@@ -11,6 +11,8 @@
 */
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Opc.Ua.Bindings
 {
@@ -59,13 +61,14 @@ namespace Opc.Ua.Bindings
         }
         #endregion
 
-        #region ITransportChannel Members
+        #region Properties
         /// <summary>
         /// A masking indicating which features are implemented.
         /// </summary>
         public TransportChannelFeatures SupportedFeatures
         {
-            get { return TransportChannelFeatures.Open | TransportChannelFeatures.BeginOpen | TransportChannelFeatures.Reconnect | TransportChannelFeatures.BeginSendRequest; }
+            get { return TransportChannelFeatures.Open | TransportChannelFeatures.BeginOpen | 
+                    TransportChannelFeatures.Reconnect | TransportChannelFeatures.BeginSendRequest; }
         }
 
         /// <summary>
@@ -101,6 +104,8 @@ namespace Opc.Ua.Bindings
             set { m_operationTimeout = value; }
         }
 
+        #endregion Properties
+
         /// <summary>
         /// Initializes a secure channel with the endpoint identified by the URL.
         /// </summary>
@@ -114,6 +119,8 @@ namespace Opc.Ua.Bindings
             SaveSettings(url, settings);
         }
 
+        #region Open
+
         /// <summary>
         /// Opens a secure channel with the endpoint identified by the URL.
         /// </summary>
@@ -121,6 +128,38 @@ namespace Opc.Ua.Bindings
         public void Open()
         {
             // opens when the first request is called to preserve previous behavoir.
+        }
+
+        /// <summary>
+        /// Opens the channel before sending the request.
+        /// </summary>
+        private void OpenOnDemand()
+        {
+            // create the channel.
+            m_channel = new UaSCUaBinaryClientChannel(
+                Guid.NewGuid().ToString(),
+                m_bufferManager,
+                m_messageSocketFactory,
+                m_quotas,
+                m_settings.ClientCertificate,
+                m_settings.ServerCertificate,
+                m_settings.Description);
+        }
+
+        /// <summary>
+        /// Opens the channel before sending the request.
+        /// </summary>
+        public async Task OpenAsync(CancellationToken ct)
+        {
+            OpenOnDemand();
+
+            // begin connect operation.
+
+            // TODO:  remove timeout
+          //  var cts = new CancellationTokenSource(m_operationTimeout);
+          //  ct.Register(() => cts.Cancel());
+
+            await m_channel.ConnectAsync(m_url, m_operationTimeout, ct).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -137,18 +176,8 @@ namespace Opc.Ua.Bindings
         {
             lock (m_lock)
             {
-                // create the channel.
-                m_channel = new UaSCUaBinaryClientChannel(
-                    Guid.NewGuid().ToString(),
-                    m_bufferManager,
-                    m_messageSocketFactory,
-                    m_quotas,
-                    m_settings.ClientCertificate,
-                    m_settings.ServerCertificate,
-                    m_settings.Description);
-
                 // begin connect operation.
-                return m_channel.BeginConnect(this.m_url, m_operationTimeout, callback, callbackData);
+                return TaskToApm.Begin(OpenAsync(CancellationToken.None), callback, callbackData);
             }
         }
 
@@ -160,9 +189,11 @@ namespace Opc.Ua.Bindings
         /// <seealso cref="Open"/>
         public void EndOpen(IAsyncResult result)
         {
-            m_channel.EndConnect(result);
+            TaskToApm.End(result);
         }
+        #endregion Open
 
+        #region Reconnect
         /// <summary>
         /// Closes any existing secure channel and opens a new one.
         /// </summary>
@@ -172,38 +203,43 @@ namespace Opc.Ua.Bindings
         /// </remarks>
         public void Reconnect()
         {
+            ReconnectAsync(CancellationToken.None).Wait();
+        }
+
+        /// <summary>
+        /// Closes any existing secure channel and opens a new one async.
+        /// </summary>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Calling this method will cause outstanding requests over the current secure channel to fail.
+        /// </remarks>
+        public async Task ReconnectAsync(CancellationToken ct)
+        {
             Utils.Trace("TransportChannel RECONNECT: Reconnecting to {0}.", m_url);
 
+            UaSCUaBinaryClientChannel channel;
             lock (m_lock)
             {
                 // the new channel must be created first because WinSock will reuse sockets and this
                 // can result in messages sent over the old socket arriving as messages on the new socket.
                 // if this happens the new channel is shutdown because of a security violation.
-                UaSCUaBinaryClientChannel channel = m_channel;
+                channel = m_channel;
                 m_channel = null;
-                
-                // reconnect.
-                OpenOnDemand();
+            }
 
-                // begin connect operation.
-                IAsyncResult result = m_channel.BeginConnect(m_url, m_operationTimeout, null, null);
-                m_channel.EndConnect(result);
+            await OpenAsync(ct).ConfigureAwait(false);
 
-                // close existing channel.
-                if (channel != null)
+            // close existing channel.
+            if (channel != null)
+            {
+                try
                 {
-                    try
-                    {
-                        channel.Close(1000);
-                    }
-                    catch (Exception)
-                    {
-                        // do nothing.
-                    }
-                    finally
-                    {
-                        channel.Dispose();
-                    }
+                    await channel.CloseAsync(m_operationTimeout, ct).ConfigureAwait(false);
+                }
+                finally
+                {
+                    channel.Dispose();
                 }
             }
         }
@@ -220,7 +256,7 @@ namespace Opc.Ua.Bindings
         /// <seealso cref="Reconnect"/>
         public IAsyncResult BeginReconnect(AsyncCallback callback, object callbackData)
         {
-            throw new NotImplementedException();
+            return TaskToApm.Begin(ReconnectAsync(CancellationToken.None), callback, callbackData);
         }
 
         /// <summary>
@@ -231,25 +267,36 @@ namespace Opc.Ua.Bindings
         /// <seealso cref="Reconnect"/>
         public void EndReconnect(IAsyncResult result)
         {
-            throw new NotImplementedException();
+            TaskToApm.End(result);
         }
+        #endregion Reconnect
 
+        #region Close
         /// <summary>
         /// Closes the secure channel.
         /// </summary>
         /// <exception cref="ServiceResultException">Thrown if any communication error occurs.</exception>
         public void Close()
         {
-            if (m_channel != null)
+            CloseAsync(CancellationToken.None).Wait();
+        }
+
+        /// <summary>
+        /// Closes the secure channel.
+        /// </summary>
+        /// <exception cref="ServiceResultException">Thrown if any communication error occurs.</exception>
+        public async Task CloseAsync(CancellationToken ct)
+        {
+            UaSCUaBinaryClientChannel channel;
+            lock (m_lock)
             {
-                lock (m_lock)
-                {
-                    if (m_channel != null)
-                    {
-                        m_channel.Close(1000);
-                        m_channel = null;
-                    }
-                }
+                channel = m_channel;
+                m_channel = null;
+            }
+
+            if (channel != null)
+            {
+                await channel.CloseAsync(m_operationTimeout, ct).ConfigureAwait(false);
             }
         }
 
@@ -265,7 +312,7 @@ namespace Opc.Ua.Bindings
         /// <seealso cref="Close"/>
         public IAsyncResult BeginClose(AsyncCallback callback, object callbackData)
         {
-            throw new NotImplementedException();
+            return TaskToApm.Begin(CloseAsync(CancellationToken.None), callback, callbackData);
         }
 
         /// <summary>
@@ -276,9 +323,11 @@ namespace Opc.Ua.Bindings
         /// <seealso cref="Close"/>
         public void EndClose(IAsyncResult result)
         {
-            throw new NotImplementedException();
+            TaskToApm.End(result);
         }
+        #endregion Close
 
+        #region SendRequest
         /// <summary>
         /// Sends a request over the secure channel.
         /// </summary>
@@ -287,8 +336,33 @@ namespace Opc.Ua.Bindings
         /// <exception cref="ServiceResultException">Thrown if any communication error occurs.</exception>
         public IServiceResponse SendRequest(IServiceRequest request)
         {
-            IAsyncResult result = BeginSendRequest(request, null, null);
-            return EndSendRequest(result);
+            return SendRequestAsync(request, CancellationToken.None).Result;
+        }
+
+        /// <summary>
+        /// Send request over channel
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public async Task<IServiceResponse> SendRequestAsync(IServiceRequest request, CancellationToken ct)
+        {
+            UaSCUaBinaryClientChannel channel = m_channel;
+            if (channel == null)
+            {
+                lock (m_lock)
+                {
+                    if (m_channel == null)
+                    {
+                        OpenOnDemand();
+                    }
+
+                    channel = m_channel;
+                }
+            }
+
+            // Send operation - will connect if channel not connected yet
+            return await channel.SendRequestAsync(request, m_operationTimeout, ct).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -304,22 +378,7 @@ namespace Opc.Ua.Bindings
         /// <seealso cref="SendRequest"/>
         public IAsyncResult BeginSendRequest(IServiceRequest request, AsyncCallback callback, object callbackData)
         {
-            UaSCUaBinaryClientChannel channel = m_channel;
-
-            if (channel == null)
-            {
-                lock (m_lock)
-                {
-                    if (m_channel == null)
-                    {
-                        OpenOnDemand();
-                    }
-
-                    channel = m_channel;
-                }
-            }
-
-            return channel.BeginSendRequest(request, m_operationTimeout, callback, callbackData);
+            return TaskToApm.Begin(SendRequestAsync(request, CancellationToken.None), callback, callbackData);
         }
 
         /// <summary>
@@ -338,9 +397,12 @@ namespace Opc.Ua.Bindings
                 throw ServiceResultException.Create(StatusCodes.BadSecureChannelClosed, "Channel has been closed.");
             }
 
-            return channel.EndSendRequest(result);
+            return TaskToApm.End<IServiceResponse>(result);
         }
 
+        #endregion SendRequest
+
+        #region Misc
         /// <summary>
         /// Saves the settings so the channel can be opened later.
         /// </summary>
@@ -376,23 +438,7 @@ namespace Opc.Ua.Bindings
             // create the buffer manager.
             m_bufferManager = new BufferManager("Client", (int)Int32.MaxValue, settings.Configuration.MaxBufferSize);
         }
-
-        /// <summary>
-        /// Opens the channel before sending the request.
-        /// </summary>
-        private void OpenOnDemand()
-        {
-            // create the channel.
-            m_channel = new UaSCUaBinaryClientChannel(
-                Guid.NewGuid().ToString(),
-                m_bufferManager,
-                m_messageSocketFactory,
-                m_quotas,
-                m_settings.ClientCertificate,
-                m_settings.ServerCertificate,
-                m_settings.Description);
-        }
-        #endregion
+        #endregion Misc
 
         #region Private Fields
         private object m_lock = new object();

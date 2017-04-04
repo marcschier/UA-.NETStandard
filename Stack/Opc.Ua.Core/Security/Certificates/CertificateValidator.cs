@@ -64,7 +64,7 @@ namespace Opc.Ua
         {
             if (configuration == null) throw new ArgumentNullException("configuration");
 
-            await Update(configuration.SecurityConfiguration);
+            await Update(configuration.SecurityConfiguration).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -142,7 +142,7 @@ namespace Opc.Ua
 
             if (configuration.ApplicationCertificate != null)
             {
-                m_applicationCertificate = await configuration.ApplicationCertificate.Find(false);
+                m_applicationCertificate = await configuration.ApplicationCertificate.Find(false).ConfigureAwait(false);
             }
         }
 
@@ -293,7 +293,7 @@ namespace Opc.Ua
             {
                 for (int ii = 0; ii < m_trustedCertificateList.Count; ii++)
                 {
-                    X509Certificate2 trusted = await m_trustedCertificateList[ii].Find(false);
+                    X509Certificate2 trusted = await m_trustedCertificateList[ii].Find(false).ConfigureAwait(false);
 
                     if (trusted != null && trusted.Thumbprint == certificate.Thumbprint)
                     {
@@ -312,7 +312,7 @@ namespace Opc.Ua
 
                 try
                 {
-                    X509Certificate2Collection trusted = await store.FindByThumbprint(certificate.Thumbprint);
+                    X509Certificate2Collection trusted = await store.FindByThumbprint(certificate.Thumbprint).ConfigureAwait(false);
 
                     for (int ii = 0; ii < trusted.Count; ii++)
                     {
@@ -458,15 +458,15 @@ namespace Opc.Ua
 
             do
             {
-                issuer = await GetIssuer(certificate, m_trustedCertificateList, m_trustedCertificateStore, true);
+                issuer = await GetIssuer(certificate, m_trustedCertificateList, m_trustedCertificateStore, true).ConfigureAwait(false);
 
                 if (issuer == null)
                 {
-                    issuer = await GetIssuer(certificate, m_issuerCertificateList, m_issuerCertificateStore, true);
+                    issuer = await GetIssuer(certificate, m_issuerCertificateList, m_issuerCertificateStore, true).ConfigureAwait(false);
 
                     if (issuer == null)
                     {
-                        issuer = await GetIssuer(certificate, collection, null, true);
+                        issuer = await GetIssuer(certificate, collection, null, true).ConfigureAwait(false);
                     }
                 }
 
@@ -475,7 +475,7 @@ namespace Opc.Ua
                     isTrusted = true;
 
                     issuers.Add(issuer);
-                    certificate = await issuer.Find(false);
+                    certificate = await issuer.Find(false).ConfigureAwait(false);
 
                     // check for root.
                     if (Utils.CompareDistinguishedName(certificate.Subject, certificate.Issuer))
@@ -506,11 +506,11 @@ namespace Opc.Ua
 
             do
             {
-                issuer = await GetIssuer(certificate, m_trustedCertificateList, m_trustedCertificateStore, true);
+                issuer = await GetIssuer(certificate, m_trustedCertificateList, m_trustedCertificateStore, true).ConfigureAwait(false);
 
                 if (issuer == null)
                 {
-                    issuer = await GetIssuer(certificate, m_issuerCertificateList, m_issuerCertificateStore, true);
+                    issuer = await GetIssuer(certificate, m_issuerCertificateList, m_issuerCertificateStore, true).ConfigureAwait(false);
                 }
                 else
                 {
@@ -520,7 +520,7 @@ namespace Opc.Ua
                 if (issuer != null)
                 {
                     issuers.Add(issuer);
-                    certificate = await issuer.Find(false);
+                    certificate = await issuer.Find(false).ConfigureAwait(false);
 
                     // check for root.
                     if (Utils.CompareDistinguishedName(certificate.Subject, certificate.Issuer))
@@ -561,7 +561,7 @@ namespace Opc.Ua
             {
                 for (int ii = 0; ii < explicitList.Count; ii++)
                 {
-                    X509Certificate2 issuer = await explicitList[ii].Find(false);
+                    X509Certificate2 issuer = await explicitList[ii].Find(false).ConfigureAwait(false);
 
                     if (issuer != null)
                     {
@@ -586,7 +586,7 @@ namespace Opc.Ua
 
                 try
                 {
-                    X509Certificate2Collection certificates = await store.Enumerate();
+                    X509Certificate2Collection certificates = await store.Enumerate().ConfigureAwait(false);
 
                     for (int ii = 0; ii < certificates.Count; ii++)
                     {
@@ -654,11 +654,11 @@ namespace Opc.Ua
                 }
             }
 
-            CertificateIdentifier trustedCertificate = await GetTrustedCertificate(certificate);
+            CertificateIdentifier trustedCertificate = await GetTrustedCertificate(certificate).ConfigureAwait(false);
 
             // get the issuers (checks the revocation lists if using directory stores).
             List<CertificateIdentifier> issuers = new List<CertificateIdentifier>();
-            bool isIssuerTrusted = await GetIssuers(certificates, issuers);
+            bool isIssuerTrusted = await GetIssuers(certificates, issuers).ConfigureAwait(false);
 
             // setup policy chain
             X509ChainPolicy policy = new X509ChainPolicy();

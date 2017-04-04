@@ -155,7 +155,7 @@ namespace Opc.Ua
         /// </summary>
         public async Task<X509Certificate2> Find()
         {
-            return await Find(false);
+            return await Find(false).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -173,7 +173,7 @@ namespace Opc.Ua
                 }
             }
             
-            return await Find(true);
+            return await Find(true).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -198,7 +198,7 @@ namespace Opc.Ua
                 {
                     store.Open(StorePath);
 
-                    X509Certificate2Collection collection = await store.Enumerate();
+                    X509Certificate2Collection collection = await store.Enumerate().ConfigureAwait(false);
 
                     certificate = Find(collection, m_thumbprint, m_subjectName, needPrivateKey);
 
@@ -624,7 +624,7 @@ namespace Opc.Ua
 
             for (int ii = 0; ii < this.Count; ii++)
             {
-                X509Certificate2 certificate = await this[ii].Find(false);
+                X509Certificate2 certificate = await this[ii].Find(false).ConfigureAwait(false);
 
                 if (certificate != null)
                 {
@@ -645,7 +645,7 @@ namespace Opc.Ua
 
             for (int ii = 0; ii < this.Count; ii++)
             {
-                X509Certificate2 current = await this[ii].Find(false);
+                X509Certificate2 current = await this[ii].Find(false).ConfigureAwait(false);
 
                 if (current != null && current.Thumbprint == certificate.Thumbprint)
                 {
@@ -674,7 +674,7 @@ namespace Opc.Ua
 
             for (int ii = 0; ii < this.Count; ii++)
             {
-                X509Certificate2 certificate = await this[ii].Find(false);
+                X509Certificate2 certificate = await this[ii].Find(false).ConfigureAwait(false);
 
                 if (certificate != null && certificate.Thumbprint == thumbprint)
                 {
@@ -700,7 +700,7 @@ namespace Opc.Ua
 
             for (int ii = 0; ii < this.Count; ii++)
             {
-                X509Certificate2 certificate = await this[ii].Find(false);
+                X509Certificate2 certificate = await this[ii].Find(false).ConfigureAwait(false);
 
                 if (certificate != null && certificate.Thumbprint == thumbprint)
                 {

@@ -863,7 +863,7 @@ namespace Opc.Ua
 
         public static async Task<IPAddress[]> GetHostAddresses(string remoteHostName)
         {
-            IPAddress[] addresses = await Dns.GetHostAddressesAsync(remoteHostName);
+            IPAddress[] addresses = await Dns.GetHostAddressesAsync(remoteHostName).ConfigureAwait(false);
             return addresses;
         }
 

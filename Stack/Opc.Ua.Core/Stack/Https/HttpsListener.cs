@@ -50,7 +50,7 @@ namespace Opc.Ua.Bindings
                     context.Response.ContentLength = 0;
                     context.Response.ContentType = "text/plain";
                     context.Response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
-                    await context.Response.WriteAsync(string.Empty);
+                    await context.Response.WriteAsync(string.Empty).ConfigureAwait(false);
                 }
                 else
                 {
@@ -219,7 +219,7 @@ namespace Opc.Ua.Bindings
                     context.Response.ContentLength = 0;
                     context.Response.ContentType = "text/plain";
                     context.Response.StatusCode = (int)HttpStatusCode.NotImplemented;
-                    await context.Response.WriteAsync(string.Empty);
+                    await context.Response.WriteAsync(string.Empty).ConfigureAwait(false);
                     return;
                 }
 
@@ -276,7 +276,7 @@ namespace Opc.Ua.Bindings
                 context.Response.ContentLength = response.Length;
                 context.Response.ContentType = context.Request.ContentType;
                 context.Response.StatusCode = (int)HttpStatusCode.OK;
-                await context.Response.Body.WriteAsync(response, 0, response.Length);
+                await context.Response.Body.WriteAsync(response, 0, response.Length).ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -284,7 +284,7 @@ namespace Opc.Ua.Bindings
                 context.Response.ContentLength = e.Message.Length;
                 context.Response.ContentType = "text/plain";
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                await context.Response.WriteAsync(e.Message);
+                await context.Response.WriteAsync(e.Message).ConfigureAwait(false);
             }
         }
         #endregion

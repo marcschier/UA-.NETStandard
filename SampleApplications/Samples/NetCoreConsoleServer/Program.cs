@@ -49,7 +49,7 @@ namespace NetCoreConsoleServer
                 {
                     ConsoleKeyInfo result = Console.ReadKey();
                     Console.WriteLine();
-                    return await Task.FromResult((result.KeyChar == 'y') || (result.KeyChar == 'Y') || (result.KeyChar == '\r'));
+                    return (result.KeyChar == 'y') || (result.KeyChar == 'Y') || (result.KeyChar == '\r');
                 }
                 catch
                 {
@@ -128,10 +128,10 @@ namespace NetCoreConsoleServer
             application.ConfigSectionName = "Opc.Ua.SampleServer";
 
             // load the application configuration.
-            ApplicationConfiguration config = await application.LoadApplicationConfiguration(false);
+            ApplicationConfiguration config = await application.LoadApplicationConfiguration(false).ConfigureAwait(false);
 
             // check the application certificate.
-            bool haveAppCertificate = await application.CheckApplicationInstanceCertificate(false, 0);
+            bool haveAppCertificate = await application.CheckApplicationInstanceCertificate(false, 0).ConfigureAwait(false);
             if (!haveAppCertificate)
             {
                 throw new Exception("Application instance certificate invalid!");
@@ -144,7 +144,7 @@ namespace NetCoreConsoleServer
 
             // start the server.
             server = new SampleServer();
-            await application.Start(server);
+            await application.Start(server).ConfigureAwait(false);
 
             // start the status thread
             status = Task.Run(new Action(StatusThread));

@@ -941,7 +941,7 @@ namespace Opc.Ua
                 }
 
                 // substitute the computer name for any local IP if an IP is used by client.
-                IPAddress[] addresses = await Utils.GetHostAddresses(Utils.GetHostName());
+                IPAddress[] addresses = await Utils.GetHostAddresses(Utils.GetHostName()).ConfigureAwait(false);
 
                 for (int ii = 0; ii < addresses.Length; ii++)
                 {

@@ -13,6 +13,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Opc.Ua
 {
@@ -76,6 +78,13 @@ namespace Opc.Ua
         void Open();
 
         /// <summary>
+        /// Opens a secure channel with the endpoint identified by the URL.
+        /// </summary>
+        /// <param name="ct">Cancellation token</param>
+        /// <exception cref="ServiceResultException">Thrown if any communication error occurs.</exception>
+        Task OpenAsync(CancellationToken ct);
+
+        /// <summary>
         /// Begins an asynchronous operation to open a secure channel with the endpoint identified by the URL.
         /// </summary>
         /// <param name="callback">The callback to call when the operation completes.</param>
@@ -105,6 +114,16 @@ namespace Opc.Ua
         void Reconnect();
 
         /// <summary>
+        /// Closes any existing secure channel and opens a new one.
+        /// </summary>
+        /// <exception cref="ServiceResultException">Thrown if any communication error occurs.</exception>
+        /// <param name="ct">Cancellation token</param>
+        /// <remarks>
+        /// Calling this method will cause outstanding requests over the current secure channel to fail.
+        /// </remarks>
+        Task ReconnectAsync(CancellationToken ct);
+
+        /// <summary>
         /// Begins an asynchronous operation to close the existing secure channel and open a new one.
         /// </summary>
         /// <param name="callback">The callback to call when the operation completes.</param>
@@ -127,6 +146,13 @@ namespace Opc.Ua
         /// </summary>
         /// <exception cref="ServiceResultException">Thrown if any communication error occurs.</exception>
         void Close();
+
+        /// <summary>
+        /// Closes the secure channel.
+        /// </summary>
+        /// <param name="ct">Cancellation token</param>
+        /// <exception cref="ServiceResultException">Thrown if any communication error occurs.</exception>
+        Task CloseAsync(CancellationToken ct);
 
         /// <summary>
         /// Begins an asynchronous operation to close the secure channel.
@@ -153,6 +179,15 @@ namespace Opc.Ua
         /// <returns>The response returned by the server.</returns>
         /// <exception cref="ServiceResultException">Thrown if any communication error occurs.</exception>
         IServiceResponse SendRequest(IServiceRequest request);
+
+        /// <summary>
+        /// Sends a request over the secure channel.
+        /// </summary>
+        /// <param name="request">The request to send.</param>
+        /// <param name="ct">Cancellation token</param>
+        /// <returns>The response returned by the server.</returns>
+        /// <exception cref="ServiceResultException">Thrown if any communication error occurs.</exception>
+        Task<IServiceResponse> SendRequestAsync(IServiceRequest request, CancellationToken ct);
 
         /// <summary>
         /// Begins an asynchronous operation to send a request over the secure channel.

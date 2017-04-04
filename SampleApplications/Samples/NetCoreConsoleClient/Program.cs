@@ -84,7 +84,7 @@ namespace NetCoreConsoleClient
                 ClientConfiguration = new ClientConfiguration { DefaultSessionTimeout = 60000 }
             };
 
-            await config.Validate(ApplicationType.Client);
+            await config.Validate(ApplicationType.Client).ConfigureAwait(false);
 
             bool haveAppCertificate = config.SecurityConfiguration.ApplicationCertificate.Certificate != null;
 
@@ -131,7 +131,7 @@ namespace NetCoreConsoleClient
             var endpointConfiguration = EndpointConfiguration.Create(config);
             var endpoint = new ConfiguredEndpoint(selectedEndpoint.Server, endpointConfiguration);
             endpoint.Update(selectedEndpoint);
-            var session = await Session.Create(config, endpoint, true, ".Net Core OPC UA Console Client", 60000, new UserIdentity(new AnonymousIdentityToken()), null);
+            var session = await Session.Create(config, endpoint, true, ".Net Core OPC UA Console Client", 60000, new UserIdentity(new AnonymousIdentityToken()), null).ConfigureAwait(false);
 
             Console.WriteLine("4 - Browse the OPC UA server namespace.");
             ReferenceDescriptionCollection references;

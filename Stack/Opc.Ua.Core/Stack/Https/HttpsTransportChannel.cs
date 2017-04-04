@@ -14,6 +14,7 @@ using System;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Opc.Ua.Bindings
@@ -59,12 +60,16 @@ namespace Opc.Ua.Bindings
         {
             SaveSettings(url, settings);
         }
-        
+
+        #region Open
+        /// <summary>
+        /// Open synchronously
+        /// </summary>
         public void Open()
         {
             try
             {
-                  m_client = new HttpClient();
+                m_client = new HttpClient();
             }
             catch (Exception ex)
             {
@@ -73,6 +78,84 @@ namespace Opc.Ua.Bindings
             }
         }
 
+        /// <summary>
+        /// Open async
+        /// </summary>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public Task OpenAsync(CancellationToken ct)
+        {
+            Open();
+            return Task.FromResult(true);
+        }
+
+        /// <summary>
+        /// Begin open
+        /// </summary>
+        /// <param name="callback"></param>
+        /// <param name="callbackData"></param>
+        /// <returns></returns>
+        public IAsyncResult BeginOpen(AsyncCallback callback, object callbackData)
+        {
+            return TaskToApm.Begin(OpenAsync(CancellationToken.None), callback, callbackData);
+        }
+
+        /// <summary>
+        /// Complete open
+        /// </summary>
+        /// <param name="result"></param>
+        public void EndOpen(IAsyncResult result)
+        {
+            TaskToApm.End(result);
+        }
+        #endregion Open
+
+        #region Reconnect
+        /// <summary>
+        /// No op
+        /// </summary>
+        public void Reconnect()
+        {
+            Utils.Trace("HttpsTransportChannel RECONNECT: Reconnecting to {0}.", m_url);
+        }
+
+        /// <summary>
+        /// No op
+        /// </summary>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public Task ReconnectAsync(CancellationToken ct)
+        {
+            Reconnect();
+            return Task.FromResult(true);
+        }
+
+        /// <summary>
+        /// Begin reconnect
+        /// </summary>
+        /// <param name="callback"></param>
+        /// <param name="callbackData"></param>
+        /// <returns></returns>
+        public IAsyncResult BeginReconnect(AsyncCallback callback, object callbackData)
+        {
+            return TaskToApm.Begin(ReconnectAsync(CancellationToken.None), callback, callbackData);
+        }
+
+        /// <summary>
+        /// Complete reconnect
+        /// </summary>
+        /// <param name="result"></param>
+        public void EndReconnect(IAsyncResult result)
+        {
+            TaskToApm.End(result);
+        }
+
+        #endregion Reconnect
+
+        #region Close
+        /// <summary>
+        /// Close
+        /// </summary>
         public void Close()
         {
             if (m_client != null)
@@ -81,121 +164,111 @@ namespace Opc.Ua.Bindings
             }
         }
 
-        private class AsyncResult : AsyncResultBase
+        /// <summary>
+        /// Close async
+        /// </summary>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public Task CloseAsync(CancellationToken ct)
         {
-            public IServiceRequest Request;
-            public HttpResponseMessage Response;
-
-            public AsyncResult(
-                AsyncCallback callback,
-                object callbackData,
-                int timeout,
-                IServiceRequest request,
-                HttpResponseMessage response)
-            :
-                base(callback, callbackData, timeout)
-            {
-                Request = request;
-                Response = response;
-            }
+            Close();
+            return Task.FromResult(true);
         }
 
-        public IAsyncResult BeginSendRequest(IServiceRequest request, AsyncCallback callback, object callbackData)
+        /// <summary>
+        /// Begin close
+        /// </summary>
+        /// <param name="callback"></param>
+        /// <param name="callbackData"></param>
+        /// <returns></returns>
+        public IAsyncResult BeginClose(AsyncCallback callback, object callbackData)
         {
-            HttpResponseMessage response = null;
+            return TaskToApm.Begin(CloseAsync(CancellationToken.None), callback, callbackData);
+        }
 
+        /// <summary>
+        /// Complete close
+        /// </summary>
+        /// <param name="result"></param>
+        public void EndClose(IAsyncResult result)
+        {
+            TaskToApm.End(result);
+        }
+        #endregion Close
+
+        #region SendRequest
+
+        /// <summary>
+        /// Send request synchronously
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        public IServiceResponse SendRequest(IServiceRequest request)
+        {
+            return SendRequestAsync(request, CancellationToken.None).Result;
+        }
+
+        /// <summary>
+        /// Send request asynchronously
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public async Task<IServiceResponse> SendRequestAsync(IServiceRequest request, CancellationToken ct)
+        {
             try
             {
-                ByteArrayContent content = new ByteArrayContent(BinaryEncoder.EncodeMessage(request, m_quotas.MessageContext));
+                HttpResponseMessage response = null;
+                var content = new ByteArrayContent(BinaryEncoder.EncodeMessage(request, m_quotas.MessageContext));
                 content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-
-                Task<HttpResponseMessage> task = m_client.PostAsync(m_url, content);
-                task.Wait();
-                response = task.Result;
-
+                response = await m_client.PostAsync(m_url, content).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
 
-                AsyncResult result = new AsyncResult(callback, callbackData, m_operationTimeout, request, response);
-                result.OperationCompleted();
-                return result;
-            }
-            catch (Exception ex)
-            {
-                Utils.Trace("Exception sending HTTPS request: " + ex.Message);
-                AsyncResult result = new AsyncResult(callback, callbackData, m_operationTimeout, request, response);
-                result.Exception = ex;
-                result.OperationCompleted();
-                return result;
-            }
-        }
-
-        public IServiceResponse EndSendRequest(IAsyncResult result)
-        {
-            AsyncResult result2 = result as AsyncResult;
-            if (result2 == null)
-            {
-                throw new ArgumentException("Invalid result object passed.", "result");
-            }
-
-            try
-            {
-                result2.WaitForComplete();
-
-                Task<Stream> task = result2.Response.Content.ReadAsStreamAsync();
-                task.Wait();
-                Stream responseContent = task.Result;
-
-                return BinaryDecoder.DecodeMessage(responseContent, null, m_quotas.MessageContext) as IServiceResponse;
+                using (var responseContent = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                {
+                    return BinaryDecoder.DecodeMessage(responseContent, null, m_quotas.MessageContext) as IServiceResponse;
+                }
             }
             catch (Exception ex)
             {
                 Utils.Trace("Exception reading HTTPS response: " + ex.Message);
-                result2.Exception = ex;
-                return result2 as IServiceResponse;
+
+                // TODO: Old begin/end code cast async result to IServiceResponse, which should be null, since there is no inheritance from it.
+                // We throw, but this is a breaking change...
+                throw;
             }
         }
 
-        public IAsyncResult BeginOpen(AsyncCallback callback, object callbackData)
+        /// <summary>
+        /// Begin send
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="callback"></param>
+        /// <param name="callbackData"></param>
+        /// <returns></returns>
+        public IAsyncResult BeginSendRequest(IServiceRequest request, AsyncCallback callback, object callbackData)
         {
-            throw new NotImplementedException();
+            return TaskToApm.Begin(SendRequestAsync(request, CancellationToken.None), callback, callbackData);
         }
 
-        public void EndOpen(IAsyncResult result)
+        /// <summary>
+        /// End sending
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        public IServiceResponse EndSendRequest(IAsyncResult result)
         {
-            throw new NotImplementedException();
+            return TaskToApm.End<IServiceResponse>(result);
         }
 
-        public void Reconnect()
-        {
-            Utils.Trace("HttpsTransportChannel RECONNECT: Reconnecting to {0}.", m_url);
-        }
+        #endregion SendRequest
 
-        public IAsyncResult BeginReconnect(AsyncCallback callback, object callbackData)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void EndReconnect(IAsyncResult result)
-        {
-            throw new NotImplementedException();
-        }
-        
-        public IAsyncResult BeginClose(AsyncCallback callback, object callbackData)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void EndClose(IAsyncResult result)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IServiceResponse SendRequest(IServiceRequest request)
-        {
-            IAsyncResult result = BeginSendRequest(request, null, null);
-            return EndSendRequest(result);
-        }
-        
+        #region Misc
+        /// <summary>
+        /// Save settings
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="settings"></param>
         private void SaveSettings(Uri url, TransportChannelSettings settings)
         {
             m_url = new Uri(Utils.ReplaceLocalhost(url.ToString()));
@@ -223,6 +296,8 @@ namespace Opc.Ua.Bindings
 
             m_quotas.CertificateValidator = settings.CertificateValidator;
         }
+
+        #endregion Misc
 
         private Uri m_url;
         private int m_operationTimeout;

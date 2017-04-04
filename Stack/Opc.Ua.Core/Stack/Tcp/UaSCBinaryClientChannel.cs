@@ -96,6 +96,17 @@ namespace Opc.Ua.Bindings
         #endregion
 
         #region Public Methods
+
+        /// <summary>
+        /// Creates a connection with the server.
+        /// </summary>
+        public Task ConnectAsync(Uri url, int timeout, CancellationToken ct)
+        {
+            // TODO: Need to provide cancellation support!
+
+            return Task.Factory.FromAsync(BeginConnect, EndConnect, url, timeout, null, TaskCreationOptions.None); 
+        }
+
         /// <summary>
         /// Creates a connection with the server.
         /// </summary>
@@ -130,7 +141,7 @@ namespace Opc.Ua.Bindings
                 State = TcpChannelState.Connecting;
                 Socket = m_socketFactory.Create(this, BufferManager, Quotas.MaxBufferSize);
 
-                task = Task.Run(async () => await Socket.BeginConnect(m_via, m_ConnectCallback, operation));
+                task = Task.Run(async () => await Socket.BeginConnect(m_via, m_ConnectCallback, operation).ConfigureAwait(false));
             }
 
             return m_handshakeOperation;
@@ -162,6 +173,17 @@ namespace Opc.Ua.Bindings
             {
                 OperationCompleted(operation);
             }
+        }
+
+        /// <summary>
+        /// Closes a connection with the server.
+        /// </summary>
+        public Task CloseAsync(int timeout, CancellationToken ct)
+        {
+            // TODO: Need to provide cancellation support!
+
+            // TODO: Async version...
+            return Task.Run(() => Close(timeout), ct);
         }
 
         /// <summary>
@@ -228,6 +250,16 @@ namespace Opc.Ua.Bindings
 
             // shutdown.
             Shutdown(StatusCodes.BadConnectionClosed);
+        }
+
+        /// <summary>
+        /// Sends a request to the server.
+        /// </summary>
+        public Task<IServiceResponse> SendRequestAsync(IServiceRequest request, int timeout, CancellationToken ct)
+        {
+            // TODO: Need to provide cancellation support!
+
+            return Task.Factory.FromAsync(BeginSendRequest, EndSendRequest, request, timeout, null, TaskCreationOptions.None);
         }
 
         /// <summary>
@@ -826,7 +858,7 @@ namespace Opc.Ua.Bindings
 
                     State = TcpChannelState.Connecting;
                     Socket = m_socketFactory.Create(this, BufferManager, Quotas.MaxBufferSize);
-                    task = Task.Run( async () => await Socket.BeginConnect(m_via, m_ConnectCallback, m_handshakeOperation));
+                    task = Task.Run( async () => await Socket.BeginConnect(m_via, m_ConnectCallback, m_handshakeOperation).ConfigureAwait(false));
                 }
             }
             catch (Exception e)

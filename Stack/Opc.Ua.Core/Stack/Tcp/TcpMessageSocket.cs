@@ -252,7 +252,7 @@ namespace Opc.Ua.Bindings
             }
 
             // Get DNS host information.
-            IPAddress[] hostAdresses = await Dns.GetHostAddressesAsync(endpointUrl.DnsSafeHost);
+            IPAddress[] hostAdresses = await Dns.GetHostAddressesAsync(endpointUrl.DnsSafeHost).ConfigureAwait(false);
 
             // try IPv4 and IPv6 address
             IPAddress addressV4 = null;
@@ -397,7 +397,7 @@ namespace Opc.Ua.Bindings
                 }
             }
 
-            error = await tcs.Task;
+            error = await tcs.Task.ConfigureAwait(false);
 
             return (error == SocketError.Success) ? true : false;
         }

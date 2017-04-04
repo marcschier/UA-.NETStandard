@@ -215,9 +215,9 @@ namespace Opc.Ua
         /// <param name="sectionName">Name of configuration section for the current application's default configuration containing <see cref="ConfigurationLocation"/>.</param>
         /// <param name="applicationType">Type of the application.</param>
         /// <returns>Application configuration</returns>
-        public static async Task<ApplicationConfiguration> Load(string sectionName, ApplicationType applicationType)
+        public static Task<ApplicationConfiguration> Load(string sectionName, ApplicationType applicationType)
         {
-            return await Load(sectionName, applicationType, typeof(ApplicationConfiguration));
+            return Load(sectionName, applicationType, typeof(ApplicationConfiguration));
         }
 
         /// <summary>
@@ -242,7 +242,7 @@ namespace Opc.Ua
                     Directory.GetCurrentDirectory());
             }
 
-            return await Load(file, applicationType, systemType);
+            return await Load(file, applicationType, systemType).ConfigureAwait(false);
         }
         
         /// <summary>
@@ -291,9 +291,9 @@ namespace Opc.Ua
         /// <param name="applicationType">Type of the application.</param>
         /// <param name="systemType">Type of the system.</param>
         /// <returns>Application configuration</returns>
-        public static async Task<ApplicationConfiguration> Load(FileInfo file, ApplicationType applicationType, Type systemType)
+        public static Task<ApplicationConfiguration> Load(FileInfo file, ApplicationType applicationType, Type systemType)
         {
-            return await ApplicationConfiguration.Load(file, applicationType, systemType, true);
+            return Load(file, applicationType, systemType, true);
         }
 
         /// <summary>
@@ -342,7 +342,7 @@ namespace Opc.Ua
                     configuration.TraceConfiguration.ApplySettings();
                 }
 
-                await configuration.Validate(applicationType);
+                await configuration.Validate(applicationType).ConfigureAwait(false);
 
                 configuration.m_sourceFilePath = file.FullName;
             }
@@ -411,7 +411,7 @@ namespace Opc.Ua
             SecurityConfiguration.Validate();
 
             // load private key
-            await SecurityConfiguration.ApplicationCertificate.LoadPrivateKey(null);
+            await SecurityConfiguration.ApplicationCertificate.LoadPrivateKey(null).ConfigureAwait(false);
 
             //  generate a default uri if null
             if (String.IsNullOrEmpty(ApplicationUri))
@@ -472,7 +472,7 @@ namespace Opc.Ua
 
             // create the certificate validator.
             m_certificateValidator = new CertificateValidator();
-            await m_certificateValidator.Update(this.SecurityConfiguration);
+            await m_certificateValidator.Update(this.SecurityConfiguration).ConfigureAwait(false);
         }
 
         /// <summary>

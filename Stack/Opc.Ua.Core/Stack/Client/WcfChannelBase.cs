@@ -14,6 +14,8 @@ using System;
 using System.ServiceModel;
 using Opc.Ua.Bindings;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Opc.Ua
 {
@@ -267,6 +269,22 @@ namespace Opc.Ua
         }
 
         /// <summary>
+        /// Opens a secure channel with the endpoint identified by the URL.
+        /// </summary>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public async Task OpenAsync(CancellationToken ct)
+        {
+            if (m_wcfBypassChannel != null)
+            {
+                await m_wcfBypassChannel.OpenAsync(ct).ConfigureAwait(false);
+                return;
+            }
+
+            throw new NotSupportedException("WCF channels must be configured when they are constructed.");
+        }
+
+        /// <summary>
         /// Begins an asynchronous operation to open a secure channel with the endpoint identified by the URL.
         /// </summary>
         public IAsyncResult BeginOpen(AsyncCallback callback, object callbackData)
@@ -301,6 +319,22 @@ namespace Opc.Ua
         /// Calling this method will cause outstanding requests over the current secure channel to fail.
         /// </remarks>
         public abstract void Reconnect();
+
+        /// <summary>
+        /// Closes any existing secure channel and opens a new one.
+        /// </summary>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public async Task ReconnectAsync(CancellationToken ct)
+        {
+            if (m_wcfBypassChannel != null)
+            {
+                await m_wcfBypassChannel.ReconnectAsync(ct).ConfigureAwait(false);
+                return;
+            }
+
+            throw new NotSupportedException("WCF channels cannot be reconnected.");
+        }
 
         /// <summary>
         /// Begins an asynchronous operation to close the existing secure channel and open a new one.
@@ -341,6 +375,19 @@ namespace Opc.Ua
             }
 
             CloseChannel();
+        }
+
+        /// <summary>
+        /// Closes any existing secure channel.
+        /// </summary>
+        public Task CloseAsync(CancellationToken ct)
+        {
+            if (m_wcfBypassChannel != null)
+            {
+                return m_wcfBypassChannel.CloseAsync(ct);
+            }
+
+            return Task.Factory.FromAsync(BeginClose, EndClose, TaskCreationOptions.None);
         }
 
         /// <summary>
@@ -386,6 +433,19 @@ namespace Opc.Ua
             byte[] requestMessage = BinaryEncoder.EncodeMessage(request, m_messageContext);
             InvokeServiceResponseMessage responseMessage = InvokeService(new InvokeServiceMessage(requestMessage));
             return (IServiceResponse)BinaryDecoder.DecodeMessage(responseMessage.InvokeServiceResponse, null, m_messageContext);            
+        }
+
+        /// <summary>
+        /// Sends a request over the secure channel.
+        /// </summary>
+        public Task<IServiceResponse> SendRequestAsync(IServiceRequest request, CancellationToken ct)
+        {
+            if (m_wcfBypassChannel != null)
+            {
+                return m_wcfBypassChannel.SendRequestAsync(request, ct);
+            }
+
+            return Task.Factory.FromAsync(BeginSendRequest, EndSendRequest, request, null, TaskCreationOptions.None);
         }
 
         /// <summary>

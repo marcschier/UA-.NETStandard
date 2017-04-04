@@ -70,25 +70,25 @@ namespace Opc.Ua.Schema.Binary
         {
             get { return m_warnings; }
         }
-        
-		/// <summary>
-		/// Generates the code from the contents of the address space.
-		/// </summary>
-		public async Task Validate(Stream stream)
-		{
-			// read and parse the file.
-			m_dictionary = (TypeDictionary)LoadInput(typeof(TypeDictionary), stream);
-            await Validate();
+
+        /// <summary>
+        /// Generates the code from the contents of the address space.
+        /// </summary>
+        public async Task Validate(Stream stream)
+        {
+            // read and parse the file.
+            m_dictionary = (TypeDictionary)LoadInput(typeof(TypeDictionary), stream);
+            await Validate().ConfigureAwait(false);
         }
 
-		/// <summary>
-		/// Generates the code from the contents of the address space.
-		/// </summary>
-		public async Task Validate(string inputPath)
-		{
-			// read and parse the file.
-			m_dictionary = (TypeDictionary)LoadInput(typeof(TypeDictionary), inputPath);
-            await Validate();
+        /// <summary>
+        /// Generates the code from the contents of the address space.
+        /// </summary>
+        public async Task Validate(string inputPath)
+        {
+            // read and parse the file.
+            m_dictionary = (TypeDictionary)LoadInput(typeof(TypeDictionary), inputPath);
+            await Validate().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -153,7 +153,7 @@ namespace Opc.Ua.Schema.Binary
             {
                 foreach (ImportDirective directive in m_dictionary.Import)
                 {
-                    await Import(directive);
+                    await Import(directive).ConfigureAwait(false);
                 }
             }
 
@@ -205,7 +205,7 @@ namespace Opc.Ua.Schema.Binary
             {
                 for (int ii = 0; ii < dictionary.Import.Length; ii++)
                 {
-                    await Import(dictionary.Import[ii]);
+                    await Import(dictionary.Import[ii]).ConfigureAwait(false);
                 }
             }
 
