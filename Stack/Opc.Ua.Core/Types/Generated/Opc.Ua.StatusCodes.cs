@@ -490,6 +490,11 @@ namespace Opc.Ua
         public const uint BadNodeNotInView = 0x804E0000;
 
         /// <summary>
+        /// The number was not accepted because of a numeric overflow.
+        /// </summary>
+        public const uint BadNumericOverflow = 0x81120000;
+
+        /// <summary>
         /// The ServerUri is not a valid URI.
         /// </summary>
         public const uint BadServerUriInvalid = 0x804F0000;
@@ -738,6 +743,11 @@ namespace Opc.Ua
         /// The client did not specify all of the input arguments for the method.
         /// </summary>
         public const uint BadArgumentsMissing = 0x80760000;
+
+        /// <summary>
+        /// The executable attribute does not allow the execution of the method.
+        /// </summary>
+        public const uint BadNotExecutable = 0x81110000;
 
         /// <summary>
         /// The server has reached its  maximum number of subscriptions.
