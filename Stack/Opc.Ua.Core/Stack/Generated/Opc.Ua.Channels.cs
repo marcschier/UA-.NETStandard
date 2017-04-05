@@ -74,6 +74,23 @@ namespace Opc.Ua
             }
         }
 
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the CreateSession service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<CreateSessionResponseMessage> CreateSessionAsync(CreateSessionMessage request)
+        {
+            try
+            {
+                return await this.Channel.CreateSessionAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
+
         /// <summary>
         /// The client side implementation of the BeginCreateSession service contract.
         /// </summary>
@@ -128,6 +145,23 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
+
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the ActivateSession service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<ActivateSessionResponseMessage> ActivateSessionAsync(ActivateSessionMessage request)
+        {
+            try
+            {
+                return await this.Channel.ActivateSessionAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
 
         /// <summary>
         /// The client side implementation of the BeginActivateSession service contract.
@@ -184,6 +218,23 @@ namespace Opc.Ua
             }
         }
 
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the CloseSession service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<CloseSessionResponseMessage> CloseSessionAsync(CloseSessionMessage request)
+        {
+            try
+            {
+                return await this.Channel.CloseSessionAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
+
         /// <summary>
         /// The client side implementation of the BeginCloseSession service contract.
         /// </summary>
@@ -238,6 +289,23 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
+
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the Cancel service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<CancelResponseMessage> CancelAsync(CancelMessage request)
+        {
+            try
+            {
+                return await this.Channel.CancelAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
 
         /// <summary>
         /// The client side implementation of the BeginCancel service contract.
@@ -294,6 +362,23 @@ namespace Opc.Ua
             }
         }
 
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the AddNodes service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<AddNodesResponseMessage> AddNodesAsync(AddNodesMessage request)
+        {
+            try
+            {
+                return await this.Channel.AddNodesAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
+
         /// <summary>
         /// The client side implementation of the BeginAddNodes service contract.
         /// </summary>
@@ -348,6 +433,23 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
+
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the AddReferences service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<AddReferencesResponseMessage> AddReferencesAsync(AddReferencesMessage request)
+        {
+            try
+            {
+                return await this.Channel.AddReferencesAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
 
         /// <summary>
         /// The client side implementation of the BeginAddReferences service contract.
@@ -404,6 +506,23 @@ namespace Opc.Ua
             }
         }
 
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the DeleteNodes service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<DeleteNodesResponseMessage> DeleteNodesAsync(DeleteNodesMessage request)
+        {
+            try
+            {
+                return await this.Channel.DeleteNodesAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
+
         /// <summary>
         /// The client side implementation of the BeginDeleteNodes service contract.
         /// </summary>
@@ -458,6 +577,23 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
+
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the DeleteReferences service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<DeleteReferencesResponseMessage> DeleteReferencesAsync(DeleteReferencesMessage request)
+        {
+            try
+            {
+                return await this.Channel.DeleteReferencesAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
 
         /// <summary>
         /// The client side implementation of the BeginDeleteReferences service contract.
@@ -514,6 +650,23 @@ namespace Opc.Ua
             }
         }
 
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the Browse service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<BrowseResponseMessage> BrowseAsync(BrowseMessage request)
+        {
+            try
+            {
+                return await this.Channel.BrowseAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
+
         /// <summary>
         /// The client side implementation of the BeginBrowse service contract.
         /// </summary>
@@ -568,6 +721,23 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
+
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the BrowseNext service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<BrowseNextResponseMessage> BrowseNextAsync(BrowseNextMessage request)
+        {
+            try
+            {
+                return await this.Channel.BrowseNextAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
 
         /// <summary>
         /// The client side implementation of the BeginBrowseNext service contract.
@@ -624,6 +794,23 @@ namespace Opc.Ua
             }
         }
 
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the TranslateBrowsePathsToNodeIds service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<TranslateBrowsePathsToNodeIdsResponseMessage> TranslateBrowsePathsToNodeIdsAsync(TranslateBrowsePathsToNodeIdsMessage request)
+        {
+            try
+            {
+                return await this.Channel.TranslateBrowsePathsToNodeIdsAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
+
         /// <summary>
         /// The client side implementation of the BeginTranslateBrowsePathsToNodeIds service contract.
         /// </summary>
@@ -678,6 +865,23 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
+
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the RegisterNodes service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<RegisterNodesResponseMessage> RegisterNodesAsync(RegisterNodesMessage request)
+        {
+            try
+            {
+                return await this.Channel.RegisterNodesAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
 
         /// <summary>
         /// The client side implementation of the BeginRegisterNodes service contract.
@@ -734,6 +938,23 @@ namespace Opc.Ua
             }
         }
 
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the UnregisterNodes service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<UnregisterNodesResponseMessage> UnregisterNodesAsync(UnregisterNodesMessage request)
+        {
+            try
+            {
+                return await this.Channel.UnregisterNodesAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
+
         /// <summary>
         /// The client side implementation of the BeginUnregisterNodes service contract.
         /// </summary>
@@ -788,6 +1009,23 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
+
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the QueryFirst service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<QueryFirstResponseMessage> QueryFirstAsync(QueryFirstMessage request)
+        {
+            try
+            {
+                return await this.Channel.QueryFirstAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
 
         /// <summary>
         /// The client side implementation of the BeginQueryFirst service contract.
@@ -844,6 +1082,23 @@ namespace Opc.Ua
             }
         }
 
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the QueryNext service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<QueryNextResponseMessage> QueryNextAsync(QueryNextMessage request)
+        {
+            try
+            {
+                return await this.Channel.QueryNextAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
+
         /// <summary>
         /// The client side implementation of the BeginQueryNext service contract.
         /// </summary>
@@ -898,6 +1153,23 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
+
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the Read service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<ReadResponseMessage> ReadAsync(ReadMessage request)
+        {
+            try
+            {
+                return await this.Channel.ReadAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
 
         /// <summary>
         /// The client side implementation of the BeginRead service contract.
@@ -954,6 +1226,23 @@ namespace Opc.Ua
             }
         }
 
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the HistoryRead service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<HistoryReadResponseMessage> HistoryReadAsync(HistoryReadMessage request)
+        {
+            try
+            {
+                return await this.Channel.HistoryReadAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
+
         /// <summary>
         /// The client side implementation of the BeginHistoryRead service contract.
         /// </summary>
@@ -1008,6 +1297,23 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
+
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the Write service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<WriteResponseMessage> WriteAsync(WriteMessage request)
+        {
+            try
+            {
+                return await this.Channel.WriteAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
 
         /// <summary>
         /// The client side implementation of the BeginWrite service contract.
@@ -1064,6 +1370,23 @@ namespace Opc.Ua
             }
         }
 
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the HistoryUpdate service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<HistoryUpdateResponseMessage> HistoryUpdateAsync(HistoryUpdateMessage request)
+        {
+            try
+            {
+                return await this.Channel.HistoryUpdateAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
+
         /// <summary>
         /// The client side implementation of the BeginHistoryUpdate service contract.
         /// </summary>
@@ -1118,6 +1441,23 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
+
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the Call service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<CallResponseMessage> CallAsync(CallMessage request)
+        {
+            try
+            {
+                return await this.Channel.CallAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
 
         /// <summary>
         /// The client side implementation of the BeginCall service contract.
@@ -1174,6 +1514,23 @@ namespace Opc.Ua
             }
         }
 
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the CreateMonitoredItems service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<CreateMonitoredItemsResponseMessage> CreateMonitoredItemsAsync(CreateMonitoredItemsMessage request)
+        {
+            try
+            {
+                return await this.Channel.CreateMonitoredItemsAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
+
         /// <summary>
         /// The client side implementation of the BeginCreateMonitoredItems service contract.
         /// </summary>
@@ -1228,6 +1585,23 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
+
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the ModifyMonitoredItems service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<ModifyMonitoredItemsResponseMessage> ModifyMonitoredItemsAsync(ModifyMonitoredItemsMessage request)
+        {
+            try
+            {
+                return await this.Channel.ModifyMonitoredItemsAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
 
         /// <summary>
         /// The client side implementation of the BeginModifyMonitoredItems service contract.
@@ -1284,6 +1658,23 @@ namespace Opc.Ua
             }
         }
 
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the SetMonitoringMode service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<SetMonitoringModeResponseMessage> SetMonitoringModeAsync(SetMonitoringModeMessage request)
+        {
+            try
+            {
+                return await this.Channel.SetMonitoringModeAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
+
         /// <summary>
         /// The client side implementation of the BeginSetMonitoringMode service contract.
         /// </summary>
@@ -1338,6 +1729,23 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
+
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the SetTriggering service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<SetTriggeringResponseMessage> SetTriggeringAsync(SetTriggeringMessage request)
+        {
+            try
+            {
+                return await this.Channel.SetTriggeringAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
 
         /// <summary>
         /// The client side implementation of the BeginSetTriggering service contract.
@@ -1394,6 +1802,23 @@ namespace Opc.Ua
             }
         }
 
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the DeleteMonitoredItems service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<DeleteMonitoredItemsResponseMessage> DeleteMonitoredItemsAsync(DeleteMonitoredItemsMessage request)
+        {
+            try
+            {
+                return await this.Channel.DeleteMonitoredItemsAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
+
         /// <summary>
         /// The client side implementation of the BeginDeleteMonitoredItems service contract.
         /// </summary>
@@ -1448,6 +1873,23 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
+
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the CreateSubscription service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<CreateSubscriptionResponseMessage> CreateSubscriptionAsync(CreateSubscriptionMessage request)
+        {
+            try
+            {
+                return await this.Channel.CreateSubscriptionAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
 
         /// <summary>
         /// The client side implementation of the BeginCreateSubscription service contract.
@@ -1504,6 +1946,23 @@ namespace Opc.Ua
             }
         }
 
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the ModifySubscription service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<ModifySubscriptionResponseMessage> ModifySubscriptionAsync(ModifySubscriptionMessage request)
+        {
+            try
+            {
+                return await this.Channel.ModifySubscriptionAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
+
         /// <summary>
         /// The client side implementation of the BeginModifySubscription service contract.
         /// </summary>
@@ -1558,6 +2017,23 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
+
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the SetPublishingMode service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<SetPublishingModeResponseMessage> SetPublishingModeAsync(SetPublishingModeMessage request)
+        {
+            try
+            {
+                return await this.Channel.SetPublishingModeAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
 
         /// <summary>
         /// The client side implementation of the BeginSetPublishingMode service contract.
@@ -1614,6 +2090,23 @@ namespace Opc.Ua
             }
         }
 
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the Publish service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<PublishResponseMessage> PublishAsync(PublishMessage request)
+        {
+            try
+            {
+                return await this.Channel.PublishAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
+
         /// <summary>
         /// The client side implementation of the BeginPublish service contract.
         /// </summary>
@@ -1668,6 +2161,23 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
+
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the Republish service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<RepublishResponseMessage> RepublishAsync(RepublishMessage request)
+        {
+            try
+            {
+                return await this.Channel.RepublishAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
 
         /// <summary>
         /// The client side implementation of the BeginRepublish service contract.
@@ -1724,6 +2234,23 @@ namespace Opc.Ua
             }
         }
 
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the TransferSubscriptions service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<TransferSubscriptionsResponseMessage> TransferSubscriptionsAsync(TransferSubscriptionsMessage request)
+        {
+            try
+            {
+                return await this.Channel.TransferSubscriptionsAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
+
         /// <summary>
         /// The client side implementation of the BeginTransferSubscriptions service contract.
         /// </summary>
@@ -1778,6 +2305,23 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
+
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the DeleteSubscriptions service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<DeleteSubscriptionsResponseMessage> DeleteSubscriptionsAsync(DeleteSubscriptionsMessage request)
+        {
+            try
+            {
+                return await this.Channel.DeleteSubscriptionsAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
 
         /// <summary>
         /// The client side implementation of the BeginDeleteSubscriptions service contract.
@@ -1851,6 +2395,23 @@ namespace Opc.Ua
             }
         }
 
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the FindServers service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<FindServersResponseMessage> FindServersAsync(FindServersMessage request)
+        {
+            try
+            {
+                return await this.Channel.FindServersAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
+
         /// <summary>
         /// The client side implementation of the BeginFindServers service contract.
         /// </summary>
@@ -1906,6 +2467,23 @@ namespace Opc.Ua
             }
         }
 
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the FindServersOnNetwork service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<FindServersOnNetworkResponseMessage> FindServersOnNetworkAsync(FindServersOnNetworkMessage request)
+        {
+            try
+            {
+                return await this.Channel.FindServersOnNetworkAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
+
         /// <summary>
         /// The client side implementation of the BeginFindServersOnNetwork service contract.
         /// </summary>
@@ -1960,6 +2538,23 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
+
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the GetEndpoints service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<GetEndpointsResponseMessage> GetEndpointsAsync(GetEndpointsMessage request)
+        {
+            try
+            {
+                return await this.Channel.GetEndpointsAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
 
         /// <summary>
         /// The client side implementation of the BeginGetEndpoints service contract.
@@ -2033,6 +2628,23 @@ namespace Opc.Ua
             }
         }
 
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the RegisterServer service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<RegisterServerResponseMessage> RegisterServerAsync(RegisterServerMessage request)
+        {
+            try
+            {
+                return await this.Channel.RegisterServerAsync(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
+
         /// <summary>
         /// The client side implementation of the BeginRegisterServer service contract.
         /// </summary>
@@ -2087,6 +2699,23 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
+
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+        /// <summary>
+        /// The client side implementation of the RegisterServer2 service contract.
+        /// </summary>
+        public async System.Threading.Tasks.Task<RegisterServer2ResponseMessage> RegisterServer2Async(RegisterServer2Message request)
+        {
+            try
+            {
+                return await this.Channel.RegisterServer2Async(request);
+            }
+            catch (FaultException<ServiceFault> e)
+            {
+                throw HandleSoapFault(e);
+            }
+        }
+        #endif
 
         /// <summary>
         /// The client side implementation of the BeginRegisterServer2 service contract.
