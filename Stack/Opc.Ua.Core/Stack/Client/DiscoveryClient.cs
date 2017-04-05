@@ -15,6 +15,8 @@ using System.ServiceModel;
 using System.ServiceModel.Channels;
 
 using Opc.Ua.Bindings;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace Opc.Ua
 {
@@ -64,15 +66,26 @@ namespace Opc.Ua
         public virtual EndpointDescriptionCollection GetEndpoints(StringCollection profileUris)
         {
             EndpointDescriptionCollection endpoints = null;
+            GetEndpoints(null, this.Endpoint.EndpointUrl, null, profileUris, out endpoints);
+            return endpoints;
+        }
 
-            GetEndpoints(
+        /// <summary>
+        /// Invokes the GetEndpoints service.
+        /// </summary>
+        /// <param name="profileUris">The collection of profile URIs.</param>
+        /// <returns></returns>
+        public virtual async Task<EndpointDescriptionCollection> GetEndpointsAsync(
+            StringCollection profileUris,
+            CancellationToken cancellationToken)
+        {
+            GetEndpointsResponse response = await GetEndpointsAsync(
                 null,
                 this.Endpoint.EndpointUrl,
-                null,
+                null, 
                 profileUris,
-                out endpoints);
-
-            return endpoints;
+                cancellationToken);
+            return response.Endpoints;
         }
 
         /// <summary>
@@ -83,15 +96,26 @@ namespace Opc.Ua
         public virtual ApplicationDescriptionCollection FindServers(StringCollection serverUris)
         {
             ApplicationDescriptionCollection servers = null;
-
-            FindServers(
-                null,
-                this.Endpoint.EndpointUrl,
-                null,
-                serverUris,
-                out servers);
-
+            FindServers(null,this.Endpoint.EndpointUrl, null,serverUris,out servers);
             return servers;
+        }
+
+        /// <summary>
+        /// Invokes the FindServers service.
+        /// </summary>
+        /// <param name="serverUris">The collection of server URIs.</param>
+        /// <returns></returns>
+        public virtual async Task<ApplicationDescriptionCollection> FindServersAsync(
+            StringCollection serverUris, 
+            CancellationToken cancellationToken)
+        {
+            FindServersResponse response = await FindServersAsync(
+                null, 
+                this.Endpoint.EndpointUrl, 
+                null, 
+                serverUris, 
+                cancellationToken);
+            return response.Servers;
         }
 
         /// <summary>
@@ -109,21 +133,67 @@ namespace Opc.Ua
             out DateTime lastCounterResetTime)
         {
             ServerOnNetworkCollection servers = null;
-
             FindServersOnNetwork(
+                null, 
+                startingRecordId, 
+                maxRecordsToReturn, 
+                serverCapabilityFilter, 
+                out lastCounterResetTime, 
+                out servers);
+            return servers;
+        }
+
+        /// <summary>
+        /// Invokes the FindServersOnNetwork service.
+        /// </summary>
+        /// <param name="startingRecordId"></param>
+        /// <param name="maxRecordsToReturn"></param>
+        /// <param name="serverCapabilityFilter"></param>
+        /// <param name="lastCounterResetTime"></param>
+        /// <returns></returns>
+        public virtual async Task<DateTime> FindServersOnNetworkAsync(
+            uint startingRecordId,
+            uint maxRecordsToReturn,
+            StringCollection serverCapabilityFilter,
+            Action<ServerOnNetwork> serversOnNetwork,
+            CancellationToken cancellationToken)
+        {
+            FindServersOnNetworkResponse response = await FindServersOnNetworkAsync(
+                null, 
+                startingRecordId, 
+                maxRecordsToReturn, 
+                serverCapabilityFilter, 
+                cancellationToken);
+            foreach(var entry in response.Servers)
+                serversOnNetwork?.Invoke(entry);
+            return response.LastCounterResetTime;
+        }
+
+        /// <summary>
+        /// Invokes the FindServersOnNetwork service.
+        /// </summary>
+        /// <param name="startingRecordId"></param>
+        /// <param name="maxRecordsToReturn"></param>
+        /// <param name="serverCapabilityFilter"></param>
+        /// <returns></returns>
+        public virtual async Task<ServerOnNetworkCollection> FindServersOnNetworkAsync(
+            uint startingRecordId,
+            uint maxRecordsToReturn,
+            StringCollection serverCapabilityFilter,
+            CancellationToken cancellationToken)
+        {
+            FindServersOnNetworkResponse response = await FindServersOnNetworkAsync(
                 null,
                 startingRecordId,
                 maxRecordsToReturn,
                 serverCapabilityFilter,
-                out lastCounterResetTime,
-                out servers);
-
-            return servers;
+                cancellationToken);
+            return response.Servers;
         }
 
         #endregion  
     }
-    
+
     /// <summary>
     /// A channel object used by clients to access a UA discovery service.
     /// </summary>

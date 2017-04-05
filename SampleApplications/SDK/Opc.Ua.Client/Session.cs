@@ -2322,7 +2322,7 @@ namespace Opc.Ua.Client
                 try
                 {
                     CloseSession(null, false);
-                    CloseChannel();
+                    Close();
                 }
                 catch (Exception e)
                 {
@@ -2776,7 +2776,7 @@ namespace Opc.Ua.Client
                     CloseSession(null, true);
                     this.OperationTimeout = existingTimeout;
 
-                    CloseChannel();
+                    Close();
 
                     // raised notification indicating the session is closed.
                     SessionCreated(null, null);

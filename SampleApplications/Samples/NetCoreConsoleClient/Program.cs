@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using Opc.Ua;
 using Opc.Ua.Client;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 
 namespace NetCoreConsoleClient
 {
@@ -36,7 +37,7 @@ namespace NetCoreConsoleClient
             }
             try
             {
-                Task t = ConsoleSampleClient(endpointURL);
+                Task t = ConsoleSampleClient(endpointURL, CancellationToken.None);
                 t.Wait();
             }
             catch (Exception e)
@@ -45,7 +46,7 @@ namespace NetCoreConsoleClient
             }
         }
 
-        public static async Task ConsoleSampleClient(string endpointURL)
+        public static async Task ConsoleSampleClient(string endpointURL, CancellationToken cancellationToken)
         {
             Console.WriteLine("1 - Create an Application Configuration.");
             var config = new ApplicationConfiguration()
@@ -122,7 +123,7 @@ namespace NetCoreConsoleClient
 
             Console.WriteLine("2 - Discover endpoints of {0}.", endpointURL);
             Uri endpointURI = new Uri(endpointURL);
-            var endpointCollection = DiscoverEndpoints(config, endpointURI, 10);
+            var endpointCollection = await DiscoverEndpointsAsync(config, endpointURI, cancellationToken);
             var selectedEndpoint = SelectUaTcpEndpoint(endpointCollection, haveAppCertificate);
             Console.WriteLine("    Selected endpoint uses: {0}", 
                 selectedEndpoint.SecurityPolicyUri.Substring(selectedEndpoint.SecurityPolicyUri.LastIndexOf('#') + 1));
@@ -210,28 +211,33 @@ namespace NetCoreConsoleClient
             e.Accept = (e.Error.StatusCode == StatusCodes.BadCertificateUntrusted);
         }
 
-        private static EndpointDescriptionCollection DiscoverEndpoints(ApplicationConfiguration config, Uri discoveryUrl, int timeout)
+        private static async Task<EndpointDescriptionCollection> DiscoverEndpointsAsync(
+            ApplicationConfiguration config, 
+            Uri discoveryUrl, 
+            CancellationToken cancellationToken)
         {
             // use a short timeout.
             EndpointConfiguration configuration = EndpointConfiguration.Create(config);
-            configuration.OperationTimeout = timeout;
+            configuration.OperationTimeout = 10;
 
-            using (DiscoveryClient client = DiscoveryClient.Create(
+            DiscoveryClient client = DiscoveryClient.Create(
                 discoveryUrl,
-                EndpointConfiguration.Create(config)))
+                EndpointConfiguration.Create(config));
+            try
             {
-                try
-                {
-                    EndpointDescriptionCollection endpoints = client.GetEndpoints(null);
-                    ReplaceLocalHostWithRemoteHost(endpoints, discoveryUrl);
-                    return endpoints;
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Could not fetch endpoints from url: {0}", discoveryUrl);
-                    Console.WriteLine("Reason = {0}", e.Message);
-                    throw e;
-                }
+                EndpointDescriptionCollection endpoints = await client.GetEndpointsAsync(null, cancellationToken);
+                ReplaceLocalHostWithRemoteHost(endpoints, discoveryUrl);
+                return endpoints;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Could not fetch endpoints from url: {0}", discoveryUrl);
+                Console.WriteLine("Reason = {0}", e.Message);
+                throw e;
+            }
+            finally
+            {
+                await client.CloseAsync(CancellationToken.None);
             }
         }
 

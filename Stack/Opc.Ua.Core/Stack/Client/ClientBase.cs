@@ -14,6 +14,7 @@ using System;
 using System.Collections;
 using System.Threading;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Opc.Ua
 {
@@ -57,10 +58,29 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
-        {
-            CloseChannel();
-            DisposeChannel();
+        { 
+            if (m_channel != null)
+            {
+                try
+                {
+                    m_channel.Close();
+                }
+                catch
+                {
+                    // ignore errors.
+                }
 
+                try
+                {
+                    m_channel.Dispose();
+                }
+                catch
+                {
+                    // ignore errors.
+                }
+
+                m_channel = null;
+            }
             m_disposed = true;
         }
         #endregion
@@ -254,6 +274,23 @@ namespace Opc.Ua
             if (m_channel != null)
             {
                 m_channel.Close();
+                m_channel.Dispose();
+                m_channel = null;
+            }
+
+            m_authenticationToken = null;
+            return StatusCodes.Good;
+        }
+
+        /// <summary>
+        /// Closes the channel asynchronously.
+        /// </summary>
+        public virtual async Task<StatusCode> CloseAsync(CancellationToken cancellationToken)
+        {
+            if (m_channel != null)
+            {
+                await m_channel.CloseAsync(cancellationToken);
+                m_channel.Dispose();
                 m_channel = null;
             }
 
@@ -283,42 +320,6 @@ namespace Opc.Ua
         #endregion
 
         #region Protected Methods
-        /// <summary>
-        /// Closes the channel.
-        /// </summary>
-        protected void CloseChannel()
-        {
-            if (m_channel != null)
-            {
-                try
-                {
-                    m_channel.Close();
-                }
-                catch
-                {
-                    // ignore errors.
-                }
-
-                m_channel = null;
-            }
-        }
-
-        protected void DisposeChannel()
-        {
-            if (m_channel != null)
-            {
-                try
-                {
-                    m_channel.Dispose();
-                }
-                catch
-                {
-                    // ignore errors.
-                }
-
-                m_channel = null;
-            }
-        }
 
         /// <summary>
         /// An object used to synchronize access to the session state.
