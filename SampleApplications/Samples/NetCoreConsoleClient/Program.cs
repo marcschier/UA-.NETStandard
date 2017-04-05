@@ -80,8 +80,8 @@ namespace NetCoreConsoleClient
                     AutoAcceptUntrustedCertificates = true
                 },
                 TransportConfigurations = new TransportConfigurationCollection(),
-                TransportQuotas = new TransportQuotas { OperationTimeout = 15000 },
-                ClientConfiguration = new ClientConfiguration { DefaultSessionTimeout = 60000 }
+                TransportQuotas = new TransportQuotas { OperationTimeout = 1500000 },
+                ClientConfiguration = new ClientConfiguration { DefaultSessionTimeout = 6000000 }
             };
 
             await config.Validate(ApplicationType.Client).ConfigureAwait(false);

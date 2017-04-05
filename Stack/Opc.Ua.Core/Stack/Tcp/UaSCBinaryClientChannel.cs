@@ -182,14 +182,13 @@ namespace Opc.Ua.Bindings
         {
             // TODO: Need to provide cancellation support!
 
-            // TODO: Async version...
-            return Task.Run(() => Close(timeout), ct);
+            return Task.Factory.FromAsync(BeginClose, EndClose, timeout, null, TaskCreationOptions.None);
         }
 
         /// <summary>
-        /// Closes a connection with the server.
+        /// Starts closing 
         /// </summary>
-        public void Close(int timeout)
+        public IAsyncResult BeginClose(int timeout, AsyncCallback callback, object state)
         {
             WriteOperation operation = null;
 
@@ -198,7 +197,7 @@ namespace Opc.Ua.Bindings
                 // nothing to do if the connection is already closed.
                 if (State == TcpChannelState.Closed)
                 {
-                    return;
+                    return null;
                 }
 
                 // check if a handshake is in progress.
@@ -213,17 +212,26 @@ namespace Opc.Ua.Bindings
                 if (State == TcpChannelState.Open)
                 {
                     State = TcpChannelState.Closing;
-                    operation = BeginOperation(timeout, null, null);
+                    operation = BeginOperation(timeout, callback, state);
                     SendCloseSecureChannelRequest(operation);
                 }
             }
+            return operation;
+        }
+
+        /// <summary>
+        /// Completes closing connection.
+        /// </summary>
+        public void EndClose(IAsyncResult result)
+        {
+            WriteOperation operation = result as WriteOperation;
 
             // wait for the close to succeed.
             if (operation != null)
             {
                 try
                 {
-                    operation.End(timeout, false);
+                    operation.End(Int32.MaxValue, false);
                 }
                 catch (ServiceResultException e)
                 {
@@ -253,7 +261,7 @@ namespace Opc.Ua.Bindings
         }
 
         /// <summary>
-        /// Sends a request to the server.
+        /// Sends a request to the server asynchronously.
         /// </summary>
         public Task<IServiceResponse> SendRequestAsync(IServiceRequest request, int timeout, CancellationToken ct)
         {
@@ -711,35 +719,35 @@ namespace Opc.Ua.Bindings
                 // process a response.
                 if (TcpMessageType.IsType(messageType, TcpMessageType.Message))
                 {
-                    //Utils.Trace("Channel {0}: ProcessResponseMessage", ChannelId);
+                    Utils.TraceDebug("Channel {0}: ProcessResponseMessage", ChannelId);
                     return ProcessResponseMessage(messageType, messageChunk);
                 }
 
                 // check for acknowledge.
                 else if (messageType == TcpMessageType.Acknowledge)
                 {
-                    //Utils.Trace("Channel {0}: ProcessAcknowledgeMessage", ChannelId);
+                    Utils.TraceDebug("Channel {0}: ProcessAcknowledgeMessage", ChannelId);
                     return ProcessAcknowledgeMessage(messageChunk);
                 }
 
                 // check for error.
                 else if (messageType == TcpMessageType.Error)
                 {
-                    //Utils.Trace("Channel {0}: ProcessErrorMessage", ChannelId);
+                    Utils.TraceDebug("Channel {0}: ProcessErrorMessage", ChannelId);
                     return ProcessErrorMessage(messageType, messageChunk);
                 }
 
                 // process open secure channel repsonse.
                 else if (TcpMessageType.IsType(messageType, TcpMessageType.Open))
                 {
-                    //Utils.Trace("Channel {0}: ProcessOpenSecureChannelResponse", ChannelId);
+                    Utils.TraceDebug("Channel {0}: ProcessOpenSecureChannelResponse", ChannelId);
                     return ProcessOpenSecureChannelResponse(messageType, messageChunk);
                 }
 
                 // process a response to a close request.
                 else if (TcpMessageType.IsType(messageType, TcpMessageType.Close))
                 {
-                    //Utils.Trace("Channel {0}: ProcessResponseMessage (close)", ChannelId);
+                    Utils.TraceDebug("Channel {0}: ProcessResponseMessage (close)", ChannelId);
                     return ProcessResponseMessage(messageType, messageChunk);
                 }
 

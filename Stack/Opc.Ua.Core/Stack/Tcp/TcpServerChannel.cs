@@ -234,28 +234,28 @@ namespace Opc.Ua.Bindings
                     // process a response.
                     if (TcpMessageType.IsType(messageType, TcpMessageType.Message))
                     {
-                        //Utils.Trace("Channel {0}: ProcessRequestMessage", ChannelId);
+                        Utils.TraceDebug("Channel {0}: ProcessRequestMessage", ChannelId);
                         return ProcessRequestMessage(messageType, messageChunk);
                     }
 
                     // check for hello.
                     if (messageType == TcpMessageType.Hello)
                     {
-                        //Utils.Trace("Channel {0}: ProcessHelloMessage", ChannelId);
+                        Utils.TraceDebug("Channel {0}: ProcessHelloMessage", ChannelId);
                         return ProcessHelloMessage(messageType, messageChunk);
                     }
 
                     // process open secure channel repsonse.
                     if (TcpMessageType.IsType(messageType, TcpMessageType.Open))
                     {
-                        //Utils.Trace("Channel {0}: ProcessOpenSecureChannelRequest", ChannelId);
+                        Utils.TraceDebug("Channel {0}: ProcessOpenSecureChannelRequest", ChannelId);
                         return ProcessOpenSecureChannelRequest(messageType, messageChunk);
                     }
 
                     // process close secure channel response.
                     if (TcpMessageType.IsType(messageType, TcpMessageType.Close))
                     {
-                        //Utils.Trace("Channel {0}: ProcessCloseSecureChannelRequest", ChannelId);
+                        Utils.TraceDebug("Channel {0}: ProcessCloseSecureChannelRequest", ChannelId);
                         return ProcessCloseSecureChannelRequest(messageType, messageChunk);
                     }
 
