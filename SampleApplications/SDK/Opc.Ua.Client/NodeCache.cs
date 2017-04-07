@@ -31,6 +31,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace Opc.Ua.Client
 {
@@ -77,9 +79,22 @@ namespace Opc.Ua.Client
         {
             return Find(nodeId) != null;
         }
-        
+
+        /// <summary cref="INodeTable.Exists(ExpandedNodeId)" />
+        public async Task<bool> ExistsAsync(ExpandedNodeId nodeId, CancellationToken cancellationToken)
+        {
+            INode node = await FindAsync(nodeId, cancellationToken).ConfigureAwait(false);
+            return node != null;
+        }
+
         /// <summary cref="INodeTable.Find(ExpandedNodeId)" />
         public INode Find(ExpandedNodeId nodeId)
+        {
+            return FindAsync(nodeId, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary cref="INodeTable.FindAsync(ExpandedNodeId, CancellationToken)" />
+        public async Task<INode> FindAsync(ExpandedNodeId nodeId, CancellationToken cancellationToken)
         {
             // check for null.
             if (NodeId.IsNull(nodeId))
@@ -88,7 +103,7 @@ namespace Opc.Ua.Client
             }
 
             // check if node alredy exists.
-            INode node = m_nodes.Find(nodeId);
+            INode node = await m_nodes.FindAsync(nodeId, cancellationToken).ConfigureAwait(false);
 
             if (node != null)
             {
@@ -102,7 +117,7 @@ namespace Opc.Ua.Client
             // fetch node from server.
             try
             {
-                return FetchNode(nodeId);
+                return await FetchNodeAsync(nodeId, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -114,14 +129,27 @@ namespace Opc.Ua.Client
         
         /// <summary cref="INodeTable.Find(ExpandedNodeId,NodeId,bool,bool,QualifiedName)" />
         public INode Find(
-            ExpandedNodeId sourceId, 
-            NodeId         referenceTypeId, 
-            bool           isInverse, 
-            bool           includeSubtypes, 
-            QualifiedName  browseName)
+            ExpandedNodeId sourceId,
+            NodeId referenceTypeId,
+            bool isInverse,
+            bool includeSubtypes,
+            QualifiedName browseName)
+        {
+            return FindAsync(sourceId, referenceTypeId, isInverse, includeSubtypes, browseName, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary cref="INodeTable.FindAsync(ExpandedNodeId,NodeId,bool,bool,QualifiedName,CancellationToken)" />
+        public async Task<INode> FindAsync(
+            ExpandedNodeId sourceId,
+            NodeId referenceTypeId,
+            bool isInverse,
+            bool includeSubtypes,
+            QualifiedName browseName,
+            CancellationToken cancellationToken)
         {
             // find the source.
-            Node source = Find(sourceId) as Node;
+            INode result = await FindAsync(sourceId, cancellationToken).ConfigureAwait(false);
+            Node source = result as Node;
 
             if (source == null)
             {
@@ -133,7 +161,7 @@ namespace Opc.Ua.Client
 
             foreach (IReference reference in references)
             {  
-                INode target = Find(reference.TargetId);
+                INode target = await FindAsync(reference.TargetId, cancellationToken).ConfigureAwait(false);
                         
                 if (target == null)
                 {
@@ -149,18 +177,29 @@ namespace Opc.Ua.Client
             // target not found.
             return null;
         }
-
         /// <summary cref="INodeTable.Find(ExpandedNodeId,NodeId,bool,bool)" />
         public IList<INode> Find(
-            ExpandedNodeId sourceId, 
-            NodeId         referenceTypeId, 
-            bool           isInverse, 
-            bool           includeSubtypes)
-        {            
+            ExpandedNodeId sourceId,
+            NodeId referenceTypeId,
+            bool isInverse,
+            bool includeSubtypes)
+        {
+            return FindAsync(sourceId, referenceTypeId, isInverse, includeSubtypes, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary cref="INodeTable.FindAsync(ExpandedNodeId,NodeId,bool,bool, CancellationToken)" />
+        public async Task<IList<INode>> FindAsync(
+            ExpandedNodeId sourceId,
+            NodeId referenceTypeId,
+            bool isInverse,
+            bool includeSubtypes,
+            CancellationToken cancellationToken)
+        {
             List<INode> hits = new List<INode>();
 
             // find the source.
-            Node source = Find(sourceId) as Node;
+            INode result = await FindAsync(sourceId, cancellationToken).ConfigureAwait(false);
+            Node source = result as Node;
 
             if (source == null)
             {
@@ -172,7 +211,7 @@ namespace Opc.Ua.Client
             
             foreach (IReference reference in references)
             {  
-                INode target = Find(reference.TargetId);
+                INode target = await FindAsync(reference.TargetId, cancellationToken).ConfigureAwait(false);
                         
                 if (target == null)
                 {
@@ -622,6 +661,14 @@ namespace Opc.Ua.Client
         /// </summary>
         public Node FetchNode(ExpandedNodeId nodeId)
         {
+            return FetchNodeAsync(nodeId, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Fetches a node from the server and updates the cache.
+        /// </summary>
+        public async Task<Node> FetchNodeAsync(ExpandedNodeId nodeId, CancellationToken cancellationToken)
+        {
             NodeId localId = ExpandedNodeId.ToNodeId(nodeId, m_session.NamespaceUris);
 
             if (localId == null)
@@ -630,12 +677,12 @@ namespace Opc.Ua.Client
             }
 
             // fetch node from server.
-            Node source = m_session.ReadNode(localId);
+            Node source = await m_session.ReadNodeAsync(localId, cancellationToken).ConfigureAwait(false);
 
             try
             {
                 // fetch references from server.
-                ReferenceDescriptionCollection references = m_session.FetchReferences(localId);
+                ReferenceDescriptionCollection references = await m_session.FetchReferencesAsync(localId, cancellationToken).ConfigureAwait(false);
 
                 foreach (ReferenceDescription reference in references)
                 {

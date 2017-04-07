@@ -38,6 +38,7 @@ using System.Reflection;
 
 using Opc.Ua.Client;
 using Opc.Ua.Client.Controls;
+using System.Threading;
 
 namespace Opc.Ua.Sample.Controls
 {
@@ -246,7 +247,7 @@ namespace Opc.Ua.Sample.Controls
                 ReferenceDescription encoding = m_encodings[EncodingCB.SelectedIndex];
 
                 // find the desctiption.
-                ReferenceDescription description = m_session.FindDataDescription((NodeId)encoding.NodeId);
+                ReferenceDescription description = await m_session.FindDataDescriptionAsync((NodeId)encoding.NodeId, CancellationToken.None);
 
                 if (description == null)
                 {
@@ -256,7 +257,7 @@ namespace Opc.Ua.Sample.Controls
                 TypeNameTB.Text = description.ToString();
 
                 // find the dictionary.
-                DataDictionary dictionary = await m_session.FindDataDictionary((NodeId)description.NodeId);
+                DataDictionary dictionary = await m_session.FindDataDictionaryAsync((NodeId)description.NodeId, CancellationToken.None);
 
                 if (dictionary == null)
                 {

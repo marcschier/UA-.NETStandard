@@ -37,8 +37,7 @@ namespace NetCoreConsoleClient
             }
             try
             {
-                Task t = ConsoleSampleClient(endpointURL, CancellationToken.None);
-                t.Wait();
+                ConsoleSampleClient(endpointURL, CancellationToken.None).GetAwaiter().GetResult(); 
             }
             catch (Exception e)
             {
@@ -132,15 +131,22 @@ namespace NetCoreConsoleClient
             var endpointConfiguration = EndpointConfiguration.Create(config);
             var endpoint = new ConfiguredEndpoint(selectedEndpoint.Server, endpointConfiguration);
             endpoint.Update(selectedEndpoint);
-            var session = await Session.Create(config, endpoint, true, ".Net Core OPC UA Console Client", 60000, new UserIdentity(new AnonymousIdentityToken()), null).ConfigureAwait(false);
+            var session = await Session.CreateAsync(
+                config, 
+                endpoint, 
+                true,
+                ".Net Core OPC UA Console Client",
+                60000, 
+                new UserIdentity(new AnonymousIdentityToken()), 
+                null,
+                cancellationToken).ConfigureAwait(false);
 
             Console.WriteLine("4 - Browse the OPC UA server namespace.");
+
             ReferenceDescriptionCollection references;
-            Byte[] continuationPoint;
+            references = await session.FetchReferencesAsync(ObjectIds.ObjectsFolder, cancellationToken);
 
-            references = session.FetchReferences(ObjectIds.ObjectsFolder);
-
-            session.Browse(
+            var result = await session.BrowseAsync(
                 null,
                 null,
                 ObjectIds.ObjectsFolder,
@@ -149,16 +155,16 @@ namespace NetCoreConsoleClient
                 ReferenceTypeIds.HierarchicalReferences,
                 true,
                 (uint)NodeClass.Variable | (uint)NodeClass.Object | (uint)NodeClass.Method,
-                out continuationPoint,
-                out references);
+                cancellationToken);
+
+            byte[] continuationPoint = result.Item2;
+            references = result.Item1;
 
             Console.WriteLine(" DisplayName, BrowseName, NodeClass");
             foreach (var rd in references)
             {
                 Console.WriteLine(" {0}, {1}, {2}", rd.DisplayName, rd.BrowseName, rd.NodeClass);
-                ReferenceDescriptionCollection nextRefs;
-                byte[] nextCp;
-                session.Browse(
+                result = await session.BrowseAsync(
                     null,
                     null,
                     ExpandedNodeId.ToNodeId(rd.NodeId, session.NamespaceUris),
@@ -167,8 +173,10 @@ namespace NetCoreConsoleClient
                     ReferenceTypeIds.HierarchicalReferences,
                     true,
                     (uint)NodeClass.Variable | (uint)NodeClass.Object | (uint)NodeClass.Method,
-                    out nextCp,
-                    out nextRefs);
+                    cancellationToken);
+
+                ReferenceDescriptionCollection nextRefs = result.Item1;
+                byte[] nextCp = result.Item2;
 
                 foreach (var nextRd in nextRefs)
                 {
@@ -191,7 +199,7 @@ namespace NetCoreConsoleClient
 
             Console.WriteLine("7 - Add the subscription to the session.");
             session.AddSubscription(subscription);
-            subscription.Create();
+            await subscription.CreateAsync(cancellationToken);
 
             Console.WriteLine("8 - Running...Press any key to exit...");
             Console.ReadKey(true);

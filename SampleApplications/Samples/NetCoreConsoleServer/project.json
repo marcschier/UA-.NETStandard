@@ -5,10 +5,6 @@
     },
 
   "dependencies": {
-    "Microsoft.NETCore.App": {
-      "type": "platform",
-      "version": "1.0.0"
-    },
     "Opc.Ua.Configuration": "1.0.0-*",
     "Opc.Ua.Core": "1.0.0-*",
     "Opc.Ua.Sample": "1.0.0-*",
@@ -16,6 +12,14 @@
   },
 
   "frameworks": {
-    "netcoreapp1.0": {}
+    "netcoreapp1.0": {
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "type": "platform",
+          "version": "1.0.0"
+        }
+      }
+    },
+    "net46": {}
   }
 }

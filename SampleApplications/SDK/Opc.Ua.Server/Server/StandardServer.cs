@@ -2131,7 +2131,16 @@ namespace Opc.Ua.Server
         /// Registers the server with the discovery server.
         /// </summary>
         /// <returns>Boolean value.</returns>
-        public async Task<bool> RegisterWithDiscoveryServer()
+        public bool RegisterWithDiscoveryServer()
+        {
+            return RegisterWithDiscoveryServerAsync(CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Registers the server with the discovery server.
+        /// </summary>
+        /// <returns>Boolean value.</returns>
+        public async Task<bool> RegisterWithDiscoveryServerAsync(CancellationToken cancellationToken)
         {
             ApplicationConfiguration configuration = string.IsNullOrEmpty(base.Configuration.SourceFilePath) ? base.Configuration : await ApplicationConfiguration.Load(new FileInfo(base.Configuration.SourceFilePath), ApplicationType.Server, null, false);
             CertificateValidationEventHandler registrationCertificateValidator = new CertificateValidationEventHandler(RegistrationValidator_CertificateValidation);
@@ -2161,7 +2170,7 @@ namespace Opc.Ua.Server
 
                                 if (updateRequired)
                                 {
-                                    endpoint.UpdateFromServer();
+                                    await endpoint.UpdateFromServerAsync(cancellationToken);
                                 }
 
                                 lock (m_registrationLock)
@@ -2188,16 +2197,18 @@ namespace Opc.Ua.Server
                                     StatusCodeCollection configurationResults = null;
                                     DiagnosticInfoCollection diagnosticInfos = null;
 
-                                    client.RegisterServer2(
+                                    RegisterServer2Response response = await client.RegisterServer2Async(
                                         requestHeader,
                                         m_registrationInfo,
                                         discoveryConfiguration,
-                                        out configurationResults,
-                                        out diagnosticInfos);
+                                        cancellationToken);
+
+                                    configurationResults = response.ConfigurationResults;
+                                    diagnosticInfos = response.DiagnosticInfos;
                                 }
                                 else
                                 {
-                                    client.RegisterServer(requestHeader, m_registrationInfo);
+                                    await client.RegisterServerAsync(requestHeader, m_registrationInfo, cancellationToken);
                                 }
 
                                 return true;
@@ -2214,7 +2225,7 @@ namespace Opc.Ua.Server
                                 {
                                     try
                                     {
-                                        client.Close();
+                                        await client.CloseAsync(CancellationToken.None);
                                         client = null;
                                     }
                                     catch (Exception e)
@@ -2283,7 +2294,7 @@ namespace Opc.Ua.Server
                     }
                 }
 
-                if (await RegisterWithDiscoveryServer())
+                if (await RegisterWithDiscoveryServerAsync(CancellationToken.None))
                 {
                     // schedule next registration.                        
                     lock (m_registrationLock)
@@ -2900,7 +2911,9 @@ namespace Opc.Ua.Server
                 {
                     // unregister from Discovery Server
                     m_registrationInfo.IsOnline = false;
-                    RegisterWithDiscoveryServer().Wait();
+
+                    // TODO: Consider async
+                    RegisterWithDiscoveryServer();
                 }
 
                 lock (m_lock)

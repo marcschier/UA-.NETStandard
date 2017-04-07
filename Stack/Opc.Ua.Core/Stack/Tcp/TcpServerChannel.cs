@@ -1203,5 +1203,5 @@ namespace Opc.Ua.Bindings
     /// <summary>
     /// Used to report an incoming request.
     /// </summary>
-    public delegate void TcpChannelRequestEventHandler(TcpServerChannel channel, uint requestId, IServiceRequest request);
+    public delegate Task TcpChannelRequestEventHandler(TcpServerChannel channel, uint requestId, IServiceRequest request);
 }

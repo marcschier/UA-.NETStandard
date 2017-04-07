@@ -182,7 +182,7 @@ namespace Opc.Ua
             {
                 lock (m_lock)
                 {
-
+                    // TODO: Make the whole validation async!
                     InternalValidate(chain).Wait();
 
                     // add to list of validated certificates.

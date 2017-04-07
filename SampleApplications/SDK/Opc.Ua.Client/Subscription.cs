@@ -764,17 +764,23 @@ namespace Opc.Ua.Client
         /// </summary>
         public void Create()
         {
+            CreateAsync(CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Creates a subscription on the server.
+        /// </summary>
+        public async Task CreateAsync(CancellationToken cancellationToken)
+        {
             VerifySubscriptionState(false);
 
             // create the subscription.
-            uint subscriptionId;
-            double revisedPublishingInterval;
             uint revisedKeepAliveCount = m_keepAliveCount;
             uint revisedLifetimeCounter = m_lifetimeCount;
 
             AdjustCounts(ref revisedKeepAliveCount, ref revisedLifetimeCounter);
 
-            m_session.CreateSubscription(
+            CreateSubscriptionResponse response = await m_session.CreateSubscriptionAsync(
                 null,
                 m_publishingInterval,
                 revisedLifetimeCounter,
@@ -782,16 +788,14 @@ namespace Opc.Ua.Client
                 m_maxNotificationsPerPublish,
                 m_publishingEnabled,
                 m_priority,
-                out subscriptionId,
-                out revisedPublishingInterval,
-                out revisedLifetimeCounter,
-                out revisedKeepAliveCount);
+                cancellationToken).ConfigureAwait(false);
+
             
             // update current state.
-            m_id                        = subscriptionId;
-            m_currentPublishingInterval = revisedPublishingInterval;
-            m_currentKeepAliveCount     = revisedKeepAliveCount;
-            m_currentLifetimeCount      = revisedLifetimeCounter;
+            m_id                        = response.SubscriptionId;
+            m_currentPublishingInterval = response.RevisedPublishingInterval;
+            m_currentKeepAliveCount     = response.RevisedMaxKeepAliveCount;
+            m_currentLifetimeCount      = response.RevisedLifetimeCount;
             m_currentPublishingEnabled  = m_publishingEnabled;
             m_currentPriority           = m_priority;
 
@@ -809,9 +813,9 @@ namespace Opc.Ua.Client
                 Utils.Trace("For subscription {0}, Lifetime count was revised from {1} to {2}", Id, m_lifetimeCount, revisedLifetimeCounter);
             }
 
-            if (m_publishingInterval != revisedPublishingInterval)
+            if (m_publishingInterval != m_currentPublishingInterval)
             {
-                Utils.Trace("For subscription {0}, Publishing interval was revised from {1} to {2}", Id, m_publishingInterval, revisedPublishingInterval);
+                Utils.Trace("For subscription {0}, Publishing interval was revised from {1} to {2}", Id, m_publishingInterval, m_currentPublishingInterval);
             }
 
             if (revisedLifetimeCounter < revisedKeepAliveCount * 3)
@@ -824,7 +828,7 @@ namespace Opc.Ua.Client
                 Utils.Trace("For subscription {0}, the priority was set to 0.", Id);
             }
 
-            CreateItems();
+            await CreateItemsAsync(cancellationToken).ConfigureAwait(false);
 
             ChangesCompleted();
         }
@@ -917,11 +921,19 @@ namespace Opc.Ua.Client
 
             Utils.Trace("{0}", buffer.ToString());
         }
-        
+
         /// <summary>
         /// Deletes a subscription on the server.
         /// </summary>
         public void Delete(bool silent)
+        {
+            DeleteAsync(silent, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Deletes a subscription on the server.
+        /// </summary>
+        public async Task DeleteAsync(bool silent, CancellationToken cancellationToken)
         {
             if (!silent)
             {
@@ -949,11 +961,16 @@ namespace Opc.Ua.Client
                 StatusCodeCollection results;
                 DiagnosticInfoCollection diagnosticInfos;
 
-                ResponseHeader responseHeader = m_session.DeleteSubscriptions(
+                ResponseHeader responseHeader;
+                
+                DeleteSubscriptionsResponse response = await m_session.DeleteSubscriptionsAsync(
                     null,
                     subscriptionIds,
-                    out results,
-                    out diagnosticInfos);
+                    cancellationToken).ConfigureAwait(false);
+
+                results = response.Results;
+                diagnosticInfos = response.DiagnosticInfos;
+                responseHeader = response.ResponseHeader;
 
                 // validate response.
                 ClientBase.ValidateResponse(results, subscriptionIds);
@@ -1005,16 +1022,23 @@ namespace Opc.Ua.Client
         /// </summary>
         public void Modify()
         {
+            ModifyAsync(CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Modifies a subscription on the server.
+        /// </summary>
+        public async Task ModifyAsync(CancellationToken cancellationToken)
+        {
             VerifySubscriptionState(true);
             
             // modify the subscription.
-            double revisedPublishingInterval;
             uint revisedKeepAliveCount = m_keepAliveCount;
             uint revisedLifetimeCounter = m_lifetimeCount;
             
             AdjustCounts(ref revisedKeepAliveCount, ref revisedLifetimeCounter);
 
-            m_session.ModifySubscription(
+            ModifySubscriptionResponse response = await m_session.ModifySubscriptionAsync(
                 null,
                 m_id,
                 m_publishingInterval,
@@ -1022,24 +1046,30 @@ namespace Opc.Ua.Client
                 revisedKeepAliveCount,
                 m_maxNotificationsPerPublish,
                 m_priority,
-                out revisedPublishingInterval,
-                out revisedLifetimeCounter,
-                out revisedKeepAliveCount);
-            
+                cancellationToken).ConfigureAwait(false);
+
             // update current state.
-            m_currentPublishingInterval = revisedPublishingInterval;
-            m_currentKeepAliveCount     = revisedKeepAliveCount;
-            m_currentLifetimeCount      = revisedLifetimeCounter;
+            m_currentPublishingInterval = response.RevisedPublishingInterval;
+            m_currentKeepAliveCount     = response.RevisedMaxKeepAliveCount;
+            m_currentLifetimeCount      = response.RevisedLifetimeCount;
             m_currentPriority           = m_priority;
             
             m_changeMask |= SubscriptionChangeMask.Modified;
             ChangesCompleted();
         }
-        
+
         /// <summary>
         /// Changes the publishing enabled state for the subscription.
         /// </summary>
         public void SetPublishingMode(bool enabled)
+        {
+            SetPublishingModeAsync(enabled, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Changes the publishing enabled state for the subscription.
+        /// </summary>
+        public async Task SetPublishingModeAsync(bool enabled, CancellationToken cancellationToken)
         {
             VerifySubscriptionState(true);
             
@@ -1048,13 +1078,17 @@ namespace Opc.Ua.Client
 
             StatusCodeCollection results;
             DiagnosticInfoCollection diagnosticInfos;
+            ResponseHeader responseHeader;
 
-            ResponseHeader responseHeader = m_session.SetPublishingMode(
+            SetPublishingModeResponse response = await m_session.SetPublishingModeAsync(
                 null,
                 enabled,
                 new uint[] { m_id },
-                out results,
-                out diagnosticInfos);
+                cancellationToken).ConfigureAwait(false);
+
+            results = response.Results;
+            diagnosticInfos = response.DiagnosticInfos;
+            responseHeader = response.ResponseHeader;
 
             // validate response.
             ClientBase.ValidateResponse(results, subscriptionIds);
@@ -1077,17 +1111,23 @@ namespace Opc.Ua.Client
         /// </summary>
         public NotificationMessage Republish(uint sequenceNumber)
         {
+            return RepublishAsync(sequenceNumber, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Republishes the specified notification message.
+        /// </summary>
+        public async Task<NotificationMessage> RepublishAsync(uint sequenceNumber, CancellationToken cancellationToken)
+        {
             VerifySubscriptionState(true);
             
-            NotificationMessage message;
-
-            m_session.Republish(
+            RepublishResponse response = await m_session.RepublishAsync(
                 null,
                 m_id,
                 sequenceNumber,
-                out message);
+                cancellationToken).ConfigureAwait(false);
 
-            return message;
+            return response.NotificationMessage;
         }
 
         /// <summary>
@@ -1095,15 +1135,31 @@ namespace Opc.Ua.Client
         /// </summary>
         public void ApplyChanges()
         {
-            DeleteItems();
-            ModifyItems();
-            CreateItems();
+            ApplyChangesAsync(CancellationToken.None).GetAwaiter().GetResult();
         }
-        
+
+        /// <summary>
+        /// Applies any changes to the subscription items.
+        /// </summary>
+        public async Task ApplyChangesAsync(CancellationToken cancellationToken)
+        {
+            await DeleteItemsAsync(cancellationToken).ConfigureAwait(false);
+            await ModifyItemsAsync(cancellationToken).ConfigureAwait(false);
+            await CreateItemsAsync(cancellationToken).ConfigureAwait(false);
+        }
+
         /// <summary>
         /// Resolves all relative paths to nodes on the server.
         /// </summary>
         public void ResolveItemNodeIds()
+        {
+            ResolveItemNodeIdsAsync(CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Resolves all relative paths to nodes on the server.
+        /// </summary>
+        public async Task ResolveItemNodeIdsAsync(CancellationToken cancellationToken)
         {
             VerifySubscriptionState(true);
 
@@ -1153,12 +1209,16 @@ namespace Opc.Ua.Client
             // translate browse paths.
             BrowsePathResultCollection results;
             DiagnosticInfoCollection diagnosticInfos;
+            ResponseHeader responseHeader;
 
-            ResponseHeader responseHeader = m_session.TranslateBrowsePathsToNodeIds(
+            TranslateBrowsePathsToNodeIdsResponse response = await m_session.TranslateBrowsePathsToNodeIdsAsync(
                 null,
                 browsePaths,
-                out results,
-                out diagnosticInfos);
+                cancellationToken).ConfigureAwait(false);
+
+            responseHeader = response.ResponseHeader;
+            results = response.Results;
+            diagnosticInfos = response.DiagnosticInfos;
 
             ClientBase.ValidateResponse(results, browsePaths);
             ClientBase.ValidateDiagnosticInfos(diagnosticInfos, browsePaths);
@@ -1177,9 +1237,17 @@ namespace Opc.Ua.Client
         /// </summary>
         public IList<MonitoredItem> CreateItems()
         {
+            return CreateItemsAsync(CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Creates all items that have not already been created.
+        /// </summary>
+        public async Task<IList<MonitoredItem>> CreateItemsAsync(CancellationToken cancellationToken)
+        {
             VerifySubscriptionState(true);                       
             
-            ResolveItemNodeIds();
+            await ResolveItemNodeIdsAsync(cancellationToken).ConfigureAwait(false);
 
             MonitoredItemCreateRequestCollection requestItems = new MonitoredItemCreateRequestCollection();
             List<MonitoredItem> itemsToCreate = new List<MonitoredItem>();
@@ -1228,13 +1296,18 @@ namespace Opc.Ua.Client
             MonitoredItemCreateResultCollection results;
             DiagnosticInfoCollection diagnosticInfos;
 
-            ResponseHeader responseHeader = m_session.CreateMonitoredItems(
+            ResponseHeader responseHeader;
+
+            CreateMonitoredItemsResponse response = await m_session.CreateMonitoredItemsAsync(
                 null,
                 m_id,
                 m_timestampsToReturn,
                 requestItems,
-                out results,
-                out diagnosticInfos);
+                cancellationToken).ConfigureAwait(false);
+
+            responseHeader = response.ResponseHeader;
+            results = response.Results;
+            diagnosticInfos = response.DiagnosticInfos;
 
             ClientBase.ValidateResponse(results, itemsToCreate);
             ClientBase.ValidateDiagnosticInfos(diagnosticInfos, itemsToCreate);
@@ -1251,11 +1324,19 @@ namespace Opc.Ua.Client
             // return the list of items affected by the change.
             return itemsToCreate;
         }
-        
+
         /// <summary>
         /// Modies all items that have been changed.
         /// </summary>
         public IList<MonitoredItem> ModifyItems()
+        {
+            return ModifyItemsAsync(CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Modies all items that have been changed.
+        /// </summary>
+        public async Task<IList<MonitoredItem>> ModifyItemsAsync(CancellationToken cancellationToken)
         {
             VerifySubscriptionState(true);                       
 
@@ -1300,13 +1381,18 @@ namespace Opc.Ua.Client
             MonitoredItemModifyResultCollection results;
             DiagnosticInfoCollection diagnosticInfos;
 
-            ResponseHeader responseHeader = m_session.ModifyMonitoredItems(
+            ResponseHeader responseHeader;
+
+            ModifyMonitoredItemsResponse response = await m_session.ModifyMonitoredItemsAsync(
                 null,
                 m_id,
                 m_timestampsToReturn,
                 requestItems,
-                out results,
-                out diagnosticInfos);
+                cancellationToken).ConfigureAwait(false);
+
+            responseHeader = response.ResponseHeader;
+            results = response.Results;
+            diagnosticInfos = response.DiagnosticInfos;
 
             ClientBase.ValidateResponse(results, itemsToModify);
             ClientBase.ValidateDiagnosticInfos(diagnosticInfos, itemsToModify);
@@ -1323,11 +1409,19 @@ namespace Opc.Ua.Client
             // return the list of items affected by the change.
             return itemsToModify;
         }
-        
+
         /// <summary>
         /// Deletes all items that have been marked for deletion.
         /// </summary>
         public IList<MonitoredItem> DeleteItems()
+        {
+            return DeleteItemsAsync(CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Deletes all items that have been marked for deletion.
+        /// </summary>
+        public async Task<IList<MonitoredItem>> DeleteItemsAsync(CancellationToken cancellationToken)
         {
             VerifySubscriptionState(true);
 
@@ -1349,12 +1443,17 @@ namespace Opc.Ua.Client
             StatusCodeCollection results;
             DiagnosticInfoCollection diagnosticInfos;
 
-            ResponseHeader responseHeader = m_session.DeleteMonitoredItems(
+            ResponseHeader responseHeader;
+
+            DeleteMonitoredItemsResponse response = await m_session.DeleteMonitoredItemsAsync(
                 null,
                 m_id,
                 monitoredItemIds,
-                out results,
-                out diagnosticInfos);
+                cancellationToken).ConfigureAwait(false);
+
+            responseHeader = response.ResponseHeader;
+            results = response.Results;
+            diagnosticInfos = response.DiagnosticInfos;
 
             ClientBase.ValidateResponse(results, monitoredItemIds);
             ClientBase.ValidateDiagnosticInfos(diagnosticInfos, monitoredItemIds);
@@ -1371,13 +1470,24 @@ namespace Opc.Ua.Client
             // return the list of items affected by the change.
             return itemsToDelete;
         }
-        
+
         /// <summary>
         /// Deletes all items that have been marked for deletion.
         /// </summary>
         public List<ServiceResult> SetMonitoringMode(
-            MonitoringMode       monitoringMode, 
+            MonitoringMode monitoringMode,
             IList<MonitoredItem> monitoredItems)
+        {
+            return SetMonitoringModeAsync(monitoringMode, monitoredItems, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Deletes all items that have been marked for deletion.
+        /// </summary>
+        public async Task<List<ServiceResult>> SetMonitoringModeAsync(
+            MonitoringMode monitoringMode,
+            IList<MonitoredItem> monitoredItems,
+            CancellationToken cancellationToken)
         {
             if (monitoredItems == null) throw new ArgumentNullException("monitoredItems");
 
@@ -1399,13 +1509,18 @@ namespace Opc.Ua.Client
             StatusCodeCollection results;
             DiagnosticInfoCollection diagnosticInfos;
 
-            ResponseHeader responseHeader = m_session.SetMonitoringMode(
+            ResponseHeader responseHeader;
+
+            SetMonitoringModeResponse response = await m_session.SetMonitoringModeAsync(
                 null,
                 m_id,
                 monitoringMode,
                 monitoredItemIds,
-                out results,
-                out diagnosticInfos);
+                cancellationToken).ConfigureAwait(false);
+
+            responseHeader = response.ResponseHeader;
+            results = response.Results;
+            diagnosticInfos = response.DiagnosticInfos;
 
             ClientBase.ValidateResponse(results, monitoredItemIds);
             ClientBase.ValidateDiagnosticInfos(diagnosticInfos, monitoredItemIds);
@@ -1571,11 +1686,8 @@ namespace Opc.Ua.Client
                 }
 
                 // process messages.
-                Task.Run(() =>
-                {
-                    Interlocked.Increment(ref m_outstandingMessageWorkers);
-                    OnMessageRecieved(null);
-                });
+                Interlocked.Increment(ref m_outstandingMessageWorkers);
+                OnMessageReceivedAsync(null);
             }
 
             // send notification that publishing has recovered.
@@ -1595,7 +1707,7 @@ namespace Opc.Ua.Client
         /// <summary>
         /// Processes the incoming messages.
         /// </summary>
-        private void OnMessageRecieved(object state)
+        private async void OnMessageReceivedAsync(object state)
         {
             try
             {
@@ -1739,8 +1851,9 @@ namespace Opc.Ua.Client
                 if (messagesToRepublish != null && session != null && subscriptionId != 0)
                 {
                     for (int ii = 0; ii < messagesToRepublish.Count; ii++)
-                    {     
-                        if (!session.Republish(subscriptionId, messagesToRepublish[ii].SequenceNumber))
+                    {
+                        bool success = await session.RepublishAsync(subscriptionId, messagesToRepublish[ii].SequenceNumber, CancellationToken.None).ConfigureAwait(false);
+                        if (!success)
                         {
                              messagesToRepublish[ii].Republished = false;
                         }
@@ -1897,12 +2010,21 @@ namespace Opc.Ua.Client
         /// </summary>
         public void ConditionRefresh()
         {
+            ConditionRefreshAsync(CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Tells the server to refresh all conditions being monitored by the subscription.
+        /// </summary>
+        public async Task ConditionRefreshAsync(CancellationToken cancellationToken)
+        {
             VerifySubscriptionState(true);
 
-            m_session.Call(
+            await m_session.CallAsync(
                 ObjectTypeIds.ConditionType,
                 MethodIds.ConditionType_ConditionRefresh,
-                m_id);            
+                m_id,
+                cancellationToken).ConfigureAwait(false);            
         }
         #endregion
         

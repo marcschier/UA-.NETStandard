@@ -16,6 +16,7 @@ using System.Threading;
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Sockets;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace Opc.Ua.Bindings
 {
@@ -332,7 +333,7 @@ namespace Opc.Ua.Bindings
 
                         if (m_callback != null)
                         {
-                            channel.SetRequestReceivedCallback(new TcpChannelRequestEventHandler(OnRequestReceived));
+                            channel.SetRequestReceivedCallback(new TcpChannelRequestEventHandler(OnRequestReceivedAsync));
                         }
                     }
                     catch (Exception ex)
@@ -366,18 +367,18 @@ namespace Opc.Ua.Bindings
         /// <summary>
         /// Handles requests arriving from a channel.
         /// </summary>
-        private void OnRequestReceived(TcpServerChannel channel, uint requestId, IServiceRequest request)
+        private async Task OnRequestReceivedAsync(TcpServerChannel channel, uint requestId, IServiceRequest request)
         {
             try
             {
                 if (m_callback != null)
                 {
-                    IAsyncResult result = m_callback.BeginProcessRequest(
-                        channel.GlobalChannelId,
+                    IServiceResponse response = await m_callback.ProcessRequestAsync(channel.GlobalChannelId,
                         channel.EndpointDescription,
-                        request,
-                        OnProcessRequestComplete,
-                        new object[] { channel, requestId, request });
+                        request).ConfigureAwait(false);
+
+                    // TODO: Async all the way...
+                    channel.SendResponse(requestId, response);
                 }
             }
             catch (Exception e)
@@ -386,24 +387,6 @@ namespace Opc.Ua.Bindings
             }
         }
 
-        private void OnProcessRequestComplete(IAsyncResult result)
-        {
-            try
-            {
-                object[] args = (object[])result.AsyncState;
-
-                if (m_callback != null)
-                {
-                    TcpServerChannel channel = (TcpServerChannel)args[0];
-                    IServiceResponse response = m_callback.EndProcessRequest(result);
-                    channel.SendResponse((uint)args[1], response);
-                }
-            }
-            catch (Exception e)
-            {
-                Utils.Trace(e, "TCPLISTENER - Unexpected error sending result.");
-            }
-        }
         #endregion
 
         #region Private Fields

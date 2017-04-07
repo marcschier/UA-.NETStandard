@@ -61,14 +61,13 @@ namespace Opc.Ua.Bindings
         }
         #endregion
 
-        #region Properties
+        #region ITransportChannel Members
         /// <summary>
         /// A masking indicating which features are implemented.
         /// </summary>
         public TransportChannelFeatures SupportedFeatures
         {
-            get { return TransportChannelFeatures.Open | TransportChannelFeatures.BeginOpen | 
-                    TransportChannelFeatures.Reconnect | TransportChannelFeatures.BeginSendRequest; }
+            get { return TransportChannelFeatures.Open | TransportChannelFeatures.BeginOpen | TransportChannelFeatures.Reconnect | TransportChannelFeatures.BeginSendRequest; }
         }
 
         /// <summary>
@@ -104,8 +103,6 @@ namespace Opc.Ua.Bindings
             set { m_operationTimeout = value; }
         }
 
-        #endregion Properties
-
         /// <summary>
         /// Initializes a secure channel with the endpoint identified by the URL.
         /// </summary>
@@ -118,6 +115,7 @@ namespace Opc.Ua.Bindings
         {
             SaveSettings(url, settings);
         }
+        #endregion
 
         #region Open
 
@@ -203,7 +201,7 @@ namespace Opc.Ua.Bindings
         /// </remarks>
         public void Reconnect()
         {
-            ReconnectAsync(CancellationToken.None).Wait();
+            ReconnectAsync(CancellationToken.None).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -278,7 +276,7 @@ namespace Opc.Ua.Bindings
         /// <exception cref="ServiceResultException">Thrown if any communication error occurs.</exception>
         public void Close()
         {
-            CloseAsync(CancellationToken.None).Wait();
+            CloseAsync(CancellationToken.None).GetAwaiter().GetResult();
         }
 
         /// <summary>

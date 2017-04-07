@@ -12,6 +12,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Opc.Ua
 {
@@ -37,7 +39,7 @@ namespace Opc.Ua
         /// </summary>
         /// <value>The type tree.</value>
         ITypeTable TypeTree { get; }
-        
+
         /// <summary>
         /// Returns true if the node is in the table.
         /// </summary>
@@ -51,7 +53,7 @@ namespace Opc.Ua
         /// <param name="nodeId">The node identifier.</param>
         /// <returns>Returns null if the node does not exist.</returns>
         INode Find(ExpandedNodeId nodeId);
-        
+
         /// <summary>
         /// Follows the reference from the source and returns the first target with the specified browse name.
         /// </summary>
@@ -64,11 +66,11 @@ namespace Opc.Ua
         /// Returns null if the source does not exist or if there is no matching target.
         /// </returns>
         INode Find(
-            ExpandedNodeId sourceId, 
-            NodeId         referenceTypeId, 
-            bool           isInverse, 
-            bool           includeSubtypes, 
-            QualifiedName  browseName);
+            ExpandedNodeId sourceId,
+            NodeId referenceTypeId,
+            bool isInverse,
+            bool includeSubtypes,
+            QualifiedName browseName);
 
         /// <summary>
         /// Follows the reference from the source and returns all target nodes.
@@ -81,10 +83,60 @@ namespace Opc.Ua
         /// Returns an empty list if the source does not exist or if there are no matching targets.
         /// </returns>
         IList<INode> Find(
-            ExpandedNodeId sourceId, 
-            NodeId         referenceTypeId, 
-            bool           isInverse, 
-            bool           includeSubtypes);
+            ExpandedNodeId sourceId,
+            NodeId referenceTypeId,
+            bool isInverse,
+            bool includeSubtypes);
+
+        /// <summary>
+        /// Returns true if the node is in the table.
+        /// </summary>
+        /// <param name="nodeId">The node identifier.</param>
+        /// <returns>True if the node is in the table.</returns>
+        Task<bool> ExistsAsync(ExpandedNodeId nodeId, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Finds a node in the node set.
+        /// </summary>
+        /// <param name="nodeId">The node identifier.</param>
+        /// <returns>Returns null if the node does not exist.</returns>
+        Task<INode> FindAsync(ExpandedNodeId nodeId, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Follows the reference from the source and returns the first target with the specified browse name.
+        /// </summary>
+        /// <param name="sourceId">The source identifier.</param>
+        /// <param name="referenceTypeId">The reference type identifier.</param>
+        /// <param name="isInverse">if set to <c>true</c> this is inverse reference.</param>
+        /// <param name="includeSubtypes">if set to <c>true</c> subtypes are included.</param>
+        /// <param name="browseName">Name of the browse.</param>
+        /// <returns>
+        /// Returns null if the source does not exist or if there is no matching target.
+        /// </returns>
+        Task<INode> FindAsync(
+            ExpandedNodeId    sourceId, 
+            NodeId            referenceTypeId, 
+            bool              isInverse, 
+            bool              includeSubtypes, 
+            QualifiedName     browseName,
+            CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Follows the reference from the source and returns all target nodes.
+        /// </summary>
+        /// <param name="sourceId">The source identifier.</param>
+        /// <param name="referenceTypeId">The reference type identifier.</param>
+        /// <param name="isInverse">if set to <c>true</c> this is inverse reference.</param>
+        /// <param name="includeSubtypes">if set to <c>true</c> subtypes are included.</param>
+        /// <returns>
+        /// Returns an empty list if the source does not exist or if there are no matching targets.
+        /// </returns>
+        Task<IList<INode>> FindAsync(
+            ExpandedNodeId    sourceId, 
+            NodeId            referenceTypeId, 
+            bool              isInverse, 
+            bool              includeSubtypes, 
+            CancellationToken cancellationToken);
     }
     
     /// <summary>
@@ -139,6 +191,71 @@ namespace Opc.Ua
         public ITypeTable TypeTree 
         { 
             get { return m_typeTree; } 
+        }
+
+        /// <summary>
+        /// Returns true if the node is in the table.
+        /// </summary>
+        /// <param name="nodeId">The node identifier.</param>
+        /// <returns></returns>
+        public Task<bool> ExistsAsync(
+            ExpandedNodeId nodeId,
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Exists(nodeId));
+        }
+
+        /// <summary>
+        /// Finds a node in the node set.
+        /// </summary>
+        /// <param name="nodeId">The node identifier.</param>
+        /// <returns>Returns null if the node does not exist.</returns>
+        public Task<INode> FindAsync(
+            ExpandedNodeId nodeId,
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Find(nodeId));
+        }
+
+        /// <summary>
+        /// Follows the reference from the source and returns the first target with the specified browse name.
+        /// </summary>
+        /// <param name="sourceId"></param>
+        /// <param name="referenceTypeId"></param>
+        /// <param name="isInverse"></param>
+        /// <param name="includeSubtypes"></param>
+        /// <param name="browseName"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public Task<INode> FindAsync(
+            ExpandedNodeId sourceId,
+            NodeId referenceTypeId,
+            bool isInverse,
+            bool includeSubtypes,
+            QualifiedName browseName,
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Find(sourceId, referenceTypeId, isInverse, includeSubtypes, browseName));
+        }
+
+        /// <summary>
+        /// Follows the reference from the source and returns the first target with the specified browse name.
+        /// </summary>
+        /// <param name="sourceId"></param>
+        /// <param name="referenceTypeId"></param>
+        /// <param name="isInverse"></param>
+        /// <param name="includeSubtypes"></param>
+        /// <param name="browseName"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public Task<IList<INode>> FindAsync(
+            ExpandedNodeId sourceId,
+            NodeId referenceTypeId,
+            bool isInverse,
+            bool includeSubtypes,
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Find(sourceId, referenceTypeId, isInverse, includeSubtypes));
         }
 
         /// <summary>
@@ -397,7 +514,7 @@ namespace Opc.Ua
                     // see if a remote node needs to be created.
                     if (targetId.ServerIndex != 0)
                     {
-                        RemoteNode remoteNode = Find(targetId) as RemoteNode;
+                        RemoteNode remoteNode = InternalFind(targetId) as RemoteNode;
                         
                         if (remoteNode == null)
                         {
@@ -429,7 +546,7 @@ namespace Opc.Ua
                 // add reverse references.
                 foreach (IReference reference in node.ReferenceTable)
                 {
-                    Node targetNode = Find(reference.TargetId) as Node;
+                    Node targetNode = InternalFind(reference.TargetId) as Node;
 
                     if (targetNode == null)
                     {
@@ -492,7 +609,7 @@ namespace Opc.Ua
         public INode Import(ReferenceDescription reference)
         {
             // find any existing node.
-            INode target = Find(reference.NodeId);
+            INode target = InternalFind(reference.NodeId);
                             
             // create a new object.
             if (target == null)
@@ -558,7 +675,7 @@ namespace Opc.Ua
         public void Attach(ILocalNode node)
         {
             // remove duplicates.
-            if (Exists(node.NodeId))
+            if (InternalFind(node.NodeId) != null)
             {
                 Remove(node.NodeId);
             }
@@ -582,7 +699,7 @@ namespace Opc.Ua
                     // see if a remote node needs to be created.
                     if (reference.TargetId.ServerIndex != 0)
                     {
-                        RemoteNode remoteNode = Find(reference.TargetId) as RemoteNode;
+                        RemoteNode remoteNode = InternalFind(reference.TargetId) as RemoteNode;
                         
                         if (remoteNode == null)
                         {
@@ -604,7 +721,7 @@ namespace Opc.Ua
             // add reverse references.
             foreach (IReference reference in node.References)
             {
-                ILocalNode targetNode = Find(reference.TargetId) as ILocalNode;
+                ILocalNode targetNode = InternalFind(reference.TargetId) as ILocalNode;
 
                 if (targetNode == null)
                 {
@@ -633,7 +750,7 @@ namespace Opc.Ua
         public bool Remove(ExpandedNodeId nodeId)
         {
             // find the target.
-            INode source = Find(nodeId);
+            INode source = InternalFind(nodeId);
 
             if (source == null)
             {

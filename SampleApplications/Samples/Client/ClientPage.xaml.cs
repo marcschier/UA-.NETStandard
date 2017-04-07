@@ -488,7 +488,7 @@ namespace Opc.Ua.SampleClient
 
                 if (server != null)
                 {
-                    await server.RegisterWithDiscoveryServer();
+                    await server.RegisterWithDiscoveryServerAsync(CancellationToken.None);
                 }
             }
             catch (Exception exception)

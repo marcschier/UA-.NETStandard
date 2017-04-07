@@ -182,7 +182,10 @@ namespace Opc.Ua.Bindings
         {
             Task.Run(() =>
             {
-                m_StateChanged?.Invoke(this, state, reason);
+                if (m_StateChanged != null)
+                {
+                    m_StateChanged(this, state, reason);
+                }
             });
         }
 

@@ -271,15 +271,7 @@ namespace Opc.Ua
         /// </summary>
         public virtual StatusCode Close()
         {
-            if (m_channel != null)
-            {
-                m_channel.Close();
-                m_channel.Dispose();
-                m_channel = null;
-            }
-
-            m_authenticationToken = null;
-            return StatusCodes.Good;
+            return CloseAsync(CancellationToken.None).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -289,7 +281,7 @@ namespace Opc.Ua
         {
             if (m_channel != null)
             {
-                await m_channel.CloseAsync(cancellationToken);
+                await m_channel.CloseAsync(cancellationToken).ConfigureAwait(false);
                 m_channel.Dispose();
                 m_channel = null;
             }

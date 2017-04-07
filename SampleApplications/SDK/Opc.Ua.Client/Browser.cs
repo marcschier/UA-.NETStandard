@@ -32,6 +32,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.ServiceModel;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace Opc.Ua.Client
 {
@@ -242,12 +244,20 @@ namespace Opc.Ua.Client
             }
         }
         #endregion
-        
+
         #region Public Methods
         /// <summary>
         /// Browses the specified node.
         /// </summary>
         public ReferenceDescriptionCollection Browse(NodeId nodeId)
+        {
+            return BrowseAsync(nodeId, CancellationToken.None).Result;
+        }
+
+        /// <summary>
+        /// Browses the specified node asynchronously.
+        /// </summary>
+        public async Task<ReferenceDescriptionCollection> BrowseAsync(NodeId nodeId, CancellationToken cancellationToken)
         {
             if (m_session == null)
             {
@@ -274,14 +284,18 @@ namespace Opc.Ua.Client
                 // make the call to the server.
                 BrowseResultCollection results;
                 DiagnosticInfoCollection diagnosticInfos;
+                ResponseHeader responseHeader;
 
-                ResponseHeader responseHeader = m_session.Browse(
+                var response = await m_session.BrowseAsync(
                     null,
                     m_view,
                     m_maxReferencesReturned,
                     nodesToBrowse,
-                    out results,
-                    out diagnosticInfos);
+                    cancellationToken).ConfigureAwait(false);
+
+                results = response.Results;
+                diagnosticInfos = response.DiagnosticInfos;
+                responseHeader = response.ResponseHeader;
 
                 // ensure that the server returned valid results.
                 Session.ValidateResponse(results, nodesToBrowse);
@@ -300,8 +314,6 @@ namespace Opc.Ua.Client
                 // process any continuation point.
                 while (continuationPoint != null)
                 {
-                    ReferenceDescriptionCollection additionalReferences;
-
                     if (!m_continueUntilDone && m_MoreReferences != null)
                     {
                         BrowserEventArgs args = new BrowserEventArgs(references);
@@ -310,23 +322,27 @@ namespace Opc.Ua.Client
                         // cancel browser and return the references fetched so far.
                         if (args.Cancel)
                         {
-                            BrowseNext(ref continuationPoint, true);
+                            continuationPoint = await BrowseNextAsync(_ => { }, continuationPoint, true, cancellationToken).ConfigureAwait(false);
                             return references;
                         }
 
                         m_continueUntilDone = args.ContinueUntilDone;
                     }
-                    
-                    additionalReferences = BrowseNext(ref continuationPoint, false);
-                    if (additionalReferences != null && additionalReferences.Count > 0)
-                    {
-                        references.AddRange(additionalReferences);
-                    }
-                    else
-                    {
-                        Utils.Trace("Continuation point exists, but the browse results are null/empty.");
-                        break;
-                    }
+
+                    continuationPoint = await BrowseNextAsync(
+                        r =>
+                        {
+                            if (r != null && r.Count > 0)
+                            {
+                                references.AddRange(r);
+                            }
+                            else
+                            {
+                                throw ServiceResultException.Create(StatusCodes.BadContinuationPointInvalid,
+                                    "Continuation point exists, but the browse results are null/empty.");
+                            }
+                        }, 
+                    continuationPoint, false, cancellationToken).ConfigureAwait(false);
                  }
 
                 // return the results.
@@ -354,10 +370,16 @@ namespace Opc.Ua.Client
         /// <summary>
         /// Fetches the next batch of references.
         /// </summary>
-        /// <param name="continuationPoint">The continuation point.</param>
+        /// <param name="handler"></param>
+        /// <param name="continuationPoint">The continuation point ref.</param>
         /// <param name="cancel">if set to <c>true</c> the browse operation is cancelled.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The next batch of references</returns>
-        private ReferenceDescriptionCollection BrowseNext(ref byte[] continuationPoint, bool cancel)
+        private async Task<byte[]> BrowseNextAsync(
+            Action<ReferenceDescriptionCollection> handler, 
+            byte[] continuationPoint, 
+            bool cancel, 
+            CancellationToken cancellationToken)
         {
             ByteStringCollection continuationPoints = new ByteStringCollection();
             continuationPoints.Add(continuationPoint);
@@ -365,13 +387,17 @@ namespace Opc.Ua.Client
             // make the call to the server.
             BrowseResultCollection results;
             DiagnosticInfoCollection diagnosticInfos;
-
-            ResponseHeader responseHeader = m_session.BrowseNext(
+            ResponseHeader responseHeader;
+            
+            var response = await m_session.BrowseNextAsync(
                 null,
                 cancel,
                 continuationPoints,
-                out results,
-                out diagnosticInfos);
+                cancellationToken).ConfigureAwait(false);
+
+            results = response.Results;
+            diagnosticInfos = response.DiagnosticInfos;
+            responseHeader = response.ResponseHeader;
 
             // ensure that the server returned valid results.
             Session.ValidateResponse(results, continuationPoints);
@@ -384,10 +410,12 @@ namespace Opc.Ua.Client
             }
 
             // update continuation point.
-            continuationPoint = results[0].ContinuationPoint;           
-            
+            continuationPoint = results[0].ContinuationPoint;
+
             // return references.
-            return results[0].References;
+            handler(results[0].References);
+
+            return continuationPoint;
         }
         #endregion
         

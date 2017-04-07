@@ -343,7 +343,6 @@ namespace Opc.Ua
     public interface ISessionEndpoint : IEndpointBase
     {
         #if (!OPCUA_EXCLUDE_CreateSession)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the CreateSession service.
         /// </summary>
@@ -356,7 +355,7 @@ namespace Opc.Ua
         /// </summary>
         CreateSessionResponseMessage EndCreateSession(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the CreateSession service.
         /// </summary>
@@ -367,7 +366,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_ActivateSession)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the ActivateSession service.
         /// </summary>
@@ -380,7 +378,7 @@ namespace Opc.Ua
         /// </summary>
         ActivateSessionResponseMessage EndActivateSession(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the ActivateSession service.
         /// </summary>
@@ -391,7 +389,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_CloseSession)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the CloseSession service.
         /// </summary>
@@ -404,7 +401,7 @@ namespace Opc.Ua
         /// </summary>
         CloseSessionResponseMessage EndCloseSession(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the CloseSession service.
         /// </summary>
@@ -415,7 +412,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_Cancel)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the Cancel service.
         /// </summary>
@@ -428,7 +424,7 @@ namespace Opc.Ua
         /// </summary>
         CancelResponseMessage EndCancel(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the Cancel service.
         /// </summary>
@@ -439,7 +435,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_AddNodes)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the AddNodes service.
         /// </summary>
@@ -452,7 +447,7 @@ namespace Opc.Ua
         /// </summary>
         AddNodesResponseMessage EndAddNodes(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the AddNodes service.
         /// </summary>
@@ -463,7 +458,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_AddReferences)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the AddReferences service.
         /// </summary>
@@ -476,7 +470,7 @@ namespace Opc.Ua
         /// </summary>
         AddReferencesResponseMessage EndAddReferences(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the AddReferences service.
         /// </summary>
@@ -487,7 +481,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_DeleteNodes)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the DeleteNodes service.
         /// </summary>
@@ -500,7 +493,7 @@ namespace Opc.Ua
         /// </summary>
         DeleteNodesResponseMessage EndDeleteNodes(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the DeleteNodes service.
         /// </summary>
@@ -511,7 +504,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_DeleteReferences)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the DeleteReferences service.
         /// </summary>
@@ -524,7 +516,7 @@ namespace Opc.Ua
         /// </summary>
         DeleteReferencesResponseMessage EndDeleteReferences(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the DeleteReferences service.
         /// </summary>
@@ -535,7 +527,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_Browse)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the Browse service.
         /// </summary>
@@ -548,7 +539,7 @@ namespace Opc.Ua
         /// </summary>
         BrowseResponseMessage EndBrowse(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the Browse service.
         /// </summary>
@@ -559,7 +550,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_BrowseNext)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the BrowseNext service.
         /// </summary>
@@ -572,7 +562,7 @@ namespace Opc.Ua
         /// </summary>
         BrowseNextResponseMessage EndBrowseNext(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the BrowseNext service.
         /// </summary>
@@ -583,7 +573,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_TranslateBrowsePathsToNodeIds)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the TranslateBrowsePathsToNodeIds service.
         /// </summary>
@@ -596,7 +585,7 @@ namespace Opc.Ua
         /// </summary>
         TranslateBrowsePathsToNodeIdsResponseMessage EndTranslateBrowsePathsToNodeIds(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the TranslateBrowsePathsToNodeIds service.
         /// </summary>
@@ -607,7 +596,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_RegisterNodes)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the RegisterNodes service.
         /// </summary>
@@ -620,7 +608,7 @@ namespace Opc.Ua
         /// </summary>
         RegisterNodesResponseMessage EndRegisterNodes(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the RegisterNodes service.
         /// </summary>
@@ -631,7 +619,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_UnregisterNodes)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the UnregisterNodes service.
         /// </summary>
@@ -644,7 +631,7 @@ namespace Opc.Ua
         /// </summary>
         UnregisterNodesResponseMessage EndUnregisterNodes(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the UnregisterNodes service.
         /// </summary>
@@ -655,7 +642,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_QueryFirst)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the QueryFirst service.
         /// </summary>
@@ -668,7 +654,7 @@ namespace Opc.Ua
         /// </summary>
         QueryFirstResponseMessage EndQueryFirst(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the QueryFirst service.
         /// </summary>
@@ -679,7 +665,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_QueryNext)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the QueryNext service.
         /// </summary>
@@ -692,7 +677,7 @@ namespace Opc.Ua
         /// </summary>
         QueryNextResponseMessage EndQueryNext(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the QueryNext service.
         /// </summary>
@@ -703,7 +688,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_Read)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the Read service.
         /// </summary>
@@ -716,7 +700,7 @@ namespace Opc.Ua
         /// </summary>
         ReadResponseMessage EndRead(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the Read service.
         /// </summary>
@@ -727,7 +711,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_HistoryRead)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the HistoryRead service.
         /// </summary>
@@ -740,7 +723,7 @@ namespace Opc.Ua
         /// </summary>
         HistoryReadResponseMessage EndHistoryRead(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the HistoryRead service.
         /// </summary>
@@ -751,7 +734,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_Write)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the Write service.
         /// </summary>
@@ -764,7 +746,7 @@ namespace Opc.Ua
         /// </summary>
         WriteResponseMessage EndWrite(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the Write service.
         /// </summary>
@@ -775,7 +757,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_HistoryUpdate)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the HistoryUpdate service.
         /// </summary>
@@ -788,7 +769,7 @@ namespace Opc.Ua
         /// </summary>
         HistoryUpdateResponseMessage EndHistoryUpdate(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the HistoryUpdate service.
         /// </summary>
@@ -799,7 +780,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_Call)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the Call service.
         /// </summary>
@@ -812,7 +792,7 @@ namespace Opc.Ua
         /// </summary>
         CallResponseMessage EndCall(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the Call service.
         /// </summary>
@@ -823,7 +803,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_CreateMonitoredItems)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the CreateMonitoredItems service.
         /// </summary>
@@ -836,7 +815,7 @@ namespace Opc.Ua
         /// </summary>
         CreateMonitoredItemsResponseMessage EndCreateMonitoredItems(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the CreateMonitoredItems service.
         /// </summary>
@@ -847,7 +826,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_ModifyMonitoredItems)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the ModifyMonitoredItems service.
         /// </summary>
@@ -860,7 +838,7 @@ namespace Opc.Ua
         /// </summary>
         ModifyMonitoredItemsResponseMessage EndModifyMonitoredItems(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the ModifyMonitoredItems service.
         /// </summary>
@@ -871,7 +849,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_SetMonitoringMode)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the SetMonitoringMode service.
         /// </summary>
@@ -884,7 +861,7 @@ namespace Opc.Ua
         /// </summary>
         SetMonitoringModeResponseMessage EndSetMonitoringMode(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the SetMonitoringMode service.
         /// </summary>
@@ -895,7 +872,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_SetTriggering)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the SetTriggering service.
         /// </summary>
@@ -908,7 +884,7 @@ namespace Opc.Ua
         /// </summary>
         SetTriggeringResponseMessage EndSetTriggering(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the SetTriggering service.
         /// </summary>
@@ -919,7 +895,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_DeleteMonitoredItems)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the DeleteMonitoredItems service.
         /// </summary>
@@ -932,7 +907,7 @@ namespace Opc.Ua
         /// </summary>
         DeleteMonitoredItemsResponseMessage EndDeleteMonitoredItems(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the DeleteMonitoredItems service.
         /// </summary>
@@ -943,7 +918,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_CreateSubscription)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the CreateSubscription service.
         /// </summary>
@@ -956,7 +930,7 @@ namespace Opc.Ua
         /// </summary>
         CreateSubscriptionResponseMessage EndCreateSubscription(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the CreateSubscription service.
         /// </summary>
@@ -967,7 +941,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_ModifySubscription)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the ModifySubscription service.
         /// </summary>
@@ -980,7 +953,7 @@ namespace Opc.Ua
         /// </summary>
         ModifySubscriptionResponseMessage EndModifySubscription(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the ModifySubscription service.
         /// </summary>
@@ -991,7 +964,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_SetPublishingMode)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the SetPublishingMode service.
         /// </summary>
@@ -1004,7 +976,7 @@ namespace Opc.Ua
         /// </summary>
         SetPublishingModeResponseMessage EndSetPublishingMode(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the SetPublishingMode service.
         /// </summary>
@@ -1015,7 +987,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_Publish)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the Publish service.
         /// </summary>
@@ -1028,7 +999,7 @@ namespace Opc.Ua
         /// </summary>
         PublishResponseMessage EndPublish(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the Publish service.
         /// </summary>
@@ -1039,7 +1010,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_Republish)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the Republish service.
         /// </summary>
@@ -1052,7 +1022,7 @@ namespace Opc.Ua
         /// </summary>
         RepublishResponseMessage EndRepublish(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the Republish service.
         /// </summary>
@@ -1063,7 +1033,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_TransferSubscriptions)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the TransferSubscriptions service.
         /// </summary>
@@ -1076,7 +1045,7 @@ namespace Opc.Ua
         /// </summary>
         TransferSubscriptionsResponseMessage EndTransferSubscriptions(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the TransferSubscriptions service.
         /// </summary>
@@ -1087,7 +1056,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_DeleteSubscriptions)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the DeleteSubscriptions service.
         /// </summary>
@@ -1100,7 +1068,7 @@ namespace Opc.Ua
         /// </summary>
         DeleteSubscriptionsResponseMessage EndDeleteSubscriptions(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the DeleteSubscriptions service.
         /// </summary>
@@ -2099,7 +2067,6 @@ namespace Opc.Ua
     public interface IDiscoveryEndpoint : IEndpointBase
     {
         #if (!OPCUA_EXCLUDE_FindServers)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the FindServers service.
         /// </summary>
@@ -2112,7 +2079,7 @@ namespace Opc.Ua
         /// </summary>
         FindServersResponseMessage EndFindServers(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the FindServers service.
         /// </summary>
@@ -2123,7 +2090,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_FindServersOnNetwork)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the FindServersOnNetwork service.
         /// </summary>
@@ -2136,7 +2102,7 @@ namespace Opc.Ua
         /// </summary>
         FindServersOnNetworkResponseMessage EndFindServersOnNetwork(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the FindServersOnNetwork service.
         /// </summary>
@@ -2147,7 +2113,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_GetEndpoints)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the GetEndpoints service.
         /// </summary>
@@ -2160,7 +2125,7 @@ namespace Opc.Ua
         /// </summary>
         GetEndpointsResponseMessage EndGetEndpoints(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the GetEndpoints service.
         /// </summary>
@@ -2309,7 +2274,6 @@ namespace Opc.Ua
     public interface IRegistrationEndpoint : IEndpointBase
     {
         #if (!OPCUA_EXCLUDE_RegisterServer)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the RegisterServer service.
         /// </summary>
@@ -2322,7 +2286,7 @@ namespace Opc.Ua
         /// </summary>
         RegisterServerResponseMessage EndRegisterServer(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the RegisterServer service.
         /// </summary>
@@ -2333,7 +2297,6 @@ namespace Opc.Ua
         #endif
 
         #if (!OPCUA_EXCLUDE_RegisterServer2)
-        #if (!OPCUA_ASYNC_TASK)
         /// <summary>
         /// The operation contract for the RegisterServer2 service.
         /// </summary>
@@ -2346,7 +2309,7 @@ namespace Opc.Ua
         /// </summary>
         RegisterServer2ResponseMessage EndRegisterServer2(IAsyncResult result);
 
-        #else
+        #if (OPCUA_ASYNC_TASK || NET_STANDARD)
         /// <summary>
         /// The operation contract for the RegisterServer2 service.
         /// </summary>

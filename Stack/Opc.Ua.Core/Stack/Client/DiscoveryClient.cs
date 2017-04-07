@@ -84,7 +84,7 @@ namespace Opc.Ua
                 this.Endpoint.EndpointUrl,
                 null, 
                 profileUris,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
             return response.Endpoints;
         }
 
@@ -114,7 +114,7 @@ namespace Opc.Ua
                 this.Endpoint.EndpointUrl, 
                 null, 
                 serverUris, 
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
             return response.Servers;
         }
 
@@ -149,7 +149,7 @@ namespace Opc.Ua
         /// <param name="startingRecordId"></param>
         /// <param name="maxRecordsToReturn"></param>
         /// <param name="serverCapabilityFilter"></param>
-        /// <param name="lastCounterResetTime"></param>
+        /// <param name="serversOnNetwork"></param>
         /// <returns></returns>
         public virtual async Task<DateTime> FindServersOnNetworkAsync(
             uint startingRecordId,
@@ -163,7 +163,7 @@ namespace Opc.Ua
                 startingRecordId, 
                 maxRecordsToReturn, 
                 serverCapabilityFilter, 
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
             foreach(var entry in response.Servers)
                 serversOnNetwork?.Invoke(entry);
             return response.LastCounterResetTime;
@@ -187,7 +187,7 @@ namespace Opc.Ua
                 startingRecordId,
                 maxRecordsToReturn,
                 serverCapabilityFilter,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
             return response.Servers;
         }
 

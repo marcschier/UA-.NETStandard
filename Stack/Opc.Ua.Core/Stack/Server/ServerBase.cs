@@ -35,7 +35,6 @@ namespace Opc.Ua
             m_hosts = new List<Task>();
             m_listeners = new List<ITransportListener>();
             m_endpoints = null;
-            m_requestQueue = new RequestQueue(this, 10, 100, 1000);
         }
         #endregion
         
@@ -76,13 +75,11 @@ namespace Opc.Ua
 
                     m_hosts.Clear();
                 }
-
-                Utils.SilentDispose(m_requestQueue);
             }
         }
         #endregion
 
-        #region IServerBase Members
+        #region IServer Members
         /// <summary>
         /// The message context to use with the service.
         /// </summary>
@@ -134,6 +131,9 @@ namespace Opc.Ua
 
             return new EndpointDescriptionCollection();
         }
+        #endregion
+
+        #region IServerBase Members
 
         /// <summary>
         /// Schedules an incoming request.
@@ -141,8 +141,11 @@ namespace Opc.Ua
         /// <param name="request">The request.</param>
         public virtual void ScheduleIncomingRequest(IEndpointIncomingRequest request)
         {
-            m_requestQueue.ScheduleIncomingRequest(request);
+            // Servers extending ServerBase can implement a custom scheduler or request queue to 
+            // process the request, then call request.CompleteAsync.  Use default...
+            request.OperationCompleted(null, m_stopped ? StatusCodes.BadTooManyOperations : StatusCodes.Good);
         }
+
         #endregion
 
         #region Public Methods
@@ -160,8 +163,7 @@ namespace Opc.Ua
             // do any pre-startup processing
             OnServerStarting(configuration);
 
-            // intialize the request queue from the configuration.
-            InitializeRequestQueue(configuration);
+            m_stopped = false;
 
             // initialize the base addresses.
             InitializeBaseAddresses(configuration);
@@ -181,6 +183,7 @@ namespace Opc.Ua
 
             // start the application.
             StartApplication(configuration);
+
 
             // the configuration file may specify multiple security policies or non-HTTP protocols
             // which will require multiple service hosts. the default host will be opened by WCF when
@@ -215,8 +218,7 @@ namespace Opc.Ua
             // do any pre-startup processing
             OnServerStarting(configuration);
 
-            // intialize the request queue from the configuration.
-            InitializeRequestQueue(configuration);
+            m_stopped = false;
 
             // initialize the base addresses.
             InitializeBaseAddresses(configuration);
@@ -358,50 +360,6 @@ namespace Opc.Ua
         }              
 
         /// <summary>
-        /// Initializes the request queue.
-        /// </summary>
-        /// <param name="configuration">The configuration.</param>
-        protected void InitializeRequestQueue(ApplicationConfiguration configuration)
-        {
-            // set suitable defaults.
-            int minRequestThreadCount = 10;
-            int maxRequestThreadCount = 1000;
-            int maxQueuedRequestCount = 2000;
-
-            if (configuration.ServerConfiguration != null)
-            {
-                minRequestThreadCount = configuration.ServerConfiguration.MinRequestThreadCount;
-                maxRequestThreadCount = configuration.ServerConfiguration.MaxRequestThreadCount;
-                maxQueuedRequestCount = configuration.ServerConfiguration.MaxQueuedRequestCount;
-            }
-
-            else if (configuration.DiscoveryServerConfiguration != null)
-            {
-                minRequestThreadCount = configuration.DiscoveryServerConfiguration.MinRequestThreadCount;
-                maxRequestThreadCount = configuration.DiscoveryServerConfiguration.MaxRequestThreadCount;
-                maxQueuedRequestCount = configuration.DiscoveryServerConfiguration.MaxQueuedRequestCount;
-            }
-
-            // ensure configuration errors don't render the server inoperable.
-            if (maxRequestThreadCount < 100)
-            {
-                maxRequestThreadCount = 100;
-            }
-
-            if (maxQueuedRequestCount < 100)
-            {
-                maxQueuedRequestCount = 100;
-            }
-            
-            if (m_requestQueue != null)
-            {
-                m_requestQueue.Dispose();
-            }
-
-            m_requestQueue = new RequestQueue(this, minRequestThreadCount, maxRequestThreadCount, maxQueuedRequestCount);
-        }
-
-        /// <summary>
         /// Stops the server and releases all resources.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1716:IdentifiersShouldNotMatchKeywords", MessageId = "Stop")]
@@ -416,6 +374,8 @@ namespace Opc.Ua
             {
                 m_serverError = new ServiceResult(e);
             }
+
+            m_stopped = true;
 
             // close any listeners.
             List<ITransportListener> listeners = m_listeners;
@@ -1367,87 +1327,6 @@ namespace Opc.Ua
             return new ServerProperties();
         }
 
-        /// <summary>
-        /// Processes the request.
-        /// </summary>
-        /// <param name="request">The request.</param>
-        /// <param name="calldata">The calldata passed with the request.</param>
-        protected virtual void ProcessRequest(IEndpointIncomingRequest request)
-        {
-            request.CallSynchronously();
-        }
-#endregion
-
-#region RequestQueue Class
-        /// <summary>
-        /// Manages a queue of requests.
-        /// </summary>
-        protected class RequestQueue : IDisposable
-        {
-#region Constructors
-            /// <summary>
-            /// Initializes a new instance of the <see cref="RequestQueue"/> class.
-            /// </summary>
-            /// <param name="server">The server.</param>
-            /// <param name="minThreadCount">The minimum number of threads in the pool.</param>
-            /// <param name="maxThreadCount">The maximum number of threads  in the pool.</param>
-            /// <param name="maxRequestCount">The maximum number of requests that will placed in the queue.</param>
-            public RequestQueue(ServerBase server, int minThreadCount, int maxThreadCount, int maxRequestCount)
-            {
-                m_server = server;
-                m_stopped = false;
-            }
-#endregion
-
-#region IDisposable Members
-            /// <summary>
-            /// Frees any unmanaged resources.
-            /// </summary>
-            public void Dispose()
-            {
-                Dispose(true);
-            }
-
-            /// <summary>
-            /// An overrideable version of the Dispose.
-            /// </summary>
-            protected virtual void Dispose(bool disposing)
-            {
-                if (disposing)
-                {
-                    m_stopped = true;
-                }
-            }
-#endregion
-
-#region Public Members
-            /// <summary>
-            /// Schedules an incoming request.
-            /// </summary>
-            /// <param name="request">The request.</param>
-            public void ScheduleIncomingRequest(IEndpointIncomingRequest request)
-            {
-                if (m_stopped)
-                {
-                    request.OperationCompleted(null, StatusCodes.BadTooManyOperations);
-                }
-                else
-                {
-                    Task.Run(() =>
-                    {
-                        m_server.ProcessRequest(request);
-                    });
-                }
-            }
-#endregion
-
-#region Private Fields
-            private ServerBase m_server;
-            private bool m_stopped;
-#endregion
-
-        }
-
 #endregion
 
 #region Private Fields
@@ -1461,7 +1340,7 @@ namespace Opc.Ua
         private List<Task> m_hosts;
         private List<ITransportListener> m_listeners;
         private ReadOnlyList<EndpointDescription> m_endpoints;
-        private RequestQueue m_requestQueue;
+        private bool m_stopped = true;
 #endregion
     }
 }

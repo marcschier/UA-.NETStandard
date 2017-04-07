@@ -15,6 +15,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Runtime.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 
 namespace Opc.Ua
@@ -1011,23 +1013,43 @@ namespace Opc.Ua
                 m_configuration.UseBinaryEncoding = true;
             }
         }
-        
+
         /// <summary>
         /// Updates an endpoint with information from the server's discovery endpoint.
         /// </summary>
         public void UpdateFromServer()
         {
-            UpdateFromServer(EndpointUrl, m_description.SecurityMode, m_description.SecurityPolicyUri);
+            UpdateFromServerAsync(CancellationToken.None).GetAwaiter().GetResult();
         }
-        
+
         /// <summary>
         /// Updates an endpoint with information from the server's discovery endpoint.
         /// </summary>
         public void UpdateFromServer(
-            Uri                 endpointUrl,
-            MessageSecurityMode securityMode, 
-            string              securityPolicyUri)
-        { 
+            Uri endpointUrl,
+            MessageSecurityMode securityMode,
+            string securityPolicyUri)
+        {
+            UpdateFromServerAsync(endpointUrl, securityMode, securityPolicyUri, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Updates an endpoint with information from the server's discovery endpoint.
+        /// </summary>
+        public Task UpdateFromServerAsync(CancellationToken cancellationToken)
+        {
+            return UpdateFromServerAsync(EndpointUrl, m_description.SecurityMode, m_description.SecurityPolicyUri, cancellationToken);
+        }
+
+        /// <summary>
+        /// Updates an endpoint with information from the server's discovery endpoint.
+        /// </summary>
+        public async Task UpdateFromServerAsync(
+            Uri endpointUrl,
+            MessageSecurityMode securityMode,
+            string securityPolicyUri,
+            CancellationToken cancellationToken)
+        {
             // get the a discovery url.
             Uri discoveryUrl = GetDiscoveryUrl(endpointUrl);
 
@@ -1037,7 +1059,7 @@ namespace Opc.Ua
             try
             {
                 // get the endpoints.
-                EndpointDescriptionCollection collection = client.GetEndpoints(null);
+                EndpointDescriptionCollection collection = await client.GetEndpointsAsync(null, cancellationToken).ConfigureAwait(false);
 
                 if (collection == null || collection.Count == 0)
                 {
@@ -1149,7 +1171,7 @@ namespace Opc.Ua
             }
             finally
             {
-                client.Close();
+                await client.CloseAsync(CancellationToken.None).ConfigureAwait(false);
             }
         }
         /// <summary>

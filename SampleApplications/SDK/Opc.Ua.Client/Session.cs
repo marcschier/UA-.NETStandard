@@ -95,7 +95,7 @@ namespace Opc.Ua.Client
             X509Certificate2 clientCertificate,
             EndpointDescriptionCollection availableEndpoints)
             :
-                base(channel)
+            base(channel)
         {
             Initialize(channel, configuration, endpoint, clientCertificate);
 
@@ -706,8 +706,9 @@ namespace Opc.Ua.Client
         /// <param name="sessionTimeout">The timeout period for the session.</param>
         /// <param name="identity">The identity.</param>
         /// <param name="preferredLocales">The user identity to associate with the session.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The new session object</returns>
-        public static async Task<Session> Create(
+        public static Session Create(
             ApplicationConfiguration configuration,
             ConfiguredEndpoint endpoint,
             bool updateBeforeConnect,
@@ -716,7 +717,85 @@ namespace Opc.Ua.Client
             IUserIdentity identity,
             IList<string> preferredLocales)
         {
-            return await Create(configuration, endpoint, updateBeforeConnect, false, sessionName, sessionTimeout, identity, preferredLocales);
+            return CreateAsync(
+                configuration,
+                endpoint, 
+                updateBeforeConnect,
+                false, 
+                sessionName, 
+                sessionTimeout, 
+                identity, 
+                preferredLocales,
+                CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Creates a new communication session with a server by invoking the CreateSession service
+        /// </summary>
+        /// <param name="configuration">The configuration for the client application.</param>
+        /// <param name="endpoint">The endpoint for the server.</param>
+        /// <param name="updateBeforeConnect">If set to <c>true</c> the discovery endpoint is used to update the endpoint description before connecting.</param>
+        /// <param name="sessionName">The name to assign to the session.</param>
+        /// <param name="sessionTimeout">The timeout period for the session.</param>
+        /// <param name="identity">The identity.</param>
+        /// <param name="preferredLocales">The user identity to associate with the session.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>The new session object</returns>
+        public static Task<Session> CreateAsync(
+            ApplicationConfiguration configuration,
+            ConfiguredEndpoint endpoint,
+            bool updateBeforeConnect,
+            string sessionName,
+            uint sessionTimeout,
+            IUserIdentity identity,
+            IList<string> preferredLocales,
+            CancellationToken cancellationToken)
+        {
+            return CreateAsync(
+                configuration, 
+                endpoint, 
+                updateBeforeConnect, 
+                false, 
+                sessionName, 
+                sessionTimeout, 
+                identity, 
+                preferredLocales, 
+                cancellationToken);
+        }
+
+        /// <summary>
+        /// Creates a new communication session with a server by invoking the CreateSession service
+        /// </summary>
+        /// <param name="configuration">The configuration for the client application.</param>
+        /// <param name="endpoint">The endpoint for the server.</param>
+        /// <param name="updateBeforeConnect">If set to <c>true</c> the discovery endpoint is used to update the endpoint description before connecting.</param>
+        /// <param name="checkDomain">If set to <c>true</c> then the domain in the certificate must match the endpoint used.</param>
+        /// <param name="sessionName">The name to assign to the session.</param>
+        /// <param name="sessionTimeout">The timeout period for the session.</param>
+        /// <param name="identity">The identity.</param>
+        /// <param name="preferredLocales">The user identity to associate with the session.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>The new session object</returns>
+        public static Session Create(
+            ApplicationConfiguration configuration,
+            ConfiguredEndpoint endpoint,
+            bool updateBeforeConnect,
+            bool checkDomain,
+            string sessionName,
+            uint sessionTimeout,
+            IUserIdentity identity,
+            IList<string> preferredLocales)
+        {
+            return CreateAsync(
+                configuration,
+                endpoint,
+                updateBeforeConnect,
+                checkDomain,
+                sessionName,
+                sessionTimeout,
+                identity,
+                preferredLocales,
+                CancellationToken.None).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -730,8 +809,9 @@ namespace Opc.Ua.Client
         /// <param name="sessionTimeout">The timeout period for the session.</param>
         /// <param name="identity">The user identity to associate with the session.</param>
         /// <param name="preferredLocales">The preferred locales.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The new session object.</returns>
-        public static async Task<Session> Create(
+        public static async Task<Session> CreateAsync(
             ApplicationConfiguration configuration,
             ConfiguredEndpoint endpoint,
             bool updateBeforeConnect,
@@ -739,7 +819,8 @@ namespace Opc.Ua.Client
             string sessionName,
             uint sessionTimeout,
             IUserIdentity identity,
-            IList<string> preferredLocales)
+            IList<string> preferredLocales,
+            CancellationToken cancellationToken)
         {
             endpoint.UpdateBeforeConnect = updateBeforeConnect;
 
@@ -759,7 +840,7 @@ namespace Opc.Ua.Client
             // update endpoint description using the discovery endpoint.
             if (endpoint.UpdateBeforeConnect)
             {
-                endpoint.UpdateFromServer();
+                await endpoint.UpdateFromServerAsync(cancellationToken).ConfigureAwait(false);
 
                 endpointDescription = endpoint.Description;
                 endpointConfiguration = endpoint.Configuration;
@@ -780,7 +861,7 @@ namespace Opc.Ua.Client
                     throw ServiceResultException.Create(StatusCodes.BadConfigurationError, "ApplicationCertificate must be specified.");
                 }
 
-                clientCertificate = await configuration.SecurityConfiguration.ApplicationCertificate.Find(true);
+                clientCertificate = await configuration.SecurityConfiguration.ApplicationCertificate.Find(true).ConfigureAwait(false);
 
                 if (clientCertificate == null)
                 {
@@ -802,7 +883,7 @@ namespace Opc.Ua.Client
             // create the session.
             try
             {
-                session.Open(sessionName, sessionTimeout, identity, preferredLocales, checkDomain);
+                await session.OpenAsync(sessionName, sessionTimeout, identity, preferredLocales, checkDomain, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -861,6 +942,16 @@ namespace Opc.Ua.Client
         /// <returns>The new session object.</returns>
         public static Session Recreate(Session template)
         {
+             return RecreateAsync(template, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Recreates a session based on a specified template.
+        /// </summary>
+        /// <param name="template">The Session object to use as template</param>
+        /// <returns>The new session object.</returns>
+        public static async Task<Session> RecreateAsync(Session template, CancellationToken cancellationToken)
+        {
             // create the channel object used to connect to the server.
             ITransportChannel channel = SessionChannel.Create(
                 template.m_configuration,
@@ -875,16 +966,17 @@ namespace Opc.Ua.Client
             try
             {
                 // open the session.
-                session.Open(
+                await session.OpenAsync(
                     template.m_sessionName,
                     (uint)template.m_sessionTimeout,
                     template.m_identity,
-                    template.m_preferredLocales);
+                    template.m_preferredLocales,
+                    cancellationToken).ConfigureAwait(false);
 
                 // create the subscriptions.
                 foreach (Subscription subscription in session.Subscriptions)
                 {
-                    subscription.Create();
+                    await subscription.CreateAsync(cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (Exception e)
@@ -1134,6 +1226,14 @@ namespace Opc.Ua.Client
         /// </summary>
         public void FetchNamespaceTables()
         {
+
+        }
+
+        /// <summary>
+        /// Updates the local copy of the server's namespace uri and server uri tables.
+        /// </summary>
+        public async Task FetchNamespaceTablesAsync(CancellationToken cancellationToken)
+        {
             ReadValueIdCollection nodesToRead = new ReadValueIdCollection();
 
             // request namespace array.
@@ -1155,15 +1255,19 @@ namespace Opc.Ua.Client
             // read from server.
             DataValueCollection values = null;
             DiagnosticInfoCollection diagnosticInfos = null;
+            ResponseHeader responseHeader;
 
-            ResponseHeader responseHeader = this.Read(
+            ReadResponse response = await this.ReadAsync(
                 null,
                 0,
                 TimestampsToReturn.Both,
-                nodesToRead,
-                out values,
-                out diagnosticInfos);
+                nodesToRead, 
+                cancellationToken).ConfigureAwait(false);
 
+            responseHeader = response.ResponseHeader;
+            values = response.Results;
+            diagnosticInfos = response.DiagnosticInfos;
+  
             ValidateResponse(values, nodesToRead);
             ValidateDiagnosticInfos(diagnosticInfos, nodesToRead);
 
@@ -1213,6 +1317,16 @@ namespace Opc.Ua.Client
         /// <param name="variableId">The variable node.</param>
         /// <returns></returns>
         public ReferenceDescriptionCollection ReadAvailableEncodings(NodeId variableId)
+        {
+            return ReadAvailableEncodingsAsync(variableId, CancellationToken.None).Result;
+        }
+
+        /// <summary>
+        /// Returns the available encodings for a node
+        /// </summary>
+        /// <param name="variableId">The variable node.</param>
+        /// <returns></returns>
+        public async Task<ReferenceDescriptionCollection> ReadAvailableEncodingsAsync(NodeId variableId, CancellationToken cancellationToken)
         {
             VariableNode variable = NodeCache.Find(variableId) as VariableNode;
 
@@ -1265,7 +1379,7 @@ namespace Opc.Ua.Client
             browser.IncludeSubtypes = false;
             browser.NodeClassMask = 0;
 
-            return browser.Browse(variable.DataType);
+            return await browser.BrowseAsync(variable.DataType, cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -1276,6 +1390,16 @@ namespace Opc.Ua.Client
         /// <returns></returns>
         public ReferenceDescription FindDataDescription(NodeId encodingId)
         {
+            return FindDataDescriptionAsync(encodingId, CancellationToken.None).Result;
+        }
+
+        /// <summary>
+        /// Returns the data description for the encoding.
+        /// </summary>
+        /// <param name="encodingId">The encoding Id.</param>
+        /// <returns></returns>
+        public async Task<ReferenceDescription> FindDataDescriptionAsync(NodeId encodingId, CancellationToken cancellationToken)
+        {
             Browser browser = new Browser(this);
 
             browser.BrowseDirection = BrowseDirection.Forward;
@@ -1283,7 +1407,7 @@ namespace Opc.Ua.Client
             browser.IncludeSubtypes = false;
             browser.NodeClassMask = 0;
 
-            ReferenceDescriptionCollection references = browser.Browse(encodingId);
+            ReferenceDescriptionCollection references = await browser.BrowseAsync(encodingId, cancellationToken).ConfigureAwait(false);
 
             if (references.Count == 0)
             {
@@ -1299,7 +1423,17 @@ namespace Opc.Ua.Client
         /// </summary>
         /// <param name="descriptionId">The description id.</param>
         /// <returns></returns>
-        public async Task<DataDictionary> FindDataDictionary(NodeId descriptionId)
+        public DataDictionary FindDataDictionary(NodeId descriptionId)
+        {
+            return FindDataDictionaryAsync(descriptionId, CancellationToken.None).Result;
+        }
+
+        /// <summary>
+        ///  Returns the data dictionary that constains the description.
+        /// </summary>
+        /// <param name="descriptionId">The description id.</param>
+        /// <returns></returns>
+        public async Task<DataDictionary> FindDataDictionaryAsync(NodeId descriptionId, CancellationToken cancellationToken)
         {
             // check if the dictionary has already been loaded.
             foreach (DataDictionary dictionary in m_dictionaries.Values)
@@ -1318,7 +1452,7 @@ namespace Opc.Ua.Client
             browser.IncludeSubtypes = false;
             browser.NodeClassMask = 0;
 
-            ReferenceDescriptionCollection references = browser.Browse(descriptionId);
+            ReferenceDescriptionCollection references = await browser.BrowseAsync(descriptionId, cancellationToken).ConfigureAwait(false);
 
             if (references.Count == 0)
             {
@@ -1330,7 +1464,7 @@ namespace Opc.Ua.Client
 
             DataDictionary dictionaryToLoad = new DataDictionary(this);
 
-            await dictionaryToLoad.Load(references[0]);
+            await dictionaryToLoad.LoadAsync(references[0], cancellationToken).ConfigureAwait(false);
 
             m_dictionaries[dictionaryId] = dictionaryToLoad;
 
@@ -1342,8 +1476,18 @@ namespace Opc.Ua.Client
         /// </summary>
         /// <param name="nodeId">The nodeId.</param>
         /// <returns></returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1505:AvoidUnmaintainableCode"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         public Node ReadNode(NodeId nodeId)
+        {
+            return ReadNodeAsync(nodeId, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Reads the values for the node attributes and returns a node object.
+        /// </summary>
+        /// <param name="nodeId">The nodeId.</param>
+        /// <returns></returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1505:AvoidUnmaintainableCode"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
+        public async Task<Node> ReadNodeAsync(NodeId nodeId, CancellationToken cancellationToken)
         {
             // build list of attributes.
             SortedDictionary<uint, DataValue> attributes = new SortedDictionary<uint, DataValue>();
@@ -1387,13 +1531,18 @@ namespace Opc.Ua.Client
             DataValueCollection values = null;
             DiagnosticInfoCollection diagnosticInfos = null;
 
-            ResponseHeader responseHeader = Read(
+            ResponseHeader responseHeader;
+
+            ReadResponse response = await ReadAsync(
                 null,
                 0,
                 TimestampsToReturn.Neither,
                 itemsToRead,
-                out values,
-                out diagnosticInfos);
+                cancellationToken).ConfigureAwait(false);
+
+            responseHeader = response.ResponseHeader;
+            values = response.Results;
+            diagnosticInfos = response.DiagnosticInfos;
 
             ClientBase.ValidateResponse(values, itemsToRead);
             ClientBase.ValidateDiagnosticInfos(diagnosticInfos, itemsToRead);
@@ -1787,6 +1936,16 @@ namespace Opc.Ua.Client
         /// <returns></returns>
         public DataValue ReadValue(NodeId nodeId)
         {
+            return ReadValueAsync(nodeId, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Reads the value for a node.
+        /// </summary>
+        /// <param name="nodeId">The node Id.</param>
+        /// <returns></returns>
+        public async Task<DataValue> ReadValueAsync(NodeId nodeId, CancellationToken cancellationToken)
+        {
             ReadValueId itemToRead = new ReadValueId();
 
             itemToRead.NodeId = nodeId;
@@ -1798,14 +1957,18 @@ namespace Opc.Ua.Client
             // read from server.
             DataValueCollection values = null;
             DiagnosticInfoCollection diagnosticInfos = null;
+            ResponseHeader responseHeader;
 
-            ResponseHeader responseHeader = Read(
+            ReadResponse response = await ReadAsync(
                 null,
                 0,
                 TimestampsToReturn.Both,
                 itemsToRead,
-                out values,
-                out diagnosticInfos);
+                cancellationToken).ConfigureAwait(false);
+
+            responseHeader = response.ResponseHeader;
+            values = response.Results;
+            diagnosticInfos = response.DiagnosticInfos;
 
             ClientBase.ValidateResponse(values, itemsToRead);
             ClientBase.ValidateDiagnosticInfos(diagnosticInfos, itemsToRead);
@@ -1827,7 +1990,18 @@ namespace Opc.Ua.Client
         /// <returns></returns>
         public object ReadValue(NodeId nodeId, Type expectedType)
         {
-            DataValue dataValue = ReadValue(nodeId);
+            return ReadValueAsync(nodeId, expectedType, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Reads the value for a node an checks that it is the specified type.
+        /// </summary>
+        /// <param name="nodeId">The node id.</param>
+        /// <param name="expectedType">The expected type.</param>
+        /// <returns></returns>
+        public async Task<object> ReadValueAsync(NodeId nodeId, Type expectedType, CancellationToken cancellationToken)
+        {
+            DataValue dataValue = await ReadValueAsync(nodeId, cancellationToken).ConfigureAwait(false);
 
             object value = dataValue.Value;
 
@@ -1852,7 +2026,6 @@ namespace Opc.Ua.Client
             return value;
         }
 
-
         /// <summary>
         /// Fetches all references for the specified node.
         /// </summary>
@@ -1860,11 +2033,21 @@ namespace Opc.Ua.Client
         /// <returns></returns>
         public ReferenceDescriptionCollection FetchReferences(NodeId nodeId)
         {
+            return FetchReferencesAsync(nodeId, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Fetches all references for the specified node.
+        /// </summary>
+        /// <param name="nodeId">The node id.</param>
+        /// <returns></returns>
+        public async Task<ReferenceDescriptionCollection> FetchReferencesAsync(NodeId nodeId, CancellationToken cancellationToken)
+        {
             // browse for all references.
             byte[] continuationPoint;
             ReferenceDescriptionCollection descriptions;
 
-            Browse(
+            Tuple<ReferenceDescriptionCollection, byte[]> result = await BrowseAsync(
                 null,
                 null,
                 nodeId,
@@ -1873,23 +2056,24 @@ namespace Opc.Ua.Client
                 null,
                 true,
                 0,
-                out continuationPoint,
-                out descriptions);
+                cancellationToken).ConfigureAwait(false);
+
+            continuationPoint = result.Item2;
+            descriptions = result.Item1;
 
             // process any continuation point.
             while (continuationPoint != null)
             {
-                byte[] revisedContinuationPoint;
                 ReferenceDescriptionCollection additionalDescriptions;
 
-                BrowseNext(
+                result = await BrowseNextAsync(
                     null,
                     false,
                     continuationPoint,
-                    out revisedContinuationPoint,
-                    out additionalDescriptions);
+                    cancellationToken).ConfigureAwait(false);
 
-                continuationPoint = revisedContinuationPoint;
+                additionalDescriptions = result.Item1;
+                continuationPoint = result.Item2;
 
                 descriptions.AddRange(additionalDescriptions);
             }
@@ -1933,13 +2117,67 @@ namespace Opc.Ua.Client
         /// <param name="identity">The user identity.</param>
         /// <param name="preferredLocales">The list of preferred locales.</param>
         /// <param name="checkDomain">If set to <c>true</c> then the domain in the certificate must match the endpoint used.</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         public void Open(
-            string        sessionName,
-            uint          sessionTimeout,
+            string sessionName,
+            uint sessionTimeout,
             IUserIdentity identity,
             IList<string> preferredLocales,
-            bool          checkDomain)
+            bool checkDomain)
+        {
+            OpenAsync(sessionName, 
+                sessionTimeout, 
+                identity, 
+                preferredLocales, 
+                checkDomain, 
+                CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Establishes a session with the server.
+        /// </summary>
+        /// <param name="sessionName">The name to assign to the session.</param>
+        /// <param name="identity">The user identity.</param>
+        public Task OpenAsync(
+            string sessionName,
+            IUserIdentity identity,
+            CancellationToken cancellationToken)
+        {
+            return OpenAsync(sessionName, 0, identity, null, cancellationToken);
+        }
+
+        /// <summary>
+        /// Establishes a session with the server.
+        /// </summary>
+        /// <param name="sessionName">The name to assign to the session.</param>
+        /// <param name="sessionTimeout">The session timeout.</param>
+        /// <param name="identity">The user identity.</param>
+        /// <param name="preferredLocales">The list of preferred locales.</param>
+        public Task OpenAsync(
+            string sessionName,
+            uint sessionTimeout,
+            IUserIdentity identity,
+            IList<string> preferredLocales,
+            CancellationToken cancellationToken)
+        {
+            return OpenAsync(sessionName, sessionTimeout, identity, preferredLocales, true, cancellationToken);
+        }
+
+        /// <summary>
+        /// Establishes a session with the server.
+        /// </summary>
+        /// <param name="sessionName">The name to assign to the session.</param>
+        /// <param name="sessionTimeout">The session timeout.</param>
+        /// <param name="identity">The user identity.</param>
+        /// <param name="preferredLocales">The list of preferred locales.</param>
+        /// <param name="checkDomain">If set to <c>true</c> then the domain in the certificate must match the endpoint used.</param>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
+        public async Task OpenAsync(
+            string sessionName,
+            uint sessionTimeout,
+            IUserIdentity identity,
+            IList<string> preferredLocales,
+            bool checkDomain,
+            CancellationToken cancellationToken)
         {
             // check connection state.
             lock (SyncRoot)
@@ -2031,14 +2269,14 @@ namespace Opc.Ua.Client
                 sessionTimeout = (uint)m_configuration.ClientConfiguration.DefaultSessionTimeout;
             }
 
-            bool successCreateSession = false;
+            CreateSessionResponse createSessionResponse = null;
             //if security none, first try to connect without certificate
             if (m_endpoint.Description.SecurityPolicyUri == SecurityPolicies.None)
             {
-                //first try to connect with client certificate NULL
+                // first try to connect with client certificate NULL
                 try
                 {
-                    CreateSession(
+                    createSessionResponse = await CreateSessionAsync(
                         null,
                         clientDescription,
                         m_endpoint.Description.Server.ApplicationUri,
@@ -2048,28 +2286,19 @@ namespace Opc.Ua.Client
                         null,
                         sessionTimeout,
                         (uint)MessageContext.MaxMessageSize,
-                        out sessionId,
-                        out sessionCookie,
-                        out m_sessionTimeout,
-                        out serverNonce,
-                        out serverCertificateData,
-                        out serverEndpoints,
-                        out serverSoftwareCertificates,
-                        out serverSignature,
-                        out m_maxRequestMessageSize);
-
-                    successCreateSession = true;
+                        cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
                     Utils.Trace("Create session failed with client certificate NULL. " + ex.Message);
-                    successCreateSession = false;
                 }
             }
 
-            if (!successCreateSession)
+            if (createSessionResponse == null)
             {
-                CreateSession(
+                try
+                {
+                    createSessionResponse = await CreateSessionAsync(
                         null,
                         clientDescription,
                         m_endpoint.Description.Server.ApplicationUri,
@@ -2079,17 +2308,25 @@ namespace Opc.Ua.Client
                         clientCertificateData,
                         sessionTimeout,
                         (uint)MessageContext.MaxMessageSize,
-                        out sessionId,
-                        out sessionCookie,
-                        out m_sessionTimeout,
-                        out serverNonce,
-                        out serverCertificateData,
-                        out serverEndpoints,
-                        out serverSoftwareCertificates,
-                        out serverSignature,
-                        out m_maxRequestMessageSize);
-
+                        cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    Utils.Trace("Create session failed with client certificate NULL. " + ex.Message);
+                    throw ex;
+                }
             }
+
+            sessionId = createSessionResponse.SessionId;
+            sessionCookie = createSessionResponse.AuthenticationToken;
+            m_sessionTimeout = createSessionResponse.RevisedSessionTimeout;
+            serverNonce = createSessionResponse.ServerNonce;
+            serverCertificateData = createSessionResponse.ServerCertificate;
+            serverEndpoints = createSessionResponse.ServerEndpoints;
+            serverSoftwareCertificates = createSessionResponse.ServerSoftwareCertificates;
+            serverSignature = createSessionResponse.ServerSignature;
+            m_maxRequestMessageSize = createSessionResponse.MaxRequestMessageSize;
+
             // save session id.
             lock (SyncRoot)
             {
@@ -2273,16 +2510,18 @@ namespace Opc.Ua.Client
                 DiagnosticInfoCollection certificateDiagnosticInfos = null;
 
                 // activate session.
-                ActivateSession(
+                ActivateSessionResponse activateSessionResponse = await ActivateSessionAsync(
                     null,
                     clientSignature,
                     clientSoftwareCertificates,
                     m_preferredLocales,
                     new ExtensionObject(identityToken),
                     userTokenSignature,
-                    out serverNonce,
-                    out certificateResults,
-                    out certificateDiagnosticInfos);
+                    cancellationToken).ConfigureAwait(false);
+
+                serverNonce = activateSessionResponse.ServerNonce;
+                certificateResults = activateSessionResponse.Results;
+                certificateDiagnosticInfos = activateSessionResponse.DiagnosticInfos;
 
                 if (certificateResults != null)
                 {
@@ -2298,7 +2537,7 @@ namespace Opc.Ua.Client
                 }
 
                 // fetch namespaces.
-                FetchNamespaceTables();
+                await FetchNamespaceTablesAsync(cancellationToken).ConfigureAwait(false);
 
                 lock (SyncRoot)
                 {
@@ -2321,8 +2560,8 @@ namespace Opc.Ua.Client
             {
                 try
                 {
-                    CloseSession(null, false);
-                    Close();
+                    await CloseSessionAsync(null, false, CancellationToken.None).ConfigureAwait(false);
+                    await CloseAsync(CancellationToken.None).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
@@ -2343,7 +2582,16 @@ namespace Opc.Ua.Client
         /// <param name="preferredLocales">The preferred locales.</param>
         public void ChangePreferredLocales(StringCollection preferredLocales)
         {
-            UpdateSession(Identity, preferredLocales);
+            ChangePreferredLocales(preferredLocales, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Updates the preferred locales used for the session.
+        /// </summary>
+        /// <param name="preferredLocales">The preferred locales.</param>
+        public async Task ChangePreferredLocales(StringCollection preferredLocales, CancellationToken cancellationToken)
+        {
+            await UpdateSessionAsync(Identity, preferredLocales, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -2352,6 +2600,16 @@ namespace Opc.Ua.Client
         /// <param name="identity">The user identity.</param>
         /// <param name="preferredLocales">The preferred locales.</param>
         public void UpdateSession(IUserIdentity identity, StringCollection preferredLocales)
+        {
+            UpdateSessionAsync(identity, preferredLocales, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Updates the user identity and/or locales used for the session.
+        /// </summary>
+        /// <param name="identity">The user identity.</param>
+        /// <param name="preferredLocales">The preferred locales.</param>
+        public async Task UpdateSessionAsync(IUserIdentity identity, StringCollection preferredLocales, CancellationToken cancellationToken)
         {
             byte[] serverNonce = null;
 
@@ -2423,20 +2681,17 @@ namespace Opc.Ua.Client
             // send the software certificates assigned to the client.
             SignedSoftwareCertificateCollection clientSoftwareCertificates = GetSoftwareCertificates();
 
-            StatusCodeCollection certificateResults = null;
-            DiagnosticInfoCollection certificateDiagnosticInfos = null;
-
             // activate session.
-            ActivateSession(
+            ActivateSessionResponse activateSessionResponse = await ActivateSessionAsync(
                 null,
                 clientSignature,
                 clientSoftwareCertificates,
                 preferredLocales,
                 new ExtensionObject(identityToken),
                 userTokenSignature,
-                out serverNonce,
-                out certificateResults,
-                out certificateDiagnosticInfos);
+                cancellationToken).ConfigureAwait(false);
+
+            serverNonce = activateSessionResponse.ServerNonce;
 
             // save nonce and new values.
             lock (SyncRoot)
@@ -2465,8 +2720,26 @@ namespace Opc.Ua.Client
             out NodeIdCollection componentIds,
             out List<ServiceResult> errors)
         {
-            componentIds = new NodeIdCollection();
-            errors = new List<ServiceResult>();
+            List<ServiceResult> errorsOut = null;
+            componentIds = FindComponentIdsAsync(
+                instanceId, 
+                componentPaths, 
+                e => errorsOut = e, 
+                CancellationToken.None).GetAwaiter().GetResult();
+            errors = errorsOut;
+        }
+
+        /// <summary>
+        /// Finds the NodeIds for the components for an instance.
+        /// </summary>
+        public async Task<NodeIdCollection> FindComponentIdsAsync(
+            NodeId instanceId,
+            IList<string> componentPaths,
+            Action<List<ServiceResult>> errorHandler,
+            CancellationToken cancellationToken)
+        {
+            NodeIdCollection componentIds = new NodeIdCollection();
+            List<ServiceResult> errors = new List<ServiceResult>();
 
             // build list of paths to translate.
             BrowsePathCollection pathsToTranslate = new BrowsePathCollection();
@@ -2485,11 +2758,16 @@ namespace Opc.Ua.Client
             BrowsePathResultCollection results = null;
             DiagnosticInfoCollection diagnosticInfos = null;
 
-            ResponseHeader responseHeader = TranslateBrowsePathsToNodeIds(
+            ResponseHeader responseHeader;
+
+            TranslateBrowsePathsToNodeIdsResponse response = await TranslateBrowsePathsToNodeIdsAsync(
                 null,
                 pathsToTranslate,
-                out results,
-                out diagnosticInfos);
+                cancellationToken).ConfigureAwait(false);
+
+            responseHeader = response.ResponseHeader;
+            results = response.Results;
+            diagnosticInfos = response.DiagnosticInfos;
 
             // verify that the server returned the correct number of results.
             ClientBase.ValidateResponse(results, pathsToTranslate);
@@ -2563,6 +2841,8 @@ namespace Opc.Ua.Client
                 // suitable target found.
                 componentIds[ii] = ExpandedNodeId.ToNodeId(results[ii].Targets[0].TargetId, m_namespaceUris);
             }
+            errorHandler(errors);
+            return componentIds;
         }
 
 
@@ -2579,8 +2859,26 @@ namespace Opc.Ua.Client
             out List<object> values,
             out List<ServiceResult> errors)
         {
-            values = new List<object>();
-            errors = new List<ServiceResult>();
+            List<ServiceResult> errorsOut = null;
+            values = ReadValuesAsync(variableIds, expectedTypes, e => errorsOut = e, CancellationToken.None).GetAwaiter().GetResult();
+            errors = errorsOut;
+        }
+
+        /// <summary>
+        /// Reads the values for a set of variables.
+        /// </summary>
+        /// <param name="variableIds">The variable ids.</param>
+        /// <param name="expectedTypes">The expected types.</param>
+        /// <param name="values">The list of returned values.</param>
+        /// <param name="errors">The list of returned errors.</param>
+        public async Task<List<object>> ReadValuesAsync(
+            IList<NodeId> variableIds,
+            IList<Type> expectedTypes,
+            Action<List<ServiceResult>> errorHandler,
+            CancellationToken cancellationToken)
+        {
+            List<object> values = new List<object>();
+            List<ServiceResult> errors = new List<ServiceResult>();
 
             // build list of values to read.
             ReadValueIdCollection valuesToRead = new ReadValueIdCollection();
@@ -2600,14 +2898,18 @@ namespace Opc.Ua.Client
             // read the values.
             DataValueCollection results = null;
             DiagnosticInfoCollection diagnosticInfos = null;
+            ResponseHeader responseHeader;
 
-            ResponseHeader responseHeader = Read(
+            ReadResponse response = await ReadAsync(
                 null,
                 Int32.MaxValue,
                 TimestampsToReturn.Both,
                 valuesToRead,
-                out results,
-                out diagnosticInfos);
+                cancellationToken).ConfigureAwait(false);
+
+            responseHeader = response.ResponseHeader;
+            results = response.Results;
+            diagnosticInfos = response.DiagnosticInfos;
 
             // verify that the server returned the correct number of results.
             ClientBase.ValidateResponse(results, valuesToRead);
@@ -2650,8 +2952,10 @@ namespace Opc.Ua.Client
                 // suitable value found.
                 values[ii] = value;
             }
-        }
 
+            errorHandler(errors);
+            return values;
+        }
 
         /// <summary>
         /// Reads the display name for a set of Nodes.
@@ -2661,8 +2965,26 @@ namespace Opc.Ua.Client
             out List<string> displayNames,
             out List<ServiceResult> errors)
         {
-            displayNames = new List<string>();
-            errors = new List<ServiceResult>();
+            List<ServiceResult> errorsOut = null;
+
+            displayNames = ReadDisplayNameAsync(
+                nodeIds, 
+                e => errorsOut = e, 
+                CancellationToken.None).GetAwaiter().GetResult();
+
+            errors = errorsOut;
+        }
+
+        /// <summary>
+        /// Reads the display name for a set of Nodes.
+        /// </summary>
+        public async Task<List<string>> ReadDisplayNameAsync(
+            IList<NodeId> nodeIds,
+            Action<List<ServiceResult>> outErrors,
+            CancellationToken cancellationToken)
+        {
+            List<string> displayNames = new List<string>();
+            List<ServiceResult> errors = new List<ServiceResult>();
 
             // build list of values to read.
             ReadValueIdCollection valuesToRead = new ReadValueIdCollection();
@@ -2682,14 +3004,19 @@ namespace Opc.Ua.Client
             // read the values.
             DataValueCollection results = null;
             DiagnosticInfoCollection diagnosticInfos = null;
+            ResponseHeader responseHeader;
 
-            ResponseHeader responseHeader = Read(
+            ReadResponse response = await this.ReadAsync(
                 null,
                 Int32.MaxValue,
                 TimestampsToReturn.Both,
                 valuesToRead,
-                out results,
-                out diagnosticInfos);
+                cancellationToken).ConfigureAwait(false);
+
+            responseHeader = response.ResponseHeader;
+            results = response.Results;
+            diagnosticInfos = response.DiagnosticInfos;
+
 
             // verify that the server returned the correct number of results.
             ClientBase.ValidateResponse(results, valuesToRead);
@@ -2715,20 +3042,23 @@ namespace Opc.Ua.Client
                     displayNames[ii] = displayName.Text;
                 }
             }
+
+            outErrors(errors);
+            return displayNames;
         }
 
-        /// <summary>
-        /// Disconnects from the server and frees any network resources.
-        /// </summary>
-        public override StatusCode Close()
-        {
-            return Close(m_keepAliveInterval);
-        }
+     //  /// <summary>
+     //  /// Disconnects from the server and frees any network resources.
+     //  /// </summary>
+     //  public override StatusCode Close()
+     //  {
+     //      return CloseAsync(CancellationToken.None).GetAwaiter().GetResult();
+     //  }
 
         /// <summary>
         /// Disconnects from the server and frees any network resources with the specified timeout.
         /// </summary>
-        public virtual StatusCode Close(int timeout)
+        public override async Task<StatusCode> CloseAsync(CancellationToken cancellationToken)
         {
             // check if already called.
             if (Disposed)
@@ -2772,11 +3102,9 @@ namespace Opc.Ua.Client
                 try
                 {
                     // close the session and delete all subscriptions.
-                    this.OperationTimeout = timeout;
-                    CloseSession(null, true);
-                    this.OperationTimeout = existingTimeout;
+                    CloseSessionResponse response = await CloseSessionAsync(null, true, cancellationToken).ConfigureAwait(false);
 
-                    Close();
+                    await CloseAsync(CancellationToken.None).ConfigureAwait(false);
 
                     // raised notification indicating the session is closed.
                     SessionCreated(null, null);
@@ -2838,11 +3166,21 @@ namespace Opc.Ua.Client
         /// <returns></returns>
         public bool RemoveSubscription(Subscription subscription)
         {
+            return RemoveSubscriptionAsync(subscription, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Removes a subscription from the session.
+        /// </summary>
+        /// <param name="subscription">The subscription to remove.</param>
+        /// <returns></returns>
+        public async Task<bool> RemoveSubscriptionAsync(Subscription subscription, CancellationToken cancellationToken)
+        {
             if (subscription == null) throw new ArgumentNullException("subscription");
 
             if (subscription.Created)
             {
-                subscription.Delete(false);
+                await subscription.DeleteAsync(false, cancellationToken).ConfigureAwait(false);
             }
 
             lock (SyncRoot)
@@ -2863,12 +3201,23 @@ namespace Opc.Ua.Client
             return true;
         }
 
+
         /// <summary>
         /// Removes a list of subscriptions from the sessiont.
         /// </summary>
         /// <param name="subscriptions">The list of subscriptions to remove.</param>
         /// <returns></returns>
         public bool RemoveSubscriptions(IEnumerable<Subscription> subscriptions)
+        {
+            return RemoveSubscriptions(subscriptions, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Removes a list of subscriptions from the sessiont.
+        /// </summary>
+        /// <param name="subscriptions">The list of subscriptions to remove.</param>
+        /// <returns></returns>
+        public async Task<bool> RemoveSubscriptions(IEnumerable<Subscription> subscriptions, CancellationToken cancellationToken)
         {
             if (subscriptions == null) throw new ArgumentNullException("subscriptions");
 
@@ -2893,7 +3242,7 @@ namespace Opc.Ua.Client
 
             foreach (Subscription subscription in subscriptionsToDelete)
             {
-                subscription.Delete(true);
+                await subscription.DeleteAsync(true, cancellationToken).ConfigureAwait(false);
             }
 
             if (removed)
@@ -2934,6 +3283,92 @@ namespace Opc.Ua.Client
             out byte[] continuationPoint,
             out ReferenceDescriptionCollection references)
         {
+            byte[] continuationPointOut = null;
+            ReferenceDescriptionCollection referencesOut = null;
+
+            ResponseHeader result = BrowseAsync(
+                requestHeader,
+                view,
+                nodeToBrowse,
+                maxResultsToReturn,
+                browseDirection,
+                referenceTypeId,
+                includeSubtypes,
+                nodeClassMask, (r, c) => { continuationPointOut = c; referencesOut = r; }, CancellationToken.None).GetAwaiter().GetResult();
+
+            continuationPoint = continuationPointOut;
+            references = referencesOut;
+
+            return result;
+        }
+
+        /// <summary>
+        /// Invokes the Browse service.
+        /// </summary>
+        /// <param name="requestHeader">The request header.</param>
+        /// <param name="view">The view to browse.</param>
+        /// <param name="nodeToBrowse">The node to browse.</param>
+        /// <param name="maxResultsToReturn">The maximum number of returned values.</param>
+        /// <param name="browseDirection">The browse direction.</param>
+        /// <param name="referenceTypeId">The reference type id.</param>
+        /// <param name="includeSubtypes">If set to <c>true</c> the subtypes of the ReferenceType will be included in the browse.</param>
+        /// <param name="nodeClassMask">The node class mask.</param>
+        /// <param name="cancellationToken">To cancel the request</param>
+        /// <returns></returns>
+        public virtual async Task<Tuple<ReferenceDescriptionCollection, byte[]>> BrowseAsync(
+            RequestHeader requestHeader,
+            ViewDescription view,
+            NodeId nodeToBrowse,
+            uint maxResultsToReturn,
+            BrowseDirection browseDirection,
+            NodeId referenceTypeId,
+            bool includeSubtypes,
+            uint nodeClassMask,
+            CancellationToken cancellationToken)
+        {
+            Tuple<ReferenceDescriptionCollection, byte[]> result = null;
+
+            await BrowseAsync(
+                requestHeader,
+                view,
+                nodeToBrowse,
+                maxResultsToReturn,
+                browseDirection,
+                referenceTypeId,
+                includeSubtypes,
+                nodeClassMask, 
+                (r, c) => result = Tuple.Create(r, c), 
+                cancellationToken).ConfigureAwait(false);
+
+            return result;
+        }
+
+        /// <summary>
+        /// Invokes the Browse service.
+        /// </summary>
+        /// <param name="requestHeader">The request header.</param>
+        /// <param name="view">The view to browse.</param>
+        /// <param name="nodeToBrowse">The node to browse.</param>
+        /// <param name="maxResultsToReturn">The maximum number of returned values.</param>
+        /// <param name="browseDirection">The browse direction.</param>
+        /// <param name="referenceTypeId">The reference type id.</param>
+        /// <param name="includeSubtypes">If set to <c>true</c> the subtypes of the ReferenceType will be included in the browse.</param>
+        /// <param name="nodeClassMask">The node class mask.</param>
+        /// <param name="resultHandler">To receive results</param>
+        /// <param name="cancellationToken">To cancel the request</param>
+        /// <returns></returns>
+        public virtual async Task<ResponseHeader> BrowseAsync(
+            RequestHeader requestHeader,
+            ViewDescription view,
+            NodeId nodeToBrowse,
+            uint maxResultsToReturn,
+            BrowseDirection browseDirection,
+            NodeId referenceTypeId,
+            bool includeSubtypes,
+            uint nodeClassMask,
+            Action<ReferenceDescriptionCollection, byte[]> resultHandler,
+            CancellationToken cancellationToken)
+        {
             BrowseDescription description = new BrowseDescription();
 
             description.NodeId = nodeToBrowse;
@@ -2949,13 +3384,18 @@ namespace Opc.Ua.Client
             BrowseResultCollection results;
             DiagnosticInfoCollection diagnosticInfos;
 
-            ResponseHeader responseHeader = Browse(
+            ResponseHeader responseHeader;
+
+            BrowseResponse response = await BrowseAsync(
                 requestHeader,
                 view,
                 maxResultsToReturn,
                 nodesToBrowse,
-                out results,
-                out diagnosticInfos);
+                cancellationToken).ConfigureAwait(false);
+
+            responseHeader = response.ResponseHeader;
+            results = response.Results;
+            diagnosticInfos = response.DiagnosticInfos;
 
             ClientBase.ValidateResponse(results, nodesToBrowse);
             ClientBase.ValidateDiagnosticInfos(diagnosticInfos, nodesToBrowse);
@@ -2965,9 +3405,7 @@ namespace Opc.Ua.Client
                 throw new ServiceResultException(new ServiceResult(results[0].StatusCode, 0, diagnosticInfos, responseHeader.StringTable));
             }
 
-            continuationPoint = results[0].ContinuationPoint;
-            references = results[0].References;
-
+            resultHandler?.Invoke(results[0].References, results[0].ContinuationPoint);
             return responseHeader;
         }
 
@@ -3066,18 +3504,70 @@ namespace Opc.Ua.Client
             out byte[] revisedContinuationPoint,
             out ReferenceDescriptionCollection references)
         {
+            byte[] continuationPointOut = null;
+            ReferenceDescriptionCollection referencesOut = null;
+
+            ResponseHeader responseHeader = BrowseNextAsync(
+                requestHeader,
+                releaseContinuationPoint,
+                continuationPoint,
+                (r, c) => { continuationPointOut = c; referencesOut = r; }, 
+                CancellationToken.None).GetAwaiter().GetResult();
+
+            revisedContinuationPoint = continuationPointOut;
+            references = referencesOut;
+
+            return responseHeader;
+        }
+
+        /// <summary>
+        /// Invokes the BrowseNext service.
+        /// <returns></returns>
+        public virtual async Task<Tuple<ReferenceDescriptionCollection, byte[]>> BrowseNextAsync(
+            RequestHeader requestHeader,
+            bool releaseContinuationPoint,
+            byte[] continuationPoint,
+            CancellationToken cancellationToken)
+        {
+            Tuple<ReferenceDescriptionCollection, byte[]> result = null;
+
+            await BrowseNextAsync(
+                requestHeader,
+                releaseContinuationPoint,
+                continuationPoint,
+                (r, c) => result = Tuple.Create(r, c), 
+                cancellationToken).ConfigureAwait(false);
+
+            return result;
+        }
+
+        /// <summary>
+        /// Invokes the BrowseNext service.
+        /// </summary>
+        public virtual async Task<ResponseHeader> BrowseNextAsync(
+            RequestHeader requestHeader,
+            bool releaseContinuationPoint,
+            byte[] continuationPoint,
+            Action<ReferenceDescriptionCollection, byte[]> resultHandler,
+            CancellationToken cancellationToken)
+        {
             ByteStringCollection continuationPoints = new ByteStringCollection();
             continuationPoints.Add(continuationPoint);
 
             BrowseResultCollection results;
             DiagnosticInfoCollection diagnosticInfos;
 
-            ResponseHeader responseHeader = BrowseNext(
+            ResponseHeader responseHeader;
+
+            BrowseNextResponse response = await BrowseNextAsync(
                 requestHeader,
                 releaseContinuationPoint,
                 continuationPoints,
-                out results,
-                out diagnosticInfos);
+                cancellationToken).ConfigureAwait(false);
+
+            responseHeader = response.ResponseHeader;
+            results = response.Results;
+            diagnosticInfos = response.DiagnosticInfos;
 
             ClientBase.ValidateResponse(results, continuationPoints);
             ClientBase.ValidateDiagnosticInfos(diagnosticInfos, continuationPoints);
@@ -3087,9 +3577,7 @@ namespace Opc.Ua.Client
                 throw new ServiceResultException(new ServiceResult(results[0].StatusCode, 0, diagnosticInfos, responseHeader.StringTable));
             }
 
-            revisedContinuationPoint = results[0].ContinuationPoint;
-            references = results[0].References;
-
+            resultHandler(results[0].References, results[0].ContinuationPoint);
             return responseHeader;
         }
 
@@ -3145,8 +3633,8 @@ namespace Opc.Ua.Client
 
             return responseHeader;
         }
-#endregion
 
+#endregion
         /// <summary>
         /// Calls the specified method and returns the output arguments.
         /// </summary>
@@ -3155,6 +3643,30 @@ namespace Opc.Ua.Client
         /// <param name="args">The input arguments.</param>
         /// <returns>The list of output argument values.</returns>
         public IList<object> Call(NodeId objectId, NodeId methodId, params object[] args)
+        {
+            return CallAsync(objectId, methodId, args, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Calls the specified method and returns the output arguments.
+        /// </summary>
+        /// <param name="objectId">The NodeId of the object that provides the method.</param>
+        /// <param name="methodId">The NodeId of the method to call.</param>
+        /// <param name="args">The input arguments.</param>
+        /// <returns>The list of output argument values.</returns>
+        public Task<IList<object>> CallAsync(NodeId objectId, NodeId methodId, params object[] args)
+        {
+            return CallAsync(objectId, methodId, args, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Calls the specified method and returns the output arguments.
+        /// </summary>
+        /// <param name="objectId">The NodeId of the object that provides the method.</param>
+        /// <param name="methodId">The NodeId of the method to call.</param>
+        /// <param name="args">The input arguments.</param>
+        /// <returns>The list of output argument values.</returns>
+        public async Task<IList<object>> CallAsync(NodeId objectId, NodeId methodId, object[] args, CancellationToken cancellationToken)
         {
             VariantCollection inputArguments = new VariantCollection();
 
@@ -3177,12 +3689,16 @@ namespace Opc.Ua.Client
 
             CallMethodResultCollection results;
             DiagnosticInfoCollection diagnosticInfos;
-
-            ResponseHeader responseHeader = Call(
+            ResponseHeader responseHeader;
+            
+            CallResponse response = await CallAsync(
                 null,
                 requests,
-                out results,
-                out diagnosticInfos);
+                cancellationToken).ConfigureAwait(false);
+
+            responseHeader = response.ResponseHeader;
+            results = response.Results;
+            diagnosticInfos = response.DiagnosticInfos;
 
             ClientBase.ValidateResponse(results, requests);
             ClientBase.ValidateDiagnosticInfos(diagnosticInfos, requests);
@@ -3791,6 +4307,14 @@ namespace Opc.Ua.Client
         /// </summary>
         public bool Republish(uint subscriptionId, uint sequenceNumber)
         {
+            return RepublishAsync(subscriptionId, sequenceNumber, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Sends a republish request.
+        /// </summary>
+        public async Task<bool> RepublishAsync(uint subscriptionId, uint sequenceNumber, CancellationToken cancellationToken)
+        {
             // send publish request.
             RequestHeader requestHeader = new RequestHeader();
 
@@ -3805,11 +4329,16 @@ namespace Opc.Ua.Client
                 // request republish.
                 NotificationMessage notificationMessage = null;
 
-                ResponseHeader responseHeader = Republish(
+                ResponseHeader responseHeader;
+
+                RepublishResponse response = await RepublishAsync(
                     requestHeader,
                     subscriptionId,
                     sequenceNumber,
-                    out notificationMessage);
+                    cancellationToken).ConfigureAwait(false);
+
+                responseHeader = response.ResponseHeader;
+                notificationMessage = response.NotificationMessage;
 
                 Utils.Trace("Received Republish for {0}-{1}", subscriptionId, sequenceNumber);
 

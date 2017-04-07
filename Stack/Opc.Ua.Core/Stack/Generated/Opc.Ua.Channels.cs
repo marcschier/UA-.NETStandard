@@ -82,7 +82,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.CreateSessionAsync(request);
+                return await this.Channel.CreateSessionAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -154,7 +154,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.ActivateSessionAsync(request);
+                return await this.Channel.ActivateSessionAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -226,7 +226,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.CloseSessionAsync(request);
+                return await this.Channel.CloseSessionAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -298,7 +298,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.CancelAsync(request);
+                return await this.Channel.CancelAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -370,7 +370,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.AddNodesAsync(request);
+                return await this.Channel.AddNodesAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -442,7 +442,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.AddReferencesAsync(request);
+                return await this.Channel.AddReferencesAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -514,7 +514,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.DeleteNodesAsync(request);
+                return await this.Channel.DeleteNodesAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -586,7 +586,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.DeleteReferencesAsync(request);
+                return await this.Channel.DeleteReferencesAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -658,7 +658,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.BrowseAsync(request);
+                return await this.Channel.BrowseAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -730,7 +730,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.BrowseNextAsync(request);
+                return await this.Channel.BrowseNextAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -802,7 +802,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.TranslateBrowsePathsToNodeIdsAsync(request);
+                return await this.Channel.TranslateBrowsePathsToNodeIdsAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -874,7 +874,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.RegisterNodesAsync(request);
+                return await this.Channel.RegisterNodesAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -946,7 +946,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.UnregisterNodesAsync(request);
+                return await this.Channel.UnregisterNodesAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -1018,7 +1018,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.QueryFirstAsync(request);
+                return await this.Channel.QueryFirstAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -1090,7 +1090,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.QueryNextAsync(request);
+                return await this.Channel.QueryNextAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -1162,7 +1162,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.ReadAsync(request);
+                return await this.Channel.ReadAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -1234,7 +1234,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.HistoryReadAsync(request);
+                return await this.Channel.HistoryReadAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -1306,7 +1306,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.WriteAsync(request);
+                return await this.Channel.WriteAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -1378,7 +1378,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.HistoryUpdateAsync(request);
+                return await this.Channel.HistoryUpdateAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -1450,7 +1450,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.CallAsync(request);
+                return await this.Channel.CallAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -1522,7 +1522,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.CreateMonitoredItemsAsync(request);
+                return await this.Channel.CreateMonitoredItemsAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -1594,7 +1594,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.ModifyMonitoredItemsAsync(request);
+                return await this.Channel.ModifyMonitoredItemsAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -1666,7 +1666,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.SetMonitoringModeAsync(request);
+                return await this.Channel.SetMonitoringModeAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -1738,7 +1738,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.SetTriggeringAsync(request);
+                return await this.Channel.SetTriggeringAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -1810,7 +1810,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.DeleteMonitoredItemsAsync(request);
+                return await this.Channel.DeleteMonitoredItemsAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -1882,7 +1882,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.CreateSubscriptionAsync(request);
+                return await this.Channel.CreateSubscriptionAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -1954,7 +1954,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.ModifySubscriptionAsync(request);
+                return await this.Channel.ModifySubscriptionAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -2026,7 +2026,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.SetPublishingModeAsync(request);
+                return await this.Channel.SetPublishingModeAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -2098,7 +2098,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.PublishAsync(request);
+                return await this.Channel.PublishAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -2170,7 +2170,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.RepublishAsync(request);
+                return await this.Channel.RepublishAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -2242,7 +2242,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.TransferSubscriptionsAsync(request);
+                return await this.Channel.TransferSubscriptionsAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -2314,7 +2314,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.DeleteSubscriptionsAsync(request);
+                return await this.Channel.DeleteSubscriptionsAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -2403,7 +2403,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.FindServersAsync(request);
+                return await this.Channel.FindServersAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -2475,7 +2475,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.FindServersOnNetworkAsync(request);
+                return await this.Channel.FindServersOnNetworkAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -2547,7 +2547,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.GetEndpointsAsync(request);
+                return await this.Channel.GetEndpointsAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -2636,7 +2636,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.RegisterServerAsync(request);
+                return await this.Channel.RegisterServerAsync(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {
@@ -2708,7 +2708,7 @@ namespace Opc.Ua
         {
             try
             {
-                return await this.Channel.RegisterServer2Async(request);
+                return await this.Channel.RegisterServer2Async(request).ConfigureAwait(false);
             }
             catch (FaultException<ServiceFault> e)
             {

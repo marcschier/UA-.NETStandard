@@ -34,6 +34,7 @@ using System.IO;
 
 using Opc.Ua.Schema;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace Opc.Ua.Client
 {
@@ -117,24 +118,32 @@ namespace Opc.Ua.Client
         /// <summary>
         /// Loads the dictionary idetified by the node id.
         /// </summary>
-        public async Task Load(ReferenceDescription dictionary)
+        public void Load(ReferenceDescription dictionary)
+        {
+            LoadAsync(dictionary, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Loads the dictionary idetified by the node id.
+        /// </summary>
+        public async Task LoadAsync(ReferenceDescription dictionary, CancellationToken cancellationToken)
         {
             if (dictionary == null) throw new ArgumentNullException("dictionary");
 
             NodeId dictionaryId = ExpandedNodeId.ToNodeId(dictionary.NodeId, m_session.NamespaceUris);
 
-            GetTypeSystem(dictionaryId);
+            await GetTypeSystemAsync(dictionaryId, cancellationToken).ConfigureAwait(false);
 
-            byte[] schema = ReadDictionary(dictionaryId);
+            byte[] schema = await ReadDictionaryAsync(dictionaryId, cancellationToken).ConfigureAwait(false);
 
             if (schema == null || schema.Length == 0)
             {
                 throw ServiceResultException.Create(StatusCodes.BadUnexpectedError, "Cannot parse empty data dictionary.");
             }
 
-            await Validate(schema);
+            await ValidateAsync(schema, cancellationToken).ConfigureAwait(false);
 
-            ReadDataTypes(dictionaryId);
+            await ReadDataTypesAsync(dictionaryId, cancellationToken).ConfigureAwait(false);
 
             m_dictionaryId = dictionaryId;
             m_name = dictionary.ToString();
@@ -167,14 +176,14 @@ namespace Opc.Ua.Client
 
             return m_validator.GetSchema(null);
         }
-		#endregion
-        
-		#region Private Members
+        #endregion
+
+        #region Private Members
         /// <summary>
         /// Retrieves the type system for the dictionary.
         /// </summary>
-        private void GetTypeSystem(NodeId dictionaryId)
-        {                    
+        private async Task GetTypeSystemAsync(NodeId dictionaryId, CancellationToken cancellationToken)
+        {
             Browser browser = new Browser(m_session);
             
             browser.BrowseDirection = BrowseDirection.Inverse;
@@ -182,7 +191,7 @@ namespace Opc.Ua.Client
             browser.IncludeSubtypes = false;
             browser.NodeClassMask   = 0;
 
-            ReferenceDescriptionCollection references = browser.Browse(dictionaryId);
+            ReferenceDescriptionCollection references = await browser.BrowseAsync(dictionaryId, cancellationToken).ConfigureAwait(false);
                                    
             if (references.Count > 0)
             {   
@@ -194,7 +203,7 @@ namespace Opc.Ua.Client
         /// <summary>
         /// Retrieves the data types in the dictionary.
         /// </summary>
-        private void ReadDataTypes(NodeId dictionaryId)
+        private async Task ReadDataTypesAsync(NodeId dictionaryId, CancellationToken cancellationToken)
         {                    
             Browser browser = new Browser(m_session);
             
@@ -203,7 +212,7 @@ namespace Opc.Ua.Client
             browser.IncludeSubtypes = false;
             browser.NodeClassMask   = 0;
 
-            ReferenceDescriptionCollection references = browser.Browse(dictionaryId);
+            ReferenceDescriptionCollection references = await browser.BrowseAsync(dictionaryId, cancellationToken).ConfigureAwait(false);
                                    
             foreach (ReferenceDescription reference in references)
             {
@@ -219,7 +228,7 @@ namespace Opc.Ua.Client
         /// <summary>
         /// Reads the contents of a data dictionary.
         /// </summary>
-        private byte[] ReadDictionary(NodeId dictionaryId)
+        private async Task<byte[]> ReadDictionaryAsync(NodeId dictionaryId, CancellationToken cancellationToken)
         {
             // create item to read.
             ReadValueId itemToRead = new ReadValueId();
@@ -235,14 +244,18 @@ namespace Opc.Ua.Client
             // read value.
             DataValueCollection values;
             DiagnosticInfoCollection diagnosticInfos;
+            ResponseHeader responseHeader;
 
-            ResponseHeader responseHeader = m_session.Read(
+            ReadResponse response = await m_session.ReadAsync(
                 null,
                 0,
                 TimestampsToReturn.Neither,
                 itemsToRead,
-                out values,
-                out diagnosticInfos);
+                cancellationToken).ConfigureAwait(false);
+
+            values = response.Results;
+            diagnosticInfos = response.DiagnosticInfos;
+            responseHeader = response.ResponseHeader;
 
             ClientBase.ValidateResponse(values, itemsToRead);
             ClientBase.ValidateDiagnosticInfos(diagnosticInfos, itemsToRead);      
@@ -262,7 +275,7 @@ namespace Opc.Ua.Client
         /// Validates the type dictionary.
         /// </summary>
         /// <param name="dictionary"></param>
-        private async Task Validate(byte[] dictionary)
+        private async Task ValidateAsync(byte[] dictionary, CancellationToken cancellationToken)
         {
             MemoryStream istrm = new MemoryStream(dictionary);
 
@@ -288,7 +301,7 @@ namespace Opc.Ua.Client
 
                 try
                 {
-                    await validator.Validate(istrm);
+                    await validator.ValidateAsync(istrm, cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {

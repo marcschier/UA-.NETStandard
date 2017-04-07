@@ -181,7 +181,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -195,7 +195,7 @@ namespace Opc.Ua
                 {
                     CreateSessionResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginCreateSession, InnerChannel.EndCreateSession, new CreateSessionMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.CreateSessionResponse == null)
                     {
@@ -413,7 +413,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -427,7 +427,7 @@ namespace Opc.Ua
                 {
                     ActivateSessionResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginActivateSession, InnerChannel.EndActivateSession, new ActivateSessionMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.ActivateSessionResponse == null)
                     {
@@ -605,7 +605,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -619,7 +619,7 @@ namespace Opc.Ua
                 {
                     CloseSessionResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginCloseSession, InnerChannel.EndCloseSession, new CloseSessionMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.CloseSessionResponse == null)
                     {
@@ -785,7 +785,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -799,7 +799,7 @@ namespace Opc.Ua
                 {
                     CancelResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginCancel, InnerChannel.EndCancel, new CancelMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.CancelResponse == null)
                     {
@@ -969,7 +969,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -983,7 +983,7 @@ namespace Opc.Ua
                 {
                     AddNodesResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginAddNodes, InnerChannel.EndAddNodes, new AddNodesMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.AddNodesResponse == null)
                     {
@@ -1155,7 +1155,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -1169,7 +1169,7 @@ namespace Opc.Ua
                 {
                     AddReferencesResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginAddReferences, InnerChannel.EndAddReferences, new AddReferencesMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.AddReferencesResponse == null)
                     {
@@ -1341,7 +1341,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -1355,7 +1355,7 @@ namespace Opc.Ua
                 {
                     DeleteNodesResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginDeleteNodes, InnerChannel.EndDeleteNodes, new DeleteNodesMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.DeleteNodesResponse == null)
                     {
@@ -1527,7 +1527,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -1541,7 +1541,7 @@ namespace Opc.Ua
                 {
                     DeleteReferencesResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginDeleteReferences, InnerChannel.EndDeleteReferences, new DeleteReferencesMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.DeleteReferencesResponse == null)
                     {
@@ -1721,7 +1721,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -1735,7 +1735,7 @@ namespace Opc.Ua
                 {
                     BrowseResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginBrowse, InnerChannel.EndBrowse, new BrowseMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.BrowseResponse == null)
                     {
@@ -1915,7 +1915,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -1929,7 +1929,7 @@ namespace Opc.Ua
                 {
                     BrowseNextResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginBrowseNext, InnerChannel.EndBrowseNext, new BrowseNextMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.BrowseNextResponse == null)
                     {
@@ -2103,7 +2103,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -2117,7 +2117,7 @@ namespace Opc.Ua
                 {
                     TranslateBrowsePathsToNodeIdsResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginTranslateBrowsePathsToNodeIds, InnerChannel.EndTranslateBrowsePathsToNodeIds, new TranslateBrowsePathsToNodeIdsMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.TranslateBrowsePathsToNodeIdsResponse == null)
                     {
@@ -2287,7 +2287,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -2301,7 +2301,7 @@ namespace Opc.Ua
                 {
                     RegisterNodesResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginRegisterNodes, InnerChannel.EndRegisterNodes, new RegisterNodesMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.RegisterNodesResponse == null)
                     {
@@ -2467,7 +2467,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -2481,7 +2481,7 @@ namespace Opc.Ua
                 {
                     UnregisterNodesResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginUnregisterNodes, InnerChannel.EndUnregisterNodes, new UnregisterNodesMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.UnregisterNodesResponse == null)
                     {
@@ -2671,7 +2671,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -2685,7 +2685,7 @@ namespace Opc.Ua
                 {
                     QueryFirstResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginQueryFirst, InnerChannel.EndQueryFirst, new QueryFirstMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.QueryFirstResponse == null)
                     {
@@ -2875,7 +2875,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -2889,7 +2889,7 @@ namespace Opc.Ua
                 {
                     QueryNextResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginQueryNext, InnerChannel.EndQueryNext, new QueryNextMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.QueryNextResponse == null)
                     {
@@ -3071,7 +3071,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -3085,7 +3085,7 @@ namespace Opc.Ua
                 {
                     ReadResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginRead, InnerChannel.EndRead, new ReadMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.ReadResponse == null)
                     {
@@ -3273,7 +3273,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -3287,7 +3287,7 @@ namespace Opc.Ua
                 {
                     HistoryReadResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginHistoryRead, InnerChannel.EndHistoryRead, new HistoryReadMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.HistoryReadResponse == null)
                     {
@@ -3465,7 +3465,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -3479,7 +3479,7 @@ namespace Opc.Ua
                 {
                     WriteResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginWrite, InnerChannel.EndWrite, new WriteMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.WriteResponse == null)
                     {
@@ -3651,7 +3651,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -3665,7 +3665,7 @@ namespace Opc.Ua
                 {
                     HistoryUpdateResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginHistoryUpdate, InnerChannel.EndHistoryUpdate, new HistoryUpdateMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.HistoryUpdateResponse == null)
                     {
@@ -3837,7 +3837,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -3851,7 +3851,7 @@ namespace Opc.Ua
                 {
                     CallResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginCall, InnerChannel.EndCall, new CallMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.CallResponse == null)
                     {
@@ -4031,7 +4031,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -4045,7 +4045,7 @@ namespace Opc.Ua
                 {
                     CreateMonitoredItemsResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginCreateMonitoredItems, InnerChannel.EndCreateMonitoredItems, new CreateMonitoredItemsMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.CreateMonitoredItemsResponse == null)
                     {
@@ -4229,7 +4229,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -4243,7 +4243,7 @@ namespace Opc.Ua
                 {
                     ModifyMonitoredItemsResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginModifyMonitoredItems, InnerChannel.EndModifyMonitoredItems, new ModifyMonitoredItemsMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.ModifyMonitoredItemsResponse == null)
                     {
@@ -4427,7 +4427,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -4441,7 +4441,7 @@ namespace Opc.Ua
                 {
                     SetMonitoringModeResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginSetMonitoringMode, InnerChannel.EndSetMonitoringMode, new SetMonitoringModeMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.SetMonitoringModeResponse == null)
                     {
@@ -4633,7 +4633,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -4647,7 +4647,7 @@ namespace Opc.Ua
                 {
                     SetTriggeringResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginSetTriggering, InnerChannel.EndSetTriggering, new SetTriggeringMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.SetTriggeringResponse == null)
                     {
@@ -4833,7 +4833,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -4847,7 +4847,7 @@ namespace Opc.Ua
                 {
                     DeleteMonitoredItemsResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginDeleteMonitoredItems, InnerChannel.EndDeleteMonitoredItems, new DeleteMonitoredItemsMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.DeleteMonitoredItemsResponse == null)
                     {
@@ -5045,7 +5045,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -5059,7 +5059,7 @@ namespace Opc.Ua
                 {
                     CreateSubscriptionResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginCreateSubscription, InnerChannel.EndCreateSubscription, new CreateSubscriptionMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.CreateSubscriptionResponse == null)
                     {
@@ -5267,7 +5267,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -5281,7 +5281,7 @@ namespace Opc.Ua
                 {
                     ModifySubscriptionResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginModifySubscription, InnerChannel.EndModifySubscription, new ModifySubscriptionMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.ModifySubscriptionResponse == null)
                     {
@@ -5469,7 +5469,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -5483,7 +5483,7 @@ namespace Opc.Ua
                 {
                     SetPublishingModeResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginSetPublishingMode, InnerChannel.EndSetPublishingMode, new SetPublishingModeMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.SetPublishingModeResponse == null)
                     {
@@ -5665,7 +5665,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -5679,7 +5679,7 @@ namespace Opc.Ua
                 {
                     PublishResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginPublish, InnerChannel.EndPublish, new PublishMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.PublishResponse == null)
                     {
@@ -5861,7 +5861,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -5875,7 +5875,7 @@ namespace Opc.Ua
                 {
                     RepublishResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginRepublish, InnerChannel.EndRepublish, new RepublishMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.RepublishResponse == null)
                     {
@@ -6051,7 +6051,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -6065,7 +6065,7 @@ namespace Opc.Ua
                 {
                     TransferSubscriptionsResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginTransferSubscriptions, InnerChannel.EndTransferSubscriptions, new TransferSubscriptionsMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.TransferSubscriptionsResponse == null)
                     {
@@ -6239,7 +6239,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -6253,7 +6253,7 @@ namespace Opc.Ua
                 {
                     DeleteSubscriptionsResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginDeleteSubscriptions, InnerChannel.EndDeleteSubscriptions, new DeleteSubscriptionsMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.DeleteSubscriptionsResponse == null)
                     {
@@ -6462,7 +6462,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -6476,7 +6476,7 @@ namespace Opc.Ua
                 {
                     FindServersResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginFindServers, InnerChannel.EndFindServers, new FindServersMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.FindServersResponse == null)
                     {
@@ -6658,7 +6658,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -6672,7 +6672,7 @@ namespace Opc.Ua
                 {
                     FindServersOnNetworkResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginFindServersOnNetwork, InnerChannel.EndFindServersOnNetwork, new FindServersOnNetworkMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.FindServersOnNetworkResponse == null)
                     {
@@ -6854,7 +6854,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -6868,7 +6868,7 @@ namespace Opc.Ua
                 {
                     GetEndpointsResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginGetEndpoints, InnerChannel.EndGetEndpoints, new GetEndpointsMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.GetEndpointsResponse == null)
                     {
@@ -7069,7 +7069,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -7083,7 +7083,7 @@ namespace Opc.Ua
                 {
                     RegisterServerResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginRegisterServer, InnerChannel.EndRegisterServer, new RegisterServerMessage(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.RegisterServerResponse == null)
                     {
@@ -7255,7 +7255,7 @@ namespace Opc.Ua
             {
                 if (UseTransportChannel)
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken);
+                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -7269,7 +7269,7 @@ namespace Opc.Ua
                 {
                     RegisterServer2ResponseMessage responseMessage = await System.Threading.Tasks.Task.Factory.FromAsync(
                         InnerChannel.BeginRegisterServer2, InnerChannel.EndRegisterServer2, new RegisterServer2Message(request), 
-                        null, System.Threading.Tasks.TaskCreationOptions.None);
+                        null, System.Threading.Tasks.TaskCreationOptions.None).ConfigureAwait(false);
 
                     if (responseMessage == null || responseMessage.RegisterServer2Response == null)
                     {

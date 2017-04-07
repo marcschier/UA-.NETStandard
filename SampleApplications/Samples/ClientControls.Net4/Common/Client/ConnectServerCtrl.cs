@@ -290,7 +290,7 @@ namespace Opc.Ua.Client.Controls
             EndpointConfiguration endpointConfiguration = EndpointConfiguration.Create(m_configuration);
             ConfiguredEndpoint endpoint = new ConfiguredEndpoint(null, endpointDescription, endpointConfiguration);
 
-            m_session = await Session.Create(
+            m_session = await Session.CreateAsync(
                 m_configuration,
                 endpoint,
                 false,
@@ -298,7 +298,8 @@ namespace Opc.Ua.Client.Controls
                 (String.IsNullOrEmpty(SessionName)) ? m_configuration.ApplicationName : SessionName,
                 60000,
                 UserIdentity,
-                PreferredLocales);
+                PreferredLocales,
+                System.Threading.CancellationToken.None);
 
             // set up keep alive callback.
             m_session.KeepAlive += new KeepAliveEventHandler(Session_KeepAlive);
@@ -340,7 +341,7 @@ namespace Opc.Ua.Client.Controls
             // disconnect any existing session.
             if (m_session != null)
             {
-                m_session.Close(10000);
+                m_session.Close();
                 m_session = null;
             }
 

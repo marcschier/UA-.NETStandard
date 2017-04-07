@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using Opc.Ua;
+using System.Threading.Tasks;
 
 namespace Opc.Ua.Client
 {
@@ -94,7 +95,7 @@ namespace Opc.Ua.Client
                 m_reconnectFailed = false;
                 m_reconnectPeriod = reconnectPeriod;
                 m_callback = callback;
-                m_reconnectTimer = new System.Threading.Timer(OnReconnect, null, reconnectPeriod, Timeout.Infinite);
+                m_reconnectTimer = new System.Threading.Timer(OnReconnectAsync, null, reconnectPeriod, Timeout.Infinite);
             }
         }
         #endregion
@@ -103,7 +104,7 @@ namespace Opc.Ua.Client
         /// <summary>
         /// Called when the reconnect timer expires.
         /// </summary>
-        private void OnReconnect(object state)
+        private async void OnReconnectAsync(object state)
         {
             try
             {
@@ -114,7 +115,8 @@ namespace Opc.Ua.Client
                 }
 
                 // do the reconnect.
-                if (DoReconnect())
+                bool success = await DoReconnectAsync().ConfigureAwait(false);
+                if (success)
                 {
                     lock (m_lock)
                     {
@@ -137,14 +139,14 @@ namespace Opc.Ua.Client
             // schedule the next reconnect.
             lock (m_lock)
             {
-                m_reconnectTimer = new System.Threading.Timer(OnReconnect, null, m_reconnectPeriod, Timeout.Infinite);
+                m_reconnectTimer = new System.Threading.Timer(OnReconnectAsync, null, m_reconnectPeriod, Timeout.Infinite);
             }
         }
 
         /// <summary>
         /// Reconnects to the server.
         /// </summary>
-        private bool DoReconnect()
+        private async Task<bool> DoReconnectAsync()
         {
             // try a reconnect.
             if (!m_reconnectFailed)
@@ -181,8 +183,8 @@ namespace Opc.Ua.Client
             // re-create the session.
             try
             {
-                Session session = Session.Recreate(m_session);
-                m_session.Close();
+                Session session = await Session.RecreateAsync(m_session, CancellationToken.None).ConfigureAwait(false);
+                await m_session.CloseAsync(CancellationToken.None).ConfigureAwait(false);
                 m_session = session;
                 return true;
             }

@@ -491,6 +491,421 @@ namespace Opc.Ua
     }
     #endregion
 
+    #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+    #region ISessionServerAsync Interface
+    /// <summary>
+    /// An interface to a UA server implementation using asynchronous Task based callbacks.
+    /// </summary>
+    /// <exclude />
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.CodeGenerator", "1.0.0.0")]
+    public interface ISessionServerAsync : IServerAsyncBase
+    {
+        #if (!OPCUA_EXCLUDE_FindServers)
+        /// <summary>
+        /// Invokes the FindServers service.
+        /// </summary>
+        System.Threading.Tasks.Task<FindServersResponse> FindServersAsync(
+            RequestHeader                      requestHeader,
+            string                             endpointUrl,
+            StringCollection                   localeIds,
+            StringCollection                   serverUris,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_FindServersOnNetwork)
+        /// <summary>
+        /// Invokes the FindServersOnNetwork service.
+        /// </summary>
+        System.Threading.Tasks.Task<FindServersOnNetworkResponse> FindServersOnNetworkAsync(
+            RequestHeader                      requestHeader,
+            uint                               startingRecordId,
+            uint                               maxRecordsToReturn,
+            StringCollection                   serverCapabilityFilter,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_GetEndpoints)
+        /// <summary>
+        /// Invokes the GetEndpoints service.
+        /// </summary>
+        System.Threading.Tasks.Task<GetEndpointsResponse> GetEndpointsAsync(
+            RequestHeader                      requestHeader,
+            string                             endpointUrl,
+            StringCollection                   localeIds,
+            StringCollection                   profileUris,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_CreateSession)
+        /// <summary>
+        /// Invokes the CreateSession service.
+        /// </summary>
+        System.Threading.Tasks.Task<CreateSessionResponse> CreateSessionAsync(
+            RequestHeader                      requestHeader,
+            ApplicationDescription             clientDescription,
+            string                             serverUri,
+            string                             endpointUrl,
+            string                             sessionName,
+            byte[]                             clientNonce,
+            byte[]                             clientCertificate,
+            double                             requestedSessionTimeout,
+            uint                               maxResponseMessageSize,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_ActivateSession)
+        /// <summary>
+        /// Invokes the ActivateSession service.
+        /// </summary>
+        System.Threading.Tasks.Task<ActivateSessionResponse> ActivateSessionAsync(
+            RequestHeader                       requestHeader,
+            SignatureData                       clientSignature,
+            SignedSoftwareCertificateCollection clientSoftwareCertificates,
+            StringCollection                    localeIds,
+            ExtensionObject                     userIdentityToken,
+            SignatureData                       userTokenSignature,
+            System.Threading.CancellationToken  cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_CloseSession)
+        /// <summary>
+        /// Invokes the CloseSession service.
+        /// </summary>
+        System.Threading.Tasks.Task<CloseSessionResponse> CloseSessionAsync(
+            RequestHeader                      requestHeader,
+            bool                               deleteSubscriptions,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_Cancel)
+        /// <summary>
+        /// Invokes the Cancel service.
+        /// </summary>
+        System.Threading.Tasks.Task<CancelResponse> CancelAsync(
+            RequestHeader                      requestHeader,
+            uint                               requestHandle,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_AddNodes)
+        /// <summary>
+        /// Invokes the AddNodes service.
+        /// </summary>
+        System.Threading.Tasks.Task<AddNodesResponse> AddNodesAsync(
+            RequestHeader                      requestHeader,
+            AddNodesItemCollection             nodesToAdd,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_AddReferences)
+        /// <summary>
+        /// Invokes the AddReferences service.
+        /// </summary>
+        System.Threading.Tasks.Task<AddReferencesResponse> AddReferencesAsync(
+            RequestHeader                      requestHeader,
+            AddReferencesItemCollection        referencesToAdd,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_DeleteNodes)
+        /// <summary>
+        /// Invokes the DeleteNodes service.
+        /// </summary>
+        System.Threading.Tasks.Task<DeleteNodesResponse> DeleteNodesAsync(
+            RequestHeader                      requestHeader,
+            DeleteNodesItemCollection          nodesToDelete,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_DeleteReferences)
+        /// <summary>
+        /// Invokes the DeleteReferences service.
+        /// </summary>
+        System.Threading.Tasks.Task<DeleteReferencesResponse> DeleteReferencesAsync(
+            RequestHeader                      requestHeader,
+            DeleteReferencesItemCollection     referencesToDelete,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_Browse)
+        /// <summary>
+        /// Invokes the Browse service.
+        /// </summary>
+        System.Threading.Tasks.Task<BrowseResponse> BrowseAsync(
+            RequestHeader                      requestHeader,
+            ViewDescription                    view,
+            uint                               requestedMaxReferencesPerNode,
+            BrowseDescriptionCollection        nodesToBrowse,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_BrowseNext)
+        /// <summary>
+        /// Invokes the BrowseNext service.
+        /// </summary>
+        System.Threading.Tasks.Task<BrowseNextResponse> BrowseNextAsync(
+            RequestHeader                      requestHeader,
+            bool                               releaseContinuationPoints,
+            ByteStringCollection               continuationPoints,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_TranslateBrowsePathsToNodeIds)
+        /// <summary>
+        /// Invokes the TranslateBrowsePathsToNodeIds service.
+        /// </summary>
+        System.Threading.Tasks.Task<TranslateBrowsePathsToNodeIdsResponse> TranslateBrowsePathsToNodeIdsAsync(
+            RequestHeader                      requestHeader,
+            BrowsePathCollection               browsePaths,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_RegisterNodes)
+        /// <summary>
+        /// Invokes the RegisterNodes service.
+        /// </summary>
+        System.Threading.Tasks.Task<RegisterNodesResponse> RegisterNodesAsync(
+            RequestHeader                      requestHeader,
+            NodeIdCollection                   nodesToRegister,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_UnregisterNodes)
+        /// <summary>
+        /// Invokes the UnregisterNodes service.
+        /// </summary>
+        System.Threading.Tasks.Task<UnregisterNodesResponse> UnregisterNodesAsync(
+            RequestHeader                      requestHeader,
+            NodeIdCollection                   nodesToUnregister,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_QueryFirst)
+        /// <summary>
+        /// Invokes the QueryFirst service.
+        /// </summary>
+        System.Threading.Tasks.Task<QueryFirstResponse> QueryFirstAsync(
+            RequestHeader                      requestHeader,
+            ViewDescription                    view,
+            NodeTypeDescriptionCollection      nodeTypes,
+            ContentFilter                      filter,
+            uint                               maxDataSetsToReturn,
+            uint                               maxReferencesToReturn,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_QueryNext)
+        /// <summary>
+        /// Invokes the QueryNext service.
+        /// </summary>
+        System.Threading.Tasks.Task<QueryNextResponse> QueryNextAsync(
+            RequestHeader                      requestHeader,
+            bool                               releaseContinuationPoint,
+            byte[]                             continuationPoint,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_Read)
+        /// <summary>
+        /// Invokes the Read service.
+        /// </summary>
+        System.Threading.Tasks.Task<ReadResponse> ReadAsync(
+            RequestHeader                      requestHeader,
+            double                             maxAge,
+            TimestampsToReturn                 timestampsToReturn,
+            ReadValueIdCollection              nodesToRead,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_HistoryRead)
+        /// <summary>
+        /// Invokes the HistoryRead service.
+        /// </summary>
+        System.Threading.Tasks.Task<HistoryReadResponse> HistoryReadAsync(
+            RequestHeader                      requestHeader,
+            ExtensionObject                    historyReadDetails,
+            TimestampsToReturn                 timestampsToReturn,
+            bool                               releaseContinuationPoints,
+            HistoryReadValueIdCollection       nodesToRead,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_Write)
+        /// <summary>
+        /// Invokes the Write service.
+        /// </summary>
+        System.Threading.Tasks.Task<WriteResponse> WriteAsync(
+            RequestHeader                      requestHeader,
+            WriteValueCollection               nodesToWrite,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_HistoryUpdate)
+        /// <summary>
+        /// Invokes the HistoryUpdate service.
+        /// </summary>
+        System.Threading.Tasks.Task<HistoryUpdateResponse> HistoryUpdateAsync(
+            RequestHeader                      requestHeader,
+            ExtensionObjectCollection          historyUpdateDetails,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_Call)
+        /// <summary>
+        /// Invokes the Call service.
+        /// </summary>
+        System.Threading.Tasks.Task<CallResponse> CallAsync(
+            RequestHeader                      requestHeader,
+            CallMethodRequestCollection        methodsToCall,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_CreateMonitoredItems)
+        /// <summary>
+        /// Invokes the CreateMonitoredItems service.
+        /// </summary>
+        System.Threading.Tasks.Task<CreateMonitoredItemsResponse> CreateMonitoredItemsAsync(
+            RequestHeader                        requestHeader,
+            uint                                 subscriptionId,
+            TimestampsToReturn                   timestampsToReturn,
+            MonitoredItemCreateRequestCollection itemsToCreate,
+            System.Threading.CancellationToken   cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_ModifyMonitoredItems)
+        /// <summary>
+        /// Invokes the ModifyMonitoredItems service.
+        /// </summary>
+        System.Threading.Tasks.Task<ModifyMonitoredItemsResponse> ModifyMonitoredItemsAsync(
+            RequestHeader                        requestHeader,
+            uint                                 subscriptionId,
+            TimestampsToReturn                   timestampsToReturn,
+            MonitoredItemModifyRequestCollection itemsToModify,
+            System.Threading.CancellationToken   cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_SetMonitoringMode)
+        /// <summary>
+        /// Invokes the SetMonitoringMode service.
+        /// </summary>
+        System.Threading.Tasks.Task<SetMonitoringModeResponse> SetMonitoringModeAsync(
+            RequestHeader                      requestHeader,
+            uint                               subscriptionId,
+            MonitoringMode                     monitoringMode,
+            UInt32Collection                   monitoredItemIds,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_SetTriggering)
+        /// <summary>
+        /// Invokes the SetTriggering service.
+        /// </summary>
+        System.Threading.Tasks.Task<SetTriggeringResponse> SetTriggeringAsync(
+            RequestHeader                      requestHeader,
+            uint                               subscriptionId,
+            uint                               triggeringItemId,
+            UInt32Collection                   linksToAdd,
+            UInt32Collection                   linksToRemove,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_DeleteMonitoredItems)
+        /// <summary>
+        /// Invokes the DeleteMonitoredItems service.
+        /// </summary>
+        System.Threading.Tasks.Task<DeleteMonitoredItemsResponse> DeleteMonitoredItemsAsync(
+            RequestHeader                      requestHeader,
+            uint                               subscriptionId,
+            UInt32Collection                   monitoredItemIds,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_CreateSubscription)
+        /// <summary>
+        /// Invokes the CreateSubscription service.
+        /// </summary>
+        System.Threading.Tasks.Task<CreateSubscriptionResponse> CreateSubscriptionAsync(
+            RequestHeader                      requestHeader,
+            double                             requestedPublishingInterval,
+            uint                               requestedLifetimeCount,
+            uint                               requestedMaxKeepAliveCount,
+            uint                               maxNotificationsPerPublish,
+            bool                               publishingEnabled,
+            byte                               priority,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_ModifySubscription)
+        /// <summary>
+        /// Invokes the ModifySubscription service.
+        /// </summary>
+        System.Threading.Tasks.Task<ModifySubscriptionResponse> ModifySubscriptionAsync(
+            RequestHeader                      requestHeader,
+            uint                               subscriptionId,
+            double                             requestedPublishingInterval,
+            uint                               requestedLifetimeCount,
+            uint                               requestedMaxKeepAliveCount,
+            uint                               maxNotificationsPerPublish,
+            byte                               priority,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_SetPublishingMode)
+        /// <summary>
+        /// Invokes the SetPublishingMode service.
+        /// </summary>
+        System.Threading.Tasks.Task<SetPublishingModeResponse> SetPublishingModeAsync(
+            RequestHeader                      requestHeader,
+            bool                               publishingEnabled,
+            UInt32Collection                   subscriptionIds,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_Publish)
+        /// <summary>
+        /// Invokes the Publish service.
+        /// </summary>
+        System.Threading.Tasks.Task<PublishResponse> PublishAsync(
+            RequestHeader                         requestHeader,
+            SubscriptionAcknowledgementCollection subscriptionAcknowledgements,
+            System.Threading.CancellationToken    cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_Republish)
+        /// <summary>
+        /// Invokes the Republish service.
+        /// </summary>
+        System.Threading.Tasks.Task<RepublishResponse> RepublishAsync(
+            RequestHeader                      requestHeader,
+            uint                               subscriptionId,
+            uint                               retransmitSequenceNumber,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_TransferSubscriptions)
+        /// <summary>
+        /// Invokes the TransferSubscriptions service.
+        /// </summary>
+        System.Threading.Tasks.Task<TransferSubscriptionsResponse> TransferSubscriptionsAsync(
+            RequestHeader                      requestHeader,
+            UInt32Collection                   subscriptionIds,
+            bool                               sendInitialValues,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_DeleteSubscriptions)
+        /// <summary>
+        /// Invokes the DeleteSubscriptions service.
+        /// </summary>
+        System.Threading.Tasks.Task<DeleteSubscriptionsResponse> DeleteSubscriptionsAsync(
+            RequestHeader                      requestHeader,
+            UInt32Collection                   subscriptionIds,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+    }
+    #endregion
+    #endif
+
     #region SessionServerBase Class
     /// <summary>
     /// A basic implementation of the UA server.
@@ -1378,6 +1793,75 @@ namespace Opc.Ua
         #endif
     }
     #endregion
+
+    #if (OPCUA_ASYNC_TASK || NET_STANDARD)
+    #region IDiscoveryServerAsync Interface
+    /// <summary>
+    /// An interface to a UA server implementation using asynchronous Task based callbacks.
+    /// </summary>
+    /// <exclude />
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.CodeGenerator", "1.0.0.0")]
+    public interface IDiscoveryServerAsync : IServerAsyncBase
+    {
+        #if (!OPCUA_EXCLUDE_FindServers)
+        /// <summary>
+        /// Invokes the FindServers service.
+        /// </summary>
+        System.Threading.Tasks.Task<FindServersResponse> FindServersAsync(
+            RequestHeader                      requestHeader,
+            string                             endpointUrl,
+            StringCollection                   localeIds,
+            StringCollection                   serverUris,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_FindServersOnNetwork)
+        /// <summary>
+        /// Invokes the FindServersOnNetwork service.
+        /// </summary>
+        System.Threading.Tasks.Task<FindServersOnNetworkResponse> FindServersOnNetworkAsync(
+            RequestHeader                      requestHeader,
+            uint                               startingRecordId,
+            uint                               maxRecordsToReturn,
+            StringCollection                   serverCapabilityFilter,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_GetEndpoints)
+        /// <summary>
+        /// Invokes the GetEndpoints service.
+        /// </summary>
+        System.Threading.Tasks.Task<GetEndpointsResponse> GetEndpointsAsync(
+            RequestHeader                      requestHeader,
+            string                             endpointUrl,
+            StringCollection                   localeIds,
+            StringCollection                   profileUris,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_RegisterServer)
+        /// <summary>
+        /// Invokes the RegisterServer service.
+        /// </summary>
+        System.Threading.Tasks.Task<RegisterServerResponse> RegisterServerAsync(
+            RequestHeader                      requestHeader,
+            RegisteredServer                   server,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+
+        #if (!OPCUA_EXCLUDE_RegisterServer2)
+        /// <summary>
+        /// Invokes the RegisterServer2 service.
+        /// </summary>
+        System.Threading.Tasks.Task<RegisterServer2Response> RegisterServer2Async(
+            RequestHeader                      requestHeader,
+            RegisteredServer                   server,
+            ExtensionObjectCollection          discoveryConfiguration,
+            System.Threading.CancellationToken cancellationToken);
+        #endif
+    }
+    #endregion
+    #endif
 
     #region DiscoveryServerBase Class
     /// <summary>

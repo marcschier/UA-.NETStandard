@@ -94,45 +94,6 @@ namespace Opc.Ua
             }
         }
 
-        /// <summary>
-        /// Opens the channel with the server.
-        /// </summary>
-        public void OpenChannel()
-        {
-            ICommunicationObject channel = m_channel as ICommunicationObject;
-
-            if (channel != null && channel.State == CommunicationState.Closed)
-            {
-                channel.Open();
-            }
-        }
-
-        /// <summary>
-        /// Closes the channel with the server.
-        /// </summary>
-        public void CloseChannel()
-        {
-            ICommunicationObject channel = m_channel as ICommunicationObject;
-
-            if (channel != null && channel.State == CommunicationState.Opened)
-            {
-                channel.Abort();
-            }
-        }
-
-        /// <summary>
-        /// Schedules an outgoing request.
-        /// </summary>
-        /// <param name="request">The request.</param>
-        public void ScheduleOutgoingRequest(IChannelOutgoingRequest request)
-        {
-            #if MANAGE_CHANNEL_THREADS
-            System.Threading.Thread thread = new System.Threading.Thread(OnSendRequest);
-            thread.Start(request);
-            #else
-            throw new NotImplementedException();
-            #endif
-        }
         #endregion
 
         #region ITransportChannel Members
@@ -458,14 +419,8 @@ namespace Opc.Ua
                 return m_wcfBypassChannel.BeginSendRequest(request, callback, callbackData);
             }
 
-            #if MANAGE_CHANNEL_THREADS
-            SendRequestAsyncResult asyncResult = new SendRequestAsyncResult(this, callback, callbackData, 0);
-            asyncResult.BeginSendRequest(SendRequest, request);
-            return asyncResult;
-            #else
             byte[] requestMessage = BinaryEncoder.EncodeMessage(request, m_messageContext);
             return BeginInvokeService(new InvokeServiceMessage(requestMessage), callback, callbackData);
-            #endif
         }
 
         /// <summary>
@@ -478,18 +433,19 @@ namespace Opc.Ua
                 return m_wcfBypassChannel.EndSendRequest(result);
             }
 
-            #if MANAGE_CHANNEL_THREADS
-            return SendRequestAsyncResult.WaitForComplete(result);
-            #else
             InvokeServiceResponseMessage responseMessage = EndInvokeService(result);
             return (IServiceResponse)BinaryDecoder.DecodeMessage(responseMessage.InvokeServiceResponse, null, m_messageContext);
-            #endif
         }
 
         /// <summary>
         /// The client side implementation of the InvokeService service contract.
         /// </summary>
         public abstract InvokeServiceResponseMessage InvokeService(InvokeServiceMessage request);
+
+        /// <summary>
+        /// The client side implementation of the InvokeService service contract.
+        /// </summary>
+        public abstract Task<InvokeServiceResponseMessage> InvokeServiceAsync(InvokeServiceMessage request);
 
         /// <summary>
         /// The client side implementation of the BeginInvokeService service contract.
@@ -501,217 +457,6 @@ namespace Opc.Ua
         /// </summary>
         public abstract InvokeServiceResponseMessage EndInvokeService(IAsyncResult result);
         #endregion
-        
-        #if MANAGE_CHANNEL_THREADS
-        #region SendRequestAsyncResult Class
-        /// <summary>
-        /// An AsyncResult object when handling an asynchronous request.
-        /// </summary>
-        protected class SendRequestAsyncResult : AsyncResultBase, IChannelOutgoingRequest
-        {
-            #region Constructors
-            /// <summary>
-            /// Initializes a new instance of the <see cref="SendRequestAsyncResult"/> class.
-            /// </summary>
-            /// <param name="channel">The channel being used.</param>
-            /// <param name="callback">The callback to use when the operation completes.</param>
-            /// <param name="callbackData">The callback data.</param>
-            /// <param name="timeout">The timeout in milliseconds</param>
-            public SendRequestAsyncResult(
-                IChannelBase channel,
-                AsyncCallback callback,
-                object callbackData,
-                int timeout)
-            :
-                base(callback, callbackData, timeout)
-            {
-                m_channel = channel;
-            }
-            #endregion
-
-            #region IChannelOutgoingRequest Members
-            /// <summary>
-            /// Gets the request.
-            /// </summary>
-            /// <value>The request.</value>
-            public IServiceRequest Request
-            {
-                get { return m_request; }
-            }
-
-            /// <summary>
-            /// Gets the handler used to send the request.
-            /// </summary>
-            /// <value>The send request handler.</value>
-            public ChannelSendRequestEventHandler Handler
-            {
-                get { return m_handler; }
-            }
-
-            /// <summary>
-            /// Used to call the default synchronous handler.
-            /// </summary>
-            /// <remarks>
-            /// This method may block the current thread so the caller must not call in the
-            /// thread that calls IServerBase.ScheduleIncomingRequest().
-            /// This method always traps any exceptions and reports them to the client as a fault.
-            /// </remarks>
-            public void CallSynchronously()
-            {
-                OnSendRequest(null);
-            }
-
-            /// <summary>
-            /// Used to indicate that the asynchronous operation has completed.
-            /// </summary>
-            /// <param name="response">The response. May be null if an error is provided.</param>
-            /// <param name="error"></param>
-            public void OperationCompleted(IServiceResponse response, ServiceResult error)
-            {
-                // save response and/or error.
-                m_error = null;
-                m_response = response;
-
-                if (ServiceResult.IsBad(error))
-                {
-                    m_error = new ServiceResultException(error);
-                    m_response = null;
-                }
-
-                // operation completed.
-                OperationCompleted();
-            }
-            #endregion
-
-            #region Public Members
-            /// <summary>
-            /// Begins processing an incoming request.
-            /// </summary>
-            /// <param name="handler">The method which sends the request.</param>
-            /// <param name="request">The request.</param>
-            /// <returns>The result object that is used to call the EndSendRequest method.</returns>
-            public IAsyncResult BeginSendRequest(
-                ChannelSendRequestEventHandler handler,
-                IServiceRequest request)
-            {
-                m_handler = handler;
-                m_request = request;
-
-                try
-                {
-                    // queue request.
-                    m_channel.ScheduleOutgoingRequest(this);
-                }
-                catch (Exception e)
-                {
-                    m_error = e;
-                    m_response = null;
-
-                    // operation completed.
-                    OperationCompleted();
-                }
-
-                return this;
-            }
-
-            /// <summary>
-            /// Checks for a valid IAsyncResult object and waits for the operation to complete.
-            /// </summary>
-            /// <param name="ar">The IAsyncResult object for the operation.</param>
-            /// <returns>The response.</returns>
-            public static new IServiceResponse WaitForComplete(IAsyncResult ar)
-            {
-                SendRequestAsyncResult result = ar as SendRequestAsyncResult;
-
-                if (result == null)
-                {
-                    throw new ArgumentException("End called with an invalid IAsyncResult object.", "ar");
-                }
-
-                if (result.m_response == null && result.m_error == null)
-                {
-                    if (!result.WaitForComplete())
-                    {
-                        throw new TimeoutException();
-                    }
-                }
-
-                if (result.m_error != null)
-                {
-                    throw new ServiceResultException(result.m_error, StatusCodes.BadInternalError);
-                }
-
-                return result.m_response;
-            }
-
-            /// <summary>
-            /// Checks for a valid IAsyncResult object and returns the original request object.
-            /// </summary>
-            /// <param name="ar">The IAsyncResult object for the operation.</param>
-            /// <returns>The request object if available; otherwise null.</returns>
-            public static IServiceRequest GetRequest(IAsyncResult ar)
-            {
-                SendRequestAsyncResult result = ar as SendRequestAsyncResult;
-
-                if (result != null)
-                {
-                    return result.m_request;
-                }
-
-                return null;
-            }
-            #endregion
-
-            #region Private Members
-            /// <summary>
-            /// Processes the request.
-            /// </summary>
-            private void OnSendRequest(object state)
-            {
-                try
-                {
-                    // call the service.
-                    m_response = m_handler(m_request);
-                }
-                catch (Exception e)
-                {
-                    // save any error.
-                    m_error = e;
-                    m_response = null;
-                }
-
-                // report completion.
-                OperationCompleted();
-            }
-            #endregion
-
-            #region Private Fields
-            private IChannelBase m_channel;
-            private ChannelSendRequestEventHandler m_handler;
-            private IServiceRequest m_request;
-            private IServiceResponse m_response;
-            private Exception m_error;
-            #endregion
-        }
-        #endregion
-        
-        /// <summary>
-        /// Processes the request.
-        /// </summary>
-        /// <param name="state">IChannelOutgoingRequest object passed to the ScheduleOutgoingRequest method.</param>
-        protected virtual void OnSendRequest(object state)
-        {
-            try
-            {
-                IChannelOutgoingRequest request = (IChannelOutgoingRequest)state;
-                request.CallSynchronously();
-            }
-            catch (Exception e)
-            {
-                Utils.Trace(e, "Unexpected error sending outgoing request.");
-            }
-        }
-        #endif
 
         #region Protected Methods
         /// <summary>
@@ -843,6 +588,19 @@ namespace Opc.Ua
         }
         #endregion
 
+        /// <summary>
+        /// Closes the channel with the server.
+        /// </summary>
+        internal void CloseChannel()
+        {
+            ICommunicationObject channel = m_channel as ICommunicationObject;
+
+            if (channel != null && channel.State == CommunicationState.Opened)
+            {
+                channel.Abort();
+            }
+        }
+
         #region Private Fields
 
         internal TransportChannelSettings m_settings;
@@ -902,7 +660,15 @@ namespace Opc.Ua
                 result = this.Channel.BeginInvokeService(request, null, null);
             }
 
-            return this.Channel.EndInvokeService(result);
+           return this.Channel.EndInvokeService(result);
+        }
+
+        /// <summary>
+        /// The client side implementation of the InvokeService service contract.
+        /// </summary>
+        public override Task<InvokeServiceResponseMessage> InvokeServiceAsync(InvokeServiceMessage request)
+        {
+            return this.Channel.InvokeServiceAsync(request);
         }
 
         /// <summary>

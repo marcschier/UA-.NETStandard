@@ -91,11 +91,8 @@ namespace Opc.Ua.Bindings
         {
             if (disposing)
             {
-                lock (m_lock)
-                {
-                    Utils.SilentDispose(m_host);
-                    m_host = null;
-                }
+                Utils.SilentDispose(m_host);
+                m_host = null;
             }
         }
         #endregion
@@ -210,8 +207,6 @@ namespace Opc.Ua.Bindings
         /// </summary>
         public async void SendAsync(HttpContext context)
         {
-            IAsyncResult result = null;
-
             try
             {
                 if (m_callback == null)
@@ -224,11 +219,7 @@ namespace Opc.Ua.Bindings
                 }
 
                 byte[] buffer = new byte[(int)context.Request.ContentLength];
-                lock (m_lock)
-                {
-                    Task<int> task = context.Request.Body.ReadAsync(buffer, 0, (int)context.Request.ContentLength);
-                    task.Wait();
-                }
+                await context.Request.Body.ReadAsync(buffer, 0, (int)context.Request.ContentLength).ConfigureAwait(false);
 
                 IServiceRequest input = (IServiceRequest)BinaryDecoder.DecodeMessage(buffer, null, m_quotas.MessageContext);
 
@@ -263,14 +254,7 @@ namespace Opc.Ua.Bindings
                     }
                 }
 
-                result = m_callback.BeginProcessRequest(
-                    m_listenerId,
-                    endpoint,
-                    input as IServiceRequest,
-                    null,
-                    null);
-
-                IServiceResponse output = m_callback.EndProcessRequest(result);
+                IServiceResponse output = await m_callback.ProcessRequestAsync(m_listenerId, endpoint, input as IServiceRequest).ConfigureAwait(false);
 
                 byte[] response = BinaryEncoder.EncodeMessage(output, m_quotas.MessageContext);
                 context.Response.ContentLength = response.Length;
@@ -290,8 +274,6 @@ namespace Opc.Ua.Bindings
         #endregion
 
         #region Private Fields
-        private object m_lock = new object();
-
         private string m_listenerId;
         private Uri m_uri;
         private EndpointDescriptionCollection m_descriptions;
