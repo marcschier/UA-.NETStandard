@@ -18,6 +18,11 @@ namespace Opc.Ua
     public interface IServiceRequest : IEncodeable
     {
         /// <summary>
+        /// Secure channel context for this response (TODO: Add to a base class/interface)
+        /// </summary>
+        SecureChannelContext ChannelContext { get; set; }
+
+        /// <summary>
         /// The header for the request.
         /// </summary>
         /// <value>The request header.</value>
@@ -29,6 +34,11 @@ namespace Opc.Ua
 	/// </summary>
     public interface IServiceResponse : IEncodeable 
     {
+        /// <summary>
+        /// Secure channel context for this response (TODO: Add to a base class/interface)
+        /// </summary>
+        SecureChannelContext ChannelContext { get; set; }
+
         /// <summary>
         /// The header for the response.
         /// </summary>

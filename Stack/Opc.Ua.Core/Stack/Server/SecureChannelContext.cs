@@ -36,20 +36,6 @@ namespace Opc.Ua
             m_messageEncoding     = messageEncoding;
         }
 
-        /// <summary>
-        /// Initializes a new instance with the context for the current thread.
-        /// </summary>
-        protected SecureChannelContext()
-        {        
-            SecureChannelContext context = SecureChannelContext.Current;
-
-            if (context != null)
-            {
-                m_secureChannelId     = context.SecureChannelId;
-                m_endpointDescription = context.EndpointDescription;
-                m_messageEncoding     = context.MessageEncoding;
-            }
-        }
         #endregion
                 
         #region Public Properties

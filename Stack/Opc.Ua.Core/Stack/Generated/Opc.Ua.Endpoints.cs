@@ -166,8 +166,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new FindServersResponse();
-                    
                     response = await ServerInstanceAsync.FindServersAsync(
                        request.RequestHeader,
                        request.EndpointUrl,
@@ -181,9 +179,9 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new FindServersResponse();
-                    
                         ApplicationDescriptionCollection servers = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.FindServers(
                            request.RequestHeader,
                            request.EndpointUrl,
@@ -193,11 +191,8 @@ namespace Opc.Ua
 
 
                         response.Servers = servers;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -256,9 +251,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (FindServersResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.FindServersRequest).ConfigureAwait(false);
+                response = (FindServersResponse)await ProcessRequestAsync(message.FindServersRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -273,10 +266,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the FindServers service.
-        /// </summary>
-        public virtual IAsyncResult BeginFindServers(FindServersMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the FindServers service.
+            /// </summary>
+            public virtual IAsyncResult BeginFindServers(FindServersMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -378,8 +371,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new FindServersOnNetworkResponse();
-                    
                     response = await ServerInstanceAsync.FindServersOnNetworkAsync(
                        request.RequestHeader,
                        request.StartingRecordId,
@@ -393,10 +384,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new FindServersOnNetworkResponse();
-                    
                         DateTime lastCounterResetTime = DateTime.MinValue;
                         ServerOnNetworkCollection servers = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.FindServersOnNetwork(
                            request.RequestHeader,
                            request.StartingRecordId,
@@ -408,11 +399,8 @@ namespace Opc.Ua
 
                         response.LastCounterResetTime = lastCounterResetTime;
                         response.Servers              = servers;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -471,9 +459,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (FindServersOnNetworkResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.FindServersOnNetworkRequest).ConfigureAwait(false);
+                response = (FindServersOnNetworkResponse)await ProcessRequestAsync(message.FindServersOnNetworkRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -488,10 +474,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the FindServersOnNetwork service.
-        /// </summary>
-        public virtual IAsyncResult BeginFindServersOnNetwork(FindServersOnNetworkMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the FindServersOnNetwork service.
+            /// </summary>
+            public virtual IAsyncResult BeginFindServersOnNetwork(FindServersOnNetworkMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -590,8 +576,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new GetEndpointsResponse();
-                    
                     response = await ServerInstanceAsync.GetEndpointsAsync(
                        request.RequestHeader,
                        request.EndpointUrl,
@@ -605,9 +589,9 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new GetEndpointsResponse();
-                    
                         EndpointDescriptionCollection endpoints = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.GetEndpoints(
                            request.RequestHeader,
                            request.EndpointUrl,
@@ -617,11 +601,8 @@ namespace Opc.Ua
 
 
                         response.Endpoints = endpoints;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -680,9 +661,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (GetEndpointsResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.GetEndpointsRequest).ConfigureAwait(false);
+                response = (GetEndpointsResponse)await ProcessRequestAsync(message.GetEndpointsRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -697,10 +676,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the GetEndpoints service.
-        /// </summary>
-        public virtual IAsyncResult BeginGetEndpoints(GetEndpointsMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the GetEndpoints service.
+            /// </summary>
+            public virtual IAsyncResult BeginGetEndpoints(GetEndpointsMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -828,8 +807,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new CreateSessionResponse();
-                    
                     response = await ServerInstanceAsync.CreateSessionAsync(
                        request.RequestHeader,
                        request.ClientDescription,
@@ -848,7 +825,6 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new CreateSessionResponse();
-                    
                         NodeId sessionId = null;
                         NodeId authenticationToken = null;
                         double revisedSessionTimeout = 0;
@@ -859,6 +835,7 @@ namespace Opc.Ua
                         SignatureData serverSignature = null;
                         uint maxRequestMessageSize = 0;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.CreateSession(
                            request.RequestHeader,
                            request.ClientDescription,
@@ -889,11 +866,8 @@ namespace Opc.Ua
                         response.ServerSoftwareCertificates = serverSoftwareCertificates;
                         response.ServerSignature            = serverSignature;
                         response.MaxRequestMessageSize      = maxRequestMessageSize;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -952,9 +926,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (CreateSessionResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.CreateSessionRequest).ConfigureAwait(false);
+                response = (CreateSessionResponse)await ProcessRequestAsync(message.CreateSessionRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -969,10 +941,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the CreateSession service.
-        /// </summary>
-        public virtual IAsyncResult BeginCreateSession(CreateSessionMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the CreateSession service.
+            /// </summary>
+            public virtual IAsyncResult BeginCreateSession(CreateSessionMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -1079,8 +1051,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new ActivateSessionResponse();
-                    
                     response = await ServerInstanceAsync.ActivateSessionAsync(
                        request.RequestHeader,
                        request.ClientSignature,
@@ -1096,11 +1066,11 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new ActivateSessionResponse();
-                    
                         byte[] serverNonce = null;
                         StatusCodeCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.ActivateSession(
                            request.RequestHeader,
                            request.ClientSignature,
@@ -1116,11 +1086,8 @@ namespace Opc.Ua
                         response.ServerNonce     = serverNonce;
                         response.Results         = results;
                         response.DiagnosticInfos = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -1179,9 +1146,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (ActivateSessionResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.ActivateSessionRequest).ConfigureAwait(false);
+                response = (ActivateSessionResponse)await ProcessRequestAsync(message.ActivateSessionRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -1196,10 +1161,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the ActivateSession service.
-        /// </summary>
-        public virtual IAsyncResult BeginActivateSession(ActivateSessionMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the ActivateSession service.
+            /// </summary>
+            public virtual IAsyncResult BeginActivateSession(ActivateSessionMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -1293,8 +1258,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new CloseSessionResponse();
-                    
                     response = await ServerInstanceAsync.CloseSessionAsync(
                        request.RequestHeader,
                        request.DeleteSubscriptions,
@@ -1306,18 +1269,15 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new CloseSessionResponse();
-                    
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.CloseSession(
                            request.RequestHeader,
                            request.DeleteSubscriptions);
 
 
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -1376,9 +1336,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (CloseSessionResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.CloseSessionRequest).ConfigureAwait(false);
+                response = (CloseSessionResponse)await ProcessRequestAsync(message.CloseSessionRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -1393,10 +1351,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the CloseSession service.
-        /// </summary>
-        public virtual IAsyncResult BeginCloseSession(CloseSessionMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the CloseSession service.
+            /// </summary>
+            public virtual IAsyncResult BeginCloseSession(CloseSessionMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -1493,8 +1451,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new CancelResponse();
-                    
                     response = await ServerInstanceAsync.CancelAsync(
                        request.RequestHeader,
                        request.RequestHandle,
@@ -1506,9 +1462,9 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new CancelResponse();
-                    
                         uint cancelCount = 0;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.Cancel(
                            request.RequestHeader,
                            request.RequestHandle,
@@ -1516,11 +1472,8 @@ namespace Opc.Ua
 
 
                         response.CancelCount = cancelCount;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -1579,9 +1532,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (CancelResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.CancelRequest).ConfigureAwait(false);
+                response = (CancelResponse)await ProcessRequestAsync(message.CancelRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -1596,10 +1547,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the Cancel service.
-        /// </summary>
-        public virtual IAsyncResult BeginCancel(CancelMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the Cancel service.
+            /// </summary>
+            public virtual IAsyncResult BeginCancel(CancelMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -1699,8 +1650,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new AddNodesResponse();
-                    
                     response = await ServerInstanceAsync.AddNodesAsync(
                        request.RequestHeader,
                        request.NodesToAdd,
@@ -1712,10 +1661,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new AddNodesResponse();
-                    
                         AddNodesResultCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.AddNodes(
                            request.RequestHeader,
                            request.NodesToAdd,
@@ -1725,11 +1674,8 @@ namespace Opc.Ua
 
                         response.Results         = results;
                         response.DiagnosticInfos = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -1788,9 +1734,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (AddNodesResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.AddNodesRequest).ConfigureAwait(false);
+                response = (AddNodesResponse)await ProcessRequestAsync(message.AddNodesRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -1805,10 +1749,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the AddNodes service.
-        /// </summary>
-        public virtual IAsyncResult BeginAddNodes(AddNodesMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the AddNodes service.
+            /// </summary>
+            public virtual IAsyncResult BeginAddNodes(AddNodesMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -1908,8 +1852,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new AddReferencesResponse();
-                    
                     response = await ServerInstanceAsync.AddReferencesAsync(
                        request.RequestHeader,
                        request.ReferencesToAdd,
@@ -1921,10 +1863,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new AddReferencesResponse();
-                    
                         StatusCodeCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.AddReferences(
                            request.RequestHeader,
                            request.ReferencesToAdd,
@@ -1934,11 +1876,8 @@ namespace Opc.Ua
 
                         response.Results         = results;
                         response.DiagnosticInfos = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -1997,9 +1936,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (AddReferencesResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.AddReferencesRequest).ConfigureAwait(false);
+                response = (AddReferencesResponse)await ProcessRequestAsync(message.AddReferencesRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -2014,10 +1951,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the AddReferences service.
-        /// </summary>
-        public virtual IAsyncResult BeginAddReferences(AddReferencesMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the AddReferences service.
+            /// </summary>
+            public virtual IAsyncResult BeginAddReferences(AddReferencesMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -2117,8 +2054,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new DeleteNodesResponse();
-                    
                     response = await ServerInstanceAsync.DeleteNodesAsync(
                        request.RequestHeader,
                        request.NodesToDelete,
@@ -2130,10 +2065,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new DeleteNodesResponse();
-                    
                         StatusCodeCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.DeleteNodes(
                            request.RequestHeader,
                            request.NodesToDelete,
@@ -2143,11 +2078,8 @@ namespace Opc.Ua
 
                         response.Results         = results;
                         response.DiagnosticInfos = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -2206,9 +2138,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (DeleteNodesResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.DeleteNodesRequest).ConfigureAwait(false);
+                response = (DeleteNodesResponse)await ProcessRequestAsync(message.DeleteNodesRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -2223,10 +2153,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the DeleteNodes service.
-        /// </summary>
-        public virtual IAsyncResult BeginDeleteNodes(DeleteNodesMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the DeleteNodes service.
+            /// </summary>
+            public virtual IAsyncResult BeginDeleteNodes(DeleteNodesMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -2326,8 +2256,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new DeleteReferencesResponse();
-                    
                     response = await ServerInstanceAsync.DeleteReferencesAsync(
                        request.RequestHeader,
                        request.ReferencesToDelete,
@@ -2339,10 +2267,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new DeleteReferencesResponse();
-                    
                         StatusCodeCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.DeleteReferences(
                            request.RequestHeader,
                            request.ReferencesToDelete,
@@ -2352,11 +2280,8 @@ namespace Opc.Ua
 
                         response.Results         = results;
                         response.DiagnosticInfos = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -2415,9 +2340,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (DeleteReferencesResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.DeleteReferencesRequest).ConfigureAwait(false);
+                response = (DeleteReferencesResponse)await ProcessRequestAsync(message.DeleteReferencesRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -2432,10 +2355,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the DeleteReferences service.
-        /// </summary>
-        public virtual IAsyncResult BeginDeleteReferences(DeleteReferencesMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the DeleteReferences service.
+            /// </summary>
+            public virtual IAsyncResult BeginDeleteReferences(DeleteReferencesMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -2537,8 +2460,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new BrowseResponse();
-                    
                     response = await ServerInstanceAsync.BrowseAsync(
                        request.RequestHeader,
                        request.View,
@@ -2552,10 +2473,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new BrowseResponse();
-                    
                         BrowseResultCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.Browse(
                            request.RequestHeader,
                            request.View,
@@ -2567,11 +2488,8 @@ namespace Opc.Ua
 
                         response.Results         = results;
                         response.DiagnosticInfos = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -2630,9 +2548,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (BrowseResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.BrowseRequest).ConfigureAwait(false);
+                response = (BrowseResponse)await ProcessRequestAsync(message.BrowseRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -2647,10 +2563,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the Browse service.
-        /// </summary>
-        public virtual IAsyncResult BeginBrowse(BrowseMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the Browse service.
+            /// </summary>
+            public virtual IAsyncResult BeginBrowse(BrowseMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -2751,8 +2667,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new BrowseNextResponse();
-                    
                     response = await ServerInstanceAsync.BrowseNextAsync(
                        request.RequestHeader,
                        request.ReleaseContinuationPoints,
@@ -2765,10 +2679,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new BrowseNextResponse();
-                    
                         BrowseResultCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.BrowseNext(
                            request.RequestHeader,
                            request.ReleaseContinuationPoints,
@@ -2779,11 +2693,8 @@ namespace Opc.Ua
 
                         response.Results         = results;
                         response.DiagnosticInfos = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -2842,9 +2753,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (BrowseNextResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.BrowseNextRequest).ConfigureAwait(false);
+                response = (BrowseNextResponse)await ProcessRequestAsync(message.BrowseNextRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -2859,10 +2768,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the BrowseNext service.
-        /// </summary>
-        public virtual IAsyncResult BeginBrowseNext(BrowseNextMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the BrowseNext service.
+            /// </summary>
+            public virtual IAsyncResult BeginBrowseNext(BrowseNextMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -2962,8 +2871,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new TranslateBrowsePathsToNodeIdsResponse();
-                    
                     response = await ServerInstanceAsync.TranslateBrowsePathsToNodeIdsAsync(
                        request.RequestHeader,
                        request.BrowsePaths,
@@ -2975,10 +2882,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new TranslateBrowsePathsToNodeIdsResponse();
-                    
                         BrowsePathResultCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.TranslateBrowsePathsToNodeIds(
                            request.RequestHeader,
                            request.BrowsePaths,
@@ -2988,11 +2895,8 @@ namespace Opc.Ua
 
                         response.Results         = results;
                         response.DiagnosticInfos = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -3051,9 +2955,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (TranslateBrowsePathsToNodeIdsResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.TranslateBrowsePathsToNodeIdsRequest).ConfigureAwait(false);
+                response = (TranslateBrowsePathsToNodeIdsResponse)await ProcessRequestAsync(message.TranslateBrowsePathsToNodeIdsRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -3068,10 +2970,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the TranslateBrowsePathsToNodeIds service.
-        /// </summary>
-        public virtual IAsyncResult BeginTranslateBrowsePathsToNodeIds(TranslateBrowsePathsToNodeIdsMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the TranslateBrowsePathsToNodeIds service.
+            /// </summary>
+            public virtual IAsyncResult BeginTranslateBrowsePathsToNodeIds(TranslateBrowsePathsToNodeIdsMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -3168,8 +3070,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new RegisterNodesResponse();
-                    
                     response = await ServerInstanceAsync.RegisterNodesAsync(
                        request.RequestHeader,
                        request.NodesToRegister,
@@ -3181,9 +3081,9 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new RegisterNodesResponse();
-                    
                         NodeIdCollection registeredNodeIds = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.RegisterNodes(
                            request.RequestHeader,
                            request.NodesToRegister,
@@ -3191,11 +3091,8 @@ namespace Opc.Ua
 
 
                         response.RegisteredNodeIds = registeredNodeIds;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -3254,9 +3151,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (RegisterNodesResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.RegisterNodesRequest).ConfigureAwait(false);
+                response = (RegisterNodesResponse)await ProcessRequestAsync(message.RegisterNodesRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -3271,10 +3166,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the RegisterNodes service.
-        /// </summary>
-        public virtual IAsyncResult BeginRegisterNodes(RegisterNodesMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the RegisterNodes service.
+            /// </summary>
+            public virtual IAsyncResult BeginRegisterNodes(RegisterNodesMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -3368,8 +3263,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new UnregisterNodesResponse();
-                    
                     response = await ServerInstanceAsync.UnregisterNodesAsync(
                        request.RequestHeader,
                        request.NodesToUnregister,
@@ -3381,18 +3274,15 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new UnregisterNodesResponse();
-                    
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.UnregisterNodes(
                            request.RequestHeader,
                            request.NodesToUnregister);
 
 
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -3451,9 +3341,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (UnregisterNodesResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.UnregisterNodesRequest).ConfigureAwait(false);
+                response = (UnregisterNodesResponse)await ProcessRequestAsync(message.UnregisterNodesRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -3468,10 +3356,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the UnregisterNodes service.
-        /// </summary>
-        public virtual IAsyncResult BeginUnregisterNodes(UnregisterNodesMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the UnregisterNodes service.
+            /// </summary>
+            public virtual IAsyncResult BeginUnregisterNodes(UnregisterNodesMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -3584,8 +3472,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new QueryFirstResponse();
-                    
                     response = await ServerInstanceAsync.QueryFirstAsync(
                        request.RequestHeader,
                        request.View,
@@ -3601,13 +3487,13 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new QueryFirstResponse();
-                    
                         QueryDataSetCollection queryDataSets = null;
                         byte[] continuationPoint = null;
                         ParsingResultCollection parsingResults = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
                         ContentFilterResult filterResult = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.QueryFirst(
                            request.RequestHeader,
                            request.View,
@@ -3627,11 +3513,8 @@ namespace Opc.Ua
                         response.ParsingResults    = parsingResults;
                         response.DiagnosticInfos   = diagnosticInfos;
                         response.FilterResult      = filterResult;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -3690,9 +3573,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (QueryFirstResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.QueryFirstRequest).ConfigureAwait(false);
+                response = (QueryFirstResponse)await ProcessRequestAsync(message.QueryFirstRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -3707,10 +3588,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the QueryFirst service.
-        /// </summary>
-        public virtual IAsyncResult BeginQueryFirst(QueryFirstMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the QueryFirst service.
+            /// </summary>
+            public virtual IAsyncResult BeginQueryFirst(QueryFirstMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -3811,8 +3692,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new QueryNextResponse();
-                    
                     response = await ServerInstanceAsync.QueryNextAsync(
                        request.RequestHeader,
                        request.ReleaseContinuationPoint,
@@ -3825,10 +3704,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new QueryNextResponse();
-                    
                         QueryDataSetCollection queryDataSets = null;
                         byte[] revisedContinuationPoint = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.QueryNext(
                            request.RequestHeader,
                            request.ReleaseContinuationPoint,
@@ -3839,11 +3718,8 @@ namespace Opc.Ua
 
                         response.QueryDataSets            = queryDataSets;
                         response.RevisedContinuationPoint = revisedContinuationPoint;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -3902,9 +3778,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (QueryNextResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.QueryNextRequest).ConfigureAwait(false);
+                response = (QueryNextResponse)await ProcessRequestAsync(message.QueryNextRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -3919,10 +3793,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the QueryNext service.
-        /// </summary>
-        public virtual IAsyncResult BeginQueryNext(QueryNextMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the QueryNext service.
+            /// </summary>
+            public virtual IAsyncResult BeginQueryNext(QueryNextMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -4024,8 +3898,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new ReadResponse();
-                    
                     response = await ServerInstanceAsync.ReadAsync(
                        request.RequestHeader,
                        request.MaxAge,
@@ -4039,10 +3911,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new ReadResponse();
-                    
                         DataValueCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.Read(
                            request.RequestHeader,
                            request.MaxAge,
@@ -4054,11 +3926,8 @@ namespace Opc.Ua
 
                         response.Results         = results;
                         response.DiagnosticInfos = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -4117,9 +3986,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (ReadResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.ReadRequest).ConfigureAwait(false);
+                response = (ReadResponse)await ProcessRequestAsync(message.ReadRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -4134,10 +4001,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the Read service.
-        /// </summary>
-        public virtual IAsyncResult BeginRead(ReadMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the Read service.
+            /// </summary>
+            public virtual IAsyncResult BeginRead(ReadMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -4240,8 +4107,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new HistoryReadResponse();
-                    
                     response = await ServerInstanceAsync.HistoryReadAsync(
                        request.RequestHeader,
                        request.HistoryReadDetails,
@@ -4256,10 +4121,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new HistoryReadResponse();
-                    
                         HistoryReadResultCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.HistoryRead(
                            request.RequestHeader,
                            request.HistoryReadDetails,
@@ -4272,11 +4137,8 @@ namespace Opc.Ua
 
                         response.Results         = results;
                         response.DiagnosticInfos = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -4335,9 +4197,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (HistoryReadResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.HistoryReadRequest).ConfigureAwait(false);
+                response = (HistoryReadResponse)await ProcessRequestAsync(message.HistoryReadRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -4352,10 +4212,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the HistoryRead service.
-        /// </summary>
-        public virtual IAsyncResult BeginHistoryRead(HistoryReadMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the HistoryRead service.
+            /// </summary>
+            public virtual IAsyncResult BeginHistoryRead(HistoryReadMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -4455,8 +4315,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new WriteResponse();
-                    
                     response = await ServerInstanceAsync.WriteAsync(
                        request.RequestHeader,
                        request.NodesToWrite,
@@ -4468,10 +4326,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new WriteResponse();
-                    
                         StatusCodeCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.Write(
                            request.RequestHeader,
                            request.NodesToWrite,
@@ -4481,11 +4339,8 @@ namespace Opc.Ua
 
                         response.Results         = results;
                         response.DiagnosticInfos = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -4544,9 +4399,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (WriteResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.WriteRequest).ConfigureAwait(false);
+                response = (WriteResponse)await ProcessRequestAsync(message.WriteRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -4561,10 +4414,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the Write service.
-        /// </summary>
-        public virtual IAsyncResult BeginWrite(WriteMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the Write service.
+            /// </summary>
+            public virtual IAsyncResult BeginWrite(WriteMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -4664,8 +4517,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new HistoryUpdateResponse();
-                    
                     response = await ServerInstanceAsync.HistoryUpdateAsync(
                        request.RequestHeader,
                        request.HistoryUpdateDetails,
@@ -4677,10 +4528,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new HistoryUpdateResponse();
-                    
                         HistoryUpdateResultCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.HistoryUpdate(
                            request.RequestHeader,
                            request.HistoryUpdateDetails,
@@ -4690,11 +4541,8 @@ namespace Opc.Ua
 
                         response.Results         = results;
                         response.DiagnosticInfos = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -4753,9 +4601,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (HistoryUpdateResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.HistoryUpdateRequest).ConfigureAwait(false);
+                response = (HistoryUpdateResponse)await ProcessRequestAsync(message.HistoryUpdateRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -4770,10 +4616,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the HistoryUpdate service.
-        /// </summary>
-        public virtual IAsyncResult BeginHistoryUpdate(HistoryUpdateMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the HistoryUpdate service.
+            /// </summary>
+            public virtual IAsyncResult BeginHistoryUpdate(HistoryUpdateMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -4873,8 +4719,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new CallResponse();
-                    
                     response = await ServerInstanceAsync.CallAsync(
                        request.RequestHeader,
                        request.MethodsToCall,
@@ -4886,10 +4730,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new CallResponse();
-                    
                         CallMethodResultCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.Call(
                            request.RequestHeader,
                            request.MethodsToCall,
@@ -4899,11 +4743,8 @@ namespace Opc.Ua
 
                         response.Results         = results;
                         response.DiagnosticInfos = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -4962,9 +4803,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (CallResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.CallRequest).ConfigureAwait(false);
+                response = (CallResponse)await ProcessRequestAsync(message.CallRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -4979,10 +4818,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the Call service.
-        /// </summary>
-        public virtual IAsyncResult BeginCall(CallMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the Call service.
+            /// </summary>
+            public virtual IAsyncResult BeginCall(CallMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -5084,8 +4923,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new CreateMonitoredItemsResponse();
-                    
                     response = await ServerInstanceAsync.CreateMonitoredItemsAsync(
                        request.RequestHeader,
                        request.SubscriptionId,
@@ -5099,10 +4936,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new CreateMonitoredItemsResponse();
-                    
                         MonitoredItemCreateResultCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.CreateMonitoredItems(
                            request.RequestHeader,
                            request.SubscriptionId,
@@ -5114,11 +4951,8 @@ namespace Opc.Ua
 
                         response.Results         = results;
                         response.DiagnosticInfos = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -5177,9 +5011,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (CreateMonitoredItemsResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.CreateMonitoredItemsRequest).ConfigureAwait(false);
+                response = (CreateMonitoredItemsResponse)await ProcessRequestAsync(message.CreateMonitoredItemsRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -5194,10 +5026,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the CreateMonitoredItems service.
-        /// </summary>
-        public virtual IAsyncResult BeginCreateMonitoredItems(CreateMonitoredItemsMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the CreateMonitoredItems service.
+            /// </summary>
+            public virtual IAsyncResult BeginCreateMonitoredItems(CreateMonitoredItemsMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -5299,8 +5131,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new ModifyMonitoredItemsResponse();
-                    
                     response = await ServerInstanceAsync.ModifyMonitoredItemsAsync(
                        request.RequestHeader,
                        request.SubscriptionId,
@@ -5314,10 +5144,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new ModifyMonitoredItemsResponse();
-                    
                         MonitoredItemModifyResultCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.ModifyMonitoredItems(
                            request.RequestHeader,
                            request.SubscriptionId,
@@ -5329,11 +5159,8 @@ namespace Opc.Ua
 
                         response.Results         = results;
                         response.DiagnosticInfos = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -5392,9 +5219,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (ModifyMonitoredItemsResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.ModifyMonitoredItemsRequest).ConfigureAwait(false);
+                response = (ModifyMonitoredItemsResponse)await ProcessRequestAsync(message.ModifyMonitoredItemsRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -5409,10 +5234,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the ModifyMonitoredItems service.
-        /// </summary>
-        public virtual IAsyncResult BeginModifyMonitoredItems(ModifyMonitoredItemsMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the ModifyMonitoredItems service.
+            /// </summary>
+            public virtual IAsyncResult BeginModifyMonitoredItems(ModifyMonitoredItemsMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -5514,8 +5339,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new SetMonitoringModeResponse();
-                    
                     response = await ServerInstanceAsync.SetMonitoringModeAsync(
                        request.RequestHeader,
                        request.SubscriptionId,
@@ -5529,10 +5352,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new SetMonitoringModeResponse();
-                    
                         StatusCodeCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.SetMonitoringMode(
                            request.RequestHeader,
                            request.SubscriptionId,
@@ -5544,11 +5367,8 @@ namespace Opc.Ua
 
                         response.Results         = results;
                         response.DiagnosticInfos = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -5607,9 +5427,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (SetMonitoringModeResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.SetMonitoringModeRequest).ConfigureAwait(false);
+                response = (SetMonitoringModeResponse)await ProcessRequestAsync(message.SetMonitoringModeRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -5624,10 +5442,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the SetMonitoringMode service.
-        /// </summary>
-        public virtual IAsyncResult BeginSetMonitoringMode(SetMonitoringModeMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the SetMonitoringMode service.
+            /// </summary>
+            public virtual IAsyncResult BeginSetMonitoringMode(SetMonitoringModeMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -5736,8 +5554,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new SetTriggeringResponse();
-                    
                     response = await ServerInstanceAsync.SetTriggeringAsync(
                        request.RequestHeader,
                        request.SubscriptionId,
@@ -5752,12 +5568,12 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new SetTriggeringResponse();
-                    
                         StatusCodeCollection addResults = null;
                         DiagnosticInfoCollection addDiagnosticInfos = null;
                         StatusCodeCollection removeResults = null;
                         DiagnosticInfoCollection removeDiagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.SetTriggering(
                            request.RequestHeader,
                            request.SubscriptionId,
@@ -5774,11 +5590,8 @@ namespace Opc.Ua
                         response.AddDiagnosticInfos    = addDiagnosticInfos;
                         response.RemoveResults         = removeResults;
                         response.RemoveDiagnosticInfos = removeDiagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -5837,9 +5650,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (SetTriggeringResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.SetTriggeringRequest).ConfigureAwait(false);
+                response = (SetTriggeringResponse)await ProcessRequestAsync(message.SetTriggeringRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -5854,10 +5665,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the SetTriggering service.
-        /// </summary>
-        public virtual IAsyncResult BeginSetTriggering(SetTriggeringMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the SetTriggering service.
+            /// </summary>
+            public virtual IAsyncResult BeginSetTriggering(SetTriggeringMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -5958,8 +5769,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new DeleteMonitoredItemsResponse();
-                    
                     response = await ServerInstanceAsync.DeleteMonitoredItemsAsync(
                        request.RequestHeader,
                        request.SubscriptionId,
@@ -5972,10 +5781,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new DeleteMonitoredItemsResponse();
-                    
                         StatusCodeCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.DeleteMonitoredItems(
                            request.RequestHeader,
                            request.SubscriptionId,
@@ -5986,11 +5795,8 @@ namespace Opc.Ua
 
                         response.Results         = results;
                         response.DiagnosticInfos = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -6049,9 +5855,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (DeleteMonitoredItemsResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.DeleteMonitoredItemsRequest).ConfigureAwait(false);
+                response = (DeleteMonitoredItemsResponse)await ProcessRequestAsync(message.DeleteMonitoredItemsRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -6066,10 +5870,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the DeleteMonitoredItems service.
-        /// </summary>
-        public virtual IAsyncResult BeginDeleteMonitoredItems(DeleteMonitoredItemsMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the DeleteMonitoredItems service.
+            /// </summary>
+            public virtual IAsyncResult BeginDeleteMonitoredItems(DeleteMonitoredItemsMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -6180,8 +5984,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new CreateSubscriptionResponse();
-                    
                     response = await ServerInstanceAsync.CreateSubscriptionAsync(
                        request.RequestHeader,
                        request.RequestedPublishingInterval,
@@ -6198,12 +6000,12 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new CreateSubscriptionResponse();
-                    
                         uint subscriptionId = 0;
                         double revisedPublishingInterval = 0;
                         uint revisedLifetimeCount = 0;
                         uint revisedMaxKeepAliveCount = 0;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.CreateSubscription(
                            request.RequestHeader,
                            request.RequestedPublishingInterval,
@@ -6222,11 +6024,8 @@ namespace Opc.Ua
                         response.RevisedPublishingInterval = revisedPublishingInterval;
                         response.RevisedLifetimeCount      = revisedLifetimeCount;
                         response.RevisedMaxKeepAliveCount  = revisedMaxKeepAliveCount;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -6285,9 +6084,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (CreateSubscriptionResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.CreateSubscriptionRequest).ConfigureAwait(false);
+                response = (CreateSubscriptionResponse)await ProcessRequestAsync(message.CreateSubscriptionRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -6302,10 +6099,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the CreateSubscription service.
-        /// </summary>
-        public virtual IAsyncResult BeginCreateSubscription(CreateSubscriptionMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the CreateSubscription service.
+            /// </summary>
+            public virtual IAsyncResult BeginCreateSubscription(CreateSubscriptionMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -6413,8 +6210,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new ModifySubscriptionResponse();
-                    
                     response = await ServerInstanceAsync.ModifySubscriptionAsync(
                        request.RequestHeader,
                        request.SubscriptionId,
@@ -6431,11 +6226,11 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new ModifySubscriptionResponse();
-                    
                         double revisedPublishingInterval = 0;
                         uint revisedLifetimeCount = 0;
                         uint revisedMaxKeepAliveCount = 0;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.ModifySubscription(
                            request.RequestHeader,
                            request.SubscriptionId,
@@ -6452,11 +6247,8 @@ namespace Opc.Ua
                         response.RevisedPublishingInterval = revisedPublishingInterval;
                         response.RevisedLifetimeCount      = revisedLifetimeCount;
                         response.RevisedMaxKeepAliveCount  = revisedMaxKeepAliveCount;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -6515,9 +6307,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (ModifySubscriptionResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.ModifySubscriptionRequest).ConfigureAwait(false);
+                response = (ModifySubscriptionResponse)await ProcessRequestAsync(message.ModifySubscriptionRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -6532,10 +6322,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the ModifySubscription service.
-        /// </summary>
-        public virtual IAsyncResult BeginModifySubscription(ModifySubscriptionMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the ModifySubscription service.
+            /// </summary>
+            public virtual IAsyncResult BeginModifySubscription(ModifySubscriptionMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -6636,8 +6426,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new SetPublishingModeResponse();
-                    
                     response = await ServerInstanceAsync.SetPublishingModeAsync(
                        request.RequestHeader,
                        request.PublishingEnabled,
@@ -6650,10 +6438,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new SetPublishingModeResponse();
-                    
                         StatusCodeCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.SetPublishingMode(
                            request.RequestHeader,
                            request.PublishingEnabled,
@@ -6664,11 +6452,8 @@ namespace Opc.Ua
 
                         response.Results         = results;
                         response.DiagnosticInfos = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -6727,9 +6512,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (SetPublishingModeResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.SetPublishingModeRequest).ConfigureAwait(false);
+                response = (SetPublishingModeResponse)await ProcessRequestAsync(message.SetPublishingModeRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -6744,10 +6527,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the SetPublishingMode service.
-        /// </summary>
-        public virtual IAsyncResult BeginSetPublishingMode(SetPublishingModeMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the SetPublishingMode service.
+            /// </summary>
+            public virtual IAsyncResult BeginSetPublishingMode(SetPublishingModeMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -6859,8 +6642,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new PublishResponse();
-                    
                     response = await ServerInstanceAsync.PublishAsync(
                        request.RequestHeader,
                        request.SubscriptionAcknowledgements,
@@ -6872,7 +6653,6 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new PublishResponse();
-                    
                         uint subscriptionId = 0;
                         UInt32Collection availableSequenceNumbers = null;
                         bool moreNotifications = false;
@@ -6880,6 +6660,7 @@ namespace Opc.Ua
                         StatusCodeCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.Publish(
                            request.RequestHeader,
                            request.SubscriptionAcknowledgements,
@@ -6897,11 +6678,8 @@ namespace Opc.Ua
                         response.NotificationMessage      = notificationMessage;
                         response.Results                  = results;
                         response.DiagnosticInfos          = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -6960,9 +6738,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (PublishResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.PublishRequest).ConfigureAwait(false);
+                response = (PublishResponse)await ProcessRequestAsync(message.PublishRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -6977,10 +6753,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the Publish service.
-        /// </summary>
-        public virtual IAsyncResult BeginPublish(PublishMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the Publish service.
+            /// </summary>
+            public virtual IAsyncResult BeginPublish(PublishMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -7078,8 +6854,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new RepublishResponse();
-                    
                     response = await ServerInstanceAsync.RepublishAsync(
                        request.RequestHeader,
                        request.SubscriptionId,
@@ -7092,9 +6866,9 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new RepublishResponse();
-                    
                         NotificationMessage notificationMessage = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.Republish(
                            request.RequestHeader,
                            request.SubscriptionId,
@@ -7103,11 +6877,8 @@ namespace Opc.Ua
 
 
                         response.NotificationMessage = notificationMessage;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -7166,9 +6937,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (RepublishResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.RepublishRequest).ConfigureAwait(false);
+                response = (RepublishResponse)await ProcessRequestAsync(message.RepublishRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -7183,10 +6952,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the Republish service.
-        /// </summary>
-        public virtual IAsyncResult BeginRepublish(RepublishMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the Republish service.
+            /// </summary>
+            public virtual IAsyncResult BeginRepublish(RepublishMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -7287,8 +7056,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new TransferSubscriptionsResponse();
-                    
                     response = await ServerInstanceAsync.TransferSubscriptionsAsync(
                        request.RequestHeader,
                        request.SubscriptionIds,
@@ -7301,10 +7068,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new TransferSubscriptionsResponse();
-                    
                         TransferResultCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.TransferSubscriptions(
                            request.RequestHeader,
                            request.SubscriptionIds,
@@ -7315,11 +7082,8 @@ namespace Opc.Ua
 
                         response.Results         = results;
                         response.DiagnosticInfos = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -7378,9 +7142,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (TransferSubscriptionsResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.TransferSubscriptionsRequest).ConfigureAwait(false);
+                response = (TransferSubscriptionsResponse)await ProcessRequestAsync(message.TransferSubscriptionsRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -7395,10 +7157,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the TransferSubscriptions service.
-        /// </summary>
-        public virtual IAsyncResult BeginTransferSubscriptions(TransferSubscriptionsMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the TransferSubscriptions service.
+            /// </summary>
+            public virtual IAsyncResult BeginTransferSubscriptions(TransferSubscriptionsMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -7498,8 +7260,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new DeleteSubscriptionsResponse();
-                    
                     response = await ServerInstanceAsync.DeleteSubscriptionsAsync(
                        request.RequestHeader,
                        request.SubscriptionIds,
@@ -7511,10 +7271,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new DeleteSubscriptionsResponse();
-                    
                         StatusCodeCollection results = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.DeleteSubscriptions(
                            request.RequestHeader,
                            request.SubscriptionIds,
@@ -7524,11 +7284,8 @@ namespace Opc.Ua
 
                         response.Results         = results;
                         response.DiagnosticInfos = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -7587,9 +7344,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (DeleteSubscriptionsResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.DeleteSubscriptionsRequest).ConfigureAwait(false);
+                response = (DeleteSubscriptionsResponse)await ProcessRequestAsync(message.DeleteSubscriptionsRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -7604,10 +7359,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the DeleteSubscriptions service.
-        /// </summary>
-        public virtual IAsyncResult BeginDeleteSubscriptions(DeleteSubscriptionsMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the DeleteSubscriptions service.
+            /// </summary>
+            public virtual IAsyncResult BeginDeleteSubscriptions(DeleteSubscriptionsMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -7898,8 +7653,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new FindServersResponse();
-                    
                     response = await ServerInstanceAsync.FindServersAsync(
                        request.RequestHeader,
                        request.EndpointUrl,
@@ -7913,9 +7666,9 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new FindServersResponse();
-                    
                         ApplicationDescriptionCollection servers = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.FindServers(
                            request.RequestHeader,
                            request.EndpointUrl,
@@ -7925,11 +7678,8 @@ namespace Opc.Ua
 
 
                         response.Servers = servers;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -7988,9 +7738,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (FindServersResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.FindServersRequest).ConfigureAwait(false);
+                response = (FindServersResponse)await ProcessRequestAsync(message.FindServersRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -8005,10 +7753,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the FindServers service.
-        /// </summary>
-        public virtual IAsyncResult BeginFindServers(FindServersMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the FindServers service.
+            /// </summary>
+            public virtual IAsyncResult BeginFindServers(FindServersMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -8110,8 +7858,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new FindServersOnNetworkResponse();
-                    
                     response = await ServerInstanceAsync.FindServersOnNetworkAsync(
                        request.RequestHeader,
                        request.StartingRecordId,
@@ -8125,10 +7871,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new FindServersOnNetworkResponse();
-                    
                         DateTime lastCounterResetTime = DateTime.MinValue;
                         ServerOnNetworkCollection servers = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.FindServersOnNetwork(
                            request.RequestHeader,
                            request.StartingRecordId,
@@ -8140,11 +7886,8 @@ namespace Opc.Ua
 
                         response.LastCounterResetTime = lastCounterResetTime;
                         response.Servers              = servers;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -8203,9 +7946,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (FindServersOnNetworkResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.FindServersOnNetworkRequest).ConfigureAwait(false);
+                response = (FindServersOnNetworkResponse)await ProcessRequestAsync(message.FindServersOnNetworkRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -8220,10 +7961,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the FindServersOnNetwork service.
-        /// </summary>
-        public virtual IAsyncResult BeginFindServersOnNetwork(FindServersOnNetworkMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the FindServersOnNetwork service.
+            /// </summary>
+            public virtual IAsyncResult BeginFindServersOnNetwork(FindServersOnNetworkMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -8322,8 +8063,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new GetEndpointsResponse();
-                    
                     response = await ServerInstanceAsync.GetEndpointsAsync(
                        request.RequestHeader,
                        request.EndpointUrl,
@@ -8337,9 +8076,9 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new GetEndpointsResponse();
-                    
                         EndpointDescriptionCollection endpoints = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.GetEndpoints(
                            request.RequestHeader,
                            request.EndpointUrl,
@@ -8349,11 +8088,8 @@ namespace Opc.Ua
 
 
                         response.Endpoints = endpoints;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -8412,9 +8148,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (GetEndpointsResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.GetEndpointsRequest).ConfigureAwait(false);
+                response = (GetEndpointsResponse)await ProcessRequestAsync(message.GetEndpointsRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -8429,10 +8163,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the GetEndpoints service.
-        /// </summary>
-        public virtual IAsyncResult BeginGetEndpoints(GetEndpointsMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the GetEndpoints service.
+            /// </summary>
+            public virtual IAsyncResult BeginGetEndpoints(GetEndpointsMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -8526,8 +8260,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new RegisterServerResponse();
-                    
                     response = await ServerInstanceAsync.RegisterServerAsync(
                        request.RequestHeader,
                        request.Server,
@@ -8539,18 +8271,15 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new RegisterServerResponse();
-                    
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.RegisterServer(
                            request.RequestHeader,
                            request.Server);
 
 
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -8609,9 +8338,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (RegisterServerResponse)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.RegisterServerRequest).ConfigureAwait(false);
+                response = (RegisterServerResponse)await ProcessRequestAsync(message.RegisterServerRequest).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -8626,10 +8353,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the RegisterServer service.
-        /// </summary>
-        public virtual IAsyncResult BeginRegisterServer(RegisterServerMessage message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the RegisterServer service.
+            /// </summary>
+            public virtual IAsyncResult BeginRegisterServer(RegisterServerMessage message, AsyncCallback callback, object callbackData)
         {
             try
             {
@@ -8730,8 +8457,6 @@ namespace Opc.Ua
 
                 if (ServerInstanceAsync != null)
                 {
-                    response = new RegisterServer2Response();
-                    
                     response = await ServerInstanceAsync.RegisterServer2Async(
                        request.RequestHeader,
                        request.Server,
@@ -8744,10 +8469,10 @@ namespace Opc.Ua
                     response = await System.Threading.Tasks.Task.Run( () => 
                     {
                         response = new RegisterServer2Response();
-                    
                         StatusCodeCollection configurationResults = null;
                         DiagnosticInfoCollection diagnosticInfos = null;
 
+                        SecureChannelContext.Current = incoming.ChannelContext;
                         response.ResponseHeader = ServerInstance.RegisterServer2(
                            request.RequestHeader,
                            request.Server,
@@ -8758,11 +8483,8 @@ namespace Opc.Ua
 
                         response.ConfigurationResults = configurationResults;
                         response.DiagnosticInfos      = diagnosticInfos;
-
                         return response;
-
-                    } 
-                    ).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
                 }
             }
             finally
@@ -8821,9 +8543,7 @@ namespace Opc.Ua
                 // set the request context.
                 SetRequestContext(RequestEncoding.Xml);
 
-                response = (RegisterServer2Response)await ProcessRequestAsync(
-                    SecureChannelContext.Current, 
-                    message.RegisterServer2Request).ConfigureAwait(false);
+                response = (RegisterServer2Response)await ProcessRequestAsync(message.RegisterServer2Request).ConfigureAwait(false);
 
                 OnResponseSent(response);
 
@@ -8838,10 +8558,10 @@ namespace Opc.Ua
         }
         #endif
 
-        /// <summary>
-        /// Asynchronously calls the RegisterServer2 service.
-        /// </summary>
-        public virtual IAsyncResult BeginRegisterServer2(RegisterServer2Message message, AsyncCallback callback, object callbackData)
+            /// <summary>
+            /// Asynchronously calls the RegisterServer2 service.
+            /// </summary>
+            public virtual IAsyncResult BeginRegisterServer2(RegisterServer2Message message, AsyncCallback callback, object callbackData)
         {
             try
             {

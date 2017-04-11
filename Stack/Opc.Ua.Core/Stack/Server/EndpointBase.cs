@@ -96,12 +96,12 @@ namespace Opc.Ua
             EndpointDescription endpointDescription,
             IServiceRequest request)
         {
-            SecureChannelContext context = new SecureChannelContext(
+            request.ChannelContext = new SecureChannelContext(
                 channeId,
                 endpointDescription,
                 RequestEncoding.Binary);
 
-            return await ProcessRequestAsync(context, request).ConfigureAwait(false);
+            return await ProcessRequestAsync(request).ConfigureAwait(false);
         }
         #endregion
 
@@ -116,9 +116,7 @@ namespace Opc.Ua
         /// <returns>
         /// The response to return over the channel.
         /// </returns>
-        public virtual async Task<IServiceResponse> ProcessRequestAsync(
-            SecureChannelContext context, 
-            IServiceRequest request)
+        public virtual async Task<IServiceResponse> ProcessRequestAsync(IServiceRequest request)
         {
             try
             {
@@ -168,14 +166,13 @@ namespace Opc.Ua
 
                 // decoding incoming message.
                 decodedRequest = BinaryDecoder.DecodeMessage(request.InvokeServiceRequest, null, context) as IServiceRequest;
+                decodedRequest.ChannelContext = SecureChannelContext.Current;
 
                 // invoke service.
-                response = await ProcessRequestAsync(SecureChannelContext.Current, decodedRequest).ConfigureAwait(false);
+                response = await ProcessRequestAsync(decodedRequest).ConfigureAwait(false);
 
                 // encode response.
-                InvokeServiceResponseMessage outgoing = new InvokeServiceResponseMessage();
-                outgoing.InvokeServiceResponse = BinaryEncoder.EncodeMessage(response, context);
-                return outgoing;
+                return new InvokeServiceResponseMessage(BinaryEncoder.EncodeMessage(response, context), request.ChannelContext);
             }
             catch (Exception e)
             {
@@ -188,9 +185,7 @@ namespace Opc.Ua
                     context = new ServiceMessageContext();
                 }
 
-                InvokeServiceResponseMessage outgoing = new InvokeServiceResponseMessage();
-                outgoing.InvokeServiceResponse = BinaryEncoder.EncodeMessage(fault, context);
-                return outgoing;
+                return new InvokeServiceResponseMessage(BinaryEncoder.EncodeMessage(fault, context), request.ChannelContext);
             }
         }
 
@@ -466,8 +461,6 @@ namespace Opc.Ua
         /// <param name="encoding">The encoding.</param>
         protected void SetRequestContext(RequestEncoding encoding)
         {
-            // fetch the current operation context.
-            OperationContext context = OperationContext.Current;
         }
 
         /// <summary>
@@ -638,7 +631,7 @@ namespace Opc.Ua
                     try
                     {
                         // set the context.
-                        SecureChannelContext.Current = m_context;
+                        m_request.ChannelContext = m_context;
 
                         // call the service.
                         m_response = await m_service.InvokeAsync(m_request).ConfigureAwait(false);
@@ -673,8 +666,8 @@ namespace Opc.Ua
                 SecureChannelContext context,
                 IServiceRequest request)
             {
-                m_context = context;
                 m_request = request;
+                m_context = context;
 
                 try
                 {
@@ -707,11 +700,9 @@ namespace Opc.Ua
             /// <param name="context"></param>
             /// <param name="request"></param>
             /// <returns></returns>
-            public virtual Task<IServiceResponse> ProcessRequestAsync(
-                SecureChannelContext context,
-                IServiceRequest request)
+            public virtual Task<IServiceResponse> ProcessRequestAsync(IServiceRequest request)
             {
-                return m_endpoint.ProcessRequestAsync(context, request);
+                return m_endpoint.ProcessRequestAsync(request);
             }
 
             /// <summary>
@@ -772,11 +763,11 @@ namespace Opc.Ua
             {
                 try
                 {
-                    return EndpointBase.CreateFault(m_request, e);
+                    return CreateFault(m_request, e);
                 }
                 catch (Exception e2)
                 {
-                    return EndpointBase.CreateFault(null, e2);
+                    return CreateFault(null, e2);
                 }
             }
             #endregion

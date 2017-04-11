@@ -18,12 +18,13 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Opc.Ua
 {
-	#region ServiceFault Class
-	/// <summary>
-	/// The ServiceFault class.
-	/// </summary>
-	public partial class ServiceFault : IServiceResponse
-	{
-	}
-	#endregion
+    #region ServiceFault Class
+    /// <summary>
+    /// The ServiceFault class.
+    /// </summary>
+    public partial class ServiceFault : IServiceResponse
+    {
+        public SecureChannelContext ChannelContext { get; set; }
+    }
+    #endregion
 }

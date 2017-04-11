@@ -26,6 +26,11 @@ namespace Opc.Ua
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1051:DoNotDeclareVisibleInstanceFields")]
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
         public byte[] InvokeServiceRequest;
+
+        /// <summary>
+        /// TODO: Move to base classe
+        /// </summary>
+        public SecureChannelContext ChannelContext { get; set; }
         
         /// <summary>
         /// Initializes an empty message.
@@ -38,9 +43,10 @@ namespace Opc.Ua
         /// Initializes the message with the body.
         /// </summary>
         /// <param name="InvokeServiceRequest">The invoke service request.</param>
-        public InvokeServiceMessage(byte[] InvokeServiceRequest)
+        public InvokeServiceMessage(byte[] InvokeServiceRequest, SecureChannelContext channelContext)
         {
             this.InvokeServiceRequest = InvokeServiceRequest;
+            this.ChannelContext       = channelContext;
         }
     }
 
@@ -56,21 +62,20 @@ namespace Opc.Ua
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1051:DoNotDeclareVisibleInstanceFields")]
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
         public byte[] InvokeServiceResponse;
-        
+
         /// <summary>
-        /// Initializes an empty message.
+        /// TODO: Move to base classe
         /// </summary>
-        public InvokeServiceResponseMessage()
-        {
-        }
+        public SecureChannelContext ChannelContext { get; set; }
             
         /// <summary>
         /// Initializes the message with the body.
         /// </summary>
         /// <param name="InvokeServiceResponse">The invoke service response.</param>
-        public InvokeServiceResponseMessage(byte[] InvokeServiceResponse)
+        public InvokeServiceResponseMessage(byte[] InvokeServiceResponse, SecureChannelContext channelContext)
         {
             this.InvokeServiceResponse = InvokeServiceResponse;
+            this.ChannelContext = channelContext;
         }
     }
 }

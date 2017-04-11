@@ -39,10 +39,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_FindServers)
     public partial class FindServersRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class FindServersResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -146,10 +154,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_FindServersOnNetwork)
     public partial class FindServersOnNetworkRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class FindServersOnNetworkResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -253,10 +269,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_GetEndpoints)
     public partial class GetEndpointsRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class GetEndpointsResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -360,10 +384,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_RegisterServer)
     public partial class RegisterServerRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class RegisterServerResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -467,10 +499,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_RegisterServer2)
     public partial class RegisterServer2Request : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class RegisterServer2Response : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -574,10 +614,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_OpenSecureChannel)
     public partial class OpenSecureChannelRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class OpenSecureChannelResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -681,10 +729,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_CloseSecureChannel)
     public partial class CloseSecureChannelRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class CloseSecureChannelResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -788,10 +844,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_CreateSession)
     public partial class CreateSessionRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class CreateSessionResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -895,10 +959,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_ActivateSession)
     public partial class ActivateSessionRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class ActivateSessionResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -1002,10 +1074,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_CloseSession)
     public partial class CloseSessionRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class CloseSessionResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -1109,10 +1189,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_Cancel)
     public partial class CancelRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class CancelResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -1216,10 +1304,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_AddNodes)
     public partial class AddNodesRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class AddNodesResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -1323,10 +1419,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_AddReferences)
     public partial class AddReferencesRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class AddReferencesResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -1430,10 +1534,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_DeleteNodes)
     public partial class DeleteNodesRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class DeleteNodesResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -1537,10 +1649,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_DeleteReferences)
     public partial class DeleteReferencesRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class DeleteReferencesResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -1644,10 +1764,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_Browse)
     public partial class BrowseRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class BrowseResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -1751,10 +1879,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_BrowseNext)
     public partial class BrowseNextRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class BrowseNextResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -1858,10 +1994,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_TranslateBrowsePathsToNodeIds)
     public partial class TranslateBrowsePathsToNodeIdsRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class TranslateBrowsePathsToNodeIdsResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -1965,10 +2109,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_RegisterNodes)
     public partial class RegisterNodesRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class RegisterNodesResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -2072,10 +2224,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_UnregisterNodes)
     public partial class UnregisterNodesRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class UnregisterNodesResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -2179,10 +2339,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_QueryFirst)
     public partial class QueryFirstRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class QueryFirstResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -2286,10 +2454,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_QueryNext)
     public partial class QueryNextRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class QueryNextResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -2393,10 +2569,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_Read)
     public partial class ReadRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class ReadResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -2500,10 +2684,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_HistoryRead)
     public partial class HistoryReadRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class HistoryReadResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -2607,10 +2799,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_Write)
     public partial class WriteRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class WriteResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -2714,10 +2914,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_HistoryUpdate)
     public partial class HistoryUpdateRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class HistoryUpdateResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -2821,10 +3029,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_Call)
     public partial class CallRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class CallResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -2928,10 +3144,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_CreateMonitoredItems)
     public partial class CreateMonitoredItemsRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class CreateMonitoredItemsResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -3035,10 +3259,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_ModifyMonitoredItems)
     public partial class ModifyMonitoredItemsRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class ModifyMonitoredItemsResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -3142,10 +3374,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_SetMonitoringMode)
     public partial class SetMonitoringModeRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class SetMonitoringModeResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -3249,10 +3489,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_SetTriggering)
     public partial class SetTriggeringRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class SetTriggeringResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -3356,10 +3604,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_DeleteMonitoredItems)
     public partial class DeleteMonitoredItemsRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class DeleteMonitoredItemsResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -3463,10 +3719,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_CreateSubscription)
     public partial class CreateSubscriptionRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class CreateSubscriptionResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -3570,10 +3834,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_ModifySubscription)
     public partial class ModifySubscriptionRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class ModifySubscriptionResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -3677,10 +3949,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_SetPublishingMode)
     public partial class SetPublishingModeRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class SetPublishingModeResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -3784,10 +4064,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_Publish)
     public partial class PublishRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class PublishResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -3891,10 +4179,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_Republish)
     public partial class RepublishRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class RepublishResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -3998,10 +4294,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_TransferSubscriptions)
     public partial class TransferSubscriptionsRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class TransferSubscriptionsResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
@@ -4105,10 +4409,18 @@ namespace Opc.Ua
     #if (!OPCUA_EXCLUDE_DeleteSubscriptions)
     public partial class DeleteSubscriptionsRequest : IServiceRequest
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceRequest.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     public partial class DeleteSubscriptionsResponse : IServiceResponse
     {
+    #if (NET_STANDARD)
+        /// <summary cref="IServiceResponse.ChannelContext" />
+        public SecureChannelContext ChannelContext { get; set; }
+    #endif
     }
 
     /// <summary>
