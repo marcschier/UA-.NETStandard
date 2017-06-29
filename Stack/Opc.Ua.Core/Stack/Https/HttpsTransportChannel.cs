@@ -22,54 +22,31 @@ namespace Opc.Ua.Bindings
     /// <summary>
     /// Wraps the HttpsTransportChannel and provides an ITransportChannel implementation.
     /// </summary>
-    public class HttpsTransportChannel : ITransportChannel
+    public class HttpsTransportChannel : TransportChannelBase
     {
-        public void Dispose()
-        {   
-        }
-
-        public TransportChannelFeatures SupportedFeatures
+        /// <summary>
+        /// Initialize
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="settings"></param>
+        public override void Initialize(Uri url, TransportChannelSettings settings)
         {
-            get { return TransportChannelFeatures.Open | TransportChannelFeatures.Reconnect | TransportChannelFeatures.BeginSendRequest; }
-        }
-
-        public EndpointDescription EndpointDescription
-        {
-            get { return m_settings.Description; }
-        }
-
-        public EndpointConfiguration EndpointConfiguration
-        {
-            get { return m_settings.Configuration; }
-        }
-
-        public ServiceMessageContext MessageContext
-        {
-            get { return m_quotas.MessageContext; }
-        }
-
-        public int OperationTimeout
-        {
-            get { return m_operationTimeout;  }
-            set { m_operationTimeout = value; }
-        }
-
-        public void Initialize(
-            Uri url,
-            TransportChannelSettings settings)
-        {
-            SaveSettings(url, settings);
+            base.Initialize(new Uri(Utils.ReplaceLocalhost(url.ToString())), settings);
         }
 
         #region Open
+
         /// <summary>
-        /// Open synchronously
+        /// Open async
         /// </summary>
-        public void Open()
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public override Task OpenAsync(CancellationToken ct)
         {
             try
             {
                 m_client = new HttpClient();
+                return Task.FromResult(true);
             }
             catch (Exception ex)
             {
@@ -78,76 +55,18 @@ namespace Opc.Ua.Bindings
             }
         }
 
-        /// <summary>
-        /// Open async
-        /// </summary>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        public Task OpenAsync(CancellationToken ct)
-        {
-            Open();
-            return Task.FromResult(true);
-        }
-
-        /// <summary>
-        /// Begin open
-        /// </summary>
-        /// <param name="callback"></param>
-        /// <param name="callbackData"></param>
-        /// <returns></returns>
-        public IAsyncResult BeginOpen(AsyncCallback callback, object callbackData)
-        {
-            return TaskToApm.Begin(OpenAsync(CancellationToken.None), callback, callbackData);
-        }
-
-        /// <summary>
-        /// Complete open
-        /// </summary>
-        /// <param name="result"></param>
-        public void EndOpen(IAsyncResult result)
-        {
-            TaskToApm.End(result);
-        }
         #endregion Open
 
         #region Reconnect
         /// <summary>
         /// No op
         /// </summary>
-        public void Reconnect()
-        {
-            Utils.Trace("HttpsTransportChannel RECONNECT: Reconnecting to {0}.", m_url);
-        }
-
-        /// <summary>
-        /// No op
-        /// </summary>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public Task ReconnectAsync(CancellationToken ct)
+        public override Task ReconnectAsync(CancellationToken ct)
         {
-            Reconnect();
+            Utils.Trace("HttpsTransportChannel RECONNECT: Reconnecting to {0}.", Url);
             return Task.FromResult(true);
-        }
-
-        /// <summary>
-        /// Begin reconnect
-        /// </summary>
-        /// <param name="callback"></param>
-        /// <param name="callbackData"></param>
-        /// <returns></returns>
-        public IAsyncResult BeginReconnect(AsyncCallback callback, object callbackData)
-        {
-            return TaskToApm.Begin(ReconnectAsync(CancellationToken.None), callback, callbackData);
-        }
-
-        /// <summary>
-        /// Complete reconnect
-        /// </summary>
-        /// <param name="result"></param>
-        public void EndReconnect(IAsyncResult result)
-        {
-            TaskToApm.End(result);
         }
 
         #endregion Reconnect
@@ -156,11 +75,12 @@ namespace Opc.Ua.Bindings
         /// <summary>
         /// Close
         /// </summary>
-        public void Close()
+        public override void Close()
         {
             if (m_client != null)
             {
                 m_client.Dispose();
+                m_client = null;
             }
         }
 
@@ -169,44 +89,26 @@ namespace Opc.Ua.Bindings
         /// </summary>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public Task CloseAsync(CancellationToken ct)
+        public override Task CloseAsync(CancellationToken ct)
         {
             Close();
             return Task.FromResult(true);
         }
 
         /// <summary>
-        /// Begin close
+        /// Dispose = Close
         /// </summary>
-        /// <param name="callback"></param>
-        /// <param name="callbackData"></param>
-        /// <returns></returns>
-        public IAsyncResult BeginClose(AsyncCallback callback, object callbackData)
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
         {
-            return TaskToApm.Begin(CloseAsync(CancellationToken.None), callback, callbackData);
-        }
-
-        /// <summary>
-        /// Complete close
-        /// </summary>
-        /// <param name="result"></param>
-        public void EndClose(IAsyncResult result)
-        {
-            TaskToApm.End(result);
+            if (disposing)
+            {
+                Close();
+            }
         }
         #endregion Close
 
         #region SendRequest
-
-        /// <summary>
-        /// Send request synchronously
-        /// </summary>
-        /// <param name="request"></param>
-        /// <returns></returns>
-        public IServiceResponse SendRequest(IServiceRequest request)
-        {
-            return SendRequestAsync(request, CancellationToken.None).Result;
-        }
 
         /// <summary>
         /// Send request asynchronously
@@ -214,19 +116,18 @@ namespace Opc.Ua.Bindings
         /// <param name="request"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public async Task<IServiceResponse> SendRequestAsync(IServiceRequest request, CancellationToken ct)
+        public override async Task<IServiceResponse> SendRequestAsync(IServiceRequest request, CancellationToken ct)
         {
             try
             {
                 HttpResponseMessage response = null;
-                var content = new ByteArrayContent(BinaryEncoder.EncodeMessage(request, m_quotas.MessageContext));
+                var content = new ByteArrayContent(BinaryEncoder.EncodeMessage(request, MessageContext));
                 content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-                response = await m_client.PostAsync(m_url, content).ConfigureAwait(false);
+                response = await m_client.PostAsync(Url, content).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
-
                 using (var responseContent = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
                 {
-                    return BinaryDecoder.DecodeMessage(responseContent, null, m_quotas.MessageContext) as IServiceResponse;
+                    return BinaryDecoder.DecodeMessage(responseContent, null, MessageContext) as IServiceResponse;
                 }
             }
             catch (Exception ex)
@@ -238,71 +139,9 @@ namespace Opc.Ua.Bindings
                 throw;
             }
         }
-
-        /// <summary>
-        /// Begin send
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="callback"></param>
-        /// <param name="callbackData"></param>
-        /// <returns></returns>
-        public IAsyncResult BeginSendRequest(IServiceRequest request, AsyncCallback callback, object callbackData)
-        {
-            return TaskToApm.Begin(SendRequestAsync(request, CancellationToken.None), callback, callbackData);
-        }
-
-        /// <summary>
-        /// End sending
-        /// </summary>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public IServiceResponse EndSendRequest(IAsyncResult result)
-        {
-            return TaskToApm.End<IServiceResponse>(result);
-        }
-
         #endregion SendRequest
 
-        #region Misc
-        /// <summary>
-        /// Save settings
-        /// </summary>
-        /// <param name="url"></param>
-        /// <param name="settings"></param>
-        private void SaveSettings(Uri url, TransportChannelSettings settings)
-        {
-            m_url = new Uri(Utils.ReplaceLocalhost(url.ToString()));
 
-            m_settings = settings;
-            m_operationTimeout = settings.Configuration.OperationTimeout;
-
-            // initialize the quotas.
-            m_quotas = new ChannelQuotas();
-
-            m_quotas.MaxBufferSize = m_settings.Configuration.MaxBufferSize;
-            m_quotas.MaxMessageSize = m_settings.Configuration.MaxMessageSize;
-            m_quotas.ChannelLifetime = m_settings.Configuration.ChannelLifetime;
-            m_quotas.SecurityTokenLifetime = m_settings.Configuration.SecurityTokenLifetime;
-
-            m_quotas.MessageContext = new ServiceMessageContext();
-
-            m_quotas.MessageContext.MaxArrayLength = m_settings.Configuration.MaxArrayLength;
-            m_quotas.MessageContext.MaxByteStringLength = m_settings.Configuration.MaxByteStringLength;
-            m_quotas.MessageContext.MaxMessageSize = m_settings.Configuration.MaxMessageSize;
-            m_quotas.MessageContext.MaxStringLength = m_settings.Configuration.MaxStringLength;
-            m_quotas.MessageContext.NamespaceUris = m_settings.NamespaceUris;
-            m_quotas.MessageContext.ServerUris = new StringTable();
-            m_quotas.MessageContext.Factory = m_settings.Factory;
-
-            m_quotas.CertificateValidator = settings.CertificateValidator;
-        }
-
-        #endregion Misc
-
-        private Uri m_url;
-        private int m_operationTimeout;
-        private TransportChannelSettings m_settings;
-        private ChannelQuotas m_quotas;
         private HttpClient m_client;
     }
 }
