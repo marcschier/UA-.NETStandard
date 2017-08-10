@@ -79,50 +79,6 @@ namespace Opc.Ua
         #endregion
 
         #region Public Methods
-        /// <summary>
-        /// Encodes a session-less message to a buffer.
-        /// </summary>
-        public static void EncodeSessionLessMessage(IEncodeable message, Stream stream, ServiceMessageContext context, bool leaveOpen = false)
-        {
-            if (message == null) throw new ArgumentNullException("message");
-            if (context == null) throw new ArgumentNullException("context");
-
-            // create encoder.
-            JsonEncoder encoder = new JsonEncoder(context, true, new StreamWriter(stream, new UTF8Encoding(false), 65535, leaveOpen));
-
-            try
-            {
-                long start = stream.Position;
-
-                // write the message.
-                SessionLessServiceMessage envelope = new SessionLessServiceMessage();
-                envelope.NamespaceUris = context.NamespaceUris;
-                envelope.ServerUris = context.ServerUris;
-                envelope.Message = message;
-
-                envelope.Encode(encoder);
-
-                // check that the max message size was not exceeded.
-                if (context.MaxMessageSize > 0 && context.MaxMessageSize < (int)(stream.Position - start))
-                {
-                    throw ServiceResultException.Create(
-                        StatusCodes.BadEncodingLimitsExceeded,
-                        "MaxMessageSize {0} < {1}",
-                        context.MaxMessageSize,
-                        (int)(stream.Position - start));
-                }
-
-                encoder.Close();
-            }
-            finally
-            {
-                if (leaveOpen)
-                {
-                    encoder.m_writer.Flush();
-                    stream.Position = 0;
-                }
-            }
-        }
 
         /// <summary>
         /// Encodes a message in a stream.

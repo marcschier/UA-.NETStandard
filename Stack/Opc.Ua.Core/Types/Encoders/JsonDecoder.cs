@@ -71,30 +71,6 @@ namespace Opc.Ua
         #endregion
 
         #region Public Methods
-        /// <summary>
-        /// Decodes a session-less message from a buffer.
-        /// </summary>
-        public static IEncodeable DecodeSessionLessMessage(byte[] buffer, ServiceMessageContext context)
-        {
-            if (buffer == null) throw new ArgumentNullException("buffer");
-            if (context == null) throw new ArgumentNullException("context");
-
-            JsonDecoder decoder = new JsonDecoder(UTF8Encoding.UTF8.GetString(buffer), context);
-
-            try
-            {
-                // decode the actual message.
-                SessionLessServiceMessage message = new SessionLessServiceMessage();
-
-                message.Decode(decoder);
-
-                return message.Message;
-            }
-            finally
-            {
-                decoder.Close();
-            }
-        }
 
         /// <summary>
         /// Decodes a message from a buffer.

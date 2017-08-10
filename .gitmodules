@@ -1,0 +1,3 @@
+[submodule "Stack/Opc.Ua.Core/Nodeset"]
+	path = Stack/Opc.Ua.Core/Nodeset
+	url = https://github.com/marcschier/UA-Nodeset.git
