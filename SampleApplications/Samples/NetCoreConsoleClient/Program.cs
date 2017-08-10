@@ -131,7 +131,7 @@ namespace NetCoreConsoleClient
             }
 
             Console.WriteLine("2 - Discover endpoints of {0}.", endpointURL);
-            var selectedEndpoint = await CoreClientUtils.SelectEndpointAsync(endpointURL, haveAppCertificate);
+            var selectedEndpoint = await CoreClientUtils.SelectEndpointAsync(endpointURL, haveAppCertificate, -1, cancellationToken);
             Console.WriteLine("    Selected endpoint uses: {0}", 
                 selectedEndpoint.SecurityPolicyUri.Substring(selectedEndpoint.SecurityPolicyUri.LastIndexOf('#') + 1));
 

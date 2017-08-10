@@ -452,7 +452,7 @@ namespace Opc.Ua.Sample.Controls
 
                 if (server != null)
                 {
-                    server.RegisterWithDiscoveryServer().Wait();
+                    server.RegisterWithDiscoveryServerAsync(System.Threading.CancellationToken.None).Wait();
                 }
             }
             catch (Exception exception)

@@ -29,6 +29,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Opc.Ua.Client
 {
@@ -43,7 +45,15 @@ namespace Opc.Ua.Client
         /// </summary>
         /// <param name="configuration">The configuration.</param>
         /// <returns>A list of server urls.</returns>
-        public static IList<string> DiscoverServers(ApplicationConfiguration configuration)
+        public static IList<string> DiscoverServers(ApplicationConfiguration configuration) =>
+            DiscoverServersAsync(configuration, CancellationToken.None).Result;
+
+        /// <summary>
+        /// Discovers the servers on the local machine.
+        /// </summary>
+        /// <param name="configuration">The configuration.</param>
+        /// <returns>A list of server urls.</returns>
+        public static async Task<IList<string>> DiscoverServersAsync(ApplicationConfiguration configuration, CancellationToken cancellationToken)
         {
             List<string> serverUrls = new List<string>();
 
@@ -54,7 +64,7 @@ namespace Opc.Ua.Client
             // Connect to the local discovery server and find the available servers.
             using (DiscoveryClient client = DiscoveryClient.Create(new Uri("opc.tcp://localhost:4840"), endpointConfiguration))
             {
-                ApplicationDescriptionCollection servers = client.FindServers(null);
+                ApplicationDescriptionCollection servers = await client.FindServersAsync(null, cancellationToken);
 
                 // populate the drop down list with the discovery URLs for the available servers.
                 for (int ii = 0; ii < servers.Count; ii++)
@@ -70,7 +80,7 @@ namespace Opc.Ua.Client
 
                         // Many servers will use the '/discovery' suffix for the discovery endpoint.
                         // The URL without this prefix should be the base URL for the server. 
-                        if (discoveryUrl.EndsWith("/discovery"))
+                        if (discoveryUrl.EndsWith("/discovery", StringComparison.Ordinal))
                         {
                             discoveryUrl = discoveryUrl.Substring(0, discoveryUrl.Length - "/discovery".Length);
                         }
@@ -93,12 +103,21 @@ namespace Opc.Ua.Client
         /// <param name="discoveryUrl">The discovery URL.</param>
         /// <param name="useSecurity">if set to <c>true</c> select an endpoint that uses security.</param>
         /// <returns>The best available endpoint.</returns>
-        public static EndpointDescription SelectEndpoint(string discoveryUrl, bool useSecurity, int operationTimeout = -1)
+        public static EndpointDescription SelectEndpoint(string discoveryUrl, bool useSecurity, int operationTimeout = -1) =>
+            SelectEndpointAsync(discoveryUrl, useSecurity, operationTimeout, new CancellationTokenSource(operationTimeout).Token).Result;
+
+        /// <summary>
+        /// Finds the endpoint that best matches the current settings.
+        /// </summary>
+        /// <param name="discoveryUrl">The discovery URL.</param>
+        /// <param name="useSecurity">if set to <c>true</c> select an endpoint that uses security.</param>
+        /// <returns>The best available endpoint.</returns>
+        public static async Task<EndpointDescription> SelectEndpointAsync(string discoveryUrl, bool useSecurity, int operationTimeout, CancellationToken cancellationToken)
         {
             // needs to add the '/discovery' back onto non-UA TCP URLs.
-            if (discoveryUrl.StartsWith(Utils.UriSchemeHttps))
+            if (discoveryUrl.StartsWith(Utils.UriSchemeHttps, StringComparison.Ordinal))
             {
-                if (!discoveryUrl.EndsWith("/discovery"))
+                if (!discoveryUrl.EndsWith("/discovery", StringComparison.Ordinal))
                 {
                     discoveryUrl += "/discovery";
                 }
@@ -118,7 +137,7 @@ namespace Opc.Ua.Client
             // Connect to the server's discovery endpoint and find the available configuration.
             using (DiscoveryClient client = DiscoveryClient.Create(uri, configuration))
             {
-                EndpointDescriptionCollection endpoints = client.GetEndpoints(null);
+                EndpointDescriptionCollection endpoints = await client.GetEndpointsAsync(null, cancellationToken);
 
                 // select the best endpoint to use based on the selected URL and the UseSecurity checkbox. 
                 for (int ii = 0; ii < endpoints.Count; ii++)
@@ -126,7 +145,7 @@ namespace Opc.Ua.Client
                     EndpointDescription endpoint = endpoints[ii];
 
                     // check for a match on the URL scheme.
-                    if (endpoint.EndpointUrl.StartsWith(uri.Scheme))
+                    if (endpoint.EndpointUrl.StartsWith(uri.Scheme, StringComparison.Ordinal))
                     {
                         // check if security was requested.
                         if (useSecurity)

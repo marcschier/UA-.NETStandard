@@ -275,7 +275,6 @@ namespace Opc.Ua
             TaskToApm.End<IServiceResponse>(result);
         #endregion SendRequest
 
-        private int m_operationTimeout;
         private TransportChannelSettings m_settings;
         private ServiceMessageContext m_messageContext;
     }
