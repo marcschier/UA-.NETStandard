@@ -34,6 +34,7 @@ using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using System.Security.Authentication;
+using System.Collections.Generic;
 
 namespace Opc.Ua.Bindings
 {
@@ -170,7 +171,6 @@ namespace Opc.Ua.Bindings
         public void Start()
         {
             Startup.Listener = this;
-
             m_host = new WebHostBuilder();
 
             HttpsConnectionFilterOptions httpsOptions = new HttpsConnectionFilterOptions();
@@ -184,11 +184,8 @@ namespace Opc.Ua.Bindings
                 options.NoDelay = true;
                 options.UseHttps(httpsOptions);
             });
-
             m_host.UseContentRoot(Directory.GetCurrentDirectory());
             m_host.UseStartup<Startup>();
-            m_host.Build();
-
             m_host.Start(Utils.ReplaceLocalhost(m_uri.ToString()));
         }
 

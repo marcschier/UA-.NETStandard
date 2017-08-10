@@ -48,6 +48,7 @@ namespace NetCoreConsoleClient
         public static async Task ConsoleSampleClient(string endpointURL, CancellationToken cancellationToken)
         {
             Console.WriteLine("1 - Create an Application Configuration.");
+            Utils.SetTraceOutput(Utils.TraceOutput.DebugAndFile);
             var config = new ApplicationConfiguration()
             {
                 ApplicationName = "UA Core Sample Client",
@@ -95,9 +96,18 @@ namespace NetCoreConsoleClient
                 X509Certificate2 certificate = CertificateFactory.CreateCertificate(
                     config.SecurityConfiguration.ApplicationCertificate.StoreType,
                     config.SecurityConfiguration.ApplicationCertificate.StorePath,
+                    null,
                     config.ApplicationUri,
                     config.ApplicationName,
-                    config.SecurityConfiguration.ApplicationCertificate.SubjectName
+                    config.SecurityConfiguration.ApplicationCertificate.SubjectName,
+                    null,
+                    CertificateFactory.defaultKeySize,
+                    DateTime.UtcNow - TimeSpan.FromDays(1),
+                    CertificateFactory.defaultLifeTime,
+                    CertificateFactory.defaultHashSize,
+                    false,
+                    null,
+                    null
                     );
 
                 config.SecurityConfiguration.ApplicationCertificate.Certificate = certificate;
@@ -121,9 +131,7 @@ namespace NetCoreConsoleClient
             }
 
             Console.WriteLine("2 - Discover endpoints of {0}.", endpointURL);
-            Uri endpointURI = new Uri(endpointURL);
-            var endpointCollection = await DiscoverEndpointsAsync(config, endpointURI, cancellationToken);
-            var selectedEndpoint = SelectUaTcpEndpoint(endpointCollection, haveAppCertificate);
+            var selectedEndpoint = await CoreClientUtils.SelectEndpointAsync(endpointURL, haveAppCertificate);
             Console.WriteLine("    Selected endpoint uses: {0}", 
                 selectedEndpoint.SecurityPolicyUri.Substring(selectedEndpoint.SecurityPolicyUri.LastIndexOf('#') + 1));
 
@@ -219,6 +227,7 @@ namespace NetCoreConsoleClient
             e.Accept = (e.Error.StatusCode == StatusCodes.BadCertificateUntrusted);
         }
 
+#if OLD_TODO_MERGE
         private static async Task<EndpointDescriptionCollection> DiscoverEndpointsAsync(
             ApplicationConfiguration config, 
             Uri discoveryUrl, 
@@ -280,5 +289,6 @@ namespace NetCoreConsoleClient
                 endpoint.Server.DiscoveryUrls = updatedDiscoveryUrls;
             }
         }
+#endif
     }
 }

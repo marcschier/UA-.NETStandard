@@ -1270,8 +1270,6 @@ namespace Opc.Ua.Bindings
         /// </summary>
         protected bool ProcessErrorMessage(uint messageType, ArraySegment<byte> messageChunk)
         {
-            Utils.Trace("Channel {0}: ProcessErrorMessage()", ChannelId);
-
             // read request buffer sizes.            
             MemoryStream istrm = new MemoryStream(messageChunk.Array, messageChunk.Offset, messageChunk.Count, false);
             BinaryDecoder decoder = new BinaryDecoder(istrm, Quotas.MessageContext);
@@ -1281,6 +1279,8 @@ namespace Opc.Ua.Bindings
             try
             {
                 ServiceResult error = ReadErrorMessageBody(decoder);
+
+                Utils.Trace((int)Utils.TraceMasks.Error, "Channel {0}: ProcessErrorMessage({1})", ChannelId, error);
 
                 // check if a handshake is in progress
                 if (m_handshakeOperation != null)

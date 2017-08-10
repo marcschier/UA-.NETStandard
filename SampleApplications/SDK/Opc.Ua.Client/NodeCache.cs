@@ -689,6 +689,12 @@ namespace Opc.Ua.Client
                     // create a placeholder for the node if it does not already exist.
                     if (!m_nodes.Exists(reference.NodeId))
                     {
+                        // transform absolute identifiers.
+                        if (reference.NodeId != null && reference.NodeId.IsAbsolute)
+                        {
+                            reference.NodeId = ExpandedNodeId.ToNodeId(reference.NodeId, NamespaceUris);
+                        }
+
                         Node target = new Node(reference);
                         m_nodes.Attach(target);
                     }

@@ -28,6 +28,7 @@
  * ======================================================================*/
 
 using System;
+using System.Threading;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
@@ -66,6 +67,19 @@ namespace Quickstarts.ReferenceServer
 
             // create the custom node managers.
             nodeManagers.Add(new EmptyNodeManager(server, configuration));
+
+            // get the ShutdownDelay configuration parameter.
+            ReferenceServerConfiguration referenceServerConfiguration = configuration.ParseExtension<ReferenceServerConfiguration>();
+
+            if (referenceServerConfiguration != null)
+            {
+                m_shutdownDelay = referenceServerConfiguration.ShutdownDelay;
+            }
+            else
+            {
+                // default value of 5 seconds.
+                m_shutdownDelay = 5;
+            }
 
             // create master node manager.
             return new MasterNodeManager(server, configuration, null, nodeManagers.ToArray());
@@ -124,6 +138,46 @@ namespace Quickstarts.ReferenceServer
 
             // request notifications when the user identity is changed. all valid users are accepted by default.
             server.SessionManager.ImpersonateUser += new ImpersonateEventHandler(SessionManager_ImpersonateUser);
+        }
+
+        /// <summary>
+        /// Cleans up before the server shuts down.
+        /// </summary>
+        /// <remarks>
+        /// This method is called before any shutdown processing occurs.
+        /// </remarks>
+        protected override void OnServerStopping()
+        {
+            try
+            {
+                // check for connected clients
+                IList<Session> currentessions = this.ServerInternal.SessionManager.GetSessions();
+
+                if (currentessions.Count > 0)
+                {
+                    // provide some time for the connected clients to detect the shutdown state.
+                    ServerInternal.Status.Value.ShutdownReason = new LocalizedText("en-US", "Application closed.");
+                    ServerInternal.Status.Variable.ShutdownReason.Value = new LocalizedText("en-US", "Application closed.");
+                    ServerInternal.Status.Value.State = ServerState.Shutdown;
+                    ServerInternal.Status.Variable.State.Value = ServerState.Shutdown;
+                    ServerInternal.Status.Variable.ClearChangeMasks(ServerInternal.DefaultSystemContext, true);
+
+                    for (uint timeTillShutdown = m_shutdownDelay; timeTillShutdown > 0; timeTillShutdown--)
+                    {
+                        ServerInternal.Status.Value.SecondsTillShutdown = timeTillShutdown;
+                        ServerInternal.Status.Variable.SecondsTillShutdown.Value = timeTillShutdown;
+                        ServerInternal.Status.Variable.ClearChangeMasks(ServerInternal.DefaultSystemContext, true);
+
+                        Thread.Sleep(1000);
+                    }
+                }
+            }
+            catch
+            {
+                // ignore error during shutdown procedure.
+            }
+
+            base.OnServerStopping();
         }
         #endregion
         #region User Validation Functions
@@ -210,23 +264,43 @@ namespace Quickstarts.ReferenceServer
                     throw new ServiceResultException(StatusCodes.BadCertificateUseNotAllowed);
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                // construct translation object with default text.
-                TranslationInfo info = new TranslationInfo(
-                    "InvalidCertificate",
-                    "en-US",
-                    "'{0}' is not a trusted user certificate.",
-                    certificate.Subject);
+                TranslationInfo info;
+                StatusCode result = StatusCodes.BadIdentityTokenRejected;
+                ServiceResultException se = e as ServiceResultException;
+                if (se != null && se.StatusCode == StatusCodes.BadCertificateUseNotAllowed)
+                {
+                    info = new TranslationInfo(
+                        "InvalidCertificate",
+                        "en-US",
+                        "'{0}' is an invalid user certificate.",
+                        certificate.Subject);
+
+                    result = StatusCodes.BadIdentityTokenInvalid;
+                }
+                else
+                {
+                    // construct translation object with default text.
+                    info = new TranslationInfo(
+                        "UntrustedCertificate",
+                        "en-US",
+                        "'{0}' is not a trusted user certificate.",
+                        certificate.Subject);
+                }
 
                 // create an exception with a vendor defined sub-code.
                 throw new ServiceResultException(new ServiceResult(
-                    StatusCodes.BadIdentityTokenRejected,
-                    "InvalidCertificate",
+                    result,
+                    info.Key,
                     "http://opcfoundation.org/UA/Sample/",
                     new LocalizedText(info)));
             }
         }
+
+        #region Private Fields
+        private uint m_shutdownDelay = 0;
+        #endregion 
         #endregion
     }
 }

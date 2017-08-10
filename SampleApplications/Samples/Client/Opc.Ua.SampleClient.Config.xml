@@ -26,11 +26,13 @@
       <StorePath>CurrentUser\UA_MachineDefault</StorePath>
 
       <!-- The subject for the certificate 
-           Note that subject names are complex structures. The text that appears here is the CommonName component.
-           A complete distinguished would be something like: 'CN=UA Sample Client, DC=MACHINENAME'
-           The first certificate found is used if multiple certificates with the same CommonName exist. 
-           The Thumbprint should be specified if the CommonName does not uniquely identify a certificate. -->
-      <SubjectName>Opc.Ua.SampleClient</SubjectName>
+           Note that subject names are complex structures. Only text that appears here is treated as the CommonName component.
+           The first certificate found is used if multiple certificates with the same CommonName and a matching hostname exist.
+           Also a complete distinguished name can be specified here: 'CN=UA Sample Client, DC=localhost'.
+           In this case the first certificate matching the complete distinguished name is used. localhost is replaced with the hostname.
+           If no certificate is found, a new self signed application certificate is created.
+           The Thumbprint should be specified if the CN or DN does not uniquely identify a certificate. -->
+      <SubjectName>CN=Opc.Ua.SampleClient, C=US, S=Arizona, O=OPC Foundation, DC=localhost</SubjectName>
 
       <!-- The SHA1 thumbprint for the certificate.
            The thumbprint uniquely identifies a certificate.
@@ -166,38 +168,31 @@
       <ServerSecurityPolicy>
         <SecurityMode>SignAndEncrypt_3</SecurityMode>
         <SecurityPolicyUri>http://opcfoundation.org/UA/SecurityPolicy#Basic128Rsa15</SecurityPolicyUri>
-        <SecurityLevel>4</SecurityLevel>
       </ServerSecurityPolicy>
       <ServerSecurityPolicy>
         <SecurityMode>Sign_2</SecurityMode>
         <SecurityPolicyUri>http://opcfoundation.org/UA/SecurityPolicy#Basic256</SecurityPolicyUri>
-        <SecurityLevel>2</SecurityLevel>
       </ServerSecurityPolicy>
       <!--Removing no secuirty option from the configuration as this is a security risk
         <ServerSecurityPolicy>
         <SecurityMode>None_1</SecurityMode>
         <SecurityPolicyUri>http://opcfoundation.org/UA/SecurityPolicy#None</SecurityPolicyUri>
-        <SecurityLevel>0</SecurityLevel>
       </ServerSecurityPolicy>-->
       <ServerSecurityPolicy>
         <SecurityMode>Sign_2</SecurityMode>
         <SecurityPolicyUri>http://opcfoundation.org/UA/SecurityPolicy#Basic128Rsa15</SecurityPolicyUri>
-        <SecurityLevel>1</SecurityLevel>
       </ServerSecurityPolicy>
       <ServerSecurityPolicy>
         <SecurityMode>SignAndEncrypt_3</SecurityMode>
         <SecurityPolicyUri>http://opcfoundation.org/UA/SecurityPolicy#Basic256</SecurityPolicyUri>
-        <SecurityLevel>5</SecurityLevel>
       </ServerSecurityPolicy>      
       <ServerSecurityPolicy>
         <SecurityMode>Sign_2</SecurityMode>
         <SecurityPolicyUri>http://opcfoundation.org/UA/SecurityPolicy#Basic256Sha256</SecurityPolicyUri>
-        <SecurityLevel>3</SecurityLevel>
       </ServerSecurityPolicy>
       <ServerSecurityPolicy>
         <SecurityMode>SignAndEncrypt_3</SecurityMode>
         <SecurityPolicyUri>http://opcfoundation.org/UA/SecurityPolicy#Basic256Sha256</SecurityPolicyUri>
-        <SecurityLevel>6</SecurityLevel>
       </ServerSecurityPolicy>
     </SecurityPolicies>
 
@@ -307,7 +302,6 @@
 		  <ua:SecurityMode>SignAndEncrypt_3</ua:SecurityMode>
       <ua:SecurityPolicyUri />
 		  <ua:UserIdentityTokens />
-		  <ua:SecurityLevel>1</ua:SecurityLevel>
 	  </RegistrationEndpoint>
 
 	  <!-- The maximum interval between registration. 0 disables periodic registration -->

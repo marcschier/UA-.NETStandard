@@ -271,7 +271,7 @@ namespace Opc.Ua
                             truncated = true;
                         }
 
-                        using (StreamWriter writer = new StreamWriter(File.Open(file.FullName, FileMode.Append)))
+                        using (StreamWriter writer = new StreamWriter(File.Open(file.FullName, FileMode.Append, FileAccess.Write, FileShare.Read)))
                         {
                             if (truncated)
                             {
@@ -918,7 +918,42 @@ namespace Opc.Ua
 
             return buffer.ToString();
         }
-        
+
+        /// <summary>
+        /// Replaces the cert subject name DC=localhost with the current host name.
+        /// </summary>
+        public static string ReplaceDCLocalhost(string subjectName, string hostname = null)
+        {
+            // ignore nulls.
+            if (String.IsNullOrEmpty(subjectName))
+            {
+                return subjectName;
+            }
+
+            // IPv6 address needs a surrounding [] 
+            if (!String.IsNullOrEmpty(hostname) && hostname.Contains(':'))
+            {
+                hostname = "[" + hostname + "]";
+            }
+
+            // check if the string DC=localhost is specified.
+            int index = subjectName.IndexOf("DC=localhost", StringComparison.OrdinalIgnoreCase);
+
+            if (index == -1)
+            {
+                return subjectName;
+            }
+
+            // construct new uri.
+            StringBuilder buffer = new StringBuilder();
+
+            buffer.Append(subjectName.Substring(0, index + 3));
+            buffer.Append((hostname == null) ? GetHostName() : hostname);
+            buffer.Append(subjectName.Substring(index + "DC=localhost".Length));
+
+            return buffer.ToString();
+        }
+
         /// <summary>
         /// Parses a URI string. Returns null if it is invalid.
         /// </summary>
@@ -1357,18 +1392,46 @@ namespace Opc.Ua
                 return value;
             }
 
-            // copy arrays.
+            // copy arrays, any dimension.
             Array array = value as Array;
             if (array != null)
             {
-                Array clone = Array.CreateInstance(type.GetElementType(), array.Length);
-
-                for (int ii = 0; ii < array.Length; ii++)
+                if (array.Rank == 1)
                 {
-                    clone.SetValue(Utils.Clone(array.GetValue(ii)), ii);
+                    Array clone = Array.CreateInstance(type.GetElementType(), array.Length);
+                    for (int ii = 0; ii < array.Length; ii++)
+                    {
+                        clone.SetValue(Utils.Clone(array.GetValue(ii)), ii);
+                    }
+                    return clone;
                 }
+                else
+                {
+                    int[] arrayRanks = new int[array.Rank];
+                    int[] arrayIndex = new int[array.Rank];
+                    for (int ii=0; ii<array.Rank; ii++)
+                    {
+                        arrayRanks[ii] = array.GetLength(ii);
+                        arrayIndex[ii] = 0;
+                    }
+                    Array clone = Array.CreateInstance(type.GetElementType(), arrayRanks);
+                    for (int ii = 0; ii < array.Length; ii++)
+                    {
+                        clone.SetValue(Utils.Clone(array.GetValue(arrayIndex)), arrayIndex);
 
-                return clone;
+                        // iterate the index array
+                        for (int ix = 0; ix < array.Rank; ix++)
+                        {
+                            arrayIndex[ix]++;
+                            if (arrayIndex[ix] < arrayRanks[ix])
+                            {
+                                break;
+                            }
+                            arrayIndex[ix] = 0;
+                        }
+                    }
+                    return clone;
+                }
             }
 
             // copy XmlNode.
@@ -1659,6 +1722,14 @@ namespace Opc.Ua
             // copy Opc.Ua.DataValue
             {
                 Opc.Ua.DataValue castedObject = value as Opc.Ua.DataValue;
+                if (castedObject != null)
+                {
+                    return castedObject.MemberwiseClone();
+                }
+            }
+            // copy Opc.Ua.ExpandedNodeId
+            {
+                ExpandedNodeId castedObject = value as ExpandedNodeId;
                 if (castedObject != null)
                 {
                     return castedObject.MemberwiseClone();
@@ -2405,28 +2476,25 @@ namespace Opc.Ua
             if (a == null || b == null) return false;
             if (a.Length != b.Length) return false;
 
+            byte result = 0;
             for (int i = 0; i < a.Length; i++)
-                if (a[i] != b[i])
-                    return false;
+                result |= (byte) (a[i] ^ b[i]);
 
-            return true;
+            return result == 0;
         }
 
         public class Nonce
         {
-            private static int m_calls = 0;
+            static RandomNumberGenerator m_rng = RandomNumberGenerator.Create();
 
             /// <summary>
             /// Generates a Nonce for cryptographic functions.
             /// </summary>
-            public static byte[] CreateNonce(string secret, uint length)
+            public static byte[] CreateNonce(uint length)
             {
-                // This function should rather use a crypthographic random number generator
-                // once available in .Net Standard library
-                string label = DateTime.UtcNow.Ticks.ToString();
-                // ensure every Nonce is different, even when the ticks didn't change since the last call
-                m_calls++;
-                return PSHA1(new UTF8Encoding().GetBytes(secret), label, BitConverter.GetBytes(m_calls), 0, (int)length);
+                byte[] randomBytes = new byte[length];
+                m_rng.GetBytes(randomBytes);
+                return randomBytes;
             }
         }
 
@@ -2916,7 +2984,11 @@ namespace Opc.Ua
                 return false;
             }
 
-            // compare each.
+            // sort to ensure similar entries are compared
+            parsedName.Sort(StringComparer.OrdinalIgnoreCase);
+            certificateName.Sort(StringComparer.OrdinalIgnoreCase);
+
+            // compare each entry
             for (int ii = 0; ii < parsedName.Count; ii++)
             {
                 if (String.Compare(parsedName[ii], certificateName[ii], StringComparison.OrdinalIgnoreCase) != 0)

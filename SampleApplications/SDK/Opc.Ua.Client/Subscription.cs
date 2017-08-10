@@ -1686,7 +1686,6 @@ namespace Opc.Ua.Client
                 }
 
                 // process messages.
-                Interlocked.Increment(ref m_outstandingMessageWorkers);
                 OnMessageReceivedAsync(null);
             }
 
@@ -1709,6 +1708,7 @@ namespace Opc.Ua.Client
         /// </summary>
         private async void OnMessageReceivedAsync(object state)
         {
+            Interlocked.Increment(ref m_outstandingMessageWorkers);
             try
             {
                 Session session = null;

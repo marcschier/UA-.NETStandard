@@ -33,6 +33,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.IO;
 using System.Threading.Tasks;
+using System.Globalization;
 
 namespace Opc.Ua.Server
 {
@@ -673,11 +674,6 @@ namespace Opc.Ua.Server
             }
             catch (ServiceResultException e)
             {
-                if (e.StatusCode == StatusCodes.BadSessionNotActivated)
-                {
-                    return CreateResponse(requestHeader, e);
-                }
-
                 lock (ServerInternal.DiagnosticsWriteLock)
                 {
                     ServerInternal.ServerDiagnostics.RejectedRequestsCount++;
@@ -1408,7 +1404,7 @@ namespace Opc.Ua.Server
                 }
                 */
                 
-                Utils.Trace("PUBLISH #{0} RECIEVED. TIME={1:hh:hh:ss.fff}", requestHeader.RequestHandle, requestHeader.Timestamp);
+                Utils.Trace("PUBLISH #{0} RECEIVED. TIME={1:hh:mm:ss.fff}", requestHeader.RequestHandle, requestHeader.Timestamp);
                 
                 notificationMessage = ServerInternal.SubscriptionManager.Publish(
                     context,
@@ -2689,7 +2685,7 @@ namespace Opc.Ua.Server
             serverDescription = new ApplicationDescription();
 
             serverDescription.ApplicationUri = configuration.ApplicationUri;
-            serverDescription.ApplicationName = configuration.ApplicationName;
+            serverDescription.ApplicationName = new LocalizedText("en-US", configuration.ApplicationName);
             serverDescription.ApplicationType = configuration.ApplicationType;
             serverDescription.ProductUri = configuration.ProductUri;
             serverDescription.DiscoveryUrls = GetDiscoveryUrls();
@@ -2710,11 +2706,11 @@ namespace Opc.Ua.Server
             // create HTTPS host.
 #if !NO_HTTPS
             endpointsForHost = CreateHttpsServiceHost(
-            hosts,
-            configuration,
-            configuration.ServerConfiguration.BaseAddresses,
-            serverDescription,
-            configuration.ServerConfiguration.SecurityPolicies);
+                hosts,
+                configuration,
+                configuration.ServerConfiguration.BaseAddresses,
+                serverDescription,
+                configuration.ServerConfiguration.SecurityPolicies);
 
             endpoints.AddRange(endpointsForHost);
 #endif
@@ -2841,9 +2837,9 @@ namespace Opc.Ua.Server
                         {
                             endpoint = new EndpointDescription();
                             endpoint.EndpointUrl = Utils.Format(Utils.DiscoveryUrls[0], "localhost");
-                            endpoint.SecurityLevel = 0;
+                            endpoint.SecurityLevel = ServerSecurityPolicy.CalculateSecurityLevel(MessageSecurityMode.SignAndEncrypt, SecurityPolicies.Basic256Sha256);
                             endpoint.SecurityMode = MessageSecurityMode.SignAndEncrypt;
-                            endpoint.SecurityPolicyUri = SecurityPolicies.Basic128Rsa15;
+                            endpoint.SecurityPolicyUri = SecurityPolicies.Basic256Sha256;
                             endpoint.Server.ApplicationType = ApplicationType.DiscoveryServer;
                         }
 
