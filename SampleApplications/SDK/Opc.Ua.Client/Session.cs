@@ -1229,7 +1229,7 @@ namespace Opc.Ua.Client
         /// </summary>
         public void FetchNamespaceTables()
         {
-
+            FetchNamespaceTablesAsync(CancellationToken.None).Wait();
         }
 
         /// <summary>
@@ -1481,7 +1481,7 @@ namespace Opc.Ua.Client
         /// <returns></returns>
         public Node ReadNode(NodeId nodeId)
         {
-            return ReadNodeAsync(nodeId, CancellationToken.None).GetAwaiter().GetResult();
+            return ReadNodeAsync(nodeId, CancellationToken.None).Result;
         }
 
         /// <summary>
@@ -2872,8 +2872,6 @@ namespace Opc.Ua.Client
         /// </summary>
         /// <param name="variableIds">The variable ids.</param>
         /// <param name="expectedTypes">The expected types.</param>
-        /// <param name="values">The list of returned values.</param>
-        /// <param name="errors">The list of returned errors.</param>
         public async Task<List<object>> ReadValuesAsync(
             IList<NodeId> variableIds,
             IList<Type> expectedTypes,
