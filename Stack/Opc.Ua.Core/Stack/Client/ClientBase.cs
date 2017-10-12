@@ -58,29 +58,9 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
-        { 
-            if (m_channel != null)
-            {
-                try
-                {
-                    m_channel.Close();
-                }
-                catch
-                {
-                    // ignore errors.
-                }
-
-                try
-                {
-                    m_channel.Dispose();
-                }
-                catch
-                {
-                    // ignore errors.
-                }
-
-                m_channel = null;
-            }
+        {
+            CloseChannel();
+            DisposeChannel();
             m_disposed = true;
         }
         #endregion
@@ -172,6 +152,7 @@ namespace Opc.Ua
                     try
                     {
                         channel.Close();
+                        channel.Dispose();
                     }
                     catch (Exception)
                     {
@@ -312,6 +293,45 @@ namespace Opc.Ua
         #endregion
 
         #region Protected Methods
+        /// <summary>
+        /// Closes the channel.
+        /// </summary>
+        protected void CloseChannel()
+        {
+            if (m_channel != null)
+            {
+                try
+                {
+                    m_channel.Close();
+                }
+                catch
+                {
+                    // ignore errors.
+                }
+
+                DisposeChannel();
+            }
+        }
+
+        /// <summary>
+        /// Disposes the channel.
+        /// </summary>
+        protected void DisposeChannel()
+        {
+            if (m_channel != null)
+            {
+                try
+                {
+                    m_channel.Dispose();
+                }
+                catch
+                {
+                    // ignore errors.
+                }
+
+                m_channel = null;
+            }
+        }
 
         /// <summary>
         /// An object used to synchronize access to the session state.
@@ -421,7 +441,7 @@ namespace Opc.Ua
                 requestHandle = response.ResponseHeader.RequestHandle;
                 statusCode = response.ResponseHeader.ServiceResult;
             }
-            
+
             if (response == null)
             {
                 statusCode = StatusCodes.Bad;
