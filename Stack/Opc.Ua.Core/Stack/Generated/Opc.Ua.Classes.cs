@@ -49098,11 +49098,11 @@ namespace Opc.Ua
         private PropertyState<ushort> m_rate;
         #endregion
     }
-    #endif
-    #endregion
+#endif
+#endregion
 
-    #region ProgramStateMachineState Class
-    #if (!OPCUA_EXCLUDE_ProgramStateMachineState)
+#region ProgramStateMachineState Class
+#if (!OPCUA_EXCLUDE_ProgramStateMachineState)
     /// <summary>
     /// Stores an instance of the ProgramStateMachineType ObjectType.
     /// </summary>
@@ -49137,15 +49137,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the instance with a node.
-        /// </summary>
-        protected override void Initialize(ISystemContext context, NodeState source)
-        {
-            InitializeOptionalChildren(context);
-            base.Initialize(context, source);
-        }
-
-        /// <summary>
         /// Initializes the any option children defined for the instance.
         /// </summary>
         protected override void InitializeOptionalChildren(ISystemContext context)
@@ -49161,12 +49152,37 @@ namespace Opc.Ua
             {
                 FinalResultData.Initialize(context, FinalResultData_InitializationString);
             }
+
+            if (Start != null)
+            {
+                Start.Initialize(context, Start_InitializationString);
+            }
+
+            if (Suspend != null)
+            {
+                Suspend.Initialize(context, Suspend_InitializationString);
+            }
+
+            if (Resume != null)
+            {
+                Resume.Initialize(context, Resume_InitializationString);
+            }
+
+            if (Halt != null)
+            {
+                Halt.Initialize(context, Halt_InitializationString);
+            }
+
+            if (Reset != null)
+            {
+                Reset.Initialize(context, Reset_InitializationString);
+            }
         }
 
         #region Initialization String
         private const string ProgramDiagnostics_InitializationString =
-           "//////////8VYIkKAgAAAAAAEgAAAFByb2dyYW1EaWFnbm9zdGljcwEAXwkALwEAFzxfCQAAAQAkPP//" +
-           "//8BAf////8MAAAAFWCJCgIAAAAAAA8AAABDcmVhdGVTZXNzaW9uSWQBAAAPAC4ARAAPAAAAEf////8B" +
+           "//////////8VYIkKAgAAAAAAEgAAAFByb2dyYW1EaWFnbm9zdGljcwEAXwkALwEATAlfCQAAAQB+A///" +
+           "//8BAf////8KAAAAFWCJCgIAAAAAAA8AAABDcmVhdGVTZXNzaW9uSWQBAAAPAC4ARAAPAAAAEf////8B" +
            "Af////8AAAAAFWCJCgIAAAAAABAAAABDcmVhdGVDbGllbnROYW1lAQABDwAuAEQBDwAAAAz/////AQH/" +
            "////AAAAABVgiQoCAAAAAAAWAAAASW52b2NhdGlvbkNyZWF0aW9uVGltZQEAAg8ALgBEAg8AAAEAJgH/" +
            "////AQH/////AAAAABVgiQoCAAAAAAASAAAATGFzdFRyYW5zaXRpb25UaW1lAQADDwAuAEQDDwAAAQAm" +
@@ -49174,41 +49190,73 @@ namespace Opc.Ua
            "/wEB/////wAAAAAVYIkKAgAAAAAAEwAAAExhc3RNZXRob2RTZXNzaW9uSWQBAAUPAC4ARAUPAAAAEf//" +
            "//8BAf////8AAAAAFWCJCgIAAAAAABgAAABMYXN0TWV0aG9kSW5wdXRBcmd1bWVudHMBAAYPAC4ARAYP" +
            "AAABACgBAQAAAAEB/////wAAAAAVYIkKAgAAAAAAGQAAAExhc3RNZXRob2RPdXRwdXRBcmd1bWVudHMB" +
-           "AAcPAC4ARAcPAAABACgBAQAAAAEB/////wAAAAAVYIkKAgAAAAAAFQAAAExhc3RNZXRob2RJbnB1dFZh" +
-           "bHVlcwEAvjoALgBEvjoAAAAYAQAAAAEB/////wAAAAAVYIkKAgAAAAAAFgAAAExhc3RNZXRob2RPdXRw" +
-           "dXRWYWx1ZXMBAMA6AC4ARMA6AAAAGAEAAAABAf////8AAAAAFWCJCgIAAAAAABIAAABMYXN0TWV0aG9k" +
-           "Q2FsbFRpbWUBAAgPAC4ARAgPAAABACYB/////wEB/////wAAAAAVYIkKAgAAAAAAFgAAAExhc3RNZXRo" +
-           "b2RSZXR1cm5TdGF0dXMBAAkPAC4ARAkPAAAAE/////8BAf////8AAAAA";
+           "AAcPAC4ARAcPAAABACgBAQAAAAEB/////wAAAAAVYIkKAgAAAAAAEgAAAExhc3RNZXRob2RDYWxsVGlt" +
+           "ZQEACA8ALgBECA8AAAEAJgH/////AQH/////AAAAABVgiQoCAAAAAAAWAAAATGFzdE1ldGhvZFJldHVy" +
+           "blN0YXR1cwEACQ8ALgBECQ8AAAEAKwH/////AQH/////AAAAAA==";
 
         private const string FinalResultData_InitializationString =
            "//////////8EYIAKAQAAAAAADwAAAEZpbmFsUmVzdWx0RGF0YQEACg8ALwA6Cg8AAP////8AAAAA";
 
+        private const string Start_InitializationString =
+           "//////////8kYYIKBAAAAAAABQAAAFN0YXJ0AQB6CQMAAAAASwAAAENhdXNlcyB0aGUgUHJvZ3JhbSB0" +
+           "byB0cmFuc2l0aW9uIGZyb20gdGhlIFJlYWR5IHN0YXRlIHRvIHRoZSBSdW5uaW5nIHN0YXRlLgAvAQB6" +
+           "CXoJAAABAQEAAAAANQEBAGoJAAAAAA==";
+
+        private const string Suspend_InitializationString =
+           "//////////8kYYIKBAAAAAAABwAAAFN1c3BlbmQBAHsJAwAAAABPAAAAQ2F1c2VzIHRoZSBQcm9ncmFt" +
+           "IHRvIHRyYW5zaXRpb24gZnJvbSB0aGUgUnVubmluZyBzdGF0ZSB0byB0aGUgU3VzcGVuZGVkIHN0YXRl" +
+           "LgAvAQB7CXsJAAABAQEAAAAANQEBAHAJAAAAAA==";
+
+        private const string Resume_InitializationString =
+           "//////////8kYYIKBAAAAAAABgAAAFJlc3VtZQEAfAkDAAAAAE8AAABDYXVzZXMgdGhlIFByb2dyYW0g" +
+           "dG8gdHJhbnNpdGlvbiBmcm9tIHRoZSBTdXNwZW5kZWQgc3RhdGUgdG8gdGhlIFJ1bm5pbmcgc3RhdGUu" +
+           "AC8BAHwJfAkAAAEBAQAAAAA1AQEAcgkAAAAA";
+
+        private const string Halt_InitializationString =
+           "//////////8kYYIKBAAAAAAABAAAAEhhbHQBAH0JAwAAAABgAAAAQ2F1c2VzIHRoZSBQcm9ncmFtIHRv" +
+           "IHRyYW5zaXRpb24gZnJvbSB0aGUgUmVhZHksIFJ1bm5pbmcgb3IgU3VzcGVuZGVkIHN0YXRlIHRvIHRo" +
+           "ZSBIYWx0ZWQgc3RhdGUuAC8BAH0JfQkAAAEBAwAAAAA1AQEAbAkANQEBAHQJADUBAQB4CQAAAAA=";
+
+        private const string Reset_InitializationString =
+           "//////////8kYYIKBAAAAAAABQAAAFJlc2V0AQB+CQMAAAAASgAAAENhdXNlcyB0aGUgUHJvZ3JhbSB0" +
+           "byB0cmFuc2l0aW9uIGZyb20gdGhlIEhhbHRlZCBzdGF0ZSB0byB0aGUgUmVhZHkgc3RhdGUuAC8BAH4J" +
+           "fgkAAAEBAQAAAAA1AQEAaAkAAAAA";
+
         private const string InitializationString =
            "//////////8EYIAAAQAAAAAAHwAAAFByb2dyYW1TdGF0ZU1hY2hpbmVUeXBlSW5zdGFuY2UBAFcJAQBX" +
-           "Cf////8HAAAAFWCJCgIAAAAAAAwAAABDdXJyZW50U3RhdGUBAPYOAC8BAMgK9g4AAAAV/////wEB////" +
+           "Cf////8LAAAAFWCJCgIAAAAAAAwAAABDdXJyZW50U3RhdGUBAPYOAC8BAMgK9g4AAAAV/////wEB////" +
            "/wIAAAAVYIkKAgAAAAAAAgAAAElkAQD3DgAuAET3DgAAABH/////AQH/////AAAAABVgiQoCAAAAAAAG" +
            "AAAATnVtYmVyAQD5DgAuAET5DgAAAAf/////AQH/////AAAAABVgiQoCAAAAAAAOAAAATGFzdFRyYW5z" +
            "aXRpb24BAPsOAC8BAM8K+w4AAAAV/////wEB/////wMAAAAVYIkKAgAAAAAAAgAAAElkAQD8DgAuAET8" +
            "DgAAABH/////AQH/////AAAAABVgiQoCAAAAAAAGAAAATnVtYmVyAQD+DgAuAET+DgAAAAf/////AQH/" +
            "////AAAAABVgiQoCAAAAAAAOAAAAVHJhbnNpdGlvblRpbWUBAP8OAC4ARP8OAAABACYB/////wEB////" +
            "/wAAAAAVYIkKAgAAAAAACQAAAERlbGV0YWJsZQEAWQkALgBEWQkAAAAB/////wEB/////wAAAAAVYIkK" +
-           "AgAAAAAACgAAAEF1dG9EZWxldGUBAFoJAC4ARFoJAAAAAf////8BAf////8AAAAAFWCJCgIAAAAAAAwA" +
-           "AABSZWN5Y2xlQ291bnQBAFsJAC4ARFsJAAAABv////8BAf////8AAAAAFWCJCgIAAAAAABIAAABQcm9n" +
-           "cmFtRGlhZ25vc3RpY3MBAF8JAC8BABc8XwkAAAEAJDz/////AQH/////DAAAABVgiQoCAAAAAAAPAAAA" +
-           "Q3JlYXRlU2Vzc2lvbklkAQAADwAuAEQADwAAABH/////AQH/////AAAAABVgiQoCAAAAAAAQAAAAQ3Jl" +
-           "YXRlQ2xpZW50TmFtZQEAAQ8ALgBEAQ8AAAAM/////wEB/////wAAAAAVYIkKAgAAAAAAFgAAAEludm9j" +
-           "YXRpb25DcmVhdGlvblRpbWUBAAIPAC4ARAIPAAABACYB/////wEB/////wAAAAAVYIkKAgAAAAAAEgAA" +
-           "AExhc3RUcmFuc2l0aW9uVGltZQEAAw8ALgBEAw8AAAEAJgH/////AQH/////AAAAABVgiQoCAAAAAAAO" +
-           "AAAATGFzdE1ldGhvZENhbGwBAAQPAC4ARAQPAAAADP////8BAf////8AAAAAFWCJCgIAAAAAABMAAABM" +
-           "YXN0TWV0aG9kU2Vzc2lvbklkAQAFDwAuAEQFDwAAABH/////AQH/////AAAAABVgiQoCAAAAAAAYAAAA" +
-           "TGFzdE1ldGhvZElucHV0QXJndW1lbnRzAQAGDwAuAEQGDwAAAQAoAQEAAAABAf////8AAAAAFWCJCgIA" +
-           "AAAAABkAAABMYXN0TWV0aG9kT3V0cHV0QXJndW1lbnRzAQAHDwAuAEQHDwAAAQAoAQEAAAABAf////8A" +
-           "AAAAFWCJCgIAAAAAABUAAABMYXN0TWV0aG9kSW5wdXRWYWx1ZXMBAL46AC4ARL46AAAAGAEAAAABAf//" +
-           "//8AAAAAFWCJCgIAAAAAABYAAABMYXN0TWV0aG9kT3V0cHV0VmFsdWVzAQDAOgAuAETAOgAAABgBAAAA" +
-           "AQH/////AAAAABVgiQoCAAAAAAASAAAATGFzdE1ldGhvZENhbGxUaW1lAQAIDwAuAEQIDwAAAQAmAf//" +
-           "//8BAf////8AAAAAFWCJCgIAAAAAABYAAABMYXN0TWV0aG9kUmV0dXJuU3RhdHVzAQAJDwAuAEQJDwAA" +
-           "ABP/////AQH/////AAAAAARggAoBAAAAAAAPAAAARmluYWxSZXN1bHREYXRhAQAKDwAvADoKDwAA////" +
-           "/wAAAAA=";
+           "AgAAAAAADAAAAFJlY3ljbGVDb3VudAEAWwkALgBEWwkAAAAG/////wEB/////wAAAAAVYIkKAgAAAAAA" +
+           "EgAAAFByb2dyYW1EaWFnbm9zdGljcwEAXwkALwEATAlfCQAAAQB+A/////8BAf////8KAAAAFWCJCgIA" +
+           "AAAAAA8AAABDcmVhdGVTZXNzaW9uSWQBAAAPAC4ARAAPAAAAEf////8BAf////8AAAAAFWCJCgIAAAAA" +
+           "ABAAAABDcmVhdGVDbGllbnROYW1lAQABDwAuAEQBDwAAAAz/////AQH/////AAAAABVgiQoCAAAAAAAW" +
+           "AAAASW52b2NhdGlvbkNyZWF0aW9uVGltZQEAAg8ALgBEAg8AAAEAJgH/////AQH/////AAAAABVgiQoC" +
+           "AAAAAAASAAAATGFzdFRyYW5zaXRpb25UaW1lAQADDwAuAEQDDwAAAQAmAf////8BAf////8AAAAAFWCJ" +
+           "CgIAAAAAAA4AAABMYXN0TWV0aG9kQ2FsbAEABA8ALgBEBA8AAAAM/////wEB/////wAAAAAVYIkKAgAA" +
+           "AAAAEwAAAExhc3RNZXRob2RTZXNzaW9uSWQBAAUPAC4ARAUPAAAAEf////8BAf////8AAAAAFWCJCgIA" +
+           "AAAAABgAAABMYXN0TWV0aG9kSW5wdXRBcmd1bWVudHMBAAYPAC4ARAYPAAABACgBAQAAAAEB/////wAA" +
+           "AAAVYIkKAgAAAAAAGQAAAExhc3RNZXRob2RPdXRwdXRBcmd1bWVudHMBAAcPAC4ARAcPAAABACgBAQAA" +
+           "AAEB/////wAAAAAVYIkKAgAAAAAAEgAAAExhc3RNZXRob2RDYWxsVGltZQEACA8ALgBECA8AAAEAJgH/" +
+           "////AQH/////AAAAABVgiQoCAAAAAAAWAAAATGFzdE1ldGhvZFJldHVyblN0YXR1cwEACQ8ALgBECQ8A" +
+           "AAEAKwH/////AQH/////AAAAAARggAoBAAAAAAAPAAAARmluYWxSZXN1bHREYXRhAQAKDwAvADoKDwAA" +
+           "/////wAAAAAkYYIKBAAAAAAABQAAAFN0YXJ0AQB6CQMAAAAASwAAAENhdXNlcyB0aGUgUHJvZ3JhbSB0" +
+           "byB0cmFuc2l0aW9uIGZyb20gdGhlIFJlYWR5IHN0YXRlIHRvIHRoZSBSdW5uaW5nIHN0YXRlLgAvAQB6" +
+           "CXoJAAABAQEAAAAANQEBAGoJAAAAACRhggoEAAAAAAAHAAAAU3VzcGVuZAEAewkDAAAAAE8AAABDYXVz" +
+           "ZXMgdGhlIFByb2dyYW0gdG8gdHJhbnNpdGlvbiBmcm9tIHRoZSBSdW5uaW5nIHN0YXRlIHRvIHRoZSBT" +
+           "dXNwZW5kZWQgc3RhdGUuAC8BAHsJewkAAAEBAQAAAAA1AQEAcAkAAAAAJGGCCgQAAAAAAAYAAABSZXN1" +
+           "bWUBAHwJAwAAAABPAAAAQ2F1c2VzIHRoZSBQcm9ncmFtIHRvIHRyYW5zaXRpb24gZnJvbSB0aGUgU3Vz" +
+           "cGVuZGVkIHN0YXRlIHRvIHRoZSBSdW5uaW5nIHN0YXRlLgAvAQB8CXwJAAABAQEAAAAANQEBAHIJAAAA" +
+           "ACRhggoEAAAAAAAEAAAASGFsdAEAfQkDAAAAAGAAAABDYXVzZXMgdGhlIFByb2dyYW0gdG8gdHJhbnNp" +
+           "dGlvbiBmcm9tIHRoZSBSZWFkeSwgUnVubmluZyBvciBTdXNwZW5kZWQgc3RhdGUgdG8gdGhlIEhhbHRl" +
+           "ZCBzdGF0ZS4ALwEAfQl9CQAAAQEDAAAAADUBAQBsCQA1AQEAdAkANQEBAHgJAAAAACRhggoEAAAAAAAF" +
+           "AAAAUmVzZXQBAH4JAwAAAABKAAAAQ2F1c2VzIHRoZSBQcm9ncmFtIHRvIHRyYW5zaXRpb24gZnJvbSB0" +
+           "aGUgSGFsdGVkIHN0YXRlIHRvIHRoZSBSZWFkeSBzdGF0ZS4ALwEAfgl+CQAAAQEBAAAAADUBAQBoCQAA" +
+           "AAA=";
         #endregion
         #endif
         #endregion
@@ -49280,7 +49328,7 @@ namespace Opc.Ua
         /// <summary>
         /// A description for the ProgramDiagnostics Variable.
         /// </summary>
-        public ProgramDiagnostic2State ProgramDiagnostics
+        public ProgramDiagnosticState ProgramDiagnostics
         {
             get
             {
@@ -49318,6 +49366,111 @@ namespace Opc.Ua
                 m_finalResultData = value;
             }
         }
+
+        /// <summary>
+        /// Causes the Program to transition from the Ready state to the Running state.
+        /// </summary>
+        public MethodState Start
+        {
+            get
+            {
+                return m_startMethod;
+            }
+
+            set
+            {
+                if (!Object.ReferenceEquals(m_startMethod, value))
+                {
+                    ChangeMasks |= NodeStateChangeMasks.Children;
+                }
+
+                m_startMethod = value;
+            }
+        }
+
+        /// <summary>
+        /// Causes the Program to transition from the Running state to the Suspended state.
+        /// </summary>
+        public MethodState Suspend
+        {
+            get
+            {
+                return m_suspendMethod;
+            }
+
+            set
+            {
+                if (!Object.ReferenceEquals(m_suspendMethod, value))
+                {
+                    ChangeMasks |= NodeStateChangeMasks.Children;
+                }
+
+                m_suspendMethod = value;
+            }
+        }
+
+        /// <summary>
+        /// Causes the Program to transition from the Suspended state to the Running state.
+        /// </summary>
+        public MethodState Resume
+        {
+            get
+            {
+                return m_resumeMethod;
+            }
+
+            set
+            {
+                if (!Object.ReferenceEquals(m_resumeMethod, value))
+                {
+                    ChangeMasks |= NodeStateChangeMasks.Children;
+                }
+
+                m_resumeMethod = value;
+            }
+        }
+
+        /// <summary>
+        /// Causes the Program to transition from the Ready, Running or Suspended state to the Halted state.
+        /// </summary>
+        public MethodState Halt
+        {
+            get
+            {
+                return m_haltMethod;
+            }
+
+            set
+            {
+                if (!Object.ReferenceEquals(m_haltMethod, value))
+                {
+                    ChangeMasks |= NodeStateChangeMasks.Children;
+                }
+
+                m_haltMethod = value;
+            }
+        }
+
+        /// <summary>
+        /// Causes the Program to transition from the Halted state to the Ready state.
+        /// </summary>
+        public MethodState Reset
+        {
+            get
+            {
+                return m_resetMethod;
+            }
+
+            set
+            {
+                if (!Object.ReferenceEquals(m_resetMethod, value))
+                {
+                    ChangeMasks |= NodeStateChangeMasks.Children;
+                }
+
+                m_resetMethod = value;
+            }
+        }
         #endregion
 
         #region Overridden Methods
@@ -49335,11 +49488,6 @@ namespace Opc.Ua
                 children.Add(m_deletable);
             }
 
-            if (m_autoDelete != null)
-            {
-                children.Add(m_autoDelete);
-            }
-
             if (m_recycleCount != null)
             {
                 children.Add(m_recycleCount);
@@ -49353,6 +49501,31 @@ namespace Opc.Ua
             if (m_finalResultData != null)
             {
                 children.Add(m_finalResultData);
+            }
+
+            if (m_startMethod != null)
+            {
+                children.Add(m_startMethod);
+            }
+
+            if (m_suspendMethod != null)
+            {
+                children.Add(m_suspendMethod);
+            }
+
+            if (m_resumeMethod != null)
+            {
+                children.Add(m_resumeMethod);
+            }
+
+            if (m_haltMethod != null)
+            {
+                children.Add(m_haltMethod);
+            }
+
+            if (m_resetMethod != null)
+            {
+                children.Add(m_resetMethod);
             }
 
             base.GetChildren(context, children);
@@ -49397,27 +49570,6 @@ namespace Opc.Ua
                     break;
                 }
 
-                case Opc.Ua.BrowseNames.AutoDelete:
-                {
-                    if (createOrReplace)
-                    {
-                        if (AutoDelete == null)
-                        {
-                            if (replacement == null)
-                            {
-                                AutoDelete = new PropertyState<bool>(this);
-                            }
-                            else
-                            {
-                                AutoDelete = (PropertyState<bool>)replacement;
-                            }
-                        }
-                    }
-
-                    instance = AutoDelete;
-                    break;
-                }
-
                 case Opc.Ua.BrowseNames.RecycleCount:
                 {
                     if (createOrReplace)
@@ -49447,11 +49599,11 @@ namespace Opc.Ua
                         {
                             if (replacement == null)
                             {
-                                ProgramDiagnostics = new ProgramDiagnostic2State(this);
+                                ProgramDiagnostics = new ProgramDiagnosticState(this);
                             }
                             else
                             {
-                                ProgramDiagnostics = (ProgramDiagnostic2State)replacement;
+                                ProgramDiagnostics = (ProgramDiagnosticState)replacement;
                             }
                         }
                     }
@@ -49480,6 +49632,111 @@ namespace Opc.Ua
                     instance = FinalResultData;
                     break;
                 }
+
+                case Opc.Ua.BrowseNames.Start:
+                {
+                    if (createOrReplace)
+                    {
+                        if (Start == null)
+                        {
+                            if (replacement == null)
+                            {
+                                Start = new MethodState(this);
+                            }
+                            else
+                            {
+                                Start = (MethodState)replacement;
+                            }
+                        }
+                    }
+
+                    instance = Start;
+                    break;
+                }
+
+                case Opc.Ua.BrowseNames.Suspend:
+                {
+                    if (createOrReplace)
+                    {
+                        if (Suspend == null)
+                        {
+                            if (replacement == null)
+                            {
+                                Suspend = new MethodState(this);
+                            }
+                            else
+                            {
+                                Suspend = (MethodState)replacement;
+                            }
+                        }
+                    }
+
+                    instance = Suspend;
+                    break;
+                }
+
+                case Opc.Ua.BrowseNames.Resume:
+                {
+                    if (createOrReplace)
+                    {
+                        if (Resume == null)
+                        {
+                            if (replacement == null)
+                            {
+                                Resume = new MethodState(this);
+                            }
+                            else
+                            {
+                                Resume = (MethodState)replacement;
+                            }
+                        }
+                    }
+
+                    instance = Resume;
+                    break;
+                }
+
+                case Opc.Ua.BrowseNames.Halt:
+                {
+                    if (createOrReplace)
+                    {
+                        if (Halt == null)
+                        {
+                            if (replacement == null)
+                            {
+                                Halt = new MethodState(this);
+                            }
+                            else
+                            {
+                                Halt = (MethodState)replacement;
+                            }
+                        }
+                    }
+
+                    instance = Halt;
+                    break;
+                }
+
+                case Opc.Ua.BrowseNames.Reset:
+                {
+                    if (createOrReplace)
+                    {
+                        if (Reset == null)
+                        {
+                            if (replacement == null)
+                            {
+                                Reset = new MethodState(this);
+                            }
+                            else
+                            {
+                                Reset = (MethodState)replacement;
+                            }
+                        }
+                    }
+
+                    instance = Reset;
+                    break;
+                }
             }
 
             if (instance != null)
@@ -49495,15 +49752,20 @@ namespace Opc.Ua
         private PropertyState<bool> m_deletable;
         private PropertyState<bool> m_autoDelete;
         private PropertyState<int> m_recycleCount;
-        private ProgramDiagnostic2State m_programDiagnostics;
+        private ProgramDiagnosticState m_programDiagnostics;
         private BaseObjectState m_finalResultData;
+        private MethodState m_startMethod;
+        private MethodState m_suspendMethod;
+        private MethodState m_resumeMethod;
+        private MethodState m_haltMethod;
+        private MethodState m_resetMethod;
         #endregion
     }
-    #endif
-    #endregion
+#endif
+#endregion
 
-    #region ProgramTransitionEventState Class
-    #if (!OPCUA_EXCLUDE_ProgramTransitionEventState)
+#region ProgramTransitionEventState Class
+#if (!OPCUA_EXCLUDE_ProgramTransitionEventState)
     /// <summary>
     /// Stores an instance of the ProgramTransitionEventType ObjectType.
     /// </summary>

@@ -67,15 +67,5 @@ namespace Opc.Ua
         /// TODO: Move to base classe
         /// </summary>
         public SecureChannelContext ChannelContext { get; set; }
-            
-        /// <summary>
-        /// Initializes the message with the body.
-        /// </summary>
-        /// <param name="InvokeServiceResponse">The invoke service response.</param>
-        public InvokeServiceResponseMessage(byte[] InvokeServiceResponse, SecureChannelContext channelContext)
-        {
-            this.InvokeServiceResponse = InvokeServiceResponse;
-            this.ChannelContext = channelContext;
-        }
     }
 }
