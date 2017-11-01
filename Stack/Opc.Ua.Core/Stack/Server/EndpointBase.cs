@@ -80,24 +80,21 @@ namespace Opc.Ua
             SupportedServices = new Dictionary<ExpandedNodeId, ServiceDefinition>();
         }
         #endregion
-             
+
         #region ITransportListenerCallback Members
         /// <summary>
         /// Processes a request received via a binary encoded channel.
         /// </summary>
-        /// <param name="channeId">A unique identifier for the secure channel which is the source of the request.</param>
-        /// <param name="endpointDescription">The description of the endpoint which the secure channel is using.</param>
         /// <param name="request">The incoming request.</param>
+        /// <param name="context">A secure channel context.</param>
         /// <returns>
         /// The response to return over the transport channel.
         /// </returns>
         public Task<IServiceResponse> ProcessRequestAsync(
-            string channeId, 
-            EndpointDescription endpointDescription,
-            IServiceRequest request)
+            IServiceRequest request, SecureChannelContext context)
         {
             var tcs = new TaskCompletionSource<IServiceResponse>();
-            var result = BeginProcessRequest(channeId, endpointDescription, request,
+            var result = BeginProcessRequest(request, context,
                 new AsyncCallback((r) => 
                 {
                     var completion = (TaskCompletionSource<IServiceResponse>)r.AsyncState;
@@ -116,9 +113,8 @@ namespace Opc.Ua
         /// <summary>
         /// Begins processing a request received via a binary encoded channel.
         /// </summary>
-        /// <param name="channeId">A unique identifier for the secure channel which is the source of the request.</param>
-        /// <param name="endpointDescription">The description of the endpoint which the secure channel is using.</param>
         /// <param name="request">The incoming request.</param>
+        /// <param name="context">A secure channel context.</param>
         /// <param name="callback">The callback.</param>
         /// <param name="callbackData">The callback data.</param>
         /// <returns>
@@ -127,22 +123,16 @@ namespace Opc.Ua
         /// <seealso cref="EndProcessRequest"/>
         /// <seealso cref="ITransportListener"/>
         private IAsyncResult BeginProcessRequest(
-            string channeId,
-            EndpointDescription endpointDescription,
             IServiceRequest request,
+            SecureChannelContext context,
             AsyncCallback callback,
             object callbackData)
         {
-            if (channeId == null) throw new ArgumentNullException("channeId");
+            if (context == null) throw new ArgumentNullException("context");
             if (request == null) throw new ArgumentNullException("request");
 
             // create operation.
             ProcessRequestAsyncResult result = new ProcessRequestAsyncResult(this, callback, callbackData, 0);
-
-            SecureChannelContext context = new SecureChannelContext(
-                channeId,
-                endpointDescription,
-                RequestEncoding.Binary);
 
             // begin invoke service.
             return result.BeginProcessRequest(context, request);

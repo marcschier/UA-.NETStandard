@@ -245,7 +245,7 @@ namespace Opc.Ua.Bindings
                     {
                         foreach (string value in context.Request.Headers["Authorization"])
                         {
-                            if (value.StartsWith("Bearer"))
+                            if (value.StartsWith("Bearer", StringComparison.Ordinal))
                             {
                                 input.RequestHeader.AuthenticationToken = new NodeId(value.Substring("Bearer ".Length).Trim());
                             }
@@ -257,14 +257,19 @@ namespace Opc.Ua.Bindings
 
                 foreach (var ep in m_descriptions)
                 {
-                    if (ep.EndpointUrl.StartsWith(Utils.UriSchemeHttps))
+                    if (ep.EndpointUrl.StartsWith(Utils.UriSchemeHttps, StringComparison.Ordinal))
                     {
                         endpoint = ep;
                         break;
                     }
                 }
 
-                IServiceResponse output = await m_callback.ProcessRequestAsync(m_listenerId, endpoint, input as IServiceRequest).ConfigureAwait(false);
+                SecureChannelContext ctx = new SecureChannelContext(
+                    m_listenerId,
+                    endpoint,
+                    RequestEncoding.Binary);  // TODO : Update encoding based on content type
+
+                IServiceResponse output = await m_callback.ProcessRequestAsync(input as IServiceRequest, ctx).ConfigureAwait(false);
 
                 byte[] response = BinaryEncoder.EncodeMessage(output, m_quotas.MessageContext);
                 context.Response.ContentLength = response.Length;

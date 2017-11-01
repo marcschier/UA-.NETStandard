@@ -23,14 +23,11 @@ namespace Opc.Ua
         /// <summary>
         /// Processes a request received via a binary encoded channel.
         /// </summary>
-        /// <param name="channeId">A unique identifier for the secure channel which is the source of the request.</param>
-        /// <param name="endpointDescription">The description of the endpoint which the secure channel is using.</param>
         /// <param name="request">The incoming request.</param>
+        /// <param name="context">info about the secure channel if message is part of it.</param>
         /// <returns>The response to return over the secure channel.</returns>
         /// <seealso cref="ITransportListener" />
         Task<IServiceResponse> ProcessRequestAsync(
-            string channeId,
-            EndpointDescription endpointDescription,
-            IServiceRequest request);
+            IServiceRequest request, SecureChannelContext context);
     }
 }
