@@ -392,7 +392,7 @@ namespace Opc.Ua
             }
 
             byte[] requestMessage = BinaryEncoder.EncodeMessage(request, m_messageContext);
-            InvokeServiceResponseMessage responseMessage = InvokeService(new InvokeServiceMessage(requestMessage, request.ChannelContext));
+            InvokeServiceResponseMessage responseMessage = InvokeService(new InvokeServiceMessage(requestMessage));
             return (IServiceResponse)BinaryDecoder.DecodeMessage(responseMessage.InvokeServiceResponse, null, m_messageContext);            
         }
 
@@ -420,7 +420,7 @@ namespace Opc.Ua
             }
 
             byte[] requestMessage = BinaryEncoder.EncodeMessage(request, m_messageContext);
-            return BeginInvokeService(new InvokeServiceMessage(requestMessage, request.ChannelContext), callback, callbackData);
+            return BeginInvokeService(new InvokeServiceMessage(requestMessage), callback, callbackData);
         }
 
         /// <summary>
