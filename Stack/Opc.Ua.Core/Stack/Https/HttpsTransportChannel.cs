@@ -64,7 +64,16 @@ namespace Opc.Ua.Bindings
         {
             try
             {
-                  m_client = new HttpClient();
+                var handler = new HttpClientHandler();
+#if DEBUG
+                handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+                handler.ServerCertificateCustomValidationCallback =
+                    (httpRequestMessage, cert, cetChain, policyErrors) =>
+                    {
+                        return true;
+                    };
+#endif
+                m_client = new HttpClient(handler);
             }
             catch (Exception ex)
             {

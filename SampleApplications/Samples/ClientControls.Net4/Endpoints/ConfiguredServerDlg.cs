@@ -751,10 +751,11 @@ namespace Opc.Ua.Client.Controls
                         if (url != null)
                         {
                             bool found = false;
+                            Protocol protocol = new Protocol(endpoint);
 
                             for (int ii = 0; ii < ProtocolCB.Items.Count; ii++)
                             {
-                                if (((Protocol)ProtocolCB.Items[ii]).Matches(url))
+                                if (((Protocol)ProtocolCB.Items[ii]).ToString() == protocol.ToString())
                                 {
                                     found = true;
                                     break;
@@ -763,7 +764,7 @@ namespace Opc.Ua.Client.Controls
 
                             if (!found)
                             {
-                                ProtocolCB.Items.Add(new Protocol(endpoint));
+                                ProtocolCB.Items.Add(protocol);
                             }
                         }
                     }
