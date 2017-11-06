@@ -24,7 +24,6 @@ namespace Opc.Ua
     /// </summary>
     public partial class ServiceFault : IServiceResponse
     {
-        public SecureChannelContext ChannelContext { get; set; }
     }
     #endregion
 }
