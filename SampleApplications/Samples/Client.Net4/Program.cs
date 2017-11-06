@@ -32,6 +32,7 @@ using System.Windows.Forms;
 using Opc.Ua.Configuration;
 using Opc.Ua.Client.Controls;
 using Opc.Ua.Bindings.Custom;
+using System.Net;
 
 namespace Opc.Ua.Sample
 {
