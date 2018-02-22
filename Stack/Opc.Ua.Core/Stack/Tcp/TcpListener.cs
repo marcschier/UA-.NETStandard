@@ -12,10 +12,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Security.Cryptography.X509Certificates;
-using System.Net.Sockets;
+using System.IdentityModel.Selectors;
 using System.Net;
+using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Opc.Ua.Bindings
 {
@@ -80,12 +80,6 @@ namespace Opc.Ua.Bindings
                         m_listeningSocketIPv6 = null;
                     }
 
-                    if (m_simulator != null)
-                    {
-                        Utils.SilentDispose(m_simulator);
-                        m_simulator = null;
-                    }
-
                     foreach (TcpServerChannel channel in m_channels.Values)
                     {
                         Utils.SilentDispose(channel);
@@ -111,22 +105,22 @@ namespace Opc.Ua.Bindings
 
             m_uri = baseAddress;
             m_descriptions = settings.Descriptions;
-            m_configuration = settings.Configuration;
+            EndpointConfiguration configuration = settings.Configuration;
 
             // initialize the quotas.
             m_quotas = new ChannelQuotas();
 
-            m_quotas.MaxBufferSize = m_configuration.MaxBufferSize;
-            m_quotas.MaxMessageSize = m_configuration.MaxMessageSize;
-            m_quotas.ChannelLifetime = m_configuration.ChannelLifetime;
-            m_quotas.SecurityTokenLifetime = m_configuration.SecurityTokenLifetime;
+            m_quotas.MaxBufferSize = configuration.MaxBufferSize;
+            m_quotas.MaxMessageSize = configuration.MaxMessageSize;
+            m_quotas.ChannelLifetime = configuration.ChannelLifetime;
+            m_quotas.SecurityTokenLifetime = configuration.SecurityTokenLifetime;
 
             m_quotas.MessageContext = new ServiceMessageContext();
 
-            m_quotas.MessageContext.MaxArrayLength = m_configuration.MaxArrayLength;
-            m_quotas.MessageContext.MaxByteStringLength = m_configuration.MaxByteStringLength;
-            m_quotas.MessageContext.MaxMessageSize = m_configuration.MaxMessageSize;
-            m_quotas.MessageContext.MaxStringLength = m_configuration.MaxStringLength;
+            m_quotas.MessageContext.MaxArrayLength = configuration.MaxArrayLength;
+            m_quotas.MessageContext.MaxByteStringLength = configuration.MaxByteStringLength;
+            m_quotas.MessageContext.MaxMessageSize = configuration.MaxMessageSize;
+            m_quotas.MessageContext.MaxStringLength = configuration.MaxStringLength;
             m_quotas.MessageContext.NamespaceUris = settings.NamespaceUris;
             m_quotas.MessageContext.ServerUris = new StringTable();
             m_quotas.MessageContext.Factory = settings.Factory;
@@ -192,7 +186,10 @@ namespace Opc.Ua.Bindings
                     args.UserToken = m_listeningSocket;
                     m_listeningSocket.Bind(endpoint);
                     m_listeningSocket.Listen(Int32.MaxValue);
-                    m_listeningSocket.AcceptAsync(args);
+                    if (!m_listeningSocket.AcceptAsync(args))
+                    {
+                        OnAccept(null, args);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -211,7 +208,10 @@ namespace Opc.Ua.Bindings
                     args.UserToken = m_listeningSocketIPv6;
                     m_listeningSocketIPv6.Bind(endpointIPv6);
                     m_listeningSocketIPv6.Listen(Int32.MaxValue);
-                    m_listeningSocketIPv6.AcceptAsync(args);
+                    if (!m_listeningSocketIPv6.AcceptAsync(args))
+                    {
+                        OnAccept(null, args);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -289,6 +289,25 @@ namespace Opc.Ua.Bindings
 
             Utils.Trace("Channel {0} closed", channelId);
         }
+        /// <summary>
+        /// Called when a UpdateCertificate event occured.
+        /// </summary>
+        internal void CertificateUpdate(
+            X509CertificateValidator validator,
+            X509Certificate2 serverCertificate,
+            X509Certificate2Collection serverCertificateChain)
+        {
+            m_quotas.CertificateValidator = validator;
+            m_serverCertificate = serverCertificate;
+            m_serverCertificateChain = serverCertificateChain;
+            foreach (var description in m_descriptions)
+            {
+                if (description.ServerCertificate != null)
+                {
+                    description.ServerCertificate = serverCertificate.RawData;
+                }
+            }
+        }
         #endregion
 
         #region Socket Event Handler
@@ -298,67 +317,75 @@ namespace Opc.Ua.Bindings
         private void OnAccept(object sender, SocketAsyncEventArgs e)
         {
             TcpServerChannel channel = null;
-
-            lock (m_lock)
+            bool repeatAccept = false;
+            do
             {
-                Socket listeningSocket = e.UserToken as Socket;
-
-                if (listeningSocket == null)
+                repeatAccept = false;
+                lock (m_lock)
                 {
-                    Utils.Trace("OnAccept: Listensocket was null.");
-                    e.Dispose();
-                    return;
-                }
+                    Socket listeningSocket = e.UserToken as Socket;
 
-                // check if the accept socket has been created.
-                if (e.AcceptSocket != null && e.SocketError == SocketError.Success)
-                {
-                    try
+                    if (listeningSocket == null)
                     {
-                        // create the channel to manage incoming messages.
-                        channel = new TcpServerChannel(
-                            m_listenerId,
-                            this,
-                            m_bufferManager,
-                            m_quotas,
-                            m_serverCertificate,
-                            m_descriptions);
+                        Utils.Trace("OnAccept: Listensocket was null.");
+                        e.Dispose();
+                        return;
+                    }
 
-                        // start accepting messages on the channel.
-                        channel.Attach(++m_lastChannelId, e.AcceptSocket);
-
-                        // save the channel for shutdown and reconnects.
-                        m_channels.Add(m_lastChannelId, channel);
-
-                        if (m_callback != null)
+                    // check if the accept socket has been created.
+                    if (e.AcceptSocket != null && e.SocketError == SocketError.Success)
+                    {
+                        try
                         {
-                            channel.SetRequestReceivedCallback(new TcpChannelRequestEventHandler(OnRequestReceived));
+                            // create the channel to manage incoming messages.
+                            channel = new TcpServerChannel(
+                                m_listenerId,
+                                this,
+                                m_bufferManager,
+                                m_quotas,
+                                m_serverCertificate,
+                                m_descriptions);
+
+                            if (m_callback != null)
+                            {
+                                channel.SetRequestReceivedCallback(new TcpChannelRequestEventHandler(OnRequestReceived));
+                            }
+
+                            // start accepting messages on the channel.
+                            channel.Attach(++m_lastChannelId, e.AcceptSocket);
+
+                            // save the channel for shutdown and reconnects.
+                            m_channels.Add(m_lastChannelId, channel);
+
+                        }
+                        catch (Exception ex)
+                        {
+                            Utils.Trace(ex, "Unexpected error accepting a new connection.");
                         }
                     }
-                    catch (Exception ex)
+
+                    e.Dispose();
+
+                    if (e.SocketError != SocketError.OperationAborted)
                     {
-                        Utils.Trace(ex, "Unexpected error accepting a new connection.");
+                        // go back and wait for the next connection.
+                        try
+                        {
+                            e = new SocketAsyncEventArgs();
+                            e.Completed += OnAccept;
+                            e.UserToken = listeningSocket;
+                            if (!listeningSocket.AcceptAsync(e))
+                            {
+                                repeatAccept = true;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Utils.Trace(ex, "Unexpected error listening for a new connection.");
+                        }
                     }
                 }
-
-                e.Dispose();
-
-                if (e.SocketError != SocketError.OperationAborted)
-                {
-                    // go back and wait for the next connection.
-                    try
-                    {
-                        e = new SocketAsyncEventArgs();
-                        e.Completed += OnAccept;
-                        e.UserToken = listeningSocket;
-                        listeningSocket.AcceptAsync(e);
-                    }
-                    catch (Exception ex)
-                    {
-                        Utils.Trace(ex, "Unexpected error listening for a new connection.");
-                    }
-                }
-            }
+            } while (repeatAccept);
         }
         #endregion
 
@@ -412,7 +439,6 @@ namespace Opc.Ua.Bindings
         private string m_listenerId;
         private Uri m_uri;
         private EndpointDescriptionCollection m_descriptions;
-        private EndpointConfiguration m_configuration;
 
         private BufferManager m_bufferManager;
         private ChannelQuotas m_quotas;
@@ -425,7 +451,6 @@ namespace Opc.Ua.Bindings
         private Socket m_listeningSocketIPv6;
         private Dictionary<uint, TcpServerChannel> m_channels;
 
-        private Timer m_simulator;
         private ITransportListenerCallback m_callback;
         #endregion
     }

@@ -14,6 +14,7 @@ using System;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace Opc.Ua.Bindings
@@ -24,7 +25,7 @@ namespace Opc.Ua.Bindings
     public class HttpsTransportChannel : ITransportChannel
     {
         public void Dispose()
-        {   
+        {
         }
 
         public TransportChannelFeatures SupportedFeatures
@@ -49,7 +50,7 @@ namespace Opc.Ua.Bindings
 
         public int OperationTimeout
         {
-            get { return m_operationTimeout;  }
+            get { return m_operationTimeout; }
             set { m_operationTimeout = value; }
         }
 
@@ -59,11 +60,13 @@ namespace Opc.Ua.Bindings
         {
             SaveSettings(url, settings);
         }
-        
+
         public void Open()
         {
             try
             {
+                // auto validate server cert, if supported
+                // if unsupported, the TLS server cert must be trusted by a root CA
                 var handler = new HttpClientHandler();
 #if DEBUG
                 handler.ClientCertificateOptions = ClientCertificateOption.Manual;
@@ -72,7 +75,39 @@ namespace Opc.Ua.Bindings
                     {
                         return true;
                     };
+#else
+                handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+
+                // OSX platform cannot auto validate certs and throws
+                // on PostAsync, do not set validation handler
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    try
+                    {
+                        handler.ServerCertificateCustomValidationCallback =
+                            (httpRequestMessage, cert, chain, policyErrors) =>
+                            {
+                                try
+                                {
+                                    m_quotas.CertificateValidator?.Validate(cert);
+                                    return true;
+                                }
+                                catch (Exception ex)
+                                {
+                                    Utils.Trace("HTTPS: Failed to validate server cert: " + cert.Subject);
+                                    Utils.Trace("HTTPS: Exception:" + ex.Message);
+                                }
+                                return false;
+                            };
+                    }
+                    catch (PlatformNotSupportedException)
+                    {
+                        // client may throw if not supported (e.g. UWP)
+                        handler.ServerCertificateCustomValidationCallback = null;
+                    }
+                }
 #endif
+
                 m_client = new HttpClient(handler);
             }
             catch (Exception ex)
@@ -118,14 +153,24 @@ namespace Opc.Ua.Bindings
                 ByteArrayContent content = new ByteArrayContent(BinaryEncoder.EncodeMessage(request, m_quotas.MessageContext));
                 content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
 
-                Task<HttpResponseMessage> task = m_client.PostAsync(m_url, content);
-                task.Wait();
-                response = task.Result;
+                AsyncResult result = new AsyncResult(callback, callbackData, m_operationTimeout, request, null);
+                Task.Run(async () =>
+               {
+                   try
+                   {
+                       response = await m_client.PostAsync(m_url, content);
+                       response.EnsureSuccessStatusCode();
+                   }
+                   catch (Exception ex)
+                   {
+                       Utils.Trace("Exception sending HTTPS request: " + ex.Message);
+                       result.Exception = ex;
+                       response = null;
+                   }
+                   result.Response = response;
+                   result.OperationCompleted();
+               });
 
-                response.EnsureSuccessStatusCode();
-
-                AsyncResult result = new AsyncResult(callback, callbackData, m_operationTimeout, request, response);
-                result.OperationCompleted();
                 return result;
             }
             catch (Exception ex)
@@ -149,19 +194,18 @@ namespace Opc.Ua.Bindings
             try
             {
                 result2.WaitForComplete();
-
-                Task<Stream> task = result2.Response.Content.ReadAsStreamAsync();
-                task.Wait();
-                Stream responseContent = task.Result;
-
-                return BinaryDecoder.DecodeMessage(responseContent, null, m_quotas.MessageContext) as IServiceResponse;
+                if (result2.Response != null)
+                {
+                    Stream responseContent = result2.Response.Content.ReadAsStreamAsync().Result;
+                    return BinaryDecoder.DecodeMessage(responseContent, null, m_quotas.MessageContext) as IServiceResponse;
+                }
             }
             catch (Exception ex)
             {
                 Utils.Trace("Exception reading HTTPS response: " + ex.Message);
                 result2.Exception = ex;
-                return result2 as IServiceResponse;
             }
+            return result2 as IServiceResponse;
         }
 
         public IAsyncResult BeginOpen(AsyncCallback callback, object callbackData)
@@ -188,7 +232,7 @@ namespace Opc.Ua.Bindings
         {
             throw new NotImplementedException();
         }
-        
+
         public IAsyncResult BeginClose(AsyncCallback callback, object callbackData)
         {
             throw new NotImplementedException();
@@ -204,10 +248,10 @@ namespace Opc.Ua.Bindings
             IAsyncResult result = BeginSendRequest(request, null, null);
             return EndSendRequest(result);
         }
-        
+
         private void SaveSettings(Uri url, TransportChannelSettings settings)
         {
-            m_url = new Uri(Utils.ReplaceLocalhost(url.ToString()));
+            m_url = new Uri(url.ToString());
 
             m_settings = settings;
             m_operationTimeout = settings.Configuration.OperationTimeout;

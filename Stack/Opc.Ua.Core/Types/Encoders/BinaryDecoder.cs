@@ -166,7 +166,7 @@ namespace Opc.Ua
                 // lookup message session-less envelope type.
                 Type actualType = context.Factory.GetSystemType(absoluteId);
 
-                if (actualType == null || actualType != typeof(SessionLessServiceMessageType))
+                if (actualType == null || actualType != typeof(SessionlessInvokeRequestType))
                 {
                     throw new ServiceResultException(StatusCodes.BadEncodingError, Utils.Format("Cannot decode session-less service message with type id: {0}.", absoluteId));
                 }
@@ -498,8 +498,14 @@ namespace Opc.Ua
             }
 
             XmlDocument document = new XmlDocument();
-            document.InnerXml = new UTF8Encoding().GetString(bytes, 0, bytes.Length);
-
+            try
+            {
+                document.InnerXml = new UTF8Encoding().GetString(bytes, 0, bytes.Length);
+            }
+            catch (XmlException)
+            {
+                return null;
+            }
             return document.DocumentElement;
         }
 
@@ -1539,6 +1545,14 @@ namespace Opc.Ua
             if (systemType != null)
             {
                 encodeable = Activator.CreateInstance(systemType) as IEncodeable;
+
+                // set type identifier for custom complex data types before decode.
+                IComplexTypeInstance complexTypeInstance = encodeable as IComplexTypeInstance;
+
+                if (complexTypeInstance != null)
+                {
+                    complexTypeInstance.TypeId = extension.TypeId;
+                }
             }
 
             // get the length.

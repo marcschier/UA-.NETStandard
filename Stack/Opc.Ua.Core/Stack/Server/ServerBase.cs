@@ -16,6 +16,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Net;
 using System.Threading.Tasks;
+using Opc.Ua.Bindings;
 
 namespace Opc.Ua
 {
@@ -163,6 +164,9 @@ namespace Opc.Ua
             // intialize the request queue from the configuration.
             InitializeRequestQueue(configuration);
 
+            // initialize the server capabilities
+            ServerCapabilities = configuration.ServerConfiguration.ServerCapabilities;
+
             // initialize the base addresses.
             InitializeBaseAddresses(configuration);
 
@@ -217,6 +221,9 @@ namespace Opc.Ua
 
             // intialize the request queue from the configuration.
             InitializeRequestQueue(configuration);
+
+            // initialize the server capabilities
+            ServerCapabilities = configuration.ServerConfiguration.ServerCapabilities;
 
             // initialize the base addresses.
             InitializeBaseAddresses(configuration);
@@ -628,6 +635,30 @@ namespace Opc.Ua
         }
 
         /// <summary>
+        /// Called after the application certificate update.
+        /// </summary>
+        protected virtual void OnCertificateUpdate(object sender, CertificateUpdateEventArgs e)
+        {
+            // disconnect all sessions
+            InstanceCertificate = e.SecurityConfiguration.ApplicationCertificate.Certificate;
+            foreach (var listener in TransportListeners)
+            {
+                UaTcpChannelListener tcpListener = listener as UaTcpChannelListener;
+                if (tcpListener != null)
+                {
+                    tcpListener.CertificateUpdate(e.CertificateValidator, InstanceCertificate, null);
+                    continue;
+                }
+                UaHttpsChannelListener httpsListener = listener as UaHttpsChannelListener;
+                if (httpsListener != null)
+                {
+                    httpsListener.CertificateUpdate(e.CertificateValidator, InstanceCertificate, null);
+                    continue;
+                }
+            }
+        }
+
+        /// <summary>
         /// Create a new service host for UA TCP.
         /// </summary>
         protected List<EndpointDescription> CreateUaTcpServiceHost(
@@ -735,7 +766,7 @@ namespace Opc.Ua
                 catch (Exception e)
                 {
                     Utils.Trace(e, "Could not load UA-TCP Stack Listener.");
-					throw e;
+                    throw e;
                 }
             }
 
@@ -797,25 +828,25 @@ namespace Opc.Ua
 
                 if (uri.Scheme == Utils.UriSchemeHttps)
                 {
-                    // can only support one policy with HTTPS so pick the best one.
+                    // Can only support one policy with HTTPS so pick the 
+                    // first secure policy with sign and encrypt in the list 
                     ServerSecurityPolicy bestPolicy = null;
-                    byte bestLevel = 0;
                     foreach (ServerSecurityPolicy policy in securityPolicies)
                     {
-                        if (bestPolicy == null)
+                        if (policy.SecurityMode != MessageSecurityMode.SignAndEncrypt)
                         {
-                            bestPolicy = policy;
                             continue;
                         }
 
-                        byte securityLevel = ServerSecurityPolicy.CalculateSecurityLevel(policy.SecurityMode, policy.SecurityPolicyUri);
-                        if (bestLevel < securityLevel)
-                        {
-                            bestPolicy = policy;
-                            bestLevel = securityLevel;
-                        }
+                        bestPolicy = policy;
+                        break;
                     }
-                
+
+                    if (bestPolicy == null)
+                    {
+                        throw new ServiceResultException("HTTPS transport requires policy with sign and encrypt.");
+                    }
+
                     EndpointDescription description = new EndpointDescription();
 
                     description.EndpointUrl = uri.ToString();
@@ -1118,12 +1149,12 @@ namespace Opc.Ua
                 // find matching base address.
                 foreach (BaseAddress baseAddress in baseAddresses)
                 {
-					bool translateHttpsEndpoint = false;
-					if (endpoint.TransportProfileUri == Profiles.HttpsBinaryTransport && baseAddress.ProfileUri == Profiles.HttpsBinaryTransport)
-					{
-						translateHttpsEndpoint = true;
-					}
-					
+                    bool translateHttpsEndpoint = false;
+                    if (endpoint.TransportProfileUri == Profiles.HttpsBinaryTransport && baseAddress.ProfileUri == Profiles.HttpsBinaryTransport)
+                    {
+                        translateHttpsEndpoint = true;
+                    }
+                    
                     if (endpoint.TransportProfileUri != baseAddress.ProfileUri && !translateHttpsEndpoint)
                     {
                         continue;
