@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AssemblyName>Opc.Ua.Configuration</AssemblyName>
-    <TargetFrameworks>$(LibTargetFrameworks)</TargetFrameworks>
+    <TargetFramework>net6.0</TargetFramework>
     <PackageId>OPCFoundation.NetStandard.Opc.Ua.Configuration</PackageId>
     <RootNamespace>Opc.Ua.Configuration</RootNamespace>
     <Description>OPC UA Configuration Class Library</Description>
@@ -27,7 +27,7 @@
   <PropertyGroup Condition="'$(SignAssembly)' == 'true'">
     <DefineConstants>$(DefineConstants);SIGNASSEMBLY</DefineConstants>
   </PropertyGroup>
-  
+
   <Target Name="GetPackagingOutputs" />
 
 </Project>
