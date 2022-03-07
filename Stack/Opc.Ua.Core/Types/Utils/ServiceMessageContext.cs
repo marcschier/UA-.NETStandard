@@ -10,8 +10,6 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 */
 
-using System;
-
 namespace Opc.Ua
 {
     /// <summary>
@@ -19,16 +17,16 @@ namespace Opc.Ua
 	/// </summary>
 	public class ServiceMessageContext : IServiceMessageContext
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object with default values.
         /// </summary>
         public ServiceMessageContext()
         {
-            m_maxStringLength = UInt16.MaxValue;
-            m_maxByteStringLength = UInt16.MaxValue * 16;
-            m_maxArrayLength = UInt16.MaxValue;
-            m_maxMessageSize = UInt16.MaxValue * 32;
+            m_maxStringLength = ushort.MaxValue;
+            m_maxByteStringLength = ushort.MaxValue * 16;
+            m_maxArrayLength = ushort.MaxValue;
+            m_maxMessageSize = ushort.MaxValue * 32;
             m_namespaceUris = new NamespaceTable();
             m_serverUris = new StringTable();
             m_factory = EncodeableFactory.GlobalFactory;
@@ -37,18 +35,18 @@ namespace Opc.Ua
 
         private ServiceMessageContext(bool shared) : this()
         {
-            m_maxStringLength = UInt16.MaxValue;
-            m_maxByteStringLength = UInt16.MaxValue * 16;
-            m_maxArrayLength = UInt16.MaxValue;
-            m_maxMessageSize = UInt16.MaxValue * 32;
+            m_maxStringLength = ushort.MaxValue;
+            m_maxByteStringLength = ushort.MaxValue * 16;
+            m_maxArrayLength = ushort.MaxValue;
+            m_maxMessageSize = ushort.MaxValue * 32;
             m_namespaceUris = new NamespaceTable(shared);
             m_serverUris = new StringTable(shared);
             m_factory = EncodeableFactory.GlobalFactory;
             m_maxEncodingNestingLevels = 200;
         }
-        #endregion
 
-        #region Static Members
+
+
         /// <summary>
         /// The default context for the process (used only during XML serialization).
         /// </summary>
@@ -60,18 +58,15 @@ namespace Opc.Ua
         /// </summary>
         public static ServiceMessageContext ThreadContext
         {
-            get
-            {
-                return s_globalContext;
-            }
+            get => s_globalContext;
 
             set
             {
             }
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// Returns the object used to synchronize access to the context.
         /// </summary>
@@ -126,10 +121,7 @@ namespace Opc.Ua
         /// </summary>
         public NamespaceTable NamespaceUris
         {
-            get
-            {
-                return m_namespaceUris;
-            }
+            get => m_namespaceUris;
 
             set
             {
@@ -151,10 +143,7 @@ namespace Opc.Ua
         /// </summary>
         public StringTable ServerUris
         {
-            get
-            {
-                return m_serverUris;
-            }
+            get => m_serverUris;
 
             set
             {
@@ -176,10 +165,7 @@ namespace Opc.Ua
         /// </summary>
         public IEncodeableFactory Factory
         {
-            get
-            {
-                return m_factory;
-            }
+            get => m_factory;
 
             set
             {
@@ -195,20 +181,20 @@ namespace Opc.Ua
                 }
             }
         }
-        #endregion
 
-        #region Private Fields
-        private object m_lock = new object();
+
+
+        private readonly object m_lock = new object();
         private int m_maxStringLength;
         private int m_maxByteStringLength;
         private int m_maxArrayLength;
         private int m_maxMessageSize;
-        private uint m_maxEncodingNestingLevels;
+        private readonly uint m_maxEncodingNestingLevels;
         private NamespaceTable m_namespaceUris;
         private StringTable m_serverUris;
         private IEncodeableFactory m_factory;
 
-        private static ServiceMessageContext s_globalContext = new ServiceMessageContext(true);
-        #endregion
+        private static readonly ServiceMessageContext s_globalContext = new ServiceMessageContext(true);
+
     }
 }

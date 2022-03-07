@@ -11,11 +11,8 @@
 */
 
 using System;
-using System.Xml;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading;
-using System.Runtime.Serialization;
 
 namespace Opc.Ua
 {
@@ -24,7 +21,7 @@ namespace Opc.Ua
     /// </summary>
     public class StringTable
     {
-        #region Constructors
+
         /// <summary>
         /// Creates an empty collection.
         /// </summary>
@@ -61,35 +58,16 @@ namespace Opc.Ua
             m_instanceId = Interlocked.Increment(ref m_globalInstanceCount);
 #endif
         }
-        #endregion
-
-        #region Public Members
-        /// <summary>
-        /// The synchronization object.
-        /// </summary>
-        public object SyncRoot
-        {
-            get { return m_lock; }
-        }
-
-        /// <summary>
-        /// Returns a unique identifier for the table instance. Used to debug problems with shared tables.
-        /// </summary>
-        public int InstanceId
-        {
-#if DEBUG
-            get { return m_instanceId; }
-#else
-            get { return 0; }
-#endif
-        }
 
         /// <summary>
         /// Updates the table of namespace uris.
         /// </summary>
         public void Update(IEnumerable<string> strings)
         {
-            if (strings == null) throw new ArgumentNullException(nameof(strings));
+            if (strings == null)
+            {
+                throw new ArgumentNullException(nameof(strings));
+            }
 
             lock (m_lock)
             {
@@ -112,7 +90,7 @@ namespace Opc.Ua
         /// </summary>
         public int Append(string value)
         {
-            if (String.IsNullOrEmpty(value))
+            if (string.IsNullOrEmpty(value))
             {
                 throw new ArgumentNullException(nameof(value));
             }
@@ -154,7 +132,7 @@ namespace Opc.Ua
         {
             lock (m_lock)
             {
-                if (String.IsNullOrEmpty(value))
+                if (string.IsNullOrEmpty(value))
                 {
                     return -1;
                 }
@@ -168,7 +146,7 @@ namespace Opc.Ua
         /// </summary>
         public ushort GetIndexOrAppend(string value)
         {
-            if (String.IsNullOrEmpty(value))
+            if (string.IsNullOrEmpty(value))
             {
                 throw new ArgumentNullException(nameof(value));
             }
@@ -244,7 +222,7 @@ namespace Opc.Ua
                 {
                     if (!updateTable)
                     {
-                        mapping[ii] = UInt16.MaxValue;
+                        mapping[ii] = ushort.MaxValue;
                         continue;
                     }
 
@@ -256,10 +234,10 @@ namespace Opc.Ua
 
             return mapping;
         }
-        #endregion                        
 
-        #region Private Fields
-        private object m_lock = new object();
+
+
+        private readonly object m_lock = new object();
         private List<string> m_strings;
 
 #if DEBUG
@@ -267,7 +245,7 @@ namespace Opc.Ua
         internal int m_instanceId;
         private static int m_globalInstanceCount;
 #endif
-        #endregion
+
     }
 
     /// <summary>
@@ -275,7 +253,7 @@ namespace Opc.Ua
     /// </summary>
     public class NamespaceTable : StringTable
     {
-        #region Constructors
+
         /// <summary>
         /// Creates an empty collection.
         /// </summary>
@@ -303,15 +281,18 @@ namespace Opc.Ua
         {
             Update(namespaceUris);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// Updates the table of namespace uris.
         /// </summary>
         public new void Update(IEnumerable<string> namespaceUris)
         {
-            if (namespaceUris == null) throw new ArgumentNullException(nameof(namespaceUris));
+            if (namespaceUris == null)
+            {
+                throw new ArgumentNullException(nameof(namespaceUris));
+            }
 
             // check that first entry is the UA namespace.
             int ii = 0;
@@ -333,6 +314,6 @@ namespace Opc.Ua
 
             base.Update(namespaceUris);
         }
-        #endregion
+
     }
 }

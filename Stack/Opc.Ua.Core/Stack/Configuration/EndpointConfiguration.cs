@@ -10,9 +10,6 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 */
 
-using System;
-using System.Collections.Generic;
-
 namespace Opc.Ua
 {
     /// <summary>
@@ -20,23 +17,23 @@ namespace Opc.Ua
     /// </summary>
     public partial class EndpointConfiguration
     {
-        #region Constructors
+
         /// <summary>
         /// Creates an instance of a configuration with reasonable default values.
         /// </summary>
         public static EndpointConfiguration Create()
         {
-            EndpointConfiguration configuration = new EndpointConfiguration();
-
-            configuration.OperationTimeout      = 120000;
-            configuration.UseBinaryEncoding     = true;
-            configuration.MaxArrayLength        = UInt16.MaxValue;
-            configuration.MaxByteStringLength   = UInt16.MaxValue*16;
-            configuration.MaxMessageSize        = UInt16.MaxValue*64;
-            configuration.MaxStringLength       = UInt16.MaxValue;
-            configuration.MaxBufferSize         = UInt16.MaxValue;
-            configuration.ChannelLifetime       = 120000;
-            configuration.SecurityTokenLifetime = 3600000;
+            var configuration = new EndpointConfiguration {
+                OperationTimeout = 120000,
+                UseBinaryEncoding = true,
+                MaxArrayLength = ushort.MaxValue,
+                MaxByteStringLength = ushort.MaxValue * 16,
+                MaxMessageSize = ushort.MaxValue * 64,
+                MaxStringLength = ushort.MaxValue,
+                MaxBufferSize = ushort.MaxValue,
+                ChannelLifetime = 120000,
+                SecurityTokenLifetime = 3600000
+            };
 
             return configuration;
         }
@@ -51,20 +48,20 @@ namespace Opc.Ua
                 return Create();
             }
 
-            EndpointConfiguration configuration = new EndpointConfiguration();
-            
-            configuration.OperationTimeout      = applicationConfiguration.TransportQuotas.OperationTimeout;
-            configuration.UseBinaryEncoding     = true;
-            configuration.MaxArrayLength        = applicationConfiguration.TransportQuotas.MaxArrayLength;
-            configuration.MaxByteStringLength   = applicationConfiguration.TransportQuotas.MaxByteStringLength;
-            configuration.MaxMessageSize        = applicationConfiguration.TransportQuotas.MaxMessageSize;
-            configuration.MaxStringLength       = applicationConfiguration.TransportQuotas.MaxStringLength;
-            configuration.MaxBufferSize         = applicationConfiguration.TransportQuotas.MaxBufferSize;
-            configuration.ChannelLifetime       = applicationConfiguration.TransportQuotas.ChannelLifetime;
-            configuration.SecurityTokenLifetime = applicationConfiguration.TransportQuotas.SecurityTokenLifetime; 
+            var configuration = new EndpointConfiguration {
+                OperationTimeout = applicationConfiguration.TransportQuotas.OperationTimeout,
+                UseBinaryEncoding = true,
+                MaxArrayLength = applicationConfiguration.TransportQuotas.MaxArrayLength,
+                MaxByteStringLength = applicationConfiguration.TransportQuotas.MaxByteStringLength,
+                MaxMessageSize = applicationConfiguration.TransportQuotas.MaxMessageSize,
+                MaxStringLength = applicationConfiguration.TransportQuotas.MaxStringLength,
+                MaxBufferSize = applicationConfiguration.TransportQuotas.MaxBufferSize,
+                ChannelLifetime = applicationConfiguration.TransportQuotas.ChannelLifetime,
+                SecurityTokenLifetime = applicationConfiguration.TransportQuotas.SecurityTokenLifetime
+            };
 
             return configuration;
         }
-        #endregion
+
     }
 }

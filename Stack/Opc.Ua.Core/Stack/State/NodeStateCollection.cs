@@ -12,11 +12,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Xml;
-using System.Text;
 using System.IO;
 using System.Reflection;
-using System.Runtime.Serialization;
 
 namespace Opc.Ua
 {
@@ -25,7 +22,7 @@ namespace Opc.Ua
     /// </summary>
     public partial class NodeStateCollection : List<NodeState>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes a new instance of the <see cref="NodeStateCollection"/> class.
         /// </summary>
@@ -51,43 +48,8 @@ namespace Opc.Ua
         public NodeStateCollection(IEnumerable<NodeState> collection) : base(collection)
         {
         }
-        #endregion
 
-        #region Public Methods
-        /// <summary>
-        /// Writes the collection to a stream using the NodeSet schema.
-        /// </summary>
-        public void SaveAsNodeSet(ISystemContext context, Stream ostrm)
-        {
-            NodeTable nodeTable = new NodeTable(context.NamespaceUris, context.ServerUris, null);
-            
-            for (int ii = 0; ii < this.Count; ii++)
-            {
-                this[ii].Export(context, nodeTable);
-            }
 
-            NodeSet nodeSet = new NodeSet();
-            
-            foreach (ILocalNode node in nodeTable)
-            {
-                nodeSet.Add(node, nodeTable.NamespaceUris, nodeTable.ServerUris);
-            }
-
-            XmlWriterSettings settings = new XmlWriterSettings();
-
-            settings.Encoding = Encoding.UTF8;
-            settings.CloseOutput = true;
-            settings.ConformanceLevel = ConformanceLevel.Document;
-            settings.Indent = true;
-
-            using (XmlWriter writer = XmlWriter.Create(ostrm, settings))
-            {
-                DataContractSerializer serializer = new DataContractSerializer(typeof(NodeSet));
-                serializer.WriteObject(writer, nodeSet);
-            }
-        }
-
-        #region Well-Known Aliases
         /// <summary>
         /// Stores a well known alias.
         /// </summary>
@@ -106,7 +68,7 @@ namespace Opc.Ua
         /// <summary>
         /// The list of aliases to use.
         /// </summary>
-        private AliasToUse[] s_AliasesToUse = new AliasToUse[]
+        private readonly AliasToUse[] s_AliasesToUse = new AliasToUse[]
         {
             new AliasToUse(BrowseNames.Boolean, DataTypeIds.Boolean),
             new AliasToUse(BrowseNames.SByte, DataTypeIds.SByte),
@@ -155,128 +117,22 @@ namespace Opc.Ua
             new AliasToUse(BrowseNames.HasAddIn, ReferenceTypeIds.HasAddIn),
             new AliasToUse(BrowseNames.HasInterface, ReferenceTypeIds.HasInterface)
         };
-        #endregion
-        
-        /// <summary>
-        /// Writes the collection to a stream using the Opc.Ua.Schema.UANodeSet schema.
-        /// </summary>
-        public void SaveAsNodeSet2(ISystemContext context, Stream ostrm)
-        {
-            SaveAsNodeSet2(context, ostrm, null);
-        }
-
-        /// <summary>
-        /// Writes the collection to a stream using the Opc.Ua.Schema.UANodeSet schema.
-        /// </summary>
-        public void SaveAsNodeSet2(ISystemContext context, Stream ostrm, string version)
-        {
-            Opc.Ua.Export.UANodeSet nodeSet = new Opc.Ua.Export.UANodeSet();
-            nodeSet.LastModified = DateTime.UtcNow;
-            nodeSet.LastModifiedSpecified = true;
-
-            for (int ii = 0; ii < s_AliasesToUse.Length; ii++)
-            {
-                nodeSet.AddAlias(context, s_AliasesToUse[ii].Alias, s_AliasesToUse[ii].NodeId);
-            }
-
-            for (int ii = 0; ii < this.Count; ii++)
-            {
-                nodeSet.Export(context, this[ii], true);
-            }
-
-            nodeSet.Write(ostrm);
-        }
-
-        /// <summary>
-        /// Writes the schema information to a static XML export file.
-        /// </summary>
-        public void SaveAsXml(ISystemContext context, Stream ostrm)
-        {
-            SaveAsXml(context, ostrm, false);
-        }
-
-        /// <summary>
-        /// Writes the schema information to a static XML export file.
-        /// </summary>
-        public void SaveAsXml(ISystemContext context, Stream ostrm, bool keepStreamOpen)
-        {
-            XmlWriterSettings settings = new XmlWriterSettings();
-
-            settings.Encoding = Encoding.UTF8;
-            settings.CloseOutput = !keepStreamOpen;
-            settings.ConformanceLevel = ConformanceLevel.Document;
-            settings.Indent = true;
-
-            ServiceMessageContext messageContext = new ServiceMessageContext();
-
-            messageContext.NamespaceUris = context.NamespaceUris;
-            messageContext.ServerUris = context.ServerUris;
-            messageContext.Factory = context.EncodeableFactory;
-
-            using (XmlWriter writer = XmlWriter.Create(ostrm, settings))
-            {
-                XmlQualifiedName root = new XmlQualifiedName("ListOfNodeState", Namespaces.OpcUaXsd);
-                XmlEncoder encoder = new XmlEncoder(root, writer, messageContext);
-
-                encoder.SaveStringTable("NamespaceUris", "NamespaceUri", context.NamespaceUris);
-                encoder.SaveStringTable("ServerUris", "ServerUri", context.ServerUris);
-
-                for (int ii = 0; ii < this.Count; ii++)
-                {
-                    NodeState state = this[ii];
-
-                    if (state != null)
-                    {
-                        state.SaveAsXml(context, encoder);
-                    }
-                }
-
-                encoder.Close();
-            }
-        }
-
-        /// <summary>
-        /// Writes the collection to a binary stream. The stream is closed by this method.
-        /// </summary>
-        public void SaveAsBinary(ISystemContext context, Stream ostrm)
-        {
-            ServiceMessageContext messageContext = new ServiceMessageContext();
-
-            messageContext.NamespaceUris = context.NamespaceUris;
-            messageContext.ServerUris = context.ServerUris;
-            messageContext.Factory = context.EncodeableFactory;
-
-            BinaryEncoder encoder = new BinaryEncoder(ostrm, messageContext);
-
-            encoder.SaveStringTable(context.NamespaceUris);
-            encoder.SaveStringTable(context.ServerUris);
-
-            encoder.WriteInt32(null, this.Count);
-
-            for (int ii = 0; ii < this.Count; ii++)
-            {
-                NodeState state = this[ii];
-                state.SaveAsBinary(context, encoder);
-            }
-
-            encoder.Close();
-        }
 
         /// <summary>
         /// Reads the schema information from a XML document.
         /// </summary>
         public void LoadFromBinary(ISystemContext context, Stream istrm, bool updateTables)
         {
-            ServiceMessageContext messageContext = new ServiceMessageContext();
+            var messageContext = new ServiceMessageContext {
+                NamespaceUris = context.NamespaceUris,
+                ServerUris = context.ServerUris,
+                Factory = context.EncodeableFactory
+            };
 
-            messageContext.NamespaceUris = context.NamespaceUris;
-            messageContext.ServerUris = context.ServerUris;
-            messageContext.Factory = context.EncodeableFactory;
-
-            using (BinaryDecoder decoder = new BinaryDecoder(istrm, messageContext))
+            using (var decoder = new BinaryDecoder(istrm, messageContext))
             {
                 // check if a namespace table was provided.
-                NamespaceTable namespaceUris = new NamespaceTable();
+                var namespaceUris = new NamespaceTable();
 
                 if (!decoder.LoadStringTable(namespaceUris))
                 {
@@ -296,7 +152,7 @@ namespace Opc.Ua
                 }
 
                 // check if a server uri table was provided.
-                StringTable serverUris = new StringTable();
+                var serverUris = new StringTable();
 
                 if (namespaceUris != null && namespaceUris.Count > 1)
                 {
@@ -327,110 +183,10 @@ namespace Opc.Ua
 
                 for (int ii = 0; ii < count; ii++)
                 {
-                    NodeState state = NodeState.LoadNode(context, decoder);
-                    this.Add(state);
+                    var state = NodeState.LoadNode(context, decoder);
+                    Add(state);
                 }
             }
-        }
-
-        /// <summary>
-        /// Reads the schema information from a XML document.
-        /// </summary>
-        public void LoadFromXml(ISystemContext context, Stream istrm, bool updateTables)
-        {
-            ServiceMessageContext messageContext = new ServiceMessageContext();
-
-            messageContext.NamespaceUris = context.NamespaceUris;
-            messageContext.ServerUris = context.ServerUris;
-            messageContext.Factory = context.EncodeableFactory;
-
-            using (XmlReader reader = XmlReader.Create(istrm, Utils.DefaultXmlReaderSettings()))
-            {
-                XmlQualifiedName root = new XmlQualifiedName("ListOfNodeState", Namespaces.OpcUaXsd);
-                XmlDecoder decoder = new XmlDecoder(null, reader, messageContext);
-
-                NamespaceTable namespaceUris = new NamespaceTable();
-
-                if (!decoder.LoadStringTable("NamespaceUris", "NamespaceUri", namespaceUris))
-                {
-                    namespaceUris = null;
-                }
-
-                // update namespace table.
-                if (updateTables)
-                {
-                    if (namespaceUris != null && context.NamespaceUris != null)
-                    {
-                        for (int ii = 0; ii < namespaceUris.Count; ii++)
-                        {
-                            context.NamespaceUris.GetIndexOrAppend(namespaceUris.GetString((uint)ii));
-                        }
-                    }
-                }
-
-                StringTable serverUris = new StringTable();
-
-                if (!decoder.LoadStringTable("ServerUris", "ServerUri", context.ServerUris))
-                {
-                    serverUris = null;
-                }
-
-                // update server table.
-                if (updateTables)
-                {
-                    if (serverUris != null && context.ServerUris != null)
-                    {
-                        for (int ii = 0; ii < serverUris.Count; ii++)
-                        {
-                            context.ServerUris.GetIndexOrAppend(serverUris.GetString((uint)ii));
-                        }
-                    }
-                }
-
-                // set mapping.
-                decoder.SetMappingTables(namespaceUris, serverUris);
-
-                decoder.PushNamespace(Namespaces.OpcUaXsd);
-
-                NodeState state = NodeState.LoadNode(context, decoder);
-
-                while (state != null)
-                {
-                    this.Add(state);
-
-                    state = NodeState.LoadNode(context, decoder);
-                }
-
-                decoder.Close();
-            }
-        }
-
-        /// <summary>
-        /// Loads the nodes from an embedded resource.
-        /// </summary>
-        /// <param name="context">The context.</param>
-        /// <param name="resourcePath">The resource path.</param>
-        /// <param name="assembly">The assembly containing the resource.</param>
-        /// <param name="updateTables">if set to <c>true</c> the namespace and server tables are updated with any new URIs.</param>
-        public void LoadFromResource(ISystemContext context, string resourcePath, Assembly assembly, bool updateTables)
-        {
-            if (resourcePath == null) throw new ArgumentNullException(nameof(resourcePath));
-
-            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
-            
-            Stream istrm = assembly.GetManifestResourceStream(resourcePath);
-            if (istrm == null)
-            {
-                // try to load from app directory
-                FileInfo file = new FileInfo(resourcePath);
-                istrm = file.OpenRead();
-                if (istrm == null)
-                {
-                    throw ServiceResultException.Create(StatusCodes.BadDecodingError, "Could not load nodes from resource: {0}", resourcePath);
-                }
-            }
-
-            LoadFromXml(context, istrm, updateTables);
         }
 
         /// <summary>
@@ -442,15 +198,21 @@ namespace Opc.Ua
         /// <param name="updateTables">if set to <c>true</c> the namespace and server tables are updated with any new URIs.</param>
         public void LoadFromBinaryResource(ISystemContext context, string resourcePath, Assembly assembly, bool updateTables)
         {
-            if (resourcePath == null) throw new ArgumentNullException(nameof(resourcePath));
+            if (resourcePath == null)
+            {
+                throw new ArgumentNullException(nameof(resourcePath));
+            }
 
-            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
-            
+            if (assembly == null)
+            {
+                throw new ArgumentNullException(nameof(assembly));
+            }
+
             Stream istrm = assembly.GetManifestResourceStream(resourcePath);
             if (istrm == null)
             {
                 // try to load from app directory
-                FileInfo file = new FileInfo(resourcePath);
+                var file = new FileInfo(resourcePath);
                 istrm = file.OpenRead();
                 if (istrm == null)
                 {
@@ -460,7 +222,7 @@ namespace Opc.Ua
 
             LoadFromBinary(context, istrm, updateTables);
         }
-#endregion
+
     }
 
     /// <summary>
@@ -469,7 +231,7 @@ namespace Opc.Ua
     public class NodeStateFactory
     {
         /// <summary>
-        /// Creates a new instance. 
+        /// Creates a new instance.
         /// </summary>
         /// <param name="context">The current context.</param>
         /// <param name="parent">The parent.</param>
@@ -479,25 +241,14 @@ namespace Opc.Ua
         /// <param name="typeDefinitionId">The type definition.</param>
         /// <returns>Returns null if the type is not known.</returns>
         public virtual NodeState CreateInstance(
-            ISystemContext context, 
+            ISystemContext context,
             NodeState parent,
             NodeClass nodeClass,
-            QualifiedName browseName, 
-            NodeId referenceTypeId, 
+            QualifiedName browseName,
+            NodeId referenceTypeId,
             NodeId typeDefinitionId)
         {
             NodeState child = null;
-
-            if (m_types != null && !NodeId.IsNull(typeDefinitionId))
-            {
-                Type type = null;
-
-                if (m_types.TryGetValue(typeDefinitionId, out type))
-                {
-                    return Activator.CreateInstance(type, parent) as NodeState;
-                }
-            }
-
             switch (nodeClass)
             {
                 case NodeClass.Variable:
@@ -563,39 +314,5 @@ namespace Opc.Ua
 
             return child;
         }
-
-        /// <summary>
-        /// Registers a type with the factory.
-        /// </summary>
-        /// <param name="typeDefinitionId">The type definition.</param>
-        /// <param name="type">The system type.</param>
-        public void RegisterType(NodeId typeDefinitionId, Type type)
-        {
-            if (NodeId.IsNull(typeDefinitionId)) throw new ArgumentNullException(nameof(typeDefinitionId));
-            if (type == null) throw new ArgumentNullException(nameof(type));
-            
-            if (m_types == null)
-            {
-                m_types = new NodeIdDictionary<Type>();
-            }
-
-            m_types[typeDefinitionId] = type;
-        }
-
-        /// <summary>
-        /// Unregisters a type with the factory.
-        /// </summary>
-        /// <param name="typeDefinitionId">The type definition.</param>
-        public void UnRegisterType(NodeId typeDefinitionId)
-        {
-            if (NodeId.IsNull(typeDefinitionId)) throw new ArgumentNullException(nameof(typeDefinitionId));
-
-            if (m_types != null)
-            {
-                m_types.Remove(typeDefinitionId);
-            }
-        }
-        
-        private NodeIdDictionary<Type> m_types;
     }
 }

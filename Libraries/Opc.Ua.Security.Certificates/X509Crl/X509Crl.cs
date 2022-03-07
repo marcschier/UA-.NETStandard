@@ -43,7 +43,7 @@ namespace Opc.Ua.Security.Certificates
     /// </summary>
     public class X509CRL : IX509CRL
     {
-        #region Constructors
+
         /// <summary>
         /// Loads a CRL from a file.
         /// </summary>
@@ -73,7 +73,7 @@ namespace Opc.Ua.Security.Certificates
             m_nextUpdate = crl.NextUpdate;
             m_revokedCertificates = new List<RevokedCertificate>(crl.RevokedCertificates);
             m_crlExtensions = new X509ExtensionCollection();
-            foreach (var extension in crl.CrlExtensions)
+            foreach (X509Extension extension in crl.CrlExtensions)
             {
                 m_crlExtensions.Add(extension);
             }
@@ -91,9 +91,9 @@ namespace Opc.Ua.Security.Certificates
             m_revokedCertificates = new List<RevokedCertificate>();
             m_crlExtensions = new X509ExtensionCollection();
         }
-        #endregion
 
-        #region IX509CRL Interface
+
+
         /// <inheritdoc/>
         public X500DistinguishedName IssuerName
         {
@@ -159,9 +159,9 @@ namespace Opc.Ua.Security.Certificates
 
         /// <inheritdoc/>
         public byte[] RawData { get; private set; }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Verifies the signature on the CRL.
         /// </summary>
@@ -194,8 +194,8 @@ namespace Opc.Ua.Security.Certificates
                 throw new CryptographicException("Certificate was not created by the CRL Issuer.");
             }
             EnsureDecoded();
-            var serialnumber = certificate.GetSerialNumber();
-            foreach (var revokedCert in RevokedCertificates)
+            byte[] serialnumber = certificate.GetSerialNumber();
+            foreach (RevokedCertificate revokedCert in RevokedCertificates)
             {
                 if (serialnumber.SequenceEqual<byte>(revokedCert.UserCertificate))
                 {
@@ -204,9 +204,9 @@ namespace Opc.Ua.Security.Certificates
             }
             return false;
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Decode the complete CRL.
         /// </summary>
@@ -227,16 +227,16 @@ namespace Opc.Ua.Security.Certificates
         {
             try
             {
-                AsnReader crlReader = new AsnReader(tbs, AsnEncodingRules.DER);
-                var tag = Asn1Tag.Sequence;
-                var seqReader = crlReader.ReadSequence(tag);
+                var crlReader = new AsnReader(tbs, AsnEncodingRules.DER);
+                Asn1Tag tag = Asn1Tag.Sequence;
+                AsnReader seqReader = crlReader.ReadSequence(tag);
                 crlReader.ThrowIfNotEmpty();
                 if (seqReader != null)
                 {
                     // Version is OPTIONAL
                     uint version = 0;
                     var intTag = new Asn1Tag(UniversalTagNumber.Integer);
-                    var peekTag = seqReader.PeekTag();
+                    Asn1Tag peekTag = seqReader.PeekTag();
                     if (peekTag == intTag)
                     {
                         if (seqReader.TryReadUInt32(out version))
@@ -249,8 +249,8 @@ namespace Opc.Ua.Security.Certificates
                     }
 
                     // Signature Algorithm Identifier
-                    var sigReader = seqReader.ReadSequence();
-                    var oid = sigReader.ReadObjectIdentifier();
+                    AsnReader sigReader = seqReader.ReadSequence();
+                    string oid = sigReader.ReadObjectIdentifier();
                     m_hashAlgorithmName = Oids.GetHashAlgorithmName(oid);
                     if (sigReader.HasData)
                     {
@@ -277,22 +277,23 @@ namespace Opc.Ua.Security.Certificates
                     if (peekTag == seqTag)
                     {
                         // revoked certificates
-                        var revReader = seqReader.ReadSequence(tag);
+                        AsnReader revReader = seqReader.ReadSequence(tag);
                         var revokedCertificates = new List<RevokedCertificate>();
                         while (revReader.HasData)
                         {
-                            var crlEntry = revReader.ReadSequence();
-                            var serial = crlEntry.ReadInteger();
-                            var revokedCertificate = new RevokedCertificate(serial.ToByteArray());
-                            revokedCertificate.RevocationDate = crlEntry.ReadUtcTime().UtcDateTime;
+                            AsnReader crlEntry = revReader.ReadSequence();
+                            System.Numerics.BigInteger serial = crlEntry.ReadInteger();
+                            var revokedCertificate = new RevokedCertificate(serial.ToByteArray()) {
+                                RevocationDate = crlEntry.ReadUtcTime().UtcDateTime
+                            };
                             if (version == 1 &&
                                 crlEntry.HasData)
                             {
                                 // CRL entry extensions
-                                var crlEntryExtensions = crlEntry.ReadSequence();
+                                AsnReader crlEntryExtensions = crlEntry.ReadSequence();
                                 while (crlEntryExtensions.HasData)
                                 {
-                                    var extension = crlEntryExtensions.ReadExtension();
+                                    X509Extension extension = crlEntryExtensions.ReadExtension();
                                     revokedCertificate.CrlEntryExtensions.Add(extension);
                                 }
                                 crlEntryExtensions.ThrowIfNotEmpty();
@@ -309,12 +310,12 @@ namespace Opc.Ua.Security.Certificates
                         seqReader.HasData)
                     {
                         var extTag = new Asn1Tag(TagClass.ContextSpecific, 0);
-                        var optReader = seqReader.ReadSequence(extTag);
+                        AsnReader optReader = seqReader.ReadSequence(extTag);
                         var crlExtensionList = new X509ExtensionCollection();
-                        var crlExtensions = optReader.ReadSequence();
+                        AsnReader crlExtensions = optReader.ReadSequence();
                         while (crlExtensions.HasData)
                         {
-                            var extension = crlExtensions.ReadExtension();
+                            X509Extension extension = crlExtensions.ReadExtension();
                             crlExtensionList.Add(extension);
                         }
                         m_crlExtensions = crlExtensionList;
@@ -341,9 +342,9 @@ namespace Opc.Ua.Security.Certificates
                 Decode(RawData);
             }
         }
-        #endregion
 
-        #region Private Fields
+
+
         private bool m_decoded = false;
         private X509Signature m_signature;
         private X500DistinguishedName m_issuerName;
@@ -352,7 +353,7 @@ namespace Opc.Ua.Security.Certificates
         private HashAlgorithmName m_hashAlgorithmName;
         private List<RevokedCertificate> m_revokedCertificates;
         private X509ExtensionCollection m_crlExtensions;
-        #endregion
+
     }
 
     /// <summary>
@@ -361,22 +362,6 @@ namespace Opc.Ua.Security.Certificates
     [CollectionDataContract(Name = "ListOfX509CRL", ItemName = "X509CRL")]
     public class X509CRLCollection : List<X509CRL>
     {
-        /// <summary>
-        /// Gets or sets the element at the specified index.
-        /// </summary>
-        /// <param name="index">The zero-based index of the element to get or set.</param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public new X509CRL this[int index]
-        {
-            get
-            {
-                return (X509CRL)base[index];
-            }
-            set
-            {
-                base[index] = value ?? throw new ArgumentNullException(nameof(value));
-            }
-        }
 
         /// <summary>
         /// Create an empty X509CRL collection.

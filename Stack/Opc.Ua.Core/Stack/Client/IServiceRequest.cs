@@ -11,10 +11,10 @@
 */
 
 namespace Opc.Ua
-{   
+{
     /// <summary>
-	/// An interface to a service request.
-	/// </summary>
+    /// An interface to a service request.
+    /// </summary>
     public interface IServiceRequest : IEncodeable
     {
         /// <summary>
@@ -23,11 +23,11 @@ namespace Opc.Ua
         /// <value>The request header.</value>
         RequestHeader RequestHeader { get; set; }
     }
-    
+
     /// <summary>
-	/// An interface to a service response.
-	/// </summary>
-    public interface IServiceResponse : IEncodeable 
+    /// An interface to a service response.
+    /// </summary>
+    public interface IServiceResponse : IEncodeable
     {
         /// <summary>
         /// The header for the response.
@@ -35,23 +35,11 @@ namespace Opc.Ua
         /// <value>The response header.</value>
         ResponseHeader ResponseHeader { get; }
     }
-    
+
     /// <summary>
-	/// An interface to a service message.
-	/// </summary>
+    /// An interface to a service message.
+    /// </summary>
     public interface IServiceMessage
     {
-        /// <summary>
-        /// Returns the request contained in the message.
-        /// </summary>
-        /// <returns></returns>
-        IServiceRequest GetRequest();
-    
-        /// <summary>
-        /// Creates an instance of a response message.
-        /// </summary>
-        /// <param name="response">The response.</param>
-        /// <returns></returns>
-        object CreateResponse(IServiceResponse response);
     }
 }

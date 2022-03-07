@@ -10,7 +10,6 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 */
 
-using System;
 using System.Collections.Generic;
 
 namespace Opc.Ua
@@ -20,15 +19,15 @@ namespace Opc.Ua
     /// </summary>
     public class InstanceStateSnapshot : IFilterTarget
     {
-        #region Public Interface
+
         /// <summary>
         /// Gets or sets a handled associated with the snapshot.
         /// </summary>
         /// <value>The handle.</value>
         public object Handle
         {
-            get { return m_handle; }
-            set { m_handle = value; }
+            get => m_handle;
+            set => m_handle = value;
         }
 
         /// <summary>
@@ -37,29 +36,15 @@ namespace Opc.Ua
         /// <param name="context">The context.</param>
         /// <param name="state">The state.</param>
         public void Initialize(
-            ISystemContext context, 
+            ISystemContext context,
             BaseInstanceState state)
         {
             m_typeDefinitionId = state.TypeDefinitionId;
             m_snapshot = CreateChildNode(context, state);
         }
 
-        /// <summary>
-        /// Sets the value for a child. Adds it if it does not already exist.
-        /// </summary>
-        /// <param name="browseName">The BrowseName.</param>
-        /// <param name="nodeClass">The node class.</param>
-        /// <param name="value">The value.</param>
-        public void SetChildValue(
-            QualifiedName browseName,
-            NodeClass nodeClass,
-            object value)
-        {
-            SetChildValue(m_snapshot, browseName, nodeClass, value);
-        }
-        #endregion
 
-        #region IFilterTarget Members
+
         /// <summary>
         /// Returns true if the snapshort is an instance of the specified type.
         /// </summary>
@@ -93,10 +78,10 @@ namespace Opc.Ua
         /// The attribute value. Returns null if the attribute does not exist.
         /// </returns>
         public object GetAttributeValue(
-            FilterContext context, 
-            NodeId typeDefinitionId, 
-            IList<QualifiedName> relativePath, 
-            uint attributeId, 
+            FilterContext context,
+            NodeId typeDefinitionId,
+            IList<QualifiedName> relativePath,
+            uint attributeId,
             NumericRange indexRange)
         {
             if (!NodeId.IsNull(typeDefinitionId))
@@ -125,9 +110,9 @@ namespace Opc.Ua
 
             return value;
         }
-        #endregion
 
-        #region ChildNode Class
+
+
         /// <summary>
         /// Stores the key attributes of a child node.
         /// </summary>
@@ -137,53 +122,6 @@ namespace Opc.Ua
             public QualifiedName BrowseName;
             public object Value;
             public List<ChildNode> Children;
-        }     
-        #endregion   
-
-        #region Private Methods
-        /// <summary>
-        /// Sets the value for a child. Adds it if it does not already exist.
-        /// </summary>
-        /// <param name="node">The node.</param>
-        /// <param name="browseName">The BrowseName.</param>
-        /// <param name="nodeClass">The node class.</param>
-        /// <param name="value">The value.</param>
-        private void SetChildValue(
-            ChildNode node,
-            QualifiedName browseName,
-            NodeClass nodeClass,
-            object value)
-        {
-            ChildNode child = null;
-
-            if (node.Children != null)
-            {
-                for (int ii = 0; ii < node.Children.Count; ii++)
-                {
-                    child = node.Children[ii];
-
-                    if (child.BrowseName == browseName)
-                    {
-                        break;
-                    }
-
-                    child = null;
-                }
-            }
-            else
-            {
-                node.Children = new List<ChildNode>();
-            }
-
-            if (child == null)
-            {
-                child = new ChildNode();
-                node.Children.Add(child);
-            }
-
-            child.BrowseName = browseName;
-            child.NodeClass = nodeClass;
-            child.Value = value;
         }
 
         /// <summary>
@@ -194,14 +132,13 @@ namespace Opc.Ua
         /// <returns>A snapshot of a node.</returns>
         private ChildNode CreateChildNode(ISystemContext context, BaseInstanceState state)
         {
-            ChildNode node = new ChildNode();
+            var node = new ChildNode {
+                NodeClass = state.NodeClass,
+                BrowseName = state.BrowseName
+            };
 
-            node.NodeClass  = state.NodeClass;
-            node.BrowseName = state.BrowseName;
 
-            BaseVariableState variable = state as BaseVariableState;
-
-            if (variable != null)
+            if (state is BaseVariableState variable)
             {
                 if (!StatusCode.IsBad(variable.StatusCode))
                 {
@@ -209,11 +146,10 @@ namespace Opc.Ua
                 }
             }
 
-            BaseObjectState instance = state as BaseObjectState;
 
-            if (instance != null)
+            if (state is BaseObjectState instance)
             {
-                node.Value = instance.NodeId;                    
+                node.Value = instance.NodeId;
             }
 
             node.Children = CreateChildNodes(context, state);
@@ -229,10 +165,10 @@ namespace Opc.Ua
         /// <returns>The list of the nodes.</returns>
         private List<ChildNode> CreateChildNodes(ISystemContext context, BaseInstanceState state)
         {
-            List<BaseInstanceState> children = new List<BaseInstanceState>();
+            var children = new List<BaseInstanceState>();
             state.GetChildren(context, children);
 
-            List<ChildNode> nodes = new List<ChildNode>();
+            var nodes = new List<ChildNode>();
 
             for (int ii = 0; ii < children.Count; ii++)
             {
@@ -244,7 +180,7 @@ namespace Opc.Ua
                 }
 
                 ChildNode node = CreateChildNode(context, child);
-                nodes.Add(node);                
+                nodes.Add(node);
             }
 
             return nodes;
@@ -261,7 +197,7 @@ namespace Opc.Ua
         private object GetAttributeValue(
             ChildNode node,
             IList<QualifiedName> relativePath,
-            int index, 
+            int index,
             uint attributeId)
         {
             if (index >= relativePath.Count)
@@ -293,18 +229,18 @@ namespace Opc.Ua
             {
                 if (node.Children[ii].BrowseName == relativePath[index])
                 {
-                    return GetAttributeValue(node.Children[ii], relativePath, index+1, attributeId);
+                    return GetAttributeValue(node.Children[ii], relativePath, index + 1, attributeId);
                 }
             }
 
             return null;
         }
-        #endregion
-        
-        #region Private Fields
+
+
+
         private NodeId m_typeDefinitionId;
         private ChildNode m_snapshot;
         private object m_handle;
-        #endregion
+
     }
 }

@@ -11,19 +11,16 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Opc.Ua
 {
-    #region ReferenceDescription Class
-	/// <summary>
-	/// A reference returned in browse operation.
-	/// </summary>
+
+    /// <summary>
+    /// A reference returned in browse operation.
+    /// </summary>
     public partial class ReferenceDescription : IFormattable
-    {     
-        #region IFormattable Members
+    {
+
         /// <summary>
         /// Returns the string representation of the object.
         /// </summary>
@@ -31,7 +28,7 @@ namespace Opc.Ua
         {
             if (format == null)
             {
-                if (m_displayName != null && !String.IsNullOrEmpty(m_displayName.Text))
+                if (m_displayName != null && !string.IsNullOrEmpty(m_displayName.Text))
                 {
                     return m_displayName.Text;
                 }
@@ -41,12 +38,12 @@ namespace Opc.Ua
                     return m_browseName.Name;
                 }
 
-                return Utils.Format("(unknown {0})", ((NodeClass)m_nodeClass).ToString().ToLower());
+                return Utils.Format("(unknown {0})", m_nodeClass.ToString().ToLower());
             }
-        
+
             throw new FormatException(Utils.Format("Invalid format string: '{0}'.", format));
         }
-        
+
         /// <summary>
         /// Returns the string representation of the object.
         /// </summary>
@@ -54,16 +51,16 @@ namespace Opc.Ua
         {
             return ToString(null, null);
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Sets the reference type for the reference.
         /// </summary>
         public void SetReferenceType(
             BrowseResultMask resultMask,
-            NodeId           referenceTypeId,
-            bool             isForward)
+            NodeId referenceTypeId,
+            bool isForward)
         {
             if ((resultMask & BrowseResultMask.ReferenceTypeId) != 0)
             {
@@ -89,10 +86,10 @@ namespace Opc.Ua
         /// </summary>
         public void SetTargetAttributes(
             BrowseResultMask resultMask,
-            NodeClass        nodeClass,
-            QualifiedName    browseName,
-            LocalizedText    displayName,
-            ExpandedNodeId   typeDefinition)
+            NodeClass nodeClass,
+            QualifiedName browseName,
+            LocalizedText displayName,
+            ExpandedNodeId typeDefinition)
         {
             if ((resultMask & BrowseResultMask.NodeClass) != 0)
             {
@@ -130,22 +127,22 @@ namespace Opc.Ua
                 m_typeDefinition = null;
             }
         }
-        #endregion
 
-        #region Supporting Properties and Methods
+
+
         /// <summary>
         /// True if the reference filter has not been applied.
         /// </summary>
         public bool Unfiltered
         {
-            get { return m_unfiltered;  }
-            set { m_unfiltered = value; }
+            get => m_unfiltered;
+            set => m_unfiltered = value;
         }
-        #endregion
 
-        #region Private Fields
+
+
         private bool m_unfiltered;
-        #endregion
+
     }
-    #endregion
+
 }

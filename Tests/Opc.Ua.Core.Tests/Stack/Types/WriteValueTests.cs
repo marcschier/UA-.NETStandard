@@ -43,7 +43,7 @@ namespace Opc.Ua.Core.Tests.Stack.Types
     public class WriteValueTests
     {
 
-        #region Test Setup
+        
         [OneTimeSetUp]
         protected void OneTimeSetUp()
         {
@@ -64,9 +64,9 @@ namespace Opc.Ua.Core.Tests.Stack.Types
         protected void TearDown()
         {
         }
-        #endregion
+        
 
-        #region Test Methods
+        
         /// <summary>
         /// Test that WriteValue.Validate() accepts Matrix value when IndexRange has SubRanges assigned
         /// </summary>
@@ -196,6 +196,6 @@ namespace Opc.Ua.Core.Tests.Stack.Types
 
     }
 
-    #endregion
+    
 
 }

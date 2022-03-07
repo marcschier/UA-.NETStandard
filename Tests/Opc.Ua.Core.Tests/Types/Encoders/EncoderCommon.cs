@@ -59,7 +59,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
         protected NamespaceTable NameSpaceUris { get; private set; }
         protected StringTable ServerUris { get; private set; }
 
-        #region Test Setup
+        
         [OneTimeSetUp]
         protected void OneTimeSetUp()
         {
@@ -107,9 +107,9 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
             RandomSource = new RandomSource(randomSeed + RandomStart);
             DataGenerator = new DataGenerator(RandomSource);
         }
-        #endregion
+        
 
-        #region DataPointSources
+        
         [DatapointSource]
         public static BuiltInType[] BuiltInTypes = ((BuiltInType[])Enum.GetValues(typeof(BuiltInType)))
             .ToList().Where(b =>
@@ -121,9 +121,9 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
 
         [DatapointSource]
         public static EncodingType[] EncoderTypes = (EncodingType[])Enum.GetValues(typeof(EncodingType));
-        #endregion
+        
 
-        #region Protected Methods
+        
         /// <summary>
         /// Encode data value and return encoded string.
         /// </summary>
@@ -647,9 +647,9 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
             [EnumMember(Value = "Hundred_100")]
             Hundred = 100,
         }
-        #endregion
+        
 
-        #region Protected classes
+        
         protected class FooBarEncodeable : IEncodeable, IDisposable
         {
             private static int s_count = 0;
@@ -723,7 +723,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
 
             private bool m_resetCounter;
         }
-        #endregion
+        
     }
 
 }

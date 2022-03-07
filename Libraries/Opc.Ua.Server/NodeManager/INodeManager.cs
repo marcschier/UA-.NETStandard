@@ -29,7 +29,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Opc.Ua.Server
 {
@@ -44,11 +43,6 @@ namespace Opc.Ua.Server
         /// <param name="server">The server instance.</param>
         /// <param name="configuration">The application configuration.</param>
         INodeManager Create(IServerInternal server, ApplicationConfiguration configuration);
-
-        /// <summary>
-        /// The namespace table of the NodeManager.
-        /// </summary>
-        StringCollection NamespacesUris { get; }
     }
 
     /// <summary>
@@ -365,7 +359,7 @@ namespace Opc.Ua.Server
     /// </summary>
     public class NodeMetadata
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object with its handle and NodeId.
         /// </summary>
@@ -374,32 +368,19 @@ namespace Opc.Ua.Server
             m_handle = handle;
             m_nodeId = nodeId;
         }
-        #endregion
-
-        #region Public Properties
-        /// <summary>
-        /// The handle assigned by the NodeManager that owns the Node.
-        /// </summary>
-        public object Handle
-        {
-            get { return m_handle; }
-        }
 
         /// <summary>
         /// The canonical NodeId for the Node.
         /// </summary>
-        public NodeId NodeId
-        {
-            get { return m_nodeId; }
-        }
+        public NodeId NodeId => m_nodeId;
 
         /// <summary>
         /// The NodeClass for the Node.
         /// </summary>
         public NodeClass NodeClass
         {
-            get { return m_nodeClass; }
-            set { m_nodeClass = value; }
+            get => m_nodeClass;
+            set => m_nodeClass = value;
         }
 
         /// <summary>
@@ -407,8 +388,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public QualifiedName BrowseName
         {
-            get { return m_browseName; }
-            set { m_browseName = value; }
+            get => m_browseName;
+            set => m_browseName = value;
         }
 
         /// <summary>
@@ -416,8 +397,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public LocalizedText DisplayName
         {
-            get { return m_displayName; }
-            set { m_displayName = value; }
+            get => m_displayName;
+            set => m_displayName = value;
         }
 
         /// <summary>
@@ -425,8 +406,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public ExpandedNodeId TypeDefinition
         {
-            get { return m_typeDefinition; }
-            set { m_typeDefinition = value; }
+            get => m_typeDefinition;
+            set => m_typeDefinition = value;
         }
 
         /// <summary>
@@ -434,8 +415,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public NodeId ModellingRule
         {
-            get { return m_modellingRule; }
-            set { m_modellingRule = value; }
+            get => m_modellingRule;
+            set => m_modellingRule = value;
         }
 
         /// <summary>
@@ -443,8 +424,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public AttributeWriteMask WriteMask
         {
-            get { return m_writeMask; }
-            set { m_writeMask = value; }
+            get => m_writeMask;
+            set => m_writeMask = value;
         }
 
         /// <summary>
@@ -452,8 +433,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public byte EventNotifier
         {
-            get { return m_eventNotifier; }
-            set { m_eventNotifier = value; }
+            get => m_eventNotifier;
+            set => m_eventNotifier = value;
         }
 
         /// <summary>
@@ -461,8 +442,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public byte AccessLevel
         {
-            get { return m_accessLevel; }
-            set { m_accessLevel = value; }
+            get => m_accessLevel;
+            set => m_accessLevel = value;
         }
 
         /// <summary>
@@ -470,8 +451,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public bool Executable
         {
-            get { return m_executable; }
-            set { m_executable = value; }
+            get => m_executable;
+            set => m_executable = value;
         }
 
         /// <summary>
@@ -479,8 +460,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public NodeId DataType
         {
-            get { return m_dataType; }
-            set { m_dataType = value; }
+            get => m_dataType;
+            set => m_dataType = value;
         }
 
         /// <summary>
@@ -488,8 +469,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public int ValueRank
         {
-            get { return m_valueRank; }
-            set { m_valueRank = value; }
+            get => m_valueRank;
+            set => m_valueRank = value;
         }
 
         /// <summary>
@@ -497,8 +478,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public IList<uint> ArrayDimensions
         {
-            get { return m_arrayDimensions; }
-            set { m_arrayDimensions = value; }
+            get => m_arrayDimensions;
+            set => m_arrayDimensions = value;
         }
 
         /// <summary>
@@ -506,8 +487,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public AccessRestrictionType AccessRestrictions
         {
-            get { return m_accessRestrictions; }
-            set { m_accessRestrictions = value; }
+            get => m_accessRestrictions;
+            set => m_accessRestrictions = value;
         }
 
         /// <summary>
@@ -516,8 +497,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public AccessRestrictionType DefaultAccessRestrictions
         {
-            get { return m_defaultAccessRestrictions; }
-            set { m_defaultAccessRestrictions = value; }
+            get => m_defaultAccessRestrictions;
+            set => m_defaultAccessRestrictions = value;
         }
 
         /// <summary>
@@ -526,8 +507,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public RolePermissionTypeCollection RolePermissions
         {
-            get { return m_rolePermissions; }
-            set { m_rolePermissions = value; }
+            get => m_rolePermissions;
+            set => m_rolePermissions = value;
         }
 
         /// <summary>
@@ -536,8 +517,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public RolePermissionTypeCollection DefaultRolePermissions
         {
-            get { return m_defaultRolePermissions; }
-            set { m_defaultRolePermissions = value; }
+            get => m_defaultRolePermissions;
+            set => m_defaultRolePermissions = value;
         }
 
         /// <summary>
@@ -546,8 +527,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public RolePermissionTypeCollection UserRolePermissions
         {
-            get { return m_userRolePermissions; }
-            set { m_userRolePermissions = value; }
+            get => m_userRolePermissions;
+            set => m_userRolePermissions = value;
         }
 
         /// <summary>
@@ -556,14 +537,14 @@ namespace Opc.Ua.Server
         /// </summary>
         public RolePermissionTypeCollection DefaultUserRolePermissions
         {
-            get { return m_defaultUserRolePermissions; }
-            set { m_defaultUserRolePermissions = value; }
+            get => m_defaultUserRolePermissions;
+            set => m_defaultUserRolePermissions = value;
         }
-        #endregion
 
-        #region Private Fields
-        private object m_handle;
-        private NodeId m_nodeId;
+
+
+        private readonly object m_handle;
+        private readonly NodeId m_nodeId;
         private NodeClass m_nodeClass;
         private QualifiedName m_browseName;
         private LocalizedText m_displayName;
@@ -582,6 +563,6 @@ namespace Opc.Ua.Server
         private RolePermissionTypeCollection m_defaultRolePermissions;
         private RolePermissionTypeCollection m_userRolePermissions;
         private RolePermissionTypeCollection m_defaultUserRolePermissions;
-        #endregion
+
     }
 }

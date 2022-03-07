@@ -29,7 +29,6 @@
 
 using System;
 using System.Security.Cryptography.X509Certificates;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Opc.Ua.Security.Certificates
@@ -104,12 +103,6 @@ namespace Opc.Ua.Security.Certificates
             RevocationDate = DateTime.UtcNow;
             CrlEntryExtensions = new X509ExtensionCollection();
         }
-
-        /// <summary>
-        /// The serial number of the revoked certificate as
-        /// big endian hex string.
-        /// </summary>
-        public string SerialNumber => UserCertificate.ToHexString(true);
 
         /// <summary>
         /// The serial number of the revoked user certificate

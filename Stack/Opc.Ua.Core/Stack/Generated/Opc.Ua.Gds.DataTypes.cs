@@ -29,15 +29,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Xml;
 using System.Runtime.Serialization;
-using Opc.Ua;
 
 namespace Opc.Ua.Gds
 {
-    #region ApplicationRecordDataType Class
-    #if (!OPCUA_EXCLUDE_ApplicationRecordDataType)
+
+#if (!OPCUA_EXCLUDE_ApplicationRecordDataType)
     /// <summary>
     /// 
     /// </summary>
@@ -46,7 +43,7 @@ namespace Opc.Ua.Gds
     [DataContract(Namespace = Opc.Ua.Gds.Namespaces.OpcUaGdsXsd)]
     public partial class ApplicationRecordDataType : IEncodeable
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -77,14 +74,14 @@ namespace Opc.Ua.Gds
             m_discoveryUrls = new StringCollection();
             m_serverCapabilities = new StringCollection();
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <remarks />
         [DataMember(Name = "ApplicationId", IsRequired = false, Order = 1)]
         public NodeId ApplicationId
         {
-            get { return m_applicationId;  }
+            get { return m_applicationId; }
             set { m_applicationId = value; }
         }
 
@@ -92,7 +89,7 @@ namespace Opc.Ua.Gds
         [DataMember(Name = "ApplicationUri", IsRequired = false, Order = 2)]
         public string ApplicationUri
         {
-            get { return m_applicationUri;  }
+            get { return m_applicationUri; }
             set { m_applicationUri = value; }
         }
 
@@ -100,7 +97,7 @@ namespace Opc.Ua.Gds
         [DataMember(Name = "ApplicationType", IsRequired = false, Order = 3)]
         public ApplicationType ApplicationType
         {
-            get { return m_applicationType;  }
+            get { return m_applicationType; }
             set { m_applicationType = value; }
         }
 
@@ -130,7 +127,7 @@ namespace Opc.Ua.Gds
         [DataMember(Name = "ProductUri", IsRequired = false, Order = 5)]
         public string ProductUri
         {
-            get { return m_productUri;  }
+            get { return m_productUri; }
             set { m_productUri = value; }
         }
 
@@ -177,9 +174,9 @@ namespace Opc.Ua.Gds
                 }
             }
         }
-        #endregion
 
-        #region IEncodeable Members
+
+
         /// <summary cref="IEncodeable.TypeId" />
         public virtual ExpandedNodeId TypeId
         {
@@ -256,13 +253,13 @@ namespace Opc.Ua.Gds
             return true;
         }
 
-        #if !NET_STANDARD
+#if !NET_STANDARD
         /// <summary cref="ICloneable.Clone" />
         public virtual object Clone()
         {
             return (ApplicationRecordDataType)this.MemberwiseClone();
         }
-        #endif
+#endif
 
         /// <summary cref="Object.MemberwiseClone" />
         public new object MemberwiseClone()
@@ -279,9 +276,9 @@ namespace Opc.Ua.Gds
 
             return clone;
         }
-        #endregion
 
-        #region Private Fields
+
+
         private NodeId m_applicationId;
         private string m_applicationUri;
         private ApplicationType m_applicationType;
@@ -289,40 +286,40 @@ namespace Opc.Ua.Gds
         private string m_productUri;
         private StringCollection m_discoveryUrls;
         private StringCollection m_serverCapabilities;
-        #endregion
+
     }
 
-    #region ApplicationRecordDataTypeCollection Class
+
     /// <summary>
     /// A collection of ApplicationRecordDataType objects.
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     [CollectionDataContract(Name = "ListOfApplicationRecordDataType", Namespace = Opc.Ua.Gds.Namespaces.OpcUaGdsXsd, ItemName = "ApplicationRecordDataType")]
-    #if !NET_STANDARD
+#if !NET_STANDARD
     public partial class ApplicationRecordDataTypeCollection : List<ApplicationRecordDataType>, ICloneable
-    #else
+#else
     public partial class ApplicationRecordDataTypeCollection : List<ApplicationRecordDataType>
-    #endif
+#endif
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the collection with default values.
         /// </summary>
-        public ApplicationRecordDataTypeCollection() {}
+        public ApplicationRecordDataTypeCollection() { }
 
         /// <summary>
         /// Initializes the collection with an initial capacity.
         /// </summary>
-        public ApplicationRecordDataTypeCollection(int capacity) : base(capacity) {}
+        public ApplicationRecordDataTypeCollection(int capacity) : base(capacity) { }
 
         /// <summary>
         /// Initializes the collection with another collection.
         /// </summary>
-        public ApplicationRecordDataTypeCollection(IEnumerable<ApplicationRecordDataType> collection) : base(collection) {}
-        #endregion
+        public ApplicationRecordDataTypeCollection(IEnumerable<ApplicationRecordDataType> collection) : base(collection) { }
 
-        #region Static Operators
+
+
         /// <summary>
         /// Converts an array to a collection.
         /// </summary>
@@ -348,10 +345,10 @@ namespace Opc.Ua.Gds
 
             return null;
         }
-        #endregion
 
-        #if !NET_STANDARD
-        #region ICloneable Methods
+
+#if !NET_STANDARD
+
         /// <summary>
         /// Creates a deep copy of the collection.
         /// </summary>
@@ -359,8 +356,8 @@ namespace Opc.Ua.Gds
         {
             return (ApplicationRecordDataTypeCollection)this.MemberwiseClone();
         }
-        #endregion
-        #endif
+
+#endif
 
         /// <summary cref="Object.MemberwiseClone" />
         public new object MemberwiseClone()
@@ -375,7 +372,7 @@ namespace Opc.Ua.Gds
             return clone;
         }
     }
-    #endregion
-    #endif
-    #endregion
+
+#endif
+
 }

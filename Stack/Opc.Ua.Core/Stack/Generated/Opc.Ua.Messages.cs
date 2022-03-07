@@ -27,8 +27,6 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
-using System.Collections.Generic;
 #if (!NET_STANDARD)
 using System.Xml;
 using System.ServiceModel;
@@ -37,8 +35,8 @@ using System.Runtime.Serialization;
 
 namespace Opc.Ua
 {
-    #region FindServers Service Messages
-    #if (!OPCUA_EXCLUDE_FindServers)
+
+#if (!OPCUA_EXCLUDE_FindServers)
     public partial class FindServersRequest : IServiceRequest
     {
     }
@@ -52,17 +50,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class FindServersMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public FindServersRequest FindServersRequest;
 
         /// <summary>
@@ -80,14 +78,14 @@ namespace Opc.Ua
             this.FindServersRequest = FindServersRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return FindServersRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             FindServersResponse body = response as FindServersResponse;
@@ -100,7 +98,7 @@ namespace Opc.Ua
 
             return new FindServersResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -108,17 +106,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class FindServersResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public FindServersResponse FindServersResponse;
 
         /// <summary>
@@ -149,11 +147,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region FindServersOnNetwork Service Messages
-    #if (!OPCUA_EXCLUDE_FindServersOnNetwork)
+
+
+#if (!OPCUA_EXCLUDE_FindServersOnNetwork)
     public partial class FindServersOnNetworkRequest : IServiceRequest
     {
     }
@@ -167,17 +165,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class FindServersOnNetworkMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public FindServersOnNetworkRequest FindServersOnNetworkRequest;
 
         /// <summary>
@@ -195,14 +193,14 @@ namespace Opc.Ua
             this.FindServersOnNetworkRequest = FindServersOnNetworkRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return FindServersOnNetworkRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             FindServersOnNetworkResponse body = response as FindServersOnNetworkResponse;
@@ -215,7 +213,7 @@ namespace Opc.Ua
 
             return new FindServersOnNetworkResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -223,17 +221,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class FindServersOnNetworkResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public FindServersOnNetworkResponse FindServersOnNetworkResponse;
 
         /// <summary>
@@ -264,11 +262,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region GetEndpoints Service Messages
-    #if (!OPCUA_EXCLUDE_GetEndpoints)
+
+
+#if (!OPCUA_EXCLUDE_GetEndpoints)
     public partial class GetEndpointsRequest : IServiceRequest
     {
     }
@@ -282,17 +280,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class GetEndpointsMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public GetEndpointsRequest GetEndpointsRequest;
 
         /// <summary>
@@ -310,14 +308,14 @@ namespace Opc.Ua
             this.GetEndpointsRequest = GetEndpointsRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return GetEndpointsRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             GetEndpointsResponse body = response as GetEndpointsResponse;
@@ -330,7 +328,7 @@ namespace Opc.Ua
 
             return new GetEndpointsResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -338,17 +336,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class GetEndpointsResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public GetEndpointsResponse GetEndpointsResponse;
 
         /// <summary>
@@ -379,11 +377,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region RegisterServer Service Messages
-    #if (!OPCUA_EXCLUDE_RegisterServer)
+
+
+#if (!OPCUA_EXCLUDE_RegisterServer)
     public partial class RegisterServerRequest : IServiceRequest
     {
     }
@@ -397,17 +395,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class RegisterServerMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public RegisterServerRequest RegisterServerRequest;
 
         /// <summary>
@@ -425,14 +423,14 @@ namespace Opc.Ua
             this.RegisterServerRequest = RegisterServerRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return RegisterServerRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             RegisterServerResponse body = response as RegisterServerResponse;
@@ -445,7 +443,7 @@ namespace Opc.Ua
 
             return new RegisterServerResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -453,17 +451,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class RegisterServerResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public RegisterServerResponse RegisterServerResponse;
 
         /// <summary>
@@ -494,11 +492,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region RegisterServer2 Service Messages
-    #if (!OPCUA_EXCLUDE_RegisterServer2)
+
+
+#if (!OPCUA_EXCLUDE_RegisterServer2)
     public partial class RegisterServer2Request : IServiceRequest
     {
     }
@@ -512,17 +510,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class RegisterServer2Message : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public RegisterServer2Request RegisterServer2Request;
 
         /// <summary>
@@ -540,14 +538,14 @@ namespace Opc.Ua
             this.RegisterServer2Request = RegisterServer2Request;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return RegisterServer2Request;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             RegisterServer2Response body = response as RegisterServer2Response;
@@ -560,7 +558,7 @@ namespace Opc.Ua
 
             return new RegisterServer2ResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -568,17 +566,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class RegisterServer2ResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public RegisterServer2Response RegisterServer2Response;
 
         /// <summary>
@@ -609,11 +607,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region OpenSecureChannel Service Messages
-    #if (!OPCUA_EXCLUDE_OpenSecureChannel)
+
+
+#if (!OPCUA_EXCLUDE_OpenSecureChannel)
     public partial class OpenSecureChannelRequest : IServiceRequest
     {
     }
@@ -627,17 +625,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class OpenSecureChannelMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public OpenSecureChannelRequest OpenSecureChannelRequest;
 
         /// <summary>
@@ -655,14 +653,14 @@ namespace Opc.Ua
             this.OpenSecureChannelRequest = OpenSecureChannelRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return OpenSecureChannelRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             OpenSecureChannelResponse body = response as OpenSecureChannelResponse;
@@ -675,7 +673,7 @@ namespace Opc.Ua
 
             return new OpenSecureChannelResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -683,17 +681,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class OpenSecureChannelResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public OpenSecureChannelResponse OpenSecureChannelResponse;
 
         /// <summary>
@@ -724,11 +722,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region CloseSecureChannel Service Messages
-    #if (!OPCUA_EXCLUDE_CloseSecureChannel)
+
+
+#if (!OPCUA_EXCLUDE_CloseSecureChannel)
     public partial class CloseSecureChannelRequest : IServiceRequest
     {
     }
@@ -742,17 +740,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class CloseSecureChannelMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public CloseSecureChannelRequest CloseSecureChannelRequest;
 
         /// <summary>
@@ -770,14 +768,14 @@ namespace Opc.Ua
             this.CloseSecureChannelRequest = CloseSecureChannelRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return CloseSecureChannelRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             CloseSecureChannelResponse body = response as CloseSecureChannelResponse;
@@ -790,7 +788,7 @@ namespace Opc.Ua
 
             return new CloseSecureChannelResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -798,17 +796,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class CloseSecureChannelResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public CloseSecureChannelResponse CloseSecureChannelResponse;
 
         /// <summary>
@@ -839,11 +837,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region CreateSession Service Messages
-    #if (!OPCUA_EXCLUDE_CreateSession)
+
+
+#if (!OPCUA_EXCLUDE_CreateSession)
     public partial class CreateSessionRequest : IServiceRequest
     {
     }
@@ -857,17 +855,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class CreateSessionMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public CreateSessionRequest CreateSessionRequest;
 
         /// <summary>
@@ -885,14 +883,14 @@ namespace Opc.Ua
             this.CreateSessionRequest = CreateSessionRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return CreateSessionRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             CreateSessionResponse body = response as CreateSessionResponse;
@@ -905,7 +903,7 @@ namespace Opc.Ua
 
             return new CreateSessionResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -913,17 +911,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class CreateSessionResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public CreateSessionResponse CreateSessionResponse;
 
         /// <summary>
@@ -954,11 +952,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region ActivateSession Service Messages
-    #if (!OPCUA_EXCLUDE_ActivateSession)
+
+
+#if (!OPCUA_EXCLUDE_ActivateSession)
     public partial class ActivateSessionRequest : IServiceRequest
     {
     }
@@ -972,17 +970,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class ActivateSessionMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public ActivateSessionRequest ActivateSessionRequest;
 
         /// <summary>
@@ -1000,14 +998,14 @@ namespace Opc.Ua
             this.ActivateSessionRequest = ActivateSessionRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return ActivateSessionRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             ActivateSessionResponse body = response as ActivateSessionResponse;
@@ -1020,7 +1018,7 @@ namespace Opc.Ua
 
             return new ActivateSessionResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -1028,17 +1026,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class ActivateSessionResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public ActivateSessionResponse ActivateSessionResponse;
 
         /// <summary>
@@ -1069,11 +1067,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region CloseSession Service Messages
-    #if (!OPCUA_EXCLUDE_CloseSession)
+
+
+#if (!OPCUA_EXCLUDE_CloseSession)
     public partial class CloseSessionRequest : IServiceRequest
     {
     }
@@ -1087,17 +1085,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class CloseSessionMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public CloseSessionRequest CloseSessionRequest;
 
         /// <summary>
@@ -1115,14 +1113,14 @@ namespace Opc.Ua
             this.CloseSessionRequest = CloseSessionRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return CloseSessionRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             CloseSessionResponse body = response as CloseSessionResponse;
@@ -1135,7 +1133,7 @@ namespace Opc.Ua
 
             return new CloseSessionResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -1143,17 +1141,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class CloseSessionResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public CloseSessionResponse CloseSessionResponse;
 
         /// <summary>
@@ -1184,11 +1182,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region Cancel Service Messages
-    #if (!OPCUA_EXCLUDE_Cancel)
+
+
+#if (!OPCUA_EXCLUDE_Cancel)
     public partial class CancelRequest : IServiceRequest
     {
     }
@@ -1202,17 +1200,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class CancelMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public CancelRequest CancelRequest;
 
         /// <summary>
@@ -1230,14 +1228,14 @@ namespace Opc.Ua
             this.CancelRequest = CancelRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return CancelRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             CancelResponse body = response as CancelResponse;
@@ -1250,7 +1248,7 @@ namespace Opc.Ua
 
             return new CancelResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -1258,17 +1256,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class CancelResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public CancelResponse CancelResponse;
 
         /// <summary>
@@ -1299,11 +1297,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region AddNodes Service Messages
-    #if (!OPCUA_EXCLUDE_AddNodes)
+
+
+#if (!OPCUA_EXCLUDE_AddNodes)
     public partial class AddNodesRequest : IServiceRequest
     {
     }
@@ -1317,17 +1315,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class AddNodesMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public AddNodesRequest AddNodesRequest;
 
         /// <summary>
@@ -1345,14 +1343,14 @@ namespace Opc.Ua
             this.AddNodesRequest = AddNodesRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return AddNodesRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             AddNodesResponse body = response as AddNodesResponse;
@@ -1365,7 +1363,7 @@ namespace Opc.Ua
 
             return new AddNodesResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -1373,17 +1371,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class AddNodesResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public AddNodesResponse AddNodesResponse;
 
         /// <summary>
@@ -1414,11 +1412,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region AddReferences Service Messages
-    #if (!OPCUA_EXCLUDE_AddReferences)
+
+
+#if (!OPCUA_EXCLUDE_AddReferences)
     public partial class AddReferencesRequest : IServiceRequest
     {
     }
@@ -1432,17 +1430,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class AddReferencesMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public AddReferencesRequest AddReferencesRequest;
 
         /// <summary>
@@ -1460,14 +1458,14 @@ namespace Opc.Ua
             this.AddReferencesRequest = AddReferencesRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return AddReferencesRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             AddReferencesResponse body = response as AddReferencesResponse;
@@ -1480,7 +1478,7 @@ namespace Opc.Ua
 
             return new AddReferencesResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -1488,17 +1486,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class AddReferencesResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public AddReferencesResponse AddReferencesResponse;
 
         /// <summary>
@@ -1529,11 +1527,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region DeleteNodes Service Messages
-    #if (!OPCUA_EXCLUDE_DeleteNodes)
+
+
+#if (!OPCUA_EXCLUDE_DeleteNodes)
     public partial class DeleteNodesRequest : IServiceRequest
     {
     }
@@ -1547,17 +1545,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class DeleteNodesMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public DeleteNodesRequest DeleteNodesRequest;
 
         /// <summary>
@@ -1575,14 +1573,14 @@ namespace Opc.Ua
             this.DeleteNodesRequest = DeleteNodesRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return DeleteNodesRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             DeleteNodesResponse body = response as DeleteNodesResponse;
@@ -1595,7 +1593,7 @@ namespace Opc.Ua
 
             return new DeleteNodesResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -1603,17 +1601,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class DeleteNodesResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public DeleteNodesResponse DeleteNodesResponse;
 
         /// <summary>
@@ -1644,11 +1642,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region DeleteReferences Service Messages
-    #if (!OPCUA_EXCLUDE_DeleteReferences)
+
+
+#if (!OPCUA_EXCLUDE_DeleteReferences)
     public partial class DeleteReferencesRequest : IServiceRequest
     {
     }
@@ -1662,17 +1660,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class DeleteReferencesMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public DeleteReferencesRequest DeleteReferencesRequest;
 
         /// <summary>
@@ -1690,14 +1688,14 @@ namespace Opc.Ua
             this.DeleteReferencesRequest = DeleteReferencesRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return DeleteReferencesRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             DeleteReferencesResponse body = response as DeleteReferencesResponse;
@@ -1710,7 +1708,7 @@ namespace Opc.Ua
 
             return new DeleteReferencesResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -1718,17 +1716,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class DeleteReferencesResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public DeleteReferencesResponse DeleteReferencesResponse;
 
         /// <summary>
@@ -1759,11 +1757,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region Browse Service Messages
-    #if (!OPCUA_EXCLUDE_Browse)
+
+
+#if (!OPCUA_EXCLUDE_Browse)
     public partial class BrowseRequest : IServiceRequest
     {
     }
@@ -1777,17 +1775,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class BrowseMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public BrowseRequest BrowseRequest;
 
         /// <summary>
@@ -1805,14 +1803,14 @@ namespace Opc.Ua
             this.BrowseRequest = BrowseRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return BrowseRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             BrowseResponse body = response as BrowseResponse;
@@ -1825,7 +1823,7 @@ namespace Opc.Ua
 
             return new BrowseResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -1833,17 +1831,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class BrowseResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public BrowseResponse BrowseResponse;
 
         /// <summary>
@@ -1874,11 +1872,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region BrowseNext Service Messages
-    #if (!OPCUA_EXCLUDE_BrowseNext)
+
+
+#if (!OPCUA_EXCLUDE_BrowseNext)
     public partial class BrowseNextRequest : IServiceRequest
     {
     }
@@ -1892,17 +1890,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class BrowseNextMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public BrowseNextRequest BrowseNextRequest;
 
         /// <summary>
@@ -1920,14 +1918,14 @@ namespace Opc.Ua
             this.BrowseNextRequest = BrowseNextRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return BrowseNextRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             BrowseNextResponse body = response as BrowseNextResponse;
@@ -1940,7 +1938,7 @@ namespace Opc.Ua
 
             return new BrowseNextResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -1948,17 +1946,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class BrowseNextResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public BrowseNextResponse BrowseNextResponse;
 
         /// <summary>
@@ -1989,11 +1987,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region TranslateBrowsePathsToNodeIds Service Messages
-    #if (!OPCUA_EXCLUDE_TranslateBrowsePathsToNodeIds)
+
+
+#if (!OPCUA_EXCLUDE_TranslateBrowsePathsToNodeIds)
     public partial class TranslateBrowsePathsToNodeIdsRequest : IServiceRequest
     {
     }
@@ -2007,17 +2005,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class TranslateBrowsePathsToNodeIdsMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public TranslateBrowsePathsToNodeIdsRequest TranslateBrowsePathsToNodeIdsRequest;
 
         /// <summary>
@@ -2035,14 +2033,14 @@ namespace Opc.Ua
             this.TranslateBrowsePathsToNodeIdsRequest = TranslateBrowsePathsToNodeIdsRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return TranslateBrowsePathsToNodeIdsRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             TranslateBrowsePathsToNodeIdsResponse body = response as TranslateBrowsePathsToNodeIdsResponse;
@@ -2055,7 +2053,7 @@ namespace Opc.Ua
 
             return new TranslateBrowsePathsToNodeIdsResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -2063,17 +2061,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class TranslateBrowsePathsToNodeIdsResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public TranslateBrowsePathsToNodeIdsResponse TranslateBrowsePathsToNodeIdsResponse;
 
         /// <summary>
@@ -2104,11 +2102,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region RegisterNodes Service Messages
-    #if (!OPCUA_EXCLUDE_RegisterNodes)
+
+
+#if (!OPCUA_EXCLUDE_RegisterNodes)
     public partial class RegisterNodesRequest : IServiceRequest
     {
     }
@@ -2122,17 +2120,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class RegisterNodesMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public RegisterNodesRequest RegisterNodesRequest;
 
         /// <summary>
@@ -2150,14 +2148,14 @@ namespace Opc.Ua
             this.RegisterNodesRequest = RegisterNodesRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return RegisterNodesRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             RegisterNodesResponse body = response as RegisterNodesResponse;
@@ -2170,7 +2168,7 @@ namespace Opc.Ua
 
             return new RegisterNodesResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -2178,17 +2176,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class RegisterNodesResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public RegisterNodesResponse RegisterNodesResponse;
 
         /// <summary>
@@ -2219,11 +2217,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region UnregisterNodes Service Messages
-    #if (!OPCUA_EXCLUDE_UnregisterNodes)
+
+
+#if (!OPCUA_EXCLUDE_UnregisterNodes)
     public partial class UnregisterNodesRequest : IServiceRequest
     {
     }
@@ -2237,17 +2235,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class UnregisterNodesMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public UnregisterNodesRequest UnregisterNodesRequest;
 
         /// <summary>
@@ -2265,14 +2263,14 @@ namespace Opc.Ua
             this.UnregisterNodesRequest = UnregisterNodesRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return UnregisterNodesRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             UnregisterNodesResponse body = response as UnregisterNodesResponse;
@@ -2285,7 +2283,7 @@ namespace Opc.Ua
 
             return new UnregisterNodesResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -2293,17 +2291,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class UnregisterNodesResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public UnregisterNodesResponse UnregisterNodesResponse;
 
         /// <summary>
@@ -2334,11 +2332,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region QueryFirst Service Messages
-    #if (!OPCUA_EXCLUDE_QueryFirst)
+
+
+#if (!OPCUA_EXCLUDE_QueryFirst)
     public partial class QueryFirstRequest : IServiceRequest
     {
     }
@@ -2352,17 +2350,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class QueryFirstMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public QueryFirstRequest QueryFirstRequest;
 
         /// <summary>
@@ -2380,14 +2378,14 @@ namespace Opc.Ua
             this.QueryFirstRequest = QueryFirstRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return QueryFirstRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             QueryFirstResponse body = response as QueryFirstResponse;
@@ -2400,7 +2398,7 @@ namespace Opc.Ua
 
             return new QueryFirstResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -2408,17 +2406,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class QueryFirstResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public QueryFirstResponse QueryFirstResponse;
 
         /// <summary>
@@ -2449,11 +2447,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region QueryNext Service Messages
-    #if (!OPCUA_EXCLUDE_QueryNext)
+
+
+#if (!OPCUA_EXCLUDE_QueryNext)
     public partial class QueryNextRequest : IServiceRequest
     {
     }
@@ -2467,17 +2465,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class QueryNextMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public QueryNextRequest QueryNextRequest;
 
         /// <summary>
@@ -2495,14 +2493,14 @@ namespace Opc.Ua
             this.QueryNextRequest = QueryNextRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return QueryNextRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             QueryNextResponse body = response as QueryNextResponse;
@@ -2515,7 +2513,7 @@ namespace Opc.Ua
 
             return new QueryNextResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -2523,17 +2521,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class QueryNextResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public QueryNextResponse QueryNextResponse;
 
         /// <summary>
@@ -2564,11 +2562,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region Read Service Messages
-    #if (!OPCUA_EXCLUDE_Read)
+
+
+#if (!OPCUA_EXCLUDE_Read)
     public partial class ReadRequest : IServiceRequest
     {
     }
@@ -2582,17 +2580,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class ReadMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public ReadRequest ReadRequest;
 
         /// <summary>
@@ -2610,14 +2608,14 @@ namespace Opc.Ua
             this.ReadRequest = ReadRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return ReadRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             ReadResponse body = response as ReadResponse;
@@ -2630,7 +2628,7 @@ namespace Opc.Ua
 
             return new ReadResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -2638,17 +2636,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class ReadResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public ReadResponse ReadResponse;
 
         /// <summary>
@@ -2679,11 +2677,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region HistoryRead Service Messages
-    #if (!OPCUA_EXCLUDE_HistoryRead)
+
+
+#if (!OPCUA_EXCLUDE_HistoryRead)
     public partial class HistoryReadRequest : IServiceRequest
     {
     }
@@ -2697,17 +2695,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class HistoryReadMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public HistoryReadRequest HistoryReadRequest;
 
         /// <summary>
@@ -2725,14 +2723,14 @@ namespace Opc.Ua
             this.HistoryReadRequest = HistoryReadRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return HistoryReadRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             HistoryReadResponse body = response as HistoryReadResponse;
@@ -2745,7 +2743,7 @@ namespace Opc.Ua
 
             return new HistoryReadResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -2753,17 +2751,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class HistoryReadResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public HistoryReadResponse HistoryReadResponse;
 
         /// <summary>
@@ -2794,11 +2792,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region Write Service Messages
-    #if (!OPCUA_EXCLUDE_Write)
+
+
+#if (!OPCUA_EXCLUDE_Write)
     public partial class WriteRequest : IServiceRequest
     {
     }
@@ -2812,17 +2810,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class WriteMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public WriteRequest WriteRequest;
 
         /// <summary>
@@ -2840,14 +2838,14 @@ namespace Opc.Ua
             this.WriteRequest = WriteRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return WriteRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             WriteResponse body = response as WriteResponse;
@@ -2860,7 +2858,7 @@ namespace Opc.Ua
 
             return new WriteResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -2868,17 +2866,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class WriteResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public WriteResponse WriteResponse;
 
         /// <summary>
@@ -2909,11 +2907,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region HistoryUpdate Service Messages
-    #if (!OPCUA_EXCLUDE_HistoryUpdate)
+
+
+#if (!OPCUA_EXCLUDE_HistoryUpdate)
     public partial class HistoryUpdateRequest : IServiceRequest
     {
     }
@@ -2927,17 +2925,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class HistoryUpdateMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public HistoryUpdateRequest HistoryUpdateRequest;
 
         /// <summary>
@@ -2955,14 +2953,14 @@ namespace Opc.Ua
             this.HistoryUpdateRequest = HistoryUpdateRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return HistoryUpdateRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             HistoryUpdateResponse body = response as HistoryUpdateResponse;
@@ -2975,7 +2973,7 @@ namespace Opc.Ua
 
             return new HistoryUpdateResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -2983,17 +2981,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class HistoryUpdateResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public HistoryUpdateResponse HistoryUpdateResponse;
 
         /// <summary>
@@ -3024,11 +3022,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region Call Service Messages
-    #if (!OPCUA_EXCLUDE_Call)
+
+
+#if (!OPCUA_EXCLUDE_Call)
     public partial class CallRequest : IServiceRequest
     {
     }
@@ -3042,17 +3040,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class CallMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public CallRequest CallRequest;
 
         /// <summary>
@@ -3070,14 +3068,14 @@ namespace Opc.Ua
             this.CallRequest = CallRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return CallRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             CallResponse body = response as CallResponse;
@@ -3090,7 +3088,7 @@ namespace Opc.Ua
 
             return new CallResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -3098,17 +3096,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class CallResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public CallResponse CallResponse;
 
         /// <summary>
@@ -3139,11 +3137,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region CreateMonitoredItems Service Messages
-    #if (!OPCUA_EXCLUDE_CreateMonitoredItems)
+
+
+#if (!OPCUA_EXCLUDE_CreateMonitoredItems)
     public partial class CreateMonitoredItemsRequest : IServiceRequest
     {
     }
@@ -3157,17 +3155,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class CreateMonitoredItemsMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public CreateMonitoredItemsRequest CreateMonitoredItemsRequest;
 
         /// <summary>
@@ -3185,14 +3183,14 @@ namespace Opc.Ua
             this.CreateMonitoredItemsRequest = CreateMonitoredItemsRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return CreateMonitoredItemsRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             CreateMonitoredItemsResponse body = response as CreateMonitoredItemsResponse;
@@ -3205,7 +3203,7 @@ namespace Opc.Ua
 
             return new CreateMonitoredItemsResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -3213,17 +3211,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class CreateMonitoredItemsResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public CreateMonitoredItemsResponse CreateMonitoredItemsResponse;
 
         /// <summary>
@@ -3254,11 +3252,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region ModifyMonitoredItems Service Messages
-    #if (!OPCUA_EXCLUDE_ModifyMonitoredItems)
+
+
+#if (!OPCUA_EXCLUDE_ModifyMonitoredItems)
     public partial class ModifyMonitoredItemsRequest : IServiceRequest
     {
     }
@@ -3272,17 +3270,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class ModifyMonitoredItemsMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public ModifyMonitoredItemsRequest ModifyMonitoredItemsRequest;
 
         /// <summary>
@@ -3300,14 +3298,14 @@ namespace Opc.Ua
             this.ModifyMonitoredItemsRequest = ModifyMonitoredItemsRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return ModifyMonitoredItemsRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             ModifyMonitoredItemsResponse body = response as ModifyMonitoredItemsResponse;
@@ -3320,7 +3318,7 @@ namespace Opc.Ua
 
             return new ModifyMonitoredItemsResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -3328,17 +3326,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class ModifyMonitoredItemsResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public ModifyMonitoredItemsResponse ModifyMonitoredItemsResponse;
 
         /// <summary>
@@ -3369,11 +3367,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region SetMonitoringMode Service Messages
-    #if (!OPCUA_EXCLUDE_SetMonitoringMode)
+
+
+#if (!OPCUA_EXCLUDE_SetMonitoringMode)
     public partial class SetMonitoringModeRequest : IServiceRequest
     {
     }
@@ -3387,17 +3385,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class SetMonitoringModeMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public SetMonitoringModeRequest SetMonitoringModeRequest;
 
         /// <summary>
@@ -3415,14 +3413,14 @@ namespace Opc.Ua
             this.SetMonitoringModeRequest = SetMonitoringModeRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return SetMonitoringModeRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             SetMonitoringModeResponse body = response as SetMonitoringModeResponse;
@@ -3435,7 +3433,7 @@ namespace Opc.Ua
 
             return new SetMonitoringModeResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -3443,17 +3441,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class SetMonitoringModeResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public SetMonitoringModeResponse SetMonitoringModeResponse;
 
         /// <summary>
@@ -3484,11 +3482,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region SetTriggering Service Messages
-    #if (!OPCUA_EXCLUDE_SetTriggering)
+
+
+#if (!OPCUA_EXCLUDE_SetTriggering)
     public partial class SetTriggeringRequest : IServiceRequest
     {
     }
@@ -3502,17 +3500,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class SetTriggeringMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public SetTriggeringRequest SetTriggeringRequest;
 
         /// <summary>
@@ -3530,14 +3528,14 @@ namespace Opc.Ua
             this.SetTriggeringRequest = SetTriggeringRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return SetTriggeringRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             SetTriggeringResponse body = response as SetTriggeringResponse;
@@ -3550,7 +3548,7 @@ namespace Opc.Ua
 
             return new SetTriggeringResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -3558,17 +3556,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class SetTriggeringResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public SetTriggeringResponse SetTriggeringResponse;
 
         /// <summary>
@@ -3599,11 +3597,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region DeleteMonitoredItems Service Messages
-    #if (!OPCUA_EXCLUDE_DeleteMonitoredItems)
+
+
+#if (!OPCUA_EXCLUDE_DeleteMonitoredItems)
     public partial class DeleteMonitoredItemsRequest : IServiceRequest
     {
     }
@@ -3617,17 +3615,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class DeleteMonitoredItemsMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public DeleteMonitoredItemsRequest DeleteMonitoredItemsRequest;
 
         /// <summary>
@@ -3645,14 +3643,14 @@ namespace Opc.Ua
             this.DeleteMonitoredItemsRequest = DeleteMonitoredItemsRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return DeleteMonitoredItemsRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             DeleteMonitoredItemsResponse body = response as DeleteMonitoredItemsResponse;
@@ -3665,7 +3663,7 @@ namespace Opc.Ua
 
             return new DeleteMonitoredItemsResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -3673,17 +3671,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class DeleteMonitoredItemsResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public DeleteMonitoredItemsResponse DeleteMonitoredItemsResponse;
 
         /// <summary>
@@ -3714,11 +3712,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region CreateSubscription Service Messages
-    #if (!OPCUA_EXCLUDE_CreateSubscription)
+
+
+#if (!OPCUA_EXCLUDE_CreateSubscription)
     public partial class CreateSubscriptionRequest : IServiceRequest
     {
     }
@@ -3732,17 +3730,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class CreateSubscriptionMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public CreateSubscriptionRequest CreateSubscriptionRequest;
 
         /// <summary>
@@ -3760,14 +3758,14 @@ namespace Opc.Ua
             this.CreateSubscriptionRequest = CreateSubscriptionRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return CreateSubscriptionRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             CreateSubscriptionResponse body = response as CreateSubscriptionResponse;
@@ -3780,7 +3778,7 @@ namespace Opc.Ua
 
             return new CreateSubscriptionResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -3788,17 +3786,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class CreateSubscriptionResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public CreateSubscriptionResponse CreateSubscriptionResponse;
 
         /// <summary>
@@ -3829,11 +3827,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region ModifySubscription Service Messages
-    #if (!OPCUA_EXCLUDE_ModifySubscription)
+
+
+#if (!OPCUA_EXCLUDE_ModifySubscription)
     public partial class ModifySubscriptionRequest : IServiceRequest
     {
     }
@@ -3847,17 +3845,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class ModifySubscriptionMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public ModifySubscriptionRequest ModifySubscriptionRequest;
 
         /// <summary>
@@ -3875,14 +3873,14 @@ namespace Opc.Ua
             this.ModifySubscriptionRequest = ModifySubscriptionRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return ModifySubscriptionRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             ModifySubscriptionResponse body = response as ModifySubscriptionResponse;
@@ -3895,7 +3893,7 @@ namespace Opc.Ua
 
             return new ModifySubscriptionResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -3903,17 +3901,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class ModifySubscriptionResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public ModifySubscriptionResponse ModifySubscriptionResponse;
 
         /// <summary>
@@ -3944,11 +3942,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region SetPublishingMode Service Messages
-    #if (!OPCUA_EXCLUDE_SetPublishingMode)
+
+
+#if (!OPCUA_EXCLUDE_SetPublishingMode)
     public partial class SetPublishingModeRequest : IServiceRequest
     {
     }
@@ -3962,17 +3960,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class SetPublishingModeMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public SetPublishingModeRequest SetPublishingModeRequest;
 
         /// <summary>
@@ -3990,14 +3988,14 @@ namespace Opc.Ua
             this.SetPublishingModeRequest = SetPublishingModeRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return SetPublishingModeRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             SetPublishingModeResponse body = response as SetPublishingModeResponse;
@@ -4010,7 +4008,7 @@ namespace Opc.Ua
 
             return new SetPublishingModeResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -4018,17 +4016,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class SetPublishingModeResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public SetPublishingModeResponse SetPublishingModeResponse;
 
         /// <summary>
@@ -4059,11 +4057,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region Publish Service Messages
-    #if (!OPCUA_EXCLUDE_Publish)
+
+
+#if (!OPCUA_EXCLUDE_Publish)
     public partial class PublishRequest : IServiceRequest
     {
     }
@@ -4077,17 +4075,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class PublishMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public PublishRequest PublishRequest;
 
         /// <summary>
@@ -4105,14 +4103,14 @@ namespace Opc.Ua
             this.PublishRequest = PublishRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return PublishRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             PublishResponse body = response as PublishResponse;
@@ -4125,7 +4123,7 @@ namespace Opc.Ua
 
             return new PublishResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -4133,17 +4131,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class PublishResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public PublishResponse PublishResponse;
 
         /// <summary>
@@ -4174,11 +4172,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region Republish Service Messages
-    #if (!OPCUA_EXCLUDE_Republish)
+
+
+#if (!OPCUA_EXCLUDE_Republish)
     public partial class RepublishRequest : IServiceRequest
     {
     }
@@ -4192,17 +4190,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class RepublishMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public RepublishRequest RepublishRequest;
 
         /// <summary>
@@ -4220,14 +4218,14 @@ namespace Opc.Ua
             this.RepublishRequest = RepublishRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return RepublishRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             RepublishResponse body = response as RepublishResponse;
@@ -4240,7 +4238,7 @@ namespace Opc.Ua
 
             return new RepublishResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -4248,17 +4246,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class RepublishResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public RepublishResponse RepublishResponse;
 
         /// <summary>
@@ -4289,11 +4287,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region TransferSubscriptions Service Messages
-    #if (!OPCUA_EXCLUDE_TransferSubscriptions)
+
+
+#if (!OPCUA_EXCLUDE_TransferSubscriptions)
     public partial class TransferSubscriptionsRequest : IServiceRequest
     {
     }
@@ -4307,17 +4305,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class TransferSubscriptionsMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public TransferSubscriptionsRequest TransferSubscriptionsRequest;
 
         /// <summary>
@@ -4335,14 +4333,14 @@ namespace Opc.Ua
             this.TransferSubscriptionsRequest = TransferSubscriptionsRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return TransferSubscriptionsRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             TransferSubscriptionsResponse body = response as TransferSubscriptionsResponse;
@@ -4355,7 +4353,7 @@ namespace Opc.Ua
 
             return new TransferSubscriptionsResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -4363,17 +4361,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class TransferSubscriptionsResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public TransferSubscriptionsResponse TransferSubscriptionsResponse;
 
         /// <summary>
@@ -4404,11 +4402,11 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
 
-    #region DeleteSubscriptions Service Messages
-    #if (!OPCUA_EXCLUDE_DeleteSubscriptions)
+
+
+#if (!OPCUA_EXCLUDE_DeleteSubscriptions)
     public partial class DeleteSubscriptionsRequest : IServiceRequest
     {
     }
@@ -4422,17 +4420,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class DeleteSubscriptionsMessage : IServiceMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace = Namespaces.OpcUaXsd, Order = 0)]
-        #endif
+#endif
         public DeleteSubscriptionsRequest DeleteSubscriptionsRequest;
 
         /// <summary>
@@ -4450,14 +4448,14 @@ namespace Opc.Ua
             this.DeleteSubscriptionsRequest = DeleteSubscriptionsRequest;
         }
 
-        #region IServiceMessage Members
-        /// <summary cref="IServiceMessage.GetRequest" />
+
+        /// <summary/>
         public IServiceRequest GetRequest()
         {
             return DeleteSubscriptionsRequest;
         }
 
-        /// <summary cref="IServiceMessage.CreateResponse" />
+        /// <summary/>
         public object CreateResponse(IServiceResponse response)
         {
             DeleteSubscriptionsResponse body = response as DeleteSubscriptionsResponse;
@@ -4470,7 +4468,7 @@ namespace Opc.Ua
 
             return new DeleteSubscriptionsResponseMessage(body);
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -4478,17 +4476,17 @@ namespace Opc.Ua
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [MessageContract(IsWrapped=false)]
-    #endif
+#endif
     public class DeleteSubscriptionsResponseMessage
     {
         /// <summary>
         /// The body of the message.
         /// </summary>
-        #if (!NET_STANDARD)
+#if (!NET_STANDARD)
         [MessageBodyMember(Namespace=Namespaces.OpcUaXsd, Order=0)]
-        #endif
+#endif
         public DeleteSubscriptionsResponse DeleteSubscriptionsResponse;
 
         /// <summary>
@@ -4519,6 +4517,6 @@ namespace Opc.Ua
             }
         }
     }
-    #endif
-    #endregion
+#endif
+
 }

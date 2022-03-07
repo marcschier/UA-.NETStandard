@@ -39,7 +39,7 @@ namespace Opc.Ua.Bindings
     /// </summary>
     public class TcpTransportListener : ITransportListener, ITcpChannelListener
     {
-        #region IDisposable Members
+
         /// <summary>
         /// Frees any unmanaged resources.
         /// </summary>
@@ -72,7 +72,7 @@ namespace Opc.Ua.Bindings
 
                     if (m_channels != null)
                     {
-                        foreach (var channel in m_channels.Values)
+                        foreach (TcpListenerChannel channel in m_channels.Values)
                         {
                             Utils.SilentDispose(channel);
                         }
@@ -81,9 +81,9 @@ namespace Opc.Ua.Bindings
                 }
             }
         }
-        #endregion
 
-        #region ITransportListener Members
+
+
         /// <summary>
         /// The URI scheme handled by the listener.
         /// </summary>
@@ -136,7 +136,7 @@ namespace Opc.Ua.Bindings
             m_serverCertificate = settings.ServerCertificate;
             m_serverCertificateChain = settings.ServerCertificateChain;
 
-            m_bufferManager = new BufferManager("Server", (int)Int32.MaxValue, m_quotas.MaxBufferSize);
+            m_bufferManager = new BufferManager("Server", int.MaxValue, m_quotas.MaxBufferSize);
             m_channels = new Dictionary<uint, TcpListenerChannel>();
             m_reverseConnectListener = settings.ReverseConnectListener;
 
@@ -155,9 +155,9 @@ namespace Opc.Ua.Bindings
         {
             Stop();
         }
-        #endregion
 
-        #region ITcpChannelListener
+
+
         /// <summary>
         /// Gets the URL for the listener's endpoint.
         /// </summary>
@@ -221,7 +221,7 @@ namespace Opc.Ua.Bindings
         /// <remarks/>
         public void CreateReverseConnection(Uri url, int timeout)
         {
-            TcpServerChannel channel = new TcpServerChannel(
+            var channel = new TcpServerChannel(
                 m_listenerId,
                 this,
                 m_bufferManager,
@@ -267,9 +267,9 @@ namespace Opc.Ua.Bindings
                 ConnectionStatusChanged?.Invoke(this, new ConnectionStatusEventArgs(channel.ReverseConnectionUrl, new ServiceResult(e), true));
             }
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Starts listening at the specified port.
         /// </summary>
@@ -280,7 +280,7 @@ namespace Opc.Ua.Bindings
                 // ensure a valid port.
                 int port = m_uri.Port;
 
-                if (port <= 0 || port > UInt16.MaxValue)
+                if (port <= 0 || port > ushort.MaxValue)
                 {
                     port = Utils.UaTcpDefaultPort;
                 }
@@ -297,17 +297,17 @@ namespace Opc.Ua.Bindings
                 {
                     ipAddress = IPAddress.Parse(m_uri.Host);
                 }
-             
+
                 // create IPv4 or IPv6 socket.
                 try
                 {
-                    IPEndPoint endpoint = new IPEndPoint(ipAddress, port);
+                    var endpoint = new IPEndPoint(ipAddress, port);
                     m_listeningSocket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                    SocketAsyncEventArgs args = new SocketAsyncEventArgs();
+                    var args = new SocketAsyncEventArgs();
                     args.Completed += OnAccept;
                     args.UserToken = m_listeningSocket;
                     m_listeningSocket.Bind(endpoint);
-                    m_listeningSocket.Listen(Int32.MaxValue);
+                    m_listeningSocket.Listen(int.MaxValue);
                     if (!m_listeningSocket.AcceptAsync(args))
                     {
                         OnAccept(null, args);
@@ -329,13 +329,13 @@ namespace Opc.Ua.Bindings
                     // create IPv6 socket
                     try
                     {
-                        IPEndPoint endpointIPv6 = new IPEndPoint(IPAddress.IPv6Any, port);
+                        var endpointIPv6 = new IPEndPoint(IPAddress.IPv6Any, port);
                         m_listeningSocketIPv6 = new Socket(endpointIPv6.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                        SocketAsyncEventArgs args = new SocketAsyncEventArgs();
+                        var args = new SocketAsyncEventArgs();
                         args.Completed += OnAccept;
                         args.UserToken = m_listeningSocketIPv6;
                         m_listeningSocketIPv6.Bind(endpointIPv6);
-                        m_listeningSocketIPv6.Listen(Int32.MaxValue);
+                        m_listeningSocketIPv6.Listen(int.MaxValue);
                         if (!m_listeningSocketIPv6.AcceptAsync(args))
                         {
                             OnAccept(null, args);
@@ -435,7 +435,7 @@ namespace Opc.Ua.Bindings
             m_quotas.CertificateValidator = validator;
             m_serverCertificate = serverCertificate;
             m_serverCertificateChain = serverCertificateChain;
-            foreach (var description in m_descriptions)
+            foreach (EndpointDescription description in m_descriptions)
             {
                 if (description.ServerCertificate != null)
                 {
@@ -443,9 +443,9 @@ namespace Opc.Ua.Bindings
                 }
             }
         }
-        #endregion
 
-        #region Socket Event Handler
+
+
         /// <summary>
         /// Handles a new connection.
         /// </summary>
@@ -458,9 +458,7 @@ namespace Opc.Ua.Bindings
                 repeatAccept = false;
                 lock (m_lock)
                 {
-                    Socket listeningSocket = e.UserToken as Socket;
-
-                    if (listeningSocket == null)
+                    if (!(e.UserToken is Socket listeningSocket))
                     {
                         Utils.LogError("OnAccept: Listensocket was null.");
                         e.Dispose();
@@ -538,9 +536,9 @@ namespace Opc.Ua.Bindings
                 }
             } while (repeatAccept);
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Handles requests arriving from a channel.
         /// </summary>
@@ -572,7 +570,7 @@ namespace Opc.Ua.Bindings
 
                 if (m_callback != null)
                 {
-                    TcpServerChannel channel = (TcpServerChannel)args[0];
+                    var channel = (TcpServerChannel)args[0];
                     IServiceResponse response = m_callback.EndProcessRequest(result);
                     channel.SendResponse((uint)args[1], response);
                 }
@@ -601,43 +599,9 @@ namespace Opc.Ua.Bindings
             }
         }
 
-        /// <summary>
-        /// Sets the URI for the listener.
-        /// </summary>
-        private void SetUri(Uri baseAddress, string relativeAddress)
-        {
-            if (baseAddress == null) throw new ArgumentNullException(nameof(baseAddress));
 
-            // validate uri.
-            if (!baseAddress.IsAbsoluteUri)
-            {
-                throw new ArgumentException("Base address must be an absolute URI.", nameof(baseAddress));
-            }
 
-            if (!String.Equals(baseAddress.Scheme, Utils.UriSchemeOpcTcp, StringComparison.OrdinalIgnoreCase))
-            {
-                throw new ArgumentException($"Invalid URI scheme: {baseAddress.Scheme}.", nameof(baseAddress));
-            }
-
-            m_uri = baseAddress;
-
-            // append the relative path to the base address.
-            if (!String.IsNullOrEmpty(relativeAddress))
-            {
-                if (!baseAddress.AbsolutePath.EndsWith("/", StringComparison.Ordinal))
-                {
-                    UriBuilder uriBuilder = new UriBuilder(baseAddress);
-                    uriBuilder.Path = uriBuilder.Path + "/";
-                    baseAddress = uriBuilder.Uri;
-                }
-
-                m_uri = new Uri(baseAddress, relativeAddress);
-            }
-        }
-        #endregion
-
-        #region Private Fields
-        private object m_lock = new object();
+        private readonly object m_lock = new object();
         private string m_listenerId;
         private Uri m_uri;
         private EndpointDescriptionCollection m_descriptions;
@@ -651,7 +615,7 @@ namespace Opc.Ua.Bindings
         private Dictionary<uint, TcpListenerChannel> m_channels;
         private ITransportListenerCallback m_callback;
         private bool m_reverseConnectListener;
-        #endregion
+
     }
 
     /// <summary>

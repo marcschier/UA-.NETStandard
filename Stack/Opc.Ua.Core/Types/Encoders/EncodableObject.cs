@@ -23,7 +23,7 @@ namespace Opc.Ua
     [DataContract(Name = "EncodeableObject", Namespace = Namespaces.OpcUaXsd)]
     public abstract class EncodeableObject : IEncodeable
     {
-        #region IEncodeable Methods
+
         /// <inheritdoc/>
         public abstract ExpandedNodeId TypeId { get; }
 
@@ -46,9 +46,9 @@ namespace Opc.Ua
         {
             throw new NotImplementedException("Subclass must implement this method.");
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Applies the data encoding to the value.
         /// </summary>
@@ -76,14 +76,13 @@ namespace Opc.Ua
             try
             {
                 // check for array of encodeables.
-                IList<IEncodeable> encodeables = value as IList<IEncodeable>;
+                var encodeables = value as IList<IEncodeable>;
 
                 if (encodeables == null)
                 {
                     // check for array of extension objects.
-                    IList<ExtensionObject> extensions = value as IList<ExtensionObject>;
 
-                    if (extensions != null)
+                    if (value is IList<ExtensionObject> extensions)
                     {
                         // convert extension objects to encodeables.
                         encodeables = new IEncodeable[extensions.Count];
@@ -96,9 +95,8 @@ namespace Opc.Ua
                                 continue;
                             }
 
-                            IEncodeable element = extensions[ii].Body as IEncodeable;
 
-                            if (element == null)
+                            if (!(extensions[ii].Body is IEncodeable element))
                             {
                                 return StatusCodes.BadTypeMismatch;
                             }
@@ -111,7 +109,7 @@ namespace Opc.Ua
                 // apply data encoding to the array.
                 if (encodeables != null)
                 {
-                    ExtensionObject[] extensions = new ExtensionObject[encodeables.Count];
+                    var extensions = new ExtensionObject[encodeables.Count];
 
                     for (int ii = 0; ii < extensions.Length; ii++)
                     {
@@ -123,13 +121,11 @@ namespace Opc.Ua
                 }
 
                 // check for scalar value.
-                IEncodeable encodeable = value as IEncodeable;
+                var encodeable = value as IEncodeable;
 
                 if (encodeable == null)
                 {
-                    ExtensionObject extension = value as ExtensionObject;
-
-                    if (extension == null)
+                    if (!(value is ExtensionObject extension))
                     {
                         return StatusCodes.BadDataEncodingUnsupported;
                     }
@@ -175,13 +171,13 @@ namespace Opc.Ua
         public static XmlElement EncodeXml(IEncodeable encodeable, IServiceMessageContext context)
         {
             // create encoder.
-            XmlEncoder encoder = new XmlEncoder(context);
+            var encoder = new XmlEncoder(context);
 
             // write body.
             encoder.WriteExtensionObjectBody(encodeable);
 
             // create document from encoder.
-            XmlDocument document = new XmlDocument();
+            var document = new XmlDocument();
             document.LoadInnerXml(encoder.Close());
 
             // return root element.
@@ -193,18 +189,9 @@ namespace Opc.Ua
         /// </summary>
         public static byte[] EncodeBinary(IEncodeable encodeable, IServiceMessageContext context)
         {
-            BinaryEncoder encoder = new BinaryEncoder(context);
+            var encoder = new BinaryEncoder(context);
             encoder.WriteEncodeable(null, encodeable, null);
             return encoder.CloseAndReturnBuffer();
-        }
-        #endregion
-
-        /// <summary>
-        /// Returns a deep copy of an encodeable object.
-        /// </summary>
-        public new object MemberwiseClone()
-        {
-            return base.MemberwiseClone();
         }
     }
 }

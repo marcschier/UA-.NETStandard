@@ -27,7 +27,6 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
@@ -39,7 +38,7 @@ namespace Opc.Ua.Client.ComplexTypes
     /// </summary>
     public static class DataTypeDefinitionExtension
     {
-        #region Public Extensions
+
         /// <summary>
         /// Convert a binary schema type definition to a
         /// StructureDefinition.
@@ -75,7 +74,7 @@ namespace Opc.Ua.Client.ComplexTypes
             bool hasBitField = false;
             bool isUnionType = false;
 
-            foreach (var field in structuredType.Field)
+            foreach (Schema.Binary.FieldType field in structuredType.Field)
             {
                 // check for yet unsupported properties
                 if (field.IsLengthInBytes ||
@@ -128,15 +127,15 @@ namespace Opc.Ua.Client.ComplexTypes
             }
 
             byte switchFieldBitPosition = 0;
-            Int32 dataTypeFieldPosition = 0;
+            int dataTypeFieldPosition = 0;
             var switchFieldBits = new Dictionary<string, byte>();
             // convert fields
-            foreach (var field in structuredType.Field)
+            foreach (Schema.Binary.FieldType field in structuredType.Field)
             {
                 // consume optional bits
                 if (field.TypeName.IsXmlBitType())
                 {
-                    var count = structureDefinition.Fields.Count;
+                    int count = structureDefinition.Fields.Count;
                     if (count == 0 &&
                         switchFieldBitPosition < 32)
                     {
@@ -173,7 +172,7 @@ namespace Opc.Ua.Client.ComplexTypes
                 if (field.LengthField != null)
                 {
                     // handle array length
-                    var lastField = structureDefinition.Fields.Last();
+                    StructureField lastField = structureDefinition.Fields.Last();
                     if (lastField.Name != field.LengthField)
                     {
                         throw new DataTypeNotSupportedException(
@@ -257,7 +256,7 @@ namespace Opc.Ua.Client.ComplexTypes
                     case "Variant": return DataTypeIds.BaseDataType;
                     case "ExtensionObject": return DataTypeIds.Structure;
                 }
-                var internalField = typeof(DataTypeIds).GetField(typeName.Name);
+                System.Reflection.FieldInfo internalField = typeof(DataTypeIds).GetField(typeName.Name);
                 if (internalField == null)
                 {
                     throw new DataTypeNotFoundException(
@@ -276,6 +275,6 @@ namespace Opc.Ua.Client.ComplexTypes
                 return referenceId;
             }
         }
-        #endregion Public Extensions
+
     }
 }//namespace

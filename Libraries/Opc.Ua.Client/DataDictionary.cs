@@ -43,7 +43,7 @@ namespace Opc.Ua.Client
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1711:IdentifiersShouldNotHaveIncorrectSuffix"), DataContract(Namespace = Namespaces.OpcUaXsd)]
     public class DataDictionary
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -66,9 +66,9 @@ namespace Opc.Ua.Client
             DictionaryId = null;
             Name = null;
         }
-        #endregion
 
-        #region Public Interface
+
+
         /// <summary>
         /// The node id for the dictionary.
         /// </summary>
@@ -108,7 +108,7 @@ namespace Opc.Ua.Client
             {
                 throw new ArgumentNullException(nameof(dictionary));
             }
-            NodeId dictionaryId = ExpandedNodeId.ToNodeId(dictionary.NodeId, m_session.NamespaceUris);
+            var dictionaryId = ExpandedNodeId.ToNodeId(dictionary.NodeId, m_session.NamespaceUris);
             return Load(dictionaryId, dictionary.ToString());
         }
 
@@ -146,47 +146,19 @@ namespace Opc.Ua.Client
             Name = name;
         }
 
-        /// <summary>
-        /// Returns true if the dictionary contains the data type description;
-        /// </summary>
-        public bool Contains(NodeId descriptionId)
-        {
-            return DataTypes.ContainsKey(descriptionId);
-        }
 
-        /// <summary>
-        /// Returns the schema for the specified type (returns the entire dictionary if null).
-        /// </summary>
-        public string GetSchema(NodeId descriptionId)
-        {
-            ReferenceDescription description = null;
 
-            if (descriptionId != null)
-            {
-                if (!DataTypes.TryGetValue(descriptionId, out description))
-                {
-                    return null;
-                }
-
-                return m_validator.GetSchema(description.BrowseName.Name);
-            }
-
-            return m_validator.GetSchema(null);
-        }
-        #endregion
-
-        #region Private Members
         /// <summary>
         /// Retrieves the type system for the dictionary.
         /// </summary>
         private void GetTypeSystem(NodeId dictionaryId)
         {
-            Browser browser = new Browser(m_session);
-
-            browser.BrowseDirection = BrowseDirection.Inverse;
-            browser.ReferenceTypeId = ReferenceTypeIds.HasComponent;
-            browser.IncludeSubtypes = false;
-            browser.NodeClassMask = 0;
+            var browser = new Browser(m_session) {
+                BrowseDirection = BrowseDirection.Inverse,
+                ReferenceTypeId = ReferenceTypeIds.HasComponent,
+                IncludeSubtypes = false,
+                NodeClassMask = 0
+            };
 
             ReferenceDescriptionCollection references = browser.Browse(dictionaryId);
 
@@ -207,24 +179,24 @@ namespace Opc.Ua.Client
         /// </remarks>
         private void ReadDataTypes(NodeId dictionaryId)
         {
-            Browser browser = new Browser(m_session);
-
-            browser.BrowseDirection = BrowseDirection.Forward;
-            browser.ReferenceTypeId = ReferenceTypeIds.HasComponent;
-            browser.IncludeSubtypes = false;
-            browser.NodeClassMask = 0;
+            var browser = new Browser(m_session) {
+                BrowseDirection = BrowseDirection.Forward,
+                ReferenceTypeId = ReferenceTypeIds.HasComponent,
+                IncludeSubtypes = false,
+                NodeClassMask = 0
+            };
 
             ReferenceDescriptionCollection references = browser.Browse(dictionaryId);
 
             foreach (ReferenceDescription reference in references)
             {
-                NodeId datatypeId = ExpandedNodeId.ToNodeId(reference.NodeId, m_session.NamespaceUris);
+                var datatypeId = ExpandedNodeId.ToNodeId(reference.NodeId, m_session.NamespaceUris);
 
                 if (datatypeId != null)
                 {
                     // read the value to get the name that is used in the dictionary
-                    var value = m_session.ReadValue(datatypeId);
-                    var dictName = (String)value.Value;
+                    DataValue value = m_session.ReadValue(datatypeId);
+                    string dictName = (string)value.Value;
                     // replace the BrowseName with type name used in the dictionary
                     reference.BrowseName = new QualifiedName(dictName, datatypeId.NamespaceIndex);
                     DataTypes[datatypeId] = reference;
@@ -238,15 +210,16 @@ namespace Opc.Ua.Client
         internal byte[] ReadDictionary(NodeId dictionaryId)
         {
             // create item to read.
-            ReadValueId itemToRead = new ReadValueId();
+            var itemToRead = new ReadValueId {
+                NodeId = dictionaryId,
+                AttributeId = Attributes.Value,
+                IndexRange = null,
+                DataEncoding = null
+            };
 
-            itemToRead.NodeId = dictionaryId;
-            itemToRead.AttributeId = Attributes.Value;
-            itemToRead.IndexRange = null;
-            itemToRead.DataEncoding = null;
-
-            ReadValueIdCollection itemsToRead = new ReadValueIdCollection();
-            itemsToRead.Add(itemToRead);
+            var itemsToRead = new ReadValueIdCollection {
+                itemToRead
+            };
 
             // read value.
             DataValueCollection values;
@@ -281,11 +254,11 @@ namespace Opc.Ua.Client
         /// <param name="throwOnError">Throw if an error occurred.</param>
         internal async Task Validate(byte[] dictionary, bool throwOnError = false)
         {
-            MemoryStream istrm = new MemoryStream(dictionary);
+            var istrm = new MemoryStream(dictionary);
 
             if (TypeSystemId == Objects.XmlSchema_TypeSystem)
             {
-                Schema.Xml.XmlSchemaValidator validator = new Schema.Xml.XmlSchemaValidator();
+                var validator = new Schema.Xml.XmlSchemaValidator();
 
                 try
                 {
@@ -305,7 +278,7 @@ namespace Opc.Ua.Client
 
             if (TypeSystemId == Objects.OPCBinarySchema_TypeSystem)
             {
-                Schema.Binary.BinarySchemaValidator validator = new Schema.Binary.BinarySchemaValidator();
+                var validator = new Schema.Binary.BinarySchemaValidator();
 
                 try
                 {
@@ -324,11 +297,11 @@ namespace Opc.Ua.Client
                 TypeDictionary = validator.Dictionary;
             }
         }
-        #endregion
 
-        #region Private Members
+
+
         private Session m_session;
         private SchemaValidator m_validator;
-        #endregion
+
     }
 }

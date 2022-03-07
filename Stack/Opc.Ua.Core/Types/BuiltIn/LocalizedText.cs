@@ -61,7 +61,7 @@ namespace Opc.Ua
     [DataContract(Namespace = Namespaces.OpcUaXsd)]
     public partial class LocalizedText : IFormattable
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object with the default values.
         /// </summary>
@@ -89,7 +89,10 @@ namespace Opc.Ua
         /// </summary>
         public LocalizedText(TranslationInfo translationInfo)
         {
-            if (translationInfo == null) throw new ArgumentNullException(nameof(translationInfo));
+            if (translationInfo == null)
+            {
+                throw new ArgumentNullException(nameof(translationInfo));
+            }
 
             m_locale = translationInfo.Locale;
             m_text = translationInfo.Text;
@@ -102,7 +105,7 @@ namespace Opc.Ua
 
             CultureInfo culture = CultureInfo.InvariantCulture;
 
-            if (!String.IsNullOrEmpty(m_locale))
+            if (!string.IsNullOrEmpty(m_locale))
             {
                 try
                 {
@@ -116,7 +119,7 @@ namespace Opc.Ua
 
             try
             {
-                m_text = String.Format(culture, m_translationInfo.Text, m_translationInfo.Args);
+                m_text = string.Format(culture, m_translationInfo.Text, m_translationInfo.Args);
             }
             catch
             {
@@ -134,7 +137,10 @@ namespace Opc.Ua
         /// <exception cref="ArgumentNullException">Thrown when the value is null</exception>
         public LocalizedText(LocalizedText value)
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             m_locale = value.m_locale;
             m_text = value.m_text;
@@ -178,14 +184,14 @@ namespace Opc.Ua
             m_locale = locale;
             m_text = text;
 
-            if (!String.IsNullOrEmpty(key))
+            if (!string.IsNullOrEmpty(key))
             {
                 m_translationInfo = new TranslationInfo(key, locale, text);
             }
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The locale used to create the text.
         /// </summary>
@@ -198,8 +204,8 @@ namespace Opc.Ua
         [DataMember(Name = "Locale", Order = 1)]
         internal string XmlEncodedLocale
         {
-            get { return m_locale; }
-            set { m_locale = value; }
+            get => m_locale;
+            set => m_locale = value;
         }
 
         /// <summary>
@@ -214,8 +220,8 @@ namespace Opc.Ua
         [DataMember(Name = "Text", Order = 2)]
         internal string XmlEncodedText
         {
-            get { return m_text; }
-            set { m_text = value; }
+            get => m_text;
+            set => m_text = value;
         }
 
         /// <summary>
@@ -253,12 +259,12 @@ namespace Opc.Ua
         /// </summary>
         public TranslationInfo TranslationInfo
         {
-            get { return m_translationInfo; }
-            set { m_translationInfo = value; }
+            get => m_translationInfo;
+            set => m_translationInfo = value;
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Returns true if the objects are equal.
         /// </summary>
@@ -273,7 +279,7 @@ namespace Opc.Ua
                 return true;
             }
 
-            LocalizedText ltext = obj as LocalizedText;
+            var ltext = obj as LocalizedText;
 
             if (ltext == null)
             {
@@ -282,7 +288,7 @@ namespace Opc.Ua
 
             if (ltext.m_locale != m_locale)
             {
-                if (!(String.IsNullOrEmpty(ltext.m_locale) && String.IsNullOrEmpty(m_locale)))
+                if (!(string.IsNullOrEmpty(ltext.m_locale) && string.IsNullOrEmpty(m_locale)))
                 {
                     return false;
                 }
@@ -353,9 +359,9 @@ namespace Opc.Ua
         {
             return ToString(null, null);
         }
-        #endregion
 
-        #region IFormattable Members
+
+
         /// <summary>
         /// Returns the string representation of the object.
         /// </summary>
@@ -369,14 +375,14 @@ namespace Opc.Ua
         {
             if (format == null)
             {
-                return String.Format(formatProvider, "{0}", this.m_text);
+                return string.Format(formatProvider, "{0}", m_text);
             }
 
             throw new FormatException(Utils.Format("Invalid format string: '{0}'.", format));
         }
-        #endregion
 
-        #region ICloneable Members
+
+
         /// <summary>
         /// Makes a deep copy of the object.
         /// </summary>
@@ -388,9 +394,9 @@ namespace Opc.Ua
             // this object cannot be altered after it is created so no new allocation is necessary.
             return this;
         }
-        #endregion
 
-        #region Static Methods
+
+
         /// <summary>
         /// Converts a string to a localized text.
         /// </summary>
@@ -432,18 +438,18 @@ namespace Opc.Ua
                 return true;
             }
 
-            return String.IsNullOrEmpty(value.m_text);
+            return string.IsNullOrEmpty(value.m_text);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private string m_locale;
         private string m_text;
         private TranslationInfo m_translationInfo;
-        #endregion
+
     }
 
-    #region LocalizedTextCollection Class
+
     /// <summary>
     /// A collection of LocalizedText objects.
     /// </summary>
@@ -516,7 +522,7 @@ namespace Opc.Ua
         /// </remarks>
         public new object MemberwiseClone()
         {
-            LocalizedTextCollection clone = new LocalizedTextCollection(this.Count);
+            var clone = new LocalizedTextCollection(Count);
 
             foreach (LocalizedText element in this)
             {
@@ -525,6 +531,6 @@ namespace Opc.Ua
 
             return clone;
         }
-        #endregion
+
     }//class
 }//namespace

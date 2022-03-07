@@ -29,7 +29,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Opc.Ua.Server
 {
@@ -38,7 +37,7 @@ namespace Opc.Ua.Server
     /// </summary>
     public class AverageAggregateCalculator : AggregateCalculator
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the aggregate calculator.
         /// </summary>
@@ -55,14 +54,14 @@ namespace Opc.Ua.Server
             double processingInterval,
             bool stepped,
             AggregateConfiguration configuration)
-        : 
+        :
             base(aggregateId, startTime, endTime, processingInterval, stepped, configuration)
         {
             SetPartialBit = aggregateId != Opc.Ua.ObjectIds.AggregateFunction_Average;
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Computes the value for the timeslice.
         /// </summary>
@@ -103,9 +102,9 @@ namespace Opc.Ua.Server
 
             return base.ComputeValue(slice);
         }
-        #endregion
 
-        #region Protected Methods
+
+
         /// <summary>
         /// Calculates the RegSlope, RegConst and RegStdDev aggregates for the timeslice.
         /// </summary>
@@ -148,13 +147,14 @@ namespace Opc.Ua.Server
             }
 
             // select the result.
-            double result = total/count;
+            double result = total / count;
 
             // set the timestamp and status.
-            DataValue value = new DataValue();
-            value.WrappedValue = new Variant(result, TypeInfo.Scalars.Double);
-            value.SourceTimestamp = GetTimestamp(slice);
-            value.ServerTimestamp = GetTimestamp(slice);
+            var value = new DataValue {
+                WrappedValue = new Variant(result, TypeInfo.Scalars.Double),
+                SourceTimestamp = GetTimestamp(slice),
+                ServerTimestamp = GetTimestamp(slice)
+            };
             value.StatusCode = value.StatusCode.SetAggregateBits(AggregateBits.Calculated);
             value.StatusCode = GetValueBasedStatusCode(slice, values, value.StatusCode);
 
@@ -194,7 +194,7 @@ namespace Opc.Ua.Server
 
             for (int ii = 0; ii < regions.Count; ii++)
             {
-                double duration = regions[ii].Duration/1000.0;
+                double duration = regions[ii].Duration / 1000.0;
 
                 if (StatusCode.IsNotBad(regions[ii].StatusCode))
                 {
@@ -219,15 +219,16 @@ namespace Opc.Ua.Server
 
             switch (valueType)
             {
-                case 1: { result = total/totalDuration; break; }
+                case 1: { result = total / totalDuration; break; }
                 case 2: { result = total; break; }
             }
 
             // set the timestamp and status.
-            DataValue value = new DataValue();
-            value.WrappedValue = new Variant(result, TypeInfo.Scalars.Double);
-            value.SourceTimestamp = GetTimestamp(slice);
-            value.ServerTimestamp = GetTimestamp(slice);
+            var value = new DataValue {
+                WrappedValue = new Variant(result, TypeInfo.Scalars.Double),
+                SourceTimestamp = GetTimestamp(slice),
+                ServerTimestamp = GetTimestamp(slice)
+            };
 
             if (useSimpleBounds)
             {
@@ -248,6 +249,6 @@ namespace Opc.Ua.Server
             // return result.
             return value;
         }
-        #endregion
+
     }
 }

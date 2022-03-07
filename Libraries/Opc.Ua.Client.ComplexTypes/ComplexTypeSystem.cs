@@ -51,7 +51,7 @@ namespace Opc.Ua.Client.ComplexTypes
     /// </remarks>
     public class ComplexTypeSystem
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type system with a session to load the custom types.
         /// </summary>
@@ -78,9 +78,9 @@ namespace Opc.Ua.Client.ComplexTypes
             m_session = session;
             m_complexTypeBuilderFactory = complexTypeBuilderFactory;
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// Load a single custom type with subtypes.
         /// </summary>
@@ -237,9 +237,9 @@ namespace Opc.Ua.Client.ComplexTypes
         {
             return m_complexTypeBuilderFactory.GetTypes();
         }
-        #endregion
 
-        #region Internal Properties
+
+
         /// <summary>
         /// Disable the use of DataTypeDefinition to create the complex type definition.
         /// </summary>
@@ -249,9 +249,9 @@ namespace Opc.Ua.Client.ComplexTypes
         /// Disable the use of DataType Dictinaries to create the complex type definition.
         /// </summary>
         internal bool DisableDataTypeDictionary { get; set; } = false;
-        #endregion
 
-        #region Private Members
+
+
         /// <summary>
         /// Load listed custom types from dictionaries
         /// into the sessions system type factory.
@@ -1252,12 +1252,12 @@ namespace Opc.Ua.Client.ComplexTypes
                 }
             }
         }
-        #endregion
 
-        #region Private Fields
+
+
         private Session m_session;
         private IComplexTypeFactory m_complexTypeBuilderFactory;
         private readonly string[] m_supportedEncodings = new string[] { BrowseNames.DefaultBinary, BrowseNames.DefaultXml, BrowseNames.DefaultJson };
-        #endregion
+
     }
 }//namespace

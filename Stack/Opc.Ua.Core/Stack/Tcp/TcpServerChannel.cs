@@ -26,7 +26,7 @@ namespace Opc.Ua.Bindings
     /// </summary>
     public class TcpServerChannel : TcpListenerChannel
     {
-        #region Constructors
+
         /// <summary>
         /// Attaches the object to an existing socket.
         /// </summary>
@@ -57,9 +57,9 @@ namespace Opc.Ua.Bindings
             base(contextId, listener, bufferManager, quotas, serverCertificate, serverCertificateChain, endpoints)
         {
         }
-        #endregion
 
-        #region IDisposable Members
+
+
         /// <summary>
         /// An overrideable version of the Dispose.
         /// </summary>
@@ -68,9 +68,9 @@ namespace Opc.Ua.Bindings
         {
             base.Dispose(disposing);
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// The channel name used in trace output.
         /// </summary>
@@ -118,9 +118,7 @@ namespace Opc.Ua.Bindings
         /// </summary>
         public void EndReverseConnect(IAsyncResult result)
         {
-            var ar = result as ReverseConnectAsyncResult;
-
-            if (ar == null)
+            if (!(result is ReverseConnectAsyncResult ar))
             {
                 throw new ArgumentException("EndReverseConnect is called with invalid IAsyncResult.", nameof(result));
             }
@@ -158,7 +156,7 @@ namespace Opc.Ua.Bindings
                 ar.Socket.ReadNextMessage();
 
                 // send reverse hello message.
-                BinaryEncoder encoder = new BinaryEncoder(buffer, 0, SendBufferSize, Quotas.MessageContext);
+                var encoder = new BinaryEncoder(buffer, 0, SendBufferSize, Quotas.MessageContext);
                 encoder.WriteUInt32(null, TcpMessageType.ReverseHello);
                 encoder.WriteUInt32(null, 0);
                 encoder.WriteString(null, EndpointDescription.Server.ApplicationUri);
@@ -198,7 +196,10 @@ namespace Opc.Ua.Bindings
             ChannelToken token,
             OpenSecureChannelRequest request)
         {
-            if (socket == null) throw new ArgumentNullException(nameof(socket));
+            if (socket == null)
+            {
+                throw new ArgumentNullException(nameof(socket));
+            }
 
             lock (DataLock)
             {
@@ -241,9 +242,9 @@ namespace Opc.Ua.Bindings
                 }
             }
         }
-        #endregion
 
-        #region Socket Event Handlers
+
+
         /// <summary>
         /// Processes an incoming message.
         /// </summary>
@@ -298,17 +299,15 @@ namespace Opc.Ua.Bindings
                 }
             }
         }
-        #endregion
 
-        #region Error Handling Functions
+
+
         /// <summary>
         /// Called to send queued responses after a reconnect.
         /// </summary>
         private void OnChannelReconnected(object state)
         {
-            SortedDictionary<uint, IServiceResponse> responses = state as SortedDictionary<uint, IServiceResponse>;
-
-            if (responses == null)
+            if (!(state is SortedDictionary<uint, IServiceResponse> responses))
             {
                 return;
             }
@@ -325,9 +324,9 @@ namespace Opc.Ua.Bindings
                 }
             }
         }
-        #endregion
 
-        #region Connect/Reconnect Sequence
+
+
         /// <summary>
         /// Processes a Hello message from the client.
         /// </summary>
@@ -343,8 +342,8 @@ namespace Opc.Ua.Bindings
 
             try
             {
-                MemoryStream istrm = new MemoryStream(messageChunk.Array, messageChunk.Offset, messageChunk.Count, false);
-                BinaryDecoder decoder = new BinaryDecoder(istrm, Quotas.MessageContext);
+                var istrm = new MemoryStream(messageChunk.Array, messageChunk.Offset, messageChunk.Count, false);
+                var decoder = new BinaryDecoder(istrm, Quotas.MessageContext);
                 istrm.Seek(TcpMessageLimits.MessageTypeAndSize, SeekOrigin.Current);
 
                 // read requested buffer sizes.
@@ -425,8 +424,8 @@ namespace Opc.Ua.Bindings
 
                 try
                 {
-                    MemoryStream ostrm = new MemoryStream(buffer, 0, SendBufferSize);
-                    BinaryEncoder encoder = new BinaryEncoder(ostrm, Quotas.MessageContext);
+                    var ostrm = new MemoryStream(buffer, 0, SendBufferSize);
+                    var encoder = new BinaryEncoder(ostrm, Quotas.MessageContext);
 
                     encoder.WriteUInt32(null, TcpMessageType.Acknowledge);
                     encoder.WriteUInt32(null, 0);
@@ -499,11 +498,9 @@ namespace Opc.Ua.Bindings
             }
             catch (Exception e)
             {
-                ServiceResultException innerException = e.InnerException as ServiceResultException;
-
                 // If the certificate structre, signature and trust list checks pass,
                 // return the other specific validation errors instead of BadSecurityChecksFailed
-                if (innerException != null)
+                if (e.InnerException is ServiceResultException innerException)
                 {
                     if (innerException.StatusCode == StatusCodes.BadCertificateUntrusted ||
                         innerException.StatusCode == StatusCodes.BadCertificateChainIncomplete ||
@@ -566,7 +563,7 @@ namespace Opc.Ua.Bindings
                 // get the chunks to process.
                 chunksToProcess = GetSavedChunks(requestId, messageBody);
 
-                OpenSecureChannelRequest request = (OpenSecureChannelRequest)BinaryDecoder.DecodeMessage(
+                var request = (OpenSecureChannelRequest)BinaryDecoder.DecodeMessage(
                     new ArraySegmentStream(chunksToProcess),
                     typeof(OpenSecureChannelRequest),
                     Quotas.MessageContext);
@@ -721,7 +718,7 @@ namespace Opc.Ua.Bindings
         /// <inheritdoc/>
         protected override void CompleteReverseHello(Exception e)
         {
-            var ar = m_pendingReverseHello;
+            ReverseConnectAsyncResult ar = m_pendingReverseHello;
             if (ar != null && ar == Interlocked.CompareExchange(ref m_pendingReverseHello, null, ar))
             {
                 ar.Exception = e;
@@ -736,7 +733,7 @@ namespace Opc.Ua.Bindings
         {
             Utils.LogTrace("ChannelId {0}: SendOpenSecureChannelResponse()", ChannelId);
 
-            OpenSecureChannelResponse response = new OpenSecureChannelResponse();
+            var response = new OpenSecureChannelResponse();
 
             response.ResponseHeader.RequestHandle = request.RequestHeader.RequestHandle;
             response.ResponseHeader.Timestamp = DateTime.UtcNow;
@@ -813,12 +810,11 @@ namespace Opc.Ua.Bindings
                 // get the chunks to process.
                 chunksToProcess = GetSavedChunks(requestId, messageBody);
 
-                CloseSecureChannelRequest request = BinaryDecoder.DecodeMessage(
+
+                if (!(BinaryDecoder.DecodeMessage(
                     new ArraySegmentStream(chunksToProcess),
                     typeof(CloseSecureChannelRequest),
-                    Quotas.MessageContext) as CloseSecureChannelRequest;
-
-                if (request == null)
+                    Quotas.MessageContext) is CloseSecureChannelRequest request))
                 {
                     throw ServiceResultException.Create(StatusCodes.BadStructureMissing, "Could not parse CloseSecureChannel request body.");
                 }
@@ -916,9 +912,8 @@ namespace Opc.Ua.Bindings
                 chunksToProcess = GetSavedChunks(requestId, messageBody);
 
                 // decode the request.
-                IServiceRequest request = BinaryDecoder.DecodeMessage(new ArraySegmentStream(chunksToProcess), null, Quotas.MessageContext) as IServiceRequest;
 
-                if (request == null)
+                if (!(BinaryDecoder.DecodeMessage(new ArraySegmentStream(chunksToProcess), null, Quotas.MessageContext) is IServiceRequest request))
                 {
                     SendServiceFault(token, requestId, ServiceResult.Create(StatusCodes.BadStructureMissing, "Could not parse request body."));
                     return true;
@@ -953,11 +948,11 @@ namespace Opc.Ua.Bindings
                 }
             }
         }
-        #endregion
 
-        #region Private Fields
+
+
         private readonly string m_ImplementationString = ".NET Standard ServerChannel UA-TCP " + Utils.GetAssemblyBuildNumber();
         private ReverseConnectAsyncResult m_pendingReverseHello;
-        #endregion
+
     }
 }

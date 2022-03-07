@@ -14,20 +14,12 @@ using System.IO;
 
 namespace Opc.Ua
 {
-    #region SecurityConfiguration Class
+
     /// <summary>
     /// The security configuration for the application.
     /// </summary>
     public partial class SecurityConfiguration
     {
-        #region Public Methods
-        /// <summary>
-        /// Adds a certificate as a trusted peer.
-        /// </summary>
-        public void AddTrustedPeer(byte[] certificate)
-        {
-            this.TrustedPeerCertificates.TrustedCertificates.Add(new CertificateIdentifier(certificate));
-        }
 
         /// <summary>
         /// Validates the security configuration.
@@ -45,9 +37,10 @@ namespace Opc.Ua
             //set a default rejected certificate store.
             if (RejectedCertificateStore == null)
             {
-                RejectedCertificateStore = new CertificateStoreIdentifier();
-                RejectedCertificateStore.StoreType = CertificateStoreType.Directory;
-                RejectedCertificateStore.StorePath = Utils.DefaultLocalFolder + Path.DirectorySeparatorChar + "Rejected";
+                RejectedCertificateStore = new CertificateStoreIdentifier {
+                    StoreType = CertificateStoreType.Directory,
+                    StorePath = Utils.DefaultLocalFolder + Path.DirectorySeparatorChar + "Rejected"
+                };
             }
 
             // replace subjectName DC=localhost with DC=hostname
@@ -76,7 +69,6 @@ namespace Opc.Ua
         /// for a private key is requested.
         /// </summary>
         public ICertificatePasswordProvider CertificatePasswordProvider { get; set; }
-        #endregion
+
     }
-    #endregion
 }

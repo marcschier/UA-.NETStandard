@@ -25,7 +25,7 @@ namespace Opc.Ua.Bindings
     /// </summary>
     public class UaSCUaBinaryClientChannel : UaSCUaBinaryChannel
     {
-        #region Constructors
+
         /// <summary>
         /// Creates a channel for for a client.
         /// </summary>
@@ -66,7 +66,10 @@ namespace Opc.Ua.Bindings
         {
             if (endpoint != null && endpoint.SecurityMode != MessageSecurityMode.None)
             {
-                if (clientCertificate == null) throw new ArgumentNullException(nameof(clientCertificate));
+                if (clientCertificate == null)
+                {
+                    throw new ArgumentNullException(nameof(clientCertificate));
+                }
 
                 if (clientCertificate.RawData.Length > TcpMessageLimits.MaxCertificateSize)
                 {
@@ -90,9 +93,9 @@ namespace Opc.Ua.Bindings
             EndpointDescription = endpoint;
             m_url = new Uri(endpoint.EndpointUrl);
         }
-        #endregion
 
-        #region IDisposable Members
+
+
         /// <summary>
         /// An overrideable version of the Dispose.
         /// </summary>
@@ -109,16 +112,23 @@ namespace Opc.Ua.Bindings
 
             base.Dispose(disposing);
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Creates a connection with the server.
         /// </summary>
         public IAsyncResult BeginConnect(Uri url, int timeout, AsyncCallback callback, object state)
         {
-            if (url == null) throw new ArgumentNullException(nameof(url));
-            if (timeout <= 0) throw new ArgumentException("Timeout must be greater than zero.", nameof(timeout));
+            if (url == null)
+            {
+                throw new ArgumentNullException(nameof(url));
+            }
+
+            if (timeout <= 0)
+            {
+                throw new ArgumentException("Timeout must be greater than zero.", nameof(timeout));
+            }
 
             Task task;
             lock (DataLock)
@@ -170,12 +180,14 @@ namespace Opc.Ua.Bindings
         /// </summary>
         public void EndConnect(IAsyncResult result)
         {
-            var operation = result as WriteOperation;
-            if (operation == null) throw new ArgumentNullException(nameof(result));
+            if (!(result is WriteOperation operation))
+            {
+                throw new ArgumentNullException(nameof(result));
+            }
 
             try
             {
-                operation.End(Int32.MaxValue);
+                operation.End(int.MaxValue);
                 Utils.LogInfo("CLIENTCHANNEL SOCKET CONNECTED: {0:X8}, ChannelId={1}", Socket.Handle, ChannelId);
             }
             catch (Exception e)
@@ -323,16 +335,14 @@ namespace Opc.Ua.Bindings
         /// </summary>
         public IServiceResponse EndSendRequest(IAsyncResult result)
         {
-            WriteOperation operation = result as WriteOperation;
-
-            if (operation == null)
+            if (!(result is WriteOperation operation))
             {
                 throw new ArgumentNullException(nameof(result));
             }
 
             try
             {
-                operation.End(Int32.MaxValue);
+                operation.End(int.MaxValue);
             }
             finally
             {
@@ -341,9 +351,9 @@ namespace Opc.Ua.Bindings
 
             return operation.MessageBody as IServiceResponse;
         }
-        #endregion
 
-        #region Connect/Reconnect Sequence
+
+
         /// <summary>
         /// Sends a Hello message.
         /// </summary>
@@ -355,8 +365,8 @@ namespace Opc.Ua.Bindings
 
             try
             {
-                MemoryStream ostrm = new MemoryStream(buffer, 0, SendBufferSize);
-                BinaryEncoder encoder = new BinaryEncoder(ostrm, Quotas.MessageContext);
+                var ostrm = new MemoryStream(buffer, 0, SendBufferSize);
+                var encoder = new BinaryEncoder(ostrm, Quotas.MessageContext);
 
                 encoder.WriteUInt32(null, TcpMessageType.Hello);
                 encoder.WriteUInt32(null, 0);
@@ -414,8 +424,8 @@ namespace Opc.Ua.Bindings
             }
 
             // read buffer sizes.
-            MemoryStream istrm = new MemoryStream(messageChunk.Array, messageChunk.Offset, messageChunk.Count);
-            BinaryDecoder decoder = new BinaryDecoder(istrm, Quotas.MessageContext);
+            var istrm = new MemoryStream(messageChunk.Array, messageChunk.Offset, messageChunk.Count);
+            var decoder = new BinaryDecoder(istrm, Quotas.MessageContext);
 
             istrm.Seek(TcpMessageLimits.MessageTypeAndSize, SeekOrigin.Current);
 
@@ -430,7 +440,7 @@ namespace Opc.Ua.Bindings
                 // update the max message size.
                 if (maxMessageSize > 0 && maxMessageSize < MaxRequestMessageSize)
                 {
-                    MaxRequestMessageSize = (int)maxMessageSize;
+                    MaxRequestMessageSize = maxMessageSize;
                 }
 
                 if (MaxRequestMessageSize < SendBufferSize)
@@ -441,7 +451,7 @@ namespace Opc.Ua.Bindings
                 // update the max chunk count.
                 if (maxChunkCount > 0 && maxChunkCount < MaxRequestChunkCount)
                 {
-                    MaxRequestChunkCount = (int)maxChunkCount;
+                    MaxRequestChunkCount = maxChunkCount;
                 }
             }
             finally
@@ -495,7 +505,7 @@ namespace Opc.Ua.Bindings
             token.ClientNonce = CreateNonce();
 
             // construct the request.
-            OpenSecureChannelRequest request = new OpenSecureChannelRequest();
+            var request = new OpenSecureChannelRequest();
             request.RequestHeader.Timestamp = DateTime.UtcNow;
 
             request.RequestType = (renew) ? SecurityTokenRequestType.Renew : SecurityTokenRequestType.Issue;
@@ -540,7 +550,7 @@ namespace Opc.Ua.Bindings
         {
             Utils.LogTrace("ChannelId {0}: ProcessOpenSecureChannelResponse()", ChannelId);
 
-            // validate the channel state.            
+            // validate the channel state.
             if (State != TcpChannelState.Opening && State != TcpChannelState.Open)
             {
                 ForceReconnect(ServiceResult.Create(StatusCodes.BadTcpMessageTypeInvalid, "Server sent an unexpected OpenSecureChannel response."));
@@ -598,14 +608,13 @@ namespace Opc.Ua.Bindings
                 chunksToProcess = GetSavedChunks(requestId, messageBody);
 
                 // read message body.
-                OpenSecureChannelResponse response = ParseResponse(chunksToProcess) as OpenSecureChannelResponse;
 
-                if (response == null)
+                if (!(ParseResponse(chunksToProcess) is OpenSecureChannelResponse response))
                 {
                     throw ServiceResultException.Create(StatusCodes.BadTypeMismatch, "Server did not return a valid OpenSecureChannelResponse.");
                 }
 
-                // the client needs to use the creation time assigned when it sent 
+                // the client needs to use the creation time assigned when it sent
                 // the request and ignores the creation time in the response because
                 // the server and client clocks may not be synchronized.
 
@@ -614,17 +623,17 @@ namespace Opc.Ua.Bindings
                 m_requestedToken.Lifetime = (int)response.SecurityToken.RevisedLifetime;
                 m_requestedToken.ServerNonce = response.ServerNonce;
 
-                string implementation = String.Format(g_ImplementationString, m_socketFactory.Implementation);
+                string implementation = string.Format(g_ImplementationString, m_socketFactory.Implementation);
 
                 // log security information.
                 if (State == TcpChannelState.Opening)
                 {
                     Opc.Ua.Security.Audit.SecureChannelCreated(
                         implementation,
-                        this.m_url.ToString(),
+                        m_url.ToString(),
                         Utils.Format("{0}", channelId),
-                        this.EndpointDescription,
-                        this.ClientCertificate,
+                        EndpointDescription,
+                        ClientCertificate,
                         serverCertificate,
                         BinaryEncodingSupport.Required);
                 }
@@ -666,9 +675,9 @@ namespace Opc.Ua.Bindings
 
             return false;
         }
-        #endregion
 
-        #region Event Handlers
+
+
         /// <summary>
         /// Handles a socket error.
         /// </summary>
@@ -684,9 +693,7 @@ namespace Opc.Ua.Bindings
         {
             lock (DataLock)
             {
-                WriteOperation operation = state as WriteOperation;
-
-                if (operation != null)
+                if (state is WriteOperation operation)
                 {
                     if (ServiceResult.IsBad(result))
                     {
@@ -752,9 +759,9 @@ namespace Opc.Ua.Bindings
         /// </summary>
         private void OnConnectComplete(object sender, IMessageSocketAsyncEventArgs e)
         {
-            WriteOperation operation = (WriteOperation)e.UserToken;
+            var operation = (WriteOperation)e.UserToken;
 
-            // dual stack ConnectAsync may call in with null UserToken if 
+            // dual stack ConnectAsync may call in with null UserToken if
             // one connection attempt timed out but the other succeeded
             if (operation == null)
             {
@@ -786,7 +793,7 @@ namespace Opc.Ua.Bindings
                 }
                 catch (Exception ex)
                 {
-                    ServiceResult fault = ServiceResult.Create(
+                    var fault = ServiceResult.Create(
                         ex,
                         StatusCodes.BadTcpInternalError,
                         "An unexpected error occurred while connecting to the server.");
@@ -809,7 +816,7 @@ namespace Opc.Ua.Bindings
                 lock (DataLock)
                 {
                     // check if renewing a token.
-                    ChannelToken token = state as ChannelToken;
+                    var token = state as ChannelToken;
 
                     if (token == CurrentToken)
                     {
@@ -822,7 +829,7 @@ namespace Opc.Ua.Bindings
                         }
 
                         // begin the operation.
-                        m_handshakeOperation = BeginOperation(Int32.MaxValue, m_HandshakeComplete, token);
+                        m_handshakeOperation = BeginOperation(int.MaxValue, m_HandshakeComplete, token);
 
                         // send the request.
                         SendOpenSecureChannelRequest(true);
@@ -857,7 +864,7 @@ namespace Opc.Ua.Bindings
                     if (!ReverseSocket)
                     {
                         // create an operation.
-                        m_handshakeOperation = BeginOperation(Int32.MaxValue, m_HandshakeComplete, null);
+                        m_handshakeOperation = BeginOperation(int.MaxValue, m_HandshakeComplete, null);
 
                         State = TcpChannelState.Connecting;
                         Socket = m_socketFactory.Create(this, BufferManager, Quotas.MaxBufferSize);
@@ -891,7 +898,7 @@ namespace Opc.Ua.Bindings
 
                     Utils.LogTrace("ChannelId {0}: OnHandshakeComplete", ChannelId);
 
-                    m_handshakeOperation.End(Int32.MaxValue);
+                    m_handshakeOperation.End(int.MaxValue);
                     m_handshakeOperation = null;
                     m_reconnecting = false;
                 }
@@ -902,7 +909,7 @@ namespace Opc.Ua.Bindings
                     m_handshakeOperation = null;
                     m_reconnecting = false;
 
-                    ServiceResult error = ServiceResult.Create(e, StatusCodes.BadUnexpectedError, "Unexpected error reconnecting or renewing a token.");
+                    var error = ServiceResult.Create(e, StatusCodes.BadUnexpectedError, "Unexpected error reconnecting or renewing a token.");
 
                     // check for expired channel or token.
                     if (error.Code == StatusCodes.BadTcpSecureChannelUnknown || error.Code == StatusCodes.BadSecurityChecksFailed)
@@ -972,16 +979,15 @@ namespace Opc.Ua.Bindings
                 }
             }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Parses the response return from the server.
         /// </summary>
         private IServiceResponse ParseResponse(BufferCollection chunksToProcess)
         {
-            IServiceResponse response = BinaryDecoder.DecodeMessage(new ArraySegmentStream(chunksToProcess), null, Quotas.MessageContext) as IServiceResponse;
-            if (response == null)
+            if (!(BinaryDecoder.DecodeMessage(new ArraySegmentStream(chunksToProcess), null, Quotas.MessageContext) is IServiceResponse response))
             {
                 throw ServiceResultException.Create(StatusCodes.BadStructureMissing, "Could not parse response body.");
             }
@@ -1012,7 +1018,7 @@ namespace Opc.Ua.Bindings
                 }
 
                 // cancel all requests.
-                List<WriteOperation> operations = new List<WriteOperation>(m_requests.Values);
+                var operations = new List<WriteOperation>(m_requests.Values);
 
                 foreach (WriteOperation operation in operations)
                 {
@@ -1041,9 +1047,6 @@ namespace Opc.Ua.Bindings
                     Socket.Close();
                     Socket = null;
                 }
-
-                // set the state.       
-                ChannelStateChanged(TcpChannelState.Closed, reason);
             }
         }
 
@@ -1070,7 +1073,7 @@ namespace Opc.Ua.Bindings
                 }
 
                 // cancel all requests.
-                List<WriteOperation> operations = new List<WriteOperation>(m_requests.Values);
+                var operations = new List<WriteOperation>(m_requests.Values);
 
                 foreach (WriteOperation operation in operations)
                 {
@@ -1121,7 +1124,6 @@ namespace Opc.Ua.Bindings
                     m_waitBetweenReconnects = TcpMessageLimits.MaxTimeBetweenReconnects;
                 }
 
-                ChannelStateChanged(TcpChannelState.Faulted, reason);
             }
         }
 
@@ -1159,12 +1161,13 @@ namespace Opc.Ua.Bindings
         }
 
         /// <summary>
-        /// Creates a object to manage the state of an asynchronous operation. 
+        /// Creates a object to manage the state of an asynchronous operation.
         /// </summary>
         private WriteOperation BeginOperation(int timeout, AsyncCallback callback, object state)
         {
-            WriteOperation operation = new WriteOperation(timeout, callback, state);
-            operation.RequestId = Utils.IncrementIdentifier(ref m_lastRequestId);
+            var operation = new WriteOperation(timeout, callback, state) {
+                RequestId = Utils.IncrementIdentifier(ref m_lastRequestId)
+            };
             m_requests.Add(operation.RequestId, operation);
             return operation;
         }
@@ -1216,7 +1219,7 @@ namespace Opc.Ua.Bindings
         {
             lock (DataLock)
             {
-                WriteOperation operation = (WriteOperation)state;
+                var operation = (WriteOperation)state;
 
                 for (int ii = 0; ii < m_queuedOperations.Count; ii++)
                 {
@@ -1236,7 +1239,7 @@ namespace Opc.Ua.Bindings
                         }
                     }
 
-                    if (this.CurrentToken == null)
+                    if (CurrentToken == null)
                     {
                         request.Operation.Fault(StatusCodes.BadConnectionClosed, "Could not send request because connection is closed.");
                     }
@@ -1254,17 +1257,17 @@ namespace Opc.Ua.Bindings
                 m_queuedOperations = null;
             }
         }
-        #endregion 
 
-        #region Message Processing
+
+
         /// <summary>
         /// Processes an Error message received over the socket.
         /// </summary>
         protected bool ProcessErrorMessage(uint messageType, ArraySegment<byte> messageChunk)
         {
-            // read request buffer sizes.            
-            MemoryStream istrm = new MemoryStream(messageChunk.Array, messageChunk.Offset, messageChunk.Count, false);
-            BinaryDecoder decoder = new BinaryDecoder(istrm, Quotas.MessageContext);
+            // read request buffer sizes.
+            var istrm = new MemoryStream(messageChunk.Array, messageChunk.Offset, messageChunk.Count, false);
+            var decoder = new BinaryDecoder(istrm, Quotas.MessageContext);
 
             istrm.Seek(TcpMessageLimits.MessageTypeAndSize, SeekOrigin.Current);
 
@@ -1309,7 +1312,7 @@ namespace Opc.Ua.Bindings
                 throw new ServiceResultException(StatusCodes.BadSecureChannelClosed);
             }
 
-            CloseSecureChannelRequest request = new CloseSecureChannelRequest();
+            var request = new CloseSecureChannelRequest();
             request.RequestHeader.Timestamp = DateTime.UtcNow;
 
             // limits should never be exceeded sending a close message.
@@ -1388,8 +1391,8 @@ namespace Opc.Ua.Bindings
                     chunksToProcess = GetSavedChunks(requestId, messageBody);
 
                     // decoder reason.
-                    MemoryStream istrm = new MemoryStream(messageBody.Array, messageBody.Offset, messageBody.Count, false);
-                    BinaryDecoder decoder = new BinaryDecoder(istrm, Quotas.MessageContext);
+                    var istrm = new MemoryStream(messageBody.Array, messageBody.Offset, messageBody.Count, false);
+                    var decoder = new BinaryDecoder(istrm, Quotas.MessageContext);
                     ServiceResult error = ReadErrorMessageBody(decoder);
                     decoder.Close();
 
@@ -1436,24 +1439,24 @@ namespace Opc.Ua.Bindings
                 }
             }
         }
-        #endregion
 
-        #region Private Fields
+
+
         private Uri m_url;
         private Uri m_via;
         private long m_lastRequestId;
-        private Dictionary<uint, WriteOperation> m_requests;
+        private readonly Dictionary<uint, WriteOperation> m_requests;
         private WriteOperation m_handshakeOperation;
         private ChannelToken m_requestedToken;
         private Timer m_handshakeTimer;
         private bool m_reconnecting;
         private int m_waitBetweenReconnects;
-        private EventHandler<IMessageSocketAsyncEventArgs> m_ConnectCallback;
-        private IMessageSocketFactory m_socketFactory;
-        private TimerCallback m_StartHandshake;
-        private AsyncCallback m_HandshakeComplete;
+        private readonly EventHandler<IMessageSocketAsyncEventArgs> m_ConnectCallback;
+        private readonly IMessageSocketFactory m_socketFactory;
+        private readonly TimerCallback m_StartHandshake;
+        private readonly AsyncCallback m_HandshakeComplete;
         private List<QueuedOperation> m_queuedOperations;
         private readonly string g_ImplementationString = ".NET Standard ClientChannel {0} " + Utils.GetAssemblyBuildNumber();
-        #endregion
+
     }
 }

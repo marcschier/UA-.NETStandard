@@ -29,14 +29,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Xml;
-using System.Runtime.Serialization;
 
 namespace Opc.Ua
 {
-    #region ServerObjectState Class
-    #if (!OPCUA_EXCLUDE_ServerObjectState)
+
+#if (!OPCUA_EXCLUDE_ServerObjectState)
     /// <summary>
     /// Stores an instance of the ServerType ObjectType.
     /// </summary>
@@ -44,7 +41,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ServerObjectState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -60,7 +57,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ServerType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -128,7 +125,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string UrisVersion_InitializationString =
            "//////////8VcIkKAgAAAAAACwAAAFVyaXNWZXJzaW9uAQCbOgAuAESbOgAAAQAGUv////8BAQAAAAAA" +
            "QI9A/////wAAAAA=";
@@ -249,11 +246,11 @@ namespace Opc.Ua
            "AAATAAAARXN0aW1hdGVkUmV0dXJuVGltZQAN/////wAAAAAAAQAqAQEiAAAAEwAAAFNlY29uZHNUaWxs" +
            "U2h1dGRvd24AB/////8AAAAAAAEAKgEBFQAAAAYAAABSZWFzb24AFf////8AAAAAAAEAKgEBFgAAAAcA" +
            "AABSZXN0YXJ0AAH/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<string[]> ServerArray
         {
@@ -576,9 +573,9 @@ namespace Opc.Ua
                 m_requestServerStateChangeMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -1059,9 +1056,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<string[]> m_serverArray;
         private PropertyState<string[]> m_namespaceArray;
         private PropertyState<uint> m_urisVersion;
@@ -1079,13 +1076,13 @@ namespace Opc.Ua
         private ResendDataMethodState m_resendDataMethod;
         private SetSubscriptionDurableMethodState m_setSubscriptionDurableMethod;
         private RequestServerStateChangeMethodState m_requestServerStateChangeMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region ServerCapabilitiesState Class
-    #if (!OPCUA_EXCLUDE_ServerCapabilitiesState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ServerCapabilitiesState)
     /// <summary>
     /// Stores an instance of the ServerCapabilitiesType ObjectType.
     /// </summary>
@@ -1093,7 +1090,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ServerCapabilitiesState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -1109,7 +1106,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ServerCapabilitiesType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -1162,7 +1159,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string MaxArrayLength_InitializationString =
            "//////////8VYIkKAgAAAAAADgAAAE1heEFycmF5TGVuZ3RoAQAdLQAuAEQdLQAAAAf/////AQH/////" +
            "AAAAAA==";
@@ -1213,11 +1210,11 @@ namespace Opc.Ua
            "/////wAAAAAEYYIKBAAAAAAACgAAAFJlbW92ZVJvbGUBAKs/AC8BAIA+qz8AAAEB/////wEAAAAXYKkK" +
            "AgAAAAAADgAAAElucHV0QXJndW1lbnRzAQCsPwAuAESsPwAAlgEAAAABACoBARkAAAAKAAAAUm9sZU5v" +
            "ZGVJZAAR/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<string[]> ServerProfileArray
         {
@@ -1483,9 +1480,9 @@ namespace Opc.Ua
                 m_roleSet = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -1888,9 +1885,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<string[]> m_serverProfileArray;
         private PropertyState<string[]> m_localeIdArray;
         private PropertyState<double> m_minSupportedSampleRate;
@@ -1905,13 +1902,13 @@ namespace Opc.Ua
         private FolderState m_modellingRules;
         private FolderState m_aggregateFunctions;
         private RoleSetState m_roleSet;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region ServerDiagnosticsState Class
-    #if (!OPCUA_EXCLUDE_ServerDiagnosticsState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ServerDiagnosticsState)
     /// <summary>
     /// Stores an instance of the ServerDiagnosticsType ObjectType.
     /// </summary>
@@ -1919,7 +1916,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ServerDiagnosticsState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -1935,7 +1932,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ServerDiagnosticsType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -1968,7 +1965,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string SamplingIntervalDiagnosticsArray_InitializationString =
            "//////////8XYIkKAgAAAAAAIAAAAFNhbXBsaW5nSW50ZXJ2YWxEaWFnbm9zdGljc0FycmF5AQDmBwAv" +
            "AQB0COYHAAABAFgDAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
@@ -1997,11 +1994,11 @@ namespace Opc.Ua
            "AAAAAAEB/////wAAAAAXYIkKAgAAAAAAHwAAAFNlc3Npb25TZWN1cml0eURpYWdub3N0aWNzQXJyYXkB" +
            "ADoMAC8BAMMIOgwAAAEAZAMBAAAAAQAAAAAAAAABAf////8AAAAAFWCJCgIAAAAAAAsAAABFbmFibGVk" +
            "RmxhZwEA6QcALgBE6QcAAAAB/////wMD/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public ServerDiagnosticsSummaryState ServerDiagnosticsSummary
         {
@@ -2096,9 +2093,9 @@ namespace Opc.Ua
                 m_enabledFlag = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -2267,21 +2264,21 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private ServerDiagnosticsSummaryState m_serverDiagnosticsSummary;
         private SamplingIntervalDiagnosticsArrayState m_samplingIntervalDiagnosticsArray;
         private SubscriptionDiagnosticsArrayState m_subscriptionDiagnosticsArray;
         private SessionsDiagnosticsSummaryState m_sessionsDiagnosticsSummary;
         private PropertyState<bool> m_enabledFlag;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region SessionsDiagnosticsSummaryState Class
-    #if (!OPCUA_EXCLUDE_SessionsDiagnosticsSummaryState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_SessionsDiagnosticsSummaryState)
     /// <summary>
     /// Stores an instance of the SessionsDiagnosticsSummaryType ObjectType.
     /// </summary>
@@ -2289,7 +2286,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SessionsDiagnosticsSummaryState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -2305,7 +2302,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.SessionsDiagnosticsSummaryType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -2333,18 +2330,18 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJgAAAFNlc3Npb25zRGlhZ25vc3RpY3NTdW1tYXJ5VHlwZUluc3RhbmNl" +
            "AQDqBwEA6gfqBwAA/////wIAAAAXYIkKAgAAAAAAFwAAAFNlc3Npb25EaWFnbm9zdGljc0FycmF5AQDr" +
            "BwAvAQCUCOsHAAABAGEDAQAAAAEAAAAAAAAAAQH/////AAAAABdgiQoCAAAAAAAfAAAAU2Vzc2lvblNl" +
            "Y3VyaXR5RGlhZ25vc3RpY3NBcnJheQEA7AcALwEAwwjsBwAAAQBkAwEAAAABAAAAAAAAAAEB/////wAA" +
            "AAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public SessionDiagnosticsArrayState SessionDiagnosticsArray
         {
@@ -2382,9 +2379,9 @@ namespace Opc.Ua
                 m_sessionSecurityDiagnosticsArray = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -2475,18 +2472,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private SessionDiagnosticsArrayState m_sessionDiagnosticsArray;
         private SessionSecurityDiagnosticsArrayState m_sessionSecurityDiagnosticsArray;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region SessionDiagnosticsObjectState Class
-    #if (!OPCUA_EXCLUDE_SessionDiagnosticsObjectState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_SessionDiagnosticsObjectState)
     /// <summary>
     /// Stores an instance of the SessionDiagnosticsObjectType ObjectType.
     /// </summary>
@@ -2494,7 +2491,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SessionDiagnosticsObjectState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -2510,7 +2507,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.SessionDiagnosticsObjectType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -2538,7 +2535,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJAAAAFNlc3Npb25EaWFnbm9zdGljc09iamVjdFR5cGVJbnN0YW5jZQEA" +
            "7QcBAO0H7QcAAP////8DAAAAFWCJCgIAAAAAABIAAABTZXNzaW9uRGlhZ25vc3RpY3MBAO4HAC8BAJUI" +
@@ -2599,11 +2596,11 @@ namespace Opc.Ua
            "AAAAABEAAABDbGllbnRDZXJ0aWZpY2F0ZQEAcwwALwA/cwwAAAAP/////wEB/////wAAAAAXYIkKAgAA" +
            "AAAAHAAAAFN1YnNjcmlwdGlvbkRpYWdub3N0aWNzQXJyYXkBAPAHAC8BAHsI8AcAAAEAagMBAAAAAQAA" +
            "AAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public SessionDiagnosticsVariableState SessionDiagnostics
         {
@@ -2660,9 +2657,9 @@ namespace Opc.Ua
                 m_subscriptionDiagnosticsArray = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -2779,19 +2776,19 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private SessionDiagnosticsVariableState m_sessionDiagnostics;
         private SessionSecurityDiagnosticsState m_sessionSecurityDiagnostics;
         private SubscriptionDiagnosticsArrayState m_subscriptionDiagnosticsArray;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region VendorServerInfoState Class
-    #if (!OPCUA_EXCLUDE_VendorServerInfoState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_VendorServerInfoState)
     /// <summary>
     /// Stores an instance of the VendorServerInfoType ObjectType.
     /// </summary>
@@ -2799,7 +2796,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class VendorServerInfoState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -2815,7 +2812,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.VendorServerInfoType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -2843,28 +2840,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHAAAAFZlbmRvclNlcnZlckluZm9UeXBlSW5zdGFuY2UBAPEHAQDxB/EH" +
            "AAD/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region ServerRedundancyState Class
-    #if (!OPCUA_EXCLUDE_ServerRedundancyState)
+
+
+#if (!OPCUA_EXCLUDE_ServerRedundancyState)
     /// <summary>
     /// Stores an instance of the ServerRedundancyType ObjectType.
     /// </summary>
@@ -2872,7 +2869,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ServerRedundancyState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -2888,7 +2885,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ServerRedundancyType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -2916,16 +2913,16 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHAAAAFNlcnZlclJlZHVuZGFuY3lUeXBlSW5zdGFuY2UBAPIHAQDyB/IH" +
            "AAD/////AQAAABVgiQoCAAAAAAARAAAAUmVkdW5kYW5jeVN1cHBvcnQBAPMHAC4ARPMHAAABAFMD////" +
            "/wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<RedundancySupport> RedundancySupport
         {
@@ -2944,9 +2941,9 @@ namespace Opc.Ua
                 m_redundancySupport = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -3011,17 +3008,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<RedundancySupport> m_redundancySupport;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region TransparentRedundancyState Class
-    #if (!OPCUA_EXCLUDE_TransparentRedundancyState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_TransparentRedundancyState)
     /// <summary>
     /// Stores an instance of the TransparentRedundancyType ObjectType.
     /// </summary>
@@ -3029,7 +3026,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class TransparentRedundancyState : ServerRedundancyState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -3045,7 +3042,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.TransparentRedundancyType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -3073,18 +3070,18 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIQAAAFRyYW5zcGFyZW50UmVkdW5kYW5jeVR5cGVJbnN0YW5jZQEA9AcB" +
            "APQH9AcAAP////8DAAAAFWCJCgIAAAAAABEAAABSZWR1bmRhbmN5U3VwcG9ydAEAdAwALgBEdAwAAAEA" +
            "UwP/////AQH/////AAAAABVgiQoCAAAAAAAPAAAAQ3VycmVudFNlcnZlcklkAQD1BwAuAET1BwAAAAz/" +
            "////AQH/////AAAAABdgiQoCAAAAAAAUAAAAUmVkdW5kYW50U2VydmVyQXJyYXkBAPYHAC4ARPYHAAAB" +
            "AFUDAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<string> CurrentServerId
         {
@@ -3122,9 +3119,9 @@ namespace Opc.Ua
                 m_redundantServerArray = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -3215,18 +3212,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<string> m_currentServerId;
         private PropertyState<RedundantServerDataType[]> m_redundantServerArray;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region NonTransparentRedundancyState Class
-    #if (!OPCUA_EXCLUDE_NonTransparentRedundancyState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_NonTransparentRedundancyState)
     /// <summary>
     /// Stores an instance of the NonTransparentRedundancyType ObjectType.
     /// </summary>
@@ -3234,7 +3231,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class NonTransparentRedundancyState : ServerRedundancyState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -3250,7 +3247,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.NonTransparentRedundancyType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -3278,17 +3275,17 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJAAAAE5vblRyYW5zcGFyZW50UmVkdW5kYW5jeVR5cGVJbnN0YW5jZQEA" +
            "9wcBAPcH9wcAAP////8CAAAAFWCJCgIAAAAAABEAAABSZWR1bmRhbmN5U3VwcG9ydAEAdQwALgBEdQwA" +
            "AAEAUwP/////AQH/////AAAAABdgiQoCAAAAAAAOAAAAU2VydmVyVXJpQXJyYXkBAPgHAC4ARPgHAAAA" +
            "DAEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<string[]> ServerUriArray
         {
@@ -3307,9 +3304,9 @@ namespace Opc.Ua
                 m_serverUriArray = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -3374,17 +3371,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<string[]> m_serverUriArray;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region NonTransparentNetworkRedundancyState Class
-    #if (!OPCUA_EXCLUDE_NonTransparentNetworkRedundancyState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_NonTransparentNetworkRedundancyState)
     /// <summary>
     /// Stores an instance of the NonTransparentNetworkRedundancyType ObjectType.
     /// </summary>
@@ -3392,7 +3389,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class NonTransparentNetworkRedundancyState : NonTransparentRedundancyState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -3408,7 +3405,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.NonTransparentNetworkRedundancyType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -3436,18 +3433,18 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKwAAAE5vblRyYW5zcGFyZW50TmV0d29ya1JlZHVuZGFuY3lUeXBlSW5z" +
            "dGFuY2UBAKkuAQCpLqkuAAD/////AwAAABVgiQoCAAAAAAARAAAAUmVkdW5kYW5jeVN1cHBvcnQBAKou" +
            "AC4ARKouAAABAFMD/////wEB/////wAAAAAXYIkKAgAAAAAADgAAAFNlcnZlclVyaUFycmF5AQCrLgAu" +
            "AESrLgAAAAwBAAAAAQAAAAAAAAABAf////8AAAAAF2CJCgIAAAAAABMAAABTZXJ2ZXJOZXR3b3JrR3Jv" +
            "dXBzAQCsLgAuAESsLgAAAQCoLgEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<NetworkGroupDataType[]> ServerNetworkGroups
         {
@@ -3466,9 +3463,9 @@ namespace Opc.Ua
                 m_serverNetworkGroups = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -3533,17 +3530,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<NetworkGroupDataType[]> m_serverNetworkGroups;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region OperationLimitsState Class
-    #if (!OPCUA_EXCLUDE_OperationLimitsState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_OperationLimitsState)
     /// <summary>
     /// Stores an instance of the OperationLimitsType ObjectType.
     /// </summary>
@@ -3551,7 +3548,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class OperationLimitsState : FolderState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -3567,7 +3564,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.OperationLimitsType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -3655,7 +3652,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string MaxNodesPerRead_InitializationString =
            "//////////8VYIkKAgAAAAAADwAAAE1heE5vZGVzUGVyUmVhZAEALS0ALgBELS0AAAAH/////wEB////" +
            "/wAAAAA=";
@@ -3720,11 +3717,11 @@ namespace Opc.Ua
            "/////wEB/////wAAAAAVYIkKAgAAAAAAGQAAAE1heE5vZGVzUGVyTm9kZU1hbmFnZW1lbnQBADUtAC4A" +
            "RDUtAAAAB/////8BAf////8AAAAAFWCJCgIAAAAAABgAAABNYXhNb25pdG9yZWRJdGVtc1BlckNhbGwB" +
            "ADYtAC4ARDYtAAAAB/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<uint> MaxNodesPerRead
         {
@@ -3952,9 +3949,9 @@ namespace Opc.Ua
                 m_maxMonitoredItemsPerCall = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -4305,9 +4302,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<uint> m_maxNodesPerRead;
         private PropertyState<uint> m_maxNodesPerHistoryReadData;
         private PropertyState<uint> m_maxNodesPerHistoryReadEvents;
@@ -4320,13 +4317,13 @@ namespace Opc.Ua
         private PropertyState<uint> m_maxNodesPerTranslateBrowsePathsToNodeIds;
         private PropertyState<uint> m_maxNodesPerNodeManagement;
         private PropertyState<uint> m_maxMonitoredItemsPerCall;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region FileState Class
-    #if (!OPCUA_EXCLUDE_FileState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_FileState)
     /// <summary>
     /// Stores an instance of the FileType ObjectType.
     /// </summary>
@@ -4334,7 +4331,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class FileState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -4350,7 +4347,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.FileType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -4388,7 +4385,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string MimeType_InitializationString =
            "//////////8VYIkKAgAAAAAACAAAAE1pbWVUeXBlAQAdNAAuAEQdNAAAAAz/////AQH/////AAAAAA==";
 
@@ -4425,11 +4422,11 @@ namespace Opc.Ua
            "bgEASS0ALwEASS1JLQAAAQH/////AQAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAEotAC4A" +
            "REotAACWAgAAAAEAKgEBGQAAAAoAAABGaWxlSGFuZGxlAAf/////AAAAAAABACoBARcAAAAIAAAAUG9z" +
            "aXRpb24ACf////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<ulong> Size
         {
@@ -4657,9 +4654,9 @@ namespace Opc.Ua
                 m_setPositionMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -5010,9 +5007,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<ulong> m_size;
         private PropertyState<bool> m_writable;
         private PropertyState<bool> m_userWritable;
@@ -5025,13 +5022,13 @@ namespace Opc.Ua
         private WriteMethodState m_writeMethod;
         private GetPositionMethodState m_getPositionMethod;
         private SetPositionMethodState m_setPositionMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AddressSpaceFileState Class
-    #if (!OPCUA_EXCLUDE_AddressSpaceFileState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AddressSpaceFileState)
     /// <summary>
     /// Stores an instance of the AddressSpaceFileType ObjectType.
     /// </summary>
@@ -5039,7 +5036,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AddressSpaceFileState : FileState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -5055,7 +5052,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AddressSpaceFileType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -5088,7 +5085,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string ExportNamespace_InitializationString =
            "//////////8EYYIKBAAAAAAADwAAAEV4cG9ydE5hbWVzcGFjZQEAXy0ALwEAXy1fLQAAAQH/////AAAA" +
            "AA==";
@@ -5121,11 +5118,11 @@ namespace Opc.Ua
            "SW5wdXRBcmd1bWVudHMBAF4tAC4ARF4tAACWAgAAAAEAKgEBGQAAAAoAAABGaWxlSGFuZGxlAAf/////" +
            "AAAAAAABACoBARcAAAAIAAAAUG9zaXRpb24ACf////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8A" +
            "AAAABGGCCgQAAAAAAA8AAABFeHBvcnROYW1lc3BhY2UBAF8tAC8BAF8tXy0AAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public MethodState ExportNamespace
         {
@@ -5144,9 +5141,9 @@ namespace Opc.Ua
                 m_exportNamespaceMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -5211,17 +5208,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private MethodState m_exportNamespaceMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region NamespaceMetadataState Class
-    #if (!OPCUA_EXCLUDE_NamespaceMetadataState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_NamespaceMetadataState)
     /// <summary>
     /// Stores an instance of the NamespaceMetadataType ObjectType.
     /// </summary>
@@ -5229,7 +5226,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class NamespaceMetadataState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -5245,7 +5242,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.NamespaceMetadataType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -5293,7 +5290,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string NamespaceFile_InitializationString =
            "//////////8EYIAKAQAAAAAADQAAAE5hbWVzcGFjZUZpbGUBAGgtAC8BAEstaC0AAP////8KAAAAFWCJ" +
            "CgIAAAAAAAQAAABTaXplAQBpLQAuAERpLQAAAAn/////AQH/////AAAAABVgiQoCAAAAAAAIAAAAV3Jp" +
@@ -5373,11 +5370,11 @@ namespace Opc.Ua
            "CT8ALgBECT8AAABgAQAAAAEAAAAAAAAAAQH/////AAAAABdgiQoCAAAAAAAaAAAARGVmYXVsdFVzZXJS" +
            "b2xlUGVybWlzc2lvbnMBAAo/AC4ARAo/AAAAYAEAAAABAAAAAAAAAAEB/////wAAAAAVYIkKAgAAAAAA" +
            "GQAAAERlZmF1bHRBY2Nlc3NSZXN0cmljdGlvbnMBAAs/AC4ARAs/AAAAX/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<string> NamespaceUri
         {
@@ -5586,9 +5583,9 @@ namespace Opc.Ua
                 m_defaultAccessRestrictions = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -5913,9 +5910,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<string> m_namespaceUri;
         private PropertyState<string> m_namespaceVersion;
         private PropertyState<DateTime> m_namespacePublicationDate;
@@ -5927,13 +5924,13 @@ namespace Opc.Ua
         private PropertyState<RolePermissionType[]> m_defaultRolePermissions;
         private PropertyState<RolePermissionType[]> m_defaultUserRolePermissions;
         private PropertyState<ushort> m_defaultAccessRestrictions;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region NamespacesState Class
-    #if (!OPCUA_EXCLUDE_NamespacesState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_NamespacesState)
     /// <summary>
     /// Stores an instance of the NamespacesType ObjectType.
     /// </summary>
@@ -5941,7 +5938,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class NamespacesState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -5957,7 +5954,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.NamespacesType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -5985,28 +5982,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAFgAAAE5hbWVzcGFjZXNUeXBlSW5zdGFuY2UBAH0tAQB9LX0tAAD/////" +
            "AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region BaseEventState Class
-    #if (!OPCUA_EXCLUDE_BaseEventState)
+
+
+#if (!OPCUA_EXCLUDE_BaseEventState)
     /// <summary>
     /// Stores an instance of the BaseEventType ObjectType.
     /// </summary>
@@ -6014,7 +6011,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class BaseEventState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -6030,7 +6027,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.BaseEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -6063,7 +6060,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string LocalTime_InitializationString =
            "//////////8VYIkKAgAAAAAACQAAAExvY2FsVGltZQEAdgwALgBEdgwAAAEA0CL/////AQH/////AAAA" +
            "AA==";
@@ -6078,18 +6075,15 @@ namespace Opc.Ua
            "AQH/////AAAAABVgiQoCAAAAAAAJAAAATG9jYWxUaW1lAQB2DAAuAER2DAAAAQDQIv////8BAf////8A" +
            "AAAAFWCJCgIAAAAAAAcAAABNZXNzYWdlAQACCAAuAEQCCAAAABX/////AQH/////AAAAABVgiQoCAAAA" +
            "AAAIAAAAU2V2ZXJpdHkBAAMIAC4ARAMIAAAABf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<byte[]> EventId
         {
-            get
-            {
-                return m_eventId;
-            }
+            get => m_eventId;
 
             set
             {
@@ -6105,10 +6099,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<NodeId> EventType
         {
-            get
-            {
-                return m_eventType;
-            }
+            get => m_eventType;
 
             set
             {
@@ -6124,10 +6115,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<NodeId> SourceNode
         {
-            get
-            {
-                return m_sourceNode;
-            }
+            get => m_sourceNode;
 
             set
             {
@@ -6143,10 +6131,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<string> SourceName
         {
-            get
-            {
-                return m_sourceName;
-            }
+            get => m_sourceName;
 
             set
             {
@@ -6162,10 +6147,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<DateTime> Time
         {
-            get
-            {
-                return m_time;
-            }
+            get => m_time;
 
             set
             {
@@ -6181,10 +6163,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<DateTime> ReceiveTime
         {
-            get
-            {
-                return m_receiveTime;
-            }
+            get => m_receiveTime;
 
             set
             {
@@ -6200,10 +6179,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<TimeZoneDataType> LocalTime
         {
-            get
-            {
-                return m_localTime;
-            }
+            get => m_localTime;
 
             set
             {
@@ -6219,10 +6195,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<LocalizedText> Message
         {
-            get
-            {
-                return m_message;
-            }
+            get => m_message;
 
             set
             {
@@ -6238,10 +6211,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<ushort> Severity
         {
-            get
-            {
-                return m_severity;
-            }
+            get => m_severity;
 
             set
             {
@@ -6253,9 +6223,9 @@ namespace Opc.Ua
                 m_severity = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -6528,9 +6498,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<byte[]> m_eventId;
         private PropertyState<NodeId> m_eventType;
         private PropertyState<NodeId> m_sourceNode;
@@ -6540,13 +6510,13 @@ namespace Opc.Ua
         private PropertyState<TimeZoneDataType> m_localTime;
         private PropertyState<LocalizedText> m_message;
         private PropertyState<ushort> m_severity;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditEventState Class
-    #if (!OPCUA_EXCLUDE_AuditEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditEventState)
     /// <summary>
     /// Stores an instance of the AuditEventType ObjectType.
     /// </summary>
@@ -6554,7 +6524,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditEventState : BaseEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -6570,7 +6540,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -6598,7 +6568,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAFgAAAEF1ZGl0RXZlbnRUeXBlSW5zdGFuY2UBAAQIAQAECAQIAAD/////" +
            "DQAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEAgAwALgBEgAwAAAAP/////wEB/////wAAAAAVYIkKAgAA" +
@@ -6613,18 +6583,15 @@ namespace Opc.Ua
            "AAcIAC4ARAcIAAAADP////8BAf////8AAAAAFWCJCgIAAAAAABIAAABDbGllbnRBdWRpdEVudHJ5SWQB" +
            "AAgIAC4ARAgIAAAADP////8BAf////8AAAAAFWCJCgIAAAAAAAwAAABDbGllbnRVc2VySWQBAAkIAC4A" +
            "RAkIAAAADP////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<DateTime> ActionTimeStamp
         {
-            get
-            {
-                return m_actionTimeStamp;
-            }
+            get => m_actionTimeStamp;
 
             set
             {
@@ -6640,10 +6607,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<bool> Status
         {
-            get
-            {
-                return m_status;
-            }
+            get => m_status;
 
             set
             {
@@ -6659,10 +6623,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<string> ServerId
         {
-            get
-            {
-                return m_serverId;
-            }
+            get => m_serverId;
 
             set
             {
@@ -6678,10 +6639,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<string> ClientAuditEntryId
         {
-            get
-            {
-                return m_clientAuditEntryId;
-            }
+            get => m_clientAuditEntryId;
 
             set
             {
@@ -6697,10 +6655,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<string> ClientUserId
         {
-            get
-            {
-                return m_clientUserId;
-            }
+            get => m_clientUserId;
 
             set
             {
@@ -6712,9 +6667,9 @@ namespace Opc.Ua
                 m_clientUserId = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -6883,21 +6838,21 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<DateTime> m_actionTimeStamp;
         private PropertyState<bool> m_status;
         private PropertyState<string> m_serverId;
         private PropertyState<string> m_clientAuditEntryId;
         private PropertyState<string> m_clientUserId;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditSecurityEventState Class
-    #if (!OPCUA_EXCLUDE_AuditSecurityEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditSecurityEventState)
     /// <summary>
     /// Stores an instance of the AuditSecurityEventType ObjectType.
     /// </summary>
@@ -6905,7 +6860,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditSecurityEventState : AuditEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -6921,7 +6876,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditSecurityEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -6954,7 +6909,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string StatusCodeId_InitializationString =
            "//////////8VYIkKAgAAAAAADAAAAFN0YXR1c0NvZGVJZAEAz0QALgBEz0QAAAAT/////wEB/////wAA" +
            "AAA=";
@@ -6974,11 +6929,11 @@ namespace Opc.Ua
            "RW50cnlJZAEAlQwALgBElQwAAAAM/////wEB/////wAAAAAVYIkKAgAAAAAADAAAAENsaWVudFVzZXJJ" +
            "ZAEAlgwALgBElgwAAAAM/////wEB/////wAAAAAVYIkKAgAAAAAADAAAAFN0YXR1c0NvZGVJZAEAz0QA" +
            "LgBEz0QAAAAT/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<StatusCode> StatusCodeId
         {
@@ -6997,9 +6952,9 @@ namespace Opc.Ua
                 m_statusCodeId = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -7064,17 +7019,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<StatusCode> m_statusCodeId;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditChannelEventState Class
-    #if (!OPCUA_EXCLUDE_AuditChannelEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditChannelEventState)
     /// <summary>
     /// Stores an instance of the AuditChannelEventType ObjectType.
     /// </summary>
@@ -7082,7 +7037,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditChannelEventState : AuditSecurityEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -7098,7 +7053,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditChannelEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -7126,7 +7081,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHQAAAEF1ZGl0Q2hhbm5lbEV2ZW50VHlwZUluc3RhbmNlAQALCAEACwgL" +
            "CAAA/////w4AAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAJcMAC4ARJcMAAAAD/////8BAf////8AAAAA" +
@@ -7142,11 +7097,11 @@ namespace Opc.Ua
            "bnRyeUlkAQCjDAAuAESjDAAAAAz/////AQH/////AAAAABVgiQoCAAAAAAAMAAAAQ2xpZW50VXNlcklk" +
            "AQCkDAAuAESkDAAAAAz/////AQH/////AAAAABVgiQoCAAAAAAAPAAAAU2VjdXJlQ2hhbm5lbElkAQC5" +
            "CgAuAES5CgAAAAz/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<string> SecureChannelId
         {
@@ -7165,9 +7120,9 @@ namespace Opc.Ua
                 m_secureChannelId = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -7232,17 +7187,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<string> m_secureChannelId;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditOpenSecureChannelEventState Class
-    #if (!OPCUA_EXCLUDE_AuditOpenSecureChannelEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditOpenSecureChannelEventState)
     /// <summary>
     /// Stores an instance of the AuditOpenSecureChannelEventType ObjectType.
     /// </summary>
@@ -7250,7 +7205,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditOpenSecureChannelEventState : AuditChannelEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -7266,7 +7221,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditOpenSecureChannelEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -7294,7 +7249,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJwAAAEF1ZGl0T3BlblNlY3VyZUNoYW5uZWxFdmVudFR5cGVJbnN0YW5j" +
            "ZQEADAgBAAwIDAgAAP////8UAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQClDAAuAESlDAAAAA//////" +
@@ -7316,11 +7271,11 @@ namespace Opc.Ua
            "UG9saWN5VXJpAQAPCAAuAEQPCAAAAAz/////AQH/////AAAAABVgiQoCAAAAAAAMAAAAU2VjdXJpdHlN" +
            "b2RlAQARCAAuAEQRCAAAAQAuAf////8BAf////8AAAAAFWCJCgIAAAAAABEAAABSZXF1ZXN0ZWRMaWZl" +
            "dGltZQEAEggALgBEEggAAAEAIgH/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<byte[]> ClientCertificate
         {
@@ -7434,9 +7389,9 @@ namespace Opc.Ua
                 m_requestedLifetime = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -7631,22 +7586,22 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<byte[]> m_clientCertificate;
         private PropertyState<string> m_clientCertificateThumbprint;
         private PropertyState<SecurityTokenRequestType> m_requestType;
         private PropertyState<string> m_securityPolicyUri;
         private PropertyState<MessageSecurityMode> m_securityMode;
         private PropertyState<double> m_requestedLifetime;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditSessionEventState Class
-    #if (!OPCUA_EXCLUDE_AuditSessionEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditSessionEventState)
     /// <summary>
     /// Stores an instance of the AuditSessionEventType ObjectType.
     /// </summary>
@@ -7654,7 +7609,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditSessionEventState : AuditSecurityEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -7670,7 +7625,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditSessionEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -7698,7 +7653,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHQAAAEF1ZGl0U2Vzc2lvbkV2ZW50VHlwZUluc3RhbmNlAQAVCAEAFQgV" +
            "CAAA/////w4AAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBALQMAC4ARLQMAAAAD/////8BAf////8AAAAA" +
@@ -7714,11 +7669,11 @@ namespace Opc.Ua
            "bnRyeUlkAQDADAAuAETADAAAAAz/////AQH/////AAAAABVgiQoCAAAAAAAMAAAAQ2xpZW50VXNlcklk" +
            "AQDBDAAuAETBDAAAAAz/////AQH/////AAAAABVgiQoCAAAAAAAJAAAAU2Vzc2lvbklkAQAWCAAuAEQW" +
            "CAAAABH/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<NodeId> SessionId
         {
@@ -7737,9 +7692,9 @@ namespace Opc.Ua
                 m_sessionId = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -7804,17 +7759,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<NodeId> m_sessionId;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditCreateSessionEventState Class
-    #if (!OPCUA_EXCLUDE_AuditCreateSessionEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditCreateSessionEventState)
     /// <summary>
     /// Stores an instance of the AuditCreateSessionEventType ObjectType.
     /// </summary>
@@ -7822,7 +7777,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditCreateSessionEventState : AuditSessionEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -7838,7 +7793,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditCreateSessionEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -7866,7 +7821,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIwAAAEF1ZGl0Q3JlYXRlU2Vzc2lvbkV2ZW50VHlwZUluc3RhbmNlAQAX" +
            "CAEAFwgXCAAA/////xIAAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAMIMAC4ARMIMAAAAD/////8BAf//" +
@@ -7886,11 +7841,11 @@ namespace Opc.Ua
            "RBkIAAAAD/////8BAf////8AAAAAFWCJCgIAAAAAABsAAABDbGllbnRDZXJ0aWZpY2F0ZVRodW1icHJp" +
            "bnQBALsKAC4ARLsKAAAADP////8BAf////8AAAAAFWCJCgIAAAAAABUAAABSZXZpc2VkU2Vzc2lvblRp" +
            "bWVvdXQBABoIAC4ARBoIAAABACIB/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<string> SecureChannelId
         {
@@ -7966,9 +7921,9 @@ namespace Opc.Ua
                 m_revisedSessionTimeout = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -8111,20 +8066,20 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<string> m_secureChannelId;
         private PropertyState<byte[]> m_clientCertificate;
         private PropertyState<string> m_clientCertificateThumbprint;
         private PropertyState<double> m_revisedSessionTimeout;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditUrlMismatchEventState Class
-    #if (!OPCUA_EXCLUDE_AuditUrlMismatchEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditUrlMismatchEventState)
     /// <summary>
     /// Stores an instance of the AuditUrlMismatchEventType ObjectType.
     /// </summary>
@@ -8132,7 +8087,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditUrlMismatchEventState : AuditCreateSessionEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -8148,7 +8103,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditUrlMismatchEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -8176,7 +8131,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIQAAAEF1ZGl0VXJsTWlzbWF0Y2hFdmVudFR5cGVJbnN0YW5jZQEAvAoB" +
            "ALwKvAoAAP////8TAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQDRDAAuAETRDAAAAA//////AQH/////" +
@@ -8197,11 +8152,11 @@ namespace Opc.Ua
            "AQDiDAAuAETiDAAAAAz/////AQH/////AAAAABVgiQoCAAAAAAAVAAAAUmV2aXNlZFNlc3Npb25UaW1l" +
            "b3V0AQDjDAAuAETjDAAAAQAiAf////8BAf////8AAAAAFWCJCgIAAAAAAAsAAABFbmRwb2ludFVybAEA" +
            "vQoALgBEvQoAAAAM/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<string> EndpointUrl
         {
@@ -8220,9 +8175,9 @@ namespace Opc.Ua
                 m_endpointUrl = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -8287,17 +8242,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<string> m_endpointUrl;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditActivateSessionEventState Class
-    #if (!OPCUA_EXCLUDE_AuditActivateSessionEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditActivateSessionEventState)
     /// <summary>
     /// Stores an instance of the AuditActivateSessionEventType ObjectType.
     /// </summary>
@@ -8305,7 +8260,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditActivateSessionEventState : AuditSessionEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -8321,7 +8276,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditActivateSessionEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -8349,7 +8304,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJQAAAEF1ZGl0QWN0aXZhdGVTZXNzaW9uRXZlbnRUeXBlSW5zdGFuY2UB" +
            "ABsIAQAbCBsIAAD/////EQAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEA5AwALgBE5AwAAAAP/////wEB" +
@@ -8368,11 +8323,11 @@ namespace Opc.Ua
            "ZmljYXRlcwEAHAgALgBEHAgAAAEAWAEBAAAAAQAAAAAAAAABAf////8AAAAAFWCJCgIAAAAAABEAAABV" +
            "c2VySWRlbnRpdHlUb2tlbgEAHQgALgBEHQgAAAEAPAH/////AQH/////AAAAABVgiQoCAAAAAAAPAAAA" +
            "U2VjdXJlQ2hhbm5lbElkAQDdLAAuAETdLAAAAAz/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<SignedSoftwareCertificate[]> ClientSoftwareCertificates
         {
@@ -8429,9 +8384,9 @@ namespace Opc.Ua
                 m_secureChannelId = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -8548,19 +8503,19 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<SignedSoftwareCertificate[]> m_clientSoftwareCertificates;
         private PropertyState<UserIdentityToken> m_userIdentityToken;
         private PropertyState<string> m_secureChannelId;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditCancelEventState Class
-    #if (!OPCUA_EXCLUDE_AuditCancelEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditCancelEventState)
     /// <summary>
     /// Stores an instance of the AuditCancelEventType ObjectType.
     /// </summary>
@@ -8568,7 +8523,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditCancelEventState : AuditSessionEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -8584,7 +8539,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditCancelEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -8612,7 +8567,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHAAAAEF1ZGl0Q2FuY2VsRXZlbnRUeXBlSW5zdGFuY2UBAB4IAQAeCB4I" +
            "AAD/////DwAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEA8wwALgBE8wwAAAAP/////wEB/////wAAAAAV" +
@@ -8629,11 +8584,11 @@ namespace Opc.Ua
            "AAANAC4ARAANAAAADP////8BAf////8AAAAAFWCJCgIAAAAAAAkAAABTZXNzaW9uSWQBAAENAC4ARAEN" +
            "AAAAEf////8BAf////8AAAAAFWCJCgIAAAAAAA0AAABSZXF1ZXN0SGFuZGxlAQAfCAAuAEQfCAAAAAf/" +
            "////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<uint> RequestHandle
         {
@@ -8652,9 +8607,9 @@ namespace Opc.Ua
                 m_requestHandle = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -8719,17 +8674,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<uint> m_requestHandle;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditCertificateEventState Class
-    #if (!OPCUA_EXCLUDE_AuditCertificateEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditCertificateEventState)
     /// <summary>
     /// Stores an instance of the AuditCertificateEventType ObjectType.
     /// </summary>
@@ -8737,7 +8692,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditCertificateEventState : AuditSecurityEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -8753,7 +8708,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditCertificateEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -8781,7 +8736,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIQAAAEF1ZGl0Q2VydGlmaWNhdGVFdmVudFR5cGVJbnN0YW5jZQEAIAgB" +
            "ACAIIAgAAP////8OAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQACDQAuAEQCDQAAAA//////AQH/////" +
@@ -8797,11 +8752,11 @@ namespace Opc.Ua
            "ZGl0RW50cnlJZAEADg0ALgBEDg0AAAAM/////wEB/////wAAAAAVYIkKAgAAAAAADAAAAENsaWVudFVz" +
            "ZXJJZAEADw0ALgBEDw0AAAAM/////wEB/////wAAAAAVYIkKAgAAAAAACwAAAENlcnRpZmljYXRlAQAh" +
            "CAAuAEQhCAAAAA//////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<byte[]> Certificate
         {
@@ -8820,9 +8775,9 @@ namespace Opc.Ua
                 m_certificate = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -8887,17 +8842,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<byte[]> m_certificate;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditCertificateDataMismatchEventState Class
-    #if (!OPCUA_EXCLUDE_AuditCertificateDataMismatchEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditCertificateDataMismatchEventState)
     /// <summary>
     /// Stores an instance of the AuditCertificateDataMismatchEventType ObjectType.
     /// </summary>
@@ -8905,7 +8860,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditCertificateDataMismatchEventState : AuditCertificateEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -8921,7 +8876,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditCertificateDataMismatchEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -8949,7 +8904,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAALQAAAEF1ZGl0Q2VydGlmaWNhdGVEYXRhTWlzbWF0Y2hFdmVudFR5cGVJ" +
            "bnN0YW5jZQEAIggBACIIIggAAP////8QAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQAQDQAuAEQQDQAA" +
@@ -8967,11 +8922,11 @@ namespace Opc.Ua
            "cnRpZmljYXRlAQAeDQAuAEQeDQAAAA//////AQH/////AAAAABVgiQoCAAAAAAAPAAAASW52YWxpZEhv" +
            "c3RuYW1lAQAjCAAuAEQjCAAAAAz/////AQH/////AAAAABVgiQoCAAAAAAAKAAAASW52YWxpZFVyaQEA" +
            "JAgALgBEJAgAAAAM/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<string> InvalidHostname
         {
@@ -9009,9 +8964,9 @@ namespace Opc.Ua
                 m_invalidUri = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -9102,18 +9057,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<string> m_invalidHostname;
         private PropertyState<string> m_invalidUri;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditCertificateExpiredEventState Class
-    #if (!OPCUA_EXCLUDE_AuditCertificateExpiredEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditCertificateExpiredEventState)
     /// <summary>
     /// Stores an instance of the AuditCertificateExpiredEventType ObjectType.
     /// </summary>
@@ -9121,7 +9076,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditCertificateExpiredEventState : AuditCertificateEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -9137,7 +9092,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditCertificateExpiredEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -9165,7 +9120,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKAAAAEF1ZGl0Q2VydGlmaWNhdGVFeHBpcmVkRXZlbnRUeXBlSW5zdGFu" +
            "Y2UBACUIAQAlCCUIAAD/////DgAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEAHw0ALgBEHw0AAAAP////" +
@@ -9181,24 +9136,24 @@ namespace Opc.Ua
            "bGllbnRBdWRpdEVudHJ5SWQBACsNAC4ARCsNAAAADP////8BAf////8AAAAAFWCJCgIAAAAAAAwAAABD" +
            "bGllbnRVc2VySWQBACwNAC4ARCwNAAAADP////8BAf////8AAAAAFWCJCgIAAAAAAAsAAABDZXJ0aWZp" +
            "Y2F0ZQEALQ0ALgBELQ0AAAAP/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region AuditCertificateInvalidEventState Class
-    #if (!OPCUA_EXCLUDE_AuditCertificateInvalidEventState)
+
+
+#if (!OPCUA_EXCLUDE_AuditCertificateInvalidEventState)
     /// <summary>
     /// Stores an instance of the AuditCertificateInvalidEventType ObjectType.
     /// </summary>
@@ -9206,7 +9161,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditCertificateInvalidEventState : AuditCertificateEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -9222,7 +9177,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditCertificateInvalidEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -9250,7 +9205,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKAAAAEF1ZGl0Q2VydGlmaWNhdGVJbnZhbGlkRXZlbnRUeXBlSW5zdGFu" +
            "Y2UBACYIAQAmCCYIAAD/////DgAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEALg0ALgBELg0AAAAP////" +
@@ -9266,24 +9221,24 @@ namespace Opc.Ua
            "bGllbnRBdWRpdEVudHJ5SWQBADoNAC4ARDoNAAAADP////8BAf////8AAAAAFWCJCgIAAAAAAAwAAABD" +
            "bGllbnRVc2VySWQBADsNAC4ARDsNAAAADP////8BAf////8AAAAAFWCJCgIAAAAAAAsAAABDZXJ0aWZp" +
            "Y2F0ZQEAPA0ALgBEPA0AAAAP/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region AuditCertificateUntrustedEventState Class
-    #if (!OPCUA_EXCLUDE_AuditCertificateUntrustedEventState)
+
+
+#if (!OPCUA_EXCLUDE_AuditCertificateUntrustedEventState)
     /// <summary>
     /// Stores an instance of the AuditCertificateUntrustedEventType ObjectType.
     /// </summary>
@@ -9291,7 +9246,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditCertificateUntrustedEventState : AuditCertificateEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -9307,7 +9262,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditCertificateUntrustedEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -9335,7 +9290,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKgAAAEF1ZGl0Q2VydGlmaWNhdGVVbnRydXN0ZWRFdmVudFR5cGVJbnN0" +
            "YW5jZQEAJwgBACcIJwgAAP////8OAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQA9DQAuAEQ9DQAAAA//" +
@@ -9351,24 +9306,24 @@ namespace Opc.Ua
            "AENsaWVudEF1ZGl0RW50cnlJZAEASQ0ALgBESQ0AAAAM/////wEB/////wAAAAAVYIkKAgAAAAAADAAA" +
            "AENsaWVudFVzZXJJZAEASg0ALgBESg0AAAAM/////wEB/////wAAAAAVYIkKAgAAAAAACwAAAENlcnRp" +
            "ZmljYXRlAQBLDQAuAERLDQAAAA//////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region AuditCertificateRevokedEventState Class
-    #if (!OPCUA_EXCLUDE_AuditCertificateRevokedEventState)
+
+
+#if (!OPCUA_EXCLUDE_AuditCertificateRevokedEventState)
     /// <summary>
     /// Stores an instance of the AuditCertificateRevokedEventType ObjectType.
     /// </summary>
@@ -9376,7 +9331,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditCertificateRevokedEventState : AuditCertificateEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -9392,7 +9347,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditCertificateRevokedEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -9420,7 +9375,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKAAAAEF1ZGl0Q2VydGlmaWNhdGVSZXZva2VkRXZlbnRUeXBlSW5zdGFu" +
            "Y2UBACgIAQAoCCgIAAD/////DgAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEATA0ALgBETA0AAAAP////" +
@@ -9436,24 +9391,24 @@ namespace Opc.Ua
            "bGllbnRBdWRpdEVudHJ5SWQBAFgNAC4ARFgNAAAADP////8BAf////8AAAAAFWCJCgIAAAAAAAwAAABD" +
            "bGllbnRVc2VySWQBAFkNAC4ARFkNAAAADP////8BAf////8AAAAAFWCJCgIAAAAAAAsAAABDZXJ0aWZp" +
            "Y2F0ZQEAWg0ALgBEWg0AAAAP/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region AuditCertificateMismatchEventState Class
-    #if (!OPCUA_EXCLUDE_AuditCertificateMismatchEventState)
+
+
+#if (!OPCUA_EXCLUDE_AuditCertificateMismatchEventState)
     /// <summary>
     /// Stores an instance of the AuditCertificateMismatchEventType ObjectType.
     /// </summary>
@@ -9461,7 +9416,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditCertificateMismatchEventState : AuditCertificateEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -9477,7 +9432,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditCertificateMismatchEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -9505,7 +9460,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKQAAAEF1ZGl0Q2VydGlmaWNhdGVNaXNtYXRjaEV2ZW50VHlwZUluc3Rh" +
            "bmNlAQApCAEAKQgpCAAA/////w4AAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAFsNAC4ARFsNAAAAD///" +
@@ -9521,24 +9476,24 @@ namespace Opc.Ua
            "Q2xpZW50QXVkaXRFbnRyeUlkAQBnDQAuAERnDQAAAAz/////AQH/////AAAAABVgiQoCAAAAAAAMAAAA" +
            "Q2xpZW50VXNlcklkAQBoDQAuAERoDQAAAAz/////AQH/////AAAAABVgiQoCAAAAAAALAAAAQ2VydGlm" +
            "aWNhdGUBAGkNAC4ARGkNAAAAD/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region AuditNodeManagementEventState Class
-    #if (!OPCUA_EXCLUDE_AuditNodeManagementEventState)
+
+
+#if (!OPCUA_EXCLUDE_AuditNodeManagementEventState)
     /// <summary>
     /// Stores an instance of the AuditNodeManagementEventType ObjectType.
     /// </summary>
@@ -9546,7 +9501,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditNodeManagementEventState : AuditEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -9562,7 +9517,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditNodeManagementEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -9590,7 +9545,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJAAAAEF1ZGl0Tm9kZU1hbmFnZW1lbnRFdmVudFR5cGVJbnN0YW5jZQEA" +
            "KggBACoIKggAAP////8NAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQBqDQAuAERqDQAAAA//////AQH/" +
@@ -9605,24 +9560,24 @@ namespace Opc.Ua
            "AAgAAABTZXJ2ZXJJZAEAdQ0ALgBEdQ0AAAAM/////wEB/////wAAAAAVYIkKAgAAAAAAEgAAAENsaWVu" +
            "dEF1ZGl0RW50cnlJZAEAdg0ALgBEdg0AAAAM/////wEB/////wAAAAAVYIkKAgAAAAAADAAAAENsaWVu" +
            "dFVzZXJJZAEAdw0ALgBEdw0AAAAM/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region AuditAddNodesEventState Class
-    #if (!OPCUA_EXCLUDE_AuditAddNodesEventState)
+
+
+#if (!OPCUA_EXCLUDE_AuditAddNodesEventState)
     /// <summary>
     /// Stores an instance of the AuditAddNodesEventType ObjectType.
     /// </summary>
@@ -9630,7 +9585,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditAddNodesEventState : AuditNodeManagementEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -9646,7 +9601,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditAddNodesEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -9674,7 +9629,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHgAAAEF1ZGl0QWRkTm9kZXNFdmVudFR5cGVJbnN0YW5jZQEAKwgBACsI" +
            "KwgAAP////8OAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQB4DQAuAER4DQAAAA//////AQH/////AAAA" +
@@ -9690,11 +9645,11 @@ namespace Opc.Ua
            "RW50cnlJZAEAhA0ALgBEhA0AAAAM/////wEB/////wAAAAAVYIkKAgAAAAAADAAAAENsaWVudFVzZXJJ" +
            "ZAEAhQ0ALgBEhQ0AAAAM/////wEB/////wAAAAAXYIkKAgAAAAAACgAAAE5vZGVzVG9BZGQBACwIAC4A" +
            "RCwIAAABAHgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<AddNodesItem[]> NodesToAdd
         {
@@ -9713,9 +9668,9 @@ namespace Opc.Ua
                 m_nodesToAdd = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -9780,17 +9735,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<AddNodesItem[]> m_nodesToAdd;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditDeleteNodesEventState Class
-    #if (!OPCUA_EXCLUDE_AuditDeleteNodesEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditDeleteNodesEventState)
     /// <summary>
     /// Stores an instance of the AuditDeleteNodesEventType ObjectType.
     /// </summary>
@@ -9798,7 +9753,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditDeleteNodesEventState : AuditNodeManagementEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -9814,7 +9769,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditDeleteNodesEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -9842,7 +9797,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIQAAAEF1ZGl0RGVsZXRlTm9kZXNFdmVudFR5cGVJbnN0YW5jZQEALQgB" +
            "AC0ILQgAAP////8OAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQCGDQAuAESGDQAAAA//////AQH/////" +
@@ -9858,11 +9813,11 @@ namespace Opc.Ua
            "ZGl0RW50cnlJZAEAkg0ALgBEkg0AAAAM/////wEB/////wAAAAAVYIkKAgAAAAAADAAAAENsaWVudFVz" +
            "ZXJJZAEAkw0ALgBEkw0AAAAM/////wEB/////wAAAAAXYIkKAgAAAAAADQAAAE5vZGVzVG9EZWxldGUB" +
            "AC4IAC4ARC4IAAABAH4BAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<DeleteNodesItem[]> NodesToDelete
         {
@@ -9881,9 +9836,9 @@ namespace Opc.Ua
                 m_nodesToDelete = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -9948,17 +9903,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<DeleteNodesItem[]> m_nodesToDelete;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditAddReferencesEventState Class
-    #if (!OPCUA_EXCLUDE_AuditAddReferencesEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditAddReferencesEventState)
     /// <summary>
     /// Stores an instance of the AuditAddReferencesEventType ObjectType.
     /// </summary>
@@ -9966,7 +9921,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditAddReferencesEventState : AuditNodeManagementEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -9982,7 +9937,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditAddReferencesEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -10010,7 +9965,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIwAAAEF1ZGl0QWRkUmVmZXJlbmNlc0V2ZW50VHlwZUluc3RhbmNlAQAv" +
            "CAEALwgvCAAA/////w4AAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAJQNAC4ARJQNAAAAD/////8BAf//" +
@@ -10026,11 +9981,11 @@ namespace Opc.Ua
            "QXVkaXRFbnRyeUlkAQCgDQAuAESgDQAAAAz/////AQH/////AAAAABVgiQoCAAAAAAAMAAAAQ2xpZW50" +
            "VXNlcklkAQChDQAuAEShDQAAAAz/////AQH/////AAAAABdgiQoCAAAAAAAPAAAAUmVmZXJlbmNlc1Rv" +
            "QWRkAQAwCAAuAEQwCAAAAQB7AQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<AddReferencesItem[]> ReferencesToAdd
         {
@@ -10049,9 +10004,9 @@ namespace Opc.Ua
                 m_referencesToAdd = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -10116,17 +10071,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<AddReferencesItem[]> m_referencesToAdd;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditDeleteReferencesEventState Class
-    #if (!OPCUA_EXCLUDE_AuditDeleteReferencesEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditDeleteReferencesEventState)
     /// <summary>
     /// Stores an instance of the AuditDeleteReferencesEventType ObjectType.
     /// </summary>
@@ -10134,7 +10089,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditDeleteReferencesEventState : AuditNodeManagementEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -10150,7 +10105,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditDeleteReferencesEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -10178,7 +10133,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJgAAAEF1ZGl0RGVsZXRlUmVmZXJlbmNlc0V2ZW50VHlwZUluc3RhbmNl" +
            "AQAxCAEAMQgxCAAA/////w4AAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAKINAC4ARKINAAAAD/////8B" +
@@ -10194,11 +10149,11 @@ namespace Opc.Ua
            "ZW50QXVkaXRFbnRyeUlkAQCuDQAuAESuDQAAAAz/////AQH/////AAAAABVgiQoCAAAAAAAMAAAAQ2xp" +
            "ZW50VXNlcklkAQCvDQAuAESvDQAAAAz/////AQH/////AAAAABdgiQoCAAAAAAASAAAAUmVmZXJlbmNl" +
            "c1RvRGVsZXRlAQAyCAAuAEQyCAAAAQCBAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<DeleteReferencesItem[]> ReferencesToDelete
         {
@@ -10217,9 +10172,9 @@ namespace Opc.Ua
                 m_referencesToDelete = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -10284,17 +10239,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<DeleteReferencesItem[]> m_referencesToDelete;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditUpdateEventState Class
-    #if (!OPCUA_EXCLUDE_AuditUpdateEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditUpdateEventState)
     /// <summary>
     /// Stores an instance of the AuditUpdateEventType ObjectType.
     /// </summary>
@@ -10302,7 +10257,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditUpdateEventState : AuditEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -10318,7 +10273,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditUpdateEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -10346,7 +10301,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHAAAAEF1ZGl0VXBkYXRlRXZlbnRUeXBlSW5zdGFuY2UBADMIAQAzCDMI" +
            "AAD/////DQAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEAsA0ALgBEsA0AAAAP/////wEB/////wAAAAAV" +
@@ -10361,24 +10316,24 @@ namespace Opc.Ua
            "dmVySWQBALsNAC4ARLsNAAAADP////8BAf////8AAAAAFWCJCgIAAAAAABIAAABDbGllbnRBdWRpdEVu" +
            "dHJ5SWQBALwNAC4ARLwNAAAADP////8BAf////8AAAAAFWCJCgIAAAAAAAwAAABDbGllbnRVc2VySWQB" +
            "AL0NAC4ARL0NAAAADP////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region AuditWriteUpdateEventState Class
-    #if (!OPCUA_EXCLUDE_AuditWriteUpdateEventState)
+
+
+#if (!OPCUA_EXCLUDE_AuditWriteUpdateEventState)
     /// <summary>
     /// Stores an instance of the AuditWriteUpdateEventType ObjectType.
     /// </summary>
@@ -10386,7 +10341,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditWriteUpdateEventState : AuditUpdateEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -10402,7 +10357,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditWriteUpdateEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -10430,7 +10385,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIQAAAEF1ZGl0V3JpdGVVcGRhdGVFdmVudFR5cGVJbnN0YW5jZQEANAgB" +
            "ADQINAgAAP////8RAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQC+DQAuAES+DQAAAA//////AQH/////" +
@@ -10448,11 +10403,11 @@ namespace Opc.Ua
            "CgAuAES+CgAAAAf/////AQH/////AAAAABVgiQoCAAAAAAAKAAAASW5kZXhSYW5nZQEANQgALgBENQgA" +
            "AAEAIwH/////AQH/////AAAAABVgiQoCAAAAAAAIAAAAT2xkVmFsdWUBADYIAC4ARDYIAAAAGP////8B" +
            "Af////8AAAAAFWCJCgIAAAAAAAgAAABOZXdWYWx1ZQEANwgALgBENwgAAAAY/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<uint> AttributeId
         {
@@ -10528,9 +10483,9 @@ namespace Opc.Ua
                 m_newValue = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -10673,20 +10628,20 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<uint> m_attributeId;
         private PropertyState<string> m_indexRange;
         private PropertyState m_oldValue;
         private PropertyState m_newValue;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditHistoryUpdateEventState Class
-    #if (!OPCUA_EXCLUDE_AuditHistoryUpdateEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditHistoryUpdateEventState)
     /// <summary>
     /// Stores an instance of the AuditHistoryUpdateEventType ObjectType.
     /// </summary>
@@ -10694,7 +10649,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditHistoryUpdateEventState : AuditUpdateEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -10710,7 +10665,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditHistoryUpdateEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -10738,7 +10693,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIwAAAEF1ZGl0SGlzdG9yeVVwZGF0ZUV2ZW50VHlwZUluc3RhbmNlAQA4" +
            "CAEAOAg4CAAA/////w4AAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAMwNAC4ARMwNAAAAD/////8BAf//" +
@@ -10754,11 +10709,11 @@ namespace Opc.Ua
            "QXVkaXRFbnRyeUlkAQDYDQAuAETYDQAAAAz/////AQH/////AAAAABVgiQoCAAAAAAAMAAAAQ2xpZW50" +
            "VXNlcklkAQDZDQAuAETZDQAAAAz/////AQH/////AAAAABVgiQoCAAAAAAATAAAAUGFyYW1ldGVyRGF0" +
            "YVR5cGVJZAEAvwoALgBEvwoAAAAR/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<NodeId> ParameterDataTypeId
         {
@@ -10777,9 +10732,9 @@ namespace Opc.Ua
                 m_parameterDataTypeId = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -10844,17 +10799,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<NodeId> m_parameterDataTypeId;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditUpdateMethodEventState Class
-    #if (!OPCUA_EXCLUDE_AuditUpdateMethodEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditUpdateMethodEventState)
     /// <summary>
     /// Stores an instance of the AuditUpdateMethodEventType ObjectType.
     /// </summary>
@@ -10862,7 +10817,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditUpdateMethodEventState : AuditEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -10878,7 +10833,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditUpdateMethodEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -10906,7 +10861,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIgAAAEF1ZGl0VXBkYXRlTWV0aG9kRXZlbnRUeXBlSW5zdGFuY2UBAE8I" +
            "AQBPCE8IAAD/////DwAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEANw4ALgBENw4AAAAP/////wEB////" +
@@ -10923,11 +10878,11 @@ namespace Opc.Ua
            "c2VySWQBAEQOAC4AREQOAAAADP////8BAf////8AAAAAFWCJCgIAAAAAAAgAAABNZXRob2RJZAEAUAgA" +
            "LgBEUAgAAAAR/////wEB/////wAAAAAXYIkKAgAAAAAADgAAAElucHV0QXJndW1lbnRzAQBRCAAuAERR" +
            "CAAAABgBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<NodeId> MethodId
         {
@@ -10965,9 +10920,9 @@ namespace Opc.Ua
                 m_inputArguments = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -11058,18 +11013,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<NodeId> m_methodId;
         private PropertyState<object[]> m_inputArguments;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region SystemEventState Class
-    #if (!OPCUA_EXCLUDE_SystemEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_SystemEventState)
     /// <summary>
     /// Stores an instance of the SystemEventType ObjectType.
     /// </summary>
@@ -11077,7 +11032,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SystemEventState : BaseEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -11093,7 +11048,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.SystemEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -11121,7 +11076,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAFwAAAFN5c3RlbUV2ZW50VHlwZUluc3RhbmNlAQBSCAEAUghSCAAA////" +
            "/wgAAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAEUOAC4AREUOAAAAD/////8BAf////8AAAAAFWCJCgIA" +
@@ -11131,24 +11086,24 @@ namespace Opc.Ua
            "ACYB/////wEB/////wAAAAAVYIkKAgAAAAAACwAAAFJlY2VpdmVUaW1lAQBKDgAuAERKDgAAAQAmAf//" +
            "//8BAf////8AAAAAFWCJCgIAAAAAAAcAAABNZXNzYWdlAQBMDgAuAERMDgAAABX/////AQH/////AAAA" +
            "ABVgiQoCAAAAAAAIAAAAU2V2ZXJpdHkBAE0OAC4ARE0OAAAABf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region DeviceFailureEventState Class
-    #if (!OPCUA_EXCLUDE_DeviceFailureEventState)
+
+
+#if (!OPCUA_EXCLUDE_DeviceFailureEventState)
     /// <summary>
     /// Stores an instance of the DeviceFailureEventType ObjectType.
     /// </summary>
@@ -11156,7 +11111,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DeviceFailureEventState : SystemEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -11172,7 +11127,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.DeviceFailureEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -11200,7 +11155,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHgAAAERldmljZUZhaWx1cmVFdmVudFR5cGVJbnN0YW5jZQEAUwgBAFMI" +
            "UwgAAP////8IAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQBODgAuAERODgAAAA//////AQH/////AAAA" +
@@ -11210,24 +11165,24 @@ namespace Opc.Ua
            "AERSDgAAAQAmAf////8BAf////8AAAAAFWCJCgIAAAAAAAsAAABSZWNlaXZlVGltZQEAUw4ALgBEUw4A" +
            "AAEAJgH/////AQH/////AAAAABVgiQoCAAAAAAAHAAAATWVzc2FnZQEAVQ4ALgBEVQ4AAAAV/////wEB" +
            "/////wAAAAAVYIkKAgAAAAAACAAAAFNldmVyaXR5AQBWDgAuAERWDgAAAAX/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region SystemStatusChangeEventState Class
-    #if (!OPCUA_EXCLUDE_SystemStatusChangeEventState)
+
+
+#if (!OPCUA_EXCLUDE_SystemStatusChangeEventState)
     /// <summary>
     /// Stores an instance of the SystemStatusChangeEventType ObjectType.
     /// </summary>
@@ -11235,7 +11190,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SystemStatusChangeEventState : SystemEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -11251,7 +11206,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.SystemStatusChangeEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -11279,7 +11234,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIwAAAFN5c3RlbVN0YXR1c0NoYW5nZUV2ZW50VHlwZUluc3RhbmNlAQC2" +
            "LAEAtiy2LAAA/////wkAAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBALcsAC4ARLcsAAAAD/////8BAf//" +
@@ -11290,11 +11245,11 @@ namespace Opc.Ua
            "AES8LAAAAQAmAf////8BAf////8AAAAAFWCJCgIAAAAAAAcAAABNZXNzYWdlAQC+LAAuAES+LAAAABX/" +
            "////AQH/////AAAAABVgiQoCAAAAAAAIAAAAU2V2ZXJpdHkBAL8sAC4ARL8sAAAABf////8BAf////8A" +
            "AAAAFWCJCgIAAAAAAAsAAABTeXN0ZW1TdGF0ZQEAsC0ALgBEsC0AAAEAVAP/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<ServerState> SystemState
         {
@@ -11313,9 +11268,9 @@ namespace Opc.Ua
                 m_systemState = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -11380,17 +11335,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<ServerState> m_systemState;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region BaseModelChangeEventState Class
-    #if (!OPCUA_EXCLUDE_BaseModelChangeEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_BaseModelChangeEventState)
     /// <summary>
     /// Stores an instance of the BaseModelChangeEventType ObjectType.
     /// </summary>
@@ -11398,7 +11353,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class BaseModelChangeEventState : BaseEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -11414,7 +11369,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.BaseModelChangeEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -11442,7 +11397,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIAAAAEJhc2VNb2RlbENoYW5nZUV2ZW50VHlwZUluc3RhbmNlAQBUCAEA" +
            "VAhUCAAA/////wgAAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAFcOAC4ARFcOAAAAD/////8BAf////8A" +
@@ -11452,24 +11407,24 @@ namespace Opc.Ua
            "AC4ARFsOAAABACYB/////wEB/////wAAAAAVYIkKAgAAAAAACwAAAFJlY2VpdmVUaW1lAQBcDgAuAERc" +
            "DgAAAQAmAf////8BAf////8AAAAAFWCJCgIAAAAAAAcAAABNZXNzYWdlAQBeDgAuAEReDgAAABX/////" +
            "AQH/////AAAAABVgiQoCAAAAAAAIAAAAU2V2ZXJpdHkBAF8OAC4ARF8OAAAABf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region GeneralModelChangeEventState Class
-    #if (!OPCUA_EXCLUDE_GeneralModelChangeEventState)
+
+
+#if (!OPCUA_EXCLUDE_GeneralModelChangeEventState)
     /// <summary>
     /// Stores an instance of the GeneralModelChangeEventType ObjectType.
     /// </summary>
@@ -11477,7 +11432,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class GeneralModelChangeEventState : BaseModelChangeEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -11493,7 +11448,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.GeneralModelChangeEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -11521,7 +11476,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIwAAAEdlbmVyYWxNb2RlbENoYW5nZUV2ZW50VHlwZUluc3RhbmNlAQBV" +
            "CAEAVQhVCAAA/////wkAAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAGAOAC4ARGAOAAAAD/////8BAf//" +
@@ -11533,11 +11488,11 @@ namespace Opc.Ua
            "////AQH/////AAAAABVgiQoCAAAAAAAIAAAAU2V2ZXJpdHkBAGgOAC4ARGgOAAAABf////8BAf////8A" +
            "AAAAF2CJCgIAAAAAAAcAAABDaGFuZ2VzAQBWCAAuAERWCAAAAQBtAwEAAAABAAAAAAAAAAEB/////wAA" +
            "AAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<ModelChangeStructureDataType[]> Changes
         {
@@ -11556,9 +11511,9 @@ namespace Opc.Ua
                 m_changes = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -11623,17 +11578,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<ModelChangeStructureDataType[]> m_changes;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region SemanticChangeEventState Class
-    #if (!OPCUA_EXCLUDE_SemanticChangeEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_SemanticChangeEventState)
     /// <summary>
     /// Stores an instance of the SemanticChangeEventType ObjectType.
     /// </summary>
@@ -11641,7 +11596,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SemanticChangeEventState : BaseEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -11657,7 +11612,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.SemanticChangeEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -11685,7 +11640,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHwAAAFNlbWFudGljQ2hhbmdlRXZlbnRUeXBlSW5zdGFuY2UBALIKAQCy" +
            "CrIKAAD/////CQAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEAaQ4ALgBEaQ4AAAAP/////wEB/////wAA" +
@@ -11696,11 +11651,11 @@ namespace Opc.Ua
            "AAABACYB/////wEB/////wAAAAAVYIkKAgAAAAAABwAAAE1lc3NhZ2UBAHAOAC4ARHAOAAAAFf////8B" +
            "Af////8AAAAAFWCJCgIAAAAAAAgAAABTZXZlcml0eQEAcQ4ALgBEcQ4AAAAF/////wEB/////wAAAAAX" +
            "YIkKAgAAAAAABwAAAENoYW5nZXMBALMKAC4ARLMKAAABAIEDAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<SemanticChangeStructureDataType[]> Changes
         {
@@ -11719,9 +11674,9 @@ namespace Opc.Ua
                 m_changes = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -11786,17 +11741,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<SemanticChangeStructureDataType[]> m_changes;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region EventQueueOverflowEventState Class
-    #if (!OPCUA_EXCLUDE_EventQueueOverflowEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_EventQueueOverflowEventState)
     /// <summary>
     /// Stores an instance of the EventQueueOverflowEventType ObjectType.
     /// </summary>
@@ -11804,7 +11759,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class EventQueueOverflowEventState : BaseEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -11820,7 +11775,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.EventQueueOverflowEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -11848,7 +11803,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIwAAAEV2ZW50UXVldWVPdmVyZmxvd0V2ZW50VHlwZUluc3RhbmNlAQDb" +
            "CwEA2wvbCwAA/////wgAAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAHcMAC4ARHcMAAAAD/////8BAf//" +
@@ -11859,24 +11814,24 @@ namespace Opc.Ua
            "AER8DAAAAQAmAf////8BAf////8AAAAAFWCJCgIAAAAAAAcAAABNZXNzYWdlAQB+DAAuAER+DAAAABX/" +
            "////AQH/////AAAAABVgiQoCAAAAAAAIAAAAU2V2ZXJpdHkBAH8MAC4ARH8MAAAABf////8BAf////8A" +
            "AAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region ProgressEventState Class
-    #if (!OPCUA_EXCLUDE_ProgressEventState)
+
+
+#if (!OPCUA_EXCLUDE_ProgressEventState)
     /// <summary>
     /// Stores an instance of the ProgressEventType ObjectType.
     /// </summary>
@@ -11884,7 +11839,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ProgressEventState : BaseEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -11900,7 +11855,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ProgressEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -11928,7 +11883,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAGQAAAFByb2dyZXNzRXZlbnRUeXBlSW5zdGFuY2UBAKwsAQCsLKwsAAD/" +
            "////CgAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEArSwALgBErSwAAAAP/////wEB/////wAAAAAVYIkK" +
@@ -11940,11 +11895,11 @@ namespace Opc.Ua
            "AAAAFWCJCgIAAAAAAAgAAABTZXZlcml0eQEAtSwALgBEtSwAAAAF/////wEB/////wAAAAAVYIkKAgAA" +
            "AAAABwAAAENvbnRleHQBANYwAC4ARNYwAAAAGP////8BAf////8AAAAAFWCJCgIAAAAAAAgAAABQcm9n" +
            "cmVzcwEA1zAALgBE1zAAAAAF/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState Context
         {
@@ -11982,9 +11937,9 @@ namespace Opc.Ua
                 m_progress = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -12075,18 +12030,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState m_context;
         private PropertyState<ushort> m_progress;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AggregateFunctionState Class
-    #if (!OPCUA_EXCLUDE_AggregateFunctionState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AggregateFunctionState)
     /// <summary>
     /// Stores an instance of the AggregateFunctionType ObjectType.
     /// </summary>
@@ -12094,7 +12049,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AggregateFunctionState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -12110,7 +12065,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AggregateFunctionType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -12138,28 +12093,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHQAAAEFnZ3JlZ2F0ZUZ1bmN0aW9uVHlwZUluc3RhbmNlAQAkCQEAJAkk" +
            "CQAA/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region ServerVendorCapabilityState Class
-    #if (!OPCUA_EXCLUDE_ServerVendorCapabilityState)
+
+
+#if (!OPCUA_EXCLUDE_ServerVendorCapabilityState)
     /// <summary>
     /// Stores an instance of the ServerVendorCapabilityType VariableType.
     /// </summary>
@@ -12167,7 +12122,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ServerVendorCapabilityState : BaseDataVariableState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -12199,7 +12154,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -12227,25 +12182,25 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAIgAAAFNlcnZlclZlbmRvckNhcGFiaWxpdHlUeXBlSW5zdGFuY2UBAFkI" +
            "AQBZCFkIAAAAGP////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
 
-    #region ServerVendorCapabilityState<T> Class
+
     /// <summary>
     /// A typed version of the ServerVendorCapabilityType variable.
     /// </summary>
@@ -12253,7 +12208,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class ServerVendorCapabilityState<T> : ServerVendorCapabilityState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -12282,9 +12237,9 @@ namespace Opc.Ua
             InitializeOptionalChildren(context);
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The value of the variable.
         /// </summary>
@@ -12300,14 +12255,14 @@ namespace Opc.Ua
                 base.Value = value;
             }
         }
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region ServerStatusState Class
-    #if (!OPCUA_EXCLUDE_ServerStatusState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ServerStatusState)
     /// <summary>
     /// Stores an instance of the ServerStatusType VariableType.
     /// </summary>
@@ -12315,7 +12270,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ServerStatusState : BaseDataVariableState<ServerStatusDataType>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -12347,7 +12302,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -12375,7 +12330,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAGAAAAFNlcnZlclN0YXR1c1R5cGVJbnN0YW5jZQEAWggBAFoIWggAAAEA" +
            "XgP/////AQH/////BgAAABVgiQoCAAAAAAAJAAAAU3RhcnRUaW1lAQBbCAAvAD9bCAAAAQAmAf////8B" +
@@ -12390,11 +12345,11 @@ namespace Opc.Ua
            "ABVwiQoCAAAAAAAJAAAAQnVpbGREYXRlAQB3DgAvAD93DgAAAQAmAf////8BAQAAAAAAQI9A/////wAA" +
            "AAAVYIkKAgAAAAAAEwAAAFNlY29uZHNUaWxsU2h1dGRvd24BAMAKAC8AP8AKAAAAB/////8BAf////8A" +
            "AAAAFWCJCgIAAAAAAA4AAABTaHV0ZG93blJlYXNvbgEAwQoALwA/wQoAAAAV/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<DateTime> StartTime
         {
@@ -12508,9 +12463,9 @@ namespace Opc.Ua
                 m_shutdownReason = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -12705,19 +12660,19 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<DateTime> m_startTime;
         private BaseDataVariableState<DateTime> m_currentTime;
         private BaseDataVariableState<ServerState> m_state;
         private BuildInfoVariableState m_buildInfo;
         private BaseDataVariableState<uint> m_secondsTillShutdown;
         private BaseDataVariableState<LocalizedText> m_shutdownReason;
-        #endregion
+
     }
 
-    #region ServerStatusValue Class
+
     /// <summary>
     /// A typed version of the _BrowseName_ variable.
     /// </summary>
@@ -12725,7 +12680,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class ServerStatusValue : BaseVariableValue
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -12740,9 +12695,9 @@ namespace Opc.Ua
 
             Initialize(variable);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The variable that the value belongs to.
         /// </summary>
@@ -12756,12 +12711,12 @@ namespace Opc.Ua
         /// </summary>
         public ServerStatusDataType Value
         {
-            get { return m_value;  }
+            get { return m_value; }
             set { m_value = value; }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Initializes the object.
         /// </summary>
@@ -12871,7 +12826,7 @@ namespace Opc.Ua
             return ServiceResult.Good;
         }
 
-        #region StartTime Access Methods
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -12909,9 +12864,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region CurrentTime Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -12949,9 +12904,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region State Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -12989,9 +12944,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region BuildInfo Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -13029,9 +12984,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region BuildInfo_ProductUri Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -13069,9 +13024,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region BuildInfo_ManufacturerName Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -13109,9 +13064,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region BuildInfo_ProductName Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -13149,9 +13104,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region BuildInfo_SoftwareVersion Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -13189,9 +13144,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region BuildInfo_BuildNumber Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -13229,9 +13184,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region BuildInfo_BuildDate Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -13269,9 +13224,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region SecondsTillShutdown Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -13309,9 +13264,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region ShutdownReason Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -13349,20 +13304,20 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
-        #endregion
 
-        #region Private Fields
+
+
+
         private ServerStatusDataType m_value;
         private ServerStatusState m_variable;
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region BuildInfoVariableState Class
-    #if (!OPCUA_EXCLUDE_BuildInfoVariableState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_BuildInfoVariableState)
     /// <summary>
     /// Stores an instance of the BuildInfoType VariableType.
     /// </summary>
@@ -13370,7 +13325,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class BuildInfoVariableState : BaseDataVariableState<BuildInfo>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -13402,7 +13357,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -13430,7 +13385,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAFQAAAEJ1aWxkSW5mb1R5cGVJbnN0YW5jZQEA6wsBAOsL6wsAAAEAUgH/" +
            "////AQH/////BgAAABVwiQoCAAAAAAAKAAAAUHJvZHVjdFVyaQEA7AsALwA/7AsAAAAM/////wEBAAAA" +
@@ -13440,11 +13395,11 @@ namespace Opc.Ua
            "AAAM/////wEBAAAAAABAj0D/////AAAAABVwiQoCAAAAAAALAAAAQnVpbGROdW1iZXIBAPALAC8AP/AL" +
            "AAAADP////8BAQAAAAAAQI9A/////wAAAAAVcIkKAgAAAAAACQAAAEJ1aWxkRGF0ZQEA8QsALwA/8QsA" +
            "AAEAJgH/////AQEAAAAAAECPQP////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<string> ProductUri
         {
@@ -13558,9 +13513,9 @@ namespace Opc.Ua
                 m_buildDate = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -13755,19 +13710,19 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<string> m_productUri;
         private BaseDataVariableState<string> m_manufacturerName;
         private BaseDataVariableState<string> m_productName;
         private BaseDataVariableState<string> m_softwareVersion;
         private BaseDataVariableState<string> m_buildNumber;
         private BaseDataVariableState<DateTime> m_buildDate;
-        #endregion
+
     }
 
-    #region BuildInfoVariableValue Class
+
     /// <summary>
     /// A typed version of the _BrowseName_ variable.
     /// </summary>
@@ -13775,7 +13730,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class BuildInfoVariableValue : BaseVariableValue
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -13790,9 +13745,9 @@ namespace Opc.Ua
 
             Initialize(variable);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The variable that the value belongs to.
         /// </summary>
@@ -13806,12 +13761,12 @@ namespace Opc.Ua
         /// </summary>
         public BuildInfo Value
         {
-            get { return m_value;  }
+            get { return m_value; }
             set { m_value = value; }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Initializes the object.
         /// </summary>
@@ -13897,7 +13852,7 @@ namespace Opc.Ua
             return ServiceResult.Good;
         }
 
-        #region ProductUri Access Methods
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -13935,9 +13890,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region ManufacturerName Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -13975,9 +13930,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region ProductName Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -14015,9 +13970,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region SoftwareVersion Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -14055,9 +14010,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region BuildNumber Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -14095,9 +14050,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region BuildDate Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -14135,20 +14090,20 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
-        #endregion
 
-        #region Private Fields
+
+
+
         private BuildInfo m_value;
         private BuildInfoVariableState m_variable;
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region ServerDiagnosticsSummaryState Class
-    #if (!OPCUA_EXCLUDE_ServerDiagnosticsSummaryState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ServerDiagnosticsSummaryState)
     /// <summary>
     /// Stores an instance of the ServerDiagnosticsSummaryType VariableType.
     /// </summary>
@@ -14156,7 +14111,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ServerDiagnosticsSummaryState : BaseDataVariableState<ServerDiagnosticsSummaryDataType>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -14188,7 +14143,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -14216,7 +14171,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAJAAAAFNlcnZlckRpYWdub3N0aWNzU3VtbWFyeVR5cGVJbnN0YW5jZQEA" +
            "ZggBAGYIZggAAAEAWwP/////AQH/////DAAAABVgiQoCAAAAAAAPAAAAU2VydmVyVmlld0NvdW50AQBn" +
@@ -14233,11 +14188,11 @@ namespace Opc.Ua
            "FWCJCgIAAAAAAB0AAABTZWN1cml0eVJlamVjdGVkUmVxdWVzdHNDb3VudAEAcggALwA/cggAAAAH////" +
            "/wEB/////wAAAAAVYIkKAgAAAAAAFQAAAFJlamVjdGVkUmVxdWVzdHNDb3VudAEAcwgALwA/cwgAAAAH" +
            "/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<uint> ServerViewCount
         {
@@ -14465,9 +14420,9 @@ namespace Opc.Ua
                 m_rejectedRequestsCount = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -14818,9 +14773,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<uint> m_serverViewCount;
         private BaseDataVariableState<uint> m_currentSessionCount;
         private BaseDataVariableState<uint> m_cumulatedSessionCount;
@@ -14833,10 +14788,10 @@ namespace Opc.Ua
         private BaseDataVariableState<uint> m_cumulatedSubscriptionCount;
         private BaseDataVariableState<uint> m_securityRejectedRequestsCount;
         private BaseDataVariableState<uint> m_rejectedRequestsCount;
-        #endregion
+
     }
 
-    #region ServerDiagnosticsSummaryValue Class
+
     /// <summary>
     /// A typed version of the _BrowseName_ variable.
     /// </summary>
@@ -14844,7 +14799,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class ServerDiagnosticsSummaryValue : BaseVariableValue
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -14859,9 +14814,9 @@ namespace Opc.Ua
 
             Initialize(variable);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The variable that the value belongs to.
         /// </summary>
@@ -14875,12 +14830,12 @@ namespace Opc.Ua
         /// </summary>
         public ServerDiagnosticsSummaryDataType Value
         {
-            get { return m_value;  }
+            get { return m_value; }
             set { m_value = value; }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Initializes the object.
         /// </summary>
@@ -14990,7 +14945,7 @@ namespace Opc.Ua
             return ServiceResult.Good;
         }
 
-        #region ServerViewCount Access Methods
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -15028,9 +14983,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region CurrentSessionCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -15068,9 +15023,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region CumulatedSessionCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -15108,9 +15063,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region SecurityRejectedSessionCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -15148,9 +15103,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region RejectedSessionCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -15188,9 +15143,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region SessionTimeoutCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -15228,9 +15183,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region SessionAbortCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -15268,9 +15223,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region CurrentSubscriptionCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -15308,9 +15263,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region CumulatedSubscriptionCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -15348,9 +15303,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region PublishingIntervalCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -15388,9 +15343,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region SecurityRejectedRequestsCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -15428,9 +15383,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region RejectedRequestsCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -15468,20 +15423,20 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
-        #endregion
 
-        #region Private Fields
+
+
+
         private ServerDiagnosticsSummaryDataType m_value;
         private ServerDiagnosticsSummaryState m_variable;
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region SamplingIntervalDiagnosticsArrayState Class
-    #if (!OPCUA_EXCLUDE_SamplingIntervalDiagnosticsArrayState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_SamplingIntervalDiagnosticsArrayState)
     /// <summary>
     /// Stores an instance of the SamplingIntervalDiagnosticsArrayType VariableType.
     /// </summary>
@@ -15489,7 +15444,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SamplingIntervalDiagnosticsArrayState : BaseDataVariableState<SamplingIntervalDiagnosticsDataType[]>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -15521,7 +15476,7 @@ namespace Opc.Ua
             return ValueRanks.OneDimension;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -15549,28 +15504,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8XYIkCAgAAAAAALAAAAFNhbXBsaW5nSW50ZXJ2YWxEaWFnbm9zdGljc0FycmF5VHlwZUlu" +
            "c3RhbmNlAQB0CAEAdAh0CAAAAQBYAwEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region SamplingIntervalDiagnosticsState Class
-    #if (!OPCUA_EXCLUDE_SamplingIntervalDiagnosticsState)
+
+
+#if (!OPCUA_EXCLUDE_SamplingIntervalDiagnosticsState)
     /// <summary>
     /// Stores an instance of the SamplingIntervalDiagnosticsType VariableType.
     /// </summary>
@@ -15578,7 +15533,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SamplingIntervalDiagnosticsState : BaseDataVariableState<SamplingIntervalDiagnosticsDataType>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -15610,7 +15565,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -15638,7 +15593,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAJwAAAFNhbXBsaW5nSW50ZXJ2YWxEaWFnbm9zdGljc1R5cGVJbnN0YW5j" +
            "ZQEAdQgBAHUIdQgAAAEAWAP/////AQH/////BAAAABVgiQoCAAAAAAAQAAAAU2FtcGxpbmdJbnRlcnZh" +
@@ -15647,11 +15602,11 @@ namespace Opc.Ua
            "bGVkTW9uaXRvcmVkSXRlbXNDb3VudAEAsi0ALwA/si0AAAAH/////wEB/////wAAAAAVYIkKAgAAAAAA" +
            "IwAAAERpc2FibGVkTW9uaXRvcmVkSXRlbXNTYW1wbGluZ0NvdW50AQCzLQAvAD+zLQAAAAf/////AQH/" +
            "////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<double> SamplingInterval
         {
@@ -15727,9 +15682,9 @@ namespace Opc.Ua
                 m_disabledMonitoredItemsSamplingCount = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -15872,17 +15827,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<double> m_samplingInterval;
         private BaseDataVariableState<uint> m_sampledMonitoredItemsCount;
         private BaseDataVariableState<uint> m_maxSampledMonitoredItemsCount;
         private BaseDataVariableState<uint> m_disabledMonitoredItemsSamplingCount;
-        #endregion
+
     }
 
-    #region SamplingIntervalDiagnosticsValue Class
+
     /// <summary>
     /// A typed version of the _BrowseName_ variable.
     /// </summary>
@@ -15890,7 +15845,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class SamplingIntervalDiagnosticsValue : BaseVariableValue
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -15905,9 +15860,9 @@ namespace Opc.Ua
 
             Initialize(variable);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The variable that the value belongs to.
         /// </summary>
@@ -15921,12 +15876,12 @@ namespace Opc.Ua
         /// </summary>
         public SamplingIntervalDiagnosticsDataType Value
         {
-            get { return m_value;  }
+            get { return m_value; }
             set { m_value = value; }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Initializes the object.
         /// </summary>
@@ -15992,7 +15947,7 @@ namespace Opc.Ua
             return ServiceResult.Good;
         }
 
-        #region SamplingInterval Access Methods
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -16030,20 +15985,20 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
-        #endregion
 
-        #region Private Fields
+
+
+
         private SamplingIntervalDiagnosticsDataType m_value;
         private SamplingIntervalDiagnosticsState m_variable;
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region SubscriptionDiagnosticsArrayState Class
-    #if (!OPCUA_EXCLUDE_SubscriptionDiagnosticsArrayState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_SubscriptionDiagnosticsArrayState)
     /// <summary>
     /// Stores an instance of the SubscriptionDiagnosticsArrayType VariableType.
     /// </summary>
@@ -16051,7 +16006,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SubscriptionDiagnosticsArrayState : BaseDataVariableState<SubscriptionDiagnosticsDataType[]>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -16083,7 +16038,7 @@ namespace Opc.Ua
             return ValueRanks.OneDimension;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -16111,28 +16066,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8XYIkCAgAAAAAAKAAAAFN1YnNjcmlwdGlvbkRpYWdub3N0aWNzQXJyYXlUeXBlSW5zdGFu" +
            "Y2UBAHsIAQB7CHsIAAABAGoDAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region SubscriptionDiagnosticsState Class
-    #if (!OPCUA_EXCLUDE_SubscriptionDiagnosticsState)
+
+
+#if (!OPCUA_EXCLUDE_SubscriptionDiagnosticsState)
     /// <summary>
     /// Stores an instance of the SubscriptionDiagnosticsType VariableType.
     /// </summary>
@@ -16140,7 +16095,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SubscriptionDiagnosticsState : BaseDataVariableState<SubscriptionDiagnosticsDataType>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -16172,7 +16127,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -16200,7 +16155,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAIwAAAFN1YnNjcmlwdGlvbkRpYWdub3N0aWNzVHlwZUluc3RhbmNlAQB8" +
            "CAEAfAh8CAAAAQBqA/////8BAf////8fAAAAFWCJCgIAAAAAAAkAAABTZXNzaW9uSWQBAH0IAC8AP30I" +
@@ -16236,11 +16191,11 @@ namespace Opc.Ua
            "AD/AIgAAAAf/////AQH/////AAAAABVgiQoCAAAAAAASAAAATmV4dFNlcXVlbmNlTnVtYmVyAQDBIgAv" +
            "AD/BIgAAAAf/////AQH/////AAAAABVgiQoCAAAAAAAXAAAARXZlbnRRdWV1ZU92ZXJmbG93Q291bnQB" +
            "AMYiAC8AP8YiAAAAB/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<NodeId> SessionId
         {
@@ -16829,9 +16784,9 @@ namespace Opc.Ua
                 m_eventQueueOverflowCount = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -17676,9 +17631,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<NodeId> m_sessionId;
         private BaseDataVariableState<uint> m_subscriptionId;
         private BaseDataVariableState<byte> m_priority;
@@ -17710,10 +17665,10 @@ namespace Opc.Ua
         private BaseDataVariableState<uint> m_monitoringQueueOverflowCount;
         private BaseDataVariableState<uint> m_nextSequenceNumber;
         private BaseDataVariableState<uint> m_eventQueueOverflowCount;
-        #endregion
+
     }
 
-    #region SubscriptionDiagnosticsValue Class
+
     /// <summary>
     /// A typed version of the _BrowseName_ variable.
     /// </summary>
@@ -17721,7 +17676,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class SubscriptionDiagnosticsValue : BaseVariableValue
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -17736,9 +17691,9 @@ namespace Opc.Ua
 
             Initialize(variable);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The variable that the value belongs to.
         /// </summary>
@@ -17752,12 +17707,12 @@ namespace Opc.Ua
         /// </summary>
         public SubscriptionDiagnosticsDataType Value
         {
-            get { return m_value;  }
+            get { return m_value; }
             set { m_value = value; }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Initializes the object.
         /// </summary>
@@ -17939,7 +17894,7 @@ namespace Opc.Ua
             return ServiceResult.Good;
         }
 
-        #region SessionId Access Methods
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -17977,9 +17932,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region SubscriptionId Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18017,9 +17972,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region Priority Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18057,9 +18012,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region PublishingInterval Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18097,9 +18052,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region MaxKeepAliveCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18137,9 +18092,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region MaxLifetimeCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18177,9 +18132,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region MaxNotificationsPerPublish Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18217,9 +18172,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region PublishingEnabled Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18257,9 +18212,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region ModifyCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18297,9 +18252,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region EnableCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18337,9 +18292,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region DisableCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18377,9 +18332,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region RepublishRequestCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18417,9 +18372,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region RepublishMessageRequestCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18457,9 +18412,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region RepublishMessageCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18497,9 +18452,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region TransferRequestCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18537,9 +18492,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region TransferredToAltClientCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18577,9 +18532,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region TransferredToSameClientCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18617,9 +18572,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region PublishRequestCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18657,9 +18612,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region DataChangeNotificationsCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18697,9 +18652,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region EventNotificationsCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18737,9 +18692,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region NotificationsCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18777,9 +18732,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region LatePublishRequestCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18817,9 +18772,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region CurrentKeepAliveCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18857,9 +18812,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region CurrentLifetimeCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18897,9 +18852,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region UnacknowledgedMessageCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18937,9 +18892,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region DiscardedMessageCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -18977,9 +18932,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region MonitoredItemCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -19017,9 +18972,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region DisabledMonitoredItemCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -19057,9 +19012,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region MonitoringQueueOverflowCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -19097,9 +19052,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region NextSequenceNumber Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -19137,20 +19092,20 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
-        #endregion
 
-        #region Private Fields
+
+
+
         private SubscriptionDiagnosticsDataType m_value;
         private SubscriptionDiagnosticsState m_variable;
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region SessionDiagnosticsArrayState Class
-    #if (!OPCUA_EXCLUDE_SessionDiagnosticsArrayState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_SessionDiagnosticsArrayState)
     /// <summary>
     /// Stores an instance of the SessionDiagnosticsArrayType VariableType.
     /// </summary>
@@ -19158,7 +19113,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SessionDiagnosticsArrayState : BaseDataVariableState<SessionDiagnosticsDataType[]>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -19190,7 +19145,7 @@ namespace Opc.Ua
             return ValueRanks.OneDimension;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -19218,28 +19173,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8XYIkCAgAAAAAAIwAAAFNlc3Npb25EaWFnbm9zdGljc0FycmF5VHlwZUluc3RhbmNlAQCU" +
            "CAEAlAiUCAAAAQBhAwEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region SessionDiagnosticsVariableState Class
-    #if (!OPCUA_EXCLUDE_SessionDiagnosticsVariableState)
+
+
+#if (!OPCUA_EXCLUDE_SessionDiagnosticsVariableState)
     /// <summary>
     /// Stores an instance of the SessionDiagnosticsVariableType VariableType.
     /// </summary>
@@ -19247,7 +19202,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SessionDiagnosticsVariableState : BaseDataVariableState<SessionDiagnosticsDataType>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -19279,7 +19234,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -19307,7 +19262,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAJgAAAFNlc3Npb25EaWFnbm9zdGljc1ZhcmlhYmxlVHlwZUluc3RhbmNl" +
            "AQCVCAEAlQiVCAAAAQBhA/////8BAf////8rAAAAFWCJCgIAAAAAAAkAAABTZXNzaW9uSWQBAJYIAC8A" +
@@ -19355,11 +19310,11 @@ namespace Opc.Ua
            "AAAAAA4AAABRdWVyeU5leHRDb3VudAEAwggALwA/wggAAAEAZwP/////AQH/////AAAAABVgiQoCAAAA" +
            "AAASAAAAUmVnaXN0ZXJOb2Rlc0NvdW50AQCqCgAvAD+qCgAAAQBnA/////8BAf////8AAAAAFWCJCgIA" +
            "AAAAABQAAABVbnJlZ2lzdGVyTm9kZXNDb3VudAEAqwoALwA/qwoAAAEAZwP/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<NodeId> SessionId
         {
@@ -20176,9 +20131,9 @@ namespace Opc.Ua
                 m_unregisterNodesCount = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -21335,9 +21290,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<NodeId> m_sessionId;
         private BaseDataVariableState<string> m_sessionName;
         private BaseDataVariableState<ApplicationDescription> m_clientDescription;
@@ -21381,10 +21336,10 @@ namespace Opc.Ua
         private BaseDataVariableState<ServiceCounterDataType> m_queryNextCount;
         private BaseDataVariableState<ServiceCounterDataType> m_registerNodesCount;
         private BaseDataVariableState<ServiceCounterDataType> m_unregisterNodesCount;
-        #endregion
+
     }
 
-    #region SessionDiagnosticsVariableValue Class
+
     /// <summary>
     /// A typed version of the _BrowseName_ variable.
     /// </summary>
@@ -21392,7 +21347,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class SessionDiagnosticsVariableValue : BaseVariableValue
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -21407,9 +21362,9 @@ namespace Opc.Ua
 
             Initialize(variable);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The variable that the value belongs to.
         /// </summary>
@@ -21423,12 +21378,12 @@ namespace Opc.Ua
         /// </summary>
         public SessionDiagnosticsDataType Value
         {
-            get { return m_value;  }
+            get { return m_value; }
             set { m_value = value; }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Initializes the object.
         /// </summary>
@@ -21662,7 +21617,7 @@ namespace Opc.Ua
             return ServiceResult.Good;
         }
 
-        #region SessionId Access Methods
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -21700,9 +21655,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region SessionName Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -21740,9 +21695,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region ClientDescription Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -21780,9 +21735,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region ServerUri Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -21820,9 +21775,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region EndpointUrl Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -21860,9 +21815,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region LocaleIds Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -21900,9 +21855,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region ActualSessionTimeout Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -21940,9 +21895,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region MaxResponseMessageSize Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -21980,9 +21935,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region ClientConnectionTime Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22020,9 +21975,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region ClientLastContactTime Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22060,9 +22015,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region CurrentSubscriptionsCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22100,9 +22055,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region CurrentMonitoredItemsCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22140,9 +22095,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region CurrentPublishRequestsInQueue Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22180,9 +22135,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region TotalRequestCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22220,9 +22175,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region UnauthorizedRequestCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22260,9 +22215,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region ReadCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22300,9 +22255,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region HistoryReadCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22340,9 +22295,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region WriteCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22380,9 +22335,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region HistoryUpdateCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22420,9 +22375,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region CallCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22460,9 +22415,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region CreateMonitoredItemsCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22500,9 +22455,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region ModifyMonitoredItemsCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22540,9 +22495,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region SetMonitoringModeCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22580,9 +22535,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region SetTriggeringCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22620,9 +22575,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region DeleteMonitoredItemsCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22660,9 +22615,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region CreateSubscriptionCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22700,9 +22655,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region ModifySubscriptionCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22740,9 +22695,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region SetPublishingModeCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22780,9 +22735,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region PublishCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22820,9 +22775,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region RepublishCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22860,9 +22815,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region TransferSubscriptionsCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22900,9 +22855,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region DeleteSubscriptionsCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22940,9 +22895,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region AddNodesCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -22980,9 +22935,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region AddReferencesCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -23020,9 +22975,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region DeleteNodesCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -23060,9 +23015,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region DeleteReferencesCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -23100,9 +23055,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region BrowseCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -23140,9 +23095,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region BrowseNextCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -23180,9 +23135,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region TranslateBrowsePathsToNodeIdsCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -23220,9 +23175,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region QueryFirstCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -23260,9 +23215,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region QueryNextCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -23300,9 +23255,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region RegisterNodesCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -23340,9 +23295,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region UnregisterNodesCount Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -23380,20 +23335,20 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
-        #endregion
 
-        #region Private Fields
+
+
+
         private SessionDiagnosticsDataType m_value;
         private SessionDiagnosticsVariableState m_variable;
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region SessionSecurityDiagnosticsArrayState Class
-    #if (!OPCUA_EXCLUDE_SessionSecurityDiagnosticsArrayState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_SessionSecurityDiagnosticsArrayState)
     /// <summary>
     /// Stores an instance of the SessionSecurityDiagnosticsArrayType VariableType.
     /// </summary>
@@ -23401,7 +23356,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SessionSecurityDiagnosticsArrayState : BaseDataVariableState<SessionSecurityDiagnosticsDataType[]>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -23433,7 +23388,7 @@ namespace Opc.Ua
             return ValueRanks.OneDimension;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -23461,28 +23416,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8XYIkCAgAAAAAAKwAAAFNlc3Npb25TZWN1cml0eURpYWdub3N0aWNzQXJyYXlUeXBlSW5z" +
            "dGFuY2UBAMMIAQDDCMMIAAABAGQDAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region SessionSecurityDiagnosticsState Class
-    #if (!OPCUA_EXCLUDE_SessionSecurityDiagnosticsState)
+
+
+#if (!OPCUA_EXCLUDE_SessionSecurityDiagnosticsState)
     /// <summary>
     /// Stores an instance of the SessionSecurityDiagnosticsType VariableType.
     /// </summary>
@@ -23490,7 +23445,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SessionSecurityDiagnosticsState : BaseDataVariableState<SessionSecurityDiagnosticsDataType>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -23522,7 +23477,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -23550,7 +23505,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAJgAAAFNlc3Npb25TZWN1cml0eURpYWdub3N0aWNzVHlwZUluc3RhbmNl" +
            "AQDECAEAxAjECAAAAQBkA/////8BAf////8JAAAAFWCJCgIAAAAAAAkAAABTZXNzaW9uSWQBAMUIAC8A" +
@@ -23563,11 +23518,11 @@ namespace Opc.Ua
            "P8sIAAABAC4B/////wEB/////wAAAAAVYIkKAgAAAAAAEQAAAFNlY3VyaXR5UG9saWN5VXJpAQDMCAAv" +
            "AD/MCAAAAAz/////AQH/////AAAAABVgiQoCAAAAAAARAAAAQ2xpZW50Q2VydGlmaWNhdGUBAPILAC8A" +
            "P/ILAAAAD/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<NodeId> SessionId
         {
@@ -23738,9 +23693,9 @@ namespace Opc.Ua
                 m_clientCertificate = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -24013,9 +23968,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<NodeId> m_sessionId;
         private BaseDataVariableState<string> m_clientUserIdOfSession;
         private BaseDataVariableState<string[]> m_clientUserIdHistory;
@@ -24025,10 +23980,10 @@ namespace Opc.Ua
         private BaseDataVariableState<MessageSecurityMode> m_securityMode;
         private BaseDataVariableState<string> m_securityPolicyUri;
         private BaseDataVariableState<byte[]> m_clientCertificate;
-        #endregion
+
     }
 
-    #region SessionSecurityDiagnosticsValue Class
+
     /// <summary>
     /// A typed version of the _BrowseName_ variable.
     /// </summary>
@@ -24036,7 +23991,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class SessionSecurityDiagnosticsValue : BaseVariableValue
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -24051,9 +24006,9 @@ namespace Opc.Ua
 
             Initialize(variable);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The variable that the value belongs to.
         /// </summary>
@@ -24067,12 +24022,12 @@ namespace Opc.Ua
         /// </summary>
         public SessionSecurityDiagnosticsDataType Value
         {
-            get { return m_value;  }
+            get { return m_value; }
             set { m_value = value; }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Initializes the object.
         /// </summary>
@@ -24170,7 +24125,7 @@ namespace Opc.Ua
             return ServiceResult.Good;
         }
 
-        #region SessionId Access Methods
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -24208,9 +24163,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region ClientUserIdOfSession Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -24248,9 +24203,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region ClientUserIdHistory Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -24288,9 +24243,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region AuthenticationMechanism Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -24328,9 +24283,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region Encoding Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -24368,9 +24323,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region TransportProtocol Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -24408,9 +24363,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region SecurityMode Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -24448,9 +24403,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region SecurityPolicyUri Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -24488,9 +24443,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region ClientCertificate Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -24528,20 +24483,20 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
-        #endregion
 
-        #region Private Fields
+
+
+
         private SessionSecurityDiagnosticsDataType m_value;
         private SessionSecurityDiagnosticsState m_variable;
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region OptionSetState Class
-    #if (!OPCUA_EXCLUDE_OptionSetState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_OptionSetState)
     /// <summary>
     /// Stores an instance of the OptionSetType VariableType.
     /// </summary>
@@ -24549,7 +24504,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class OptionSetState : BaseDataVariableState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -24581,7 +24536,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -24614,7 +24569,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string BitMask_InitializationString =
            "//////////8XYIkKAgAAAAAABwAAAEJpdE1hc2sBALUtAC4ARLUtAAAAAQEAAAABAAAAAAAAAAEB////" +
            "/wAAAAA=";
@@ -24624,11 +24579,11 @@ namespace Opc.Ua
            "/wEB/////wIAAAAXYIkKAgAAAAAADwAAAE9wdGlvblNldFZhbHVlcwEA4CwALgBE4CwAAAAVAQAAAAEA" +
            "AAAAAAAAAQH/////AAAAABdgiQoCAAAAAAAHAAAAQml0TWFzawEAtS0ALgBEtS0AAAABAQAAAAEAAAAA" +
            "AAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<LocalizedText[]> OptionSetValues
         {
@@ -24666,9 +24621,9 @@ namespace Opc.Ua
                 m_bitMask = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -24759,15 +24714,15 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<LocalizedText[]> m_optionSetValues;
         private PropertyState<bool[]> m_bitMask;
-        #endregion
+
     }
 
-    #region OptionSetState<T> Class
+
     /// <summary>
     /// A typed version of the OptionSetType variable.
     /// </summary>
@@ -24775,7 +24730,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class OptionSetState<T> : OptionSetState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -24804,9 +24759,9 @@ namespace Opc.Ua
             InitializeOptionalChildren(context);
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The value of the variable.
         /// </summary>
@@ -24822,14 +24777,14 @@ namespace Opc.Ua
                 base.Value = value;
             }
         }
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region SelectionListState Class
-    #if (!OPCUA_EXCLUDE_SelectionListState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_SelectionListState)
     /// <summary>
     /// Stores an instance of the SelectionListType VariableType.
     /// </summary>
@@ -24837,7 +24792,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SelectionListState : BaseDataVariableState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -24869,7 +24824,7 @@ namespace Opc.Ua
             return ValueRanks.Any;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -24907,7 +24862,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string SelectionDescriptions_InitializationString =
            "//////////8XYIkKAgAAAAAAFQAAAFNlbGVjdGlvbkRlc2NyaXB0aW9ucwEA4UQALgBE4UQAAAAVAQAA" +
            "AAEAAAAAAAAAAQH/////AAAAAA==";
@@ -24922,11 +24877,11 @@ namespace Opc.Ua
            "AAEB/////wAAAAAXYIkKAgAAAAAAFQAAAFNlbGVjdGlvbkRlc2NyaXB0aW9ucwEA4UQALgBE4UQAAAAV" +
            "AQAAAAEAAAAAAAAAAQH/////AAAAABVgiQoCAAAAAAAOAAAAUmVzdHJpY3RUb0xpc3QBALg/AC4ARLg/" +
            "AAAAAf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<object[]> Selections
         {
@@ -24983,9 +24938,9 @@ namespace Opc.Ua
                 m_restrictToList = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -25102,16 +25057,16 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<object[]> m_selections;
         private PropertyState<LocalizedText[]> m_selectionDescriptions;
         private PropertyState<bool> m_restrictToList;
-        #endregion
+
     }
 
-    #region SelectionListState<T> Class
+
     /// <summary>
     /// A typed version of the SelectionListType variable.
     /// </summary>
@@ -25119,7 +25074,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class SelectionListState<T> : SelectionListState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -25148,9 +25103,9 @@ namespace Opc.Ua
             InitializeOptionalChildren(context);
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The value of the variable.
         /// </summary>
@@ -25166,14 +25121,14 @@ namespace Opc.Ua
                 base.Value = value;
             }
         }
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region AudioVariableState Class
-    #if (!OPCUA_EXCLUDE_AudioVariableState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AudioVariableState)
     /// <summary>
     /// Stores an instance of the AudioVariableType VariableType.
     /// </summary>
@@ -25181,7 +25136,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AudioVariableState : BaseDataVariableState<byte[]>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -25213,7 +25168,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -25256,7 +25211,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string ListId_InitializationString =
            "//////////8VYIkKAgAAAAAABgAAAExpc3RJZAEAREYALgBEREYAAAAM/////wEB/////wAAAAA=";
 
@@ -25271,11 +25226,11 @@ namespace Opc.Ua
            "ALM//////wEB/////wMAAAAVYIkKAgAAAAAABgAAAExpc3RJZAEAREYALgBEREYAAAAM/////wEB////" +
            "/wAAAAAVYIkKAgAAAAAACAAAAEFnZW5jeUlkAQBFRgAuAERFRgAAAAz/////AQH/////AAAAABVgiQoC" +
            "AAAAAAAJAAAAVmVyc2lvbklkAQBGRgAuAERGRgAAAAz/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<string> ListId
         {
@@ -25332,9 +25287,9 @@ namespace Opc.Ua
                 m_versionId = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -25451,19 +25406,19 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<string> m_listId;
         private PropertyState<string> m_agencyId;
         private PropertyState<string> m_versionId;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region GetMonitoredItemsMethodState Class
-    #if (!OPCUA_EXCLUDE_GetMonitoredItemsMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_GetMonitoredItemsMethodState)
     /// <summary>
     /// Stores an instance of the GetMonitoredItemsMethodType Method.
     /// </summary>
@@ -25471,7 +25426,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class GetMonitoredItemsMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -25484,12 +25439,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new GetMonitoredItemsMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -25508,7 +25463,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGwAAAEdldE1vbml0b3JlZEl0ZW1zTWV0aG9kVHlwZQEA5ywALwEA5yzn" +
            "LAAAAQH/////AgAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAOgsAC4AROgsAACWAQAAAAEA" +
@@ -25516,21 +25471,21 @@ namespace Opc.Ua
            "AAAXYKkKAgAAAAAADwAAAE91dHB1dEFyZ3VtZW50cwEA6SwALgBE6SwAAJYCAAAAAQAqAQEgAAAADQAA" +
            "AFNlcnZlckhhbmRsZXMABwEAAAABAAAAAAAAAAABACoBASAAAAANAAAAQ2xpZW50SGFuZGxlcwAHAQAA" +
            "AAEAAAAAAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public GetMonitoredItemsMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -25568,10 +25523,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -25585,11 +25540,11 @@ namespace Opc.Ua
         uint subscriptionId,
         ref uint[] serverHandles,
         ref uint[] clientHandles);
-    #endif
-    #endregion
+#endif
 
-    #region ResendDataMethodState Class
-    #if (!OPCUA_EXCLUDE_ResendDataMethodState)
+
+
+#if (!OPCUA_EXCLUDE_ResendDataMethodState)
     /// <summary>
     /// Stores an instance of the ResendDataMethodType Method.
     /// </summary>
@@ -25597,7 +25552,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ResendDataMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -25610,12 +25565,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new ResendDataMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -25634,26 +25589,26 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAFAAAAFJlc2VuZERhdGFNZXRob2RUeXBlAQBLMgAvAQBLMksyAAABAf//" +
            "//8BAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEATDIALgBETDIAAJYBAAAAAQAqAQEdAAAA" +
            "DgAAAFN1YnNjcmlwdGlvbklkAAf/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public ResendDataMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -25683,10 +25638,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -25698,11 +25653,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         uint subscriptionId);
-    #endif
-    #endregion
+#endif
 
-    #region SetSubscriptionDurableMethodState Class
-    #if (!OPCUA_EXCLUDE_SetSubscriptionDurableMethodState)
+
+
+#if (!OPCUA_EXCLUDE_SetSubscriptionDurableMethodState)
     /// <summary>
     /// Stores an instance of the SetSubscriptionDurableMethodType Method.
     /// </summary>
@@ -25710,7 +25665,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SetSubscriptionDurableMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -25723,12 +25678,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new SetSubscriptionDurableMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -25747,7 +25702,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAIAAAAFNldFN1YnNjcmlwdGlvbkR1cmFibGVNZXRob2RUeXBlAQDQMQAv" +
            "AQDQMdAxAAABAf////8CAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEA0TEALgBE0TEAAJYC" +
@@ -25755,21 +25710,21 @@ namespace Opc.Ua
            "bWVJbkhvdXJzAAf/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAABdgqQoCAAAAAAAPAAAA" +
            "T3V0cHV0QXJndW1lbnRzAQDSMQAuAETSMQAAlgEAAAABACoBASUAAAAWAAAAUmV2aXNlZExpZmV0aW1l" +
            "SW5Ib3VycwAH/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public SetSubscriptionDurableMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -25806,10 +25761,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -25823,11 +25778,11 @@ namespace Opc.Ua
         uint subscriptionId,
         uint lifetimeInHours,
         ref uint revisedLifetimeInHours);
-    #endif
-    #endregion
+#endif
 
-    #region RequestServerStateChangeMethodState Class
-    #if (!OPCUA_EXCLUDE_RequestServerStateChangeMethodState)
+
+
+#if (!OPCUA_EXCLUDE_RequestServerStateChangeMethodState)
     /// <summary>
     /// Stores an instance of the RequestServerStateChangeMethodType Method.
     /// </summary>
@@ -25835,7 +25790,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class RequestServerStateChangeMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -25848,12 +25803,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new RequestServerStateChangeMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -25872,7 +25827,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAIgAAAFJlcXVlc3RTZXJ2ZXJTdGF0ZUNoYW5nZU1ldGhvZFR5cGUBAFgy" +
            "AC8BAFgyWDIAAAEB/////wEAAAAXYKkKAgAAAAAADgAAAElucHV0QXJndW1lbnRzAQBZMgAuAERZMgAA" +
@@ -25880,21 +25835,21 @@ namespace Opc.Ua
            "dHVyblRpbWUADf////8AAAAAAAEAKgEBIgAAABMAAABTZWNvbmRzVGlsbFNodXRkb3duAAf/////AAAA" +
            "AAABACoBARUAAAAGAAAAUmVhc29uABX/////AAAAAAABACoBARYAAAAHAAAAUmVzdGFydAAB/////wAA" +
            "AAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public RequestServerStateChangeMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -25932,10 +25887,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -25951,11 +25906,11 @@ namespace Opc.Ua
         uint secondsTillShutdown,
         LocalizedText reason,
         bool restart);
-    #endif
-    #endregion
+#endif
 
-    #region StateMachineState Class
-    #if (!OPCUA_EXCLUDE_StateMachineState)
+
+
+#if (!OPCUA_EXCLUDE_StateMachineState)
     /// <summary>
     /// Stores an instance of the StateMachineType ObjectType.
     /// </summary>
@@ -25963,7 +25918,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class StateMachineState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -25979,7 +25934,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.StateMachineType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -26012,7 +25967,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string LastTransition_InitializationString =
            "//////////8VYIkKAgAAAAAADgAAAExhc3RUcmFuc2l0aW9uAQDSCgAvAQDKCtIKAAAAFf////8BAf//" +
            "//8BAAAAFWCJCgIAAAAAAAIAAABJZAEAjA4ALgBEjA4AAAAY/////wEB/////wAAAAA=";
@@ -26023,11 +25978,11 @@ namespace Opc.Ua
            "AAAVYIkKAgAAAAAAAgAAAElkAQCIDgAuAESIDgAAABj/////AQH/////AAAAABVgiQoCAAAAAAAOAAAA" +
            "TGFzdFRyYW5zaXRpb24BANIKAC8BAMoK0goAAAAV/////wEB/////wEAAAAVYIkKAgAAAAAAAgAAAElk" +
            "AQCMDgAuAESMDgAAABj/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public StateVariableState CurrentState
         {
@@ -26065,9 +26020,9 @@ namespace Opc.Ua
                 m_lastTransition = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -26158,18 +26113,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private StateVariableState m_currentState;
         private TransitionVariableState m_lastTransition;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region StateVariableState Class
-    #if (!OPCUA_EXCLUDE_StateVariableState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_StateVariableState)
     /// <summary>
     /// Stores an instance of the StateVariableType VariableType.
     /// </summary>
@@ -26177,7 +26132,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class StateVariableState : BaseDataVariableState<LocalizedText>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -26209,7 +26164,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -26252,7 +26207,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string Name_InitializationString =
            "//////////8VYIkKAgAAAAAABAAAAE5hbWUBAMUKAC4ARMUKAAAAFP////8BAf////8AAAAA";
 
@@ -26269,11 +26224,11 @@ namespace Opc.Ua
            "YIkKAgAAAAAABAAAAE5hbWUBAMUKAC4ARMUKAAAAFP////8BAf////8AAAAAFWCJCgIAAAAAAAYAAABO" +
            "dW1iZXIBAMYKAC4ARMYKAAAAB/////8BAf////8AAAAAFWCJCgIAAAAAABQAAABFZmZlY3RpdmVEaXNw" +
            "bGF5TmFtZQEAxwoALgBExwoAAAAV/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState Id
         {
@@ -26349,9 +26304,9 @@ namespace Opc.Ua
                 m_effectiveDisplayName = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -26494,20 +26449,20 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState m_id;
         private PropertyState<QualifiedName> m_name;
         private PropertyState<uint> m_number;
         private PropertyState<LocalizedText> m_effectiveDisplayName;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region TransitionVariableState Class
-    #if (!OPCUA_EXCLUDE_TransitionVariableState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_TransitionVariableState)
     /// <summary>
     /// Stores an instance of the TransitionVariableType VariableType.
     /// </summary>
@@ -26515,7 +26470,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class TransitionVariableState : BaseDataVariableState<LocalizedText>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -26547,7 +26502,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -26595,7 +26550,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string Name_InitializationString =
            "//////////8VYIkKAgAAAAAABAAAAE5hbWUBAMwKAC4ARMwKAAAAFP////8BAf////8AAAAA";
 
@@ -26617,11 +26572,11 @@ namespace Opc.Ua
            "BgAAAE51bWJlcgEAzQoALgBEzQoAAAAH/////wEB/////wAAAAAVYIkKAgAAAAAADgAAAFRyYW5zaXRp" +
            "b25UaW1lAQDOCgAuAETOCgAAAQAmAf////8BAf////8AAAAAFWCJCgIAAAAAABcAAABFZmZlY3RpdmVU" +
            "cmFuc2l0aW9uVGltZQEAwCwALgBEwCwAAAEAJgH/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState Id
         {
@@ -26716,9 +26671,9 @@ namespace Opc.Ua
                 m_effectiveTransitionTime = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -26887,21 +26842,21 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState m_id;
         private PropertyState<QualifiedName> m_name;
         private PropertyState<uint> m_number;
         private PropertyState<DateTime> m_transitionTime;
         private PropertyState<DateTime> m_effectiveTransitionTime;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region FiniteStateMachineState Class
-    #if (!OPCUA_EXCLUDE_FiniteStateMachineState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_FiniteStateMachineState)
     /// <summary>
     /// Stores an instance of the FiniteStateMachineType ObjectType.
     /// </summary>
@@ -26909,7 +26864,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class FiniteStateMachineState : StateMachineState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -26925,7 +26880,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.FiniteStateMachineType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -26968,7 +26923,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string LastTransition_InitializationString =
            "//////////8VYIkKAgAAAAAADgAAAExhc3RUcmFuc2l0aW9uAQDVCgAvAQDPCtUKAAAAFf////8BAf//" +
            "//8BAAAAFWCJCgIAAAAAAAIAAABJZAEAlA4ALgBElA4AAAAR/////wEB/////wAAAAA=";
@@ -26989,32 +26944,29 @@ namespace Opc.Ua
            "AgAAAElkAQCUDgAuAESUDgAAABH/////AQH/////AAAAABdgiQoCAAAAAAAPAAAAQXZhaWxhYmxlU3Rh" +
            "dGVzAQDjRAAvAD/jRAAAABEBAAAAAQAAAAAAAAABAf////8AAAAAF2CJCgIAAAAAABQAAABBdmFpbGFi" +
            "bGVUcmFuc2l0aW9ucwEA5EQALwA/5EQAAAARAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public new FiniteStateVariableState CurrentState
         {
-            get { return (FiniteStateVariableState)base.CurrentState; }
-            set { base.CurrentState = value; }
+            get => (FiniteStateVariableState)base.CurrentState;
+            set => base.CurrentState = value;
         }
 
         /// <remarks />
         public new FiniteTransitionVariableState LastTransition
         {
-            get { return (FiniteTransitionVariableState)base.LastTransition; }
-            set { base.LastTransition = value; }
+            get => (FiniteTransitionVariableState)base.LastTransition;
+            set => base.LastTransition = value;
         }
 
         /// <remarks />
         public BaseDataVariableState<NodeId[]> AvailableStates
         {
-            get
-            {
-                return m_availableStates;
-            }
+            get => m_availableStates;
 
             set
             {
@@ -27030,10 +26982,7 @@ namespace Opc.Ua
         /// <remarks />
         public BaseDataVariableState<NodeId[]> AvailableTransitions
         {
-            get
-            {
-                return m_availableTransitions;
-            }
+            get => m_availableTransitions;
 
             set
             {
@@ -27045,9 +26994,9 @@ namespace Opc.Ua
                 m_availableTransitions = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -27180,18 +27129,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<NodeId[]> m_availableStates;
         private BaseDataVariableState<NodeId[]> m_availableTransitions;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region FiniteStateVariableState Class
-    #if (!OPCUA_EXCLUDE_FiniteStateVariableState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_FiniteStateVariableState)
     /// <summary>
     /// Stores an instance of the FiniteStateVariableType VariableType.
     /// </summary>
@@ -27199,7 +27148,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class FiniteStateVariableState : StateVariableState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -27231,7 +27180,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -27259,25 +27208,25 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAHwAAAEZpbml0ZVN0YXRlVmFyaWFibGVUeXBlSW5zdGFuY2UBAMgKAQDI" +
            "CsgKAAAAFf////8BAf////8BAAAAFWCJCgIAAAAAAAIAAABJZAEAyQoALgBEyQoAAAAR/////wEB////" +
            "/wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public new PropertyState<NodeId> Id
         {
             get { return (PropertyState<NodeId>)base.Id; }
             set { base.Id = value; }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -27338,16 +27287,16 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region FiniteTransitionVariableState Class
-    #if (!OPCUA_EXCLUDE_FiniteTransitionVariableState)
+
+
+#if (!OPCUA_EXCLUDE_FiniteTransitionVariableState)
     /// <summary>
     /// Stores an instance of the FiniteTransitionVariableType VariableType.
     /// </summary>
@@ -27355,7 +27304,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class FiniteTransitionVariableState : TransitionVariableState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -27387,7 +27336,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -27415,25 +27364,25 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAJAAAAEZpbml0ZVRyYW5zaXRpb25WYXJpYWJsZVR5cGVJbnN0YW5jZQEA" +
            "zwoBAM8KzwoAAAAV/////wEB/////wEAAAAVYIkKAgAAAAAAAgAAAElkAQDQCgAuAETQCgAAABH/////" +
            "AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public new PropertyState<NodeId> Id
         {
             get { return (PropertyState<NodeId>)base.Id; }
             set { base.Id = value; }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -27494,16 +27443,16 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region StateMachineStateState Class
-    #if (!OPCUA_EXCLUDE_StateMachineStateState)
+
+
+#if (!OPCUA_EXCLUDE_StateMachineStateState)
     /// <summary>
     /// Stores an instance of the StateType ObjectType.
     /// </summary>
@@ -27511,7 +27460,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class StateMachineStateState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -27527,7 +27476,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.StateType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -27555,15 +27504,15 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAEQAAAFN0YXRlVHlwZUluc3RhbmNlAQADCQEAAwkDCQAA/////wEAAAAV" +
            "YIkKAgAAAAAACwAAAFN0YXRlTnVtYmVyAQAECQAuAEQECQAAAAf/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<uint> StateNumber
         {
@@ -27582,9 +27531,9 @@ namespace Opc.Ua
                 m_stateNumber = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -27649,17 +27598,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<uint> m_stateNumber;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region StateMachineInitialStateState Class
-    #if (!OPCUA_EXCLUDE_StateMachineInitialStateState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_StateMachineInitialStateState)
     /// <summary>
     /// Stores an instance of the InitialStateType ObjectType.
     /// </summary>
@@ -27667,7 +27616,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class StateMachineInitialStateState : StateMachineStateState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -27683,7 +27632,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.InitialStateType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -27711,28 +27660,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAGAAAAEluaXRpYWxTdGF0ZVR5cGVJbnN0YW5jZQEABQkBAAUJBQkAAP//" +
            "//8BAAAAFWCJCgIAAAAAAAsAAABTdGF0ZU51bWJlcgEAmA4ALgBEmA4AAAAH/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region StateMachineTransitionState Class
-    #if (!OPCUA_EXCLUDE_StateMachineTransitionState)
+
+
+#if (!OPCUA_EXCLUDE_StateMachineTransitionState)
     /// <summary>
     /// Stores an instance of the TransitionType ObjectType.
     /// </summary>
@@ -27740,7 +27689,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class StateMachineTransitionState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -27756,7 +27705,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.TransitionType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -27784,16 +27733,16 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAFgAAAFRyYW5zaXRpb25UeXBlSW5zdGFuY2UBAAYJAQAGCQYJAAD/////" +
            "AQAAABVgiQoCAAAAAAAQAAAAVHJhbnNpdGlvbk51bWJlcgEACAkALgBECAkAAAAH/////wEB/////wAA" +
            "AAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<uint> TransitionNumber
         {
@@ -27812,9 +27761,9 @@ namespace Opc.Ua
                 m_transitionNumber = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -27879,17 +27828,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<uint> m_transitionNumber;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region StateMachineChoiceStateTypeState Class
-    #if (!OPCUA_EXCLUDE_StateMachineChoiceStateTypeState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_StateMachineChoiceStateTypeState)
     /// <summary>
     /// Stores an instance of the ChoiceStateType ObjectType.
     /// </summary>
@@ -27897,7 +27846,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class StateMachineChoiceStateTypeState : StateMachineStateState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -27913,7 +27862,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ChoiceStateType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -27941,28 +27890,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAFwAAAENob2ljZVN0YXRlVHlwZUluc3RhbmNlAQAFOwEABTsFOwAA////" +
            "/wEAAAAVYIkKAgAAAAAACwAAAFN0YXRlTnVtYmVyAQAGOwAuAEQGOwAAAAf/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region GuardVariableState Class
-    #if (!OPCUA_EXCLUDE_GuardVariableState)
+
+
+#if (!OPCUA_EXCLUDE_GuardVariableState)
     /// <summary>
     /// Stores an instance of the GuardVariableType VariableType.
     /// </summary>
@@ -27970,7 +27919,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class GuardVariableState : BaseDataVariableState<LocalizedText>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -28002,7 +27951,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -28030,28 +27979,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAGQAAAEd1YXJkVmFyaWFibGVUeXBlSW5zdGFuY2UBAAk7AQAJOwk7AAAA" +
            "Ff////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region ExpressionGuardVariableState Class
-    #if (!OPCUA_EXCLUDE_ExpressionGuardVariableState)
+
+
+#if (!OPCUA_EXCLUDE_ExpressionGuardVariableState)
     /// <summary>
     /// Stores an instance of the ExpressionGuardVariableType VariableType.
     /// </summary>
@@ -28059,7 +28008,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ExpressionGuardVariableState : GuardVariableState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -28091,7 +28040,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -28119,16 +28068,16 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAIwAAAEV4cHJlc3Npb25HdWFyZFZhcmlhYmxlVHlwZUluc3RhbmNlAQAY" +
            "OwEAGDsYOwAAABX/////AQH/////AQAAABVgiQoCAAAAAAAKAAAARXhwcmVzc2lvbgEAGTsALgBEGTsA" +
            "AAEASgL/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<ContentFilter> Expression
         {
@@ -28147,9 +28096,9 @@ namespace Opc.Ua
                 m_expression = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -28214,17 +28163,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<ContentFilter> m_expression;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region ElseGuardVariableState Class
-    #if (!OPCUA_EXCLUDE_ElseGuardVariableState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ElseGuardVariableState)
     /// <summary>
     /// Stores an instance of the ElseGuardVariableType VariableType.
     /// </summary>
@@ -28232,7 +28181,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ElseGuardVariableState : GuardVariableState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -28264,7 +28213,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -28292,28 +28241,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAHQAAAEVsc2VHdWFyZFZhcmlhYmxlVHlwZUluc3RhbmNlAQDVOwEA1TvV" +
            "OwAAABX/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region RationalNumberState Class
-    #if (!OPCUA_EXCLUDE_RationalNumberState)
+
+
+#if (!OPCUA_EXCLUDE_RationalNumberState)
     /// <summary>
     /// Stores an instance of the RationalNumberType VariableType.
     /// </summary>
@@ -28321,7 +28270,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class RationalNumberState : BaseDataVariableState<RationalNumber>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -28353,7 +28302,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -28381,17 +28330,17 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAGgAAAFJhdGlvbmFsTnVtYmVyVHlwZUluc3RhbmNlAQAtRQEALUUtRQAA" +
            "AQB2Sf////8BAf////8CAAAAFWCJCgIAAAAAAAkAAABOdW1lcmF0b3IBADBFAC8APzBFAAAABv////8B" +
            "Af////8AAAAAFWCJCgIAAAAAAAsAAABEZW5vbWluYXRvcgEAMUUALwA/MUUAAAAH/////wEB/////wAA" +
            "AAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<int> Numerator
         {
@@ -28429,9 +28378,9 @@ namespace Opc.Ua
                 m_denominator = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -28522,15 +28471,15 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<int> m_numerator;
         private BaseDataVariableState<uint> m_denominator;
-        #endregion
+
     }
 
-    #region RationalNumberValue Class
+
     /// <summary>
     /// A typed version of the _BrowseName_ variable.
     /// </summary>
@@ -28538,7 +28487,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class RationalNumberValue : BaseVariableValue
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -28553,9 +28502,9 @@ namespace Opc.Ua
 
             Initialize(variable);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The variable that the value belongs to.
         /// </summary>
@@ -28569,12 +28518,12 @@ namespace Opc.Ua
         /// </summary>
         public RationalNumber Value
         {
-            get { return m_value;  }
+            get { return m_value; }
             set { m_value = value; }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Initializes the object.
         /// </summary>
@@ -28644,7 +28593,7 @@ namespace Opc.Ua
             return ServiceResult.Good;
         }
 
-        #region Numerator Access Methods
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -28682,9 +28631,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region Denominator Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -28722,20 +28671,20 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
-        #endregion
 
-        #region Private Fields
+
+
+
         private RationalNumber m_value;
         private RationalNumberState m_variable;
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region VectorState Class
-    #if (!OPCUA_EXCLUDE_VectorState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_VectorState)
     /// <summary>
     /// Stores an instance of the VectorType VariableType.
     /// </summary>
@@ -28743,7 +28692,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class VectorState : BaseDataVariableState<Vector>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -28775,7 +28724,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -28808,7 +28757,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string VectorUnit_InitializationString =
            "//////////8VYIkKAgAAAAAACgAAAFZlY3RvclVuaXQBADNFAC4ARDNFAAABAHcD/////wEB/////wAA" +
            "AAA=";
@@ -28817,11 +28766,11 @@ namespace Opc.Ua
            "//////////8VYIkCAgAAAAAAEgAAAFZlY3RvclR5cGVJbnN0YW5jZQEAMkUBADJFMkUAAAEAd0n/////" +
            "AQH/////AQAAABVgiQoCAAAAAAAKAAAAVmVjdG9yVW5pdAEAM0UALgBEM0UAAAEAdwP/////AQH/////" +
            "AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<EUInformation> VectorUnit
         {
@@ -28840,9 +28789,9 @@ namespace Opc.Ua
                 m_vectorUnit = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -28907,17 +28856,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<EUInformation> m_vectorUnit;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region ThreeDVectorState Class
-    #if (!OPCUA_EXCLUDE_ThreeDVectorState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ThreeDVectorState)
     /// <summary>
     /// Stores an instance of the ThreeDVectorType VariableType.
     /// </summary>
@@ -28925,7 +28874,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ThreeDVectorState : VectorState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -28957,7 +28906,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -28985,17 +28934,17 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAGAAAAFRocmVlRFZlY3RvclR5cGVJbnN0YW5jZQEANEUBADRFNEUAAAEA" +
            "eEn/////AQH/////AwAAABVgiQoCAAAAAAABAAAAWAEAUUkALwA/UUkAAAAL/////wEB/////wAAAAAV" +
            "YIkKAgAAAAAAAQAAAFkBAFJJAC8AP1JJAAAAC/////8BAf////8AAAAAFWCJCgIAAAAAAAEAAABaAQBT" +
            "SQAvAD9TSQAAAAv/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<double> X
         {
@@ -29052,9 +29001,9 @@ namespace Opc.Ua
                 m_z = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -29171,16 +29120,16 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<double> m_x;
         private BaseDataVariableState<double> m_y;
         private BaseDataVariableState<double> m_z;
-        #endregion
+
     }
 
-    #region ThreeDVectorValue Class
+
     /// <summary>
     /// A typed version of the _BrowseName_ variable.
     /// </summary>
@@ -29188,7 +29137,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class ThreeDVectorValue : BaseVariableValue
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -29203,9 +29152,9 @@ namespace Opc.Ua
 
             Initialize(variable);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The variable that the value belongs to.
         /// </summary>
@@ -29219,12 +29168,12 @@ namespace Opc.Ua
         /// </summary>
         public ThreeDVector Value
         {
-            get { return m_value;  }
+            get { return m_value; }
             set { m_value = value; }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Initializes the object.
         /// </summary>
@@ -29298,7 +29247,7 @@ namespace Opc.Ua
             return ServiceResult.Good;
         }
 
-        #region X Access Methods
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -29336,9 +29285,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region Y Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -29376,9 +29325,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region Z Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -29416,20 +29365,20 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
-        #endregion
 
-        #region Private Fields
+
+
+
         private ThreeDVector m_value;
         private ThreeDVectorState m_variable;
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region CartesianCoordinatesState Class
-    #if (!OPCUA_EXCLUDE_CartesianCoordinatesState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_CartesianCoordinatesState)
     /// <summary>
     /// Stores an instance of the CartesianCoordinatesType VariableType.
     /// </summary>
@@ -29437,7 +29386,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class CartesianCoordinatesState : BaseDataVariableState<CartesianCoordinates>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -29469,7 +29418,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -29502,7 +29451,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string LengthUnit_InitializationString =
            "//////////8VYIkKAgAAAAAACgAAAExlbmd0aFVuaXQBAFVJAC4ARFVJAAABAHcD/////wEB/////wAA" +
            "AAA=";
@@ -29511,11 +29460,11 @@ namespace Opc.Ua
            "//////////8VYIkCAgAAAAAAIAAAAENhcnRlc2lhbkNvb3JkaW5hdGVzVHlwZUluc3RhbmNlAQBUSQEA" +
            "VElUSQAAAQB5Sf////8BAf////8BAAAAFWCJCgIAAAAAAAoAAABMZW5ndGhVbml0AQBVSQAuAERVSQAA" +
            "AQB3A/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<EUInformation> LengthUnit
         {
@@ -29534,9 +29483,9 @@ namespace Opc.Ua
                 m_lengthUnit = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -29601,17 +29550,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<EUInformation> m_lengthUnit;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region ThreeDCartesianCoordinatesState Class
-    #if (!OPCUA_EXCLUDE_ThreeDCartesianCoordinatesState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ThreeDCartesianCoordinatesState)
     /// <summary>
     /// Stores an instance of the ThreeDCartesianCoordinatesType VariableType.
     /// </summary>
@@ -29619,7 +29568,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ThreeDCartesianCoordinatesState : CartesianCoordinatesState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -29651,7 +29600,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -29679,17 +29628,17 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAJgAAAFRocmVlRENhcnRlc2lhbkNvb3JkaW5hdGVzVHlwZUluc3RhbmNl" +
            "AQBWSQEAVklWSQAAAQB6Sf////8BAf////8DAAAAFWCJCgIAAAAAAAEAAABYAQBYSQAvAD9YSQAAAAv/" +
            "////AQH/////AAAAABVgiQoCAAAAAAABAAAAWQEAWUkALwA/WUkAAAAL/////wEB/////wAAAAAVYIkK" +
            "AgAAAAAAAQAAAFoBAFpJAC8AP1pJAAAAC/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<double> X
         {
@@ -29746,9 +29695,9 @@ namespace Opc.Ua
                 m_z = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -29865,16 +29814,16 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<double> m_x;
         private BaseDataVariableState<double> m_y;
         private BaseDataVariableState<double> m_z;
-        #endregion
+
     }
 
-    #region ThreeDCartesianCoordinatesValue Class
+
     /// <summary>
     /// A typed version of the _BrowseName_ variable.
     /// </summary>
@@ -29882,7 +29831,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class ThreeDCartesianCoordinatesValue : BaseVariableValue
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -29897,9 +29846,9 @@ namespace Opc.Ua
 
             Initialize(variable);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The variable that the value belongs to.
         /// </summary>
@@ -29913,12 +29862,12 @@ namespace Opc.Ua
         /// </summary>
         public ThreeDCartesianCoordinates Value
         {
-            get { return m_value;  }
+            get { return m_value; }
             set { m_value = value; }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Initializes the object.
         /// </summary>
@@ -29992,7 +29941,7 @@ namespace Opc.Ua
             return ServiceResult.Good;
         }
 
-        #region X Access Methods
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -30030,9 +29979,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region Y Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -30070,9 +30019,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region Z Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -30110,20 +30059,20 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
-        #endregion
 
-        #region Private Fields
+
+
+
         private ThreeDCartesianCoordinates m_value;
         private ThreeDCartesianCoordinatesState m_variable;
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region OrientationState Class
-    #if (!OPCUA_EXCLUDE_OrientationState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_OrientationState)
     /// <summary>
     /// Stores an instance of the OrientationType VariableType.
     /// </summary>
@@ -30131,7 +30080,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class OrientationState : BaseDataVariableState<Orientation>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -30163,7 +30112,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -30196,7 +30145,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string AngleUnit_InitializationString =
            "//////////8VYIkKAgAAAAAACQAAAEFuZ2xlVW5pdAEAXEkALgBEXEkAAAEAdwP/////AQH/////AAAA" +
            "AA==";
@@ -30205,11 +30154,11 @@ namespace Opc.Ua
            "//////////8VYIkCAgAAAAAAFwAAAE9yaWVudGF0aW9uVHlwZUluc3RhbmNlAQBbSQEAW0lbSQAAAQB7" +
            "Sf////8BAf////8BAAAAFWCJCgIAAAAAAAkAAABBbmdsZVVuaXQBAFxJAC4ARFxJAAABAHcD/////wEB" +
            "/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<EUInformation> AngleUnit
         {
@@ -30228,9 +30177,9 @@ namespace Opc.Ua
                 m_angleUnit = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -30295,17 +30244,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<EUInformation> m_angleUnit;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region ThreeDOrientationState Class
-    #if (!OPCUA_EXCLUDE_ThreeDOrientationState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ThreeDOrientationState)
     /// <summary>
     /// Stores an instance of the ThreeDOrientationType VariableType.
     /// </summary>
@@ -30313,7 +30262,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ThreeDOrientationState : OrientationState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -30345,7 +30294,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -30373,17 +30322,17 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAHQAAAFRocmVlRE9yaWVudGF0aW9uVHlwZUluc3RhbmNlAQBdSQEAXUld" +
            "SQAAAQB8Sf////8BAf////8DAAAAFWCJCgIAAAAAAAEAAABBAQBfSQAvAD9fSQAAAAv/////AQH/////" +
            "AAAAABVgiQoCAAAAAAABAAAAQgEAYEkALwA/YEkAAAAL/////wEB/////wAAAAAVYIkKAgAAAAAAAQAA" +
            "AEMBAGFJAC8AP2FJAAAAC/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<double> A
         {
@@ -30440,9 +30389,9 @@ namespace Opc.Ua
                 m_c = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -30559,16 +30508,16 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<double> m_a;
         private BaseDataVariableState<double> m_b;
         private BaseDataVariableState<double> m_c;
-        #endregion
+
     }
 
-    #region ThreeDOrientationValue Class
+
     /// <summary>
     /// A typed version of the _BrowseName_ variable.
     /// </summary>
@@ -30576,7 +30525,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class ThreeDOrientationValue : BaseVariableValue
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -30591,9 +30540,9 @@ namespace Opc.Ua
 
             Initialize(variable);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The variable that the value belongs to.
         /// </summary>
@@ -30607,12 +30556,12 @@ namespace Opc.Ua
         /// </summary>
         public ThreeDOrientation Value
         {
-            get { return m_value;  }
+            get { return m_value; }
             set { m_value = value; }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Initializes the object.
         /// </summary>
@@ -30686,7 +30635,7 @@ namespace Opc.Ua
             return ServiceResult.Good;
         }
 
-        #region A Access Methods
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -30724,9 +30673,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region B Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -30764,9 +30713,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region C Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -30804,20 +30753,20 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
-        #endregion
 
-        #region Private Fields
+
+
+
         private ThreeDOrientation m_value;
         private ThreeDOrientationState m_variable;
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region FrameState Class
-    #if (!OPCUA_EXCLUDE_FrameState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_FrameState)
     /// <summary>
     /// Stores an instance of the FrameType VariableType.
     /// </summary>
@@ -30825,7 +30774,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class FrameState : BaseDataVariableState<Frame>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -30857,7 +30806,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -30900,7 +30849,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string Constant_InitializationString =
            "//////////8VYIkKAgAAAAAACAAAAENvbnN0YW50AQBkSQAuAERkSQAAAAH/////AQH/////AAAAAA==";
 
@@ -30917,11 +30866,11 @@ namespace Opc.Ua
            "//8BAf////8AAAAAFWCJCgIAAAAAAAgAAABDb25zdGFudAEAZEkALgBEZEkAAAAB/////wEB/////wAA" +
            "AAAVYIkKAgAAAAAACQAAAEJhc2VGcmFtZQEAZUkALwA/ZUkAAAAR/////wEB/////wAAAAAVYIkKAgAA" +
            "AAAACQAAAEZpeGVkQmFzZQEAZkkALgBEZkkAAAAB/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public CartesianCoordinatesState CartesianCoordinates
         {
@@ -31016,9 +30965,9 @@ namespace Opc.Ua
                 m_fixedBase = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -31187,21 +31136,21 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private CartesianCoordinatesState m_cartesianCoordinates;
         private OrientationState m_orientation;
         private PropertyState<bool> m_constant;
         private BaseDataVariableState<NodeId> m_baseFrame;
         private PropertyState<bool> m_fixedBase;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region ThreeDFrameState Class
-    #if (!OPCUA_EXCLUDE_ThreeDFrameState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ThreeDFrameState)
     /// <summary>
     /// Stores an instance of the ThreeDFrameType VariableType.
     /// </summary>
@@ -31209,7 +31158,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ThreeDFrameState : FrameState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -31241,7 +31190,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -31269,7 +31218,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAFwAAAFRocmVlREZyYW1lVHlwZUluc3RhbmNlAQBnSQEAZ0lnSQAAAQB+" +
            "Sf////8BAf////8CAAAAFWCJCgIAAAAAABQAAABDYXJ0ZXNpYW5Db29yZGluYXRlcwEAbEkALwEAVkls" +
@@ -31279,11 +31228,11 @@ namespace Opc.Ua
            "LwEAXUloSQAAAQB8Sf////8BAf////8DAAAAFWCJCgIAAAAAAAEAAABBAQCCSgAvAD+CSgAAAAv/////" +
            "AQH/////AAAAABVgiQoCAAAAAAABAAAAQgEAg0oALwA/g0oAAAAL/////wEB/////wAAAAAVYIkKAgAA" +
            "AAAAAQAAAEMBAIRKAC8AP4RKAAAAC/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public new ThreeDCartesianCoordinatesState CartesianCoordinates
         {
@@ -31297,9 +31246,9 @@ namespace Opc.Ua
             get { return (ThreeDOrientationState)base.Orientation; }
             set { base.Orientation = value; }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -31381,13 +31330,13 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
-    #region ThreeDFrameValue Class
+
     /// <summary>
     /// A typed version of the _BrowseName_ variable.
     /// </summary>
@@ -31395,7 +31344,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class ThreeDFrameValue : BaseVariableValue
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -31410,9 +31359,9 @@ namespace Opc.Ua
 
             Initialize(variable);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The variable that the value belongs to.
         /// </summary>
@@ -31426,12 +31375,12 @@ namespace Opc.Ua
         /// </summary>
         public ThreeDFrame Value
         {
-            get { return m_value;  }
+            get { return m_value; }
             set { m_value = value; }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Initializes the object.
         /// </summary>
@@ -31525,7 +31474,7 @@ namespace Opc.Ua
             return ServiceResult.Good;
         }
 
-        #region CartesianCoordinates Access Methods
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -31563,9 +31512,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region CartesianCoordinates_X Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -31603,9 +31552,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region CartesianCoordinates_Y Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -31643,9 +31592,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region CartesianCoordinates_Z Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -31683,9 +31632,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region Orientation Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -31723,9 +31672,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region Orientation_A Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -31763,9 +31712,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region Orientation_B Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -31803,9 +31752,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region Orientation_C Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -31843,20 +31792,20 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
-        #endregion
 
-        #region Private Fields
+
+
+
         private ThreeDFrame m_value;
         private ThreeDFrameState m_variable;
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region TransitionEventState Class
-    #if (!OPCUA_EXCLUDE_TransitionEventState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_TransitionEventState)
     /// <summary>
     /// Stores an instance of the TransitionEventType ObjectType.
     /// </summary>
@@ -31864,7 +31813,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class TransitionEventState : BaseEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -31880,7 +31829,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.TransitionEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -31908,7 +31857,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAGwAAAFRyYW5zaXRpb25FdmVudFR5cGVJbnN0YW5jZQEABwkBAAcJBwkA" +
            "AP////8LAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQCZDgAuAESZDgAAAA//////AQH/////AAAAABVg" +
@@ -31923,11 +31872,11 @@ namespace Opc.Ua
            "AC8BAMMK1woAAAAV/////wEB/////wEAAAAVYIkKAgAAAAAAAgAAAElkAQCiDgAuAESiDgAAABj/////" +
            "AQH/////AAAAABVgiQoCAAAAAAAHAAAAVG9TdGF0ZQEA2AoALwEAwwrYCgAAABX/////AQH/////AQAA" +
            "ABVgiQoCAAAAAAACAAAASWQBAKYOAC4ARKYOAAAAGP////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public TransitionVariableState Transition
         {
@@ -31984,9 +31933,9 @@ namespace Opc.Ua
                 m_toState = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -32103,19 +32052,19 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private TransitionVariableState m_transition;
         private StateVariableState m_fromState;
         private StateVariableState m_toState;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditUpdateStateEventState Class
-    #if (!OPCUA_EXCLUDE_AuditUpdateStateEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditUpdateStateEventState)
     /// <summary>
     /// Stores an instance of the AuditUpdateStateEventType ObjectType.
     /// </summary>
@@ -32123,7 +32072,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditUpdateStateEventState : AuditUpdateMethodEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -32139,7 +32088,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditUpdateStateEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -32167,7 +32116,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIQAAAEF1ZGl0VXBkYXRlU3RhdGVFdmVudFR5cGVJbnN0YW5jZQEACwkB" +
            "AAsJCwkAAP////8RAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQCuDgAuAESuDgAAAA//////AQH/////" +
@@ -32186,11 +32135,11 @@ namespace Opc.Ua
            "AAAAGAEAAAABAAAAAAAAAAEB/////wAAAAAVYIkKAgAAAAAACgAAAE9sZFN0YXRlSWQBANkKAC4ARNkK" +
            "AAAAGP////8BAf////8AAAAAFWCJCgIAAAAAAAoAAABOZXdTdGF0ZUlkAQDaCgAuAETaCgAAABj/////" +
            "AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState OldStateId
         {
@@ -32228,9 +32177,9 @@ namespace Opc.Ua
                 m_newStateId = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -32321,18 +32270,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState m_oldStateId;
         private PropertyState m_newStateId;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region OpenMethodState Class
-    #if (!OPCUA_EXCLUDE_OpenMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_OpenMethodState)
     /// <summary>
     /// Stores an instance of the OpenMethodType Method.
     /// </summary>
@@ -32340,7 +32289,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class OpenMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -32353,12 +32302,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new OpenMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -32377,28 +32326,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAADgAAAE9wZW5NZXRob2RUeXBlAQDaLQAvAQDaLdotAAABAf////8CAAAA" +
            "F2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEA2y0ALgBE2y0AAJYBAAAAAQAqAQETAAAABAAAAE1v" +
            "ZGUAA/////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAAF2CpCgIAAAAAAA8AAABPdXRwdXRB" +
            "cmd1bWVudHMBANwtAC4ARNwtAACWAQAAAAEAKgEBGQAAAAoAAABGaWxlSGFuZGxlAAf/////AAAAAAAB" +
            "ACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public OpenMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -32433,10 +32382,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -32449,11 +32398,11 @@ namespace Opc.Ua
         NodeId _objectId,
         byte mode,
         ref uint fileHandle);
-    #endif
-    #endregion
+#endif
 
-    #region CloseMethodState Class
-    #if (!OPCUA_EXCLUDE_CloseMethodState)
+
+
+#if (!OPCUA_EXCLUDE_CloseMethodState)
     /// <summary>
     /// Stores an instance of the CloseMethodType Method.
     /// </summary>
@@ -32461,7 +32410,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class CloseMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -32474,12 +32423,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new CloseMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -32498,26 +32447,26 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAADwAAAENsb3NlTWV0aG9kVHlwZQEA3S0ALwEA3S3dLQAAAQH/////AQAA" +
            "ABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAN4tAC4ARN4tAACWAQAAAAEAKgEBGQAAAAoAAABG" +
            "aWxlSGFuZGxlAAf/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public CloseMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -32547,10 +32496,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -32562,11 +32511,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         uint fileHandle);
-    #endif
-    #endregion
+#endif
 
-    #region ReadMethodState Class
-    #if (!OPCUA_EXCLUDE_ReadMethodState)
+
+
+#if (!OPCUA_EXCLUDE_ReadMethodState)
     /// <summary>
     /// Stores an instance of the ReadMethodType Method.
     /// </summary>
@@ -32574,7 +32523,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ReadMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -32587,12 +32536,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new ReadMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -32611,28 +32560,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAADgAAAFJlYWRNZXRob2RUeXBlAQDfLQAvAQDfLd8tAAABAf////8CAAAA" +
            "F2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEA4C0ALgBE4C0AAJYCAAAAAQAqAQEZAAAACgAAAEZp" +
            "bGVIYW5kbGUAB/////8AAAAAAAEAKgEBFQAAAAYAAABMZW5ndGgABv////8AAAAAAAEAKAEBAAAAAQAA" +
            "AAAAAAABAf////8AAAAAF2CpCgIAAAAAAA8AAABPdXRwdXRBcmd1bWVudHMBAOEtAC4AROEtAACWAQAA" +
            "AAEAKgEBEwAAAAQAAABEYXRhAA//////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public ReadMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -32669,10 +32618,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -32686,11 +32635,11 @@ namespace Opc.Ua
         uint fileHandle,
         int length,
         ref byte[] data);
-    #endif
-    #endregion
+#endif
 
-    #region WriteMethodState Class
-    #if (!OPCUA_EXCLUDE_WriteMethodState)
+
+
+#if (!OPCUA_EXCLUDE_WriteMethodState)
     /// <summary>
     /// Stores an instance of the WriteMethodType Method.
     /// </summary>
@@ -32698,7 +32647,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class WriteMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -32711,12 +32660,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new WriteMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -32735,27 +32684,27 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAADwAAAFdyaXRlTWV0aG9kVHlwZQEA4i0ALwEA4i3iLQAAAQH/////AQAA" +
            "ABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAOMtAC4AROMtAACWAgAAAAEAKgEBGQAAAAoAAABG" +
            "aWxlSGFuZGxlAAf/////AAAAAAABACoBARMAAAAEAAAARGF0YQAP/////wAAAAAAAQAoAQEAAAABAAAA" +
            "AAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public WriteMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -32787,10 +32736,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -32803,11 +32752,11 @@ namespace Opc.Ua
         NodeId _objectId,
         uint fileHandle,
         byte[] data);
-    #endif
-    #endregion
+#endif
 
-    #region GetPositionMethodState Class
-    #if (!OPCUA_EXCLUDE_GetPositionMethodState)
+
+
+#if (!OPCUA_EXCLUDE_GetPositionMethodState)
     /// <summary>
     /// Stores an instance of the GetPositionMethodType Method.
     /// </summary>
@@ -32815,7 +32764,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class GetPositionMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -32828,12 +32777,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new GetPositionMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -32852,28 +32801,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAFQAAAEdldFBvc2l0aW9uTWV0aG9kVHlwZQEA5C0ALwEA5C3kLQAAAQH/" +
            "////AgAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAOUtAC4AROUtAACWAQAAAAEAKgEBGQAA" +
            "AAoAAABGaWxlSGFuZGxlAAf/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAABdgqQoCAAAA" +
            "AAAPAAAAT3V0cHV0QXJndW1lbnRzAQDmLQAuAETmLQAAlgEAAAABACoBARcAAAAIAAAAUG9zaXRpb24A" +
            "Cf////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public GetPositionMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -32908,10 +32857,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -32924,11 +32873,11 @@ namespace Opc.Ua
         NodeId _objectId,
         uint fileHandle,
         ref ulong position);
-    #endif
-    #endregion
+#endif
 
-    #region SetPositionMethodState Class
-    #if (!OPCUA_EXCLUDE_SetPositionMethodState)
+
+
+#if (!OPCUA_EXCLUDE_SetPositionMethodState)
     /// <summary>
     /// Stores an instance of the SetPositionMethodType Method.
     /// </summary>
@@ -32936,7 +32885,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SetPositionMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -32949,12 +32898,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new SetPositionMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -32973,27 +32922,27 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAFQAAAFNldFBvc2l0aW9uTWV0aG9kVHlwZQEA5y0ALwEA5y3nLQAAAQH/" +
            "////AQAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAOgtAC4AROgtAACWAgAAAAEAKgEBGQAA" +
            "AAoAAABGaWxlSGFuZGxlAAf/////AAAAAAABACoBARcAAAAIAAAAUG9zaXRpb24ACf////8AAAAAAAEA" +
            "KAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public SetPositionMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -33025,10 +32974,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -33041,11 +32990,11 @@ namespace Opc.Ua
         NodeId _objectId,
         uint fileHandle,
         ulong position);
-    #endif
-    #endregion
+#endif
 
-    #region FileDirectoryState Class
-    #if (!OPCUA_EXCLUDE_FileDirectoryState)
+
+
+#if (!OPCUA_EXCLUDE_FileDirectoryState)
     /// <summary>
     /// Stores an instance of the FileDirectoryType ObjectType.
     /// </summary>
@@ -33053,7 +33002,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class FileDirectoryState : FolderState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -33069,7 +33018,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.FileDirectoryType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -33097,7 +33046,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAGQAAAEZpbGVEaXJlY3RvcnlUeXBlSW5zdGFuY2UBACk0AQApNCk0AAD/" +
            "////BAAAAARhggoEAAAAAAAPAAAAQ3JlYXRlRGlyZWN0b3J5AQBLNAAvAQBLNEs0AAABAf////8CAAAA" +
@@ -33120,11 +33069,11 @@ namespace Opc.Ua
            "//8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAAF2CpCgIAAAAAAA8AAABPdXRwdXRBcmd1bWVu" +
            "dHMBAFU0AC4ARFU0AACWAQAAAAEAKgEBGAAAAAkAAABOZXdOb2RlSWQAEf////8AAAAAAAEAKAEBAAAA" +
            "AQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public CreateDirectoryMethodState CreateDirectory
         {
@@ -33200,9 +33149,9 @@ namespace Opc.Ua
                 m_moveOrCopyMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -33345,20 +33294,20 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private CreateDirectoryMethodState m_createDirectoryMethod;
         private CreateFileMethodState m_createFileMethod;
         private DeleteFileMethodState m_deleteFileSystemObjectMethod;
         private MoveOrCopyMethodState m_moveOrCopyMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region CreateDirectoryMethodState Class
-    #if (!OPCUA_EXCLUDE_CreateDirectoryMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_CreateDirectoryMethodState)
     /// <summary>
     /// Stores an instance of the CreateDirectoryMethodType Method.
     /// </summary>
@@ -33366,7 +33315,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class CreateDirectoryMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -33379,12 +33328,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new CreateDirectoryMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -33403,28 +33352,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGQAAAENyZWF0ZURpcmVjdG9yeU1ldGhvZFR5cGUBAB40AC8BAB40HjQA" +
            "AAEB/////wIAAAAXYKkKAgAAAAAADgAAAElucHV0QXJndW1lbnRzAQAfNAAuAEQfNAAAlgEAAAABACoB" +
            "ARwAAAANAAAARGlyZWN0b3J5TmFtZQAM/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAAX" +
            "YKkKAgAAAAAADwAAAE91dHB1dEFyZ3VtZW50cwEAIDQALgBEIDQAAJYBAAAAAQAqAQEeAAAADwAAAERp" +
            "cmVjdG9yeU5vZGVJZAAR/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public CreateDirectoryMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -33459,10 +33408,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -33475,11 +33424,11 @@ namespace Opc.Ua
         NodeId _objectId,
         string directoryName,
         ref NodeId directoryNodeId);
-    #endif
-    #endregion
+#endif
 
-    #region CreateFileMethodState Class
-    #if (!OPCUA_EXCLUDE_CreateFileMethodState)
+
+
+#if (!OPCUA_EXCLUDE_CreateFileMethodState)
     /// <summary>
     /// Stores an instance of the CreateFileMethodType Method.
     /// </summary>
@@ -33487,7 +33436,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class CreateFileMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -33500,12 +33449,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new CreateFileMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -33524,7 +33473,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAFAAAAENyZWF0ZUZpbGVNZXRob2RUeXBlAQAhNAAvAQAhNCE0AAABAf//" +
            "//8CAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAIjQALgBEIjQAAJYCAAAAAQAqAQEXAAAA" +
@@ -33532,21 +33481,21 @@ namespace Opc.Ua
            "AAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAABdgqQoCAAAAAAAPAAAAT3V0cHV0QXJndW1lbnRzAQAj" +
            "NAAuAEQjNAAAlgIAAAABACoBARkAAAAKAAAARmlsZU5vZGVJZAAR/////wAAAAAAAQAqAQEZAAAACgAA" +
            "AEZpbGVIYW5kbGUAB/////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public CreateFileMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -33586,10 +33535,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -33604,11 +33553,11 @@ namespace Opc.Ua
         bool requestFileOpen,
         ref NodeId fileNodeId,
         ref uint fileHandle);
-    #endif
-    #endregion
+#endif
 
-    #region DeleteFileMethodState Class
-    #if (!OPCUA_EXCLUDE_DeleteFileMethodState)
+
+
+#if (!OPCUA_EXCLUDE_DeleteFileMethodState)
     /// <summary>
     /// Stores an instance of the DeleteFileMethodType Method.
     /// </summary>
@@ -33616,7 +33565,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DeleteFileMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -33629,12 +33578,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new DeleteFileMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -33653,26 +33602,26 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAFAAAAERlbGV0ZUZpbGVNZXRob2RUeXBlAQAkNAAvAQAkNCQ0AAABAf//" +
            "//8BAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAJTQALgBEJTQAAJYBAAAAAQAqAQEdAAAA" +
            "DgAAAE9iamVjdFRvRGVsZXRlABH/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public DeleteFileMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -33702,10 +33651,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -33717,11 +33666,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         NodeId objectToDelete);
-    #endif
-    #endregion
+#endif
 
-    #region MoveOrCopyMethodState Class
-    #if (!OPCUA_EXCLUDE_MoveOrCopyMethodState)
+
+
+#if (!OPCUA_EXCLUDE_MoveOrCopyMethodState)
     /// <summary>
     /// Stores an instance of the MoveOrCopyMethodType Method.
     /// </summary>
@@ -33729,7 +33678,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class MoveOrCopyMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -33742,12 +33691,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new MoveOrCopyMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -33766,7 +33715,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAFAAAAE1vdmVPckNvcHlNZXRob2RUeXBlAQAmNAAvAQAmNCY0AAABAf//" +
            "//8CAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAJzQALgBEJzQAAJYEAAAAAQAqAQEhAAAA" +
@@ -33775,21 +33724,21 @@ namespace Opc.Ua
            "ZXdOYW1lAAz/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAABdgqQoCAAAAAAAPAAAAT3V0" +
            "cHV0QXJndW1lbnRzAQAoNAAuAEQoNAAAlgEAAAABACoBARgAAAAJAAAATmV3Tm9kZUlkABH/////AAAA" +
            "AAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public MoveOrCopyMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -33830,10 +33779,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -33849,11 +33798,11 @@ namespace Opc.Ua
         bool createCopy,
         string newName,
         ref NodeId newNodeId);
-    #endif
-    #endregion
+#endif
 
-    #region TemporaryFileTransferState Class
-    #if (!OPCUA_EXCLUDE_TemporaryFileTransferState)
+
+
+#if (!OPCUA_EXCLUDE_TemporaryFileTransferState)
     /// <summary>
     /// Stores an instance of the TemporaryFileTransferType ObjectType.
     /// </summary>
@@ -33861,7 +33810,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class TemporaryFileTransferState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -33877,7 +33826,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.TemporaryFileTransferType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -33905,7 +33854,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIQAAAFRlbXBvcmFyeUZpbGVUcmFuc2ZlclR5cGVJbnN0YW5jZQEAgD0B" +
            "AIA9gD0AAP////8EAAAAFWCJCgIAAAAAABcAAABDbGllbnRQcm9jZXNzaW5nVGltZW91dAEAgT0ALgBE" +
@@ -33925,11 +33874,11 @@ namespace Opc.Ua
            "AQAqAQEZAAAACgAAAEZpbGVIYW5kbGUAB/////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAA" +
            "F2CpCgIAAAAAAA8AAABPdXRwdXRBcmd1bWVudHMBAIk9AC4ARIk9AACWAQAAAAEAKgEBJQAAABYAAABD" +
            "b21wbGV0aW9uU3RhdGVNYWNoaW5lABH/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<double> ClientProcessingTimeout
         {
@@ -34005,9 +33954,9 @@ namespace Opc.Ua
                 m_closeAndCommitMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -34150,20 +34099,20 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<double> m_clientProcessingTimeout;
         private GenerateFileForReadMethodState m_generateFileForReadMethod;
         private GenerateFileForWriteMethodState m_generateFileForWriteMethod;
         private CloseAndCommitMethodState m_closeAndCommitMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region GenerateFileForReadMethodState Class
-    #if (!OPCUA_EXCLUDE_GenerateFileForReadMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_GenerateFileForReadMethodState)
     /// <summary>
     /// Stores an instance of the GenerateFileForReadMethodType Method.
     /// </summary>
@@ -34171,7 +34120,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class GenerateFileForReadMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -34184,12 +34133,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new GenerateFileForReadMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -34208,7 +34157,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAHQAAAEdlbmVyYXRlRmlsZUZvclJlYWRNZXRob2RUeXBlAQCzPQAvAQCz" +
            "PbM9AAABAf////8CAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAtD0ALgBEtD0AAJYBAAAA" +
@@ -34217,21 +34166,21 @@ namespace Opc.Ua
            "CgAAAEZpbGVOb2RlSWQAEf////8AAAAAAAEAKgEBGQAAAAoAAABGaWxlSGFuZGxlAAf/////AAAAAAAB" +
            "ACoBASUAAAAWAAAAQ29tcGxldGlvblN0YXRlTWFjaGluZQAR/////wAAAAAAAQAoAQEAAAABAAAAAAAA" +
            "AAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public GenerateFileForReadMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -34272,10 +34221,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -34290,11 +34239,11 @@ namespace Opc.Ua
         ref NodeId fileNodeId,
         ref uint fileHandle,
         ref NodeId completionStateMachine);
-    #endif
-    #endregion
+#endif
 
-    #region GenerateFileForWriteMethodState Class
-    #if (!OPCUA_EXCLUDE_GenerateFileForWriteMethodState)
+
+
+#if (!OPCUA_EXCLUDE_GenerateFileForWriteMethodState)
     /// <summary>
     /// Stores an instance of the GenerateFileForWriteMethodType Method.
     /// </summary>
@@ -34302,7 +34251,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class GenerateFileForWriteMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -34315,12 +34264,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new GenerateFileForWriteMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -34339,7 +34288,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAHgAAAEdlbmVyYXRlRmlsZUZvcldyaXRlTWV0aG9kVHlwZQEAtj0ALwEA" +
            "tj22PQAAAQH/////AgAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAOg/AC4AROg/AACWAQAA" +
@@ -34347,21 +34296,21 @@ namespace Opc.Ua
            "//8AAAAAF2CpCgIAAAAAAA8AAABPdXRwdXRBcmd1bWVudHMBALc9AC4ARLc9AACWAgAAAAEAKgEBGQAA" +
            "AAoAAABGaWxlTm9kZUlkABH/////AAAAAAABACoBARkAAAAKAAAARmlsZUhhbmRsZQAH/////wAAAAAA" +
            "AQAoAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public GenerateFileForWriteMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -34399,10 +34348,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -34416,11 +34365,11 @@ namespace Opc.Ua
         object generateOptions,
         ref NodeId fileNodeId,
         ref uint fileHandle);
-    #endif
-    #endregion
+#endif
 
-    #region CloseAndCommitMethodState Class
-    #if (!OPCUA_EXCLUDE_CloseAndCommitMethodState)
+
+
+#if (!OPCUA_EXCLUDE_CloseAndCommitMethodState)
     /// <summary>
     /// Stores an instance of the CloseAndCommitMethodType Method.
     /// </summary>
@@ -34428,7 +34377,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class CloseAndCommitMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -34441,12 +34390,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new CloseAndCommitMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -34465,28 +34414,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGAAAAENsb3NlQW5kQ29tbWl0TWV0aG9kVHlwZQEAuD0ALwEAuD24PQAA" +
            "AQH/////AgAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBALk9AC4ARLk9AACWAQAAAAEAKgEB" +
            "GQAAAAoAAABGaWxlSGFuZGxlAAf/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAABdgqQoC" +
            "AAAAAAAPAAAAT3V0cHV0QXJndW1lbnRzAQC6PQAuAES6PQAAlgEAAAABACoBASUAAAAWAAAAQ29tcGxl" +
            "dGlvblN0YXRlTWFjaGluZQAR/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public CloseAndCommitMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -34521,10 +34470,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -34537,11 +34486,11 @@ namespace Opc.Ua
         NodeId _objectId,
         uint fileHandle,
         ref NodeId completionStateMachine);
-    #endif
-    #endregion
+#endif
 
-    #region FileTransferStateMachineState Class
-    #if (!OPCUA_EXCLUDE_FileTransferStateMachineState)
+
+
+#if (!OPCUA_EXCLUDE_FileTransferStateMachineState)
     /// <summary>
     /// Stores an instance of the FileTransferStateMachineType ObjectType.
     /// </summary>
@@ -34549,7 +34498,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class FileTransferStateMachineState : FiniteStateMachineState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -34565,7 +34514,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.FileTransferStateMachineType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -34593,17 +34542,17 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJAAAAEZpbGVUcmFuc2ZlclN0YXRlTWFjaGluZVR5cGVJbnN0YW5jZQEA" +
            "uz0BALs9uz0AAP////8CAAAAFWCJCgIAAAAAAAwAAABDdXJyZW50U3RhdGUBALw9AC8BAMgKvD0AAAAV" +
            "/////wEB/////wEAAAAVYIkKAgAAAAAAAgAAAElkAQC9PQAuAES9PQAAABH/////AQH/////AAAAAARh" +
            "ggoEAAAAAAAFAAAAUmVzZXQBAOM9AC8BAOM94z0AAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public MethodState Reset
         {
@@ -34622,9 +34571,9 @@ namespace Opc.Ua
                 m_resetMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -34689,17 +34638,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private MethodState m_resetMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region RoleSetState Class
-    #if (!OPCUA_EXCLUDE_RoleSetState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_RoleSetState)
     /// <summary>
     /// Stores an instance of the RoleSetType ObjectType.
     /// </summary>
@@ -34707,7 +34656,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class RoleSetState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -34723,7 +34672,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.RoleSetType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -34751,7 +34700,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAEwAAAFJvbGVTZXRUeXBlSW5zdGFuY2UBAPc8AQD3PPc8AAD/////AgAA" +
            "AARhggoEAAAAAAAHAAAAQWRkUm9sZQEAfT4ALwEAfT59PgAAAQH/////AgAAABdgqQoCAAAAAAAOAAAA" +
@@ -34762,11 +34711,11 @@ namespace Opc.Ua
            "AAoAAABSZW1vdmVSb2xlAQCAPgAvAQCAPoA+AAABAf////8BAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFy" +
            "Z3VtZW50cwEAgT4ALgBEgT4AAJYBAAAAAQAqAQEZAAAACgAAAFJvbGVOb2RlSWQAEf////8AAAAAAAEA" +
            "KAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public AddRoleMethodState AddRole
         {
@@ -34804,9 +34753,9 @@ namespace Opc.Ua
                 m_removeRoleMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -34897,18 +34846,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private AddRoleMethodState m_addRoleMethod;
         private RemoveRoleMethodState m_removeRoleMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AddRoleMethodState Class
-    #if (!OPCUA_EXCLUDE_AddRoleMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AddRoleMethodState)
     /// <summary>
     /// Stores an instance of the AddRoleMethodType Method.
     /// </summary>
@@ -34916,7 +34865,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AddRoleMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -34929,12 +34878,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new AddRoleMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -34953,7 +34902,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAEQAAAEFkZFJvbGVNZXRob2RUeXBlAQCCPgAvAQCCPoI+AAABAf////8C" +
            "AAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAgz4ALgBEgz4AAJYCAAAAAQAqAQEXAAAACAAA" +
@@ -34961,21 +34910,21 @@ namespace Opc.Ua
            "AQAAAAEAAAAAAAAAAQH/////AAAAABdgqQoCAAAAAAAPAAAAT3V0cHV0QXJndW1lbnRzAQCEPgAuAESE" +
            "PgAAlgEAAAABACoBARkAAAAKAAAAUm9sZU5vZGVJZAAR/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB" +
            "/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public AddRoleMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -35012,10 +34961,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -35029,11 +34978,11 @@ namespace Opc.Ua
         string roleName,
         string namespaceUri,
         ref NodeId roleNodeId);
-    #endif
-    #endregion
+#endif
 
-    #region RemoveRoleMethodState Class
-    #if (!OPCUA_EXCLUDE_RemoveRoleMethodState)
+
+
+#if (!OPCUA_EXCLUDE_RemoveRoleMethodState)
     /// <summary>
     /// Stores an instance of the RemoveRoleMethodType Method.
     /// </summary>
@@ -35041,7 +34990,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class RemoveRoleMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -35054,12 +35003,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new RemoveRoleMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -35078,26 +35027,26 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAFAAAAFJlbW92ZVJvbGVNZXRob2RUeXBlAQCFPgAvAQCFPoU+AAABAf//" +
            "//8BAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAhj4ALgBEhj4AAJYBAAAAAQAqAQEZAAAA" +
            "CgAAAFJvbGVOb2RlSWQAEf////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public RemoveRoleMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -35127,10 +35076,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -35142,11 +35091,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         NodeId roleNodeId);
-    #endif
-    #endregion
+#endif
 
-    #region RoleState Class
-    #if (!OPCUA_EXCLUDE_RoleState)
+
+
+#if (!OPCUA_EXCLUDE_RoleState)
     /// <summary>
     /// Stores an instance of the RoleType ObjectType.
     /// </summary>
@@ -35154,7 +35103,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class RoleState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -35170,7 +35119,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.RoleType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -35248,7 +35197,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string Applications_InitializationString =
            "//////////8XYIkKAgAAAAAADAAAAEFwcGxpY2F0aW9ucwEALj8ALgBELj8AAAAMAQAAAAEAAAAAAAAA" +
            "AQH/////AAAAAA==";
@@ -35318,11 +35267,11 @@ namespace Opc.Ua
            "AAAAAARhggoEAAAAAAAOAAAAUmVtb3ZlRW5kcG9pbnQBADY/AC8BADY/Nj8AAAEB/////wEAAAAXYKkK" +
            "AgAAAAAADgAAAElucHV0QXJndW1lbnRzAQA3PwAuAEQ3PwAAlgEAAAABACoBARkAAAAIAAAARW5kcG9p" +
            "bnQBAKg8/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<IdentityMappingRuleType[]> Identities
         {
@@ -35531,9 +35480,9 @@ namespace Opc.Ua
                 m_removeEndpointMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -35858,9 +35807,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<IdentityMappingRuleType[]> m_identities;
         private PropertyState<string[]> m_applications;
         private PropertyState<bool> m_applicationsExclude;
@@ -35872,13 +35821,13 @@ namespace Opc.Ua
         private RemoveApplicationMethodState m_removeApplicationMethod;
         private AddEndpointMethodState m_addEndpointMethod;
         private RemoveEndpointMethodState m_removeEndpointMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AddIdentityMethodState Class
-    #if (!OPCUA_EXCLUDE_AddIdentityMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AddIdentityMethodState)
     /// <summary>
     /// Stores an instance of the AddIdentityMethodType Method.
     /// </summary>
@@ -35886,7 +35835,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AddIdentityMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -35899,12 +35848,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new AddIdentityMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -35923,26 +35872,26 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAFQAAAEFkZElkZW50aXR5TWV0aG9kVHlwZQEAFD0ALwEAFD0UPQAAAQH/" +
            "////AQAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBABU9AC4ARBU9AACWAQAAAAEAKgEBFQAA" +
            "AAQAAABSdWxlAQASPf////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public AddIdentityMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -35972,10 +35921,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -35987,11 +35936,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         IdentityMappingRuleType rule);
-    #endif
-    #endregion
+#endif
 
-    #region RemoveIdentityMethodState Class
-    #if (!OPCUA_EXCLUDE_RemoveIdentityMethodState)
+
+
+#if (!OPCUA_EXCLUDE_RemoveIdentityMethodState)
     /// <summary>
     /// Stores an instance of the RemoveIdentityMethodType Method.
     /// </summary>
@@ -35999,7 +35948,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class RemoveIdentityMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -36012,12 +35961,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new RemoveIdentityMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -36036,26 +35985,26 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGAAAAFJlbW92ZUlkZW50aXR5TWV0aG9kVHlwZQEAFj0ALwEAFj0WPQAA" +
            "AQH/////AQAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBABc9AC4ARBc9AACWAQAAAAEAKgEB" +
            "FQAAAAQAAABSdWxlAQASPf////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public RemoveIdentityMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -36085,10 +36034,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -36100,11 +36049,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         IdentityMappingRuleType rule);
-    #endif
-    #endregion
+#endif
 
-    #region AddApplicationMethodState Class
-    #if (!OPCUA_EXCLUDE_AddApplicationMethodState)
+
+
+#if (!OPCUA_EXCLUDE_AddApplicationMethodState)
     /// <summary>
     /// Stores an instance of the AddApplicationMethodType Method.
     /// </summary>
@@ -36112,7 +36061,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AddApplicationMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -36125,12 +36074,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new AddApplicationMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -36149,26 +36098,26 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGAAAAEFkZEFwcGxpY2F0aW9uTWV0aG9kVHlwZQEAOD8ALwEAOD84PwAA" +
            "AQH/////AQAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBADk/AC4ARDk/AACWAQAAAAEAKgEB" +
            "HQAAAA4AAABBcHBsaWNhdGlvblVyaQAM/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public AddApplicationMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -36198,10 +36147,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -36213,11 +36162,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         string applicationUri);
-    #endif
-    #endregion
+#endif
 
-    #region RemoveApplicationMethodState Class
-    #if (!OPCUA_EXCLUDE_RemoveApplicationMethodState)
+
+
+#if (!OPCUA_EXCLUDE_RemoveApplicationMethodState)
     /// <summary>
     /// Stores an instance of the RemoveApplicationMethodType Method.
     /// </summary>
@@ -36225,7 +36174,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class RemoveApplicationMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -36238,12 +36187,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new RemoveApplicationMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -36262,27 +36211,27 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGwAAAFJlbW92ZUFwcGxpY2F0aW9uTWV0aG9kVHlwZQEAOj8ALwEAOj86" +
            "PwAAAQH/////AQAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBADs/AC4ARDs/AACWAQAAAAEA" +
            "KgEBHQAAAA4AAABBcHBsaWNhdGlvblVyaQAM/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAA" +
            "AAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public RemoveApplicationMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -36312,10 +36261,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -36327,11 +36276,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         string applicationUri);
-    #endif
-    #endregion
+#endif
 
-    #region AddEndpointMethodState Class
-    #if (!OPCUA_EXCLUDE_AddEndpointMethodState)
+
+
+#if (!OPCUA_EXCLUDE_AddEndpointMethodState)
     /// <summary>
     /// Stores an instance of the AddEndpointMethodType Method.
     /// </summary>
@@ -36339,7 +36288,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AddEndpointMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -36352,12 +36301,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new AddEndpointMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -36376,26 +36325,26 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAFQAAAEFkZEVuZHBvaW50TWV0aG9kVHlwZQEAPD8ALwEAPD88PwAAAQH/" +
            "////AQAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAD0/AC4ARD0/AACWAQAAAAEAKgEBGQAA" +
            "AAgAAABFbmRwb2ludAEAqDz/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public AddEndpointMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -36425,10 +36374,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -36440,11 +36389,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         EndpointType endpoint);
-    #endif
-    #endregion
+#endif
 
-    #region RemoveEndpointMethodState Class
-    #if (!OPCUA_EXCLUDE_RemoveEndpointMethodState)
+
+
+#if (!OPCUA_EXCLUDE_RemoveEndpointMethodState)
     /// <summary>
     /// Stores an instance of the RemoveEndpointMethodType Method.
     /// </summary>
@@ -36452,7 +36401,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class RemoveEndpointMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -36465,12 +36414,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new RemoveEndpointMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -36489,26 +36438,26 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGAAAAFJlbW92ZUVuZHBvaW50TWV0aG9kVHlwZQEAPj8ALwEAPj8+PwAA" +
            "AQH/////AQAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAD8/AC4ARD8/AACWAQAAAAEAKgEB" +
            "GQAAAAgAAABFbmRwb2ludAEAqDz/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public RemoveEndpointMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -36538,10 +36487,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -36553,11 +36502,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         EndpointType endpoint);
-    #endif
-    #endregion
+#endif
 
-    #region RoleMappingRuleChangedAuditEventState Class
-    #if (!OPCUA_EXCLUDE_RoleMappingRuleChangedAuditEventState)
+
+
+#if (!OPCUA_EXCLUDE_RoleMappingRuleChangedAuditEventState)
     /// <summary>
     /// Stores an instance of the RoleMappingRuleChangedAuditEventType ObjectType.
     /// </summary>
@@ -36565,7 +36514,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class RoleMappingRuleChangedAuditEventState : AuditUpdateMethodEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -36581,7 +36530,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.RoleMappingRuleChangedAuditEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -36609,7 +36558,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAALAAAAFJvbGVNYXBwaW5nUnVsZUNoYW5nZWRBdWRpdEV2ZW50VHlwZUlu" +
            "c3RhbmNlAQDpRAEA6UTpRAAA/////w8AAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAOpEAC4AROpEAAAA" +
@@ -36626,24 +36575,24 @@ namespace Opc.Ua
            "AAAAQ2xpZW50VXNlcklkAQD3RAAuAET3RAAAAAz/////AQH/////AAAAABVgiQoCAAAAAAAIAAAATWV0" +
            "aG9kSWQBAPhEAC4ARPhEAAAAEf////8BAf////8AAAAAF2CJCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50" +
            "cwEA+UQALgBE+UQAAAAYAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region DictionaryEntryState Class
-    #if (!OPCUA_EXCLUDE_DictionaryEntryState)
+
+
+#if (!OPCUA_EXCLUDE_DictionaryEntryState)
     /// <summary>
     /// Stores an instance of the DictionaryEntryType ObjectType.
     /// </summary>
@@ -36651,7 +36600,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DictionaryEntryState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -36667,7 +36616,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.DictionaryEntryType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -36695,28 +36644,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAGwAAAERpY3Rpb25hcnlFbnRyeVR5cGVJbnN0YW5jZQEAtUQBALVEtUQA" +
            "AP////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region DictionaryFolderState Class
-    #if (!OPCUA_EXCLUDE_DictionaryFolderState)
+
+
+#if (!OPCUA_EXCLUDE_DictionaryFolderState)
     /// <summary>
     /// Stores an instance of the DictionaryFolderType ObjectType.
     /// </summary>
@@ -36724,7 +36673,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DictionaryFolderState : FolderState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -36740,7 +36689,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.DictionaryFolderType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -36768,28 +36717,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHAAAAERpY3Rpb25hcnlGb2xkZXJUeXBlSW5zdGFuY2UBALdEAQC3RLdE" +
            "AAD/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region IrdiDictionaryEntryState Class
-    #if (!OPCUA_EXCLUDE_IrdiDictionaryEntryState)
+
+
+#if (!OPCUA_EXCLUDE_IrdiDictionaryEntryState)
     /// <summary>
     /// Stores an instance of the IrdiDictionaryEntryType ObjectType.
     /// </summary>
@@ -36797,7 +36746,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class IrdiDictionaryEntryState : DictionaryEntryState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -36813,7 +36762,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.IrdiDictionaryEntryType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -36841,28 +36790,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHwAAAElyZGlEaWN0aW9uYXJ5RW50cnlUeXBlSW5zdGFuY2UBAL5EAQC+" +
            "RL5EAAD/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region UriDictionaryEntryState Class
-    #if (!OPCUA_EXCLUDE_UriDictionaryEntryState)
+
+
+#if (!OPCUA_EXCLUDE_UriDictionaryEntryState)
     /// <summary>
     /// Stores an instance of the UriDictionaryEntryType ObjectType.
     /// </summary>
@@ -36870,7 +36819,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class UriDictionaryEntryState : DictionaryEntryState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -36886,7 +36835,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.UriDictionaryEntryType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -36914,28 +36863,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHgAAAFVyaURpY3Rpb25hcnlFbnRyeVR5cGVJbnN0YW5jZQEAwEQBAMBE" +
            "wEQAAP////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region BaseInterfaceState Class
-    #if (!OPCUA_EXCLUDE_BaseInterfaceState)
+
+
+#if (!OPCUA_EXCLUDE_BaseInterfaceState)
     /// <summary>
     /// Stores an instance of the BaseInterfaceType ObjectType.
     /// </summary>
@@ -36943,7 +36892,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class BaseInterfaceState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -36959,7 +36908,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.BaseInterfaceType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -36987,28 +36936,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAGQAAAEJhc2VJbnRlcmZhY2VUeXBlSW5zdGFuY2UBAMJEAQDCRMJEAAD/" +
            "////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region IOrderedObjectState Class
-    #if (!OPCUA_EXCLUDE_IOrderedObjectState)
+
+
+#if (!OPCUA_EXCLUDE_IOrderedObjectState)
     /// <summary>
     /// Stores an instance of the IOrderedObjectType ObjectType.
     /// </summary>
@@ -37016,7 +36965,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class IOrderedObjectState : BaseInterfaceState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -37032,7 +36981,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.IOrderedObjectType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -37060,16 +37009,16 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAGgAAAElPcmRlcmVkT2JqZWN0VHlwZUluc3RhbmNlAQDZWwEA2VvZWwAA" +
            "/////wEAAAAVYIkKAgAAAAAADAAAAE51bWJlckluTGlzdAEA3VsALgBE3VsAAAAa/////wEB/////wAA" +
            "AAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState NumberInList
         {
@@ -37088,9 +37037,9 @@ namespace Opc.Ua
                 m_numberInList = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -37155,17 +37104,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState m_numberInList;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region OrderedListState Class
-    #if (!OPCUA_EXCLUDE_OrderedListState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_OrderedListState)
     /// <summary>
     /// Stores an instance of the OrderedListType ObjectType.
     /// </summary>
@@ -37173,7 +37122,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class OrderedListState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -37189,7 +37138,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.OrderedListType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -37222,7 +37171,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string NodeVersion_InitializationString =
            "//////////8VYIkKAgAAAAAACwAAAE5vZGVWZXJzaW9uAQDlWwAuAETlWwAAAAz/////AQH/////AAAA" +
            "AA==";
@@ -37231,11 +37180,11 @@ namespace Opc.Ua
            "//////////8EYIACAQAAAAAAFwAAAE9yZGVyZWRMaXN0VHlwZUluc3RhbmNlAQDeWwEA3lveWwAAAQAA" +
            "AAApAAEAVQgBAAAAFWCJCgIAAAAAAAsAAABOb2RlVmVyc2lvbgEA5VsALgBE5VsAAAAM/////wEB////" +
            "/wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<string> NodeVersion
         {
@@ -37254,9 +37203,9 @@ namespace Opc.Ua
                 m_nodeVersion = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -37321,17 +37270,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<string> m_nodeVersion;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region DataItemState Class
-    #if (!OPCUA_EXCLUDE_DataItemState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_DataItemState)
     /// <summary>
     /// Stores an instance of the DataItemType VariableType.
     /// </summary>
@@ -37339,7 +37288,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DataItemState : BaseDataVariableState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -37371,7 +37320,7 @@ namespace Opc.Ua
             return ValueRanks.Any;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -37409,7 +37358,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string Definition_InitializationString =
            "//////////8VYIkKAgAAAAAACgAAAERlZmluaXRpb24BAD4JAC4ARD4JAAAADP////8BAf////8AAAAA";
 
@@ -37421,11 +37370,11 @@ namespace Opc.Ua
            "//////////8VYIECAgAAAAAAFAAAAERhdGFJdGVtVHlwZUluc3RhbmNlAQA9CQEAPQk9CQAAABgBAf//" +
            "//8CAAAAFWCJCgIAAAAAAAoAAABEZWZpbml0aW9uAQA+CQAuAEQ+CQAAAAz/////AQH/////AAAAABVg" +
            "iQoCAAAAAAAOAAAAVmFsdWVQcmVjaXNpb24BAD8JAC4ARD8JAAAAC/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<string> Definition
         {
@@ -37463,9 +37412,9 @@ namespace Opc.Ua
                 m_valuePrecision = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -37556,15 +37505,15 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<string> m_definition;
         private PropertyState<double> m_valuePrecision;
-        #endregion
+
     }
 
-    #region DataItemState<T> Class
+
     /// <summary>
     /// A typed version of the DataItemType variable.
     /// </summary>
@@ -37572,7 +37521,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class DataItemState<T> : DataItemState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -37601,9 +37550,9 @@ namespace Opc.Ua
             InitializeOptionalChildren(context);
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The value of the variable.
         /// </summary>
@@ -37619,14 +37568,14 @@ namespace Opc.Ua
                 base.Value = value;
             }
         }
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region BaseAnalogState Class
-    #if (!OPCUA_EXCLUDE_BaseAnalogState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_BaseAnalogState)
     /// <summary>
     /// Stores an instance of the BaseAnalogType VariableType.
     /// </summary>
@@ -37634,7 +37583,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class BaseAnalogState : DataItemState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -37666,7 +37615,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -37709,7 +37658,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string InstrumentRange_InitializationString =
            "//////////8VYIkKAgAAAAAADwAAAEluc3RydW1lbnRSYW5nZQEAn0QALgBEn0QAAAEAdAP/////AQH/" +
            "////AAAAAA==";
@@ -37726,11 +37675,11 @@ namespace Opc.Ua
            "/////wMAAAAVYIkKAgAAAAAADwAAAEluc3RydW1lbnRSYW5nZQEAn0QALgBEn0QAAAEAdAP/////AQH/" +
            "////AAAAABVgiQoCAAAAAAAHAAAARVVSYW5nZQEAoEQALgBEoEQAAAEAdAP/////AQH/////AAAAABVg" +
            "iQoCAAAAAAAQAAAARW5naW5lZXJpbmdVbml0cwEAoUQALgBEoUQAAAEAdwP/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<Range> InstrumentRange
         {
@@ -37787,9 +37736,9 @@ namespace Opc.Ua
                 m_engineeringUnits = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -37906,16 +37855,16 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<Range> m_instrumentRange;
         private PropertyState<Range> m_eURange;
         private PropertyState<EUInformation> m_engineeringUnits;
-        #endregion
+
     }
 
-    #region BaseAnalogState<T> Class
+
     /// <summary>
     /// A typed version of the BaseAnalogType variable.
     /// </summary>
@@ -37923,7 +37872,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class BaseAnalogState<T> : BaseAnalogState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -37952,9 +37901,9 @@ namespace Opc.Ua
             InitializeOptionalChildren(context);
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The value of the variable.
         /// </summary>
@@ -37970,14 +37919,14 @@ namespace Opc.Ua
                 base.Value = value;
             }
         }
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region AnalogItemState Class
-    #if (!OPCUA_EXCLUDE_AnalogItemState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AnalogItemState)
     /// <summary>
     /// Stores an instance of the AnalogItemType VariableType.
     /// </summary>
@@ -37985,7 +37934,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AnalogItemState : BaseAnalogState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -38017,7 +37966,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -38045,25 +37994,25 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIECAgAAAAAAFgAAAEFuYWxvZ0l0ZW1UeXBlSW5zdGFuY2UBAEAJAQBACUAJAAAAGgEB" +
            "/////wEAAAAVYIkKAgAAAAAABwAAAEVVUmFuZ2UBAEEJAC4AREEJAAABAHQD/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
 
-    #region AnalogItemState<T> Class
+
     /// <summary>
     /// A typed version of the AnalogItemType variable.
     /// </summary>
@@ -38071,7 +38020,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class AnalogItemState<T> : AnalogItemState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -38100,9 +38049,9 @@ namespace Opc.Ua
             InitializeOptionalChildren(context);
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The value of the variable.
         /// </summary>
@@ -38118,14 +38067,14 @@ namespace Opc.Ua
                 base.Value = value;
             }
         }
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region AnalogUnitState Class
-    #if (!OPCUA_EXCLUDE_AnalogUnitState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AnalogUnitState)
     /// <summary>
     /// Stores an instance of the AnalogUnitType VariableType.
     /// </summary>
@@ -38133,7 +38082,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AnalogUnitState : BaseAnalogState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -38165,7 +38114,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -38193,26 +38142,26 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIECAgAAAAAAFgAAAEFuYWxvZ1VuaXRUeXBlSW5zdGFuY2UBAFlEAQBZRFlEAAAAGgEB" +
            "/////wEAAAAVYIkKAgAAAAAAEAAAAEVuZ2luZWVyaW5nVW5pdHMBAF5EAC4ARF5EAAABAHcD/////wEB" +
            "/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
 
-    #region AnalogUnitState<T> Class
+
     /// <summary>
     /// A typed version of the AnalogUnitType variable.
     /// </summary>
@@ -38220,7 +38169,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class AnalogUnitState<T> : AnalogUnitState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -38249,9 +38198,9 @@ namespace Opc.Ua
             InitializeOptionalChildren(context);
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The value of the variable.
         /// </summary>
@@ -38267,14 +38216,14 @@ namespace Opc.Ua
                 base.Value = value;
             }
         }
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region AnalogUnitRangeState Class
-    #if (!OPCUA_EXCLUDE_AnalogUnitRangeState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AnalogUnitRangeState)
     /// <summary>
     /// Stores an instance of the AnalogUnitRangeType VariableType.
     /// </summary>
@@ -38282,7 +38231,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AnalogUnitRangeState : AnalogItemState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -38314,7 +38263,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -38342,27 +38291,27 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIECAgAAAAAAGwAAAEFuYWxvZ1VuaXRSYW5nZVR5cGVJbnN0YW5jZQEAokQBAKJEokQA" +
            "AAAaAQH/////AgAAABVgiQoCAAAAAAAHAAAARVVSYW5nZQEApkQALgBEpkQAAAEAdAP/////AQH/////" +
            "AAAAABVgiQoCAAAAAAAQAAAARW5naW5lZXJpbmdVbml0cwEAp0QALgBEp0QAAAEAdwP/////AQH/////" +
            "AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
 
-    #region AnalogUnitRangeState<T> Class
+
     /// <summary>
     /// A typed version of the AnalogUnitRangeType variable.
     /// </summary>
@@ -38370,7 +38319,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class AnalogUnitRangeState<T> : AnalogUnitRangeState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -38399,9 +38348,9 @@ namespace Opc.Ua
             InitializeOptionalChildren(context);
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The value of the variable.
         /// </summary>
@@ -38417,14 +38366,14 @@ namespace Opc.Ua
                 base.Value = value;
             }
         }
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region DiscreteItemState Class
-    #if (!OPCUA_EXCLUDE_DiscreteItemState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_DiscreteItemState)
     /// <summary>
     /// Stores an instance of the DiscreteItemType VariableType.
     /// </summary>
@@ -38432,7 +38381,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DiscreteItemState : DataItemState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -38464,7 +38413,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -38492,25 +38441,25 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIECAgAAAAAAGAAAAERpc2NyZXRlSXRlbVR5cGVJbnN0YW5jZQEARAkBAEQJRAkAAAAY" +
            "AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
 
-    #region DiscreteItemState<T> Class
+
     /// <summary>
     /// A typed version of the DiscreteItemType variable.
     /// </summary>
@@ -38518,7 +38467,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class DiscreteItemState<T> : DiscreteItemState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -38547,9 +38496,9 @@ namespace Opc.Ua
             InitializeOptionalChildren(context);
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The value of the variable.
         /// </summary>
@@ -38565,14 +38514,14 @@ namespace Opc.Ua
                 base.Value = value;
             }
         }
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region TwoStateDiscreteState Class
-    #if (!OPCUA_EXCLUDE_TwoStateDiscreteState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_TwoStateDiscreteState)
     /// <summary>
     /// Stores an instance of the TwoStateDiscreteType VariableType.
     /// </summary>
@@ -38580,7 +38529,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class TwoStateDiscreteState : DiscreteItemState<bool>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -38612,7 +38561,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -38640,16 +38589,16 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIECAgAAAAAAHAAAAFR3b1N0YXRlRGlzY3JldGVUeXBlSW5zdGFuY2UBAEUJAQBFCUUJ" +
            "AAAAAQEB/////wIAAAAVYIkKAgAAAAAACgAAAEZhbHNlU3RhdGUBAEYJAC4AREYJAAAAFf////8BAf//" +
            "//8AAAAAFWCJCgIAAAAAAAkAAABUcnVlU3RhdGUBAEcJAC4AREcJAAAAFf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<LocalizedText> FalseState
         {
@@ -38687,9 +38636,9 @@ namespace Opc.Ua
                 m_trueState = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -38780,18 +38729,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<LocalizedText> m_falseState;
         private PropertyState<LocalizedText> m_trueState;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region MultiStateDiscreteState Class
-    #if (!OPCUA_EXCLUDE_MultiStateDiscreteState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_MultiStateDiscreteState)
     /// <summary>
     /// Stores an instance of the MultiStateDiscreteType VariableType.
     /// </summary>
@@ -38799,7 +38748,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class MultiStateDiscreteState : DiscreteItemState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -38831,7 +38780,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -38859,26 +38808,26 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIECAgAAAAAAHgAAAE11bHRpU3RhdGVEaXNjcmV0ZVR5cGVJbnN0YW5jZQEASAkBAEgJ" +
            "SAkAAAAcAQH/////AQAAABdgiQoCAAAAAAALAAAARW51bVN0cmluZ3MBAEkJAC4AREkJAAAAFQEAAAAB" +
            "AAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
 
-    #region MultiStateDiscreteState<T> Class
+
     /// <summary>
     /// A typed version of the MultiStateDiscreteType variable.
     /// </summary>
@@ -38886,7 +38835,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class MultiStateDiscreteState<T> : MultiStateDiscreteState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -38915,9 +38864,9 @@ namespace Opc.Ua
             InitializeOptionalChildren(context);
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The value of the variable.
         /// </summary>
@@ -38933,14 +38882,14 @@ namespace Opc.Ua
                 base.Value = value;
             }
         }
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region MultiStateValueDiscreteState Class
-    #if (!OPCUA_EXCLUDE_MultiStateValueDiscreteState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_MultiStateValueDiscreteState)
     /// <summary>
     /// Stores an instance of the MultiStateValueDiscreteType VariableType.
     /// </summary>
@@ -38948,7 +38897,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class MultiStateValueDiscreteState : DiscreteItemState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -38980,7 +38929,7 @@ namespace Opc.Ua
             return ValueRanks.Any;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -39008,17 +38957,17 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIECAgAAAAAAIwAAAE11bHRpU3RhdGVWYWx1ZURpc2NyZXRlVHlwZUluc3RhbmNlAQDm" +
            "KwEA5ivmKwAAABoBAf////8CAAAAF2CJCgIAAAAAAAoAAABFbnVtVmFsdWVzAQDpKwAuAETpKwAAAQCq" +
            "HQEAAAABAAAAAAAAAAEB/////wAAAAAVYIkKAgAAAAAACwAAAFZhbHVlQXNUZXh0AQDFLAAuAETFLAAA" +
            "ABX/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<EnumValueType[]> EnumValues
         {
@@ -39056,9 +39005,9 @@ namespace Opc.Ua
                 m_valueAsText = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -39149,15 +39098,15 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<EnumValueType[]> m_enumValues;
         private PropertyState<LocalizedText> m_valueAsText;
-        #endregion
+
     }
 
-    #region MultiStateValueDiscreteState<T> Class
+
     /// <summary>
     /// A typed version of the MultiStateValueDiscreteType variable.
     /// </summary>
@@ -39165,7 +39114,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class MultiStateValueDiscreteState<T> : MultiStateValueDiscreteState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -39194,9 +39143,9 @@ namespace Opc.Ua
             InitializeOptionalChildren(context);
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The value of the variable.
         /// </summary>
@@ -39212,14 +39161,14 @@ namespace Opc.Ua
                 base.Value = value;
             }
         }
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region ArrayItemState Class
-    #if (!OPCUA_EXCLUDE_ArrayItemState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ArrayItemState)
     /// <summary>
     /// Stores an instance of the ArrayItemType VariableType.
     /// </summary>
@@ -39227,7 +39176,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ArrayItemState : DataItemState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -39259,7 +39208,7 @@ namespace Opc.Ua
             return ValueRanks.OneOrMoreDimensions;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -39292,7 +39241,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string InstrumentRange_InitializationString =
            "//////////8VYIkKAgAAAAAADwAAAEluc3RydW1lbnRSYW5nZQEA+C4ALgBE+C4AAAEAdAP/////AQH/" +
            "////AAAAAA==";
@@ -39304,11 +39253,11 @@ namespace Opc.Ua
            "ABVgiQoCAAAAAAAQAAAARW5naW5lZXJpbmdVbml0cwEA+i4ALgBE+i4AAAEAdwP/////AQH/////AAAA" +
            "ABVgiQoCAAAAAAAFAAAAVGl0bGUBAPsuAC4ARPsuAAAAFf////8BAf////8AAAAAFWCJCgIAAAAAAA0A" +
            "AABBeGlzU2NhbGVUeXBlAQD8LgAuAET8LgAAAQAtL/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<Range> InstrumentRange
         {
@@ -39403,9 +39352,9 @@ namespace Opc.Ua
                 m_axisScaleType = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -39574,18 +39523,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<Range> m_instrumentRange;
         private PropertyState<Range> m_eURange;
         private PropertyState<EUInformation> m_engineeringUnits;
         private PropertyState<LocalizedText> m_title;
         private PropertyState<AxisScaleEnumeration> m_axisScaleType;
-        #endregion
+
     }
 
-    #region ArrayItemState<T> Class
+
     /// <summary>
     /// A typed version of the ArrayItemType variable.
     /// </summary>
@@ -39593,7 +39542,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class ArrayItemState<T> : ArrayItemState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -39622,9 +39571,9 @@ namespace Opc.Ua
             InitializeOptionalChildren(context);
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The value of the variable.
         /// </summary>
@@ -39640,14 +39589,14 @@ namespace Opc.Ua
                 base.Value = value;
             }
         }
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region YArrayItemState Class
-    #if (!OPCUA_EXCLUDE_YArrayItemState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_YArrayItemState)
     /// <summary>
     /// Stores an instance of the YArrayItemType VariableType.
     /// </summary>
@@ -39655,7 +39604,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class YArrayItemState : ArrayItemState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -39687,7 +39636,7 @@ namespace Opc.Ua
             return ValueRanks.TwoDimensions;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -39715,7 +39664,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8XYIkCAgAAAAAAFgAAAFlBcnJheUl0ZW1UeXBlSW5zdGFuY2UBAP0uAQD9Lv0uAAAAGAEA" +
            "AAABAAAAAAAAAAEB/////wUAAAAVYIkKAgAAAAAABwAAAEVVUmFuZ2UBAAEvAC4ARAEvAAABAHQD////" +
@@ -39723,11 +39672,11 @@ namespace Opc.Ua
            "/wEB/////wAAAAAVYIkKAgAAAAAABQAAAFRpdGxlAQADLwAuAEQDLwAAABX/////AQH/////AAAAABVg" +
            "iQoCAAAAAAANAAAAQXhpc1NjYWxlVHlwZQEABC8ALgBEBC8AAAEALS//////AQH/////AAAAABVgiQoC" +
            "AAAAAAAPAAAAWEF4aXNEZWZpbml0aW9uAQAFLwAuAEQFLwAAAQAvL/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<AxisInformation> XAxisDefinition
         {
@@ -39746,9 +39695,9 @@ namespace Opc.Ua
                 m_xAxisDefinition = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -39813,14 +39762,14 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<AxisInformation> m_xAxisDefinition;
-        #endregion
+
     }
 
-    #region YArrayItemState<T> Class
+
     /// <summary>
     /// A typed version of the YArrayItemType variable.
     /// </summary>
@@ -39828,7 +39777,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class YArrayItemState<T> : YArrayItemState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -39857,9 +39806,9 @@ namespace Opc.Ua
             InitializeOptionalChildren(context);
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The value of the variable.
         /// </summary>
@@ -39875,14 +39824,14 @@ namespace Opc.Ua
                 base.Value = value;
             }
         }
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region XYArrayItemState Class
-    #if (!OPCUA_EXCLUDE_XYArrayItemState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_XYArrayItemState)
     /// <summary>
     /// Stores an instance of the XYArrayItemType VariableType.
     /// </summary>
@@ -39890,7 +39839,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class XYArrayItemState : ArrayItemState<XVType[]>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -39922,7 +39871,7 @@ namespace Opc.Ua
             return ValueRanks.TwoDimensions;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -39950,7 +39899,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8XYIkCAgAAAAAAFwAAAFhZQXJyYXlJdGVtVHlwZUluc3RhbmNlAQAGLwEABi8GLwAAAQAw" +
            "LwEAAAABAAAAAAAAAAEB/////wUAAAAVYIkKAgAAAAAABwAAAEVVUmFuZ2UBAAovAC4ARAovAAABAHQD" +
@@ -39958,11 +39907,11 @@ namespace Opc.Ua
            "/////wEB/////wAAAAAVYIkKAgAAAAAABQAAAFRpdGxlAQAMLwAuAEQMLwAAABX/////AQH/////AAAA" +
            "ABVgiQoCAAAAAAANAAAAQXhpc1NjYWxlVHlwZQEADS8ALgBEDS8AAAEALS//////AQH/////AAAAABVg" +
            "iQoCAAAAAAAPAAAAWEF4aXNEZWZpbml0aW9uAQAOLwAuAEQOLwAAAQAvL/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<AxisInformation> XAxisDefinition
         {
@@ -39981,9 +39930,9 @@ namespace Opc.Ua
                 m_xAxisDefinition = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -40048,17 +39997,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<AxisInformation> m_xAxisDefinition;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region ImageItemState Class
-    #if (!OPCUA_EXCLUDE_ImageItemState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ImageItemState)
     /// <summary>
     /// Stores an instance of the ImageItemType VariableType.
     /// </summary>
@@ -40066,7 +40015,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ImageItemState : ArrayItemState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -40098,7 +40047,7 @@ namespace Opc.Ua
             return 3;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -40126,7 +40075,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8XYIkCAgAAAAAAFQAAAEltYWdlSXRlbVR5cGVJbnN0YW5jZQEADy8BAA8vDy8AAAAYAgAA" +
            "AAIAAAAAAAAAAAAAAAEB/////wYAAAAVYIkKAgAAAAAABwAAAEVVUmFuZ2UBABMvAC4ARBMvAAABAHQD" +
@@ -40135,11 +40084,11 @@ namespace Opc.Ua
            "ABVgiQoCAAAAAAANAAAAQXhpc1NjYWxlVHlwZQEAFi8ALgBEFi8AAAEALS//////AQH/////AAAAABVg" +
            "iQoCAAAAAAAPAAAAWEF4aXNEZWZpbml0aW9uAQAXLwAuAEQXLwAAAQAvL/////8BAf////8AAAAAFWCJ" +
            "CgIAAAAAAA8AAABZQXhpc0RlZmluaXRpb24BABgvAC4ARBgvAAABAC8v/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<AxisInformation> XAxisDefinition
         {
@@ -40177,9 +40126,9 @@ namespace Opc.Ua
                 m_yAxisDefinition = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -40270,15 +40219,15 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<AxisInformation> m_xAxisDefinition;
         private PropertyState<AxisInformation> m_yAxisDefinition;
-        #endregion
+
     }
 
-    #region ImageItemState<T> Class
+
     /// <summary>
     /// A typed version of the ImageItemType variable.
     /// </summary>
@@ -40286,7 +40235,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class ImageItemState<T> : ImageItemState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -40315,9 +40264,9 @@ namespace Opc.Ua
             InitializeOptionalChildren(context);
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The value of the variable.
         /// </summary>
@@ -40333,14 +40282,14 @@ namespace Opc.Ua
                 base.Value = value;
             }
         }
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region CubeItemState Class
-    #if (!OPCUA_EXCLUDE_CubeItemState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_CubeItemState)
     /// <summary>
     /// Stores an instance of the CubeItemType VariableType.
     /// </summary>
@@ -40348,7 +40297,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class CubeItemState : ArrayItemState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -40380,7 +40329,7 @@ namespace Opc.Ua
             return 4;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -40408,7 +40357,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8XYIkCAgAAAAAAFAAAAEN1YmVJdGVtVHlwZUluc3RhbmNlAQAZLwEAGS8ZLwAAABgDAAAA" +
            "AwAAAAAAAAAAAAAAAAAAAAEB/////wcAAAAVYIkKAgAAAAAABwAAAEVVUmFuZ2UBAB0vAC4ARB0vAAAB" +
@@ -40418,11 +40367,11 @@ namespace Opc.Ua
            "ABVgiQoCAAAAAAAPAAAAWEF4aXNEZWZpbml0aW9uAQAhLwAuAEQhLwAAAQAvL/////8BAf////8AAAAA" +
            "FWCJCgIAAAAAAA8AAABZQXhpc0RlZmluaXRpb24BACIvAC4ARCIvAAABAC8v/////wEB/////wAAAAAV" +
            "YIkKAgAAAAAADwAAAFpBeGlzRGVmaW5pdGlvbgEAIy8ALgBEIy8AAAEALy//////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<AxisInformation> XAxisDefinition
         {
@@ -40479,9 +40428,9 @@ namespace Opc.Ua
                 m_zAxisDefinition = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -40598,16 +40547,16 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<AxisInformation> m_xAxisDefinition;
         private PropertyState<AxisInformation> m_yAxisDefinition;
         private PropertyState<AxisInformation> m_zAxisDefinition;
-        #endregion
+
     }
 
-    #region CubeItemState<T> Class
+
     /// <summary>
     /// A typed version of the CubeItemType variable.
     /// </summary>
@@ -40615,7 +40564,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class CubeItemState<T> : CubeItemState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -40644,9 +40593,9 @@ namespace Opc.Ua
             InitializeOptionalChildren(context);
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The value of the variable.
         /// </summary>
@@ -40662,14 +40611,14 @@ namespace Opc.Ua
                 base.Value = value;
             }
         }
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region NDimensionArrayItemState Class
-    #if (!OPCUA_EXCLUDE_NDimensionArrayItemState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_NDimensionArrayItemState)
     /// <summary>
     /// Stores an instance of the NDimensionArrayItemType VariableType.
     /// </summary>
@@ -40677,7 +40626,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class NDimensionArrayItemState : ArrayItemState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -40709,7 +40658,7 @@ namespace Opc.Ua
             return ValueRanks.OneOrMoreDimensions;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -40737,7 +40686,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAHwAAAE5EaW1lbnNpb25BcnJheUl0ZW1UeXBlSW5zdGFuY2UBACQvAQAk" +
            "LyQvAAAAGAAAAAABAf////8FAAAAFWCJCgIAAAAAAAcAAABFVVJhbmdlAQAoLwAuAEQoLwAAAQB0A///" +
@@ -40746,11 +40695,11 @@ namespace Opc.Ua
            "YIkKAgAAAAAADQAAAEF4aXNTY2FsZVR5cGUBACsvAC4ARCsvAAABAC0v/////wEB/////wAAAAAXYIkK" +
            "AgAAAAAADgAAAEF4aXNEZWZpbml0aW9uAQAsLwAuAEQsLwAAAQAvLwEAAAABAAAAAAAAAAEB/////wAA" +
            "AAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<AxisInformation[]> AxisDefinition
         {
@@ -40769,9 +40718,9 @@ namespace Opc.Ua
                 m_axisDefinition = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -40836,14 +40785,14 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<AxisInformation[]> m_axisDefinition;
-        #endregion
+
     }
 
-    #region NDimensionArrayItemState<T> Class
+
     /// <summary>
     /// A typed version of the NDimensionArrayItemType variable.
     /// </summary>
@@ -40851,7 +40800,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class NDimensionArrayItemState<T> : NDimensionArrayItemState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -40880,9 +40829,9 @@ namespace Opc.Ua
             InitializeOptionalChildren(context);
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The value of the variable.
         /// </summary>
@@ -40898,14 +40847,14 @@ namespace Opc.Ua
                 base.Value = value;
             }
         }
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region TwoStateVariableState Class
-    #if (!OPCUA_EXCLUDE_TwoStateVariableState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_TwoStateVariableState)
     /// <summary>
     /// Stores an instance of the TwoStateVariableType VariableType.
     /// </summary>
@@ -40913,7 +40862,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class TwoStateVariableState : StateVariableState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -40945,7 +40894,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -40993,7 +40942,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string TransitionTime_InitializationString =
            "//////////8VYIkKAgAAAAAADgAAAFRyYW5zaXRpb25UaW1lAQAoIwAuAEQoIwAAAQAmAf////8BAf//" +
            "//8AAAAA";
@@ -41015,11 +40964,11 @@ namespace Opc.Ua
            "FWCJCgIAAAAAABcAAABFZmZlY3RpdmVUcmFuc2l0aW9uVGltZQEAKSMALgBEKSMAAAEAJgH/////AQH/" +
            "////AAAAABVgiQoCAAAAAAAJAAAAVHJ1ZVN0YXRlAQBmKwAuAERmKwAAABX/////AQH/////AAAAABVg" +
            "iQoCAAAAAAAKAAAARmFsc2VTdGF0ZQEAZysALgBEZysAAAAV/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public new PropertyState<bool> Id
         {
@@ -41102,9 +41051,9 @@ namespace Opc.Ua
                 m_falseState = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -41268,20 +41217,20 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<DateTime> m_transitionTime;
         private PropertyState<DateTime> m_effectiveTransitionTime;
         private PropertyState<LocalizedText> m_trueState;
         private PropertyState<LocalizedText> m_falseState;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region ConditionVariableState Class
-    #if (!OPCUA_EXCLUDE_ConditionVariableState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ConditionVariableState)
     /// <summary>
     /// Stores an instance of the ConditionVariableType VariableType.
     /// </summary>
@@ -41289,7 +41238,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ConditionVariableState : BaseDataVariableState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -41321,7 +41270,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -41349,16 +41298,16 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIECAgAAAAAAHQAAAENvbmRpdGlvblZhcmlhYmxlVHlwZUluc3RhbmNlAQAqIwEAKiMq" +
            "IwAAABgBAf////8BAAAAFWCJCgIAAAAAAA8AAABTb3VyY2VUaW1lc3RhbXABACsjAC4ARCsjAAABACYB" +
            "/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<DateTime> SourceTimestamp
         {
@@ -41377,9 +41326,9 @@ namespace Opc.Ua
                 m_sourceTimestamp = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -41444,14 +41393,14 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<DateTime> m_sourceTimestamp;
-        #endregion
+
     }
 
-    #region ConditionVariableState<T> Class
+
     /// <summary>
     /// A typed version of the ConditionVariableType variable.
     /// </summary>
@@ -41459,7 +41408,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class ConditionVariableState<T> : ConditionVariableState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -41488,9 +41437,9 @@ namespace Opc.Ua
             InitializeOptionalChildren(context);
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The value of the variable.
         /// </summary>
@@ -41506,14 +41455,14 @@ namespace Opc.Ua
                 base.Value = value;
             }
         }
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region ConditionState Class
-    #if (!OPCUA_EXCLUDE_ConditionState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ConditionState)
     /// <summary>
     /// Stores an instance of the ConditionType ObjectType.
     /// </summary>
@@ -41521,7 +41470,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ConditionState : BaseEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -41537,7 +41486,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ConditionType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -41575,7 +41524,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string ConditionSubClassId_InitializationString =
            "//////////8XYIkKAgAAAAAAEwAAAENvbmRpdGlvblN1YkNsYXNzSWQBAOs/AC4AROs/AAAAEQEAAAAB" +
            "AAAAAAAAAAEB/////wAAAAA=";
@@ -41620,18 +41569,15 @@ namespace Opc.Ua
            "RXZlbnRJZAAP/////wAAAAADAAAAACgAAABUaGUgaWRlbnRpZmllciBmb3IgdGhlIGV2ZW50IHRvIGNv" +
            "bW1lbnQuAQAqAQFCAAAABwAAAENvbW1lbnQAFf////8AAAAAAwAAAAAkAAAAVGhlIGNvbW1lbnQgdG8g" +
            "YWRkIHRvIHRoZSBjb25kaXRpb24uAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<NodeId> ConditionClassId
         {
-            get
-            {
-                return m_conditionClassId;
-            }
+            get => m_conditionClassId;
 
             set
             {
@@ -41647,10 +41593,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<LocalizedText> ConditionClassName
         {
-            get
-            {
-                return m_conditionClassName;
-            }
+            get => m_conditionClassName;
 
             set
             {
@@ -41666,10 +41609,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<NodeId[]> ConditionSubClassId
         {
-            get
-            {
-                return m_conditionSubClassId;
-            }
+            get => m_conditionSubClassId;
 
             set
             {
@@ -41685,10 +41625,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<LocalizedText[]> ConditionSubClassName
         {
-            get
-            {
-                return m_conditionSubClassName;
-            }
+            get => m_conditionSubClassName;
 
             set
             {
@@ -41704,10 +41641,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<string> ConditionName
         {
-            get
-            {
-                return m_conditionName;
-            }
+            get => m_conditionName;
 
             set
             {
@@ -41723,10 +41657,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<NodeId> BranchId
         {
-            get
-            {
-                return m_branchId;
-            }
+            get => m_branchId;
 
             set
             {
@@ -41742,10 +41673,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<bool> Retain
         {
-            get
-            {
-                return m_retain;
-            }
+            get => m_retain;
 
             set
             {
@@ -41761,10 +41689,7 @@ namespace Opc.Ua
         /// <remarks />
         public TwoStateVariableState EnabledState
         {
-            get
-            {
-                return m_enabledState;
-            }
+            get => m_enabledState;
 
             set
             {
@@ -41780,10 +41705,7 @@ namespace Opc.Ua
         /// <remarks />
         public ConditionVariableState<StatusCode> Quality
         {
-            get
-            {
-                return m_quality;
-            }
+            get => m_quality;
 
             set
             {
@@ -41799,10 +41721,7 @@ namespace Opc.Ua
         /// <remarks />
         public ConditionVariableState<ushort> LastSeverity
         {
-            get
-            {
-                return m_lastSeverity;
-            }
+            get => m_lastSeverity;
 
             set
             {
@@ -41818,10 +41737,7 @@ namespace Opc.Ua
         /// <remarks />
         public ConditionVariableState<LocalizedText> Comment
         {
-            get
-            {
-                return m_comment;
-            }
+            get => m_comment;
 
             set
             {
@@ -41837,10 +41753,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<string> ClientUserId
         {
-            get
-            {
-                return m_clientUserId;
-            }
+            get => m_clientUserId;
 
             set
             {
@@ -41856,10 +41769,7 @@ namespace Opc.Ua
         /// <remarks />
         public MethodState Disable
         {
-            get
-            {
-                return m_disableMethod;
-            }
+            get => m_disableMethod;
 
             set
             {
@@ -41875,10 +41785,7 @@ namespace Opc.Ua
         /// <remarks />
         public MethodState Enable
         {
-            get
-            {
-                return m_enableMethod;
-            }
+            get => m_enableMethod;
 
             set
             {
@@ -41894,10 +41801,7 @@ namespace Opc.Ua
         /// <remarks />
         public AddCommentMethodState AddComment
         {
-            get
-            {
-                return m_addCommentMethod;
-            }
+            get => m_addCommentMethod;
 
             set
             {
@@ -41909,9 +41813,9 @@ namespace Opc.Ua
                 m_addCommentMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -42340,9 +42244,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<NodeId> m_conditionClassId;
         private PropertyState<LocalizedText> m_conditionClassName;
         private PropertyState<NodeId[]> m_conditionSubClassId;
@@ -42358,13 +42262,13 @@ namespace Opc.Ua
         private MethodState m_disableMethod;
         private MethodState m_enableMethod;
         private AddCommentMethodState m_addCommentMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region ConditionRefresh2MethodState Class
-    #if (!OPCUA_EXCLUDE_ConditionRefresh2MethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ConditionRefresh2MethodState)
     /// <summary>
     /// Stores an instance of the ConditionRefresh2MethodType Method.
     /// </summary>
@@ -42372,7 +42276,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ConditionRefresh2MethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -42385,12 +42289,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new ConditionRefresh2MethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -42409,7 +42313,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGwAAAENvbmRpdGlvblJlZnJlc2gyTWV0aG9kVHlwZQEAcjIALwEAcjJy" +
            "MgAAAQH/////AQAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAHMyAC4ARHMyAACWAgAAAAEA" +
@@ -42417,21 +42321,21 @@ namespace Opc.Ua
            "IGZvciB0aGUgc3Vic2NyaXB0aW9uIHRvIHJlZnJlc2guAQAqAQFZAAAADwAAAE1vbml0b3JlZEl0ZW1J" +
            "ZAEAIAH/////AAAAAAMAAAAAMQAAAFRoZSBpZGVudGlmaWVyIGZvciB0aGUgbW9uaXRvcmVkIGl0ZW0g" +
            "dG8gcmVmcmVzaC4BACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public ConditionRefresh2MethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -42463,10 +42367,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -42479,11 +42383,11 @@ namespace Opc.Ua
         NodeId _objectId,
         uint subscriptionId,
         uint monitoredItemId);
-    #endif
-    #endregion
+#endif
 
-    #region ConditionRefreshMethodState Class
-    #if (!OPCUA_EXCLUDE_ConditionRefreshMethodState)
+
+
+#if (!OPCUA_EXCLUDE_ConditionRefreshMethodState)
     /// <summary>
     /// Stores an instance of the ConditionRefreshMethodType Method.
     /// </summary>
@@ -42491,7 +42395,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ConditionRefreshMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -42504,12 +42408,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new ConditionRefreshMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -42528,27 +42432,27 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGgAAAENvbmRpdGlvblJlZnJlc2hNZXRob2RUeXBlAQAvIwAvAQAvIy8j" +
            "AAABAf////8BAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAMCMALgBEMCMAAJYBAAAAAQAq" +
            "AQFWAAAADgAAAFN1YnNjcmlwdGlvbklkAQAgAf////8AAAAAAwAAAAAvAAAAVGhlIGlkZW50aWZpZXIg" +
            "Zm9yIHRoZSBzdWJzY3JpcHRpb24gdG8gcmVmcmVzaC4BACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public ConditionRefreshMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -42578,10 +42482,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -42593,11 +42497,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         uint subscriptionId);
-    #endif
-    #endregion
+#endif
 
-    #region AddCommentMethodState Class
-    #if (!OPCUA_EXCLUDE_AddCommentMethodState)
+
+
+#if (!OPCUA_EXCLUDE_AddCommentMethodState)
     /// <summary>
     /// Stores an instance of the AddCommentMethodType Method.
     /// </summary>
@@ -42605,7 +42509,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AddCommentMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -42618,12 +42522,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new AddCommentMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -42642,28 +42546,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAFAAAAEFkZENvbW1lbnRNZXRob2RUeXBlAQAXDwAvAQAXDxcPAAABAf//" +
            "//8BAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAGA8ALgBEGA8AAJYCAAAAAQAqAQFGAAAA" +
            "BwAAAEV2ZW50SWQAD/////8AAAAAAwAAAAAoAAAAVGhlIGlkZW50aWZpZXIgZm9yIHRoZSBldmVudCB0" +
            "byBjb21tZW50LgEAKgEBQgAAAAcAAABDb21tZW50ABX/////AAAAAAMAAAAAJAAAAFRoZSBjb21tZW50" +
            "IHRvIGFkZCB0byB0aGUgY29uZGl0aW9uLgEAKAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public AddCommentMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -42695,10 +42599,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -42711,11 +42615,11 @@ namespace Opc.Ua
         NodeId _objectId,
         byte[] eventId,
         LocalizedText comment);
-    #endif
-    #endregion
+#endif
 
-    #region DialogConditionState Class
-    #if (!OPCUA_EXCLUDE_DialogConditionState)
+
+
+#if (!OPCUA_EXCLUDE_DialogConditionState)
     /// <summary>
     /// Stores an instance of the DialogConditionType ObjectType.
     /// </summary>
@@ -42723,7 +42627,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DialogConditionState : ConditionState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -42739,7 +42643,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.DialogConditionType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -42767,7 +42671,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAGwAAAERpYWxvZ0NvbmRpdGlvblR5cGVJbnN0YW5jZQEADgsBAA4LDgsA" +
            "AP////8dAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQBcEAAuAERcEAAAAA//////AQH/////AAAAABVg" +
@@ -42811,18 +42715,15 @@ namespace Opc.Ua
            "AABJbnB1dEFyZ3VtZW50cwEAbiMALgBEbiMAAJYBAAAAAQAqAQFMAAAAEAAAAFNlbGVjdGVkUmVzcG9u" +
            "c2UABv////8AAAAAAwAAAAAlAAAAVGhlIHJlc3BvbnNlIHRvIHRoZSBkaWFsb2cgY29uZGl0aW9uLgEA" +
            "KAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public TwoStateVariableState DialogState
         {
-            get
-            {
-                return m_dialogState;
-            }
+            get => m_dialogState;
 
             set
             {
@@ -42838,10 +42739,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<LocalizedText> Prompt
         {
-            get
-            {
-                return m_prompt;
-            }
+            get => m_prompt;
 
             set
             {
@@ -42857,10 +42755,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<LocalizedText[]> ResponseOptionSet
         {
-            get
-            {
-                return m_responseOptionSet;
-            }
+            get => m_responseOptionSet;
 
             set
             {
@@ -42876,10 +42771,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<int> DefaultResponse
         {
-            get
-            {
-                return m_defaultResponse;
-            }
+            get => m_defaultResponse;
 
             set
             {
@@ -42895,10 +42787,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<int> OkResponse
         {
-            get
-            {
-                return m_okResponse;
-            }
+            get => m_okResponse;
 
             set
             {
@@ -42914,10 +42803,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<int> CancelResponse
         {
-            get
-            {
-                return m_cancelResponse;
-            }
+            get => m_cancelResponse;
 
             set
             {
@@ -42933,10 +42819,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<int> LastResponse
         {
-            get
-            {
-                return m_lastResponse;
-            }
+            get => m_lastResponse;
 
             set
             {
@@ -42952,10 +42835,7 @@ namespace Opc.Ua
         /// <remarks />
         public DialogResponseMethodState Respond
         {
-            get
-            {
-                return m_respondMethod;
-            }
+            get => m_respondMethod;
 
             set
             {
@@ -42967,9 +42847,9 @@ namespace Opc.Ua
                 m_respondMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -43216,9 +43096,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private TwoStateVariableState m_dialogState;
         private PropertyState<LocalizedText> m_prompt;
         private PropertyState<LocalizedText[]> m_responseOptionSet;
@@ -43227,13 +43107,13 @@ namespace Opc.Ua
         private PropertyState<int> m_cancelResponse;
         private PropertyState<int> m_lastResponse;
         private DialogResponseMethodState m_respondMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region DialogResponseMethodState Class
-    #if (!OPCUA_EXCLUDE_DialogResponseMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_DialogResponseMethodState)
     /// <summary>
     /// Stores an instance of the DialogResponseMethodType Method.
     /// </summary>
@@ -43241,7 +43121,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DialogResponseMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -43254,12 +43134,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new DialogResponseMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -43278,27 +43158,27 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGAAAAERpYWxvZ1Jlc3BvbnNlTWV0aG9kVHlwZQEARyMALwEARyNHIwAA" +
            "AQH/////AQAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAEgjAC4AREgjAACWAQAAAAEAKgEB" +
            "TAAAABAAAABTZWxlY3RlZFJlc3BvbnNlAAb/////AAAAAAMAAAAAJQAAAFRoZSByZXNwb25zZSB0byB0" +
            "aGUgZGlhbG9nIGNvbmRpdGlvbi4BACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public DialogResponseMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -43328,10 +43208,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -43343,11 +43223,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         int selectedResponse);
-    #endif
-    #endregion
+#endif
 
-    #region AcknowledgeableConditionState Class
-    #if (!OPCUA_EXCLUDE_AcknowledgeableConditionState)
+
+
+#if (!OPCUA_EXCLUDE_AcknowledgeableConditionState)
     /// <summary>
     /// Stores an instance of the AcknowledgeableConditionType ObjectType.
     /// </summary>
@@ -43355,7 +43235,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AcknowledgeableConditionState : ConditionState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -43371,7 +43251,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AcknowledgeableConditionType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -43409,7 +43289,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string ConfirmedState_InitializationString =
            "//////////8VYIkKAgAAAAAADgAAAENvbmZpcm1lZFN0YXRlAQCOIwAvAQAjI44jAAAAFf////8BAQEA" +
            "AAABACwjAQEAcSMEAAAAFWCJCgIAAAAAAAIAAABJZAEAjyMALgBEjyMAAAAB/////wEB/////wAAAAAV" +
@@ -43474,18 +43354,15 @@ namespace Opc.Ua
            "AAAoAAAAVGhlIGlkZW50aWZpZXIgZm9yIHRoZSBldmVudCB0byBjb21tZW50LgEAKgEBQgAAAAcAAABD" +
            "b21tZW50ABX/////AAAAAAMAAAAAJAAAAFRoZSBjb21tZW50IHRvIGFkZCB0byB0aGUgY29uZGl0aW9u" +
            "LgEAKAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public TwoStateVariableState AckedState
         {
-            get
-            {
-                return m_ackedState;
-            }
+            get => m_ackedState;
 
             set
             {
@@ -43501,10 +43378,7 @@ namespace Opc.Ua
         /// <remarks />
         public TwoStateVariableState ConfirmedState
         {
-            get
-            {
-                return m_confirmedState;
-            }
+            get => m_confirmedState;
 
             set
             {
@@ -43520,10 +43394,7 @@ namespace Opc.Ua
         /// <remarks />
         public AddCommentMethodState Acknowledge
         {
-            get
-            {
-                return m_acknowledgeMethod;
-            }
+            get => m_acknowledgeMethod;
 
             set
             {
@@ -43539,10 +43410,7 @@ namespace Opc.Ua
         /// <remarks />
         public AddCommentMethodState Confirm
         {
-            get
-            {
-                return m_confirmMethod;
-            }
+            get => m_confirmMethod;
 
             set
             {
@@ -43554,9 +43422,9 @@ namespace Opc.Ua
                 m_confirmMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -43699,20 +43567,20 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private TwoStateVariableState m_ackedState;
         private TwoStateVariableState m_confirmedState;
         private AddCommentMethodState m_acknowledgeMethod;
         private AddCommentMethodState m_confirmMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AlarmConditionState Class
-    #if (!OPCUA_EXCLUDE_AlarmConditionState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AlarmConditionState)
     /// <summary>
     /// Stores an instance of the AlarmConditionType ObjectType.
     /// </summary>
@@ -43720,7 +43588,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AlarmConditionState : AcknowledgeableConditionState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -43736,7 +43604,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AlarmConditionType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -43864,7 +43732,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string SuppressedState_InitializationString =
            "//////////8VYIkKAgAAAAAADwAAAFN1cHByZXNzZWRTdGF0ZQEA0SMALwEAIyPRIwAAABX/////AQEB" +
            "AAAAAQAsIwEBAJ4jBAAAABVgiQoCAAAAAAACAAAASWQBANIjAC4ARNIjAAAAAf////8BAf////8AAAAA" +
@@ -44060,18 +43928,15 @@ namespace Opc.Ua
            "U2VydmljZQEAzUUALwEAzUXNRQAAAQEBAAAAAQD5CwABAGtDAAAAAARhggoEAAAAAAAOAAAAUGxhY2VJ" +
            "blNlcnZpY2UBAM5FAC8BAM5FzkUAAAEBAQAAAAEA+QsAAQBrQwAAAAAEYYIKBAAAAAAABQAAAFJlc2V0" +
            "AQAXRwAvAQAXRxdHAAABAQEAAAABAPkLAAEApToAAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public TwoStateVariableState ActiveState
         {
-            get
-            {
-                return m_activeState;
-            }
+            get => m_activeState;
 
             set
             {
@@ -44087,10 +43952,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<NodeId> InputNode
         {
-            get
-            {
-                return m_inputNode;
-            }
+            get => m_inputNode;
 
             set
             {
@@ -44106,10 +43968,7 @@ namespace Opc.Ua
         /// <remarks />
         public TwoStateVariableState SuppressedState
         {
-            get
-            {
-                return m_suppressedState;
-            }
+            get => m_suppressedState;
 
             set
             {
@@ -44125,10 +43984,7 @@ namespace Opc.Ua
         /// <remarks />
         public TwoStateVariableState OutOfServiceState
         {
-            get
-            {
-                return m_outOfServiceState;
-            }
+            get => m_outOfServiceState;
 
             set
             {
@@ -44144,10 +44000,7 @@ namespace Opc.Ua
         /// <remarks />
         public ShelvedStateMachineState ShelvingState
         {
-            get
-            {
-                return m_shelvingState;
-            }
+            get => m_shelvingState;
 
             set
             {
@@ -44163,10 +44016,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<bool> SuppressedOrShelved
         {
-            get
-            {
-                return m_suppressedOrShelved;
-            }
+            get => m_suppressedOrShelved;
 
             set
             {
@@ -44182,10 +44032,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<double> MaxTimeShelved
         {
-            get
-            {
-                return m_maxTimeShelved;
-            }
+            get => m_maxTimeShelved;
 
             set
             {
@@ -44201,10 +44048,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<bool> AudibleEnabled
         {
-            get
-            {
-                return m_audibleEnabled;
-            }
+            get => m_audibleEnabled;
 
             set
             {
@@ -44220,10 +44064,7 @@ namespace Opc.Ua
         /// <remarks />
         public AudioVariableState AudibleSound
         {
-            get
-            {
-                return m_audibleSound;
-            }
+            get => m_audibleSound;
 
             set
             {
@@ -44239,10 +44080,7 @@ namespace Opc.Ua
         /// <remarks />
         public TwoStateVariableState SilenceState
         {
-            get
-            {
-                return m_silenceState;
-            }
+            get => m_silenceState;
 
             set
             {
@@ -44258,10 +44096,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<double> OnDelay
         {
-            get
-            {
-                return m_onDelay;
-            }
+            get => m_onDelay;
 
             set
             {
@@ -44277,10 +44112,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<double> OffDelay
         {
-            get
-            {
-                return m_offDelay;
-            }
+            get => m_offDelay;
 
             set
             {
@@ -44296,10 +44128,7 @@ namespace Opc.Ua
         /// <remarks />
         public BaseDataVariableState<bool> FirstInGroupFlag
         {
-            get
-            {
-                return m_firstInGroupFlag;
-            }
+            get => m_firstInGroupFlag;
 
             set
             {
@@ -44315,10 +44144,7 @@ namespace Opc.Ua
         /// <remarks />
         public AlarmGroupState FirstInGroup
         {
-            get
-            {
-                return m_firstInGroup;
-            }
+            get => m_firstInGroup;
 
             set
             {
@@ -44334,10 +44160,7 @@ namespace Opc.Ua
         /// <remarks />
         public TwoStateVariableState LatchedState
         {
-            get
-            {
-                return m_latchedState;
-            }
+            get => m_latchedState;
 
             set
             {
@@ -44353,10 +44176,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<double> ReAlarmTime
         {
-            get
-            {
-                return m_reAlarmTime;
-            }
+            get => m_reAlarmTime;
 
             set
             {
@@ -44372,10 +44192,7 @@ namespace Opc.Ua
         /// <remarks />
         public BaseDataVariableState<short> ReAlarmRepeatCount
         {
-            get
-            {
-                return m_reAlarmRepeatCount;
-            }
+            get => m_reAlarmRepeatCount;
 
             set
             {
@@ -44391,10 +44208,7 @@ namespace Opc.Ua
         /// <remarks />
         public MethodState Silence
         {
-            get
-            {
-                return m_silenceMethod;
-            }
+            get => m_silenceMethod;
 
             set
             {
@@ -44410,10 +44224,7 @@ namespace Opc.Ua
         /// <remarks />
         public MethodState Suppress
         {
-            get
-            {
-                return m_suppressMethod;
-            }
+            get => m_suppressMethod;
 
             set
             {
@@ -44429,10 +44240,7 @@ namespace Opc.Ua
         /// <remarks />
         public MethodState Unsuppress
         {
-            get
-            {
-                return m_unsuppressMethod;
-            }
+            get => m_unsuppressMethod;
 
             set
             {
@@ -44448,10 +44256,7 @@ namespace Opc.Ua
         /// <remarks />
         public MethodState RemoveFromService
         {
-            get
-            {
-                return m_removeFromServiceMethod;
-            }
+            get => m_removeFromServiceMethod;
 
             set
             {
@@ -44467,10 +44272,7 @@ namespace Opc.Ua
         /// <remarks />
         public MethodState PlaceInService
         {
-            get
-            {
-                return m_placeInServiceMethod;
-            }
+            get => m_placeInServiceMethod;
 
             set
             {
@@ -44486,10 +44288,7 @@ namespace Opc.Ua
         /// <remarks />
         public MethodState Reset
         {
-            get
-            {
-                return m_resetMethod;
-            }
+            get => m_resetMethod;
 
             set
             {
@@ -44501,9 +44300,9 @@ namespace Opc.Ua
                 m_resetMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -45140,9 +44939,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private TwoStateVariableState m_activeState;
         private PropertyState<NodeId> m_inputNode;
         private TwoStateVariableState m_suppressedState;
@@ -45166,13 +44965,13 @@ namespace Opc.Ua
         private MethodState m_removeFromServiceMethod;
         private MethodState m_placeInServiceMethod;
         private MethodState m_resetMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AlarmGroupState Class
-    #if (!OPCUA_EXCLUDE_AlarmGroupState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AlarmGroupState)
     /// <summary>
     /// Stores an instance of the AlarmGroupType ObjectType.
     /// </summary>
@@ -45180,7 +44979,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AlarmGroupState : FolderState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -45196,7 +44995,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AlarmGroupType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -45224,28 +45023,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAFgAAAEFsYXJtR3JvdXBUeXBlSW5zdGFuY2UBABVAAQAVQBVAAAD/////" +
            "AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region ShelvedStateMachineState Class
-    #if (!OPCUA_EXCLUDE_ShelvedStateMachineState)
+
+
+#if (!OPCUA_EXCLUDE_ShelvedStateMachineState)
     /// <summary>
     /// Stores an instance of the ShelvedStateMachineType ObjectType.
     /// </summary>
@@ -45253,7 +45052,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ShelvedStateMachineState : FiniteStateMachineState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -45269,7 +45068,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ShelvedStateMachineType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -45297,7 +45096,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHwAAAFNoZWx2ZWRTdGF0ZU1hY2hpbmVUeXBlSW5zdGFuY2UBAHELAQBx" +
            "C3ELAAD/////BQAAABVgiQoCAAAAAAAMAAAAQ3VycmVudFN0YXRlAQDIFwAvAQDICsgXAAAAFf////8B" +
@@ -45310,18 +45109,15 @@ namespace Opc.Ua
            "AQEAAAABAAAAAAAAAAEB/////wAAAAAEYYIKBAAAAAAACAAAAFVuc2hlbHZlAQCDCwAvAQCDC4MLAAAB" +
            "AQMAAAAANQEBAHwLADUBAQB/CwEA+QsAAQBVKwAAAAAEYYIKBAAAAAAADQAAAE9uZVNob3RTaGVsdmUB" +
            "AIQLAC8BAIQLhAsAAAEBAwAAAAA1AQEAeAsANQEBAH4LAQD5CwABAFUrAAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<double> UnshelveTime
         {
-            get
-            {
-                return m_unshelveTime;
-            }
+            get => m_unshelveTime;
 
             set
             {
@@ -45337,10 +45133,7 @@ namespace Opc.Ua
         /// <remarks />
         public TimedShelveMethodState TimedShelve
         {
-            get
-            {
-                return m_timedShelveMethod;
-            }
+            get => m_timedShelveMethod;
 
             set
             {
@@ -45356,10 +45149,7 @@ namespace Opc.Ua
         /// <remarks />
         public MethodState Unshelve
         {
-            get
-            {
-                return m_unshelveMethod;
-            }
+            get => m_unshelveMethod;
 
             set
             {
@@ -45375,10 +45165,7 @@ namespace Opc.Ua
         /// <remarks />
         public MethodState OneShotShelve
         {
-            get
-            {
-                return m_oneShotShelveMethod;
-            }
+            get => m_oneShotShelveMethod;
 
             set
             {
@@ -45390,9 +45177,9 @@ namespace Opc.Ua
                 m_oneShotShelveMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -45535,20 +45322,20 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<double> m_unshelveTime;
         private TimedShelveMethodState m_timedShelveMethod;
         private MethodState m_unshelveMethod;
         private MethodState m_oneShotShelveMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region TimedShelveMethodState Class
-    #if (!OPCUA_EXCLUDE_TimedShelveMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_TimedShelveMethodState)
     /// <summary>
     /// Stores an instance of the TimedShelveMethodType Method.
     /// </summary>
@@ -45556,7 +45343,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class TimedShelveMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -45569,12 +45356,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new TimedShelveMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -45593,28 +45380,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAFQAAAFRpbWVkU2hlbHZlTWV0aG9kVHlwZQEA1hcALwEA1hfWFwAAAQH/" +
            "////AQAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBANcXAC4ARNcXAACWAQAAAAEAKgEBegAA" +
            "AAwAAABTaGVsdmluZ1RpbWUBACIB/////wAAAAADAAAAAFUAAABJZiBub3QgMCwgdGhpcyBwYXJhbWV0" +
            "ZXIgc3BlY2lmaWVzIGEgZml4ZWQgdGltZSBmb3Igd2hpY2ggdGhlIEFsYXJtIGlzIHRvIGJlIHNoZWx2" +
            "ZWQuAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public TimedShelveMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -45644,10 +45431,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -45659,11 +45446,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         double shelvingTime);
-    #endif
-    #endregion
+#endif
 
-    #region LimitAlarmState Class
-    #if (!OPCUA_EXCLUDE_LimitAlarmState)
+
+
+#if (!OPCUA_EXCLUDE_LimitAlarmState)
     /// <summary>
     /// Stores an instance of the LimitAlarmType ObjectType.
     /// </summary>
@@ -45671,7 +45458,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class LimitAlarmState : AlarmConditionState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -45687,7 +45474,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.LimitAlarmType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -45755,7 +45542,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string HighHighLimit_InitializationString =
            "//////////8VYIkKAgAAAAAADQAAAEhpZ2hIaWdoTGltaXQBAHQrAC4ARHQrAAAAC/////8BAf////8A" +
            "AAAA";
@@ -45833,11 +45620,11 @@ namespace Opc.Ua
            "AAAL/////wEB/////wAAAAAVYIkKAgAAAAAADAAAAEJhc2VMb3dMaW1pdAEAvkAALgBEvkAAAAAL////" +
            "/wEB/////wAAAAAVYIkKAgAAAAAADwAAAEJhc2VMb3dMb3dMaW1pdAEAv0AALgBEv0AAAAAL/////wEB" +
            "/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<double> HighHighLimit
         {
@@ -45989,9 +45776,9 @@ namespace Opc.Ua
                 m_baseLowLowLimit = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -46238,9 +46025,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<double> m_highHighLimit;
         private PropertyState<double> m_highLimit;
         private PropertyState<double> m_lowLimit;
@@ -46249,13 +46036,13 @@ namespace Opc.Ua
         private PropertyState<double> m_baseHighLimit;
         private PropertyState<double> m_baseLowLimit;
         private PropertyState<double> m_baseLowLowLimit;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region ExclusiveLimitStateMachineState Class
-    #if (!OPCUA_EXCLUDE_ExclusiveLimitStateMachineState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ExclusiveLimitStateMachineState)
     /// <summary>
     /// Stores an instance of the ExclusiveLimitStateMachineType ObjectType.
     /// </summary>
@@ -46263,7 +46050,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ExclusiveLimitStateMachineState : FiniteStateMachineState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -46279,7 +46066,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ExclusiveLimitStateMachineType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -46307,29 +46094,29 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJgAAAEV4Y2x1c2l2ZUxpbWl0U3RhdGVNYWNoaW5lVHlwZUluc3RhbmNl" +
            "AQBmJAEAZiRmJAAA/////wEAAAAVYIkKAgAAAAAADAAAAEN1cnJlbnRTdGF0ZQEAZyQALwEAyApnJAAA" +
            "ABX/////AQH/////AQAAABVgiQoCAAAAAAACAAAASWQBAGgkAC4ARGgkAAAAEf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region ExclusiveLimitAlarmState Class
-    #if (!OPCUA_EXCLUDE_ExclusiveLimitAlarmState)
+
+
+#if (!OPCUA_EXCLUDE_ExclusiveLimitAlarmState)
     /// <summary>
     /// Stores an instance of the ExclusiveLimitAlarmType ObjectType.
     /// </summary>
@@ -46337,7 +46124,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ExclusiveLimitAlarmState : LimitAlarmState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -46353,7 +46140,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ExclusiveLimitAlarmType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -46381,7 +46168,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHwAAAEV4Y2x1c2l2ZUxpbWl0QWxhcm1UeXBlSW5zdGFuY2UBAH0kAQB9" +
            "JH0kAAD/////GwAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEAfiQALgBEfiQAAAAP/////wEB/////wAA" +
@@ -46427,18 +46214,15 @@ namespace Opc.Ua
            "AExhc3RUcmFuc2l0aW9uAQD1JAAvAQDPCvUkAAAAFf////8BAf////8CAAAAFWCJCgIAAAAAAAIAAABJ" +
            "ZAEA9iQALgBE9iQAAAAR/////wEB/////wAAAAAVYIkKAgAAAAAADgAAAFRyYW5zaXRpb25UaW1lAQD5" +
            "JAAuAET5JAAAAQAmAf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public ExclusiveLimitStateMachineState LimitState
         {
-            get
-            {
-                return m_limitState;
-            }
+            get => m_limitState;
 
             set
             {
@@ -46450,9 +46234,9 @@ namespace Opc.Ua
                 m_limitState = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -46517,17 +46301,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private ExclusiveLimitStateMachineState m_limitState;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region NonExclusiveLimitAlarmState Class
-    #if (!OPCUA_EXCLUDE_NonExclusiveLimitAlarmState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_NonExclusiveLimitAlarmState)
     /// <summary>
     /// Stores an instance of the NonExclusiveLimitAlarmType ObjectType.
     /// </summary>
@@ -46535,7 +46319,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class NonExclusiveLimitAlarmState : LimitAlarmState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -46551,7 +46335,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.NonExclusiveLimitAlarmType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -46599,7 +46383,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string HighHighState_InitializationString =
            "//////////8VYIkKAgAAAAAADQAAAEhpZ2hIaWdoU3RhdGUBACQnAC8BACMjJCcAAAAV/////wEBAQAA" +
            "AAEALCMBAQDrJgQAAAAVYIkKAgAAAAAAAgAAAElkAQAlJwAuAEQlJwAAAAH/////AQH/////AAAAABVg" +
@@ -46693,18 +46477,15 @@ namespace Opc.Ua
            "RCcAAAEAJgH/////AQH/////AAAAABVgqQoCAAAAAAAJAAAAVHJ1ZVN0YXRlAQBGJwAuAERGJwAAFQMC" +
            "AAAAZW4NAAAATG93TG93IGFjdGl2ZQAV/////wEB/////wAAAAAVYKkKAgAAAAAACgAAAEZhbHNlU3Rh" +
            "dGUBAEcnAC4AREcnAAAVAwIAAABlbg8AAABMb3dMb3cgaW5hY3RpdmUAFf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public TwoStateVariableState HighHighState
         {
-            get
-            {
-                return m_highHighState;
-            }
+            get => m_highHighState;
 
             set
             {
@@ -46720,10 +46501,7 @@ namespace Opc.Ua
         /// <remarks />
         public TwoStateVariableState HighState
         {
-            get
-            {
-                return m_highState;
-            }
+            get => m_highState;
 
             set
             {
@@ -46739,10 +46517,7 @@ namespace Opc.Ua
         /// <remarks />
         public TwoStateVariableState LowState
         {
-            get
-            {
-                return m_lowState;
-            }
+            get => m_lowState;
 
             set
             {
@@ -46758,10 +46533,7 @@ namespace Opc.Ua
         /// <remarks />
         public TwoStateVariableState LowLowState
         {
-            get
-            {
-                return m_lowLowState;
-            }
+            get => m_lowLowState;
 
             set
             {
@@ -46773,9 +46545,9 @@ namespace Opc.Ua
                 m_lowLowState = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -46918,20 +46690,20 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private TwoStateVariableState m_highHighState;
         private TwoStateVariableState m_highState;
         private TwoStateVariableState m_lowState;
         private TwoStateVariableState m_lowLowState;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region NonExclusiveLevelAlarmState Class
-    #if (!OPCUA_EXCLUDE_NonExclusiveLevelAlarmState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_NonExclusiveLevelAlarmState)
     /// <summary>
     /// Stores an instance of the NonExclusiveLevelAlarmType ObjectType.
     /// </summary>
@@ -46939,7 +46711,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class NonExclusiveLevelAlarmState : NonExclusiveLimitAlarmState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -46955,7 +46727,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.NonExclusiveLevelAlarmType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -46983,7 +46755,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIgAAAE5vbkV4Y2x1c2l2ZUxldmVsQWxhcm1UeXBlSW5zdGFuY2UBAEwn" +
            "AQBMJ0wnAAD/////GgAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEATScALgBETScAAAAP/////wEB////" +
@@ -47024,24 +46796,24 @@ namespace Opc.Ua
            "2ScBAAAAFWCJCgIAAAAAAAIAAABJZAEAhicALgBEhicAAAAB/////wEB/////wAAAAAVYIkKAgAAAAAA" +
            "CQAAAElucHV0Tm9kZQEAiSsALgBEiSsAAAAR/////wEB/////wAAAAAVYIkKAgAAAAAAEwAAAFN1cHBy" +
            "ZXNzZWRPclNoZWx2ZWQBALwnAC4ARLwnAAAAAf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region ExclusiveLevelAlarmState Class
-    #if (!OPCUA_EXCLUDE_ExclusiveLevelAlarmState)
+
+
+#if (!OPCUA_EXCLUDE_ExclusiveLevelAlarmState)
     /// <summary>
     /// Stores an instance of the ExclusiveLevelAlarmType ObjectType.
     /// </summary>
@@ -47049,7 +46821,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ExclusiveLevelAlarmState : ExclusiveLimitAlarmState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -47065,7 +46837,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ExclusiveLevelAlarmType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -47093,7 +46865,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHwAAAEV4Y2x1c2l2ZUxldmVsQWxhcm1UeXBlSW5zdGFuY2UBAAolAQAK" +
            "JQolAAD/////GwAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEACyUALgBECyUAAAAP/////wEB/////wAA" +
@@ -47136,24 +46908,24 @@ namespace Opc.Ua
            "//8BAf////8AAAAABGCACgEAAAAAAAoAAABMaW1pdFN0YXRlAQB8JQAvAQBmJHwlAAABAAAAAQAsIwEB" +
            "AEMlAQAAABVgiQoCAAAAAAAMAAAAQ3VycmVudFN0YXRlAQB9JQAvAQDICn0lAAAAFf////8BAf////8B" +
            "AAAAFWCJCgIAAAAAAAIAAABJZAEAfiUALgBEfiUAAAAR/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region NonExclusiveDeviationAlarmState Class
-    #if (!OPCUA_EXCLUDE_NonExclusiveDeviationAlarmState)
+
+
+#if (!OPCUA_EXCLUDE_NonExclusiveDeviationAlarmState)
     /// <summary>
     /// Stores an instance of the NonExclusiveDeviationAlarmType ObjectType.
     /// </summary>
@@ -47161,7 +46933,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class NonExclusiveDeviationAlarmState : NonExclusiveLimitAlarmState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -47177,7 +46949,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.NonExclusiveDeviationAlarmType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -47210,7 +46982,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string BaseSetpointNode_InitializationString =
            "//////////8VYIkKAgAAAAAAEAAAAEJhc2VTZXRwb2ludE5vZGUBAIhBAC4ARIhBAAAAEf////8BAf//" +
            "//8AAAAA";
@@ -47257,11 +47029,11 @@ namespace Opc.Ua
            "dXBwcmVzc2VkT3JTaGVsdmVkAQDwKAAuAETwKAAAAAH/////AQH/////AAAAABVgiQoCAAAAAAAMAAAA" +
            "U2V0cG9pbnROb2RlAQAaKQAuAEQaKQAAABH/////AQH/////AAAAABVgiQoCAAAAAAAQAAAAQmFzZVNl" +
            "dHBvaW50Tm9kZQEAiEEALgBEiEEAAAAR/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<NodeId> SetpointNode
         {
@@ -47299,9 +47071,9 @@ namespace Opc.Ua
                 m_baseSetpointNode = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -47392,18 +47164,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<NodeId> m_setpointNode;
         private PropertyState<NodeId> m_baseSetpointNode;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region NonExclusiveRateOfChangeAlarmState Class
-    #if (!OPCUA_EXCLUDE_NonExclusiveRateOfChangeAlarmState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_NonExclusiveRateOfChangeAlarmState)
     /// <summary>
     /// Stores an instance of the NonExclusiveRateOfChangeAlarmType ObjectType.
     /// </summary>
@@ -47411,7 +47183,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class NonExclusiveRateOfChangeAlarmState : NonExclusiveLimitAlarmState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -47427,7 +47199,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.NonExclusiveRateOfChangeAlarmType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -47460,7 +47232,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string EngineeringUnits_InitializationString =
            "//////////8VYIkKAgAAAAAAEAAAAEVuZ2luZWVyaW5nVW5pdHMBANpBAC4ARNpBAAABAHcD/////wEB" +
            "/////wAAAAA=";
@@ -47506,11 +47278,11 @@ namespace Opc.Ua
            "CgIAAAAAAAkAAABJbnB1dE5vZGUBAIwrAC4ARIwrAAAAEf////8BAf////8AAAAAFWCJCgIAAAAAABMA" +
            "AABTdXBwcmVzc2VkT3JTaGVsdmVkAQBWKAAuAERWKAAAAAH/////AQH/////AAAAABVgiQoCAAAAAAAQ" +
            "AAAARW5naW5lZXJpbmdVbml0cwEA2kEALgBE2kEAAAEAdwP/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<EUInformation> EngineeringUnits
         {
@@ -47529,9 +47301,9 @@ namespace Opc.Ua
                 m_engineeringUnits = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -47596,17 +47368,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<EUInformation> m_engineeringUnits;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region ExclusiveDeviationAlarmState Class
-    #if (!OPCUA_EXCLUDE_ExclusiveDeviationAlarmState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ExclusiveDeviationAlarmState)
     /// <summary>
     /// Stores an instance of the ExclusiveDeviationAlarmType ObjectType.
     /// </summary>
@@ -47614,7 +47386,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ExclusiveDeviationAlarmState : ExclusiveLimitAlarmState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -47630,7 +47402,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ExclusiveDeviationAlarmType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -47663,7 +47435,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string BaseSetpointNode_InitializationString =
            "//////////8VYIkKAgAAAAAAEAAAAEJhc2VTZXRwb2ludE5vZGUBALFBAC4ARLFBAAAAEf////8BAf//" +
            "//8AAAAA";
@@ -47712,11 +47484,11 @@ namespace Opc.Ua
            "////AQAAABVgiQoCAAAAAAACAAAASWQBAJgmAC4ARJgmAAAAEf////8BAf////8AAAAAFWCJCgIAAAAA" +
            "AAwAAABTZXRwb2ludE5vZGUBALEmAC4ARLEmAAAAEf////8BAf////8AAAAAFWCJCgIAAAAAABAAAABC" +
            "YXNlU2V0cG9pbnROb2RlAQCxQQAuAESxQQAAABH/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<NodeId> SetpointNode
         {
@@ -47754,9 +47526,9 @@ namespace Opc.Ua
                 m_baseSetpointNode = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -47847,18 +47619,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<NodeId> m_setpointNode;
         private PropertyState<NodeId> m_baseSetpointNode;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region ExclusiveRateOfChangeAlarmState Class
-    #if (!OPCUA_EXCLUDE_ExclusiveRateOfChangeAlarmState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ExclusiveRateOfChangeAlarmState)
     /// <summary>
     /// Stores an instance of the ExclusiveRateOfChangeAlarmType ObjectType.
     /// </summary>
@@ -47866,7 +47638,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ExclusiveRateOfChangeAlarmState : ExclusiveLimitAlarmState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -47882,7 +47654,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ExclusiveRateOfChangeAlarmType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -47915,7 +47687,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string EngineeringUnits_InitializationString =
            "//////////8VYIkKAgAAAAAAEAAAAEVuZ2luZWVyaW5nVW5pdHMBAANCAC4ARANCAAABAHcD/////wEB" +
            "/////wAAAAA=";
@@ -47963,11 +47735,11 @@ namespace Opc.Ua
            "AAEALCMBAQDQJQEAAAAVYIkKAgAAAAAADAAAAEN1cnJlbnRTdGF0ZQEACiYALwEAyAoKJgAAABX/////" +
            "AQH/////AQAAABVgiQoCAAAAAAACAAAASWQBAAsmAC4ARAsmAAAAEf////8BAf////8AAAAAFWCJCgIA" +
            "AAAAABAAAABFbmdpbmVlcmluZ1VuaXRzAQADQgAuAEQDQgAAAQB3A/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<EUInformation> EngineeringUnits
         {
@@ -47986,9 +47758,9 @@ namespace Opc.Ua
                 m_engineeringUnits = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -48053,17 +47825,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<EUInformation> m_engineeringUnits;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region DiscreteAlarmState Class
-    #if (!OPCUA_EXCLUDE_DiscreteAlarmState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_DiscreteAlarmState)
     /// <summary>
     /// Stores an instance of the DiscreteAlarmType ObjectType.
     /// </summary>
@@ -48071,7 +47843,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DiscreteAlarmState : AlarmConditionState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -48087,7 +47859,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.DiscreteAlarmType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -48115,7 +47887,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAGQAAAERpc2NyZXRlQWxhcm1UeXBlSW5zdGFuY2UBABspAQAbKRspAAD/" +
            "////GgAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEAHCkALgBEHCkAAAAP/////wEB/////wAAAAAVYIkK" +
@@ -48155,24 +47927,24 @@ namespace Opc.Ua
            "//8BAQEAAAABACwjAQEAKCkBAAAAFWCJCgIAAAAAAAIAAABJZAEAVSkALgBEVSkAAAAB/////wEB////" +
            "/wAAAAAVYIkKAgAAAAAACQAAAElucHV0Tm9kZQEAkisALgBEkisAAAAR/////wEB/////wAAAAAVYIkK" +
            "AgAAAAAAEwAAAFN1cHByZXNzZWRPclNoZWx2ZWQBAIspAC4ARIspAAAAAf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region OffNormalAlarmState Class
-    #if (!OPCUA_EXCLUDE_OffNormalAlarmState)
+
+
+#if (!OPCUA_EXCLUDE_OffNormalAlarmState)
     /// <summary>
     /// Stores an instance of the OffNormalAlarmType ObjectType.
     /// </summary>
@@ -48180,7 +47952,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class OffNormalAlarmState : DiscreteAlarmState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -48196,7 +47968,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.OffNormalAlarmType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -48224,7 +47996,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAGgAAAE9mZk5vcm1hbEFsYXJtVHlwZUluc3RhbmNlAQCNKQEAjSmNKQAA" +
            "/////xsAAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAI4pAC4ARI4pAAAAD/////8BAf////8AAAAAFWCJ" +
@@ -48265,11 +48037,11 @@ namespace Opc.Ua
            "//8AAAAAFWCJCgIAAAAAAAkAAABJbnB1dE5vZGUBAJUrAC4ARJUrAAAAEf////8BAf////8AAAAAFWCJ" +
            "CgIAAAAAABMAAABTdXBwcmVzc2VkT3JTaGVsdmVkAQD9KQAuAET9KQAAAAH/////AQH/////AAAAABVg" +
            "iQoCAAAAAAALAAAATm9ybWFsU3RhdGUBAJYrAC4ARJYrAAAAEf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<NodeId> NormalState
         {
@@ -48288,9 +48060,9 @@ namespace Opc.Ua
                 m_normalState = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -48355,17 +48127,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<NodeId> m_normalState;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region SystemOffNormalAlarmState Class
-    #if (!OPCUA_EXCLUDE_SystemOffNormalAlarmState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_SystemOffNormalAlarmState)
     /// <summary>
     /// Stores an instance of the SystemOffNormalAlarmType ObjectType.
     /// </summary>
@@ -48373,7 +48145,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SystemOffNormalAlarmState : OffNormalAlarmState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -48389,7 +48161,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.SystemOffNormalAlarmType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -48417,7 +48189,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIAAAAFN5c3RlbU9mZk5vcm1hbEFsYXJtVHlwZUluc3RhbmNlAQDpLQEA" +
            "6S3pLQAA/////xsAAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAOotAC4AROotAAAAD/////8BAf////8A" +
@@ -48458,24 +48230,24 @@ namespace Opc.Ua
            "//8BAf////8AAAAAFWCJCgIAAAAAAAkAAABJbnB1dE5vZGUBAC0uAC4ARC0uAAAAEf////8BAf////8A" +
            "AAAAFWCJCgIAAAAAABMAAABTdXBwcmVzc2VkT3JTaGVsdmVkAQBILgAuAERILgAAAAH/////AQH/////" +
            "AAAAABVgiQoCAAAAAAALAAAATm9ybWFsU3RhdGUBAEouAC4AREouAAAAEf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region TripAlarmState Class
-    #if (!OPCUA_EXCLUDE_TripAlarmState)
+
+
+#if (!OPCUA_EXCLUDE_TripAlarmState)
     /// <summary>
     /// Stores an instance of the TripAlarmType ObjectType.
     /// </summary>
@@ -48483,7 +48255,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class TripAlarmState : OffNormalAlarmState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -48499,7 +48271,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.TripAlarmType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -48527,7 +48299,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAFQAAAFRyaXBBbGFybVR5cGVJbnN0YW5jZQEA/ykBAP8p/ykAAP////8b" +
            "AAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQAAKgAuAEQAKgAAAA//////AQH/////AAAAABVgiQoCAAAA" +
@@ -48568,24 +48340,24 @@ namespace Opc.Ua
            "ABVgiQoCAAAAAAAJAAAASW5wdXROb2RlAQCZKwAuAESZKwAAABH/////AQH/////AAAAABVgiQoCAAAA" +
            "AAATAAAAU3VwcHJlc3NlZE9yU2hlbHZlZAEAbyoALgBEbyoAAAAB/////wEB/////wAAAAAVYIkKAgAA" +
            "AAAACwAAAE5vcm1hbFN0YXRlAQCaKwAuAESaKwAAABH/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region InstrumentDiagnosticAlarmState Class
-    #if (!OPCUA_EXCLUDE_InstrumentDiagnosticAlarmState)
+
+
+#if (!OPCUA_EXCLUDE_InstrumentDiagnosticAlarmState)
     /// <summary>
     /// Stores an instance of the InstrumentDiagnosticAlarmType ObjectType.
     /// </summary>
@@ -48593,7 +48365,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class InstrumentDiagnosticAlarmState : OffNormalAlarmState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -48609,7 +48381,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.InstrumentDiagnosticAlarmType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -48637,7 +48409,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJQAAAEluc3RydW1lbnREaWFnbm9zdGljQWxhcm1UeXBlSW5zdGFuY2UB" +
            "AKtHAQCrR6tHAAD/////GwAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEArEcALgBErEcAAAAP/////wEB" +
@@ -48679,24 +48451,24 @@ namespace Opc.Ua
            "/////wAAAAAVYIkKAgAAAAAAEwAAAFN1cHByZXNzZWRPclNoZWx2ZWQBABlIAC4ARBlIAAAAAf////8B" +
            "Af////8AAAAAFWCJCgIAAAAAAAsAAABOb3JtYWxTdGF0ZQEAP0gALgBEP0gAAAAR/////wEB/////wAA" +
            "AAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region SystemDiagnosticAlarmState Class
-    #if (!OPCUA_EXCLUDE_SystemDiagnosticAlarmState)
+
+
+#if (!OPCUA_EXCLUDE_SystemDiagnosticAlarmState)
     /// <summary>
     /// Stores an instance of the SystemDiagnosticAlarmType ObjectType.
     /// </summary>
@@ -48704,7 +48476,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SystemDiagnosticAlarmState : OffNormalAlarmState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -48720,7 +48492,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.SystemDiagnosticAlarmType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -48748,7 +48520,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIQAAAFN5c3RlbURpYWdub3N0aWNBbGFybVR5cGVJbnN0YW5jZQEAQEgB" +
            "AEBIQEgAAP////8bAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQBBSAAuAERBSAAAAA//////AQH/////" +
@@ -48789,24 +48561,24 @@ namespace Opc.Ua
            "////AQH/////AAAAABVgiQoCAAAAAAAJAAAASW5wdXROb2RlAQCISAAuAESISAAAABH/////AQH/////" +
            "AAAAABVgiQoCAAAAAAATAAAAU3VwcHJlc3NlZE9yU2hlbHZlZAEArkgALgBErkgAAAAB/////wEB////" +
            "/wAAAAAVYIkKAgAAAAAACwAAAE5vcm1hbFN0YXRlAQDUSAAuAETUSAAAABH/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region CertificateExpirationAlarmState Class
-    #if (!OPCUA_EXCLUDE_CertificateExpirationAlarmState)
+
+
+#if (!OPCUA_EXCLUDE_CertificateExpirationAlarmState)
     /// <summary>
     /// Stores an instance of the CertificateExpirationAlarmType ObjectType.
     /// </summary>
@@ -48814,7 +48586,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class CertificateExpirationAlarmState : SystemOffNormalAlarmState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -48830,7 +48602,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.CertificateExpirationAlarmType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -48863,7 +48635,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string ExpirationLimit_InitializationString =
            "//////////8VYIkKAgAAAAAADwAAAEV4cGlyYXRpb25MaW1pdAEANDoALgBENDoAAAEAIgH/////AQH/" +
            "////AAAAAA==";
@@ -48912,11 +48684,11 @@ namespace Opc.Ua
            "YIkKAgAAAAAADwAAAEV4cGlyYXRpb25MaW1pdAEANDoALgBENDoAAAEAIgH/////AQH/////AAAAABVg" +
            "iQoCAAAAAAAPAAAAQ2VydGlmaWNhdGVUeXBlAQAONAAuAEQONAAAABH/////AQH/////AAAAABVgiQoC" +
            "AAAAAAALAAAAQ2VydGlmaWNhdGUBAA80AC4ARA80AAAAD/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<DateTime> ExpirationDate
         {
@@ -48992,9 +48764,9 @@ namespace Opc.Ua
                 m_certificate = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -49137,20 +48909,20 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<DateTime> m_expirationDate;
         private PropertyState<double> m_expirationLimit;
         private PropertyState<NodeId> m_certificateType;
         private PropertyState<byte[]> m_certificate;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region DiscrepancyAlarmState Class
-    #if (!OPCUA_EXCLUDE_DiscrepancyAlarmState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_DiscrepancyAlarmState)
     /// <summary>
     /// Stores an instance of the DiscrepancyAlarmType ObjectType.
     /// </summary>
@@ -49158,7 +48930,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DiscrepancyAlarmState : AlarmConditionState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -49174,7 +48946,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.DiscrepancyAlarmType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -49207,7 +48979,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string Tolerance_InitializationString =
            "//////////8VYIkKAgAAAAAACQAAAFRvbGVyYW5jZQEAQUMALgBEQUMAAAAL/////wEB/////wAAAAA=";
 
@@ -49253,11 +49025,11 @@ namespace Opc.Ua
            "FWCJCgIAAAAAAA8AAABUYXJnZXRWYWx1ZU5vZGUBAD9DAC4ARD9DAAAAEf////8BAf////8AAAAAFWCJ" +
            "CgIAAAAAAAwAAABFeHBlY3RlZFRpbWUBAEBDAC4AREBDAAABACIB/////wEB/////wAAAAAVYIkKAgAA" +
            "AAAACQAAAFRvbGVyYW5jZQEAQUMALgBEQUMAAAAL/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<NodeId> TargetValueNode
         {
@@ -49314,9 +49086,9 @@ namespace Opc.Ua
                 m_tolerance = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -49433,19 +49205,19 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<NodeId> m_targetValueNode;
         private PropertyState<double> m_expectedTime;
         private PropertyState<double> m_tolerance;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region BaseConditionClassState Class
-    #if (!OPCUA_EXCLUDE_BaseConditionClassState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_BaseConditionClassState)
     /// <summary>
     /// Stores an instance of the BaseConditionClassType ObjectType.
     /// </summary>
@@ -49453,7 +49225,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class BaseConditionClassState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -49469,7 +49241,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.BaseConditionClassType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -49497,28 +49269,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHgAAAEJhc2VDb25kaXRpb25DbGFzc1R5cGVJbnN0YW5jZQEAmysBAJsr" +
            "mysAAP////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region ProcessConditionClassState Class
-    #if (!OPCUA_EXCLUDE_ProcessConditionClassState)
+
+
+#if (!OPCUA_EXCLUDE_ProcessConditionClassState)
     /// <summary>
     /// Stores an instance of the ProcessConditionClassType ObjectType.
     /// </summary>
@@ -49526,7 +49298,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ProcessConditionClassState : BaseConditionClassState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -49542,7 +49314,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ProcessConditionClassType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -49570,28 +49342,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIQAAAFByb2Nlc3NDb25kaXRpb25DbGFzc1R5cGVJbnN0YW5jZQEAnCsB" +
            "AJwrnCsAAP////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region MaintenanceConditionClassState Class
-    #if (!OPCUA_EXCLUDE_MaintenanceConditionClassState)
+
+
+#if (!OPCUA_EXCLUDE_MaintenanceConditionClassState)
     /// <summary>
     /// Stores an instance of the MaintenanceConditionClassType ObjectType.
     /// </summary>
@@ -49599,7 +49371,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class MaintenanceConditionClassState : BaseConditionClassState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -49615,7 +49387,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.MaintenanceConditionClassType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -49643,28 +49415,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJQAAAE1haW50ZW5hbmNlQ29uZGl0aW9uQ2xhc3NUeXBlSW5zdGFuY2UB" +
            "AJ0rAQCdK50rAAD/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region SystemConditionClassState Class
-    #if (!OPCUA_EXCLUDE_SystemConditionClassState)
+
+
+#if (!OPCUA_EXCLUDE_SystemConditionClassState)
     /// <summary>
     /// Stores an instance of the SystemConditionClassType ObjectType.
     /// </summary>
@@ -49672,7 +49444,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SystemConditionClassState : BaseConditionClassState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -49688,7 +49460,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.SystemConditionClassType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -49716,28 +49488,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIAAAAFN5c3RlbUNvbmRpdGlvbkNsYXNzVHlwZUluc3RhbmNlAQCeKwEA" +
            "niueKwAA/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region SafetyConditionClassState Class
-    #if (!OPCUA_EXCLUDE_SafetyConditionClassState)
+
+
+#if (!OPCUA_EXCLUDE_SafetyConditionClassState)
     /// <summary>
     /// Stores an instance of the SafetyConditionClassType ObjectType.
     /// </summary>
@@ -49745,7 +49517,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SafetyConditionClassState : BaseConditionClassState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -49761,7 +49533,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.SafetyConditionClassType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -49789,28 +49561,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIAAAAFNhZmV0eUNvbmRpdGlvbkNsYXNzVHlwZUluc3RhbmNlAQBCQwEA" +
            "QkNCQwAA/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region HighlyManagedAlarmConditionClassState Class
-    #if (!OPCUA_EXCLUDE_HighlyManagedAlarmConditionClassState)
+
+
+#if (!OPCUA_EXCLUDE_HighlyManagedAlarmConditionClassState)
     /// <summary>
     /// Stores an instance of the HighlyManagedAlarmConditionClassType ObjectType.
     /// </summary>
@@ -49818,7 +49590,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class HighlyManagedAlarmConditionClassState : BaseConditionClassState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -49834,7 +49606,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.HighlyManagedAlarmConditionClassType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -49862,28 +49634,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAALAAAAEhpZ2hseU1hbmFnZWRBbGFybUNvbmRpdGlvbkNsYXNzVHlwZUlu" +
            "c3RhbmNlAQBDQwEAQ0NDQwAA/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region TrainingConditionClassState Class
-    #if (!OPCUA_EXCLUDE_TrainingConditionClassState)
+
+
+#if (!OPCUA_EXCLUDE_TrainingConditionClassState)
     /// <summary>
     /// Stores an instance of the TrainingConditionClassType ObjectType.
     /// </summary>
@@ -49891,7 +49663,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class TrainingConditionClassState : BaseConditionClassState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -49907,7 +49679,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.TrainingConditionClassType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -49935,28 +49707,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIgAAAFRyYWluaW5nQ29uZGl0aW9uQ2xhc3NUeXBlSW5zdGFuY2UBAERD" +
            "AQBEQ0RDAAD/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region StatisticalConditionClassState Class
-    #if (!OPCUA_EXCLUDE_StatisticalConditionClassState)
+
+
+#if (!OPCUA_EXCLUDE_StatisticalConditionClassState)
     /// <summary>
     /// Stores an instance of the StatisticalConditionClassType ObjectType.
     /// </summary>
@@ -49964,7 +49736,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class StatisticalConditionClassState : BaseConditionClassState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -49980,7 +49752,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.StatisticalConditionClassType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -50008,28 +49780,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJQAAAFN0YXRpc3RpY2FsQ29uZGl0aW9uQ2xhc3NUeXBlSW5zdGFuY2UB" +
            "AOlIAQDpSOlIAAD/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region TestingConditionClassState Class
-    #if (!OPCUA_EXCLUDE_TestingConditionClassState)
+
+
+#if (!OPCUA_EXCLUDE_TestingConditionClassState)
     /// <summary>
     /// Stores an instance of the TestingConditionClassType ObjectType.
     /// </summary>
@@ -50037,7 +49809,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class TestingConditionClassState : BaseConditionClassState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -50053,7 +49825,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.TestingConditionClassType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -50081,28 +49853,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIQAAAFRlc3RpbmdDb25kaXRpb25DbGFzc1R5cGVJbnN0YW5jZQEARUMB" +
            "AEVDRUMAAP////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region AuditConditionEventState Class
-    #if (!OPCUA_EXCLUDE_AuditConditionEventState)
+
+
+#if (!OPCUA_EXCLUDE_AuditConditionEventState)
     /// <summary>
     /// Stores an instance of the AuditConditionEventType ObjectType.
     /// </summary>
@@ -50110,7 +49882,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditConditionEventState : AuditUpdateMethodEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -50126,7 +49898,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditConditionEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -50154,7 +49926,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHwAAAEF1ZGl0Q29uZGl0aW9uRXZlbnRUeXBlSW5zdGFuY2UBAOYKAQDm" +
            "CuYKAAD/////DwAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEAnA8ALgBEnA8AAAAP/////wEB/////wAA" +
@@ -50171,24 +49943,24 @@ namespace Opc.Ua
            "SWQBAKkPAC4ARKkPAAAADP////8BAf////8AAAAAFWCJCgIAAAAAAAgAAABNZXRob2RJZAEAqg8ALgBE" +
            "qg8AAAAR/////wEB/////wAAAAAXYIkKAgAAAAAADgAAAElucHV0QXJndW1lbnRzAQCrDwAuAESrDwAA" +
            "ABgBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region AuditConditionEnableEventState Class
-    #if (!OPCUA_EXCLUDE_AuditConditionEnableEventState)
+
+
+#if (!OPCUA_EXCLUDE_AuditConditionEnableEventState)
     /// <summary>
     /// Stores an instance of the AuditConditionEnableEventType ObjectType.
     /// </summary>
@@ -50196,7 +49968,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditConditionEnableEventState : AuditConditionEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -50212,7 +49984,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditConditionEnableEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -50240,7 +50012,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJQAAAEF1ZGl0Q29uZGl0aW9uRW5hYmxlRXZlbnRUeXBlSW5zdGFuY2UB" +
            "APMKAQDzCvMKAAD/////DwAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEAChAALgBEChAAAAAP/////wEB" +
@@ -50257,24 +50029,24 @@ namespace Opc.Ua
            "bnRVc2VySWQBABcQAC4ARBcQAAAADP////8BAf////8AAAAAFWCJCgIAAAAAAAgAAABNZXRob2RJZAEA" +
            "GBAALgBEGBAAAAAR/////wEB/////wAAAAAXYIkKAgAAAAAADgAAAElucHV0QXJndW1lbnRzAQAZEAAu" +
            "AEQZEAAAABgBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region AuditConditionCommentEventState Class
-    #if (!OPCUA_EXCLUDE_AuditConditionCommentEventState)
+
+
+#if (!OPCUA_EXCLUDE_AuditConditionCommentEventState)
     /// <summary>
     /// Stores an instance of the AuditConditionCommentEventType ObjectType.
     /// </summary>
@@ -50282,7 +50054,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditConditionCommentEventState : AuditConditionEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -50298,7 +50070,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditConditionCommentEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -50326,7 +50098,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJgAAAEF1ZGl0Q29uZGl0aW9uQ29tbWVudEV2ZW50VHlwZUluc3RhbmNl" +
            "AQANCwEADQsNCwAA/////xEAAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAEoQAC4AREoQAAAAD/////8B" +
@@ -50345,11 +50117,11 @@ namespace Opc.Ua
            "LgBEWRAAAAAYAQAAAAEAAAAAAAAAAQH/////AAAAABVgiQoCAAAAAAAQAAAAQ29uZGl0aW9uRXZlbnRJ" +
            "ZAEARkMALgBERkMAAAAP/////wEB/////wAAAAAVYIkKAgAAAAAABwAAAENvbW1lbnQBAEsuAC4AREsu" +
            "AAAAFf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<byte[]> ConditionEventId
         {
@@ -50387,9 +50159,9 @@ namespace Opc.Ua
                 m_comment = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -50480,18 +50252,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<byte[]> m_conditionEventId;
         private PropertyState<LocalizedText> m_comment;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditConditionRespondEventState Class
-    #if (!OPCUA_EXCLUDE_AuditConditionRespondEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditConditionRespondEventState)
     /// <summary>
     /// Stores an instance of the AuditConditionRespondEventType ObjectType.
     /// </summary>
@@ -50499,7 +50271,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditConditionRespondEventState : AuditConditionEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -50515,7 +50287,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditConditionRespondEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -50543,7 +50315,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJgAAAEF1ZGl0Q29uZGl0aW9uUmVzcG9uZEV2ZW50VHlwZUluc3RhbmNl" +
            "AQDfIgEA3yLfIgAA/////xAAAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAOAiAC4AROAiAAAAD/////8B" +
@@ -50561,11 +50333,11 @@ namespace Opc.Ua
            "AO4iAC4ARO4iAAAAEf////8BAf////8AAAAAF2CJCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEA7yIA" +
            "LgBE7yIAAAAYAQAAAAEAAAAAAAAAAQH/////AAAAABVgiQoCAAAAAAAQAAAAU2VsZWN0ZWRSZXNwb25z" +
            "ZQEATC4ALgBETC4AAAAH/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<uint> SelectedResponse
         {
@@ -50584,9 +50356,9 @@ namespace Opc.Ua
                 m_selectedResponse = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -50651,17 +50423,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<uint> m_selectedResponse;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditConditionAcknowledgeEventState Class
-    #if (!OPCUA_EXCLUDE_AuditConditionAcknowledgeEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditConditionAcknowledgeEventState)
     /// <summary>
     /// Stores an instance of the AuditConditionAcknowledgeEventType ObjectType.
     /// </summary>
@@ -50669,7 +50441,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditConditionAcknowledgeEventState : AuditConditionEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -50685,7 +50457,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditConditionAcknowledgeEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -50713,7 +50485,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKgAAAEF1ZGl0Q29uZGl0aW9uQWNrbm93bGVkZ2VFdmVudFR5cGVJbnN0" +
            "YW5jZQEA8CIBAPAi8CIAAP////8RAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQDxIgAuAETxIgAAAA//" +
@@ -50732,11 +50504,11 @@ namespace Opc.Ua
            "AAAjAC4ARAAjAAAAGAEAAAABAAAAAAAAAAEB/////wAAAAAVYIkKAgAAAAAAEAAAAENvbmRpdGlvbkV2" +
            "ZW50SWQBAEdDAC4AREdDAAAAD/////8BAf////8AAAAAFWCJCgIAAAAAAAcAAABDb21tZW50AQBNLgAu" +
            "AERNLgAAABX/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<byte[]> ConditionEventId
         {
@@ -50774,9 +50546,9 @@ namespace Opc.Ua
                 m_comment = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -50867,18 +50639,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<byte[]> m_conditionEventId;
         private PropertyState<LocalizedText> m_comment;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditConditionConfirmEventState Class
-    #if (!OPCUA_EXCLUDE_AuditConditionConfirmEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditConditionConfirmEventState)
     /// <summary>
     /// Stores an instance of the AuditConditionConfirmEventType ObjectType.
     /// </summary>
@@ -50886,7 +50658,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditConditionConfirmEventState : AuditConditionEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -50902,7 +50674,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditConditionConfirmEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -50930,7 +50702,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJgAAAEF1ZGl0Q29uZGl0aW9uQ29uZmlybUV2ZW50VHlwZUluc3RhbmNl" +
            "AQABIwEAASMBIwAA/////xEAAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAAIjAC4ARAIjAAAAD/////8B" +
@@ -50949,11 +50721,11 @@ namespace Opc.Ua
            "LgBEESMAAAAYAQAAAAEAAAAAAAAAAQH/////AAAAABVgiQoCAAAAAAAQAAAAQ29uZGl0aW9uRXZlbnRJ" +
            "ZAEASEMALgBESEMAAAAP/////wEB/////wAAAAAVYIkKAgAAAAAABwAAAENvbW1lbnQBAE4uAC4ARE4u" +
            "AAAAFf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<byte[]> ConditionEventId
         {
@@ -50991,9 +50763,9 @@ namespace Opc.Ua
                 m_comment = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -51084,18 +50856,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<byte[]> m_conditionEventId;
         private PropertyState<LocalizedText> m_comment;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditConditionShelvingEventState Class
-    #if (!OPCUA_EXCLUDE_AuditConditionShelvingEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditConditionShelvingEventState)
     /// <summary>
     /// Stores an instance of the AuditConditionShelvingEventType ObjectType.
     /// </summary>
@@ -51103,7 +50875,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditConditionShelvingEventState : AuditConditionEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -51119,7 +50891,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditConditionShelvingEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -51152,7 +50924,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string ShelvingTime_InitializationString =
            "//////////8VYIkKAgAAAAAADAAAAFNoZWx2aW5nVGltZQEATy4ALgBETy4AAAEAIgH/////AQH/////" +
            "AAAAAA==";
@@ -51174,11 +50946,11 @@ namespace Opc.Ua
            "AQBkKwAuAERkKwAAABH/////AQH/////AAAAABdgiQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAGUr" +
            "AC4ARGUrAAAAGAEAAAABAAAAAAAAAAEB/////wAAAAAVYIkKAgAAAAAADAAAAFNoZWx2aW5nVGltZQEA" +
            "Ty4ALgBETy4AAAEAIgH/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<double> ShelvingTime
         {
@@ -51197,9 +50969,9 @@ namespace Opc.Ua
                 m_shelvingTime = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -51264,17 +51036,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<double> m_shelvingTime;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditConditionSuppressionEventState Class
-    #if (!OPCUA_EXCLUDE_AuditConditionSuppressionEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditConditionSuppressionEventState)
     /// <summary>
     /// Stores an instance of the AuditConditionSuppressionEventType ObjectType.
     /// </summary>
@@ -51282,7 +51054,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditConditionSuppressionEventState : AuditConditionEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -51298,7 +51070,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditConditionSuppressionEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -51326,7 +51098,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKgAAAEF1ZGl0Q29uZGl0aW9uU3VwcHJlc3Npb25FdmVudFR5cGVJbnN0" +
            "YW5jZQEASUMBAElDSUMAAP////8PAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQBKQwAuAERKQwAAAA//" +
@@ -51343,24 +51115,24 @@ namespace Opc.Ua
            "AENsaWVudFVzZXJJZAEAV0MALgBEV0MAAAAM/////wEB/////wAAAAAVYIkKAgAAAAAACAAAAE1ldGhv" +
            "ZElkAQBYQwAuAERYQwAAABH/////AQH/////AAAAABdgiQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMB" +
            "AFlDAC4ARFlDAAAAGAEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region AuditConditionSilenceEventState Class
-    #if (!OPCUA_EXCLUDE_AuditConditionSilenceEventState)
+
+
+#if (!OPCUA_EXCLUDE_AuditConditionSilenceEventState)
     /// <summary>
     /// Stores an instance of the AuditConditionSilenceEventType ObjectType.
     /// </summary>
@@ -51368,7 +51140,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditConditionSilenceEventState : AuditConditionEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -51384,7 +51156,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditConditionSilenceEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -51412,7 +51184,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJgAAAEF1ZGl0Q29uZGl0aW9uU2lsZW5jZUV2ZW50VHlwZUluc3RhbmNl" +
            "AQBaQwEAWkNaQwAA/////w8AAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAFtDAC4ARFtDAAAAD/////8B" +
@@ -51429,24 +51201,24 @@ namespace Opc.Ua
            "ZW50VXNlcklkAQBoQwAuAERoQwAAAAz/////AQH/////AAAAABVgiQoCAAAAAAAIAAAATWV0aG9kSWQB" +
            "AGlDAC4ARGlDAAAAEf////8BAf////8AAAAAF2CJCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAakMA" +
            "LgBEakMAAAAYAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region AuditConditionResetEventState Class
-    #if (!OPCUA_EXCLUDE_AuditConditionResetEventState)
+
+
+#if (!OPCUA_EXCLUDE_AuditConditionResetEventState)
     /// <summary>
     /// Stores an instance of the AuditConditionResetEventType ObjectType.
     /// </summary>
@@ -51454,7 +51226,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditConditionResetEventState : AuditConditionEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -51470,7 +51242,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditConditionResetEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -51498,7 +51270,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJAAAAEF1ZGl0Q29uZGl0aW9uUmVzZXRFdmVudFR5cGVJbnN0YW5jZQEA" +
            "pToBAKU6pToAAP////8PAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQCmOgAuAESmOgAAAA//////AQH/" +
@@ -51515,24 +51287,24 @@ namespace Opc.Ua
            "dFVzZXJJZAEAszoALgBEszoAAAAM/////wEB/////wAAAAAVYIkKAgAAAAAACAAAAE1ldGhvZElkAQC0" +
            "OgAuAES0OgAAABH/////AQH/////AAAAABdgiQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBALU6AC4A" +
            "RLU6AAAAGAEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region AuditConditionOutOfServiceEventState Class
-    #if (!OPCUA_EXCLUDE_AuditConditionOutOfServiceEventState)
+
+
+#if (!OPCUA_EXCLUDE_AuditConditionOutOfServiceEventState)
     /// <summary>
     /// Stores an instance of the AuditConditionOutOfServiceEventType ObjectType.
     /// </summary>
@@ -51540,7 +51312,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditConditionOutOfServiceEventState : AuditConditionEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -51556,7 +51328,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditConditionOutOfServiceEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -51584,7 +51356,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKwAAAEF1ZGl0Q29uZGl0aW9uT3V0T2ZTZXJ2aWNlRXZlbnRUeXBlSW5z" +
            "dGFuY2UBAGtDAQBrQ2tDAAD/////DwAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEAbEMALgBEbEMAAAAP" +
@@ -51601,24 +51373,24 @@ namespace Opc.Ua
            "AABDbGllbnRVc2VySWQBAHlDAC4ARHlDAAAADP////8BAf////8AAAAAFWCJCgIAAAAAAAgAAABNZXRo" +
            "b2RJZAEAekMALgBEekMAAAAR/////wEB/////wAAAAAXYIkKAgAAAAAADgAAAElucHV0QXJndW1lbnRz" +
            "AQB7QwAuAER7QwAAABgBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region RefreshStartEventState Class
-    #if (!OPCUA_EXCLUDE_RefreshStartEventState)
+
+
+#if (!OPCUA_EXCLUDE_RefreshStartEventState)
     /// <summary>
     /// Stores an instance of the RefreshStartEventType ObjectType.
     /// </summary>
@@ -51626,7 +51398,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class RefreshStartEventState : SystemEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -51642,7 +51414,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.RefreshStartEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -51670,7 +51442,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHQAAAFJlZnJlc2hTdGFydEV2ZW50VHlwZUluc3RhbmNlAQDjCgEA4wrj" +
            "CgAA/////wgAAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAIEPAC4ARIEPAAAAD/////8BAf////8AAAAA" +
@@ -51680,24 +51452,24 @@ namespace Opc.Ua
            "RIUPAAABACYB/////wEB/////wAAAAAVYIkKAgAAAAAACwAAAFJlY2VpdmVUaW1lAQCGDwAuAESGDwAA" +
            "AQAmAf////8BAf////8AAAAAFWCJCgIAAAAAAAcAAABNZXNzYWdlAQCIDwAuAESIDwAAABX/////AQH/" +
            "////AAAAABVgiQoCAAAAAAAIAAAAU2V2ZXJpdHkBAIkPAC4ARIkPAAAABf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region RefreshEndEventState Class
-    #if (!OPCUA_EXCLUDE_RefreshEndEventState)
+
+
+#if (!OPCUA_EXCLUDE_RefreshEndEventState)
     /// <summary>
     /// Stores an instance of the RefreshEndEventType ObjectType.
     /// </summary>
@@ -51705,7 +51477,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class RefreshEndEventState : SystemEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -51721,7 +51493,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.RefreshEndEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -51749,7 +51521,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAGwAAAFJlZnJlc2hFbmRFdmVudFR5cGVJbnN0YW5jZQEA5AoBAOQK5AoA" +
            "AP////8IAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQCKDwAuAESKDwAAAA//////AQH/////AAAAABVg" +
@@ -51759,24 +51531,24 @@ namespace Opc.Ua
            "DwAAAQAmAf////8BAf////8AAAAAFWCJCgIAAAAAAAsAAABSZWNlaXZlVGltZQEAjw8ALgBEjw8AAAEA" +
            "JgH/////AQH/////AAAAABVgiQoCAAAAAAAHAAAATWVzc2FnZQEAkQ8ALgBEkQ8AAAAV/////wEB////" +
            "/wAAAAAVYIkKAgAAAAAACAAAAFNldmVyaXR5AQCSDwAuAESSDwAAAAX/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region RefreshRequiredEventState Class
-    #if (!OPCUA_EXCLUDE_RefreshRequiredEventState)
+
+
+#if (!OPCUA_EXCLUDE_RefreshRequiredEventState)
     /// <summary>
     /// Stores an instance of the RefreshRequiredEventType ObjectType.
     /// </summary>
@@ -51784,7 +51556,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class RefreshRequiredEventState : SystemEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -51800,7 +51572,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.RefreshRequiredEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -51828,7 +51600,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIAAAAFJlZnJlc2hSZXF1aXJlZEV2ZW50VHlwZUluc3RhbmNlAQDlCgEA" +
            "5QrlCgAA/////wgAAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAJMPAC4ARJMPAAAAD/////8BAf////8A" +
@@ -51838,24 +51610,24 @@ namespace Opc.Ua
            "AC4ARJcPAAABACYB/////wEB/////wAAAAAVYIkKAgAAAAAACwAAAFJlY2VpdmVUaW1lAQCYDwAuAESY" +
            "DwAAAQAmAf////8BAf////8AAAAAFWCJCgIAAAAAAAcAAABNZXNzYWdlAQCaDwAuAESaDwAAABX/////" +
            "AQH/////AAAAABVgiQoCAAAAAAAIAAAAU2V2ZXJpdHkBAJsPAC4ARJsPAAAABf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region AlarmMetricsState Class
-    #if (!OPCUA_EXCLUDE_AlarmMetricsState)
+
+
+#if (!OPCUA_EXCLUDE_AlarmMetricsState)
     /// <summary>
     /// Stores an instance of the AlarmMetricsType ObjectType.
     /// </summary>
@@ -51863,7 +51635,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AlarmMetricsState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -51879,7 +51651,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AlarmMetricsType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -51907,7 +51679,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAGAAAAEFsYXJtTWV0cmljc1R5cGVJbnN0YW5jZQEAf0MBAH9Df0MAAP//" +
            "//8JAAAAFWCJCgIAAAAAAAoAAABBbGFybUNvdW50AQCAQwAvAD+AQwAAAAf/////AQH/////AAAAABVg" +
@@ -51921,11 +51693,11 @@ namespace Opc.Ua
            "AD+DQwAAAAf/////AQH/////AAAAABVgiQoCAAAAAAAQAAAAQXZlcmFnZUFsYXJtUmF0ZQEAiEMALwEA" +
            "fUOIQwAAAAv/////AQH/////AQAAABVgiQoCAAAAAAAEAAAAUmF0ZQEAiUMALgBEiUMAAAAF/////wEB" +
            "/////wAAAAAEYYIKBAAAAAAABQAAAFJlc2V0AQDqSAAvAQDqSOpIAAABAQEAAAABAPkLAAEATwgAAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<uint> AlarmCount
         {
@@ -52096,9 +51868,9 @@ namespace Opc.Ua
                 m_resetMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -52371,9 +52143,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<uint> m_alarmCount;
         private BaseDataVariableState<DateTime> m_startTime;
         private BaseDataVariableState<double> m_maximumActiveState;
@@ -52383,13 +52155,13 @@ namespace Opc.Ua
         private BaseDataVariableState<uint> m_maximumReAlarmCount;
         private AlarmRateVariableState m_averageAlarmRate;
         private MethodState m_resetMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AlarmRateVariableState Class
-    #if (!OPCUA_EXCLUDE_AlarmRateVariableState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AlarmRateVariableState)
     /// <summary>
     /// Stores an instance of the AlarmRateVariableType VariableType.
     /// </summary>
@@ -52397,7 +52169,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AlarmRateVariableState : BaseDataVariableState<double>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -52429,7 +52201,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -52457,16 +52229,16 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAHQAAAEFsYXJtUmF0ZVZhcmlhYmxlVHlwZUluc3RhbmNlAQB9QwEAfUN9" +
            "QwAAAAv/////AQH/////AQAAABVgiQoCAAAAAAAEAAAAUmF0ZQEAfkMALgBEfkMAAAAF/////wEB////" +
            "/wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<ushort> Rate
         {
@@ -52485,9 +52257,9 @@ namespace Opc.Ua
                 m_rate = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -52552,17 +52324,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<ushort> m_rate;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region ProgramStateMachineState Class
-    #if (!OPCUA_EXCLUDE_ProgramStateMachineState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ProgramStateMachineState)
     /// <summary>
     /// Stores an instance of the ProgramStateMachineType ObjectType.
     /// </summary>
@@ -52570,7 +52342,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ProgramStateMachineState : FiniteStateMachineState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -52586,7 +52358,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ProgramStateMachineType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -52624,7 +52396,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string ProgramDiagnostic_InitializationString =
            "//////////8VYIkKAgAAAAAAEQAAAFByb2dyYW1EaWFnbm9zdGljAQBfCQAvAQAXPF8JAAABAOFd////" +
            "/wEB/////wwAAAAVYIkKAgAAAAAADwAAAENyZWF0ZVNlc3Npb25JZAEAAA8ALwA/AA8AAAAR/////wEB" +
@@ -52671,18 +52443,15 @@ namespace Opc.Ua
            "YXN0TWV0aG9kQ2FsbFRpbWUBAAgPAC8APwgPAAABACYB/////wEB/////wAAAAAVYIkKAgAAAAAAFgAA" +
            "AExhc3RNZXRob2RSZXR1cm5TdGF0dXMBAAkPAC8APwkPAAAAE/////8BAf////8AAAAABGCACgEAAAAA" +
            "AA8AAABGaW5hbFJlc3VsdERhdGEBAAoPAC8AOgoPAAD/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<bool> Deletable
         {
-            get
-            {
-                return m_deletable;
-            }
+            get => m_deletable;
 
             set
             {
@@ -52698,10 +52467,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<bool> AutoDelete
         {
-            get
-            {
-                return m_autoDelete;
-            }
+            get => m_autoDelete;
 
             set
             {
@@ -52717,10 +52483,7 @@ namespace Opc.Ua
         /// <remarks />
         public PropertyState<int> RecycleCount
         {
-            get
-            {
-                return m_recycleCount;
-            }
+            get => m_recycleCount;
 
             set
             {
@@ -52736,10 +52499,7 @@ namespace Opc.Ua
         /// <remarks />
         public ProgramDiagnostic2State ProgramDiagnostic
         {
-            get
-            {
-                return m_programDiagnostic;
-            }
+            get => m_programDiagnostic;
 
             set
             {
@@ -52755,10 +52515,7 @@ namespace Opc.Ua
         /// <remarks />
         public BaseObjectState FinalResultData
         {
-            get
-            {
-                return m_finalResultData;
-            }
+            get => m_finalResultData;
 
             set
             {
@@ -52770,9 +52527,9 @@ namespace Opc.Ua
                 m_finalResultData = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -52941,21 +52698,21 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<bool> m_deletable;
         private PropertyState<bool> m_autoDelete;
         private PropertyState<int> m_recycleCount;
         private ProgramDiagnostic2State m_programDiagnostic;
         private BaseObjectState m_finalResultData;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region ProgramTransitionEventState Class
-    #if (!OPCUA_EXCLUDE_ProgramTransitionEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ProgramTransitionEventState)
     /// <summary>
     /// Stores an instance of the ProgramTransitionEventType ObjectType.
     /// </summary>
@@ -52963,7 +52720,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ProgramTransitionEventState : TransitionEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -52979,7 +52736,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ProgramTransitionEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -53007,7 +52764,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIgAAAFByb2dyYW1UcmFuc2l0aW9uRXZlbnRUeXBlSW5zdGFuY2UBAEoJ" +
            "AQBKCUoJAAD/////DAAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEAxg4ALgBExg4AAAAP/////wEB////" +
@@ -53023,11 +52780,11 @@ namespace Opc.Ua
            "AAAY/////wEB/////wAAAAAVYIkKAgAAAAAABwAAAFRvU3RhdGUBANQOAC8BAMMK1A4AAAAV/////wEB" +
            "/////wEAAAAVYIkKAgAAAAAAAgAAAElkAQDVDgAuAETVDgAAABj/////AQH/////AAAAABVgiQoCAAAA" +
            "AAASAAAASW50ZXJtZWRpYXRlUmVzdWx0AQBLCQAvAD9LCQAAABj/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState IntermediateResult
         {
@@ -53046,9 +52803,9 @@ namespace Opc.Ua
                 m_intermediateResult = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -53113,17 +52870,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState m_intermediateResult;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditProgramTransitionEventState Class
-    #if (!OPCUA_EXCLUDE_AuditProgramTransitionEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditProgramTransitionEventState)
     /// <summary>
     /// Stores an instance of the AuditProgramTransitionEventType ObjectType.
     /// </summary>
@@ -53131,7 +52888,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditProgramTransitionEventState : AuditUpdateStateEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -53147,7 +52904,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditProgramTransitionEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -53175,7 +52932,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJwAAAEF1ZGl0UHJvZ3JhbVRyYW5zaXRpb25FdmVudFR5cGVJbnN0YW5j" +
            "ZQEAUC4BAFAuUC4AAP////8SAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQBRLgAuAERRLgAAAA//////" +
@@ -53195,11 +52952,11 @@ namespace Opc.Ua
            "AC4ARGEuAAAAGP////8BAf////8AAAAAFWCJCgIAAAAAAAoAAABOZXdTdGF0ZUlkAQBiLgAuAERiLgAA" +
            "ABj/////AQH/////AAAAABVgiQoCAAAAAAAQAAAAVHJhbnNpdGlvbk51bWJlcgEAYy4ALgBEYy4AAAAH" +
            "/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<uint> TransitionNumber
         {
@@ -53218,9 +52975,9 @@ namespace Opc.Ua
                 m_transitionNumber = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -53285,17 +53042,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<uint> m_transitionNumber;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region ProgramTransitionAuditEventState Class
-    #if (!OPCUA_EXCLUDE_ProgramTransitionAuditEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ProgramTransitionAuditEventState)
     /// <summary>
     /// Stores an instance of the ProgramTransitionAuditEventType ObjectType.
     /// </summary>
@@ -53303,7 +53060,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ProgramTransitionAuditEventState : AuditUpdateStateEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -53319,7 +53076,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ProgramTransitionAuditEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -53347,7 +53104,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJwAAAFByb2dyYW1UcmFuc2l0aW9uQXVkaXRFdmVudFR5cGVJbnN0YW5j" +
            "ZQEA3g4BAN4O3g4AAP////8SAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQDfDgAuAETfDgAAAA//////" +
@@ -53367,11 +53124,11 @@ namespace Opc.Ua
            "AC4ARO8OAAAAGP////8BAf////8AAAAAFWCJCgIAAAAAAAoAAABOZXdTdGF0ZUlkAQDwDgAuAETwDgAA" +
            "ABj/////AQH/////AAAAABVgiQoCAAAAAAAKAAAAVHJhbnNpdGlvbgEA8Q4ALwEAzwrxDgAAABX/////" +
            "AQH/////AQAAABVgiQoCAAAAAAACAAAASWQBAPIOAC4ARPIOAAAAEf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public FiniteTransitionVariableState Transition
         {
@@ -53390,9 +53147,9 @@ namespace Opc.Ua
                 m_transition = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -53457,17 +53214,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private FiniteTransitionVariableState m_transition;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region ProgramDiagnosticState Class
-    #if (!OPCUA_EXCLUDE_ProgramDiagnosticState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ProgramDiagnosticState)
     /// <summary>
     /// Stores an instance of the ProgramDiagnosticType VariableType.
     /// </summary>
@@ -53475,7 +53232,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ProgramDiagnosticState : BaseDataVariableState<ProgramDiagnosticDataType>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -53507,7 +53264,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -53535,7 +53292,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAHQAAAFByb2dyYW1EaWFnbm9zdGljVHlwZUluc3RhbmNlAQBMCQEATAlM" +
            "CQAAAQB+A/////8BAf////8KAAAAFWCJCgIAAAAAAA8AAABDcmVhdGVTZXNzaW9uSWQBAE0JAC4ARE0J" +
@@ -53549,11 +53306,11 @@ namespace Opc.Ua
            "dXRwdXRBcmd1bWVudHMBAFQJAC4ARFQJAAAAGAEAAAABAAAAAAAAAAEB/////wAAAAAVYIkKAgAAAAAA" +
            "EgAAAExhc3RNZXRob2RDYWxsVGltZQEAVQkALgBEVQkAAAEAJgH/////AQH/////AAAAABVgiQoCAAAA" +
            "AAAWAAAATGFzdE1ldGhvZFJldHVyblN0YXR1cwEAVgkALgBEVgkAAAEAKwH/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<NodeId> CreateSessionId
         {
@@ -53743,9 +53500,9 @@ namespace Opc.Ua
                 m_lastMethodReturnStatus = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -54044,9 +53801,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<NodeId> m_createSessionId;
         private PropertyState<string> m_createClientName;
         private PropertyState<DateTime> m_invocationCreationTime;
@@ -54057,10 +53814,10 @@ namespace Opc.Ua
         private PropertyState<object[]> m_lastMethodOutputArguments;
         private PropertyState<DateTime> m_lastMethodCallTime;
         private PropertyState<StatusResult> m_lastMethodReturnStatus;
-        #endregion
+
     }
 
-    #region ProgramDiagnosticValue Class
+
     /// <summary>
     /// A typed version of the _BrowseName_ variable.
     /// </summary>
@@ -54068,7 +53825,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class ProgramDiagnosticValue : BaseVariableValue
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -54083,9 +53840,9 @@ namespace Opc.Ua
 
             Initialize(variable);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The variable that the value belongs to.
         /// </summary>
@@ -54099,12 +53856,12 @@ namespace Opc.Ua
         /// </summary>
         public ProgramDiagnosticDataType Value
         {
-            get { return m_value;  }
+            get { return m_value; }
             set { m_value = value; }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Initializes the object.
         /// </summary>
@@ -54206,7 +53963,7 @@ namespace Opc.Ua
             return ServiceResult.Good;
         }
 
-        #region CreateSessionId Access Methods
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -54244,9 +54001,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region CreateClientName Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -54284,9 +54041,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region InvocationCreationTime Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -54324,9 +54081,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region LastTransitionTime Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -54364,9 +54121,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region LastMethodCall Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -54404,9 +54161,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region LastMethodSessionId Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -54444,9 +54201,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region LastMethodInputArguments Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -54484,9 +54241,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region LastMethodOutputArguments Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -54524,9 +54281,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region LastMethodCallTime Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -54564,9 +54321,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region LastMethodReturnStatus Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -54604,20 +54361,20 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
-        #endregion
 
-        #region Private Fields
+
+
+
         private ProgramDiagnosticDataType m_value;
         private ProgramDiagnosticState m_variable;
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region ProgramDiagnostic2State Class
-    #if (!OPCUA_EXCLUDE_ProgramDiagnostic2State)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ProgramDiagnostic2State)
     /// <summary>
     /// Stores an instance of the ProgramDiagnostic2Type VariableType.
     /// </summary>
@@ -54625,7 +54382,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ProgramDiagnostic2State : BaseDataVariableState<ProgramDiagnostic2DataType>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -54657,7 +54414,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -54685,7 +54442,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIkCAgAAAAAAHgAAAFByb2dyYW1EaWFnbm9zdGljMlR5cGVJbnN0YW5jZQEAFzwBABc8" +
            "FzwAAAEA4V3/////AQH/////DAAAABVgiQoCAAAAAAAPAAAAQ3JlYXRlU2Vzc2lvbklkAQAYPAAvAD8Y" +
@@ -54702,11 +54459,11 @@ namespace Opc.Ua
            "AQAAAAAAAAABAf////8AAAAAFWCJCgIAAAAAABIAAABMYXN0TWV0aG9kQ2FsbFRpbWUBACI8AC8APyI8" +
            "AAABACYB/////wEB/////wAAAAAVYIkKAgAAAAAAFgAAAExhc3RNZXRob2RSZXR1cm5TdGF0dXMBACM8" +
            "AC8APyM8AAAAE/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<NodeId> CreateSessionId
         {
@@ -54934,9 +54691,9 @@ namespace Opc.Ua
                 m_lastMethodReturnStatus = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -55287,9 +55044,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<NodeId> m_createSessionId;
         private BaseDataVariableState<string> m_createClientName;
         private BaseDataVariableState<DateTime> m_invocationCreationTime;
@@ -55302,10 +55059,10 @@ namespace Opc.Ua
         private BaseDataVariableState<object[]> m_lastMethodOutputValues;
         private BaseDataVariableState<DateTime> m_lastMethodCallTime;
         private BaseDataVariableState<StatusCode> m_lastMethodReturnStatus;
-        #endregion
+
     }
 
-    #region ProgramDiagnostic2Value Class
+
     /// <summary>
     /// A typed version of the _BrowseName_ variable.
     /// </summary>
@@ -55313,7 +55070,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class ProgramDiagnostic2Value : BaseVariableValue
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -55328,9 +55085,9 @@ namespace Opc.Ua
 
             Initialize(variable);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The variable that the value belongs to.
         /// </summary>
@@ -55344,12 +55101,12 @@ namespace Opc.Ua
         /// </summary>
         public ProgramDiagnostic2DataType Value
         {
-            get { return m_value;  }
+            get { return m_value; }
             set { m_value = value; }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Initializes the object.
         /// </summary>
@@ -55459,7 +55216,7 @@ namespace Opc.Ua
             return ServiceResult.Good;
         }
 
-        #region CreateSessionId Access Methods
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -55497,9 +55254,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region CreateClientName Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -55537,9 +55294,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region InvocationCreationTime Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -55577,9 +55334,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region LastTransitionTime Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -55617,9 +55374,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region LastMethodCall Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -55657,9 +55414,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region LastMethodSessionId Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -55697,9 +55454,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region LastMethodInputArguments Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -55737,9 +55494,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region LastMethodOutputArguments Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -55777,9 +55534,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region LastMethodInputValues Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -55817,9 +55574,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region LastMethodOutputValues Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -55857,9 +55614,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region LastMethodCallTime Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -55897,9 +55654,9 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
 
-        #region LastMethodReturnStatus Access Methods
+
+
         /// <summary>
         /// Reads the value of the variable child.
         /// </summary>
@@ -55937,20 +55694,20 @@ namespace Opc.Ua
 
             return ServiceResult.Good;
         }
-        #endregion
-        #endregion
 
-        #region Private Fields
+
+
+
         private ProgramDiagnostic2DataType m_value;
         private ProgramDiagnostic2State m_variable;
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region HistoricalDataConfigurationState Class
-    #if (!OPCUA_EXCLUDE_HistoricalDataConfigurationState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_HistoricalDataConfigurationState)
     /// <summary>
     /// Stores an instance of the HistoricalDataConfigurationType ObjectType.
     /// </summary>
@@ -55958,7 +55715,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class HistoricalDataConfigurationState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -55974,7 +55731,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.HistoricalDataConfigurationType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -56047,7 +55804,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string AggregateFunctions_InitializationString =
            "//////////8EYIAKAQAAAAAAEgAAAEFnZ3JlZ2F0ZUZ1bmN0aW9ucwEAZC4ALwA9ZC4AAP////8AAAAA";
 
@@ -56100,11 +55857,11 @@ namespace Opc.Ua
            "AAAAABQAAABTdGFydE9mT25saW5lQXJjaGl2ZQEA7CwALgBE7CwAAAEAJgH/////AQH/////AAAAABVg" +
            "iQoCAAAAAAAYAAAAU2VydmVyVGltZXN0YW1wU3VwcG9ydGVkAQCUSgAuAESUSgAAAAH/////AQH/////" +
            "AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public AggregateConfigurationState AggregateConfiguration
         {
@@ -56313,9 +56070,9 @@ namespace Opc.Ua
                 m_serverTimestampSupported = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -56640,9 +56397,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private AggregateConfigurationState m_aggregateConfiguration;
         private FolderState m_aggregateFunctions;
         private PropertyState<bool> m_stepped;
@@ -56654,13 +56411,13 @@ namespace Opc.Ua
         private PropertyState<DateTime> m_startOfArchive;
         private PropertyState<DateTime> m_startOfOnlineArchive;
         private PropertyState<bool> m_serverTimestampSupported;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region HistoryServerCapabilitiesState Class
-    #if (!OPCUA_EXCLUDE_HistoryServerCapabilitiesState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_HistoryServerCapabilitiesState)
     /// <summary>
     /// Stores an instance of the HistoryServerCapabilitiesType ObjectType.
     /// </summary>
@@ -56668,7 +56425,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class HistoryServerCapabilitiesState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -56684,7 +56441,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.HistoryServerCapabilitiesType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -56712,7 +56469,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJQAAAEhpc3RvcnlTZXJ2ZXJDYXBhYmlsaXRpZXNUeXBlSW5zdGFuY2UB" +
            "ABoJAQAaCRoJAAD/////EAAAABVgiQoCAAAAAAAbAAAAQWNjZXNzSGlzdG9yeURhdGFDYXBhYmlsaXR5" +
@@ -56733,11 +56490,11 @@ namespace Opc.Ua
            "Af////8BAf////8AAAAABGCACgEAAAAAABIAAABBZ2dyZWdhdGVGdW5jdGlvbnMBAKQrAC8APaQrAAD/" +
            "////AAAAABVgiQoCAAAAAAAYAAAAU2VydmVyVGltZXN0YW1wU3VwcG9ydGVkAQCWSgAuAESWSgAAAAH/" +
            "////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<bool> AccessHistoryDataCapability
         {
@@ -57041,9 +56798,9 @@ namespace Opc.Ua
                 m_serverTimestampSupported = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -57498,9 +57255,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<bool> m_accessHistoryDataCapability;
         private PropertyState<bool> m_accessHistoryEventsCapability;
         private PropertyState<uint> m_maxReturnDataValues;
@@ -57517,13 +57274,13 @@ namespace Opc.Ua
         private PropertyState<bool> m_insertAnnotationCapability;
         private FolderState m_aggregateFunctions;
         private PropertyState<bool> m_serverTimestampSupported;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditHistoryEventUpdateEventState Class
-    #if (!OPCUA_EXCLUDE_AuditHistoryEventUpdateEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditHistoryEventUpdateEventState)
     /// <summary>
     /// Stores an instance of the AuditHistoryEventUpdateEventType ObjectType.
     /// </summary>
@@ -57531,7 +57288,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditHistoryEventUpdateEventState : AuditHistoryUpdateEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -57547,7 +57304,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditHistoryEventUpdateEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -57575,7 +57332,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKAAAAEF1ZGl0SGlzdG9yeUV2ZW50VXBkYXRlRXZlbnRUeXBlSW5zdGFu" +
            "Y2UBALcLAQC3C7cLAAD/////EwAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEA2g0ALgBE2g0AAAAP////" +
@@ -57596,11 +57353,11 @@ namespace Opc.Ua
            "CwAuAES7CwAAAQDVAv////8BAf////8AAAAAF2CJCgIAAAAAAAkAAABOZXdWYWx1ZXMBANULAC4ARNUL" +
            "AAABAJgDAQAAAAEAAAAAAAAAAQH/////AAAAABdgiQoCAAAAAAAJAAAAT2xkVmFsdWVzAQDWCwAuAETW" +
            "CwAAAQCYAwEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<NodeId> UpdatedNode
         {
@@ -57695,9 +57452,9 @@ namespace Opc.Ua
                 m_oldValues = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -57866,21 +57623,21 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<NodeId> m_updatedNode;
         private PropertyState<PerformUpdateType> m_performInsertReplace;
         private PropertyState<EventFilter> m_filter;
         private PropertyState<HistoryEventFieldList[]> m_newValues;
         private PropertyState<HistoryEventFieldList[]> m_oldValues;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditHistoryValueUpdateEventState Class
-    #if (!OPCUA_EXCLUDE_AuditHistoryValueUpdateEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditHistoryValueUpdateEventState)
     /// <summary>
     /// Stores an instance of the AuditHistoryValueUpdateEventType ObjectType.
     /// </summary>
@@ -57888,7 +57645,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditHistoryValueUpdateEventState : AuditHistoryUpdateEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -57904,7 +57661,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditHistoryValueUpdateEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -57932,7 +57689,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKAAAAEF1ZGl0SGlzdG9yeVZhbHVlVXBkYXRlRXZlbnRUeXBlSW5zdGFu" +
            "Y2UBAL4LAQC+C74LAAD/////EgAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEA6Q0ALgBE6Q0AAAAP////" +
@@ -57952,11 +57709,11 @@ namespace Opc.Ua
            "UmVwbGFjZQEA1wsALgBE1wsAAAEAHSz/////AQH/////AAAAABdgiQoCAAAAAAAJAAAATmV3VmFsdWVz" +
            "AQDYCwAuAETYCwAAABcBAAAAAQAAAAAAAAABAf////8AAAAAF2CJCgIAAAAAAAkAAABPbGRWYWx1ZXMB" +
            "ANkLAC4ARNkLAAAAFwEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<NodeId> UpdatedNode
         {
@@ -58032,9 +57789,9 @@ namespace Opc.Ua
                 m_oldValues = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -58177,20 +57934,20 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<NodeId> m_updatedNode;
         private PropertyState<PerformUpdateType> m_performInsertReplace;
         private PropertyState<DataValue[]> m_newValues;
         private PropertyState<DataValue[]> m_oldValues;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditHistoryAnnotationUpdateEventState Class
-    #if (!OPCUA_EXCLUDE_AuditHistoryAnnotationUpdateEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditHistoryAnnotationUpdateEventState)
     /// <summary>
     /// Stores an instance of the AuditHistoryAnnotationUpdateEventType ObjectType.
     /// </summary>
@@ -58198,7 +57955,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditHistoryAnnotationUpdateEventState : AuditHistoryUpdateEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -58214,7 +57971,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditHistoryAnnotationUpdateEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -58242,7 +57999,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAALQAAAEF1ZGl0SGlzdG9yeUFubm90YXRpb25VcGRhdGVFdmVudFR5cGVJ" +
            "bnN0YW5jZQEAl0oBAJdKl0oAAP////8RAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQCYSgAuAESYSgAA" +
@@ -58261,11 +58018,11 @@ namespace Opc.Ua
            "ZXJmb3JtSW5zZXJ0UmVwbGFjZQEAXUsALgBEXUsAAAEAHSz/////AQH/////AAAAABdgiQoCAAAAAAAJ" +
            "AAAATmV3VmFsdWVzAQBeSwAuAEReSwAAABcBAAAAAQAAAAAAAAABAf////8AAAAAF2CJCgIAAAAAAAkA" +
            "AABPbGRWYWx1ZXMBAF9LAC4ARF9LAAAAFwEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<PerformUpdateType> PerformInsertReplace
         {
@@ -58322,9 +58079,9 @@ namespace Opc.Ua
                 m_oldValues = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -58441,19 +58198,19 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<PerformUpdateType> m_performInsertReplace;
         private PropertyState<DataValue[]> m_newValues;
         private PropertyState<DataValue[]> m_oldValues;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditHistoryDeleteEventState Class
-    #if (!OPCUA_EXCLUDE_AuditHistoryDeleteEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditHistoryDeleteEventState)
     /// <summary>
     /// Stores an instance of the AuditHistoryDeleteEventType ObjectType.
     /// </summary>
@@ -58461,7 +58218,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditHistoryDeleteEventState : AuditHistoryUpdateEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -58477,7 +58234,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditHistoryDeleteEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -58505,7 +58262,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIwAAAEF1ZGl0SGlzdG9yeURlbGV0ZUV2ZW50VHlwZUluc3RhbmNlAQDE" +
            "CwEAxAvECwAA/////w8AAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAPgNAC4ARPgNAAAAD/////8BAf//" +
@@ -58522,11 +58279,11 @@ namespace Opc.Ua
            "VXNlcklkAQAFDgAuAEQFDgAAAAz/////AQH/////AAAAABVgiQoCAAAAAAATAAAAUGFyYW1ldGVyRGF0" +
            "YVR5cGVJZAEABg4ALgBEBg4AAAAR/////wEB/////wAAAAAVYIkKAgAAAAAACwAAAFVwZGF0ZWROb2Rl" +
            "AQDTCwAuAETTCwAAABH/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<NodeId> UpdatedNode
         {
@@ -58545,9 +58302,9 @@ namespace Opc.Ua
                 m_updatedNode = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -58612,17 +58369,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<NodeId> m_updatedNode;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditHistoryRawModifyDeleteEventState Class
-    #if (!OPCUA_EXCLUDE_AuditHistoryRawModifyDeleteEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditHistoryRawModifyDeleteEventState)
     /// <summary>
     /// Stores an instance of the AuditHistoryRawModifyDeleteEventType ObjectType.
     /// </summary>
@@ -58630,7 +58387,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditHistoryRawModifyDeleteEventState : AuditHistoryDeleteEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -58646,7 +58403,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditHistoryRawModifyDeleteEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -58674,7 +58431,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAALAAAAEF1ZGl0SGlzdG9yeVJhd01vZGlmeURlbGV0ZUV2ZW50VHlwZUlu" +
            "c3RhbmNlAQDGCwEAxgvGCwAA/////xMAAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAAcOAC4ARAcOAAAA" +
@@ -58695,11 +58452,11 @@ namespace Opc.Ua
            "yAsALgBEyAsAAAEAJgH/////AQH/////AAAAABVgiQoCAAAAAAAHAAAARW5kVGltZQEAyQsALgBEyQsA" +
            "AAEAJgH/////AQH/////AAAAABdgiQoCAAAAAAAJAAAAT2xkVmFsdWVzAQDaCwAuAETaCwAAABcBAAAA" +
            "AQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<bool> IsDeleteModified
         {
@@ -58775,9 +58532,9 @@ namespace Opc.Ua
                 m_oldValues = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -58920,20 +58677,20 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<bool> m_isDeleteModified;
         private PropertyState<DateTime> m_startTime;
         private PropertyState<DateTime> m_endTime;
         private PropertyState<DataValue[]> m_oldValues;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditHistoryAtTimeDeleteEventState Class
-    #if (!OPCUA_EXCLUDE_AuditHistoryAtTimeDeleteEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditHistoryAtTimeDeleteEventState)
     /// <summary>
     /// Stores an instance of the AuditHistoryAtTimeDeleteEventType ObjectType.
     /// </summary>
@@ -58941,7 +58698,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditHistoryAtTimeDeleteEventState : AuditHistoryDeleteEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -58957,7 +58714,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditHistoryAtTimeDeleteEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -58985,7 +58742,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKQAAAEF1ZGl0SGlzdG9yeUF0VGltZURlbGV0ZUV2ZW50VHlwZUluc3Rh" +
            "bmNlAQDLCwEAywvLCwAA/////xEAAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBABcOAC4ARBcOAAAAD///" +
@@ -59004,11 +58761,11 @@ namespace Opc.Ua
            "ZWROb2RlAQAmDgAuAEQmDgAAABH/////AQH/////AAAAABdgiQoCAAAAAAAIAAAAUmVxVGltZXMBAMwL" +
            "AC4ARMwLAAABACYBAQAAAAEAAAAAAAAAAQH/////AAAAABdgiQoCAAAAAAAJAAAAT2xkVmFsdWVzAQDN" +
            "CwAuAETNCwAAABcBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<DateTime[]> ReqTimes
         {
@@ -59046,9 +58803,9 @@ namespace Opc.Ua
                 m_oldValues = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -59139,18 +58896,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<DateTime[]> m_reqTimes;
         private PropertyState<DataValue[]> m_oldValues;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AuditHistoryEventDeleteEventState Class
-    #if (!OPCUA_EXCLUDE_AuditHistoryEventDeleteEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AuditHistoryEventDeleteEventState)
     /// <summary>
     /// Stores an instance of the AuditHistoryEventDeleteEventType ObjectType.
     /// </summary>
@@ -59158,7 +58915,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuditHistoryEventDeleteEventState : AuditHistoryDeleteEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -59174,7 +58931,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuditHistoryEventDeleteEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -59202,7 +58959,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKAAAAEF1ZGl0SGlzdG9yeUV2ZW50RGVsZXRlRXZlbnRUeXBlSW5zdGFu" +
            "Y2UBAM4LAQDOC84LAAD/////EQAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEAJw4ALgBEJw4AAAAP////" +
@@ -59221,11 +58978,11 @@ namespace Opc.Ua
            "ZE5vZGUBADYOAC4ARDYOAAAAEf////8BAf////8AAAAAF2CJCgIAAAAAAAgAAABFdmVudElkcwEAzwsA" +
            "LgBEzwsAAAAPAQAAAAEAAAAAAAAAAQH/////AAAAABVgiQoCAAAAAAAJAAAAT2xkVmFsdWVzAQDQCwAu" +
            "AETQCwAAAQCYA/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<byte[][]> EventIds
         {
@@ -59263,9 +59020,9 @@ namespace Opc.Ua
                 m_oldValues = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -59356,18 +59113,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<byte[][]> m_eventIds;
         private PropertyState<HistoryEventFieldList> m_oldValues;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region OpenWithMasksMethodState Class
-    #if (!OPCUA_EXCLUDE_OpenWithMasksMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_OpenWithMasksMethodState)
     /// <summary>
     /// Stores an instance of the OpenWithMasksMethodType Method.
     /// </summary>
@@ -59375,7 +59132,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class OpenWithMasksMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -59388,12 +59145,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new OpenWithMasksMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -59412,28 +59169,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAFwAAAE9wZW5XaXRoTWFza3NNZXRob2RUeXBlAQDhMAAvAQDhMOEwAAAB" +
            "Af////8CAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEA4jAALgBE4jAAAJYBAAAAAQAqAQEU" +
            "AAAABQAAAE1hc2tzAAf/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAABdgqQoCAAAAAAAP" +
            "AAAAT3V0cHV0QXJndW1lbnRzAQDjMAAuAETjMAAAlgEAAAABACoBARkAAAAKAAAARmlsZUhhbmRsZQAH" +
            "/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public OpenWithMasksMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -59468,10 +59225,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -59484,11 +59241,11 @@ namespace Opc.Ua
         NodeId _objectId,
         uint masks,
         ref uint fileHandle);
-    #endif
-    #endregion
+#endif
 
-    #region CloseAndUpdateMethodState Class
-    #if (!OPCUA_EXCLUDE_CloseAndUpdateMethodState)
+
+
+#if (!OPCUA_EXCLUDE_CloseAndUpdateMethodState)
     /// <summary>
     /// Stores an instance of the CloseAndUpdateMethodType Method.
     /// </summary>
@@ -59496,7 +59253,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class CloseAndUpdateMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -59509,12 +59266,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new CloseAndUpdateMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -59533,28 +59290,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGAAAAENsb3NlQW5kVXBkYXRlTWV0aG9kVHlwZQEA5DAALwEA5DDkMAAA" +
            "AQH/////AgAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAKAxAC4ARKAxAACWAQAAAAEAKgEB" +
            "GQAAAAoAAABGaWxlSGFuZGxlAAf/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAABdgqQoC" +
            "AAAAAAAPAAAAT3V0cHV0QXJndW1lbnRzAQDlMAAuAETlMAAAlgEAAAABACoBASMAAAAUAAAAQXBwbHlD" +
            "aGFuZ2VzUmVxdWlyZWQAAf////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public CloseAndUpdateMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -59589,10 +59346,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -59605,11 +59362,11 @@ namespace Opc.Ua
         NodeId _objectId,
         uint fileHandle,
         ref bool applyChangesRequired);
-    #endif
-    #endregion
+#endif
 
-    #region AddCertificateMethodState Class
-    #if (!OPCUA_EXCLUDE_AddCertificateMethodState)
+
+
+#if (!OPCUA_EXCLUDE_AddCertificateMethodState)
     /// <summary>
     /// Stores an instance of the AddCertificateMethodType Method.
     /// </summary>
@@ -59617,7 +59374,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AddCertificateMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -59630,12 +59387,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new AddCertificateMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -59654,27 +59411,27 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGAAAAEFkZENlcnRpZmljYXRlTWV0aG9kVHlwZQEA5jAALwEA5jDmMAAA" +
            "AQH/////AQAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAOcwAC4AROcwAACWAgAAAAEAKgEB" +
            "GgAAAAsAAABDZXJ0aWZpY2F0ZQAP/////wAAAAAAAQAqAQEjAAAAFAAAAElzVHJ1c3RlZENlcnRpZmlj" +
            "YXRlAAH/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public AddCertificateMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -59706,10 +59463,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -59722,11 +59479,11 @@ namespace Opc.Ua
         NodeId _objectId,
         byte[] certificate,
         bool isTrustedCertificate);
-    #endif
-    #endregion
+#endif
 
-    #region RemoveCertificateMethodState Class
-    #if (!OPCUA_EXCLUDE_RemoveCertificateMethodState)
+
+
+#if (!OPCUA_EXCLUDE_RemoveCertificateMethodState)
     /// <summary>
     /// Stores an instance of the RemoveCertificateMethodType Method.
     /// </summary>
@@ -59734,7 +59491,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class RemoveCertificateMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -59747,12 +59504,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new RemoveCertificateMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -59771,27 +59528,27 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGwAAAFJlbW92ZUNlcnRpZmljYXRlTWV0aG9kVHlwZQEA6DAALwEA6DDo" +
            "MAAAAQH/////AQAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAOkwAC4AROkwAACWAgAAAAEA" +
            "KgEBGQAAAAoAAABUaHVtYnByaW50AAz/////AAAAAAABACoBASMAAAAUAAAASXNUcnVzdGVkQ2VydGlm" +
            "aWNhdGUAAf////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public RemoveCertificateMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -59823,10 +59580,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -59839,11 +59596,11 @@ namespace Opc.Ua
         NodeId _objectId,
         string thumbprint,
         bool isTrustedCertificate);
-    #endif
-    #endregion
+#endif
 
-    #region TrustListState Class
-    #if (!OPCUA_EXCLUDE_TrustListState)
+
+
+#if (!OPCUA_EXCLUDE_TrustListState)
     /// <summary>
     /// Stores an instance of the TrustListType ObjectType.
     /// </summary>
@@ -59851,7 +59608,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class TrustListState : FileState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -59867,7 +59624,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.TrustListType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -59915,7 +59672,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string UpdateFrequency_InitializationString =
            "//////////8VYIkKAgAAAAAADwAAAFVwZGF0ZUZyZXF1ZW5jeQEAYEsALgBEYEsAAAEAIgH/////AQH/" +
            "////AAAAAA==";
@@ -59984,11 +59741,11 @@ namespace Opc.Ua
            "F2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEABzEALgBEBzEAAJYCAAAAAQAqAQEZAAAACgAAAFRo" +
            "dW1icHJpbnQADP////8AAAAAAAEAKgEBIwAAABQAAABJc1RydXN0ZWRDZXJ0aWZpY2F0ZQAB/////wAA" +
            "AAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<DateTime> LastUpdateTime
         {
@@ -60102,9 +59859,9 @@ namespace Opc.Ua
                 m_removeCertificateMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -60299,22 +60056,22 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<DateTime> m_lastUpdateTime;
         private PropertyState<double> m_updateFrequency;
         private OpenWithMasksMethodState m_openWithMasksMethod;
         private CloseAndUpdateMethodState m_closeAndUpdateMethod;
         private AddCertificateMethodState m_addCertificateMethod;
         private RemoveCertificateMethodState m_removeCertificateMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region TrustListOutOfDateAlarmState Class
-    #if (!OPCUA_EXCLUDE_TrustListOutOfDateAlarmState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_TrustListOutOfDateAlarmState)
     /// <summary>
     /// Stores an instance of the TrustListOutOfDateAlarmType ObjectType.
     /// </summary>
@@ -60322,7 +60079,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class TrustListOutOfDateAlarmState : SystemOffNormalAlarmState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -60338,7 +60095,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.TrustListOutOfDateAlarmType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -60366,7 +60123,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIwAAAFRydXN0TGlzdE91dE9mRGF0ZUFsYXJtVHlwZUluc3RhbmNlAQBh" +
            "SwEAYUthSwAA/////x4AAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAGJLAC4ARGJLAAAAD/////8BAf//" +
@@ -60410,11 +60167,11 @@ namespace Opc.Ua
            "FWCJCgIAAAAAAAsAAABUcnVzdExpc3RJZAEA9ksALgBE9ksAAAAR/////wEB/////wAAAAAVYIkKAgAA" +
            "AAAADgAAAExhc3RVcGRhdGVUaW1lAQD3SwAuAET3SwAAAQAmAf////8BAf////8AAAAAFWCJCgIAAAAA" +
            "AA8AAABVcGRhdGVGcmVxdWVuY3kBAPhLAC4ARPhLAAABACIB/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<NodeId> TrustListId
         {
@@ -60471,9 +60228,9 @@ namespace Opc.Ua
                 m_updateFrequency = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -60590,19 +60347,19 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<NodeId> m_trustListId;
         private PropertyState<DateTime> m_lastUpdateTime;
         private PropertyState<double> m_updateFrequency;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region CertificateGroupState Class
-    #if (!OPCUA_EXCLUDE_CertificateGroupState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_CertificateGroupState)
     /// <summary>
     /// Stores an instance of the CertificateGroupType ObjectType.
     /// </summary>
@@ -60610,7 +60367,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class CertificateGroupState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -60626,7 +60383,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.CertificateGroupType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -60669,7 +60426,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string CertificateExpired_InitializationString =
            "//////////8EYIAKAQAAAAAAEgAAAENlcnRpZmljYXRlRXhwaXJlZAEA+ksALwEAqTP6SwAA/////x4A" +
            "AAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAPtLAC4ARPtLAAAAD/////8BAf////8AAAAAFWCJCgIAAAAA" +
@@ -60883,11 +60640,11 @@ namespace Opc.Ua
            "YYIKBAAAAAAADwAAAEdldFJlamVjdGVkTGlzdAEA5lsALwEA5lvmWwAAAQH/////AQAAABdgqQoCAAAA" +
            "AAAPAAAAT3V0cHV0QXJndW1lbnRzAQDnWwAuAETnWwAAlgEAAAABACoBAR8AAAAMAAAAQ2VydGlmaWNh" +
            "dGVzAA8BAAAAAQAAAAAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public TrustListState TrustList
         {
@@ -60982,9 +60739,9 @@ namespace Opc.Ua
                 m_getRejectedListMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -61153,21 +60910,21 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private TrustListState m_trustList;
         private PropertyState<NodeId[]> m_certificateTypes;
         private CertificateExpirationAlarmState m_certificateExpired;
         private TrustListOutOfDateAlarmState m_trustListOutOfDate;
         private GetRejectedListMethodState m_getRejectedListMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region CertificateGroupFolderState Class
-    #if (!OPCUA_EXCLUDE_CertificateGroupFolderState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_CertificateGroupFolderState)
     /// <summary>
     /// Stores an instance of the CertificateGroupFolderType ObjectType.
     /// </summary>
@@ -61175,7 +60932,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class CertificateGroupFolderState : FolderState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -61191,7 +60948,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.CertificateGroupFolderType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -61229,7 +60986,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string DefaultHttpsGroup_InitializationString =
            "//////////8EYIAKAQAAAAAAEQAAAERlZmF1bHRIdHRwc0dyb3VwAQAYNgAvAQALMRg2AAD/////AgAA" +
            "AARggAoBAAAAAAAJAAAAVHJ1c3RMaXN0AQAZNgAvAQDqMBk2AAD/////DAAAABVgiQoCAAAAAAAEAAAA" +
@@ -61403,11 +61160,11 @@ namespace Opc.Ua
            "ARkAAAAKAAAARmlsZUhhbmRsZQAH/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAAXYIkK" +
            "AgAAAAAAEAAAAENlcnRpZmljYXRlVHlwZXMBAFs2AC4ARFs2AAAAEQEAAAABAAAAAAAAAAEB/////wAA" +
            "AAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public CertificateGroupState DefaultApplicationGroup
         {
@@ -61464,9 +61221,9 @@ namespace Opc.Ua
                 m_defaultUserTokenGroup = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -61583,19 +61340,19 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private CertificateGroupState m_defaultApplicationGroup;
         private CertificateGroupState m_defaultHttpsGroup;
         private CertificateGroupState m_defaultUserTokenGroup;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region CertificateState Class
-    #if (!OPCUA_EXCLUDE_CertificateState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_CertificateState)
     /// <summary>
     /// Stores an instance of the CertificateType ObjectType.
     /// </summary>
@@ -61603,7 +61360,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class CertificateState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -61619,7 +61376,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.CertificateType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -61647,28 +61404,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAFwAAAENlcnRpZmljYXRlVHlwZUluc3RhbmNlAQAMMQEADDEMMQAA////" +
            "/wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region ApplicationCertificateState Class
-    #if (!OPCUA_EXCLUDE_ApplicationCertificateState)
+
+
+#if (!OPCUA_EXCLUDE_ApplicationCertificateState)
     /// <summary>
     /// Stores an instance of the ApplicationCertificateType ObjectType.
     /// </summary>
@@ -61676,7 +61433,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ApplicationCertificateState : CertificateState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -61692,7 +61449,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ApplicationCertificateType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -61720,28 +61477,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIgAAAEFwcGxpY2F0aW9uQ2VydGlmaWNhdGVUeXBlSW5zdGFuY2UBAA0x" +
            "AQANMQ0xAAD/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region HttpsCertificateState Class
-    #if (!OPCUA_EXCLUDE_HttpsCertificateState)
+
+
+#if (!OPCUA_EXCLUDE_HttpsCertificateState)
     /// <summary>
     /// Stores an instance of the HttpsCertificateType ObjectType.
     /// </summary>
@@ -61749,7 +61506,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class HttpsCertificateState : CertificateState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -61765,7 +61522,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.HttpsCertificateType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -61793,28 +61550,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHAAAAEh0dHBzQ2VydGlmaWNhdGVUeXBlSW5zdGFuY2UBAA4xAQAOMQ4x" +
            "AAD/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region UserCredentialCertificateState Class
-    #if (!OPCUA_EXCLUDE_UserCredentialCertificateState)
+
+
+#if (!OPCUA_EXCLUDE_UserCredentialCertificateState)
     /// <summary>
     /// Stores an instance of the UserCredentialCertificateType ObjectType.
     /// </summary>
@@ -61822,7 +61579,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class UserCredentialCertificateState : CertificateState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -61838,7 +61595,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.UserCredentialCertificateType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -61866,28 +61623,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJQAAAFVzZXJDcmVkZW50aWFsQ2VydGlmaWNhdGVUeXBlSW5zdGFuY2UB" +
            "AE07AQBNO007AAD/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region RsaMinApplicationCertificateState Class
-    #if (!OPCUA_EXCLUDE_RsaMinApplicationCertificateState)
+
+
+#if (!OPCUA_EXCLUDE_RsaMinApplicationCertificateState)
     /// <summary>
     /// Stores an instance of the RsaMinApplicationCertificateType ObjectType.
     /// </summary>
@@ -61895,7 +61652,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class RsaMinApplicationCertificateState : ApplicationCertificateState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -61911,7 +61668,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.RsaMinApplicationCertificateType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -61939,28 +61696,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKAAAAFJzYU1pbkFwcGxpY2F0aW9uQ2VydGlmaWNhdGVUeXBlSW5zdGFu" +
            "Y2UBAA8xAQAPMQ8xAAD/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region RsaSha256ApplicationCertificateState Class
-    #if (!OPCUA_EXCLUDE_RsaSha256ApplicationCertificateState)
+
+
+#if (!OPCUA_EXCLUDE_RsaSha256ApplicationCertificateState)
     /// <summary>
     /// Stores an instance of the RsaSha256ApplicationCertificateType ObjectType.
     /// </summary>
@@ -61968,7 +61725,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class RsaSha256ApplicationCertificateState : ApplicationCertificateState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -61984,7 +61741,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.RsaSha256ApplicationCertificateType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -62012,28 +61769,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKwAAAFJzYVNoYTI1NkFwcGxpY2F0aW9uQ2VydGlmaWNhdGVUeXBlSW5z" +
            "dGFuY2UBABAxAQAQMRAxAAD/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region EccApplicationCertificateState Class
-    #if (!OPCUA_EXCLUDE_EccApplicationCertificateState)
+
+
+#if (!OPCUA_EXCLUDE_EccApplicationCertificateState)
     /// <summary>
     /// Stores an instance of the EccApplicationCertificateType ObjectType.
     /// </summary>
@@ -62041,7 +61798,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class EccApplicationCertificateState : ApplicationCertificateState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -62057,7 +61814,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.EccApplicationCertificateType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -62085,28 +61842,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJQAAAEVjY0FwcGxpY2F0aW9uQ2VydGlmaWNhdGVUeXBlSW5zdGFuY2UB" +
            "APFbAQDxW/FbAAD/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region EccNistP256ApplicationCertificateState Class
-    #if (!OPCUA_EXCLUDE_EccNistP256ApplicationCertificateState)
+
+
+#if (!OPCUA_EXCLUDE_EccNistP256ApplicationCertificateState)
     /// <summary>
     /// Stores an instance of the EccNistP256ApplicationCertificateType ObjectType.
     /// </summary>
@@ -62114,7 +61871,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class EccNistP256ApplicationCertificateState : EccApplicationCertificateState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -62130,7 +61887,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.EccNistP256ApplicationCertificateType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -62158,28 +61915,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAALQAAAEVjY05pc3RQMjU2QXBwbGljYXRpb25DZXJ0aWZpY2F0ZVR5cGVJ" +
            "bnN0YW5jZQEA8lsBAPJb8lsAAP////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region EccNistP384ApplicationCertificateState Class
-    #if (!OPCUA_EXCLUDE_EccNistP384ApplicationCertificateState)
+
+
+#if (!OPCUA_EXCLUDE_EccNistP384ApplicationCertificateState)
     /// <summary>
     /// Stores an instance of the EccNistP384ApplicationCertificateType ObjectType.
     /// </summary>
@@ -62187,7 +61944,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class EccNistP384ApplicationCertificateState : EccApplicationCertificateState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -62203,7 +61960,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.EccNistP384ApplicationCertificateType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -62231,28 +61988,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAALQAAAEVjY05pc3RQMzg0QXBwbGljYXRpb25DZXJ0aWZpY2F0ZVR5cGVJ" +
            "bnN0YW5jZQEA81sBAPNb81sAAP////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region EccBrainpoolP256r1ApplicationCertificateState Class
-    #if (!OPCUA_EXCLUDE_EccBrainpoolP256r1ApplicationCertificateState)
+
+
+#if (!OPCUA_EXCLUDE_EccBrainpoolP256r1ApplicationCertificateState)
     /// <summary>
     /// Stores an instance of the EccBrainpoolP256r1ApplicationCertificateType ObjectType.
     /// </summary>
@@ -62260,7 +62017,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class EccBrainpoolP256r1ApplicationCertificateState : EccApplicationCertificateState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -62276,7 +62033,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.EccBrainpoolP256r1ApplicationCertificateType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -62304,28 +62061,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAANAAAAEVjY0JyYWlucG9vbFAyNTZyMUFwcGxpY2F0aW9uQ2VydGlmaWNh" +
            "dGVUeXBlSW5zdGFuY2UBAPRbAQD0W/RbAAD/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region EccBrainpoolP384r1ApplicationCertificateState Class
-    #if (!OPCUA_EXCLUDE_EccBrainpoolP384r1ApplicationCertificateState)
+
+
+#if (!OPCUA_EXCLUDE_EccBrainpoolP384r1ApplicationCertificateState)
     /// <summary>
     /// Stores an instance of the EccBrainpoolP384r1ApplicationCertificateType ObjectType.
     /// </summary>
@@ -62333,7 +62090,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class EccBrainpoolP384r1ApplicationCertificateState : EccApplicationCertificateState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -62349,7 +62106,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.EccBrainpoolP384r1ApplicationCertificateType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -62377,28 +62134,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAANAAAAEVjY0JyYWlucG9vbFAzODRyMUFwcGxpY2F0aW9uQ2VydGlmaWNh" +
            "dGVUeXBlSW5zdGFuY2UBAPVbAQD1W/VbAAD/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region EccCurve25519ApplicationCertificateState Class
-    #if (!OPCUA_EXCLUDE_EccCurve25519ApplicationCertificateState)
+
+
+#if (!OPCUA_EXCLUDE_EccCurve25519ApplicationCertificateState)
     /// <summary>
     /// Stores an instance of the EccCurve25519ApplicationCertificateType ObjectType.
     /// </summary>
@@ -62406,7 +62163,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class EccCurve25519ApplicationCertificateState : EccApplicationCertificateState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -62422,7 +62179,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.EccCurve25519ApplicationCertificateType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -62450,28 +62207,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAALwAAAEVjY0N1cnZlMjU1MTlBcHBsaWNhdGlvbkNlcnRpZmljYXRlVHlw" +
            "ZUluc3RhbmNlAQD2WwEA9lv2WwAA/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region EccCurve448ApplicationCertificateState Class
-    #if (!OPCUA_EXCLUDE_EccCurve448ApplicationCertificateState)
+
+
+#if (!OPCUA_EXCLUDE_EccCurve448ApplicationCertificateState)
     /// <summary>
     /// Stores an instance of the EccCurve448ApplicationCertificateType ObjectType.
     /// </summary>
@@ -62479,7 +62236,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class EccCurve448ApplicationCertificateState : EccApplicationCertificateState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -62495,7 +62252,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.EccCurve448ApplicationCertificateType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -62523,28 +62280,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAALQAAAEVjY0N1cnZlNDQ4QXBwbGljYXRpb25DZXJ0aWZpY2F0ZVR5cGVJ" +
            "bnN0YW5jZQEA91sBAPdb91sAAP////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region TrustListUpdatedAuditEventState Class
-    #if (!OPCUA_EXCLUDE_TrustListUpdatedAuditEventState)
+
+
+#if (!OPCUA_EXCLUDE_TrustListUpdatedAuditEventState)
     /// <summary>
     /// Stores an instance of the TrustListUpdatedAuditEventType ObjectType.
     /// </summary>
@@ -62552,7 +62309,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class TrustListUpdatedAuditEventState : AuditUpdateMethodEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -62568,7 +62325,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.TrustListUpdatedAuditEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -62596,7 +62353,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJgAAAFRydXN0TGlzdFVwZGF0ZWRBdWRpdEV2ZW50VHlwZUluc3RhbmNl" +
            "AQARMQEAETERMQAA/////w8AAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBABIxAC4ARBIxAAAAD/////8B" +
@@ -62613,24 +62370,24 @@ namespace Opc.Ua
            "ZW50VXNlcklkAQAfMQAuAEQfMQAAAAz/////AQH/////AAAAABVgiQoCAAAAAAAIAAAATWV0aG9kSWQB" +
            "ACAxAC4ARCAxAAAAEf////8BAf////8AAAAAF2CJCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAITEA" +
            "LgBEITEAAAAYAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region UpdateCertificateMethodState Class
-    #if (!OPCUA_EXCLUDE_UpdateCertificateMethodState)
+
+
+#if (!OPCUA_EXCLUDE_UpdateCertificateMethodState)
     /// <summary>
     /// Stores an instance of the UpdateCertificateMethodType Method.
     /// </summary>
@@ -62638,7 +62395,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class UpdateCertificateMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -62651,12 +62408,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new UpdateCertificateMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -62675,7 +62432,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGwAAAFVwZGF0ZUNlcnRpZmljYXRlTWV0aG9kVHlwZQEAIjEALwEAIjEi" +
            "MQAAAQH/////AgAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBACMxAC4ARCMxAACWBgAAAAEA" +
@@ -62686,21 +62443,21 @@ namespace Opc.Ua
            "AQAAAAEAAAAAAAAAAQH/////AAAAABdgqQoCAAAAAAAPAAAAT3V0cHV0QXJndW1lbnRzAQAkMQAuAEQk" +
            "MQAAlgEAAAABACoBASMAAAAUAAAAQXBwbHlDaGFuZ2VzUmVxdWlyZWQAAf////8AAAAAAAEAKAEBAAAA" +
            "AQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public UpdateCertificateMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -62745,10 +62502,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -62766,11 +62523,11 @@ namespace Opc.Ua
         string privateKeyFormat,
         byte[] privateKey,
         ref bool applyChangesRequired);
-    #endif
-    #endregion
+#endif
 
-    #region CreateSigningRequestMethodState Class
-    #if (!OPCUA_EXCLUDE_CreateSigningRequestMethodState)
+
+
+#if (!OPCUA_EXCLUDE_CreateSigningRequestMethodState)
     /// <summary>
     /// Stores an instance of the CreateSigningRequestMethodType Method.
     /// </summary>
@@ -62778,7 +62535,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class CreateSigningRequestMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -62791,12 +62548,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new CreateSigningRequestMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -62815,7 +62572,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAHgAAAENyZWF0ZVNpZ25pbmdSZXF1ZXN0TWV0aG9kVHlwZQEAxTEALwEA" +
            "xTHFMQAAAQH/////AgAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAMYxAC4ARMYxAACWBQAA" +
@@ -62825,21 +62582,21 @@ namespace Opc.Ua
            "ZQAP/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAAXYKkKAgAAAAAADwAAAE91dHB1dEFy" +
            "Z3VtZW50cwEAxzEALgBExzEAAJYBAAAAAQAqAQEhAAAAEgAAAENlcnRpZmljYXRlUmVxdWVzdAAP////" +
            "/wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public CreateSigningRequestMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -62882,10 +62639,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -62902,11 +62659,11 @@ namespace Opc.Ua
         bool regeneratePrivateKey,
         byte[] nonce,
         ref byte[] certificateRequest);
-    #endif
-    #endregion
+#endif
 
-    #region GetRejectedListMethodState Class
-    #if (!OPCUA_EXCLUDE_GetRejectedListMethodState)
+
+
+#if (!OPCUA_EXCLUDE_GetRejectedListMethodState)
     /// <summary>
     /// Stores an instance of the GetRejectedListMethodType Method.
     /// </summary>
@@ -62914,7 +62671,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class GetRejectedListMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -62927,12 +62684,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new GetRejectedListMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -62951,27 +62708,27 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGQAAAEdldFJlamVjdGVkTGlzdE1ldGhvZFR5cGUBAOUxAC8BAOUx5TEA" +
            "AAEB/////wEAAAAXYKkKAgAAAAAADwAAAE91dHB1dEFyZ3VtZW50cwEA5jEALgBE5jEAAJYBAAAAAQAq" +
            "AQEfAAAADAAAAENlcnRpZmljYXRlcwAPAQAAAAEAAAAAAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8A" +
            "AAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public GetRejectedListMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -63003,10 +62760,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -63018,11 +62775,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         ref byte[][] certificates);
-    #endif
-    #endregion
+#endif
 
-    #region ServerConfigurationState Class
-    #if (!OPCUA_EXCLUDE_ServerConfigurationState)
+
+
+#if (!OPCUA_EXCLUDE_ServerConfigurationState)
     /// <summary>
     /// Stores an instance of the ServerConfigurationType ObjectType.
     /// </summary>
@@ -63030,7 +62787,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ServerConfigurationState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -63046,7 +62803,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ServerConfigurationType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -63074,7 +62831,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHwAAAFNlcnZlckNvbmZpZ3VyYXRpb25UeXBlSW5zdGFuY2UBACUxAQAl" +
            "MSUxAAD/////CQAAAARggAoBAAAAAAARAAAAQ2VydGlmaWNhdGVHcm91cHMBAH42AC8BAPU1fjYAAP//" +
@@ -63135,11 +62892,11 @@ namespace Opc.Ua
            "AQDnMQAvAQDnMecxAAABAf////8BAAAAF2CpCgIAAAAAAA8AAABPdXRwdXRBcmd1bWVudHMBAOgxAC4A" +
            "ROgxAACWAQAAAAEAKgEBHwAAAAwAAABDZXJ0aWZpY2F0ZXMADwEAAAABAAAAAAAAAAABACgBAQAAAAEA" +
            "AAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public CertificateGroupFolderState CertificateGroups
         {
@@ -63310,9 +63067,9 @@ namespace Opc.Ua
                 m_getRejectedListMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -63585,9 +63342,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private CertificateGroupFolderState m_certificateGroups;
         private PropertyState<string[]> m_serverCapabilities;
         private PropertyState<string[]> m_supportedPrivateKeyFormats;
@@ -63597,13 +63354,13 @@ namespace Opc.Ua
         private MethodState m_applyChangesMethod;
         private CreateSigningRequestMethodState m_createSigningRequestMethod;
         private GetRejectedListMethodState m_getRejectedListMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region CertificateUpdatedAuditEventState Class
-    #if (!OPCUA_EXCLUDE_CertificateUpdatedAuditEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_CertificateUpdatedAuditEventState)
     /// <summary>
     /// Stores an instance of the CertificateUpdatedAuditEventType ObjectType.
     /// </summary>
@@ -63611,7 +63368,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class CertificateUpdatedAuditEventState : AuditUpdateMethodEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -63627,7 +63384,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.CertificateUpdatedAuditEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -63655,7 +63412,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKAAAAENlcnRpZmljYXRlVXBkYXRlZEF1ZGl0RXZlbnRUeXBlSW5zdGFu" +
            "Y2UBAEwxAQBMMUwxAAD/////EQAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEATTEALgBETTEAAAAP////" +
@@ -63674,11 +63431,11 @@ namespace Opc.Ua
            "MQAuAERcMQAAABgBAAAAAQAAAAAAAAABAf////8AAAAAFWCJCgIAAAAAABAAAABDZXJ0aWZpY2F0ZUdy" +
            "b3VwAQCnNQAuAESnNQAAABH/////AQH/////AAAAABVgiQoCAAAAAAAPAAAAQ2VydGlmaWNhdGVUeXBl" +
            "AQCoNQAuAESoNQAAABH/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<NodeId> CertificateGroup
         {
@@ -63716,9 +63473,9 @@ namespace Opc.Ua
                 m_certificateType = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -63809,18 +63566,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<NodeId> m_certificateGroup;
         private PropertyState<NodeId> m_certificateType;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region CreateCredentialMethodState Class
-    #if (!OPCUA_EXCLUDE_CreateCredentialMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_CreateCredentialMethodState)
     /// <summary>
     /// Stores an instance of the CreateCredentialMethodType Method.
     /// </summary>
@@ -63828,7 +63585,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class CreateCredentialMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -63841,12 +63598,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new CreateCredentialMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -63865,7 +63622,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGgAAAENyZWF0ZUNyZWRlbnRpYWxNZXRob2RUeXBlAQCQOwAvAQCQO5A7" +
            "AAABAf////8CAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAlTsALgBElTsAAJYDAAAAAQAq" +
@@ -63874,21 +63631,21 @@ namespace Opc.Ua
            "AAABAf////8AAAAAF2CpCgIAAAAAAA8AAABPdXRwdXRBcmd1bWVudHMBAFdEAC4ARFdEAACWAQAAAAEA" +
            "KgEBHwAAABAAAABDcmVkZW50aWFsTm9kZUlkABH/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////" +
            "AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public CreateCredentialMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -63927,10 +63684,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -63945,11 +63702,11 @@ namespace Opc.Ua
         string profileUri,
         string[] endpointUrls,
         ref NodeId credentialNodeId);
-    #endif
-    #endregion
+#endif
 
-    #region KeyCredentialConfigurationFolderState Class
-    #if (!OPCUA_EXCLUDE_KeyCredentialConfigurationFolderState)
+
+
+#if (!OPCUA_EXCLUDE_KeyCredentialConfigurationFolderState)
     /// <summary>
     /// Stores an instance of the KeyCredentialConfigurationFolderType ObjectType.
     /// </summary>
@@ -63957,7 +63714,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class KeyCredentialConfigurationFolderState : FolderState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -63973,7 +63730,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.KeyCredentialConfigurationFolderType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -64006,7 +63763,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string CreateCredential_InitializationString =
            "//////////8EYYIKBAAAAAAAEAAAAENyZWF0ZUNyZWRlbnRpYWwBAHJEAC8BAHJEckQAAAEB/////wIA" +
            "AAAXYKkKAgAAAAAADgAAAElucHV0QXJndW1lbnRzAQBzRAAuAERzRAAAlgMAAAABACoBARoAAAALAAAA" +
@@ -64024,11 +63781,11 @@ namespace Opc.Ua
            "AAABAAAAAAAAAAEB/////wAAAAAXYKkKAgAAAAAADwAAAE91dHB1dEFyZ3VtZW50cwEAdEQALgBEdEQA" +
            "AJYBAAAAAQAqAQEfAAAAEAAAAENyZWRlbnRpYWxOb2RlSWQAEf////8AAAAAAAEAKAEBAAAAAQAAAAAA" +
            "AAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public CreateCredentialMethodState CreateCredential
         {
@@ -64047,9 +63804,9 @@ namespace Opc.Ua
                 m_createCredentialMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -64114,17 +63871,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private CreateCredentialMethodState m_createCredentialMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region GetEncryptingKeyMethodState Class
-    #if (!OPCUA_EXCLUDE_GetEncryptingKeyMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_GetEncryptingKeyMethodState)
     /// <summary>
     /// Stores an instance of the GetEncryptingKeyMethodType Method.
     /// </summary>
@@ -64132,7 +63889,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class GetEncryptingKeyMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -64145,12 +63902,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new GetEncryptingKeyMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -64169,7 +63926,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGgAAAEdldEVuY3J5cHRpbmdLZXlNZXRob2RUeXBlAQB7RAAvAQB7RHtE" +
            "AAABAf////8CAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAfEQALgBEfEQAAJYCAAAAAQAq" +
@@ -64178,21 +63935,21 @@ namespace Opc.Ua
            "AAAAT3V0cHV0QXJndW1lbnRzAQB9RAAuAER9RAAAlgIAAAABACoBARgAAAAJAAAAUHVibGljS2V5AA//" +
            "////AAAAAAABACoBAScAAAAYAAAAUmV2aXNlZFNlY3VyaXR5UG9saWN5VXJpABH/////AAAAAAABACgB" +
            "AQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public GetEncryptingKeyMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -64232,10 +63989,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -64250,11 +64007,11 @@ namespace Opc.Ua
         string requestedSecurityPolicyUri,
         ref byte[] publicKey,
         ref NodeId revisedSecurityPolicyUri);
-    #endif
-    #endregion
+#endif
 
-    #region KeyCredentialConfigurationState Class
-    #if (!OPCUA_EXCLUDE_KeyCredentialConfigurationState)
+
+
+#if (!OPCUA_EXCLUDE_KeyCredentialConfigurationState)
     /// <summary>
     /// Stores an instance of the KeyCredentialConfigurationType ObjectType.
     /// </summary>
@@ -64262,7 +64019,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class KeyCredentialConfigurationState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -64278,7 +64035,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.KeyCredentialConfigurationType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -64331,7 +64088,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string EndpointUrls_InitializationString =
            "//////////8XYIkKAgAAAAAADAAAAEVuZHBvaW50VXJscwEAVEYALgBEVEYAAAAMAQAAAAEAAAAAAAAA" +
            "AQH/////AAAAAA==";
@@ -64378,11 +64135,11 @@ namespace Opc.Ua
            "AAEAKgEBJAAAABUAAABDZXJ0aWZpY2F0ZVRodW1icHJpbnQADP////8AAAAAAAEAKgEBIAAAABEAAABT" +
            "ZWN1cml0eVBvbGljeVVyaQAM/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAAEYYIKBAAA" +
            "AAAAEAAAAERlbGV0ZUNyZWRlbnRpYWwBAFhGAC8BAFhGWEYAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<string> ResourceUri
         {
@@ -64515,9 +64272,9 @@ namespace Opc.Ua
                 m_deleteCredentialMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -64738,9 +64495,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<string> m_resourceUri;
         private PropertyState<string> m_profileUri;
         private PropertyState<string[]> m_endpointUrls;
@@ -64748,13 +64505,13 @@ namespace Opc.Ua
         private GetEncryptingKeyMethodState m_getEncryptingKeyMethod;
         private KeyCredentialUpdateMethodState m_updateCredentialMethod;
         private MethodState m_deleteCredentialMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region KeyCredentialUpdateMethodState Class
-    #if (!OPCUA_EXCLUDE_KeyCredentialUpdateMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_KeyCredentialUpdateMethodState)
     /// <summary>
     /// Stores an instance of the KeyCredentialUpdateMethodType Method.
     /// </summary>
@@ -64762,7 +64519,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class KeyCredentialUpdateMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -64775,12 +64532,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new KeyCredentialUpdateMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -64799,7 +64556,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAHQAAAEtleUNyZWRlbnRpYWxVcGRhdGVNZXRob2RUeXBlAQBZRgAvAQBZ" +
            "RllGAAABAf////8BAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAWkYALgBEWkYAAJYEAAAA" +
@@ -64807,21 +64564,21 @@ namespace Opc.Ua
            "ZWNyZXQAD/////8AAAAAAAEAKgEBJAAAABUAAABDZXJ0aWZpY2F0ZVRodW1icHJpbnQADP////8AAAAA" +
            "AAEAKgEBIAAAABEAAABTZWN1cml0eVBvbGljeVVyaQAM/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB" +
            "/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public KeyCredentialUpdateMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -64857,10 +64614,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -64875,11 +64632,11 @@ namespace Opc.Ua
         byte[] credentialSecret,
         string certificateThumbprint,
         string securityPolicyUri);
-    #endif
-    #endregion
+#endif
 
-    #region KeyCredentialAuditEventState Class
-    #if (!OPCUA_EXCLUDE_KeyCredentialAuditEventState)
+
+
+#if (!OPCUA_EXCLUDE_KeyCredentialAuditEventState)
     /// <summary>
     /// Stores an instance of the KeyCredentialAuditEventType ObjectType.
     /// </summary>
@@ -64887,7 +64644,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class KeyCredentialAuditEventState : AuditUpdateMethodEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -64903,7 +64660,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.KeyCredentialAuditEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -64931,7 +64688,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIwAAAEtleUNyZWRlbnRpYWxBdWRpdEV2ZW50VHlwZUluc3RhbmNlAQBb" +
            "RgEAW0ZbRgAA/////xAAAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAFxGAC4ARFxGAAAAD/////8BAf//" +
@@ -64949,11 +64706,11 @@ namespace Opc.Ua
            "AC4ARGpGAAAAEf////8BAf////8AAAAAF2CJCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAa0YALgBE" +
            "a0YAAAAYAQAAAAEAAAAAAAAAAQH/////AAAAABVgiQoCAAAAAAALAAAAUmVzb3VyY2VVcmkBAGxGAC4A" +
            "RGxGAAAADP////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<string> ResourceUri
         {
@@ -64972,9 +64729,9 @@ namespace Opc.Ua
                 m_resourceUri = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -65039,17 +64796,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<string> m_resourceUri;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region KeyCredentialUpdatedAuditEventState Class
-    #if (!OPCUA_EXCLUDE_KeyCredentialUpdatedAuditEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_KeyCredentialUpdatedAuditEventState)
     /// <summary>
     /// Stores an instance of the KeyCredentialUpdatedAuditEventType ObjectType.
     /// </summary>
@@ -65057,7 +64814,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class KeyCredentialUpdatedAuditEventState : KeyCredentialAuditEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -65073,7 +64830,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.KeyCredentialUpdatedAuditEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -65101,7 +64858,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKgAAAEtleUNyZWRlbnRpYWxVcGRhdGVkQXVkaXRFdmVudFR5cGVJbnN0" +
            "YW5jZQEAbUYBAG1GbUYAAP////8QAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQBuRgAuAERuRgAAAA//" +
@@ -65119,24 +64876,24 @@ namespace Opc.Ua
            "ZElkAQB8RgAuAER8RgAAABH/////AQH/////AAAAABdgiQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMB" +
            "AH1GAC4ARH1GAAAAGAEAAAABAAAAAAAAAAEB/////wAAAAAVYIkKAgAAAAAACwAAAFJlc291cmNlVXJp" +
            "AQB+RgAuAER+RgAAAAz/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region KeyCredentialDeletedAuditEventState Class
-    #if (!OPCUA_EXCLUDE_KeyCredentialDeletedAuditEventState)
+
+
+#if (!OPCUA_EXCLUDE_KeyCredentialDeletedAuditEventState)
     /// <summary>
     /// Stores an instance of the KeyCredentialDeletedAuditEventType ObjectType.
     /// </summary>
@@ -65144,7 +64901,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class KeyCredentialDeletedAuditEventState : KeyCredentialAuditEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -65160,7 +64917,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.KeyCredentialDeletedAuditEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -65188,7 +64945,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKgAAAEtleUNyZWRlbnRpYWxEZWxldGVkQXVkaXRFdmVudFR5cGVJbnN0" +
            "YW5jZQEAf0YBAH9Gf0YAAP////8QAAAAFWCJCgIAAAAAAAcAAABFdmVudElkAQCARgAuAESARgAAAA//" +
@@ -65206,24 +64963,24 @@ namespace Opc.Ua
            "ZElkAQCORgAuAESORgAAABH/////AQH/////AAAAABdgiQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMB" +
            "AI9GAC4ARI9GAAAAGAEAAAABAAAAAAAAAAEB/////wAAAAAVYIkKAgAAAAAACwAAAFJlc291cmNlVXJp" +
            "AQCQRgAuAESQRgAAAAz/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region AuthorizationServicesConfigurationFolderState Class
-    #if (!OPCUA_EXCLUDE_AuthorizationServicesConfigurationFolderState)
+
+
+#if (!OPCUA_EXCLUDE_AuthorizationServicesConfigurationFolderState)
     /// <summary>
     /// Stores an instance of the AuthorizationServicesConfigurationFolderType ObjectType.
     /// </summary>
@@ -65231,7 +64988,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuthorizationServicesConfigurationFolderState : FolderState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -65247,7 +65004,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuthorizationServicesConfigurationFolderType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -65275,28 +65032,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAANAAAAEF1dGhvcml6YXRpb25TZXJ2aWNlc0NvbmZpZ3VyYXRpb25Gb2xk" +
            "ZXJUeXBlSW5zdGFuY2UBAARcAQAEXARcAAD/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region AuthorizationServiceConfigurationState Class
-    #if (!OPCUA_EXCLUDE_AuthorizationServiceConfigurationState)
+
+
+#if (!OPCUA_EXCLUDE_AuthorizationServiceConfigurationState)
     /// <summary>
     /// Stores an instance of the AuthorizationServiceConfigurationType ObjectType.
     /// </summary>
@@ -65304,7 +65061,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AuthorizationServiceConfigurationState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -65320,7 +65077,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AuthorizationServiceConfigurationType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -65348,18 +65105,18 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAALQAAAEF1dGhvcml6YXRpb25TZXJ2aWNlQ29uZmlndXJhdGlvblR5cGVJ" +
            "bnN0YW5jZQEAvEUBALxFvEUAAP////8DAAAAFWCJCgIAAAAAAAoAAABTZXJ2aWNlVXJpAQCYRgAuAESY" +
            "RgAAAAz/////AQH/////AAAAABVgiQoCAAAAAAASAAAAU2VydmljZUNlcnRpZmljYXRlAQDERQAuAETE" +
            "RQAAAA//////AQH/////AAAAABVgiQoCAAAAAAARAAAASXNzdWVyRW5kcG9pbnRVcmwBAJlGAC4ARJlG" +
            "AAAADP////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<string> ServiceUri
         {
@@ -65416,9 +65173,9 @@ namespace Opc.Ua
                 m_issuerEndpointUrl = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -65535,19 +65292,19 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<string> m_serviceUri;
         private PropertyState<byte[]> m_serviceCertificate;
         private PropertyState<string> m_issuerEndpointUrl;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AggregateConfigurationState Class
-    #if (!OPCUA_EXCLUDE_AggregateConfigurationState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AggregateConfigurationState)
     /// <summary>
     /// Stores an instance of the AggregateConfigurationType ObjectType.
     /// </summary>
@@ -65555,7 +65312,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AggregateConfigurationState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -65571,7 +65328,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AggregateConfigurationType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -65599,7 +65356,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIgAAAEFnZ3JlZ2F0ZUNvbmZpZ3VyYXRpb25UeXBlSW5zdGFuY2UBALMr" +
            "AQCzK7MrAAD/////BAAAABVgiQoCAAAAAAATAAAAVHJlYXRVbmNlcnRhaW5Bc0JhZAEAtCsALgBEtCsA" +
@@ -65607,11 +65364,11 @@ namespace Opc.Ua
            "////AQH/////AAAAABVgiQoCAAAAAAAPAAAAUGVyY2VudERhdGFHb29kAQC2KwAuAES2KwAAAAP/////" +
            "AQH/////AAAAABVgiQoCAAAAAAAWAAAAVXNlU2xvcGVkRXh0cmFwb2xhdGlvbgEAtysALgBEtysAAAAB" +
            "/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<bool> TreatUncertainAsBad
         {
@@ -65687,9 +65444,9 @@ namespace Opc.Ua
                 m_useSlopedExtrapolation = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -65832,20 +65589,20 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<bool> m_treatUncertainAsBad;
         private PropertyState<byte> m_percentDataBad;
         private PropertyState<byte> m_percentDataGood;
         private PropertyState<bool> m_useSlopedExtrapolation;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region PubSubKeyServiceState Class
-    #if (!OPCUA_EXCLUDE_PubSubKeyServiceState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_PubSubKeyServiceState)
     /// <summary>
     /// Stores an instance of the PubSubKeyServiceType ObjectType.
     /// </summary>
@@ -65853,7 +65610,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubKeyServiceState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -65869,7 +65626,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.PubSubKeyServiceType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -65912,7 +65669,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string GetSecurityKeys_InitializationString =
            "//////////8EYYIKBAAAAAAADwAAAEdldFNlY3VyaXR5S2V5cwEAIz4ALwEAIz4jPgAAAQH/////AgAA" +
            "ABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBACQ+AC4ARCQ+AACWAwAAAAEAKgEBHgAAAA8AAABT" +
@@ -65972,11 +65729,11 @@ namespace Opc.Ua
            "AARhggoEAAAAAAATAAAAUmVtb3ZlU2VjdXJpdHlHcm91cAEALT4ALwEAaDwtPgAAAQH/////AQAAABdg" +
            "qQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAC4+AC4ARC4+AACWAQAAAAEAKgEBIgAAABMAAABTZWN1" +
            "cml0eUdyb3VwTm9kZUlkABH/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public GetSecurityKeysMethodState GetSecurityKeys
         {
@@ -66033,9 +65790,9 @@ namespace Opc.Ua
                 m_securityGroups = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -66152,19 +65909,19 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private GetSecurityKeysMethodState m_getSecurityKeysMethod;
         private GetSecurityGroupMethodState m_getSecurityGroupMethod;
         private SecurityGroupFolderState m_securityGroups;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region GetSecurityKeysMethodState Class
-    #if (!OPCUA_EXCLUDE_GetSecurityKeysMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_GetSecurityKeysMethodState)
     /// <summary>
     /// Stores an instance of the GetSecurityKeysMethodType Method.
     /// </summary>
@@ -66172,7 +65929,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class GetSecurityKeysMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -66185,12 +65942,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new GetSecurityKeysMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -66209,7 +65966,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGQAAAEdldFNlY3VyaXR5S2V5c01ldGhvZFR5cGUBAHI7AC8BAHI7cjsA" +
            "AAEB/////wIAAAAXYKkKAgAAAAAADgAAAElucHV0QXJndW1lbnRzAQBzOwAuAERzOwAAlgMAAAABACoB" +
@@ -66220,21 +65977,21 @@ namespace Opc.Ua
            "AAAARmlyc3RUb2tlbklkAQAgAf////8AAAAAAAEAKgEBFwAAAAQAAABLZXlzAA8BAAAAAQAAAAAAAAAA" +
            "AQAqAQEeAAAADQAAAFRpbWVUb05leHRLZXkBACIB/////wAAAAAAAQAqAQEcAAAACwAAAEtleUxpZmV0" +
            "aW1lAQAiAf////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public GetSecurityKeysMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -66285,10 +66042,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -66307,11 +66064,11 @@ namespace Opc.Ua
         ref byte[][] keys,
         ref double timeToNextKey,
         ref double keyLifetime);
-    #endif
-    #endregion
+#endif
 
-    #region GetSecurityGroupMethodState Class
-    #if (!OPCUA_EXCLUDE_GetSecurityGroupMethodState)
+
+
+#if (!OPCUA_EXCLUDE_GetSecurityGroupMethodState)
     /// <summary>
     /// Stores an instance of the GetSecurityGroupMethodType Method.
     /// </summary>
@@ -66319,7 +66076,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class GetSecurityGroupMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -66332,12 +66089,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new GetSecurityGroupMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -66356,28 +66113,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGgAAAEdldFNlY3VyaXR5R3JvdXBNZXRob2RUeXBlAQBZPAAvAQBZPFk8" +
            "AAABAf////8CAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAWjwALgBEWjwAAJYBAAAAAQAq" +
            "AQEeAAAADwAAAFNlY3VyaXR5R3JvdXBJZAAM/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAA" +
            "AAAXYKkKAgAAAAAADwAAAE91dHB1dEFyZ3VtZW50cwEAWzwALgBEWzwAAJYBAAAAAQAqAQEiAAAAEwAA" +
            "AFNlY3VyaXR5R3JvdXBOb2RlSWQAEf////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public GetSecurityGroupMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -66412,10 +66169,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -66428,11 +66185,11 @@ namespace Opc.Ua
         NodeId _objectId,
         string securityGroupId,
         ref NodeId securityGroupNodeId);
-    #endif
-    #endregion
+#endif
 
-    #region AddSecurityGroupMethodState Class
-    #if (!OPCUA_EXCLUDE_AddSecurityGroupMethodState)
+
+
+#if (!OPCUA_EXCLUDE_AddSecurityGroupMethodState)
     /// <summary>
     /// Stores an instance of the AddSecurityGroupMethodType Method.
     /// </summary>
@@ -66440,7 +66197,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AddSecurityGroupMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -66453,12 +66210,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new AddSecurityGroupMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -66477,7 +66234,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGgAAAEFkZFNlY3VyaXR5R3JvdXBNZXRob2RUeXBlAQBqPAAvAQBqPGo8" +
            "AAABAf////8CAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAazwALgBEazwAAJYFAAAAAQAq" +
@@ -66488,21 +66245,21 @@ namespace Opc.Ua
            "dXRBcmd1bWVudHMBAGw8AC4ARGw8AACWAgAAAAEAKgEBHgAAAA8AAABTZWN1cml0eUdyb3VwSWQADP//" +
            "//8AAAAAAAEAKgEBIgAAABMAAABTZWN1cml0eUdyb3VwTm9kZUlkABH/////AAAAAAABACgBAQAAAAEA" +
            "AAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public AddSecurityGroupMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -66548,10 +66305,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -66569,11 +66326,11 @@ namespace Opc.Ua
         uint maxPastKeyCount,
         ref string securityGroupId,
         ref NodeId securityGroupNodeId);
-    #endif
-    #endregion
+#endif
 
-    #region RemoveSecurityGroupMethodState Class
-    #if (!OPCUA_EXCLUDE_RemoveSecurityGroupMethodState)
+
+
+#if (!OPCUA_EXCLUDE_RemoveSecurityGroupMethodState)
     /// <summary>
     /// Stores an instance of the RemoveSecurityGroupMethodType Method.
     /// </summary>
@@ -66581,7 +66338,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class RemoveSecurityGroupMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -66594,12 +66351,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new RemoveSecurityGroupMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -66618,27 +66375,27 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAHQAAAFJlbW92ZVNlY3VyaXR5R3JvdXBNZXRob2RUeXBlAQBtPAAvAQBt" +
            "PG08AAABAf////8BAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAbjwALgBEbjwAAJYBAAAA" +
            "AQAqAQEiAAAAEwAAAFNlY3VyaXR5R3JvdXBOb2RlSWQAEf////8AAAAAAAEAKAEBAAAAAQAAAAAAAAAB" +
            "Af////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public RemoveSecurityGroupMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -66668,10 +66425,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -66683,11 +66440,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         NodeId securityGroupNodeId);
-    #endif
-    #endregion
+#endif
 
-    #region SecurityGroupFolderState Class
-    #if (!OPCUA_EXCLUDE_SecurityGroupFolderState)
+
+
+#if (!OPCUA_EXCLUDE_SecurityGroupFolderState)
     /// <summary>
     /// Stores an instance of the SecurityGroupFolderType ObjectType.
     /// </summary>
@@ -66695,7 +66452,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SecurityGroupFolderState : FolderState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -66711,7 +66468,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.SecurityGroupFolderType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -66739,7 +66496,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHwAAAFNlY3VyaXR5R3JvdXBGb2xkZXJUeXBlSW5zdGFuY2UBAFw8AQBc" +
            "PFw8AAD/////AgAAAARhggoEAAAAAAAQAAAAQWRkU2VjdXJpdHlHcm91cAEAZTwALwEAZTxlPAAAAQH/" +
@@ -66754,11 +66511,11 @@ namespace Opc.Ua
            "/////wEAAAAXYKkKAgAAAAAADgAAAElucHV0QXJndW1lbnRzAQBpPAAuAERpPAAAlgEAAAABACoBASIA" +
            "AAATAAAAU2VjdXJpdHlHcm91cE5vZGVJZAAR/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAA" +
            "AAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public AddSecurityGroupMethodState AddSecurityGroup
         {
@@ -66796,9 +66553,9 @@ namespace Opc.Ua
                 m_removeSecurityGroupMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -66889,18 +66646,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private AddSecurityGroupMethodState m_addSecurityGroupMethod;
         private RemoveSecurityGroupMethodState m_removeSecurityGroupMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region SecurityGroupState Class
-    #if (!OPCUA_EXCLUDE_SecurityGroupState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_SecurityGroupState)
     /// <summary>
     /// Stores an instance of the SecurityGroupType ObjectType.
     /// </summary>
@@ -66908,7 +66665,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SecurityGroupState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -66924,7 +66681,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.SecurityGroupType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -66952,7 +66709,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAGQAAAFNlY3VyaXR5R3JvdXBUeXBlSW5zdGFuY2UBAG88AQBvPG88AAD/" +
            "////BQAAABVgiQoCAAAAAAAPAAAAU2VjdXJpdHlHcm91cElkAQBwPAAuAERwPAAAAAz/////AQH/////" +
@@ -66960,11 +66717,11 @@ namespace Opc.Ua
            "YIkKAgAAAAAAEQAAAFNlY3VyaXR5UG9saWN5VXJpAQDHOgAuAETHOgAAAAz/////AQH/////AAAAABVg" +
            "iQoCAAAAAAARAAAATWF4RnV0dXJlS2V5Q291bnQBAMg6AC4ARMg6AAAAB/////8BAf////8AAAAAFWCJ" +
            "CgIAAAAAAA8AAABNYXhQYXN0S2V5Q291bnQBANA6AC4ARNA6AAAAB/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<string> SecurityGroupId
         {
@@ -67059,9 +66816,9 @@ namespace Opc.Ua
                 m_maxPastKeyCount = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -67230,21 +66987,21 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<string> m_securityGroupId;
         private PropertyState<double> m_keyLifetime;
         private PropertyState<string> m_securityPolicyUri;
         private PropertyState<uint> m_maxFutureKeyCount;
         private PropertyState<uint> m_maxPastKeyCount;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region PublishSubscribeState Class
-    #if (!OPCUA_EXCLUDE_PublishSubscribeState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_PublishSubscribeState)
     /// <summary>
     /// Stores an instance of the PublishSubscribeType ObjectType.
     /// </summary>
@@ -67252,7 +67009,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PublishSubscribeState : PubSubKeyServiceState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -67268,7 +67025,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.PublishSubscribeType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -67316,7 +67073,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string SetSecurityKeys_InitializationString =
            "//////////8EYYIKBAAAAAAADwAAAFNldFNlY3VyaXR5S2V5cwEAkEMALwEAkEOQQwAAAQH/////AQAA" +
            "ABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAJFDAC4ARJFDAACWBwAAAAEAKgEBHgAAAA8AAABT" +
@@ -67451,11 +67208,11 @@ namespace Opc.Ua
            "//8BAf////8BAAAAFWCpCgIAAAAAABAAAABEaWFnbm9zdGljc0xldmVsAQBQSQAuAERQSQAABgAAAAAB" +
            "AAtN/////wEB/////wAAAAAXYIkKAgAAAAAAGgAAAFN1cHBvcnRlZFRyYW5zcG9ydFByb2ZpbGVzAQBH" +
            "RAAuAERHRAAAAAwBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public SetSecurityKeysMethodState SetSecurityKeys
         {
@@ -67588,9 +67345,9 @@ namespace Opc.Ua
                 m_supportedTransportProfiles = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -67811,9 +67568,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private SetSecurityKeysMethodState m_setSecurityKeysMethod;
         private AddConnectionMethodState m_addConnectionMethod;
         private RemoveConnectionMethodState m_removeConnectionMethod;
@@ -67821,13 +67578,13 @@ namespace Opc.Ua
         private PubSubStatusState m_status;
         private PubSubDiagnosticsRootState m_diagnostics;
         private PropertyState<string[]> m_supportedTransportProfiles;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region SetSecurityKeysMethodState Class
-    #if (!OPCUA_EXCLUDE_SetSecurityKeysMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_SetSecurityKeysMethodState)
     /// <summary>
     /// Stores an instance of the SetSecurityKeysMethodType Method.
     /// </summary>
@@ -67835,7 +67592,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SetSecurityKeysMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -67848,12 +67605,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new SetSecurityKeysMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -67872,7 +67629,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGQAAAFNldFNlY3VyaXR5S2V5c01ldGhvZFR5cGUBAJJDAC8BAJJDkkMA" +
            "AAEB/////wEAAAAXYKkKAgAAAAAADgAAAElucHV0QXJndW1lbnRzAQCTQwAuAESTQwAAlgcAAAABACoB" +
@@ -67881,21 +67638,21 @@ namespace Opc.Ua
            "ARkAAAAKAAAAQ3VycmVudEtleQAP/////wAAAAAAAQAqAQEdAAAACgAAAEZ1dHVyZUtleXMADwEAAAAB" +
            "AAAAAAAAAAABACoBAR4AAAANAAAAVGltZVRvTmV4dEtleQEAIgH/////AAAAAAABACoBARwAAAALAAAA" +
            "S2V5TGlmZXRpbWUBACIB/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public SetSecurityKeysMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -67937,10 +67694,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -67958,11 +67715,11 @@ namespace Opc.Ua
         byte[][] futureKeys,
         double timeToNextKey,
         double keyLifetime);
-    #endif
-    #endregion
+#endif
 
-    #region AddConnectionMethodState Class
-    #if (!OPCUA_EXCLUDE_AddConnectionMethodState)
+
+
+#if (!OPCUA_EXCLUDE_AddConnectionMethodState)
     /// <summary>
     /// Stores an instance of the AddConnectionMethodType Method.
     /// </summary>
@@ -67970,7 +67727,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AddConnectionMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -67983,12 +67740,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new AddConnectionMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -68007,28 +67764,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAFwAAAEFkZENvbm5lY3Rpb25NZXRob2RUeXBlAQAzQQAvAQAzQTNBAAAB" +
            "Af////8CAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEATkEALgBETkEAAJYBAAAAAQAqAQEe" +
            "AAAADQAAAENvbmZpZ3VyYXRpb24BAAE9/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAAX" +
            "YKkKAgAAAAAADwAAAE91dHB1dEFyZ3VtZW50cwEAT0EALgBET0EAAJYBAAAAAQAqAQEbAAAADAAAAENv" +
            "bm5lY3Rpb25JZAAR/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public AddConnectionMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -68063,10 +67820,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -68079,11 +67836,11 @@ namespace Opc.Ua
         NodeId _objectId,
         PubSubConnectionDataType configuration,
         ref NodeId connectionId);
-    #endif
-    #endregion
+#endif
 
-    #region RemoveConnectionMethodState Class
-    #if (!OPCUA_EXCLUDE_RemoveConnectionMethodState)
+
+
+#if (!OPCUA_EXCLUDE_RemoveConnectionMethodState)
     /// <summary>
     /// Stores an instance of the RemoveConnectionMethodType Method.
     /// </summary>
@@ -68091,7 +67848,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class RemoveConnectionMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -68104,12 +67861,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new RemoveConnectionMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -68128,26 +67885,26 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGgAAAFJlbW92ZUNvbm5lY3Rpb25NZXRob2RUeXBlAQBnNwAvAQBnN2c3" +
            "AAABAf////8BAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAaDcALgBEaDcAAJYBAAAAAQAq" +
            "AQEbAAAADAAAAENvbm5lY3Rpb25JZAAR/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public RemoveConnectionMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -68177,10 +67934,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -68192,11 +67949,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         NodeId connectionId);
-    #endif
-    #endregion
+#endif
 
-    #region PublishedDataSetState Class
-    #if (!OPCUA_EXCLUDE_PublishedDataSetState)
+
+
+#if (!OPCUA_EXCLUDE_PublishedDataSetState)
     /// <summary>
     /// Stores an instance of the PublishedDataSetType ObjectType.
     /// </summary>
@@ -68204,7 +67961,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PublishedDataSetState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -68220,7 +67977,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.PublishedDataSetType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -68258,7 +68015,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string DataSetClassId_InitializationString =
            "//////////8VYIkKAgAAAAAADgAAAERhdGFTZXRDbGFzc0lkAQB3QQAuAER3QQAAAA7/////AQH/////" +
            "AAAAAA==";
@@ -68288,11 +68045,11 @@ namespace Opc.Ua
            "BAAAAAAAFAAAAFJlbW92ZUV4dGVuc2lvbkZpZWxkAQB9PAAvAQCGPH08AAABAf////8BAAAAF2CpCgIA" +
            "AAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAfjwALgBEfjwAAJYBAAAAAQAqAQEWAAAABwAAAEZpZWxkSWQA" +
            "Ef////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<ConfigurationVersionDataType> ConfigurationVersion
         {
@@ -68368,9 +68125,9 @@ namespace Opc.Ua
                 m_extensionFields = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -68513,20 +68270,20 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<ConfigurationVersionDataType> m_configurationVersion;
         private PropertyState<DataSetMetaDataType> m_dataSetMetaData;
         private PropertyState<Guid> m_dataSetClassId;
         private ExtensionFieldsState m_extensionFields;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region ExtensionFieldsState Class
-    #if (!OPCUA_EXCLUDE_ExtensionFieldsState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ExtensionFieldsState)
     /// <summary>
     /// Stores an instance of the ExtensionFieldsType ObjectType.
     /// </summary>
@@ -68534,7 +68291,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ExtensionFieldsState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -68550,7 +68307,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ExtensionFieldsType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -68578,7 +68335,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAGwAAAEV4dGVuc2lvbkZpZWxkc1R5cGVJbnN0YW5jZQEAgTwBAIE8gTwA" +
            "AP////8CAAAABGGCCgQAAAAAABEAAABBZGRFeHRlbnNpb25GaWVsZAEAgzwALwEAgzyDPAAAAQH/////" +
@@ -68589,11 +68346,11 @@ namespace Opc.Ua
            "/wAAAAAEYYIKBAAAAAAAFAAAAFJlbW92ZUV4dGVuc2lvbkZpZWxkAQCGPAAvAQCGPIY8AAABAf////8B" +
            "AAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAhzwALgBEhzwAAJYBAAAAAQAqAQEWAAAABwAA" +
            "AEZpZWxkSWQAEf////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public AddExtensionFieldMethodState AddExtensionField
         {
@@ -68631,9 +68388,9 @@ namespace Opc.Ua
                 m_removeExtensionFieldMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -68724,18 +68481,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private AddExtensionFieldMethodState m_addExtensionFieldMethod;
         private RemoveExtensionFieldMethodState m_removeExtensionFieldMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AddExtensionFieldMethodState Class
-    #if (!OPCUA_EXCLUDE_AddExtensionFieldMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AddExtensionFieldMethodState)
     /// <summary>
     /// Stores an instance of the AddExtensionFieldMethodType Method.
     /// </summary>
@@ -68743,7 +68500,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AddExtensionFieldMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -68756,12 +68513,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new AddExtensionFieldMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -68780,7 +68537,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGwAAAEFkZEV4dGVuc2lvbkZpZWxkTWV0aG9kVHlwZQEAiDwALwEAiDyI" +
            "PAAAAQH/////AgAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAIk8AC4ARIk8AACWAgAAAAEA" +
@@ -68788,21 +68545,21 @@ namespace Opc.Ua
            "AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAABdgqQoCAAAAAAAPAAAAT3V0cHV0QXJndW1lbnRz" +
            "AQCKPAAuAESKPAAAlgEAAAABACoBARYAAAAHAAAARmllbGRJZAAR/////wAAAAAAAQAoAQEAAAABAAAA" +
            "AAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public AddExtensionFieldMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -68839,10 +68596,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -68856,11 +68613,11 @@ namespace Opc.Ua
         QualifiedName fieldName,
         object fieldValue,
         ref NodeId fieldId);
-    #endif
-    #endregion
+#endif
 
-    #region RemoveExtensionFieldMethodState Class
-    #if (!OPCUA_EXCLUDE_RemoveExtensionFieldMethodState)
+
+
+#if (!OPCUA_EXCLUDE_RemoveExtensionFieldMethodState)
     /// <summary>
     /// Stores an instance of the RemoveExtensionFieldMethodType Method.
     /// </summary>
@@ -68868,7 +68625,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class RemoveExtensionFieldMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -68881,12 +68638,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new RemoveExtensionFieldMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -68905,26 +68662,26 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAHgAAAFJlbW92ZUV4dGVuc2lvbkZpZWxkTWV0aG9kVHlwZQEAizwALwEA" +
            "izyLPAAAAQH/////AQAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAIw8AC4ARIw8AACWAQAA" +
            "AAEAKgEBFgAAAAcAAABGaWVsZElkABH/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public RemoveExtensionFieldMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -68954,10 +68711,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -68969,11 +68726,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         NodeId fieldId);
-    #endif
-    #endregion
+#endif
 
-    #region PublishedDataItemsState Class
-    #if (!OPCUA_EXCLUDE_PublishedDataItemsState)
+
+
+#if (!OPCUA_EXCLUDE_PublishedDataItemsState)
     /// <summary>
     /// Stores an instance of the PublishedDataItemsType ObjectType.
     /// </summary>
@@ -68981,7 +68738,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PublishedDataItemsState : PublishedDataSetState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -68997,7 +68754,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.PublishedDataItemsType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -69035,7 +68792,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string AddVariables_InitializationString =
            "//////////8EYYIKBAAAAAAADAAAAEFkZFZhcmlhYmxlcwEA2zgALwEA2zjbOAAAAQH/////AgAAABdg" +
            "qQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBANw4AC4ARNw4AACWBAAAAAEAKgEBJQAAABQAAABDb25m" +
@@ -69075,11 +68832,11 @@ namespace Opc.Ua
            "AQDgOAAuAETgOAAAlgIAAAABACoBASgAAAAXAAAATmV3Q29uZmlndXJhdGlvblZlcnNpb24BAAE5////" +
            "/wAAAAAAAQAqAQEgAAAADQAAAFJlbW92ZVJlc3VsdHMAEwEAAAABAAAAAAAAAAABACgBAQAAAAEAAAAA" +
            "AAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<PublishedVariableDataType[]> PublishedData
         {
@@ -69136,9 +68893,9 @@ namespace Opc.Ua
                 m_removeVariablesMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -69255,19 +69012,19 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<PublishedVariableDataType[]> m_publishedData;
         private PublishedDataItemsAddVariablesMethodState m_addVariablesMethod;
         private PublishedDataItemsRemoveVariablesMethodState m_removeVariablesMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region PublishedDataItemsAddVariablesMethodState Class
-    #if (!OPCUA_EXCLUDE_PublishedDataItemsAddVariablesMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_PublishedDataItemsAddVariablesMethodState)
     /// <summary>
     /// Stores an instance of the PublishedDataItemsAddVariablesMethodType Method.
     /// </summary>
@@ -69275,7 +69032,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PublishedDataItemsAddVariablesMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -69288,12 +69045,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new PublishedDataItemsAddVariablesMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -69312,7 +69069,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAKAAAAFB1Ymxpc2hlZERhdGFJdGVtc0FkZFZhcmlhYmxlc01ldGhvZFR5" +
            "cGUBAOQ4AC8BAOQ45DgAAAEB/////wIAAAAXYKkKAgAAAAAADgAAAElucHV0QXJndW1lbnRzAQDlOAAu" +
@@ -69323,21 +69080,21 @@ namespace Opc.Ua
            "dHMBAOY4AC4AROY4AACWAgAAAAEAKgEBKAAAABcAAABOZXdDb25maWd1cmF0aW9uVmVyc2lvbgEAATn/" +
            "////AAAAAAABACoBAR0AAAAKAAAAQWRkUmVzdWx0cwATAQAAAAEAAAAAAAAAAAEAKAEBAAAAAQAAAAAA" +
            "AAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public PublishedDataItemsAddVariablesMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -69381,10 +69138,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -69401,11 +69158,11 @@ namespace Opc.Ua
         PublishedVariableDataType[] variablesToAdd,
         ref ConfigurationVersionDataType newConfigurationVersion,
         ref StatusCode[] addResults);
-    #endif
-    #endregion
+#endif
 
-    #region PublishedDataItemsRemoveVariablesMethodState Class
-    #if (!OPCUA_EXCLUDE_PublishedDataItemsRemoveVariablesMethodState)
+
+
+#if (!OPCUA_EXCLUDE_PublishedDataItemsRemoveVariablesMethodState)
     /// <summary>
     /// Stores an instance of the PublishedDataItemsRemoveVariablesMethodType Method.
     /// </summary>
@@ -69413,7 +69170,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PublishedDataItemsRemoveVariablesMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -69426,12 +69183,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new PublishedDataItemsRemoveVariablesMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -69450,7 +69207,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAKwAAAFB1Ymxpc2hlZERhdGFJdGVtc1JlbW92ZVZhcmlhYmxlc01ldGhv" +
            "ZFR5cGUBAOc4AC8BAOc45zgAAAEB/////wIAAAAXYKkKAgAAAAAADgAAAElucHV0QXJndW1lbnRzAQDo" +
@@ -69459,21 +69216,21 @@ namespace Opc.Ua
            "AAEB/////wAAAAAXYKkKAgAAAAAADwAAAE91dHB1dEFyZ3VtZW50cwEA6TgALgBE6TgAAJYCAAAAAQAq" +
            "AQEoAAAAFwAAAE5ld0NvbmZpZ3VyYXRpb25WZXJzaW9uAQABOf////8AAAAAAAEAKgEBIAAAAA0AAABS" +
            "ZW1vdmVSZXN1bHRzABMBAAAAAQAAAAAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public PublishedDataItemsRemoveVariablesMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -69513,10 +69270,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -69531,11 +69288,11 @@ namespace Opc.Ua
         uint[] variablesToRemove,
         ref ConfigurationVersionDataType newConfigurationVersion,
         ref StatusCode[] removeResults);
-    #endif
-    #endregion
+#endif
 
-    #region PublishedEventsState Class
-    #if (!OPCUA_EXCLUDE_PublishedEventsState)
+
+
+#if (!OPCUA_EXCLUDE_PublishedEventsState)
     /// <summary>
     /// Stores an instance of the PublishedEventsType ObjectType.
     /// </summary>
@@ -69543,7 +69300,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PublishedEventsState : PublishedDataSetState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -69559,7 +69316,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.PublishedEventsType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -69592,7 +69349,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string ModifyFieldSelection_InitializationString =
            "//////////8EYYIKBAAAAAAAFAAAAE1vZGlmeUZpZWxkU2VsZWN0aW9uAQDMOgAvAQDMOsw6AAABAf//" +
            "//8CAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAzToALgBEzToAAJYEAAAAAQAqAQElAAAA" +
@@ -69618,11 +69375,11 @@ namespace Opc.Ua
            "AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAABdgqQoCAAAAAAAPAAAAT3V0cHV0QXJndW1lbnRz" +
            "AQCdPAAuAESdPAAAlgEAAAABACoBASgAAAAXAAAATmV3Q29uZmlndXJhdGlvblZlcnNpb24BAAE5////" +
            "/wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<NodeId> PubSubEventNotifier
         {
@@ -69698,9 +69455,9 @@ namespace Opc.Ua
                 m_modifyFieldSelectionMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -69843,20 +69600,20 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<NodeId> m_pubSubEventNotifier;
         private PropertyState<SimpleAttributeOperand[]> m_selectedFields;
         private PropertyState<ContentFilter> m_filter;
         private PublishedEventsTypeModifyFieldSelectionMethodState m_modifyFieldSelectionMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region PublishedEventsTypeModifyFieldSelectionMethodState Class
-    #if (!OPCUA_EXCLUDE_PublishedEventsTypeModifyFieldSelectionMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_PublishedEventsTypeModifyFieldSelectionMethodState)
     /// <summary>
     /// Stores an instance of the PublishedEventsTypeModifyFieldSelectionMethodType Method.
     /// </summary>
@@ -69864,7 +69621,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PublishedEventsTypeModifyFieldSelectionMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -69877,12 +69634,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new PublishedEventsTypeModifyFieldSelectionMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -69901,7 +69658,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAMQAAAFB1Ymxpc2hlZEV2ZW50c1R5cGVNb2RpZnlGaWVsZFNlbGVjdGlv" +
            "bk1ldGhvZFR5cGUBAM46AC8BAM46zjoAAAEB/////wIAAAAXYKkKAgAAAAAADgAAAElucHV0QXJndW1l" +
@@ -69911,21 +69668,21 @@ namespace Opc.Ua
            "AFkCAQAAAAEAAAAAAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAAF2CpCgIAAAAAAA8AAABPdXRw" +
            "dXRBcmd1bWVudHMBAJ48AC4ARJ48AACWAQAAAAEAKgEBKAAAABcAAABOZXdDb25maWd1cmF0aW9uVmVy" +
            "c2lvbgEAATn/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public PublishedEventsTypeModifyFieldSelectionMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -69966,10 +69723,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -69985,11 +69742,11 @@ namespace Opc.Ua
         bool[] promotedFields,
         SimpleAttributeOperand[] selectedFields,
         ref ConfigurationVersionDataType newConfigurationVersion);
-    #endif
-    #endregion
+#endif
 
-    #region DataSetFolderState Class
-    #if (!OPCUA_EXCLUDE_DataSetFolderState)
+
+
+#if (!OPCUA_EXCLUDE_DataSetFolderState)
     /// <summary>
     /// Stores an instance of the DataSetFolderType ObjectType.
     /// </summary>
@@ -69997,7 +69754,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DataSetFolderState : FolderState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -70013,7 +69770,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.DataSetFolderType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -70076,7 +69833,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string AddPublishedDataItems_InitializationString =
            "//////////8EYYIKBAAAAAAAFQAAAEFkZFB1Ymxpc2hlZERhdGFJdGVtcwEAnTgALwEAnTidOAAAAQH/" +
            "////AgAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAJ44AC4ARJ44AACWBAAAAAEAKgEBEwAA" +
@@ -70178,11 +69935,11 @@ namespace Opc.Ua
            "Rm9sZGVyAQBlQgAvAQBlQmVCAAABAf////8BAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEA" +
            "b0IALgBEb0IAAJYBAAAAAQAqAQEiAAAAEwAAAERhdGFTZXRGb2xkZXJOb2RlSWQAEf////8AAAAAAAEA" +
            "KAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public AddPublishedDataItemsMethodState AddPublishedDataItems
         {
@@ -70315,9 +70072,9 @@ namespace Opc.Ua
                 m_removeDataSetFolderMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -70538,9 +70295,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private AddPublishedDataItemsMethodState m_addPublishedDataItemsMethod;
         private AddPublishedEventsMethodState m_addPublishedEventsMethod;
         private AddPublishedDataItemsTemplateMethodState m_addPublishedDataItemsTemplateMethod;
@@ -70548,13 +70305,13 @@ namespace Opc.Ua
         private RemovePublishedDataSetMethodState m_removePublishedDataSetMethod;
         private AddDataSetFolderMethodState m_addDataSetFolderMethod;
         private RemoveDataSetFolderMethodState m_removeDataSetFolderMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AddPublishedDataItemsMethodState Class
-    #if (!OPCUA_EXCLUDE_AddPublishedDataItemsMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AddPublishedDataItemsMethodState)
     /// <summary>
     /// Stores an instance of the AddPublishedDataItemsMethodType Method.
     /// </summary>
@@ -70562,7 +70319,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AddPublishedDataItemsMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -70575,12 +70332,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new AddPublishedDataItemsMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -70599,7 +70356,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAHwAAAEFkZFB1Ymxpc2hlZERhdGFJdGVtc01ldGhvZFR5cGUBAKU4AC8B" +
            "AKU4pTgAAAEB/////wIAAAAXYKkKAgAAAAAADgAAAElucHV0QXJndW1lbnRzAQCmOAAuAESmOAAAlgQA" +
@@ -70610,21 +70367,21 @@ namespace Opc.Ua
            "AAAARGF0YVNldE5vZGVJZAAR/////wAAAAAAAQAqAQElAAAAFAAAAENvbmZpZ3VyYXRpb25WZXJzaW9u" +
            "AQABOf////8AAAAAAAEAKgEBHQAAAAoAAABBZGRSZXN1bHRzABMBAAAAAQAAAAAAAAAAAQAoAQEAAAAB" +
            "AAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public AddPublishedDataItemsMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -70671,10 +70428,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -70692,11 +70449,11 @@ namespace Opc.Ua
         ref NodeId dataSetNodeId,
         ref ConfigurationVersionDataType configurationVersion,
         ref StatusCode[] addResults);
-    #endif
-    #endregion
+#endif
 
-    #region AddPublishedEventsMethodState Class
-    #if (!OPCUA_EXCLUDE_AddPublishedEventsMethodState)
+
+
+#if (!OPCUA_EXCLUDE_AddPublishedEventsMethodState)
     /// <summary>
     /// Stores an instance of the AddPublishedEventsMethodType Method.
     /// </summary>
@@ -70704,7 +70461,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AddPublishedEventsMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -70717,12 +70474,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new AddPublishedEventsMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -70741,7 +70498,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAHAAAAEFkZFB1Ymxpc2hlZEV2ZW50c01ldGhvZFR5cGUBAKg4AC8BAKg4" +
            "qDgAAAEB/////wIAAAAXYKkKAgAAAAAADgAAAElucHV0QXJndW1lbnRzAQCpOAAuAESpOAAAlgYAAAAB" +
@@ -70752,21 +70509,21 @@ namespace Opc.Ua
            "AQH/////AAAAABdgqQoCAAAAAAAPAAAAT3V0cHV0QXJndW1lbnRzAQCqOAAuAESqOAAAlgIAAAABACoB" +
            "ASUAAAAUAAAAQ29uZmlndXJhdGlvblZlcnNpb24BAAE5/////wAAAAAAAQAqAQEcAAAADQAAAERhdGFT" +
            "ZXROb2RlSWQAEf////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public AddPublishedEventsMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -70814,10 +70571,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -70836,11 +70593,11 @@ namespace Opc.Ua
         ContentFilter filter,
         ref ConfigurationVersionDataType configurationVersion,
         ref NodeId dataSetNodeId);
-    #endif
-    #endregion
+#endif
 
-    #region AddPublishedDataItemsTemplateMethodState Class
-    #if (!OPCUA_EXCLUDE_AddPublishedDataItemsTemplateMethodState)
+
+
+#if (!OPCUA_EXCLUDE_AddPublishedDataItemsTemplateMethodState)
     /// <summary>
     /// Stores an instance of the AddPublishedDataItemsTemplateMethodType Method.
     /// </summary>
@@ -70848,7 +70605,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AddPublishedDataItemsTemplateMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -70861,12 +70618,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new AddPublishedDataItemsTemplateMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -70885,7 +70642,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAJwAAAEFkZFB1Ymxpc2hlZERhdGFJdGVtc1RlbXBsYXRlTWV0aG9kVHlw" +
            "ZQEAhkIALwEAhkKGQgAAAQH/////AgAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAIdCAC4A" +
@@ -70894,21 +70651,21 @@ namespace Opc.Ua
            "AAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAAXYKkKAgAAAAAADwAAAE91dHB1dEFyZ3VtZW50cwEA" +
            "iEIALgBEiEIAAJYCAAAAAQAqAQEcAAAADQAAAERhdGFTZXROb2RlSWQAEf////8AAAAAAAEAKgEBHQAA" +
            "AAoAAABBZGRSZXN1bHRzABMBAAAAAQAAAAAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public AddPublishedDataItemsTemplateMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -70950,10 +70707,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -70969,11 +70726,11 @@ namespace Opc.Ua
         PublishedVariableDataType[] variablesToAdd,
         ref NodeId dataSetNodeId,
         ref StatusCode[] addResults);
-    #endif
-    #endregion
+#endif
 
-    #region AddPublishedEventsTemplateMethodState Class
-    #if (!OPCUA_EXCLUDE_AddPublishedEventsTemplateMethodState)
+
+
+#if (!OPCUA_EXCLUDE_AddPublishedEventsTemplateMethodState)
     /// <summary>
     /// Stores an instance of the AddPublishedEventsTemplateMethodType Method.
     /// </summary>
@@ -70981,7 +70738,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AddPublishedEventsTemplateMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -70994,12 +70751,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new AddPublishedEventsTemplateMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -71018,7 +70775,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAJAAAAEFkZFB1Ymxpc2hlZEV2ZW50c1RlbXBsYXRlTWV0aG9kVHlwZQEA" +
            "iUIALwEAiUKJQgAAAQH/////AgAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAJNCAC4ARJNC" +
@@ -71028,21 +70785,21 @@ namespace Opc.Ua
            "/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAAXYKkKAgAAAAAADwAAAE91dHB1dEFyZ3Vt" +
            "ZW50cwEAqkIALgBEqkIAAJYBAAAAAQAqAQEcAAAADQAAAERhdGFTZXROb2RlSWQAEf////8AAAAAAAEA" +
            "KAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public AddPublishedEventsTemplateMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -71085,10 +70842,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -71105,11 +70862,11 @@ namespace Opc.Ua
         SimpleAttributeOperand[] selectedFields,
         ContentFilter filter,
         ref NodeId dataSetNodeId);
-    #endif
-    #endregion
+#endif
 
-    #region RemovePublishedDataSetMethodState Class
-    #if (!OPCUA_EXCLUDE_RemovePublishedDataSetMethodState)
+
+
+#if (!OPCUA_EXCLUDE_RemovePublishedDataSetMethodState)
     /// <summary>
     /// Stores an instance of the RemovePublishedDataSetMethodType Method.
     /// </summary>
@@ -71117,7 +70874,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class RemovePublishedDataSetMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -71130,12 +70887,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new RemovePublishedDataSetMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -71154,27 +70911,27 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAIAAAAFJlbW92ZVB1Ymxpc2hlZERhdGFTZXRNZXRob2RUeXBlAQCrOAAv" +
            "AQCrOKs4AAABAf////8BAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEArDgALgBErDgAAJYB" +
            "AAAAAQAqAQEcAAAADQAAAERhdGFTZXROb2RlSWQAEf////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf//" +
            "//8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public RemovePublishedDataSetMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -71204,10 +70961,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -71219,11 +70976,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         NodeId dataSetNodeId);
-    #endif
-    #endregion
+#endif
 
-    #region AddDataSetFolderMethodState Class
-    #if (!OPCUA_EXCLUDE_AddDataSetFolderMethodState)
+
+
+#if (!OPCUA_EXCLUDE_AddDataSetFolderMethodState)
     /// <summary>
     /// Stores an instance of the AddDataSetFolderMethodType Method.
     /// </summary>
@@ -71231,7 +70988,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AddDataSetFolderMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -71244,12 +71001,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new AddDataSetFolderMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -71268,28 +71025,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAGgAAAEFkZERhdGFTZXRGb2xkZXJNZXRob2RUeXBlAQCrQgAvAQCrQqtC" +
            "AAABAf////8CAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEArEIALgBErEIAAJYBAAAAAQAq" +
            "AQETAAAABAAAAE5hbWUADP////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAAF2CpCgIAAAAA" +
            "AA8AAABPdXRwdXRBcmd1bWVudHMBAK1CAC4ARK1CAACWAQAAAAEAKgEBIgAAABMAAABEYXRhU2V0Rm9s" +
            "ZGVyTm9kZUlkABH/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public AddDataSetFolderMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -71324,10 +71081,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -71340,11 +71097,11 @@ namespace Opc.Ua
         NodeId _objectId,
         string name,
         ref NodeId dataSetFolderNodeId);
-    #endif
-    #endregion
+#endif
 
-    #region RemoveDataSetFolderMethodState Class
-    #if (!OPCUA_EXCLUDE_RemoveDataSetFolderMethodState)
+
+
+#if (!OPCUA_EXCLUDE_RemoveDataSetFolderMethodState)
     /// <summary>
     /// Stores an instance of the RemoveDataSetFolderMethodType Method.
     /// </summary>
@@ -71352,7 +71109,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class RemoveDataSetFolderMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -71365,12 +71122,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new RemoveDataSetFolderMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -71389,27 +71146,27 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAHQAAAFJlbW92ZURhdGFTZXRGb2xkZXJNZXRob2RUeXBlAQC3QgAvAQC3" +
            "QrdCAAABAf////8BAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAMUMALgBEMUMAAJYBAAAA" +
            "AQAqAQEiAAAAEwAAAERhdGFTZXRGb2xkZXJOb2RlSWQAEf////8AAAAAAAEAKAEBAAAAAQAAAAAAAAAB" +
            "Af////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public RemoveDataSetFolderMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -71439,10 +71196,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -71454,11 +71211,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         NodeId dataSetFolderNodeId);
-    #endif
-    #endregion
+#endif
 
-    #region PubSubConnectionState Class
-    #if (!OPCUA_EXCLUDE_PubSubConnectionState)
+
+
+#if (!OPCUA_EXCLUDE_PubSubConnectionState)
     /// <summary>
     /// Stores an instance of the PubSubConnectionType ObjectType.
     /// </summary>
@@ -71466,7 +71223,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubConnectionState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -71482,7 +71239,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.PubSubConnectionType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -71535,7 +71292,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string TransportSettings_InitializationString =
            "//////////8EYIAKAQAAAAAAEQAAAFRyYW5zcG9ydFNldHRpbmdzAQAzQwAvAQA5RTNDAAD/////AAAA" +
            "AA==";
@@ -71662,11 +71419,11 @@ namespace Opc.Ua
            "NwAvAQCRN5E3AAABAf////8BAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEAkjcALgBEkjcA" +
            "AJYBAAAAAQAqAQEWAAAABwAAAEdyb3VwSWQAEf////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8A" +
            "AAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState PublisherId
         {
@@ -71856,9 +71613,9 @@ namespace Opc.Ua
                 m_removeGroupMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -72157,9 +71914,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState m_publisherId;
         private SelectionListState<string> m_transportProfileUri;
         private PropertyState<KeyValuePair[]> m_connectionProperties;
@@ -72170,13 +71927,13 @@ namespace Opc.Ua
         private PubSubConnectionTypeAddWriterGroupMethodState m_addWriterGroupMethod;
         private PubSubConnectionAddReaderGroupGroupMethodState m_addReaderGroupMethod;
         private PubSubConnectionTypeRemoveGroupMethodState m_removeGroupMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region PubSubConnectionTypeAddWriterGroupMethodState Class
-    #if (!OPCUA_EXCLUDE_PubSubConnectionTypeAddWriterGroupMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_PubSubConnectionTypeAddWriterGroupMethodState)
     /// <summary>
     /// Stores an instance of the PubSubConnectionTypeAddWriterGroupMethodType Method.
     /// </summary>
@@ -72184,7 +71941,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubConnectionTypeAddWriterGroupMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -72197,12 +71954,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new PubSubConnectionTypeAddWriterGroupMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -72221,7 +71978,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAALAAAAFB1YlN1YkNvbm5lY3Rpb25UeXBlQWRkV3JpdGVyR3JvdXBNZXRo" +
            "b2RUeXBlAQCZRAAvAQCZRJlEAAABAf////8CAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEA" +
@@ -72229,21 +71986,21 @@ namespace Opc.Ua
            "AAABAAAAAAAAAAEB/////wAAAAAXYKkKAgAAAAAADwAAAE91dHB1dEFyZ3VtZW50cwEAzkQALgBEzkQA" +
            "AJYBAAAAAQAqAQEWAAAABwAAAEdyb3VwSWQAEf////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8A" +
            "AAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public PubSubConnectionTypeAddWriterGroupMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -72278,10 +72035,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -72294,11 +72051,11 @@ namespace Opc.Ua
         NodeId _objectId,
         WriterGroupDataType configuration,
         ref NodeId groupId);
-    #endif
-    #endregion
+#endif
 
-    #region PubSubConnectionAddReaderGroupGroupMethodState Class
-    #if (!OPCUA_EXCLUDE_PubSubConnectionAddReaderGroupGroupMethodState)
+
+
+#if (!OPCUA_EXCLUDE_PubSubConnectionAddReaderGroupGroupMethodState)
     /// <summary>
     /// Stores an instance of the PubSubConnectionAddReaderGroupGroupMethodType Method.
     /// </summary>
@@ -72306,7 +72063,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubConnectionAddReaderGroupGroupMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -72319,12 +72076,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new PubSubConnectionAddReaderGroupGroupMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -72343,7 +72100,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAALQAAAFB1YlN1YkNvbm5lY3Rpb25BZGRSZWFkZXJHcm91cEdyb3VwTWV0" +
            "aG9kVHlwZQEA3kQALwEA3kTeRAAAAQH/////AgAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMB" +
@@ -72351,21 +72108,21 @@ namespace Opc.Ua
            "AAAAAQAAAAAAAAABAf////8AAAAAF2CpCgIAAAAAAA8AAABPdXRwdXRBcmd1bWVudHMBADhFAC4ARDhF" +
            "AACWAQAAAAEAKgEBFgAAAAcAAABHcm91cElkABH/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////" +
            "AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public PubSubConnectionAddReaderGroupGroupMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -72400,10 +72157,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -72416,11 +72173,11 @@ namespace Opc.Ua
         NodeId _objectId,
         ReaderGroupDataType configuration,
         ref NodeId groupId);
-    #endif
-    #endregion
+#endif
 
-    #region PubSubConnectionTypeRemoveGroupMethodState Class
-    #if (!OPCUA_EXCLUDE_PubSubConnectionTypeRemoveGroupMethodState)
+
+
+#if (!OPCUA_EXCLUDE_PubSubConnectionTypeRemoveGroupMethodState)
     /// <summary>
     /// Stores an instance of the PubSubConnectionTypeRemoveGroupMethodType Method.
     /// </summary>
@@ -72428,7 +72185,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubConnectionTypeRemoveGroupMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -72441,12 +72198,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new PubSubConnectionTypeRemoveGroupMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -72465,27 +72222,27 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAKQAAAFB1YlN1YkNvbm5lY3Rpb25UeXBlUmVtb3ZlR3JvdXBNZXRob2RU" +
            "eXBlAQAMOQAvAQAMOQw5AAABAf////8BAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50cwEADTkA" +
            "LgBEDTkAAJYBAAAAAQAqAQEWAAAABwAAAEdyb3VwSWQAEf////8AAAAAAAEAKAEBAAAAAQAAAAAAAAAB" +
            "Af////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public PubSubConnectionTypeRemoveGroupMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -72515,10 +72272,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -72530,11 +72287,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         NodeId groupId);
-    #endif
-    #endregion
+#endif
 
-    #region ConnectionTransportState Class
-    #if (!OPCUA_EXCLUDE_ConnectionTransportState)
+
+
+#if (!OPCUA_EXCLUDE_ConnectionTransportState)
     /// <summary>
     /// Stores an instance of the ConnectionTransportType ObjectType.
     /// </summary>
@@ -72542,7 +72299,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ConnectionTransportState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -72558,7 +72315,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ConnectionTransportType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -72586,28 +72343,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHwAAAENvbm5lY3Rpb25UcmFuc3BvcnRUeXBlSW5zdGFuY2UBADlFAQA5" +
            "RTlFAAD/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region PubSubGroupState Class
-    #if (!OPCUA_EXCLUDE_PubSubGroupState)
+
+
+#if (!OPCUA_EXCLUDE_PubSubGroupState)
     /// <summary>
     /// Stores an instance of the PubSubGroupType ObjectType.
     /// </summary>
@@ -72615,7 +72372,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubGroupState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -72631,7 +72388,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.PubSubGroupType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -72669,7 +72426,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string SecurityGroupId_InitializationString =
            "//////////8VYIkKAgAAAAAADwAAAFNlY3VyaXR5R3JvdXBJZAEANz4ALgBENz4AAAAM/////wEB////" +
            "/wAAAAA=";
@@ -72687,11 +72444,11 @@ namespace Opc.Ua
            "//8BAf////8AAAAAF2CJCgIAAAAAAA8AAABHcm91cFByb3BlcnRpZXMBAFBEAC4ARFBEAAABAMU4AQAA" +
            "AAEAAAAAAAAAAQH/////AAAAAARggAoBAAAAAAAGAAAAU3RhdHVzAQChOwAvAQAzOaE7AAD/////AQAA" +
            "ABVgiQoCAAAAAAAFAAAAU3RhdGUBAKI7AC8AP6I7AAABADc5/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<MessageSecurityMode> SecurityMode
         {
@@ -72805,9 +72562,9 @@ namespace Opc.Ua
                 m_status = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -73002,22 +72759,22 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<MessageSecurityMode> m_securityMode;
         private PropertyState<string> m_securityGroupId;
         private PropertyState<EndpointDescription[]> m_securityKeyServices;
         private PropertyState<uint> m_maxNetworkMessageSize;
         private PropertyState<KeyValuePair[]> m_groupProperties;
         private PubSubStatusState m_status;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region WriterGroupState Class
-    #if (!OPCUA_EXCLUDE_WriterGroupState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_WriterGroupState)
     /// <summary>
     /// Stores an instance of the WriterGroupType ObjectType.
     /// </summary>
@@ -73025,7 +72782,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class WriterGroupState : PubSubGroupState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -73041,7 +72798,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.WriterGroupType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -73094,7 +72851,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string TransportSettings_InitializationString =
            "//////////8EYIAKAQAAAAAAEQAAAFRyYW5zcG9ydFNldHRpbmdzAQBNRQAvAQBNRk1FAAD/////AAAA" +
            "AA==";
@@ -73244,11 +73001,11 @@ namespace Opc.Ua
            "SEZIRgAAAQH/////AQAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAElGAC4ARElGAACWAQAA" +
            "AAEAKgEBIgAAABMAAABEYXRhU2V0V3JpdGVyTm9kZUlkABH/////AAAAAAABACgBAQAAAAEAAAAAAAAA" +
            "AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<ushort> WriterGroupId
         {
@@ -73457,9 +73214,9 @@ namespace Opc.Ua
                 m_removeDataSetWriterMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -73784,9 +73541,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<ushort> m_writerGroupId;
         private PropertyState<double> m_publishingInterval;
         private PropertyState<double> m_keepAliveTime;
@@ -73798,13 +73555,13 @@ namespace Opc.Ua
         private PubSubDiagnosticsWriterGroupState m_diagnostics;
         private PubSubGroupTypeAddWriterMethodState m_addDataSetWriterMethod;
         private PubSubGroupTypeRemoveWriterMethodState m_removeDataSetWriterMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region PubSubGroupTypeAddWriterMethodState Class
-    #if (!OPCUA_EXCLUDE_PubSubGroupTypeAddWriterMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_PubSubGroupTypeAddWriterMethodState)
     /// <summary>
     /// Stores an instance of the PubSubGroupTypeAddWriterMethodType Method.
     /// </summary>
@@ -73812,7 +73569,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubGroupTypeAddWriterMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -73825,12 +73582,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new PubSubGroupTypeAddWriterMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -73849,7 +73606,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAIgAAAFB1YlN1Ykdyb3VwVHlwZUFkZFdyaXRlck1ldGhvZFR5cGUBAEpG" +
            "AC8BAEpGSkYAAAEB/////wIAAAAXYKkKAgAAAAAADgAAAElucHV0QXJndW1lbnRzAQBLRgAuAERLRgAA" +
@@ -73857,21 +73614,21 @@ namespace Opc.Ua
            "AQH/////AAAAABdgqQoCAAAAAAAPAAAAT3V0cHV0QXJndW1lbnRzAQBMRgAuAERMRgAAlgEAAAABACoB" +
            "ASIAAAATAAAARGF0YVNldFdyaXRlck5vZGVJZAAR/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB////" +
            "/wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public PubSubGroupTypeAddWriterMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -73906,10 +73663,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -73922,11 +73679,11 @@ namespace Opc.Ua
         NodeId _objectId,
         DataSetWriterDataType configuration,
         ref NodeId dataSetWriterNodeId);
-    #endif
-    #endregion
+#endif
 
-    #region PubSubGroupTypeRemoveWriterMethodState Class
-    #if (!OPCUA_EXCLUDE_PubSubGroupTypeRemoveWriterMethodState)
+
+
+#if (!OPCUA_EXCLUDE_PubSubGroupTypeRemoveWriterMethodState)
     /// <summary>
     /// Stores an instance of the PubSubGroupTypeRemoveWriterMethodType Method.
     /// </summary>
@@ -73934,7 +73691,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubGroupTypeRemoveWriterMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -73947,12 +73704,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new PubSubGroupTypeRemoveWriterMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -73971,27 +73728,27 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAJQAAAFB1YlN1Ykdyb3VwVHlwZVJlbW92ZVdyaXRlck1ldGhvZFR5cGUB" +
            "AB85AC8BAB85HzkAAAEB/////wEAAAAXYKkKAgAAAAAADgAAAElucHV0QXJndW1lbnRzAQAgOQAuAEQg" +
            "OQAAlgEAAAABACoBASIAAAATAAAARGF0YVNldFdyaXRlck5vZGVJZAAR/////wAAAAAAAQAoAQEAAAAB" +
            "AAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public PubSubGroupTypeRemoveWriterMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -74021,10 +73778,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -74036,11 +73793,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         NodeId dataSetWriterNodeId);
-    #endif
-    #endregion
+#endif
 
-    #region WriterGroupTransportState Class
-    #if (!OPCUA_EXCLUDE_WriterGroupTransportState)
+
+
+#if (!OPCUA_EXCLUDE_WriterGroupTransportState)
     /// <summary>
     /// Stores an instance of the WriterGroupTransportType ObjectType.
     /// </summary>
@@ -74048,7 +73805,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class WriterGroupTransportState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -74064,7 +73821,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.WriterGroupTransportType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -74092,28 +73849,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIAAAAFdyaXRlckdyb3VwVHJhbnNwb3J0VHlwZUluc3RhbmNlAQBNRgEA" +
            "TUZNRgAA/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region WriterGroupMessageState Class
-    #if (!OPCUA_EXCLUDE_WriterGroupMessageState)
+
+
+#if (!OPCUA_EXCLUDE_WriterGroupMessageState)
     /// <summary>
     /// Stores an instance of the WriterGroupMessageType ObjectType.
     /// </summary>
@@ -74121,7 +73878,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class WriterGroupMessageState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -74137,7 +73894,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.WriterGroupMessageType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -74165,28 +73922,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHgAAAFdyaXRlckdyb3VwTWVzc2FnZVR5cGVJbnN0YW5jZQEATkYBAE5G" +
            "TkYAAP////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region ReaderGroupState Class
-    #if (!OPCUA_EXCLUDE_ReaderGroupState)
+
+
+#if (!OPCUA_EXCLUDE_ReaderGroupState)
     /// <summary>
     /// Stores an instance of the ReaderGroupType ObjectType.
     /// </summary>
@@ -74194,7 +73951,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ReaderGroupState : PubSubGroupState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -74210,7 +73967,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ReaderGroupType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -74263,7 +74020,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string Diagnostics_InitializationString =
            "//////////8EYIAKAQAAAAAACwAAAERpYWdub3N0aWNzAQAXUgAvAQC/TRdSAAD/////BwAAABVgiQoC" +
            "AAAAAAAQAAAARGlhZ25vc3RpY3NMZXZlbAEAGFIALwA/GFIAAAEAC03/////AQH/////AAAAABVgiQoC" +
@@ -74391,11 +74148,11 @@ namespace Opc.Ua
            "UmVtb3ZlRGF0YVNldFJlYWRlcgEAXVIALwEAXVJdUgAAAQH/////AQAAABdgqQoCAAAAAAAOAAAASW5w" +
            "dXRBcmd1bWVudHMBAF5SAC4ARF5SAACWAQAAAAEAKgEBIgAAABMAAABEYXRhU2V0UmVhZGVyTm9kZUlk" +
            "ABH/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PubSubDiagnosticsReaderGroupState Diagnostics
         {
@@ -74490,9 +74247,9 @@ namespace Opc.Ua
                 m_removeDataSetReaderMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -74661,21 +74418,21 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PubSubDiagnosticsReaderGroupState m_diagnostics;
         private ReaderGroupTransportState m_transportSettings;
         private ReaderGroupMessageState m_messageSettings;
         private PubSubGroupTypeAddReaderMethodState m_addDataSetReaderMethod;
         private PubSubGroupTypeRemoveReaderMethodState m_removeDataSetReaderMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region PubSubGroupTypeAddReaderMethodState Class
-    #if (!OPCUA_EXCLUDE_PubSubGroupTypeAddReaderMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_PubSubGroupTypeAddReaderMethodState)
     /// <summary>
     /// Stores an instance of the PubSubGroupTypeAddReaderMethodType Method.
     /// </summary>
@@ -74683,7 +74440,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubGroupTypeAddReaderMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -74696,12 +74453,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new PubSubGroupTypeAddReaderMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -74720,7 +74477,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAIgAAAFB1YlN1Ykdyb3VwVHlwZUFkZFJlYWRlck1ldGhvZFR5cGUBAF9S" +
            "AC8BAF9SX1IAAAEB/////wIAAAAXYKkKAgAAAAAADgAAAElucHV0QXJndW1lbnRzAQBgUgAuAERgUgAA" +
@@ -74728,21 +74485,21 @@ namespace Opc.Ua
            "AQH/////AAAAABdgqQoCAAAAAAAPAAAAT3V0cHV0QXJndW1lbnRzAQBhUgAuAERhUgAAlgEAAAABACoB" +
            "ASIAAAATAAAARGF0YVNldFJlYWRlck5vZGVJZAAR/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB////" +
            "/wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public PubSubGroupTypeAddReaderMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -74777,10 +74534,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -74793,11 +74550,11 @@ namespace Opc.Ua
         NodeId _objectId,
         DataSetReaderDataType configuration,
         ref NodeId dataSetReaderNodeId);
-    #endif
-    #endregion
+#endif
 
-    #region PubSubGroupTypeRemoveReaderMethodState Class
-    #if (!OPCUA_EXCLUDE_PubSubGroupTypeRemoveReaderMethodState)
+
+
+#if (!OPCUA_EXCLUDE_PubSubGroupTypeRemoveReaderMethodState)
     /// <summary>
     /// Stores an instance of the PubSubGroupTypeRemoveReaderMethodType Method.
     /// </summary>
@@ -74805,7 +74562,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubGroupTypeRemoveReaderMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -74818,12 +74575,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new PubSubGroupTypeRemoveReaderMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -74842,27 +74599,27 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAJQAAAFB1YlN1Ykdyb3VwVHlwZVJlbW92ZVJlYWRlck1ldGhvZFR5cGUB" +
            "ACE5AC8BACE5ITkAAAEB/////wEAAAAXYKkKAgAAAAAADgAAAElucHV0QXJndW1lbnRzAQAiOQAuAEQi" +
            "OQAAlgEAAAABACoBASIAAAATAAAARGF0YVNldFJlYWRlck5vZGVJZAAR/////wAAAAAAAQAoAQEAAAAB" +
            "AAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public PubSubGroupTypeRemoveReaderMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -74892,10 +74649,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -74907,11 +74664,11 @@ namespace Opc.Ua
         MethodState _method,
         NodeId _objectId,
         NodeId dataSetReaderNodeId);
-    #endif
-    #endregion
+#endif
 
-    #region ReaderGroupTransportState Class
-    #if (!OPCUA_EXCLUDE_ReaderGroupTransportState)
+
+
+#if (!OPCUA_EXCLUDE_ReaderGroupTransportState)
     /// <summary>
     /// Stores an instance of the ReaderGroupTransportType ObjectType.
     /// </summary>
@@ -74919,7 +74676,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ReaderGroupTransportState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -74935,7 +74692,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ReaderGroupTransportType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -74963,28 +74720,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIAAAAFJlYWRlckdyb3VwVHJhbnNwb3J0VHlwZUluc3RhbmNlAQBiUgEA" +
            "YlJiUgAA/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region ReaderGroupMessageState Class
-    #if (!OPCUA_EXCLUDE_ReaderGroupMessageState)
+
+
+#if (!OPCUA_EXCLUDE_ReaderGroupMessageState)
     /// <summary>
     /// Stores an instance of the ReaderGroupMessageType ObjectType.
     /// </summary>
@@ -74992,7 +74749,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ReaderGroupMessageState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -75008,7 +74765,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ReaderGroupMessageType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -75036,28 +74793,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHgAAAFJlYWRlckdyb3VwTWVzc2FnZVR5cGVJbnN0YW5jZQEAY1IBAGNS" +
            "Y1IAAP////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region DataSetWriterState Class
-    #if (!OPCUA_EXCLUDE_DataSetWriterState)
+
+
+#if (!OPCUA_EXCLUDE_DataSetWriterState)
     /// <summary>
     /// Stores an instance of the DataSetWriterType ObjectType.
     /// </summary>
@@ -75065,7 +74822,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DataSetWriterState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -75081,7 +74838,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.DataSetWriterType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -75129,7 +74886,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string KeyFrameCount_InitializationString =
            "//////////8VYIkKAgAAAAAADQAAAEtleUZyYW1lQ291bnQBAGZSAC4ARGZSAAAAB/////8BAf////8A" +
            "AAAA";
@@ -75234,11 +74991,11 @@ namespace Opc.Ua
            "FWCpCgIAAAAAAA4AAABDbGFzc2lmaWNhdGlvbgEAjkwALgBEjkwAAAYBAAAAAQASTf////8BAf////8A" +
            "AAAAFWCpCgIAAAAAABAAAABEaWFnbm9zdGljc0xldmVsAQCPTAAuAESPTAAABgAAAAABAAtN/////wEB" +
            "/////wAAAAAEYIAKAQAAAAAACgAAAExpdmVWYWx1ZXMBAItMAC8AOotMAAD/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<ushort> DataSetWriterId
         {
@@ -75390,9 +75147,9 @@ namespace Opc.Ua
                 m_diagnostics = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -75639,9 +75396,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<ushort> m_dataSetWriterId;
         private PropertyState<uint> m_dataSetFieldContentMask;
         private PropertyState<uint> m_keyFrameCount;
@@ -75650,13 +75407,13 @@ namespace Opc.Ua
         private DataSetWriterMessageState m_messageSettings;
         private PubSubStatusState m_status;
         private PubSubDiagnosticsDataSetWriterState m_diagnostics;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region DataSetWriterTransportState Class
-    #if (!OPCUA_EXCLUDE_DataSetWriterTransportState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_DataSetWriterTransportState)
     /// <summary>
     /// Stores an instance of the DataSetWriterTransportType ObjectType.
     /// </summary>
@@ -75664,7 +75421,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DataSetWriterTransportState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -75680,7 +75437,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.DataSetWriterTransportType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -75708,28 +75465,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIgAAAERhdGFTZXRXcml0ZXJUcmFuc3BvcnRUeXBlSW5zdGFuY2UBAMk7" +
            "AQDJO8k7AAD/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region DataSetWriterMessageState Class
-    #if (!OPCUA_EXCLUDE_DataSetWriterMessageState)
+
+
+#if (!OPCUA_EXCLUDE_DataSetWriterMessageState)
     /// <summary>
     /// Stores an instance of the DataSetWriterMessageType ObjectType.
     /// </summary>
@@ -75737,7 +75494,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DataSetWriterMessageState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -75753,7 +75510,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.DataSetWriterMessageType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -75781,28 +75538,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIAAAAERhdGFTZXRXcml0ZXJNZXNzYWdlVHlwZUluc3RhbmNlAQBoUgEA" +
            "aFJoUgAA/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region DataSetReaderState Class
-    #if (!OPCUA_EXCLUDE_DataSetReaderState)
+
+
+#if (!OPCUA_EXCLUDE_DataSetReaderState)
     /// <summary>
     /// Stores an instance of the DataSetReaderType ObjectType.
     /// </summary>
@@ -75810,7 +75567,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DataSetReaderState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -75826,7 +75583,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.DataSetReaderType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -75894,7 +75651,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string SecurityMode_InitializationString =
            "//////////8VYIkKAgAAAAAADAAAAFNlY3VyaXR5TW9kZQEAPD4ALgBEPD4AAAEALgH/////AQH/////" +
            "AAAAAA==";
@@ -76043,11 +75800,11 @@ namespace Opc.Ua
            "bnMAYAEAAAABAAAAAAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAABdgqQoCAAAAAAAPAAAAT3V0" +
            "cHV0QXJndW1lbnRzAQDvQwAuAETvQwAAlgEAAAABACoBARsAAAAMAAAAUGFyZW50Tm9kZUlkABH/////" +
            "AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState PublisherId
         {
@@ -76408,9 +76165,9 @@ namespace Opc.Ua
                 m_createDataSetMirrorMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -76943,9 +76700,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState m_publisherId;
         private PropertyState<ushort> m_writerGroupId;
         private PropertyState<ushort> m_dataSetWriterId;
@@ -76965,13 +76722,13 @@ namespace Opc.Ua
         private SubscribedDataSetState m_subscribedDataSet;
         private DataSetReaderTypeCreateTargetVariablesMethodState m_createTargetVariablesMethod;
         private DataSetReaderTypeCreateDataSetMirrorMethodState m_createDataSetMirrorMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region DataSetReaderTransportState Class
-    #if (!OPCUA_EXCLUDE_DataSetReaderTransportState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_DataSetReaderTransportState)
     /// <summary>
     /// Stores an instance of the DataSetReaderTransportType ObjectType.
     /// </summary>
@@ -76979,7 +76736,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DataSetReaderTransportState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -76995,7 +76752,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.DataSetReaderTransportType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -77023,28 +76780,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIgAAAERhdGFTZXRSZWFkZXJUcmFuc3BvcnRUeXBlSW5zdGFuY2UBANc7" +
            "AQDXO9c7AAD/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region DataSetReaderMessageState Class
-    #if (!OPCUA_EXCLUDE_DataSetReaderMessageState)
+
+
+#if (!OPCUA_EXCLUDE_DataSetReaderMessageState)
     /// <summary>
     /// Stores an instance of the DataSetReaderMessageType ObjectType.
     /// </summary>
@@ -77052,7 +76809,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DataSetReaderMessageState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -77068,7 +76825,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.DataSetReaderMessageType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -77096,28 +76853,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIAAAAERhdGFTZXRSZWFkZXJNZXNzYWdlVHlwZUluc3RhbmNlAQBwUgEA" +
            "cFJwUgAA/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region DataSetReaderTypeCreateTargetVariablesMethodState Class
-    #if (!OPCUA_EXCLUDE_DataSetReaderTypeCreateTargetVariablesMethodState)
+
+
+#if (!OPCUA_EXCLUDE_DataSetReaderTypeCreateTargetVariablesMethodState)
     /// <summary>
     /// Stores an instance of the DataSetReaderTypeCreateTargetVariablesMethodType Method.
     /// </summary>
@@ -77125,7 +76882,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DataSetReaderTypeCreateTargetVariablesMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -77138,12 +76895,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new DataSetReaderTypeCreateTargetVariablesMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -77162,7 +76919,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAMAAAAERhdGFTZXRSZWFkZXJUeXBlQ3JlYXRlVGFyZ2V0VmFyaWFibGVz" +
            "TWV0aG9kVHlwZQEA8EMALwEA8EPwQwAAAQH/////AgAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVu" +
@@ -77171,21 +76928,21 @@ namespace Opc.Ua
            "AAAAAQAAAAAAAAABAf////8AAAAAF2CpCgIAAAAAAA8AAABPdXRwdXRBcmd1bWVudHMBAPJDAC4ARPJD" +
            "AACWAQAAAAEAKgEBHQAAAAoAAABBZGRSZXN1bHRzABMBAAAAAQAAAAAAAAAAAQAoAQEAAAABAAAAAAAA" +
            "AAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public DataSetReaderTypeCreateTargetVariablesMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -77222,10 +76979,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -77239,11 +76996,11 @@ namespace Opc.Ua
         ConfigurationVersionDataType configurationVersion,
         FieldTargetDataType[] targetVariablesToAdd,
         ref StatusCode[] addResults);
-    #endif
-    #endregion
+#endif
 
-    #region DataSetReaderTypeCreateDataSetMirrorMethodState Class
-    #if (!OPCUA_EXCLUDE_DataSetReaderTypeCreateDataSetMirrorMethodState)
+
+
+#if (!OPCUA_EXCLUDE_DataSetReaderTypeCreateDataSetMirrorMethodState)
     /// <summary>
     /// Stores an instance of the DataSetReaderTypeCreateDataSetMirrorMethodType Method.
     /// </summary>
@@ -77251,7 +77008,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DataSetReaderTypeCreateDataSetMirrorMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -77264,12 +77021,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new DataSetReaderTypeCreateDataSetMirrorMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -77288,7 +77045,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAALgAAAERhdGFTZXRSZWFkZXJUeXBlQ3JlYXRlRGF0YVNldE1pcnJvck1l" +
            "dGhvZFR5cGUBAPNDAC8BAPND80MAAAEB/////wIAAAAXYKkKAgAAAAAADgAAAElucHV0QXJndW1lbnRz" +
@@ -77296,21 +77053,21 @@ namespace Opc.Ua
            "IgAAAA8AAABSb2xlUGVybWlzc2lvbnMAYAEAAAABAAAAAAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////" +
            "AAAAABdgqQoCAAAAAAAPAAAAT3V0cHV0QXJndW1lbnRzAQD1QwAuAET1QwAAlgEAAAABACoBARsAAAAM" +
            "AAAAUGFyZW50Tm9kZUlkABH/////AAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public DataSetReaderTypeCreateDataSetMirrorMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -77347,10 +77104,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -77364,11 +77121,11 @@ namespace Opc.Ua
         string parentNodeName,
         RolePermissionType[] rolePermissions,
         ref NodeId parentNodeId);
-    #endif
-    #endregion
+#endif
 
-    #region SubscribedDataSetState Class
-    #if (!OPCUA_EXCLUDE_SubscribedDataSetState)
+
+
+#if (!OPCUA_EXCLUDE_SubscribedDataSetState)
     /// <summary>
     /// Stores an instance of the SubscribedDataSetType ObjectType.
     /// </summary>
@@ -77376,7 +77133,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SubscribedDataSetState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -77392,7 +77149,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.SubscribedDataSetType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -77420,28 +77177,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHQAAAFN1YnNjcmliZWREYXRhU2V0VHlwZUluc3RhbmNlAQAEOwEABDsE" +
            "OwAA/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region TargetVariablesState Class
-    #if (!OPCUA_EXCLUDE_TargetVariablesState)
+
+
+#if (!OPCUA_EXCLUDE_TargetVariablesState)
     /// <summary>
     /// Stores an instance of the TargetVariablesType ObjectType.
     /// </summary>
@@ -77449,7 +77206,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class TargetVariablesState : SubscribedDataSetState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -77465,7 +77222,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.TargetVariablesType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -77503,7 +77260,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string AddTargetVariables_InitializationString =
            "//////////8EYYIKBAAAAAAAEgAAAEFkZFRhcmdldFZhcmlhYmxlcwEACzsALwEACzsLOwAAAQH/////" +
            "AgAAABdgqQoCAAAAAAAOAAAASW5wdXRBcmd1bWVudHMBAAw7AC4ARAw7AACWAgAAAAEAKgEBJQAAABQA" +
@@ -77535,11 +77292,11 @@ namespace Opc.Ua
            "AAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAABdgqQoCAAAAAAAPAAAAT3V0cHV0QXJndW1lbnRzAQAQ" +
            "OwAuAEQQOwAAlgEAAAABACoBASAAAAANAAAAUmVtb3ZlUmVzdWx0cwATAQAAAAEAAAAAAAAAAAEAKAEB" +
            "AAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<FieldTargetDataType[]> TargetVariables
         {
@@ -77596,9 +77353,9 @@ namespace Opc.Ua
                 m_removeTargetVariablesMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -77715,19 +77472,19 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<FieldTargetDataType[]> m_targetVariables;
         private TargetVariablesTypeAddTargetVariablesMethodState m_addTargetVariablesMethod;
         private TargetVariablesTypeRemoveTargetVariablesMethodState m_removeTargetVariablesMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region TargetVariablesTypeAddTargetVariablesMethodState Class
-    #if (!OPCUA_EXCLUDE_TargetVariablesTypeAddTargetVariablesMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_TargetVariablesTypeAddTargetVariablesMethodState)
     /// <summary>
     /// Stores an instance of the TargetVariablesTypeAddTargetVariablesMethodType Method.
     /// </summary>
@@ -77735,7 +77492,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class TargetVariablesTypeAddTargetVariablesMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -77748,12 +77505,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new TargetVariablesTypeAddTargetVariablesMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -77772,7 +77529,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAALwAAAFRhcmdldFZhcmlhYmxlc1R5cGVBZGRUYXJnZXRWYXJpYWJsZXNN" +
            "ZXRob2RUeXBlAQAROwAvAQAROxE7AAABAf////8CAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3VtZW50" +
@@ -77781,21 +77538,21 @@ namespace Opc.Ua
            "AAABAAAAAAAAAAEB/////wAAAAAXYKkKAgAAAAAADwAAAE91dHB1dEFyZ3VtZW50cwEAEzsALgBEEzsA" +
            "AJYBAAAAAQAqAQEdAAAACgAAAEFkZFJlc3VsdHMAEwEAAAABAAAAAAAAAAABACgBAQAAAAEAAAAAAAAA" +
            "AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public TargetVariablesTypeAddTargetVariablesMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -77832,10 +77589,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -77849,11 +77606,11 @@ namespace Opc.Ua
         ConfigurationVersionDataType configurationVersion,
         FieldTargetDataType[] targetVariablesToAdd,
         ref StatusCode[] addResults);
-    #endif
-    #endregion
+#endif
 
-    #region TargetVariablesTypeRemoveTargetVariablesMethodState Class
-    #if (!OPCUA_EXCLUDE_TargetVariablesTypeRemoveTargetVariablesMethodState)
+
+
+#if (!OPCUA_EXCLUDE_TargetVariablesTypeRemoveTargetVariablesMethodState)
     /// <summary>
     /// Stores an instance of the TargetVariablesTypeRemoveTargetVariablesMethodType Method.
     /// </summary>
@@ -77861,7 +77618,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class TargetVariablesTypeRemoveTargetVariablesMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -77874,12 +77631,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new TargetVariablesTypeRemoveTargetVariablesMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -77898,7 +77655,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAMgAAAFRhcmdldFZhcmlhYmxlc1R5cGVSZW1vdmVUYXJnZXRWYXJpYWJs" +
            "ZXNNZXRob2RUeXBlAQAUOwAvAQAUOxQ7AAABAf////8CAAAAF2CpCgIAAAAAAA4AAABJbnB1dEFyZ3Vt" +
@@ -77907,21 +77664,21 @@ namespace Opc.Ua
            "AAAAAAAAAQH/////AAAAABdgqQoCAAAAAAAPAAAAT3V0cHV0QXJndW1lbnRzAQAWOwAuAEQWOwAAlgEA" +
            "AAABACoBASAAAAANAAAAUmVtb3ZlUmVzdWx0cwATAQAAAAEAAAAAAAAAAAEAKAEBAAAAAQAAAAAAAAAB" +
            "Af////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public TargetVariablesTypeRemoveTargetVariablesMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -77958,10 +77715,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -77975,11 +77732,11 @@ namespace Opc.Ua
         ConfigurationVersionDataType configurationVersion,
         uint[] targetsToRemove,
         ref StatusCode[] removeResults);
-    #endif
-    #endregion
+#endif
 
-    #region SubscribedDataSetMirrorState Class
-    #if (!OPCUA_EXCLUDE_SubscribedDataSetMirrorState)
+
+
+#if (!OPCUA_EXCLUDE_SubscribedDataSetMirrorState)
     /// <summary>
     /// Stores an instance of the SubscribedDataSetMirrorType ObjectType.
     /// </summary>
@@ -77987,7 +77744,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class SubscribedDataSetMirrorState : SubscribedDataSetState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -78003,7 +77760,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.SubscribedDataSetMirrorType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -78031,28 +77788,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIwAAAFN1YnNjcmliZWREYXRhU2V0TWlycm9yVHlwZUluc3RhbmNlAQAX" +
            "OwEAFzsXOwAA/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region PubSubStatusState Class
-    #if (!OPCUA_EXCLUDE_PubSubStatusState)
+
+
+#if (!OPCUA_EXCLUDE_PubSubStatusState)
     /// <summary>
     /// Stores an instance of the PubSubStatusType ObjectType.
     /// </summary>
@@ -78060,7 +77817,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubStatusState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -78076,7 +77833,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.PubSubStatusType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -78114,7 +77871,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string Enable_InitializationString =
            "//////////8EYYIKBAAAAAAABgAAAEVuYWJsZQEANTkALwEANTk1OQAAAQH/////AAAAAA==";
 
@@ -78126,11 +77883,11 @@ namespace Opc.Ua
            "//8DAAAAFWCJCgIAAAAAAAUAAABTdGF0ZQEANDkALwA/NDkAAAEANzn/////AQH/////AAAAAARhggoE" +
            "AAAAAAAGAAAARW5hYmxlAQA1OQAvAQA1OTU5AAABAf////8AAAAABGGCCgQAAAAAAAcAAABEaXNhYmxl" +
            "AQA2OQAvAQA2OTY5AAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<PubSubState> State
         {
@@ -78187,9 +77944,9 @@ namespace Opc.Ua
                 m_disableMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -78306,19 +78063,19 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<PubSubState> m_state;
         private MethodState m_enableMethod;
         private MethodState m_disableMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region PubSubDiagnosticsState Class
-    #if (!OPCUA_EXCLUDE_PubSubDiagnosticsState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_PubSubDiagnosticsState)
     /// <summary>
     /// Stores an instance of the PubSubDiagnosticsType ObjectType.
     /// </summary>
@@ -78326,7 +78083,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubDiagnosticsState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -78342,7 +78099,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.PubSubDiagnosticsType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -78370,7 +78127,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHQAAAFB1YlN1YkRpYWdub3N0aWNzVHlwZUluc3RhbmNlAQDdTAEA3Uzd" +
            "TAAA/////wcAAAAVYIkKAgAAAAAAEAAAAERpYWdub3N0aWNzTGV2ZWwBAN5MAC8AP95MAAABAAtN////" +
@@ -78409,11 +78166,11 @@ namespace Opc.Ua
            "AENsYXNzaWZpY2F0aW9uAQAHTQAuAEQHTQAABgAAAAABABJN/////wEB/////wAAAAAVYKkKAgAAAAAA" +
            "EAAAAERpYWdub3N0aWNzTGV2ZWwBAAhNAC4ARAhNAAAGAAAAAAEAC03/////AQH/////AAAAAARggAoB" +
            "AAAAAAAKAAAATGl2ZVZhbHVlcwEACk0ALwA6Ck0AAP////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<DiagnosticsLevel> DiagnosticsLevel
         {
@@ -78546,9 +78303,9 @@ namespace Opc.Ua
                 m_liveValues = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -78769,9 +78526,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<DiagnosticsLevel> m_diagnosticsLevel;
         private PubSubDiagnosticsCounterState m_totalInformation;
         private PubSubDiagnosticsCounterState m_totalError;
@@ -78779,13 +78536,13 @@ namespace Opc.Ua
         private BaseDataVariableState<bool> m_subError;
         private BaseObjectState m_counters;
         private BaseObjectState m_liveValues;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region PubSubDiagnosticsCounterState Class
-    #if (!OPCUA_EXCLUDE_PubSubDiagnosticsCounterState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_PubSubDiagnosticsCounterState)
     /// <summary>
     /// Stores an instance of the PubSubDiagnosticsCounterType VariableType.
     /// </summary>
@@ -78793,7 +78550,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubDiagnosticsCounterState : BaseDataVariableState<uint>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -78825,7 +78582,7 @@ namespace Opc.Ua
             return ValueRanks.Scalar;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -78858,7 +78615,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string TimeFirstChange_InitializationString =
            "//////////8VYIkKAgAAAAAADwAAAFRpbWVGaXJzdENoYW5nZQEAEU0ALgBEEU0AAAAN/////wEB////" +
            "/wAAAAA=";
@@ -78870,11 +78627,11 @@ namespace Opc.Ua
            "//8BAf////8AAAAAFWCJCgIAAAAAABAAAABEaWFnbm9zdGljc0xldmVsAQAQTQAuAEQQTQAAAQALTf//" +
            "//8BAf////8AAAAAFWCJCgIAAAAAAA8AAABUaW1lRmlyc3RDaGFuZ2UBABFNAC4ARBFNAAAADf////8B" +
            "Af////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<bool> Active
         {
@@ -78950,9 +78707,9 @@ namespace Opc.Ua
                 m_timeFirstChange = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -79095,20 +78852,20 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<bool> m_active;
         private PropertyState<PubSubDiagnosticsCounterClassification> m_classification;
         private PropertyState<DiagnosticsLevel> m_diagnosticsLevel;
         private PropertyState<DateTime> m_timeFirstChange;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region PubSubDiagnosticsRootState Class
-    #if (!OPCUA_EXCLUDE_PubSubDiagnosticsRootState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_PubSubDiagnosticsRootState)
     /// <summary>
     /// Stores an instance of the PubSubDiagnosticsRootType ObjectType.
     /// </summary>
@@ -79116,7 +78873,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubDiagnosticsRootState : PubSubDiagnosticsState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -79132,7 +78889,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.PubSubDiagnosticsRootType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -79160,7 +78917,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIQAAAFB1YlN1YkRpYWdub3N0aWNzUm9vdFR5cGVJbnN0YW5jZQEAFE0B" +
            "ABRNFE0AAP////8HAAAAFWCJCgIAAAAAABAAAABEaWFnbm9zdGljc0xldmVsAQAVTQAvAD8VTQAAAQAL" +
@@ -79208,24 +78965,24 @@ namespace Opc.Ua
            "AAtN/////wEB/////wAAAAAVYIkKAgAAAAAAGQAAAE9wZXJhdGlvbmFsRGF0YVNldFJlYWRlcnMBAEhN" +
            "AC8AP0hNAAAABf////8BAf////8BAAAAFWCpCgIAAAAAABAAAABEaWFnbm9zdGljc0xldmVsAQBJTQAu" +
            "AERJTQAABgAAAAABAAtN/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region PubSubDiagnosticsConnectionState Class
-    #if (!OPCUA_EXCLUDE_PubSubDiagnosticsConnectionState)
+
+
+#if (!OPCUA_EXCLUDE_PubSubDiagnosticsConnectionState)
     /// <summary>
     /// Stores an instance of the PubSubDiagnosticsConnectionType ObjectType.
     /// </summary>
@@ -79233,7 +78990,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubDiagnosticsConnectionState : PubSubDiagnosticsState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -79249,7 +79006,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.PubSubDiagnosticsConnectionType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -79277,7 +79034,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJwAAAFB1YlN1YkRpYWdub3N0aWNzQ29ubmVjdGlvblR5cGVJbnN0YW5j" +
            "ZQEASk0BAEpNSk0AAP////8HAAAAFWCJCgIAAAAAABAAAABEaWFnbm9zdGljc0xldmVsAQBLTQAvAD9L" +
@@ -79318,24 +79075,24 @@ namespace Opc.Ua
            "/wAAAAAEYIAKAQAAAAAACgAAAExpdmVWYWx1ZXMBAHdNAC8AOndNAAD/////AQAAABVgiQoCAAAAAAAP" +
            "AAAAUmVzb2x2ZWRBZGRyZXNzAQB4TQAvAD94TQAAAAz/////AQH/////AQAAABVgqQoCAAAAAAAQAAAA" +
            "RGlhZ25vc3RpY3NMZXZlbAEAeU0ALgBEeU0AAAYAAAAAAQALTf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region PubSubDiagnosticsWriterGroupState Class
-    #if (!OPCUA_EXCLUDE_PubSubDiagnosticsWriterGroupState)
+
+
+#if (!OPCUA_EXCLUDE_PubSubDiagnosticsWriterGroupState)
     /// <summary>
     /// Stores an instance of the PubSubDiagnosticsWriterGroupType ObjectType.
     /// </summary>
@@ -79343,7 +79100,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubDiagnosticsWriterGroupState : PubSubDiagnosticsState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -79359,7 +79116,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.PubSubDiagnosticsWriterGroupType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -79387,7 +79144,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKAAAAFB1YlN1YkRpYWdub3N0aWNzV3JpdGVyR3JvdXBUeXBlSW5zdGFu" +
            "Y2UBAHpNAQB6TXpNAAD/////BwAAABVgiQoCAAAAAAAQAAAARGlhZ25vc3RpY3NMZXZlbAEAe00ALwA/" +
@@ -79447,24 +79204,24 @@ namespace Opc.Ua
            "Af////8AAAAAFWCJCgIAAAAAABEAAABUaW1lVG9OZXh0VG9rZW5JRAEAvU0ALwA/vU0AAAEAIgH/////" +
            "AQH/////AQAAABVgqQoCAAAAAAAQAAAARGlhZ25vc3RpY3NMZXZlbAEAvk0ALgBEvk0AAAYCAAAAAQAL" +
            "Tf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region PubSubDiagnosticsReaderGroupState Class
-    #if (!OPCUA_EXCLUDE_PubSubDiagnosticsReaderGroupState)
+
+
+#if (!OPCUA_EXCLUDE_PubSubDiagnosticsReaderGroupState)
     /// <summary>
     /// Stores an instance of the PubSubDiagnosticsReaderGroupType ObjectType.
     /// </summary>
@@ -79472,7 +79229,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubDiagnosticsReaderGroupState : PubSubDiagnosticsState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -79488,7 +79245,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.PubSubDiagnosticsReaderGroupType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -79516,7 +79273,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKAAAAFB1YlN1YkRpYWdub3N0aWNzUmVhZGVyR3JvdXBUeXBlSW5zdGFu" +
            "Y2UBAL9NAQC/Tb9NAAD/////BwAAABVgiQoCAAAAAAAQAAAARGlhZ25vc3RpY3NMZXZlbAEAwE0ALwA/" +
@@ -79572,24 +79329,24 @@ namespace Opc.Ua
            "AQH/////AAAAABVgiQoCAAAAAAAZAAAAT3BlcmF0aW9uYWxEYXRhU2V0UmVhZGVycwEA/k0ALwA//k0A" +
            "AAAF/////wEB/////wEAAAAVYKkKAgAAAAAAEAAAAERpYWdub3N0aWNzTGV2ZWwBAP9NAC4ARP9NAAAG" +
            "AAAAAAEAC03/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region PubSubDiagnosticsDataSetWriterState Class
-    #if (!OPCUA_EXCLUDE_PubSubDiagnosticsDataSetWriterState)
+
+
+#if (!OPCUA_EXCLUDE_PubSubDiagnosticsDataSetWriterState)
     /// <summary>
     /// Stores an instance of the PubSubDiagnosticsDataSetWriterType ObjectType.
     /// </summary>
@@ -79597,7 +79354,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubDiagnosticsDataSetWriterState : PubSubDiagnosticsState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -79613,7 +79370,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.PubSubDiagnosticsDataSetWriterType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -79641,7 +79398,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKgAAAFB1YlN1YkRpYWdub3N0aWNzRGF0YVNldFdyaXRlclR5cGVJbnN0" +
            "YW5jZQEAAE4BAABOAE4AAP////8HAAAAFWCJCgIAAAAAABAAAABEaWFnbm9zdGljc0xldmVsAQABTgAv" +
@@ -79692,24 +79449,24 @@ namespace Opc.Ua
            "AAAQAAAARGlhZ25vc3RpY3NMZXZlbAEAOE4ALgBEOE4AAAYCAAAAAQALTf////8BAf////8AAAAAFWCJ" +
            "CgIAAAAAAAwAAABNaW5vclZlcnNpb24BADlOAC8APzlOAAAAB/////8BAf////8BAAAAFWCpCgIAAAAA" +
            "ABAAAABEaWFnbm9zdGljc0xldmVsAQA6TgAuAEQ6TgAABgIAAAABAAtN/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region PubSubDiagnosticsDataSetReaderState Class
-    #if (!OPCUA_EXCLUDE_PubSubDiagnosticsDataSetReaderState)
+
+
+#if (!OPCUA_EXCLUDE_PubSubDiagnosticsDataSetReaderState)
     /// <summary>
     /// Stores an instance of the PubSubDiagnosticsDataSetReaderType ObjectType.
     /// </summary>
@@ -79717,7 +79474,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubDiagnosticsDataSetReaderState : PubSubDiagnosticsState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -79733,7 +79490,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.PubSubDiagnosticsDataSetReaderType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -79761,7 +79518,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKgAAAFB1YlN1YkRpYWdub3N0aWNzRGF0YVNldFJlYWRlclR5cGVJbnN0" +
            "YW5jZQEAO04BADtOO04AAP////8HAAAAFWCJCgIAAAAAABAAAABEaWFnbm9zdGljc0xldmVsAQA8TgAv" +
@@ -79820,24 +79577,24 @@ namespace Opc.Ua
            "AAAARGlhZ25vc3RpY3NMZXZlbAEAfE4ALgBEfE4AAAYCAAAAAQALTf////8BAf////8AAAAAFWCJCgIA" +
            "AAAAABEAAABUaW1lVG9OZXh0VG9rZW5JRAEAfU4ALwA/fU4AAAEAIgH/////AQH/////AQAAABVgqQoC" +
            "AAAAAAAQAAAARGlhZ25vc3RpY3NMZXZlbAEAfk4ALgBEfk4AAAYCAAAAAQALTf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region PubSubStatusEventState Class
-    #if (!OPCUA_EXCLUDE_PubSubStatusEventState)
+
+
+#if (!OPCUA_EXCLUDE_PubSubStatusEventState)
     /// <summary>
     /// Stores an instance of the PubSubStatusEventType ObjectType.
     /// </summary>
@@ -79845,7 +79602,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubStatusEventState : SystemEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -79861,7 +79618,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.PubSubStatusEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -79889,7 +79646,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHQAAAFB1YlN1YlN0YXR1c0V2ZW50VHlwZUluc3RhbmNlAQCvPAEArzyv" +
            "PAAA/////wsAAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBALA8AC4ARLA8AAAAD/////8BAf////8AAAAA" +
@@ -79902,11 +79659,11 @@ namespace Opc.Ua
            "CgIAAAAAAAwAAABDb25uZWN0aW9uSWQBALk8AC4ARLk8AAAAEf////8BAf////8AAAAAFWCJCgIAAAAA" +
            "AAcAAABHcm91cElkAQC6PAAuAES6PAAAABH/////AQH/////AAAAABVgiQoCAAAAAAAFAAAAU3RhdGUB" +
            "ALs8AC4ARLs8AAABADc5/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<NodeId> ConnectionId
         {
@@ -79963,9 +79720,9 @@ namespace Opc.Ua
                 m_state = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -80082,19 +79839,19 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<NodeId> m_connectionId;
         private PropertyState<NodeId> m_groupId;
         private PropertyState<PubSubState> m_state;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region PubSubTransportLimitsExceedEventState Class
-    #if (!OPCUA_EXCLUDE_PubSubTransportLimitsExceedEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_PubSubTransportLimitsExceedEventState)
     /// <summary>
     /// Stores an instance of the PubSubTransportLimitsExceedEventType ObjectType.
     /// </summary>
@@ -80102,7 +79859,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubTransportLimitsExceedEventState : PubSubStatusEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -80118,7 +79875,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.PubSubTransportLimitsExceedEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -80146,7 +79903,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAALAAAAFB1YlN1YlRyYW5zcG9ydExpbWl0c0V4Y2VlZEV2ZW50VHlwZUlu" +
            "c3RhbmNlAQC8PAEAvDy8PAAA/////w0AAAAVYIkKAgAAAAAABwAAAEV2ZW50SWQBAL08AC4ARL08AAAA" +
@@ -80161,11 +79918,11 @@ namespace Opc.Ua
            "AAAAAAAFAAAAU3RhdGUBAMg8AC4ARMg8AAABADc5/////wEB/////wAAAAAVYIkKAgAAAAAABgAAAEFj" +
            "dHVhbAEAyTwALgBEyTwAAAAH/////wEB/////wAAAAAVYIkKAgAAAAAABwAAAE1heGltdW0BAMo8AC4A" +
            "RMo8AAAAB/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<uint> Actual
         {
@@ -80203,9 +79960,9 @@ namespace Opc.Ua
                 m_maximum = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -80296,18 +80053,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<uint> m_actual;
         private PropertyState<uint> m_maximum;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region PubSubCommunicationFailureEventState Class
-    #if (!OPCUA_EXCLUDE_PubSubCommunicationFailureEventState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_PubSubCommunicationFailureEventState)
     /// <summary>
     /// Stores an instance of the PubSubCommunicationFailureEventType ObjectType.
     /// </summary>
@@ -80315,7 +80072,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class PubSubCommunicationFailureEventState : PubSubStatusEventState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -80331,7 +80088,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.PubSubCommunicationFailureEventType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -80359,7 +80116,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKwAAAFB1YlN1YkNvbW11bmljYXRpb25GYWlsdXJlRXZlbnRUeXBlSW5z" +
            "dGFuY2UBAMs8AQDLPMs8AAD/////DAAAABVgiQoCAAAAAAAHAAAARXZlbnRJZAEAzDwALgBEzDwAAAAP" +
@@ -80373,11 +80130,11 @@ namespace Opc.Ua
            "/wAAAAAVYIkKAgAAAAAABwAAAEdyb3VwSWQBANY8AC4ARNY8AAAAEf////8BAf////8AAAAAFWCJCgIA" +
            "AAAAAAUAAABTdGF0ZQEA1zwALgBE1zwAAAEANzn/////AQH/////AAAAABVgiQoCAAAAAAAFAAAARXJy" +
            "b3IBANg8AC4ARNg8AAAAE/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<StatusCode> Error
         {
@@ -80396,9 +80153,9 @@ namespace Opc.Ua
                 m_error = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -80463,17 +80220,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<StatusCode> m_error;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region UadpWriterGroupMessageState Class
-    #if (!OPCUA_EXCLUDE_UadpWriterGroupMessageState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_UadpWriterGroupMessageState)
     /// <summary>
     /// Stores an instance of the UadpWriterGroupMessageType ObjectType.
     /// </summary>
@@ -80481,7 +80238,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class UadpWriterGroupMessageState : WriterGroupMessageState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -80497,7 +80254,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.UadpWriterGroupMessageType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -80530,7 +80287,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string SamplingOffset_InitializationString =
            "//////////8VYIkKAgAAAAAADgAAAFNhbXBsaW5nT2Zmc2V0AQB1UgAuAER1UgAAAQAiAf////8BAf//" +
            "//8AAAAA";
@@ -80543,11 +80300,11 @@ namespace Opc.Ua
            "AAABABo9/////wEB/////wAAAAAVYIkKAgAAAAAADgAAAFNhbXBsaW5nT2Zmc2V0AQB1UgAuAER1UgAA" +
            "AQAiAf////8BAf////8AAAAAF2CJCgIAAAAAABAAAABQdWJsaXNoaW5nT2Zmc2V0AQB2UgAuAER2UgAA" +
            "AQAiAQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<uint> GroupVersion
         {
@@ -80642,9 +80399,9 @@ namespace Opc.Ua
                 m_publishingOffset = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -80813,21 +80570,21 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<uint> m_groupVersion;
         private PropertyState<DataSetOrderingType> m_dataSetOrdering;
         private PropertyState<uint> m_networkMessageContentMask;
         private PropertyState<double> m_samplingOffset;
         private PropertyState<double[]> m_publishingOffset;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region UadpDataSetWriterMessageState Class
-    #if (!OPCUA_EXCLUDE_UadpDataSetWriterMessageState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_UadpDataSetWriterMessageState)
     /// <summary>
     /// Stores an instance of the UadpDataSetWriterMessageType ObjectType.
     /// </summary>
@@ -80835,7 +80592,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class UadpDataSetWriterMessageState : DataSetWriterMessageState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -80851,7 +80608,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.UadpDataSetWriterMessageType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -80879,7 +80636,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJAAAAFVhZHBEYXRhU2V0V3JpdGVyTWVzc2FnZVR5cGVJbnN0YW5jZQEA" +
            "d1IBAHdSd1IAAP////8EAAAAFWCJCgIAAAAAABkAAABEYXRhU2V0TWVzc2FnZUNvbnRlbnRNYXNrAQB4" +
@@ -80887,11 +80644,11 @@ namespace Opc.Ua
            "LgBEeVIAAAAF/////wEB/////wAAAAAVYIkKAgAAAAAAFAAAAE5ldHdvcmtNZXNzYWdlTnVtYmVyAQB6" +
            "UgAuAER6UgAAAAX/////AQH/////AAAAABVgiQoCAAAAAAANAAAARGF0YVNldE9mZnNldAEAe1IALgBE" +
            "e1IAAAAF/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<uint> DataSetMessageContentMask
         {
@@ -80967,9 +80724,9 @@ namespace Opc.Ua
                 m_dataSetOffset = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -81112,20 +80869,20 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<uint> m_dataSetMessageContentMask;
         private PropertyState<ushort> m_configuredSize;
         private PropertyState<ushort> m_networkMessageNumber;
         private PropertyState<ushort> m_dataSetOffset;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region UadpDataSetReaderMessageState Class
-    #if (!OPCUA_EXCLUDE_UadpDataSetReaderMessageState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_UadpDataSetReaderMessageState)
     /// <summary>
     /// Stores an instance of the UadpDataSetReaderMessageType ObjectType.
     /// </summary>
@@ -81133,7 +80890,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class UadpDataSetReaderMessageState : DataSetReaderMessageState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -81149,7 +80906,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.UadpDataSetReaderMessageType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -81177,7 +80934,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJAAAAFVhZHBEYXRhU2V0UmVhZGVyTWVzc2FnZVR5cGVJbnN0YW5jZQEA" +
            "fFIBAHxSfFIAAP////8JAAAAFWCJCgIAAAAAAAwAAABHcm91cFZlcnNpb24BAH1SAC4ARH1SAAABAAZS" +
@@ -81190,11 +80947,11 @@ namespace Opc.Ua
            "UgAuAESDUgAAAQAiAf////8BAf////8AAAAAFWCJCgIAAAAAABAAAABQcm9jZXNzaW5nT2Zmc2V0AQCE" +
            "UgAuAESEUgAAAQAiAf////8BAf////8AAAAAFWCJCgIAAAAAAA0AAABSZWNlaXZlT2Zmc2V0AQCFUgAu" +
            "AESFUgAAAQAiAf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<uint> GroupVersion
         {
@@ -81365,9 +81122,9 @@ namespace Opc.Ua
                 m_receiveOffset = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -81640,9 +81397,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<uint> m_groupVersion;
         private PropertyState<ushort> m_networkMessageNumber;
         private PropertyState<ushort> m_dataSetOffset;
@@ -81652,13 +81409,13 @@ namespace Opc.Ua
         private PropertyState<double> m_publishingInterval;
         private PropertyState<double> m_processingOffset;
         private PropertyState<double> m_receiveOffset;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region JsonWriterGroupMessageState Class
-    #if (!OPCUA_EXCLUDE_JsonWriterGroupMessageState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_JsonWriterGroupMessageState)
     /// <summary>
     /// Stores an instance of the JsonWriterGroupMessageType ObjectType.
     /// </summary>
@@ -81666,7 +81423,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class JsonWriterGroupMessageState : WriterGroupMessageState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -81682,7 +81439,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.JsonWriterGroupMessageType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -81710,16 +81467,16 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIgAAAEpzb25Xcml0ZXJHcm91cE1lc3NhZ2VUeXBlSW5zdGFuY2UBAIZS" +
            "AQCGUoZSAAD/////AQAAABVgiQoCAAAAAAAZAAAATmV0d29ya01lc3NhZ2VDb250ZW50TWFzawEAh1IA" +
            "LgBEh1IAAAEAJj3/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<uint> NetworkMessageContentMask
         {
@@ -81738,9 +81495,9 @@ namespace Opc.Ua
                 m_networkMessageContentMask = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -81805,17 +81562,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<uint> m_networkMessageContentMask;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region JsonDataSetWriterMessageState Class
-    #if (!OPCUA_EXCLUDE_JsonDataSetWriterMessageState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_JsonDataSetWriterMessageState)
     /// <summary>
     /// Stores an instance of the JsonDataSetWriterMessageType ObjectType.
     /// </summary>
@@ -81823,7 +81580,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class JsonDataSetWriterMessageState : DataSetWriterMessageState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -81839,7 +81596,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.JsonDataSetWriterMessageType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -81867,16 +81624,16 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJAAAAEpzb25EYXRhU2V0V3JpdGVyTWVzc2FnZVR5cGVJbnN0YW5jZQEA" +
            "iFIBAIhSiFIAAP////8BAAAAFWCJCgIAAAAAABkAAABEYXRhU2V0TWVzc2FnZUNvbnRlbnRNYXNrAQCJ" +
            "UgAuAESJUgAAAQAqPf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<uint> DataSetMessageContentMask
         {
@@ -81895,9 +81652,9 @@ namespace Opc.Ua
                 m_dataSetMessageContentMask = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -81962,17 +81719,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<uint> m_dataSetMessageContentMask;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region JsonDataSetReaderMessageState Class
-    #if (!OPCUA_EXCLUDE_JsonDataSetReaderMessageState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_JsonDataSetReaderMessageState)
     /// <summary>
     /// Stores an instance of the JsonDataSetReaderMessageType ObjectType.
     /// </summary>
@@ -81980,7 +81737,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class JsonDataSetReaderMessageState : DataSetReaderMessageState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -81996,7 +81753,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.JsonDataSetReaderMessageType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -82024,17 +81781,17 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJAAAAEpzb25EYXRhU2V0UmVhZGVyTWVzc2FnZVR5cGVJbnN0YW5jZQEA" +
            "ilIBAIpSilIAAP////8CAAAAFWCJCgIAAAAAABkAAABOZXR3b3JrTWVzc2FnZUNvbnRlbnRNYXNrAQCL" +
            "UgAuAESLUgAAAQAmPf////8BAf////8AAAAAFWCJCgIAAAAAABkAAABEYXRhU2V0TWVzc2FnZUNvbnRl" +
            "bnRNYXNrAQCMUgAuAESMUgAAAQAqPf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<uint> NetworkMessageContentMask
         {
@@ -82072,9 +81829,9 @@ namespace Opc.Ua
                 m_dataSetMessageContentMask = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -82165,18 +81922,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<uint> m_networkMessageContentMask;
         private PropertyState<uint> m_dataSetMessageContentMask;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region DatagramConnectionTransportState Class
-    #if (!OPCUA_EXCLUDE_DatagramConnectionTransportState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_DatagramConnectionTransportState)
     /// <summary>
     /// Stores an instance of the DatagramConnectionTransportType ObjectType.
     /// </summary>
@@ -82184,7 +81941,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DatagramConnectionTransportState : ConnectionTransportState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -82200,7 +81957,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.DatagramConnectionTransportType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -82228,18 +81985,18 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJwAAAERhdGFncmFtQ29ubmVjdGlvblRyYW5zcG9ydFR5cGVJbnN0YW5j" +
            "ZQEA2DoBANg62DoAAP////8BAAAABGCACgEAAAAAABAAAABEaXNjb3ZlcnlBZGRyZXNzAQDgOgAvAQCZ" +
            "UuA6AAD/////AQAAABVgiQoCAAAAAAAQAAAATmV0d29ya0ludGVyZmFjZQEAMjsALwEAtT8yOwAAAAz/" +
            "////AQH/////AQAAABdgiQoCAAAAAAAKAAAAU2VsZWN0aW9ucwEAq0QALgBEq0QAAAAYAQAAAAEAAAAA" +
            "AAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public NetworkAddressState DiscoveryAddress
         {
@@ -82258,9 +82015,9 @@ namespace Opc.Ua
                 m_discoveryAddress = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -82325,17 +82082,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private NetworkAddressState m_discoveryAddress;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region DatagramWriterGroupTransportState Class
-    #if (!OPCUA_EXCLUDE_DatagramWriterGroupTransportState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_DatagramWriterGroupTransportState)
     /// <summary>
     /// Stores an instance of the DatagramWriterGroupTransportType ObjectType.
     /// </summary>
@@ -82343,7 +82100,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class DatagramWriterGroupTransportState : WriterGroupTransportState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -82359,7 +82116,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.DatagramWriterGroupTransportType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -82397,7 +82154,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string MessageRepeatCount_InitializationString =
            "//////////8VYIkKAgAAAAAAEgAAAE1lc3NhZ2VSZXBlYXRDb3VudAEAjlIALgBEjlIAAAAD/////wEB" +
            "/////wAAAAA=";
@@ -82411,11 +82168,11 @@ namespace Opc.Ua
            "Y2UBAI1SAQCNUo1SAAD/////AgAAABVgiQoCAAAAAAASAAAATWVzc2FnZVJlcGVhdENvdW50AQCOUgAu" +
            "AESOUgAAAAP/////AQH/////AAAAABVgiQoCAAAAAAASAAAATWVzc2FnZVJlcGVhdERlbGF5AQCPUgAu" +
            "AESPUgAAAQAiAf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<byte> MessageRepeatCount
         {
@@ -82453,9 +82210,9 @@ namespace Opc.Ua
                 m_messageRepeatDelay = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -82546,18 +82303,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<byte> m_messageRepeatCount;
         private PropertyState<double> m_messageRepeatDelay;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region BrokerConnectionTransportState Class
-    #if (!OPCUA_EXCLUDE_BrokerConnectionTransportState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_BrokerConnectionTransportState)
     /// <summary>
     /// Stores an instance of the BrokerConnectionTransportType ObjectType.
     /// </summary>
@@ -82565,7 +82322,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class BrokerConnectionTransportState : ConnectionTransportState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -82581,7 +82338,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.BrokerConnectionTransportType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -82609,17 +82366,17 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJQAAAEJyb2tlckNvbm5lY3Rpb25UcmFuc3BvcnRUeXBlSW5zdGFuY2UB" +
            "ADM7AQAzOzM7AAD/////AgAAABVgiQoCAAAAAAALAAAAUmVzb3VyY2VVcmkBADQ7AC4ARDQ7AAAADP//" +
            "//8BAf////8AAAAAFWCJCgIAAAAAABgAAABBdXRoZW50aWNhdGlvblByb2ZpbGVVcmkBAEo7AC4AREo7" +
            "AAAADP////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<string> ResourceUri
         {
@@ -82657,9 +82414,9 @@ namespace Opc.Ua
                 m_authenticationProfileUri = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -82750,18 +82507,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<string> m_resourceUri;
         private PropertyState<string> m_authenticationProfileUri;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region BrokerWriterGroupTransportState Class
-    #if (!OPCUA_EXCLUDE_BrokerWriterGroupTransportState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_BrokerWriterGroupTransportState)
     /// <summary>
     /// Stores an instance of the BrokerWriterGroupTransportType ObjectType.
     /// </summary>
@@ -82769,7 +82526,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class BrokerWriterGroupTransportState : WriterGroupTransportState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -82785,7 +82542,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.BrokerWriterGroupTransportType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -82813,7 +82570,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJgAAAEJyb2tlcldyaXRlckdyb3VwVHJhbnNwb3J0VHlwZUluc3RhbmNl" +
            "AQCQUgEAkFKQUgAA/////wQAAAAVYIkKAgAAAAAACQAAAFF1ZXVlTmFtZQEAkVIALgBEkVIAAAAM////" +
@@ -82821,11 +82578,11 @@ namespace Opc.Ua
            "AAAAABVgiQoCAAAAAAAYAAAAQXV0aGVudGljYXRpb25Qcm9maWxlVXJpAQCPOwAuAESPOwAAAAz/////" +
            "AQH/////AAAAABVgiQoCAAAAAAAaAAAAUmVxdWVzdGVkRGVsaXZlcnlHdWFyYW50ZWUBAJE7AC4ARJE7" +
            "AAABAKA6/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<string> QueueName
         {
@@ -82901,9 +82658,9 @@ namespace Opc.Ua
                 m_requestedDeliveryGuarantee = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -83046,20 +82803,20 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<string> m_queueName;
         private PropertyState<string> m_resourceUri;
         private PropertyState<string> m_authenticationProfileUri;
         private PropertyState<BrokerTransportQualityOfService> m_requestedDeliveryGuarantee;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region BrokerDataSetWriterTransportState Class
-    #if (!OPCUA_EXCLUDE_BrokerDataSetWriterTransportState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_BrokerDataSetWriterTransportState)
     /// <summary>
     /// Stores an instance of the BrokerDataSetWriterTransportType ObjectType.
     /// </summary>
@@ -83067,7 +82824,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class BrokerDataSetWriterTransportState : DataSetWriterTransportState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -83083,7 +82840,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.BrokerDataSetWriterTransportType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -83111,7 +82868,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKAAAAEJyb2tlckRhdGFTZXRXcml0ZXJUcmFuc3BvcnRUeXBlSW5zdGFu" +
            "Y2UBAJJSAQCSUpJSAAD/////BgAAABVgiQoCAAAAAAAJAAAAUXVldWVOYW1lAQCTUgAuAESTUgAAAAz/" +
@@ -83121,11 +82878,11 @@ namespace Opc.Ua
            "/wEB/////wAAAAAVYIkKAgAAAAAAGgAAAFJlcXVlc3RlZERlbGl2ZXJ5R3VhcmFudGVlAQDiOwAuAETi" +
            "OwAAAQCgOv////8BAf////8AAAAAFWCJCgIAAAAAABIAAABNZXRhRGF0YVVwZGF0ZVRpbWUBAJVSAC4A" +
            "RJVSAAABACIB/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<string> QueueName
         {
@@ -83239,9 +82996,9 @@ namespace Opc.Ua
                 m_metaDataUpdateTime = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -83436,22 +83193,22 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<string> m_queueName;
         private PropertyState<string> m_metaDataQueueName;
         private PropertyState<string> m_resourceUri;
         private PropertyState<string> m_authenticationProfileUri;
         private PropertyState<BrokerTransportQualityOfService> m_requestedDeliveryGuarantee;
         private PropertyState<double> m_metaDataUpdateTime;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region BrokerDataSetReaderTransportState Class
-    #if (!OPCUA_EXCLUDE_BrokerDataSetReaderTransportState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_BrokerDataSetReaderTransportState)
     /// <summary>
     /// Stores an instance of the BrokerDataSetReaderTransportType ObjectType.
     /// </summary>
@@ -83459,7 +83216,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class BrokerDataSetReaderTransportState : DataSetReaderTransportState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -83475,7 +83232,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.BrokerDataSetReaderTransportType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -83503,7 +83260,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAKAAAAEJyb2tlckRhdGFTZXRSZWFkZXJUcmFuc3BvcnRUeXBlSW5zdGFu" +
            "Y2UBAJZSAQCWUpZSAAD/////BQAAABVgiQoCAAAAAAAJAAAAUXVldWVOYW1lAQCXUgAuAESXUgAAAAz/" +
@@ -83512,11 +83269,11 @@ namespace Opc.Ua
            "//8BAf////8AAAAAFWCJCgIAAAAAABoAAABSZXF1ZXN0ZWREZWxpdmVyeUd1YXJhbnRlZQEAPDwALgBE" +
            "PDwAAAEAoDr/////AQH/////AAAAABVgiQoCAAAAAAARAAAATWV0YURhdGFRdWV1ZU5hbWUBAJhSAC4A" +
            "RJhSAAAADP////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<string> QueueName
         {
@@ -83611,9 +83368,9 @@ namespace Opc.Ua
                 m_metaDataQueueName = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -83782,21 +83539,21 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<string> m_queueName;
         private PropertyState<string> m_resourceUri;
         private PropertyState<string> m_authenticationProfileUri;
         private PropertyState<BrokerTransportQualityOfService> m_requestedDeliveryGuarantee;
         private PropertyState<string> m_metaDataQueueName;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region NetworkAddressState Class
-    #if (!OPCUA_EXCLUDE_NetworkAddressState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_NetworkAddressState)
     /// <summary>
     /// Stores an instance of the NetworkAddressType ObjectType.
     /// </summary>
@@ -83804,7 +83561,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class NetworkAddressState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -83820,7 +83577,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.NetworkAddressType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -83848,17 +83605,17 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAGgAAAE5ldHdvcmtBZGRyZXNzVHlwZUluc3RhbmNlAQCZUgEAmVKZUgAA" +
            "/////wEAAAAVYIkKAgAAAAAAEAAAAE5ldHdvcmtJbnRlcmZhY2UBAJpSAC8BALU/mlIAAAAM/////wEB" +
            "/////wEAAAAXYIkKAgAAAAAACgAAAFNlbGVjdGlvbnMBAK5EAC4ARK5EAAAAGAEAAAABAAAAAAAAAAEB" +
            "/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public SelectionListState<string> NetworkInterface
         {
@@ -83877,9 +83634,9 @@ namespace Opc.Ua
                 m_networkInterface = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -83944,17 +83701,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private SelectionListState<string> m_networkInterface;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region NetworkAddressUrlState Class
-    #if (!OPCUA_EXCLUDE_NetworkAddressUrlState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_NetworkAddressUrlState)
     /// <summary>
     /// Stores an instance of the NetworkAddressUrlType ObjectType.
     /// </summary>
@@ -83962,7 +83719,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class NetworkAddressUrlState : NetworkAddressState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -83978,7 +83735,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.NetworkAddressUrlType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -84006,17 +83763,17 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHQAAAE5ldHdvcmtBZGRyZXNzVXJsVHlwZUluc3RhbmNlAQCbUgEAm1Kb" +
            "UgAA/////wIAAAAVYIkKAgAAAAAAEAAAAE5ldHdvcmtJbnRlcmZhY2UBAJxSAC8BALU/nFIAAAAM////" +
            "/wEB/////wEAAAAXYIkKAgAAAAAACgAAAFNlbGVjdGlvbnMBALFEAC4ARLFEAAAAGAEAAAABAAAAAAAA" +
            "AAEB/////wAAAAAVYIkKAgAAAAAAAwAAAFVybAEAnVIALwA/nVIAAAAM/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<string> Url
         {
@@ -84035,9 +83792,9 @@ namespace Opc.Ua
                 m_url = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -84102,17 +83859,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<string> m_url;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region AliasNameState Class
-    #if (!OPCUA_EXCLUDE_AliasNameState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_AliasNameState)
     /// <summary>
     /// Stores an instance of the AliasNameType ObjectType.
     /// </summary>
@@ -84120,7 +83877,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AliasNameState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -84136,7 +83893,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AliasNameType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -84164,28 +83921,28 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAFQAAAEFsaWFzTmFtZVR5cGVJbnN0YW5jZQEAn1sBAJ9bn1sAAP////8A" +
            "AAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
-    #endif
-    #endregion
+#endif
 
-    #region AliasNameCategoryState Class
-    #if (!OPCUA_EXCLUDE_AliasNameCategoryState)
+
+
+#if (!OPCUA_EXCLUDE_AliasNameCategoryState)
     /// <summary>
     /// Stores an instance of the AliasNameCategoryType ObjectType.
     /// </summary>
@@ -84193,7 +83950,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class AliasNameCategoryState : FolderState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -84209,7 +83966,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.AliasNameCategoryType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -84237,7 +83994,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAHQAAAEFsaWFzTmFtZUNhdGVnb3J5VHlwZUluc3RhbmNlAQCgWwEAoFug" +
            "WwAA/////wEAAAAEYYIKBAAAAAAACQAAAEZpbmRBbGlhcwEAplsALwEAplumWwAAAQH/////AgAAABdg" +
@@ -84246,11 +84003,11 @@ namespace Opc.Ua
            "cgAR/////wAAAAAAAQAoAQEAAAABAAAAAAAAAAEB/////wAAAAAXYKkKAgAAAAAADwAAAE91dHB1dEFy" +
            "Z3VtZW50cwEAqFsALgBEqFsAAJYBAAAAAQAqAQEiAAAADQAAAEFsaWFzTm9kZUxpc3QBAKxbAQAAAAEA" +
            "AAAAAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public FindAliasMethodState FindAlias
         {
@@ -84269,9 +84026,9 @@ namespace Opc.Ua
                 m_findAliasMethod = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -84336,17 +84093,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private FindAliasMethodState m_findAliasMethod;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region FindAliasMethodState Class
-    #if (!OPCUA_EXCLUDE_FindAliasMethodState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_FindAliasMethodState)
     /// <summary>
     /// Stores an instance of the FindAliasMethodType Method.
     /// </summary>
@@ -84354,7 +84111,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class FindAliasMethodState : MethodState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -84367,12 +84124,12 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <returns>The new node.</returns>
-        public new static NodeState Construct(NodeState parent)
+        public static NodeState Construct(NodeState parent)
         {
             return new FindAliasMethodState(parent);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -84391,7 +84148,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYYIKBAAAAAAAEwAAAEZpbmRBbGlhc01ldGhvZFR5cGUBAKlbAC8BAKlbqVsAAAEB////" +
            "/wIAAAAXYKkKAgAAAAAADgAAAElucHV0QXJndW1lbnRzAQCqWwAuAESqWwAAlgIAAAABACoBASUAAAAW" +
@@ -84399,21 +84156,21 @@ namespace Opc.Ua
            "cGVGaWx0ZXIAEf////8AAAAAAAEAKAEBAAAAAQAAAAAAAAABAf////8AAAAAF2CpCgIAAAAAAA8AAABP" +
            "dXRwdXRBcmd1bWVudHMBAKtbAC4ARKtbAACWAQAAAAEAKgEBIgAAAA0AAABBbGlhc05vZGVMaXN0AQCs" +
            "WwEAAAABAAAAAAAAAAABACgBAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Event Callbacks
+#endif
+
+
+
         /// <summary>
         /// Raised when the the method is called.
         /// </summary>
         public FindAliasMethodStateMethodCallHandler OnCall;
-        #endregion
 
-        #region Public Properties
-        #endregion
 
-        #region Overridden Methods
+
+
+
+
         /// <summary>
         /// Invokes the method, returns the result and output argument.
         /// </summary>
@@ -84450,10 +84207,10 @@ namespace Opc.Ua
 
             return result;
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 
     /// <summary>
@@ -84467,11 +84224,11 @@ namespace Opc.Ua
         string aliasNameSearchPattern,
         NodeId referenceTypeFilter,
         ref AliasNameDataType[] aliasNodeList);
-    #endif
-    #endregion
+#endif
 
-    #region MultiStateDictionaryEntryDiscreteBaseState Class
-    #if (!OPCUA_EXCLUDE_MultiStateDictionaryEntryDiscreteBaseState)
+
+
+#if (!OPCUA_EXCLUDE_MultiStateDictionaryEntryDiscreteBaseState)
     /// <summary>
     /// Stores an instance of the MultiStateDictionaryEntryDiscreteBaseType VariableType.
     /// </summary>
@@ -84479,7 +84236,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class MultiStateDictionaryEntryDiscreteBaseState : MultiStateValueDiscreteState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -84511,7 +84268,7 @@ namespace Opc.Ua
             return ValueRanks.Any;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -84544,7 +84301,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string ValueAsDictionaryEntries_InitializationString =
            "//////////8XYIkKAgAAAAAAGAAAAFZhbHVlQXNEaWN0aW9uYXJ5RW50cmllcwEAi0oALgBEi0oAAAAR" +
            "AQAAAAEAAAAAAAAAAQH/////AAAAAA==";
@@ -84556,11 +84313,11 @@ namespace Opc.Ua
            "eHQBAIlKAC4ARIlKAAAAFf////8BAf////8AAAAAF2CJCgIAAAAAABUAAABFbnVtRGljdGlvbmFyeUVu" +
            "dHJpZXMBAIpKAC4ARIpKAAAAEQIAAAACAAAAAAAAAAAAAAABAf////8AAAAAF2CJCgIAAAAAABgAAABW" +
            "YWx1ZUFzRGljdGlvbmFyeUVudHJpZXMBAItKAC4ARItKAAAAEQEAAAABAAAAAAAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public PropertyState<NodeId> EnumDictionaryEntries
         {
@@ -84598,9 +84355,9 @@ namespace Opc.Ua
                 m_valueAsDictionaryEntries = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -84691,15 +84448,15 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private PropertyState<NodeId> m_enumDictionaryEntries;
         private PropertyState<NodeId[]> m_valueAsDictionaryEntries;
-        #endregion
+
     }
 
-    #region MultiStateDictionaryEntryDiscreteBaseState<T> Class
+
     /// <summary>
     /// A typed version of the MultiStateDictionaryEntryDiscreteBaseType variable.
     /// </summary>
@@ -84707,7 +84464,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class MultiStateDictionaryEntryDiscreteBaseState<T> : MultiStateDictionaryEntryDiscreteBaseState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -84736,9 +84493,9 @@ namespace Opc.Ua
             InitializeOptionalChildren(context);
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The value of the variable.
         /// </summary>
@@ -84754,14 +84511,14 @@ namespace Opc.Ua
                 base.Value = value;
             }
         }
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region MultiStateDictionaryEntryDiscreteState Class
-    #if (!OPCUA_EXCLUDE_MultiStateDictionaryEntryDiscreteState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_MultiStateDictionaryEntryDiscreteState)
     /// <summary>
     /// Stores an instance of the MultiStateDictionaryEntryDiscreteType VariableType.
     /// </summary>
@@ -84769,7 +84526,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class MultiStateDictionaryEntryDiscreteState : MultiStateDictionaryEntryDiscreteBaseState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -84801,7 +84558,7 @@ namespace Opc.Ua
             return ValueRanks.Any;
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -84829,7 +84586,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8VYIECAgAAAAAALQAAAE11bHRpU3RhdGVEaWN0aW9uYXJ5RW50cnlEaXNjcmV0ZVR5cGVJ" +
            "bnN0YW5jZQEAjEoBAIxKjEoAAAAaAQH/////BAAAABdgiQoCAAAAAAAKAAAARW51bVZhbHVlcwEAj0oA" +
@@ -84837,21 +84594,21 @@ namespace Opc.Ua
            "kEoALgBEkEoAAAAV/////wEB/////wAAAAAXYIkKAgAAAAAAFQAAAEVudW1EaWN0aW9uYXJ5RW50cmll" +
            "cwEAkUoALgBEkUoAAAARAgAAAAIAAAAAAAAAAAAAAAEB/////wAAAAAXYIkKAgAAAAAAGAAAAFZhbHVl" +
            "QXNEaWN0aW9uYXJ5RW50cmllcwEAkkoALgBEkkoAAAARAQAAAAEAAAAAAAAAAQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
-        #endregion
+#endif
 
-        #region Overridden Methods
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
+
+
+
+
+
     }
 
-    #region MultiStateDictionaryEntryDiscreteState<T> Class
+
     /// <summary>
     /// A typed version of the MultiStateDictionaryEntryDiscreteType variable.
     /// </summary>
@@ -84859,7 +84616,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public class MultiStateDictionaryEntryDiscreteState<T> : MultiStateDictionaryEntryDiscreteState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -84888,9 +84645,9 @@ namespace Opc.Ua
             InitializeOptionalChildren(context);
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The value of the variable.
         /// </summary>
@@ -84906,14 +84663,14 @@ namespace Opc.Ua
                 base.Value = value;
             }
         }
-        #endregion
-    }
-    #endregion
-    #endif
-    #endregion
 
-    #region IIetfBaseNetworkInterfaceState Class
-    #if (!OPCUA_EXCLUDE_IIetfBaseNetworkInterfaceState)
+    }
+
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_IIetfBaseNetworkInterfaceState)
     /// <summary>
     /// Stores an instance of the IIetfBaseNetworkInterfaceType ObjectType.
     /// </summary>
@@ -84921,7 +84678,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class IIetfBaseNetworkInterfaceState : BaseInterfaceState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -84937,7 +84694,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.IIetfBaseNetworkInterfaceType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -84970,7 +84727,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string PhysAddress_InitializationString =
            "//////////8VYIkKAgAAAAAACwAAAFBoeXNBZGRyZXNzAQBXXgAvAD9XXgAAAAz/////AQH/////AAAA" +
            "AA==";
@@ -84984,11 +84741,11 @@ namespace Opc.Ua
            "EAAAAEVuZ2luZWVyaW5nVW5pdHMBAF1eAC4ARF1eAAAWAQB5AwFgAAAALwAAAGh0dHA6Ly93d3cub3Bj" +
            "Zm91bmRhdGlvbi5vcmcvVUEvdW5pdHMvdW4vY2VmYWN0MDFCAAMCAAAAZW4FAAAAYml0L3MDAgAAAGVu" +
            "DgAAAGJpdCBwZXIgc2Vjb25kAQB3A/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<InterfaceAdminStatus> AdminStatus
         {
@@ -85064,9 +84821,9 @@ namespace Opc.Ua
                 m_speed = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -85209,20 +84966,20 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<InterfaceAdminStatus> m_adminStatus;
         private BaseDataVariableState<InterfaceOperStatus> m_operStatus;
         private BaseDataVariableState<string> m_physAddress;
         private AnalogUnitState<ulong> m_speed;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region IIeeeBaseEthernetPortState Class
-    #if (!OPCUA_EXCLUDE_IIeeeBaseEthernetPortState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_IIeeeBaseEthernetPortState)
     /// <summary>
     /// Stores an instance of the IIeeeBaseEthernetPortType ObjectType.
     /// </summary>
@@ -85230,7 +84987,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class IIeeeBaseEthernetPortState : BaseInterfaceState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -85246,7 +85003,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.IIeeeBaseEthernetPortType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -85274,7 +85031,7 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAIQAAAElJZWVlQmFzZUV0aGVybmV0UG9ydFR5cGVJbnN0YW5jZQEAXl4B" +
            "AF5eXl4AAP////8DAAAAFWCJCgIAAAAAAAUAAABTcGVlZAEAX14ALwEAWURfXgAAAAn/////AQH/////" +
@@ -85283,11 +85040,11 @@ namespace Opc.Ua
            "AABNYml0L3MDAgAAAGVuEgAAAG1lZ2FiaXQgcGVyIHNlY29uZAEAdwP/////AQH/////AAAAABVgiQoC" +
            "AAAAAAAGAAAARHVwbGV4AQBlXgAvAD9lXgAAAQCSXv////8BAf////8AAAAAFWCJCgIAAAAAAA4AAABN" +
            "YXhGcmFtZUxlbmd0aAEAZl4ALwA/Zl4AAAAF/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public AnalogUnitState<ulong> Speed
         {
@@ -85344,9 +85101,9 @@ namespace Opc.Ua
                 m_maxFrameLength = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -85463,19 +85220,19 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private AnalogUnitState<ulong> m_speed;
         private BaseDataVariableState<Duplex> m_duplex;
         private BaseDataVariableState<ushort> m_maxFrameLength;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region IIeeeAutoNegotiationStatusState Class
-    #if (!OPCUA_EXCLUDE_IIeeeAutoNegotiationStatusState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_IIeeeAutoNegotiationStatusState)
     /// <summary>
     /// Stores an instance of the IIeeeAutoNegotiationStatusType ObjectType.
     /// </summary>
@@ -85483,7 +85240,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class IIeeeAutoNegotiationStatusState : BaseInterfaceState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -85499,7 +85256,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.IIeeeAutoNegotiationStatusType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -85527,16 +85284,16 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJgAAAElJZWVlQXV0b05lZ290aWF0aW9uU3RhdHVzVHlwZUluc3RhbmNl" +
            "AQCpXgEAqV6pXgAA/////wEAAAAVYIkKAgAAAAAAEQAAAE5lZ290aWF0aW9uU3RhdHVzAQCqXgAvAD+q" +
            "XgAAAQCYXv////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<NegotiationStatus> NegotiationStatus
         {
@@ -85555,9 +85312,9 @@ namespace Opc.Ua
                 m_negotiationStatus = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -85622,17 +85379,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<NegotiationStatus> m_negotiationStatus;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region IBaseEthernetCapabilitiesState Class
-    #if (!OPCUA_EXCLUDE_IBaseEthernetCapabilitiesState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_IBaseEthernetCapabilitiesState)
     /// <summary>
     /// Stores an instance of the IBaseEthernetCapabilitiesType ObjectType.
     /// </summary>
@@ -85640,7 +85397,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class IBaseEthernetCapabilitiesState : BaseInterfaceState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -85656,7 +85413,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.IBaseEthernetCapabilitiesType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -85684,16 +85441,16 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAJQAAAElCYXNlRXRoZXJuZXRDYXBhYmlsaXRpZXNUeXBlSW5zdGFuY2UB" +
            "AGdeAQBnXmdeAAD/////AQAAABVgiQoCAAAAAAAOAAAAVmxhblRhZ0NhcGFibGUBAGheAC8AP2heAAAA" +
            "Af////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<bool> VlanTagCapable
         {
@@ -85712,9 +85469,9 @@ namespace Opc.Ua
                 m_vlanTagCapable = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -85779,17 +85536,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<bool> m_vlanTagCapable;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region ISrClassState Class
-    #if (!OPCUA_EXCLUDE_ISrClassState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_ISrClassState)
     /// <summary>
     /// Stores an instance of the ISrClassType ObjectType.
     /// </summary>
@@ -85797,7 +85554,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class ISrClassState : BaseInterfaceState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -85813,7 +85570,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.ISrClassType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -85841,17 +85598,17 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAFAAAAElTckNsYXNzVHlwZUluc3RhbmNlAQBpXgEAaV5pXgAA/////wMA" +
            "AAAVYIkKAgAAAAAAAgAAAElkAQBqXgAvAD9qXgAAAAP/////AQH/////AAAAABVgiQoCAAAAAAAIAAAA" +
            "UHJpb3JpdHkBAGteAC8AP2teAAAAA/////8BAf////8AAAAAFWCJCgIAAAAAAAMAAABWaWQBAGxeAC8A" +
            "P2xeAAAABf////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<byte> Id
         {
@@ -85908,9 +85665,9 @@ namespace Opc.Ua
                 m_vid = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -86027,19 +85784,19 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<byte> m_id;
         private BaseDataVariableState<byte> m_priority;
         private BaseDataVariableState<ushort> m_vid;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region IIeeeBaseTsnStreamState Class
-    #if (!OPCUA_EXCLUDE_IIeeeBaseTsnStreamState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_IIeeeBaseTsnStreamState)
     /// <summary>
     /// Stores an instance of the IIeeeBaseTsnStreamType ObjectType.
     /// </summary>
@@ -86047,7 +85804,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class IIeeeBaseTsnStreamState : BaseInterfaceState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -86063,7 +85820,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.IIeeeBaseTsnStreamType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -86101,7 +85858,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string AccumulatedLatency_InitializationString =
            "//////////8VYIkKAgAAAAAAEgAAAEFjY3VtdWxhdGVkTGF0ZW5jeQEAcV4ALwA/cV4AAAAH/////wEB" +
            "/////wAAAAA=";
@@ -86116,11 +85873,11 @@ namespace Opc.Ua
            "AAAVYIkKAgAAAAAABQAAAFN0YXRlAQBwXgAvAD9wXgAAAQCcXv////8BAf////8AAAAAFWCJCgIAAAAA" +
            "ABIAAABBY2N1bXVsYXRlZExhdGVuY3kBAHFeAC8AP3FeAAAAB/////8BAf////8AAAAAFWCJCgIAAAAA" +
            "AAkAAABTckNsYXNzSWQBAHJeAC8AP3JeAAAAA/////8BAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<byte[]> StreamId
         {
@@ -86215,9 +85972,9 @@ namespace Opc.Ua
                 m_srClassId = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -86386,21 +86143,21 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<byte[]> m_streamId;
         private BaseDataVariableState<string> m_streamName;
         private BaseDataVariableState<TsnStreamState> m_state;
         private BaseDataVariableState<uint> m_accumulatedLatency;
         private BaseDataVariableState<byte> m_srClassId;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region IIeeeBaseTsnTrafficSpecificationState Class
-    #if (!OPCUA_EXCLUDE_IIeeeBaseTsnTrafficSpecificationState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_IIeeeBaseTsnTrafficSpecificationState)
     /// <summary>
     /// Stores an instance of the IIeeeBaseTsnTrafficSpecificationType ObjectType.
     /// </summary>
@@ -86408,7 +86165,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class IIeeeBaseTsnTrafficSpecificationState : BaseInterfaceState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -86424,7 +86181,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.IIeeeBaseTsnTrafficSpecificationType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -86452,18 +86209,18 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAALAAAAElJZWVlQmFzZVRzblRyYWZmaWNTcGVjaWZpY2F0aW9uVHlwZUlu" +
            "c3RhbmNlAQBzXgEAc15zXgAA/////wMAAAAVYIkKAgAAAAAAEQAAAE1heEludGVydmFsRnJhbWVzAQB0" +
            "XgAvAD90XgAAAAX/////AQH/////AAAAABVgiQoCAAAAAAAMAAAATWF4RnJhbWVTaXplAQB1XgAvAD91" +
            "XgAAAAf/////AQH/////AAAAABVgiQoCAAAAAAAIAAAASW50ZXJ2YWwBAHZeAC8AP3ZeAAABACte////" +
            "/wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<ushort> MaxIntervalFrames
         {
@@ -86520,9 +86277,9 @@ namespace Opc.Ua
                 m_interval = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -86639,19 +86396,19 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<ushort> m_maxIntervalFrames;
         private BaseDataVariableState<uint> m_maxFrameSize;
         private BaseDataVariableState<UnsignedRationalNumber> m_interval;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region IIeeeBaseTsnStatusStreamState Class
-    #if (!OPCUA_EXCLUDE_IIeeeBaseTsnStatusStreamState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_IIeeeBaseTsnStatusStreamState)
     /// <summary>
     /// Stores an instance of the IIeeeBaseTsnStatusStreamType ObjectType.
     /// </summary>
@@ -86659,7 +86416,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class IIeeeBaseTsnStatusStreamState : BaseInterfaceState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -86675,7 +86432,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.IIeeeBaseTsnStatusStreamType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -86713,7 +86470,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string TalkerStatus_InitializationString =
            "//////////8VYIkKAgAAAAAADAAAAFRhbGtlclN0YXR1cwEAeF4ALwA/eF4AAAEAnl7/////AQH/////" +
            "AAAAAA==";
@@ -86729,11 +86486,11 @@ namespace Opc.Ua
            "//8BAf////8AAAAAFWCJCgIAAAAAAAsAAABGYWlsdXJlQ29kZQEAel4ALwA/el4AAAEAml7/////AQH/" +
            "////AAAAABdgiQoCAAAAAAAXAAAARmFpbHVyZVN5c3RlbUlkZW50aWZpZXIBAHteAC8AP3teAAAAAwIA" +
            "AAACAAAAAAAAAAgAAAABAf////8AAAAA";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<TsnTalkerStatus> TalkerStatus
         {
@@ -86809,9 +86566,9 @@ namespace Opc.Ua
                 m_failureSystemIdentifier = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -86954,20 +86711,20 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<TsnTalkerStatus> m_talkerStatus;
         private BaseDataVariableState<TsnListenerStatus> m_listenerStatus;
         private BaseDataVariableState<TsnFailureCode> m_failureCode;
         private BaseDataVariableState<byte> m_failureSystemIdentifier;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region IIeeeTsnInterfaceConfigurationState Class
-    #if (!OPCUA_EXCLUDE_IIeeeTsnInterfaceConfigurationState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_IIeeeTsnInterfaceConfigurationState)
     /// <summary>
     /// Stores an instance of the IIeeeTsnInterfaceConfigurationType ObjectType.
     /// </summary>
@@ -86975,7 +86732,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class IIeeeTsnInterfaceConfigurationState : BaseInterfaceState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -86991,7 +86748,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.IIeeeTsnInterfaceConfigurationType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -87024,7 +86781,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string InterfaceName_InitializationString =
            "//////////8VYIkKAgAAAAAADQAAAEludGVyZmFjZU5hbWUBAH5eAC8AP35eAAAADP////8BAf////8A" +
            "AAAA";
@@ -87034,11 +86791,11 @@ namespace Opc.Ua
            "YW5jZQEAfF4BAHxefF4AAP////8CAAAAFWCJCgIAAAAAAAoAAABNYWNBZGRyZXNzAQB9XgAvAD99XgAA" +
            "AAz/////AQH/////AAAAABVgiQoCAAAAAAANAAAASW50ZXJmYWNlTmFtZQEAfl4ALwA/fl4AAAAM////" +
            "/wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<string> MacAddress
         {
@@ -87076,9 +86833,9 @@ namespace Opc.Ua
                 m_interfaceName = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -87169,18 +86926,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<string> m_macAddress;
         private BaseDataVariableState<string> m_interfaceName;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region IIeeeTsnInterfaceConfigurationTalkerState Class
-    #if (!OPCUA_EXCLUDE_IIeeeTsnInterfaceConfigurationTalkerState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_IIeeeTsnInterfaceConfigurationTalkerState)
     /// <summary>
     /// Stores an instance of the IIeeeTsnInterfaceConfigurationTalkerType ObjectType.
     /// </summary>
@@ -87188,7 +86945,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class IIeeeTsnInterfaceConfigurationTalkerState : IIeeeTsnInterfaceConfigurationState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -87204,7 +86961,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.IIeeeTsnInterfaceConfigurationTalkerType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -87237,7 +86994,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string TimeAwareOffset_InitializationString =
            "//////////8VYIkKAgAAAAAADwAAAFRpbWVBd2FyZU9mZnNldAEAgl4ALwA/gl4AAAAH/////wEB////" +
            "/wAAAAA=";
@@ -87247,11 +87004,11 @@ namespace Opc.Ua
            "cGVJbnN0YW5jZQEAf14BAH9ef14AAP////8CAAAAFWCJCgIAAAAAAAoAAABNYWNBZGRyZXNzAQCAXgAv" +
            "AD+AXgAAAAz/////AQH/////AAAAABVgiQoCAAAAAAAPAAAAVGltZUF3YXJlT2Zmc2V0AQCCXgAvAD+C" +
            "XgAAAAf/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<uint> TimeAwareOffset
         {
@@ -87270,9 +87027,9 @@ namespace Opc.Ua
                 m_timeAwareOffset = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -87337,17 +87094,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<uint> m_timeAwareOffset;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region IIeeeTsnInterfaceConfigurationListenerState Class
-    #if (!OPCUA_EXCLUDE_IIeeeTsnInterfaceConfigurationListenerState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_IIeeeTsnInterfaceConfigurationListenerState)
     /// <summary>
     /// Stores an instance of the IIeeeTsnInterfaceConfigurationListenerType ObjectType.
     /// </summary>
@@ -87355,7 +87112,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class IIeeeTsnInterfaceConfigurationListenerState : IIeeeTsnInterfaceConfigurationState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -87371,7 +87128,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.IIeeeTsnInterfaceConfigurationListenerType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -87404,7 +87161,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string ReceiveOffset_InitializationString =
            "//////////8VYIkKAgAAAAAADQAAAFJlY2VpdmVPZmZzZXQBAIZeAC8AP4ZeAAAAB/////8BAf////8A" +
            "AAAA";
@@ -87414,11 +87171,11 @@ namespace Opc.Ua
            "VHlwZUluc3RhbmNlAQCDXgEAg16DXgAA/////wIAAAAVYIkKAgAAAAAACgAAAE1hY0FkZHJlc3MBAIRe" +
            "AC8AP4ReAAAADP////8BAf////8AAAAAFWCJCgIAAAAAAA0AAABSZWNlaXZlT2Zmc2V0AQCGXgAvAD+G" +
            "XgAAAAf/////AQH/////AAAAAA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<uint> ReceiveOffset
         {
@@ -87437,9 +87194,9 @@ namespace Opc.Ua
                 m_receiveOffset = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -87504,17 +87261,17 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<uint> m_receiveOffset;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region IIeeeTsnMacAddressState Class
-    #if (!OPCUA_EXCLUDE_IIeeeTsnMacAddressState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_IIeeeTsnMacAddressState)
     /// <summary>
     /// Stores an instance of the IIeeeTsnMacAddressType ObjectType.
     /// </summary>
@@ -87522,7 +87279,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class IIeeeTsnMacAddressState : BaseInterfaceState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -87538,7 +87295,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.IIeeeTsnMacAddressType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -87571,7 +87328,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string SourceAddress_InitializationString =
            "//////////8XYIkKAgAAAAAADQAAAFNvdXJjZUFkZHJlc3MBAIleAC8AP4leAAAAAwEAAAABAAAABgAA" +
            "AAEB/////wAAAAA=";
@@ -87581,11 +87338,11 @@ namespace Opc.Ua
            "h14AAP////8CAAAAF2CJCgIAAAAAABIAAABEZXN0aW5hdGlvbkFkZHJlc3MBAIheAC8AP4heAAAAAwEA" +
            "AAABAAAABgAAAAEB/////wAAAAAXYIkKAgAAAAAADQAAAFNvdXJjZUFkZHJlc3MBAIleAC8AP4leAAAA" +
            "AwEAAAABAAAABgAAAAEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<byte[]> DestinationAddress
         {
@@ -87623,9 +87380,9 @@ namespace Opc.Ua
                 m_sourceAddress = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -87716,18 +87473,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<byte[]> m_destinationAddress;
         private BaseDataVariableState<byte[]> m_sourceAddress;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region IIeeeTsnVlanTagState Class
-    #if (!OPCUA_EXCLUDE_IIeeeTsnVlanTagState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_IIeeeTsnVlanTagState)
     /// <summary>
     /// Stores an instance of the IIeeeTsnVlanTagType ObjectType.
     /// </summary>
@@ -87735,7 +87492,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class IIeeeTsnVlanTagState : BaseInterfaceState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -87751,7 +87508,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.IIeeeTsnVlanTagType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -87779,16 +87536,16 @@ namespace Opc.Ua
             base.InitializeOptionalChildren(context);
         }
 
-        #region Initialization String
+
         private const string InitializationString =
            "//////////8EYIACAQAAAAAAGwAAAElJZWVlVHNuVmxhblRhZ1R5cGVJbnN0YW5jZQEAil4BAIpeil4A" +
            "AP////8CAAAAFWCJCgIAAAAAAAYAAABWbGFuSWQBAIteAC8AP4teAAAABf////8BAf////8AAAAAFWCJ" +
            "CgIAAAAAABEAAABQcmlvcml0eUNvZGVQb2ludAEAjF4ALwA/jF4AAAAD/////wEB/////wAAAAA=";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<ushort> VlanId
         {
@@ -87826,9 +87583,9 @@ namespace Opc.Ua
                 m_priorityCodePoint = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -87919,18 +87676,18 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<ushort> m_vlanId;
         private BaseDataVariableState<byte> m_priorityCodePoint;
-        #endregion
-    }
-    #endif
-    #endregion
 
-    #region IPriorityMappingEntryState Class
-    #if (!OPCUA_EXCLUDE_IPriorityMappingEntryState)
+    }
+#endif
+
+
+
+#if (!OPCUA_EXCLUDE_IPriorityMappingEntryState)
     /// <summary>
     /// Stores an instance of the IPriorityMappingEntryType ObjectType.
     /// </summary>
@@ -87938,7 +87695,7 @@ namespace Opc.Ua
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
     public partial class IPriorityMappingEntryState : BaseInterfaceState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the type with its default attribute values.
         /// </summary>
@@ -87954,7 +87711,7 @@ namespace Opc.Ua
             return Opc.Ua.NodeId.Create(Opc.Ua.ObjectTypes.IPriorityMappingEntryType, Opc.Ua.Namespaces.OpcUa, namespaceUris);
         }
 
-        #if (!OPCUA_EXCLUDE_InitializationStrings)
+#if (!OPCUA_EXCLUDE_InitializationStrings)
         /// <summary>
         /// Initializes the instance.
         /// </summary>
@@ -87992,7 +87749,7 @@ namespace Opc.Ua
             }
         }
 
-        #region Initialization String
+
         private const string PriorityValue_PCP_InitializationString =
            "//////////8VYIkKAgAAAAAAEQAAAFByaW9yaXR5VmFsdWVfUENQAQCQXgAvAD+QXgAAAAP/////AQH/" +
            "////AAAAAA==";
@@ -88008,11 +87765,11 @@ namespace Opc.Ua
            "AAAVYIkKAgAAAAAAEQAAAFByaW9yaXR5VmFsdWVfUENQAQCQXgAvAD+QXgAAAAP/////AQH/////AAAA" +
            "ABVgiQoCAAAAAAASAAAAUHJpb3JpdHlWYWx1ZV9EU0NQAQCRXgAvAD+RXgAAAAf/////AQH/////AAAA" +
            "AA==";
-        #endregion
-        #endif
-        #endregion
 
-        #region Public Properties
+#endif
+
+
+
         /// <remarks />
         public BaseDataVariableState<string> MappingUri
         {
@@ -88088,9 +87845,9 @@ namespace Opc.Ua
                 m_priorityValue_DSCP = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -88233,15 +87990,15 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private BaseDataVariableState<string> m_mappingUri;
         private BaseDataVariableState<string> m_priorityLabel;
         private BaseDataVariableState<byte> m_priorityValue_PCP;
         private BaseDataVariableState<uint> m_priorityValue_DSCP;
-        #endregion
+
     }
-    #endif
-    #endregion
+#endif
+
 }

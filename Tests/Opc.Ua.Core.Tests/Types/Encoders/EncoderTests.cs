@@ -42,12 +42,12 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
     [Parallelizable]
     public class EncoderTests : EncoderCommon
     {
-        #region DataPointSources
+        
         [DatapointSource]
         public int[] ArrayLength = new int[] { 1, 5, 100 };
-        #endregion
+        
 
-        #region Test Methods
+        
         /// <summary>
         /// Verify encode and decode of a default built in type
         /// value as Variant in a DataValue.
@@ -435,13 +435,13 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
             Assert.AreEqual(expected, result, encodeInfo);
             Assert.IsTrue(Opc.Ua.Utils.IsEqual(expected, result), "Opc.Ua.Utils.IsEqual failed to compare expected and result. " + encodeInfo);
         }
-        #endregion
+        
 
-        #region Private Methods
-        #endregion
+        
+        
 
-        #region Private Fields
-        #endregion
+        
+        
     }
 
 }

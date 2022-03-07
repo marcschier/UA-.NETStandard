@@ -48,16 +48,16 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
     [SetCulture("en-us")]
     public class CertificateFactoryTest
     {
-        #region DataPointSources
+        
         [DatapointSource]
         public KeyHashPair[] KeyHashPairs = new KeyHashPairCollection {
             { 2048, HashAlgorithmName.SHA256 },
             { 3072, HashAlgorithmName.SHA384 },
             { 4096, HashAlgorithmName.SHA512 }
         }.ToArray();
-        #endregion
+        
 
-        #region Test Setup
+        
         /// <summary>
         /// Set up a Global Discovery Server and Client instance and connect the session
         /// </summary>
@@ -74,9 +74,9 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
         protected void OneTimeTearDown()
         {
         }
-        #endregion
+        
 
-        #region Test Methods
+        
         /// <summary>
         /// Verify self signed app certs.
         /// </summary>
@@ -244,9 +244,9 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
                 Assert.True(crl.IsRevoked(cert));
             }
         }
-        #endregion
+        
 
-        #region Public Methods
+        
         private X509Certificate2 GetIssuer(KeyHashPair keyHashPair)
         {
             X509Certificate2 issuerCertificate = null;
@@ -436,10 +436,10 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
             X509SubjectAltNameExtension subjectAlternateName = X509Extensions.FindExtension<X509SubjectAltNameExtension>(cert);
             Assert.Null(subjectAlternateName);
         }
-        #endregion
+        
 
-        #region Private Fields
+        
         private ConcurrentDictionary<int, X509Certificate2> m_rootCACertificate;
-        #endregion
+        
     }
 }

@@ -41,12 +41,12 @@ namespace Opc.Ua.Core.Tests.Types.Schemas
     [Parallelizable]
     public class XmlSchemaWellKnownTests : XmlSchemaValidator
     {
-        #region DataPointSources
+        
         [DatapointSource]
         public string[][] WellKnownSchemaData = WellKnownDictionaries;
-        #endregion
+        
 
-        #region Test Methods
+        
         /// <summary>
         /// Load well known resource type dictionaries.
         /// </summary>
@@ -78,6 +78,6 @@ namespace Opc.Ua.Core.Tests.Types.Schemas
                 Assert.AreEqual(schemaData[0], schema.TargetSchema.TargetNamespace);
             }
         }
-        #endregion
+        
     }
 }

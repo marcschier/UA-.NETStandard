@@ -19,9 +19,7 @@ using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Opc.Ua.Bindings;
-using Opc.Ua.Security.Certificates;
 
 namespace Opc.Ua
 {
@@ -30,7 +28,7 @@ namespace Opc.Ua
     /// </summary>
     public partial class ServerBase : IServerBase, IDisposable
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes object with default values.
         /// </summary>
@@ -44,9 +42,9 @@ namespace Opc.Ua
             m_requestQueue = new RequestQueue(this, 10, 100, 1000);
             m_userTokenPolicyId = 0;
         }
-        #endregion
 
-        #region IDisposable Members
+
+
         /// <summary>
         /// Frees any unmanaged resources.
         /// </summary>
@@ -87,9 +85,9 @@ namespace Opc.Ua
                 Utils.SilentDispose(m_requestQueue);
             }
         }
-        #endregion
 
-        #region IServerBase Members
+
+
         /// <summary>
         /// The message context to use with the service.
         /// </summary>
@@ -98,15 +96,9 @@ namespace Opc.Ua
         /// </value>
         public IServiceMessageContext MessageContext
         {
-            get
-            {
-                return (IServiceMessageContext)m_messageContext;
-            }
+            get => (IServiceMessageContext)m_messageContext;
 
-            set
-            {
-                Interlocked.Exchange(ref m_messageContext, value);
-            }
+            set => Interlocked.Exchange(ref m_messageContext, value);
         }
 
         /// <summary>
@@ -115,15 +107,9 @@ namespace Opc.Ua
         /// <value>The object that combines the status code and diagnostic info structures.</value>
         public ServiceResult ServerError
         {
-            get
-            {
-                return (ServiceResult)m_serverError;
-            }
+            get => (ServiceResult)m_serverError;
 
-            set
-            {
-                Interlocked.Exchange(ref m_serverError, value);
-            }
+            set => Interlocked.Exchange(ref m_serverError, value);
         }
 
         /// <summary>
@@ -150,9 +136,9 @@ namespace Opc.Ua
         {
             m_requestQueue.ScheduleIncomingRequest(request);
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Raised when the status of a monitored connection changes.
         /// </summary>
@@ -177,7 +163,7 @@ namespace Opc.Ua
 
             if (TransportListeners != null)
             {
-                foreach (var ii in TransportListeners)
+                foreach (ITransportListener ii in TransportListeners)
                 {
                     if (ii.UriScheme == url.Scheme)
                     {
@@ -196,70 +182,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Starts the server.
-        /// </summary>
-        /// <param name="configuration">The object that stores the configurable configuration information 
-        /// for a UA application</param>
-        /// <param name="baseAddresses">The array of Uri elements which contains base addresses.</param>
-        /// <returns>Returns a host for a UA service.</returns>
-        public ServiceHost Start(ApplicationConfiguration configuration, params Uri[] baseAddresses)
-        {
-            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
-
-            // do any pre-startup processing
-            OnServerStarting(configuration);
-
-            // intialize the request queue from the configuration.
-            InitializeRequestQueue(configuration);
-
-            // create the binding factory.
-            TransportListenerBindings bindingFactory = TransportBindings.Listeners;
-
-            // initialize the server capabilities
-            ServerCapabilities = configuration.ServerConfiguration.ServerCapabilities;
-
-            // initialize the base addresses.
-            InitializeBaseAddresses(configuration);
-
-            // initialize the hosts.
-            ApplicationDescription serverDescription = null;
-            EndpointDescriptionCollection endpoints = null;
-
-            IList<ServiceHost> hosts = InitializeServiceHosts(
-                configuration,
-                bindingFactory,
-                out serverDescription,
-                out endpoints);
-
-            // save discovery information.
-            ServerDescription = serverDescription;
-            m_endpoints = new ReadOnlyList<EndpointDescription>(endpoints);
-
-            // start the application.
-            StartApplication(configuration);
-
-            // the configuration file may specify multiple security policies or non-HTTP protocols
-            // which will require multiple service hosts. the default host will be opened by WCF when
-            // it is returned from this function. The others must be opened here.
-
-            if (hosts == null || hosts.Count == 0)
-            {
-                throw ServiceResultException.Create(StatusCodes.BadConfigurationError, "The UA server does not have a default host.");
-            }
-
-            lock (m_hosts)
-            {
-                for (int ii = 1; ii < hosts.Count; ii++)
-                {
-                    hosts[ii].Open();
-                    m_hosts.Add(hosts[ii]);
-                }
-            }
-
-            return hosts[0];
-        }
-
-        /// <summary>
         /// Starts the server (called from a dedicated host process).
         /// </summary>
         /// <param name="configuration">The object that stores the configurable configuration 
@@ -267,7 +189,10 @@ namespace Opc.Ua
         /// </param>
         public void Start(ApplicationConfiguration configuration)
         {
-            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+            if (configuration == null)
+            {
+                throw new ArgumentNullException(nameof(configuration));
+            }
 
             // do any pre-startup processing
             OnServerStarting(configuration);
@@ -341,13 +266,13 @@ namespace Opc.Ua
 
             foreach (string baseAddress in sourceBaseAddresses)
             {
-                BaseAddress address = new BaseAddress() { Url = new Uri(baseAddress) };
+                var address = new BaseAddress() { Url = new Uri(baseAddress) };
 
                 if (sourceAlternateAddresses != null)
                 {
                     foreach (string alternateAddress in sourceAlternateAddresses)
                     {
-                        Uri alternateUrl = new Uri(alternateAddress);
+                        var alternateUrl = new Uri(alternateAddress);
 
                         if (alternateUrl.Scheme == address.Url.Scheme)
                         {
@@ -388,12 +313,12 @@ namespace Opc.Ua
         protected StringCollection GetDiscoveryUrls()
         {
             // build list of discovery uris.
-            StringCollection discoveryUrls = new StringCollection();
+            var discoveryUrls = new StringCollection();
             string computerName = Utils.GetHostName();
 
             foreach (BaseAddress baseAddress in BaseAddresses)
             {
-                UriBuilder builder = new UriBuilder(baseAddress.DiscoveryUrl);
+                var builder = new UriBuilder(baseAddress.DiscoveryUrl);
 
                 int index = builder.Host.IndexOf("localhost", StringComparison.OrdinalIgnoreCase);
 
@@ -532,9 +457,9 @@ namespace Opc.Ua
         {
             return null;
         }
-        #endregion
 
-        #region BaseAddress Class
+
+
         /// <summary>
         /// Stores information about a base address.
         /// </summary>
@@ -560,9 +485,9 @@ namespace Opc.Ua
             /// </summary>
             public Uri DiscoveryUrl { get; set; }
         }
-        #endregion
 
-        #region Protected Properties
+
+
         /// <summary>
         /// Gets the list of base addresses supported by the server.
         /// </summary>
@@ -579,15 +504,9 @@ namespace Opc.Ua
         /// <value>The identifier for an X509 certificate.</value>
         public CertificateValidator CertificateValidator
         {
-            get
-            {
-                return (CertificateValidator)m_certificateValidator;
-            }
+            get => (CertificateValidator)m_certificateValidator;
 
-            private set
-            {
-                m_certificateValidator = value;
-            }
+            private set => m_certificateValidator = value;
         }
 
         /// <summary>
@@ -596,15 +515,9 @@ namespace Opc.Ua
         /// <value>The instance X.509 certificate.</value>
         protected X509Certificate2 InstanceCertificate
         {
-            get
-            {
-                return (X509Certificate2)m_instanceCertificate;
-            }
+            get => (X509Certificate2)m_instanceCertificate;
 
-            private set
-            {
-                m_instanceCertificate = value;
-            }
+            private set => m_instanceCertificate = value;
         }
 
         /// <summary>
@@ -612,15 +525,9 @@ namespace Opc.Ua
         /// </summary>
         protected X509Certificate2Collection InstanceCertificateChain
         {
-            get
-            {
-                return m_instanceCertificateChain;
-            }
+            get => m_instanceCertificateChain;
 
-            private set
-            {
-                m_instanceCertificateChain = value;
-            }
+            private set => m_instanceCertificateChain = value;
         }
 
         /// <summary>
@@ -629,15 +536,9 @@ namespace Opc.Ua
         /// <value>The properties of the current server instance.</value>
         protected ServerProperties ServerProperties
         {
-            get
-            {
-                return (ServerProperties)m_serverProperties;
-            }
+            get => (ServerProperties)m_serverProperties;
 
-            private set
-            {
-                m_serverProperties = value;
-            }
+            private set => m_serverProperties = value;
         }
 
         /// <summary>
@@ -646,15 +547,9 @@ namespace Opc.Ua
         /// <value>Object that stores the configurable configuration information for a UA application</value>
         protected ApplicationConfiguration Configuration
         {
-            get
-            {
-                return (ApplicationConfiguration)m_configuration;
-            }
+            get => (ApplicationConfiguration)m_configuration;
 
-            private set
-            {
-                m_configuration = value;
-            }
+            private set => m_configuration = value;
         }
 
         /// <summary>
@@ -663,24 +558,9 @@ namespace Opc.Ua
         /// <value>Object that contains a description for the ApplicationDescription DataType.</value>
         protected ApplicationDescription ServerDescription
         {
-            get
-            {
-                return (ApplicationDescription)m_serverDescription;
-            }
+            get => (ApplicationDescription)m_serverDescription;
 
-            private set
-            {
-                m_serverDescription = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets the list of service hosts used by the server instance.
-        /// </summary>
-        /// <value>The service hosts.</value>
-        protected List<ServiceHost> ServiceHosts
-        {
-            get { return m_hosts; }
+            private set => m_serverDescription = value;
         }
 
         /// <summary>
@@ -693,16 +573,6 @@ namespace Opc.Ua
         /// </summary>
         /// <value>The transport listeners.</value>
         protected List<ITransportListener> TransportListeners => m_listeners;
-        #endregion
-
-        #region Protected Methods
-        /// <summary>
-        /// Returns the service contract to use.
-        /// </summary>
-        protected virtual Type GetServiceContract()
-        {
-            return null;
-        }
 
         /// <summary>
         /// Returns an instance of the endpoint to use.
@@ -741,7 +611,7 @@ namespace Opc.Ua
         {
             // disconnect all sessions
             InstanceCertificate = e.SecurityConfiguration.ApplicationCertificate.Certificate;
-            foreach (var listener in TransportListeners)
+            foreach (ITransportListener listener in TransportListeners)
             {
                 listener.CertificateUpdate(e.CertificateValidator, InstanceCertificate, null);
             }
@@ -766,14 +636,14 @@ namespace Opc.Ua
             // create the stack listener.
             try
             {
-                TransportListenerSettings settings = new TransportListenerSettings();
-
-                settings.Descriptions = endpoints;
-                settings.Configuration = endpointConfiguration;
-                settings.ServerCertificate = InstanceCertificate;
-                settings.CertificateValidator = certificateValidator;
-                settings.NamespaceUris = MessageContext.NamespaceUris;
-                settings.Factory = MessageContext.Factory;
+                var settings = new TransportListenerSettings {
+                    Descriptions = endpoints,
+                    Configuration = endpointConfiguration,
+                    ServerCertificate = InstanceCertificate,
+                    CertificateValidator = certificateValidator,
+                    NamespaceUris = MessageContext.NamespaceUris,
+                    Factory = MessageContext.Factory
+                };
 
                 listener.Open(
                    endpointUri,
@@ -786,7 +656,7 @@ namespace Opc.Ua
             }
             catch (Exception e)
             {
-                StringBuilder message = new StringBuilder();
+                var message = new StringBuilder();
                 message.Append("Could not load ").Append(endpointUri.Scheme).Append(" Stack Listener.");
                 if (e.InnerException != null)
                 {
@@ -809,7 +679,7 @@ namespace Opc.Ua
         /// </returns>
         public virtual UserTokenPolicyCollection GetUserTokenPolicies(ApplicationConfiguration configuration, EndpointDescription description)
         {
-            UserTokenPolicyCollection policies = new UserTokenPolicyCollection();
+            var policies = new UserTokenPolicyCollection();
 
             if (configuration.ServerConfiguration == null || configuration.ServerConfiguration.UserTokenPolicies == null)
             {
@@ -818,9 +688,9 @@ namespace Opc.Ua
 
             foreach (UserTokenPolicy policy in configuration.ServerConfiguration.UserTokenPolicies)
             {
-                UserTokenPolicy clone = (UserTokenPolicy)policy.MemberwiseClone();
+                var clone = (UserTokenPolicy)policy.MemberwiseClone();
 
-                if (String.IsNullOrEmpty(policy.SecurityPolicyUri))
+                if (string.IsNullOrEmpty(policy.SecurityPolicyUri))
                 {
                     if (description.SecurityMode == MessageSecurityMode.None)
                     {
@@ -830,7 +700,7 @@ namespace Opc.Ua
                 }
                 // ensure each policy has a unique id within the context of the Server
                 clone.PolicyId = Utils.Format("{0}", ++m_userTokenPolicyId);
-                
+
                 policies.Add(clone);
             }
 
@@ -914,7 +784,7 @@ namespace Opc.Ua
                 return baseAddresses;
             }
 
-            List<BaseAddress> filteredAddresses = new List<BaseAddress>();
+            var filteredAddresses = new List<BaseAddress>();
 
             foreach (BaseAddress baseAddress in baseAddresses)
             {
@@ -943,7 +813,7 @@ namespace Opc.Ua
             }
 
             // client only gets alternate addresses that match the DNS name that it used.
-            List<BaseAddress> accessibleAddresses = new List<BaseAddress>();
+            var accessibleAddresses = new List<BaseAddress>();
 
             foreach (BaseAddress baseAddress in baseAddresses)
             {
@@ -1012,7 +882,7 @@ namespace Opc.Ua
             LocalizedText applicationName)
         {
             // get the discovery urls.
-            StringCollection discoveryUrls = new StringCollection();
+            var discoveryUrls = new StringCollection();
 
             foreach (BaseAddress baseAddress in baseAddresses)
             {
@@ -1020,14 +890,14 @@ namespace Opc.Ua
             }
 
             // copy the description.
-            ApplicationDescription copy = new ApplicationDescription();
-
-            copy.ApplicationName = description.ApplicationName;
-            copy.ApplicationUri = description.ApplicationUri;
-            copy.ApplicationType = description.ApplicationType;
-            copy.ProductUri = description.ProductUri;
-            copy.GatewayServerUri = description.DiscoveryProfileUri;
-            copy.DiscoveryUrls = discoveryUrls;
+            var copy = new ApplicationDescription {
+                ApplicationName = description.ApplicationName,
+                ApplicationUri = description.ApplicationUri,
+                ApplicationType = description.ApplicationType,
+                ProductUri = description.ProductUri,
+                GatewayServerUri = description.DiscoveryProfileUri,
+                DiscoveryUrls = discoveryUrls
+            };
 
             if (!LocalizedText.IsNullOrEmpty(applicationName))
             {
@@ -1052,12 +922,12 @@ namespace Opc.Ua
             IList<EndpointDescription> endpoints,
             ApplicationDescription application)
         {
-            EndpointDescriptionCollection translations = new EndpointDescriptionCollection();
+            var translations = new EndpointDescriptionCollection();
 
             // process endpoints
             foreach (EndpointDescription endpoint in endpoints)
             {
-                UriBuilder endpointUrl = new UriBuilder(endpoint.EndpointUrl);
+                var endpointUrl = new UriBuilder(endpoint.EndpointUrl);
 
                 // find matching base address.
                 foreach (BaseAddress baseAddress in baseAddresses)
@@ -1083,9 +953,9 @@ namespace Opc.Ua
                         continue;
                     }
 
-                    EndpointDescription translation = new EndpointDescription();
-
-                    translation.EndpointUrl = baseAddress.Url.ToString();
+                    var translation = new EndpointDescription {
+                        EndpointUrl = baseAddress.Url.ToString()
+                    };
 
                     if (endpointUrl.Path.StartsWith(baseAddress.Url.PathAndQuery, StringComparison.Ordinal) &&
                         endpointUrl.Path.Length > baseAddress.Url.PathAndQuery.Length)
@@ -1136,30 +1006,10 @@ namespace Opc.Ua
                 throw new ServiceResultException(statusCode);
             }
 
-            ResponseHeader responseHeader = new ResponseHeader();
-
-            responseHeader.Timestamp = DateTime.UtcNow;
-            responseHeader.RequestHandle = requestHeader.RequestHandle;
-
-            return responseHeader;
-        }
-
-        /// <summary>
-        /// Creates the response header.
-        /// </summary>
-        /// <param name="requestHeader">The object that contains description for the RequestHeader DataType.</param>
-        /// <param name="exception">The exception used to create DiagnosticInfo assigned to the ServiceDiagnostics.</param>
-        /// <returns>Returns a description for the ResponseHeader DataType. </returns>
-        protected virtual ResponseHeader CreateResponse(RequestHeader requestHeader, Exception exception)
-        {
-            ResponseHeader responseHeader = new ResponseHeader();
-
-            responseHeader.Timestamp = DateTime.UtcNow;
-            responseHeader.RequestHandle = requestHeader.RequestHandle;
-
-            StringTable stringTable = new StringTable();
-            responseHeader.ServiceDiagnostics = new DiagnosticInfo(exception, (DiagnosticsMasks)requestHeader.ReturnDiagnostics, true, stringTable);
-            responseHeader.StringTable = stringTable.ToArray();
+            var responseHeader = new ResponseHeader {
+                Timestamp = DateTime.UtcNow,
+                RequestHandle = requestHeader.RequestHandle
+            };
 
             return responseHeader;
         }
@@ -1172,25 +1022,14 @@ namespace Opc.Ua
         /// <returns>Returns a description for the ResponseHeader DataType. </returns>
         protected virtual ResponseHeader CreateResponse(RequestHeader requestHeader, StringTable stringTable)
         {
-            ResponseHeader responseHeader = new ResponseHeader();
-
-            responseHeader.Timestamp = DateTime.UtcNow;
-            responseHeader.RequestHandle = requestHeader.RequestHandle;
+            var responseHeader = new ResponseHeader {
+                Timestamp = DateTime.UtcNow,
+                RequestHandle = requestHeader.RequestHandle
+            };
 
             responseHeader.StringTable.AddRange(stringTable.ToArray());
 
             return responseHeader;
-        }
-
-        /// <summary>
-        /// Called when the server configuration is changed on disk.
-        /// </summary>
-        /// <param name="configuration">The object that stores the configurable configuration information for a UA application.</param>
-        /// <remarks>
-        /// Servers are free to ignore changes if it is difficult/impossible to apply them without a restart.
-        /// </remarks>
-        protected virtual void OnUpdateConfiguration(ApplicationConfiguration configuration)
-        {
         }
 
         /// <summary>
@@ -1214,9 +1053,9 @@ namespace Opc.Ua
                 // ensure at least one user token policy exists.
                 if (configuration.ServerConfiguration.UserTokenPolicies.Count == 0)
                 {
-                    UserTokenPolicy userTokenPolicy = new UserTokenPolicy();
-
-                    userTokenPolicy.TokenType = UserTokenType.Anonymous;
+                    var userTokenPolicy = new UserTokenPolicy {
+                        TokenType = UserTokenType.Anonymous
+                    };
                     userTokenPolicy.PolicyId = userTokenPolicy.TokenType.ToString();
 
                     configuration.ServerConfiguration.UserTokenPolicies.Add(userTokenPolicy);
@@ -1245,7 +1084,7 @@ namespace Opc.Ua
 
             // load certificate chain.
             InstanceCertificateChain = new X509Certificate2Collection(InstanceCertificate);
-            List<CertificateIdentifier> issuers = new List<CertificateIdentifier>();
+            var issuers = new List<CertificateIdentifier>();
             configuration.CertificateValidator.GetIssuers(InstanceCertificateChain, issuers).Wait();
 
             for (int i = 0; i < issuers.Count; i++)
@@ -1259,11 +1098,11 @@ namespace Opc.Ua
             MessageContext = messageContext;
 
             // assign a unique identifier if none specified.
-            if (String.IsNullOrEmpty(configuration.ApplicationUri))
+            if (string.IsNullOrEmpty(configuration.ApplicationUri))
             {
                 configuration.ApplicationUri = X509Utils.GetApplicationUriFromCertificate(InstanceCertificate);
 
-                if (String.IsNullOrEmpty(configuration.ApplicationUri))
+                if (string.IsNullOrEmpty(configuration.ApplicationUri))
                 {
                     configuration.ApplicationUri = Utils.Format(
                         "http://{0}/{1}/{2}",
@@ -1277,7 +1116,7 @@ namespace Opc.Ua
             MessageContext.NamespaceUris.Append(configuration.ApplicationUri);
 
             // assign an instance name.
-            if (String.IsNullOrEmpty(configuration.ApplicationName) && InstanceCertificate != null)
+            if (string.IsNullOrEmpty(configuration.ApplicationName) && InstanceCertificate != null)
             {
                 configuration.ApplicationName = InstanceCertificate.GetNameInfo(X509NameType.DnsName, false);
             }
@@ -1340,15 +1179,15 @@ namespace Opc.Ua
         {
             request.CallSynchronously();
         }
-        #endregion
 
-        #region RequestQueue Class
+
+
         /// <summary>
         /// Manages a queue of requests.
         /// </summary>
         protected class RequestQueue : IDisposable
         {
-            #region Constructors
+
             /// <summary>
             /// Initializes a new instance of the <see cref="RequestQueue"/> class.
             /// </summary>
@@ -1382,9 +1221,9 @@ namespace Opc.Ua
                     Math.Max(maxThreadCount, m_maxThreadCount),
                     Math.Max(maxCompletionPortThreads, m_maxThreadCount));
             }
-            #endregion
 
-            #region IDisposable Members
+
+
             /// <summary>
             /// Frees any unmanaged resources.
             /// </summary>
@@ -1414,9 +1253,9 @@ namespace Opc.Ua
 #endif
                 }
             }
-            #endregion
 
-            #region Public Members
+
+
             /// <summary>
             /// Schedules an incoming request.
             /// </summary>
@@ -1464,8 +1303,9 @@ namespace Opc.Ua
                             Monitor.Exit(m_lock);
 
                             // new threads start in an active state
-                            Thread thread = new Thread(OnProcessRequestQueue);
-                            thread.IsBackground = true;
+                            var thread = new Thread(OnProcessRequestQueue) {
+                                IsBackground = true
+                            };
                             thread.Start(null);
 
                             Utils.LogTrace("Thread created: {0:X8}. Total: {1} Active: {2}",
@@ -1510,9 +1350,9 @@ namespace Opc.Ua
                 });
 #endif
             }
-            #endregion
 
-            #region Private Methods
+
+
 #if THREAD_SCHEDULER
             /// <summary>
             /// Processes the requests in the request queue.
@@ -1561,26 +1401,26 @@ namespace Opc.Ua
                 }
             }
 #endif
-            #endregion
 
-            #region Private Fields
-            private ServerBase m_server;
+
+
+            private readonly ServerBase m_server;
             private bool m_stopped;
             private int m_activeThreadCount;
-            private int m_maxThreadCount;
-            private int m_minThreadCount;
-            private int m_maxRequestCount;
+            private readonly int m_maxThreadCount;
+            private readonly int m_minThreadCount;
+            private readonly int m_maxRequestCount;
 #if THREAD_SCHEDULER
-            private object m_lock = new object();
-            private Queue<IEndpointIncomingRequest> m_queue;
+            private readonly object m_lock = new object();
+            private readonly Queue<IEndpointIncomingRequest> m_queue;
             private int m_totalThreadCount;
 #endif
-            #endregion
+
 
         }
-        #endregion
 
-        #region Private Fields
+
+
         private object m_messageContext;
         private object m_serverError;
         private object m_certificateValidator;
@@ -1589,12 +1429,12 @@ namespace Opc.Ua
         private object m_serverProperties;
         private object m_configuration;
         private object m_serverDescription;
-        private List<ServiceHost> m_hosts;
-        private List<ITransportListener> m_listeners;
+        private readonly List<ServiceHost> m_hosts;
+        private readonly List<ITransportListener> m_listeners;
         private ReadOnlyList<EndpointDescription> m_endpoints;
         private RequestQueue m_requestQueue;
         // identifier for the UserTokenPolicy should be unique within the context of a single Server
         private int m_userTokenPolicyId = 0;
-        #endregion
+
     }
 }

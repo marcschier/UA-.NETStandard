@@ -54,7 +54,7 @@ namespace Opc.Ua.Client.Tests
         public int OperationTimeout { get; set; } = 10000;
         public int TraceMasks { get; set; } = Utils.TraceMasks.Error | Utils.TraceMasks.StackTrace | Utils.TraceMasks.Security | Utils.TraceMasks.Information;
 
-        #region Public Methods
+        
         /// <summary>
         /// Load the default client configuration.
         /// </summary>
@@ -303,9 +303,9 @@ namespace Opc.Ua.Client.Tests
                 m_traceLogger.SetWriter(writer);
             }
         }
-        #endregion
+        
 
-        #region Private Methods
+        
         private void Session_KeepAlive(Session session, KeepAliveEventArgs e)
         {
             if (ServiceResult.IsBad(e.Status))
@@ -313,6 +313,6 @@ namespace Opc.Ua.Client.Tests
                 session?.Dispose();
             }
         }
-        #endregion
+        
     }
 }

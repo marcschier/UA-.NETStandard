@@ -27,7 +27,7 @@ namespace Opc.Ua
     [DataContract(Namespace = Namespaces.OpcUaXsd)]
     public class ExpandedNodeId : IComparable, IFormattable
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object with default values.
         /// </summary>
@@ -49,7 +49,10 @@ namespace Opc.Ua
         /// <exception cref="ArgumentNullException">Thrown when the parameter is null</exception>
         public ExpandedNodeId(ExpandedNodeId value)
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             m_namespaceUri = value.m_namespaceUri;
 
@@ -108,7 +111,7 @@ namespace Opc.Ua
                 m_nodeId = new NodeId(nodeId);
             }
 
-            if (!String.IsNullOrEmpty(namespaceUri))
+            if (!string.IsNullOrEmpty(namespaceUri))
             {
                 SetNamespaceUri(namespaceUri);
             }
@@ -133,7 +136,7 @@ namespace Opc.Ua
                 m_nodeId = new NodeId(nodeId);
             }
 
-            if (!String.IsNullOrEmpty(namespaceUri))
+            if (!string.IsNullOrEmpty(namespaceUri))
             {
                 SetNamespaceUri(namespaceUri);
             }
@@ -330,9 +333,9 @@ namespace Opc.Ua
             m_namespaceUri = null;
             m_serverIndex = 0;
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The index of the namespace URI in the server's namespace array.
         /// </summary>
@@ -417,7 +420,7 @@ namespace Opc.Ua
         {
             get
             {
-                if (!String.IsNullOrEmpty(m_namespaceUri))
+                if (!string.IsNullOrEmpty(m_namespaceUri))
                 {
                     return false;
                 }
@@ -441,7 +444,7 @@ namespace Opc.Ua
         {
             get
             {
-                if (!String.IsNullOrEmpty(m_namespaceUri) || m_serverIndex > 0)
+                if (!string.IsNullOrEmpty(m_namespaceUri) || m_serverIndex > 0)
                 {
                     return true;
                 }
@@ -458,8 +461,8 @@ namespace Opc.Ua
         /// </remarks>
         internal NodeId InnerNodeId
         {
-            get { return m_nodeId; }
-            set { m_nodeId = value; }
+            get => m_nodeId;
+            set => m_nodeId = value;
         }
 
         /// <summary>
@@ -471,13 +474,10 @@ namespace Opc.Ua
         [DataMember(Name = "Identifier", Order = 1)]
         internal string IdentifierText
         {
-            get
-            {
-                return Format();
-            }
+            get => Format();
             set
             {
-                ExpandedNodeId nodeId = ExpandedNodeId.Parse(value);
+                var nodeId = ExpandedNodeId.Parse(value);
 
                 m_nodeId = nodeId.m_nodeId;
                 m_namespaceUri = nodeId.m_namespaceUri;
@@ -485,7 +485,7 @@ namespace Opc.Ua
             }
         }
 
-        #region public string Format()
+
         /// <summary>
         /// Formats a expanded node id as a string.
         /// </summary>
@@ -505,7 +505,7 @@ namespace Opc.Ua
         /// </remarks>
         public string Format()
         {
-            StringBuilder buffer = new StringBuilder();
+            var buffer = new StringBuilder();
             Format(buffer);
             return buffer.ToString();
         }
@@ -541,7 +541,7 @@ namespace Opc.Ua
                 buffer.AppendFormat(CultureInfo.InvariantCulture, "svr={0};", serverIndex);
             }
 
-            if (!String.IsNullOrEmpty(namespaceUri))
+            if (!string.IsNullOrEmpty(namespaceUri))
             {
                 buffer.Append("nsu=");
 
@@ -571,9 +571,9 @@ namespace Opc.Ua
 
             NodeId.Format(buffer, identifier, identifierType, namespaceIndex);
         }
-        #endregion
 
-        #region public static ExpandedNodeId Parse(string, NamespaceTable, NamespaceTable)
+
+
         /// <summary>
         /// Parses a expanded node id string, translated any namespace indexes and returns the result.
         /// </summary>
@@ -593,7 +593,7 @@ namespace Opc.Ua
             // translate the namespace uri.
             ushort namespaceIndex = 0;
 
-            if (!String.IsNullOrEmpty(uri))
+            if (!string.IsNullOrEmpty(uri))
             {
                 int index = targetNamespaces.GetIndex(uri);
 
@@ -622,9 +622,9 @@ namespace Opc.Ua
 
             return nodeId;
         }
-        #endregion
 
-        #region public static ExpandedNodeId Parse(string text)
+
+
         /// <summary>
         /// Parses a expanded node id string and returns a node id object.
         /// </summary>
@@ -638,7 +638,7 @@ namespace Opc.Ua
             try
             {
                 // check for null.
-                if (String.IsNullOrEmpty(text))
+                if (string.IsNullOrEmpty(text))
                 {
                     return ExpandedNodeId.Null;
                 }
@@ -672,7 +672,7 @@ namespace Opc.Ua
                         throw new ServiceResultException(StatusCodes.BadNodeIdInvalid, "Invalid namespace uri.");
                     }
 
-                    StringBuilder buffer = new StringBuilder();
+                    var buffer = new StringBuilder();
 
                     UnescapeUri(text, 4, index, buffer);
                     namespaceUri = buffer.ToString();
@@ -680,7 +680,7 @@ namespace Opc.Ua
                 }
 
                 // parse the node id.
-                NodeId nodeId = NodeId.Parse(text);
+                var nodeId = NodeId.Parse(text);
 
                 // craete the node id.
                 return new ExpandedNodeId(nodeId, namespaceUri, serverIndex);
@@ -714,7 +714,7 @@ namespace Opc.Ua
 
                         ushort value = 0;
 
-                        int digit = kHexDigits.IndexOf(Char.ToUpperInvariant(text[++ii]));
+                        int digit = kHexDigits.IndexOf(char.ToUpperInvariant(text[++ii]));
 
                         if (digit == -1)
                         {
@@ -724,7 +724,7 @@ namespace Opc.Ua
                         value += (ushort)digit;
                         value <<= 4;
 
-                        digit = kHexDigits.IndexOf(Char.ToUpperInvariant(text[++ii]));
+                        digit = kHexDigits.IndexOf(char.ToUpperInvariant(text[++ii]));
 
                         if (digit == -1)
                         {
@@ -752,11 +752,11 @@ namespace Opc.Ua
         /// The set of hexadecimal digits used for decoding escaped URIs.
         /// </summary>
         private const string kHexDigits = "0123456789ABCDEF";
-        #endregion
 
-        #endregion
 
-        #region IComparable Members
+
+
+
         /// <summary>
         /// Compares the current instance to the object.
         /// </summary>
@@ -778,36 +778,36 @@ namespace Opc.Ua
             }
 
             // just compare node ids.
-            if (!this.IsAbsolute)
+            if (!IsAbsolute)
             {
-                if (this.m_nodeId != null)
+                if (m_nodeId != null)
                 {
-                    return this.m_nodeId.CompareTo(obj);
+                    return m_nodeId.CompareTo(obj);
                 }
             }
 
-            NodeId nodeId = obj as NodeId;
+            var nodeId = obj as NodeId;
 
             // check for expanded node ids.
-            ExpandedNodeId expandedId = obj as ExpandedNodeId;
+            var expandedId = obj as ExpandedNodeId;
 
             if (expandedId != null)
             {
-                if (this.IsNull && expandedId.IsNull)
+                if (IsNull && expandedId.IsNull)
                 {
                     return 0;
                 }
 
-                if (this.ServerIndex != expandedId.ServerIndex)
+                if (ServerIndex != expandedId.ServerIndex)
                 {
-                    return this.ServerIndex.CompareTo(expandedId.ServerIndex);
+                    return ServerIndex.CompareTo(expandedId.ServerIndex);
                 }
 
-                if (this.NamespaceUri != expandedId.NamespaceUri)
+                if (NamespaceUri != expandedId.NamespaceUri)
                 {
-                    if (this.NamespaceUri != null)
+                    if (NamespaceUri != null)
                     {
-                        return String.CompareOrdinal(NamespaceUri, expandedId.NamespaceUri);
+                        return string.CompareOrdinal(NamespaceUri, expandedId.NamespaceUri);
                     }
 
                     return -1;
@@ -817,9 +817,9 @@ namespace Opc.Ua
             }
 
             // check for null.
-            if (this.m_nodeId != null)
+            if (m_nodeId != null)
             {
-                return this.m_nodeId.CompareTo(nodeId);
+                return m_nodeId.CompareTo(nodeId);
             }
 
             // compare node ids.
@@ -857,9 +857,9 @@ namespace Opc.Ua
 
             return true;
         }
-        #endregion
 
-        #region Comparison Functions
+
+
         /// <summary>
         /// Determines if the specified object is equal to the ExpandedNodeId.
         /// </summary>
@@ -918,9 +918,9 @@ namespace Opc.Ua
 
             return (value1.CompareTo(value2) != 0);
         }
-        #endregion
 
-        #region IFormattable Members
+
+
         /// <summary>
         /// Returns the string representation of an ExpandedNodeId.
         /// </summary>
@@ -940,9 +940,9 @@ namespace Opc.Ua
 
             throw new FormatException(Utils.Format("Invalid format string: '{0}'.", format));
         }
-        #endregion
 
-        #region ICloneable Members
+
+
         /// <summary>
         /// Makes a deep copy of the object.
         /// </summary>
@@ -954,9 +954,9 @@ namespace Opc.Ua
             // this object cannot be altered after it is created so no new allocation is necessary.
             return this;
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Returns the string representation of am ExpandedNodeId.
         /// </summary>
@@ -985,13 +985,13 @@ namespace Opc.Ua
             }
 
             // return a reference to the internal node id object.
-            if (String.IsNullOrEmpty(nodeId.m_namespaceUri) && nodeId.m_serverIndex == 0)
+            if (string.IsNullOrEmpty(nodeId.m_namespaceUri) && nodeId.m_serverIndex == 0)
             {
                 return nodeId.m_nodeId;
             }
 
             // create copy.
-            NodeId localId = new NodeId(nodeId.m_nodeId);
+            var localId = new NodeId(nodeId.m_nodeId);
 
             int index = -1;
 
@@ -1038,9 +1038,9 @@ namespace Opc.Ua
         {
             m_serverIndex = serverIndex;
         }
-        #endregion
 
-        #region Static Members
+
+
         /// <summary>
         /// Parses an absolute NodeId formatted as a string and converts it a local NodeId.
         /// </summary>
@@ -1050,14 +1050,14 @@ namespace Opc.Ua
         /// <exception cref="ServiceResultException">Thrown if the namespace URI is not in the namespace table.</exception>
         public static NodeId Parse(string text, NamespaceTable namespaceUris)
         {
-            ExpandedNodeId nodeId = ExpandedNodeId.Parse(text);
+            var nodeId = ExpandedNodeId.Parse(text);
 
             if (!nodeId.IsAbsolute)
             {
                 return nodeId.InnerNodeId;
             }
 
-            NodeId localId = ExpandedNodeId.ToNodeId(nodeId, namespaceUris);
+            var localId = ExpandedNodeId.ToNodeId(nodeId, namespaceUris);
 
             if (localId == null)
             {
@@ -1150,16 +1150,16 @@ namespace Opc.Ua
         public static ExpandedNodeId Null => s_Null;
 
         private static readonly ExpandedNodeId s_Null = new ExpandedNodeId();
-        #endregion
 
-        #region Private Fields
+
+
         private NodeId m_nodeId;
         private string m_namespaceUri;
         private uint m_serverIndex;
-        #endregion
+
     }
 
-    #region ExpandedNodeIdCollection Class
+
     /// <summary>
     /// A collection of ExpandedNodeId objects.
     /// </summary>
@@ -1228,7 +1228,7 @@ namespace Opc.Ua
         /// </remarks>
         public new object MemberwiseClone()
         {
-            ExpandedNodeIdCollection clone = new ExpandedNodeIdCollection(this.Count);
+            var clone = new ExpandedNodeIdCollection(Count);
 
             foreach (ExpandedNodeId element in this)
             {
@@ -1239,6 +1239,6 @@ namespace Opc.Ua
         }
 
     }//class
-    #endregion
+
 
 }//namespace

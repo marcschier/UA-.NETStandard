@@ -10,16 +10,6 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 */
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using System.Xml;
-using System.IO;
-using System.Runtime.Serialization;
-using System.Reflection;
-using System.Threading;
-
 namespace Opc.Ua
 {
     /// <summary> 
@@ -27,7 +17,7 @@ namespace Opc.Ua
     /// </summary>
     public class BaseObjectState : BaseInstanceState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -41,18 +31,8 @@ namespace Opc.Ua
             }
         }
 
-        /// <summary>
-        /// Constructs an instance of a node.
-        /// </summary>
-        /// <param name="parent">The parent.</param>
-        /// <returns>The new node.</returns>
-        public static NodeState Construct(NodeState parent)
-        {
-            return new BaseObjectState(parent);
-        }
-        #endregion
 
-        #region Initialization
+
         /// <summary>
         /// Initializes the instance with the default values.
         /// </summary>
@@ -75,9 +55,7 @@ namespace Opc.Ua
         /// </summary>
         protected override void Initialize(ISystemContext context, NodeState source)
         {
-            BaseObjectState instance = source as BaseObjectState;
-
-            if (instance != null)
+            if (source is BaseObjectState instance)
             {
                 m_eventNotifier = instance.m_eventNotifier;
             }
@@ -92,18 +70,15 @@ namespace Opc.Ua
         {
             return ObjectTypes.BaseObjectType;
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The inverse name for the reference.
         /// </summary>
         public byte EventNotifier
         {
-            get
-            {
-                return m_eventNotifier;
-            }
+            get => m_eventNotifier;
 
             set
             {
@@ -115,9 +90,9 @@ namespace Opc.Ua
                 m_eventNotifier = value;
             }
         }
-        #endregion
 
-        #region Event Callbacks
+
+
         /// <summary>
         /// Raised when the EventNotifier attribute is read.
         /// </summary>
@@ -127,9 +102,9 @@ namespace Opc.Ua
         /// Raised when the EventNotifier attribute is written.
         /// </summary>
         public NodeAttributeEventHandler<byte> OnWriteEventNotifier;
-        #endregion
 
-        #region Serialization Functions
+
+
         /// <summary>
         /// Exports a copt of the node to a node table.
         /// </summary>
@@ -139,11 +114,10 @@ namespace Opc.Ua
         {
             base.Export(context, node);
 
-            ObjectNode objectNode = node as ObjectNode;
 
-            if (objectNode != null)
+            if (node is ObjectNode objectNode)
             {
-                objectNode.EventNotifier = this.EventNotifier;
+                objectNode.EventNotifier = EventNotifier;
             }
         }
 
@@ -184,7 +158,7 @@ namespace Opc.Ua
 
             decoder.PopNamespace();
         }
-        
+
         /// <summary>
         /// Returns a mask which indicates which attributes have non-default value.
         /// </summary>
@@ -233,9 +207,9 @@ namespace Opc.Ua
                 m_eventNotifier = decoder.ReadByte(null);
             }
         }
-        #endregion
 
-        #region Read Support Functions
+
+
         /// <summary>
         /// Reads the value for any non-value attribute.
         /// </summary>
@@ -268,9 +242,9 @@ namespace Opc.Ua
 
             return base.ReadNonValueAttribute(context, attributeId, ref value);
         }
-        #endregion
 
-        #region Write Support Functions
+
+
         /// <summary>
         /// Write the value for any non-value attribute.
         /// </summary>
@@ -315,28 +289,28 @@ namespace Opc.Ua
 
             return base.WriteNonValueAttribute(context, attributeId, value);
         }
-        #endregion
-        
-        #region Private Fields
+
+
+
         private byte m_eventNotifier;
-        #endregion
+
     }
-    
+
     /// <summary> 
     /// The base class for all folder nodes.
     /// </summary>
     public class FolderState : BaseObjectState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
-        public FolderState(NodeState parent) : base( parent)
+        public FolderState(NodeState parent) : base(parent)
         {
         }
-        #endregion
 
-        #region Initialization
+
+
         /// <summary>
         /// Initializes the instance with the default values.
         /// </summary>
@@ -361,6 +335,6 @@ namespace Opc.Ua
         {
             return ObjectTypes.FolderType;
         }
-        #endregion
+
     }
 }

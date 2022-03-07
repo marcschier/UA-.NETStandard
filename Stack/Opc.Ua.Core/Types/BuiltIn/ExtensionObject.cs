@@ -32,247 +32,16 @@ namespace Opc.Ua
     /// <br/>
     /// </para>
     /// <para>
-    /// An instance of the <see cref="ExtensionObject"/> is a container for any complex data types which cannot be encoded as one of the 
-    /// other built-in data types. The ExtensionObject contains a complex value serialized as a sequence of 
-    /// bytes or as an XML element. It also contains an identifier which indicates what data it contains and 
-    /// how it is encoded. 
+    /// An instance of the <see cref="ExtensionObject"/> is a container for any complex data types which cannot be encoded as one of the
+    /// other built-in data types. The ExtensionObject contains a complex value serialized as a sequence of
+    /// bytes or as an XML element. It also contains an identifier which indicates what data it contains and
+    /// how it is encoded.
     /// </para>
     /// </remarks>
-    /// <example>
-    /// <para>
-    /// The following example demonstrates a simple class containing 3 public properties of
-    /// type int, DateTime and string. This class implements the <see cref="IEncodeable"/>
-    /// interface, and is then encoded using the <b>WriteExtensionObject</b> method.
-    /// <br/></para>
-    /// <code lang="C#">
-    /// //First, we will define a very simple class object that will represent
-    /// //some real-world process.
-    /// class simpleClass : IEncodeable
-    /// {
-    /// 
-    ///     //fields
-    ///     public string PublicFieldNotVisible = "I should not be encoded";
-    ///  
-    ///     //properties
-    ///     private string stringField;
-    ///     public string StringProperty
-    ///     {
-    ///         get
-    ///         {
-    ///             return (stringField);
-    ///         }
-    ///         set
-    ///         {
-    ///             stringField = value;
-    ///         }
-    ///     }
-    /// 
-    ///     private int intField;
-    ///     public int IntProperty
-    ///     {
-    ///         get
-    ///         {
-    ///             return (intField);
-    ///         }
-    ///         set
-    ///         {
-    ///             intField = value;
-    ///         }
-    ///     }
-    ///  
-    ///     private DateTime datetimeField;
-    ///     public DateTime DatetimeProperty
-    ///     {
-    ///         get
-    ///         {   
-    ///             return (datetimeField);
-    ///         }
-    ///         set
-    ///         {
-    ///             datetimeField = value;
-    ///         }
-    ///     }
-    /// 
-    ///     //class constructor
-    ///     public simpleClass(string StringValue, int IntValue, DateTime DateTimeValue)
-    ///     {
-    ///         StringProperty = StringValue;
-    ///         IntProperty = IntValue;
-    ///         DatetimeProperty = DateTimeValue;
-    ///     }
-    ///     public simpleClass(simpleClass SimpleClassInstance)
-    ///     {
-    ///         StringProperty = SimpleClassInstance.StringProperty;
-    ///         IntProperty = SimpleClassInstance.IntProperty;
-    ///         DatetimeProperty = SimpleClassInstance.DatetimeProperty;
-    ///     }
-    /// 
-    ///     #region IEncodeable Members
-    /// 
-    ///     public ExpandedNodeId TypeId
-    ///     {
-    ///         get
-    ///         {
-    ///             return (new ExpandedNodeId(Guid.NewGuid()));
-    ///         }
-    ///     }
-    /// 
-    ///     public void Encode(IEncoder encoder)
-    ///     {
-    ///         if (encoder != null)
-    ///         {
-    ///             //our simple object has 3 properies: string, int and datetime
-    ///             encoder.WriteString("StringProperty", this.StringProperty);
-    ///             encoder.WriteInt32("IntProperty", this.IntProperty);
-    ///             encoder.WriteDateTime("DateTimeProperty", this.DatetimeProperty);
-    ///         }
-    ///     }
-    /// 
-    ///     public void Decode(IDecoder decoder)
-    ///     {
-    ///         if (decoder != null)
-    ///         {
-    ///             this.StringProperty = decoder.ReadString("StringProperty");
-    ///             this.IntProperty = decoder.ReadInt16("IntProperty");
-    ///             this.DatetimeProperty = decoder.ReadDateTime("DateTimeProperty");
-    ///         }
-    ///     }
-    /// 
-    ///     public bool IsEqual(IEncodeable encodeable)
-    ///     {
-    ///         return (encodeable.Equals(this));
-    ///     }
-    /// 
-    ///     #endregion
-    /// 
-    ///     #region ICloneable Members
-    /// 
-    ///     public new object MemberwiseClone()
-    ///     {
-    ///         return (new simpleClass(this));
-    ///     }
-    /// 
-    ///     #endregion
-    /// 
-    /// }
-    /// 
-    /// public void EncodeExample()
-    /// {
-    ///     //define an instance of our class object, defined above.
-    ///     simpleClass mySimpleClassInstance1 = new simpleClass("String", int.MaxValue, DateTime.Now);
-    /// 
-    ///     //define an object that will encapsulate/extend our simple instance above
-    ///     ExtensionObject extendedSimpleClassInstance = new ExtensionObject(mySimpleClassInstance1);
-    /// 
-    ///     /// 
-    ///     //encode our class object into the stream
-    ///     uaEncoderInstance.WriteExtensionObject( "Extended1", extendedSimpleClassInstance);
-    /// }
-    /// </code>
-    /// <code lang="Visual Basic">
-    /// 
-    /// 'First, we will define a very simple class object that will represent
-    /// 'some real-world process.
-    /// 
-    /// Class simpleClass
-    ///    Inherits IEncodeable
-    ///    
-    ///    'fields
-    ///    Public PublicFieldNotVisible As String = "I should not be encoded"
-    ///    
-    ///    'properties
-    ///    Private stringField As String
-    ///    Private intField As Integer
-    ///    Private datetimeField As DateTime
-    ///    
-    ///    'class constructor
-    ///    Public Sub New(ByVal StringValue As String, ByVal IntValue As Integer, ByVal DateTimeValue As DateTime)
-    ///        StringProperty = StringValue
-    ///        IntProperty = IntValue
-    ///        DatetimeProperty = DateTimeValue
-    ///    End Sub
-    ///    
-    ///    Public Sub New(ByVal SimpleClassInstance As simpleClass)
-    ///        StringProperty = SimpleClassInstance.StringProperty
-    ///        IntProperty = SimpleClassInstance.IntProperty
-    ///        DatetimeProperty = SimpleClassInstance.DatetimeProperty
-    ///    End Sub
-    ///    
-    ///    Public Property StringProperty As String
-    ///        Get
-    ///            Return stringField
-    ///        End Get
-    ///        Set
-    ///            stringField = value
-    ///        End Set
-    ///    End Property
-    ///    
-    ///    Public Property IntProperty As Integer
-    ///        Get
-    ///            Return intField
-    ///        End Get
-    ///        Set
-    ///            intField = value
-    ///        End Set
-    ///    End Property
-    ///    
-    ///    Public Property DatetimeProperty As DateTime
-    ///        Get
-    ///            Return datetimeField
-    ///        End Get
-    ///        Set
-    ///            datetimeField = value
-    ///        End Set
-    ///    End Property
-    ///    
-    ///    Public ReadOnly Property TypeId As ExpandedNodeId
-    ///        Get
-    ///            Return New ExpandedNodeId(Guid.NewGuid)
-    ///        End Get
-    ///    End Property
-    ///    
-    ///    Public Sub Encode(ByVal encoder As IEncoder)
-    ///        If encoder Isnot Nothing Then
-    ///            'our simple object has 3 properies: string, int and datetime
-    ///            encoder.WriteString("StringProperty", Me.StringProperty)
-    ///            encoder.WriteInt32("IntProperty", Me.IntProperty)
-    ///            encoder.WriteDateTime("DateTimeProperty", Me.DatetimeProperty)
-    ///        End If
-    ///    End Sub
-    ///    
-    ///    Public Sub Decode(ByVal decoder As IDecoder)
-    ///        If decoder Isnot Nothing Then
-    ///            Me.StringProperty = decoder.ReadString("StringProperty")
-    ///            Me.IntProperty = decoder.ReadInt16("IntProperty")
-    ///            Me.DatetimeProperty = decoder.ReadDateTime("DateTimeProperty")
-    ///        End If
-    ///    End Sub
-    ///    
-    ///    Public Function IsEqual(ByVal encodeable As IEncodeable) As Boolean
-    ///        Return encodeable.Equals(Me)
-    ///    End Function
-    ///    
-    ///    Public Function Clone() As Object
-    ///        Return New simpleClass(Me)
-    ///    End Function
-    ///End Class
-    ///
-    ///   Public Sub nodeid()
-    ///    'define an instance of our class object, defined above.
-    ///    Dim mySimpleClassInstance1 As simpleClass = New simpleClass("String", int.MaxValue, DateTime.Now)
-    /// 
-    ///    'define an object that will encapsulate/extend our simple instance above
-    ///    Dim extendedSimpleClassInstance As ExtensionObject = New ExtensionObject(mySimpleClassInstance1)
-    /// 
-    ///    'encode our class object into the stream
-    ///    uaEncoderInstance.WriteExtensionObject("Extended1", extendedSimpleClassInstance)
-    ///End Sub
-    /// </code>
-    /// </example>
     [DataContract(Namespace = Namespaces.OpcUaXsd)]
     public class ExtensionObject : IFormattable
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object with default values.
         /// </summary>
@@ -356,9 +125,9 @@ namespace Opc.Ua
             m_body = null;
             m_context = MessageContextExtension.CurrentContext;
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The data type node id for the extension object.
         /// </summary>
@@ -425,9 +194,9 @@ namespace Opc.Ua
                 }
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Determines if the specified object is equal to the <paramref name="obj"/>.
         /// </summary>
@@ -447,9 +216,8 @@ namespace Opc.Ua
                 return true;
             }
 
-            ExtensionObject value = obj as ExtensionObject;
 
-            if (value != null)
+            if (obj is ExtensionObject value)
             {
                 if (this.m_typeId != value.m_typeId)
                 {
@@ -493,9 +261,9 @@ namespace Opc.Ua
         {
             return ToString(null, null);
         }
-        #endregion
 
-        #region IFormattable Members
+
+
         /// <summary>
         /// Returns the string representation of the embededobject.
         /// </summary>
@@ -536,9 +304,7 @@ namespace Opc.Ua
 
                         for (int ii = 0; ii < attributes.Length; ii++)
                         {
-                            DataMemberAttribute contract = attributes[ii] as DataMemberAttribute;
-
-                            if (contract != null)
+                            if (attributes[ii] is DataMemberAttribute contract)
                             {
                                 if (body.Length == 0)
                                 {
@@ -572,9 +338,9 @@ namespace Opc.Ua
 
             throw new FormatException(Utils.Format("Invalid format string: '{0}'.", format));
         }
-        #endregion
 
-        #region ICloneable Members
+
+
         /// <summary>
         /// Makes a deep copy of the object.
         /// </summary>
@@ -585,9 +351,9 @@ namespace Opc.Ua
         {
             return new ExtensionObject(this);
         }
-        #endregion
 
-        #region Static Members
+
+
         /// <summary>
         /// Tests if the extension or embedd objects are null value.
         /// </summary>
@@ -637,9 +403,7 @@ namespace Opc.Ua
         /// </remarks>
         public static Array ToArray(object source, Type elementType)
         {
-            var extensions = source as Array;
-
-            if (extensions == null)
+            if (!(source is Array extensions))
             {
                 return null;
             }
@@ -669,9 +433,7 @@ namespace Opc.Ua
         /// </remarks>
         public static List<T> ToList<T>(object source) where T : class
         {
-            var extensions = source as Array;
-
-            if (extensions == null)
+            if (!(source is Array extensions))
             {
                 return null;
             }
@@ -700,18 +462,17 @@ namespace Opc.Ua
         /// </summary>
         public static ExtensionObject Null => s_Null;
         private static readonly ExtensionObject s_Null = new ExtensionObject();
-        #endregion
 
-        #region Private Members
+
+
         [DataMember(Name = "TypeId", Order = 1, IsRequired = false, EmitDefaultValue = true)]
         private NodeId XmlEncodedTypeId
         {
             get
             {
                 // must use the XML encoding id if encoding in an XML stream.
-                IEncodeable encodeable = m_body as IEncodeable;
 
-                if (encodeable != null)
+                if (m_body is IEncodeable encodeable)
                 {
                     return ExpandedNodeId.ToNodeId(encodeable.XmlEncodingId, m_context.NamespaceUris);
                 }
@@ -772,9 +533,8 @@ namespace Opc.Ua
                 Body = decoder.ReadExtensionObjectBody(m_typeId);
 
                 // clear the type id for encodeables.
-                IEncodeable encodeable = m_body as IEncodeable;
 
-                if (encodeable != null)
+                if (m_body is IEncodeable encodeable)
                 {
                     m_typeId = ExpandedNodeId.Null;
                 }
@@ -793,17 +553,17 @@ namespace Opc.Ua
                 }
             }
         }
-        #endregion
 
-        #region Private Fields
+
+
         private ExpandedNodeId m_typeId;
         private ExtensionObjectEncoding m_encoding;
         private object m_body;
         private IServiceMessageContext m_context;
-        #endregion
+
     }
 
-    #region ExtensionObjectEncoding Enumeration
+
     /// <summary>
     /// The types of encodings that may used with an object.
     /// </summary>
@@ -837,19 +597,19 @@ namespace Opc.Ua
         /// </summary>
         Json = 4
     }
-    #endregion
 
-    #region ExtensionObjectCollection Class
+
+
     /// <summary>
     /// A collection of ExtensionObjects.
-    /// </summary>   
+    /// </summary>
     /// <remarks>
     /// A strongly-typed collection of ExtensionObjects.
     /// </remarks>
     [CollectionDataContract(Name = "ListOfExtensionObject", Namespace = Namespaces.OpcUaXsd, ItemName = "ExtensionObject")]
     public class ExtensionObjectCollection : List<ExtensionObject>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes an empty collection.
         /// </summary>
@@ -875,9 +635,9 @@ namespace Opc.Ua
         /// </remarks>
         /// <param name="capacity">Max capacity of the collection</param>
         public ExtensionObjectCollection(int capacity) : base(capacity) { }
-        #endregion
 
-        #region Static Members
+
+
         /// <summary>
         /// Converts an array of ExtensionObjects to a collection.
         /// </summary>
@@ -918,9 +678,8 @@ namespace Opc.Ua
                 foreach (IEncodeable encodeable in encodeables)
                 {
                     // check if already an extension object.
-                    ExtensionObject extensible = encodeable as ExtensionObject;
 
-                    if (extensible != null)
+                    if (encodeable is ExtensionObject extensible)
                     {
                         extensibles.Add(extensible);
                     }
@@ -935,7 +694,7 @@ namespace Opc.Ua
 
             return extensibles;
         }
-        #endregion
+
 
         /// <summary>
         /// Creates a deep copy of the collection.
@@ -954,6 +713,6 @@ namespace Opc.Ua
 
             return clone;
         }
-        #endregion
+
     }//class
 }//namespace

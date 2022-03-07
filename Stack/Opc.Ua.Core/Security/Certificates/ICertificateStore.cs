@@ -94,19 +94,9 @@ namespace Opc.Ua
         Task<StatusCode> IsRevoked(X509Certificate2 issuer, X509Certificate2 certificate);
 
         /// <summary>
-        /// Whether the store supports CRLs.
-        /// </summary>
-        bool SupportsCRLs { get; }
-
-        /// <summary>
         /// Returns the CRLs in the store.
         /// </summary>
         Task<X509CRLCollection> EnumerateCRLs();
-
-        /// <summary>
-        /// Returns the CRLs for the issuer.
-        /// </summary>
-        Task<X509CRLCollection> EnumerateCRLs(X509Certificate2 issuer, bool validateUpdateTime = true);
 
         /// <summary>
         /// Adds a CRL to the store.

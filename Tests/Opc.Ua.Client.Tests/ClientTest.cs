@@ -59,14 +59,14 @@ namespace Opc.Ua.Client.Tests
         {
         }
 
-        #region DataPointSources
+        
         public static readonly NodeId[] TypeSystems = {
             ObjectIds.OPCBinarySchema_TypeSystem,
             ObjectIds.XmlSchema_TypeSystem
         };
-        #endregion
+        
 
-        #region Test Setup
+        
         /// <summary>
         /// Set up a Server and a Client instance.
         /// </summary>
@@ -103,9 +103,9 @@ namespace Opc.Ua.Client.Tests
         {
             return base.TearDown();
         }
-        #endregion
+        
 
-        #region Benchmark Setup
+        
         /// <summary>
         /// Global Setup for benchmarks.
         /// </summary>
@@ -123,9 +123,9 @@ namespace Opc.Ua.Client.Tests
         {
             base.GlobalCleanup();
         }
-        #endregion
+        
 
-        #region Test Methods
+        
         [Test, Order(100)]
         public async Task GetEndpointsAsync()
         {
@@ -678,9 +678,9 @@ namespace Opc.Ua.Client.Tests
                 transferSession?.Dispose();
             }
         }
-        #endregion
+        
 
-        #region Benchmarks
+        
         /// <summary>
         /// Benchmark wrapper for browse tests.
         /// </summary>
@@ -689,9 +689,9 @@ namespace Opc.Ua.Client.Tests
         {
             await BrowseFullAddressSpace(null).ConfigureAwait(false);
         }
-        #endregion
+        
 
-        #region Private Methods
-        #endregion
+        
+        
     }
 }

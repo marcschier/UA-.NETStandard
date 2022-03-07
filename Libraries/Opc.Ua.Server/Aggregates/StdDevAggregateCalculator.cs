@@ -29,7 +29,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Opc.Ua.Server
 {
@@ -38,7 +37,7 @@ namespace Opc.Ua.Server
     /// </summary>
     public class StdDevAggregateCalculator : AggregateCalculator
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the aggregate calculator.
         /// </summary>
@@ -55,14 +54,14 @@ namespace Opc.Ua.Server
             double processingInterval,
             bool stepped,
             AggregateConfiguration configuration)
-        : 
+        :
             base(aggregateId, startTime, endTime, processingInterval, stepped, configuration)
         {
             SetPartialBit = true;
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Computes the value for the timeslice.
         /// </summary>
@@ -98,133 +97,6 @@ namespace Opc.Ua.Server
 
             return base.ComputeValue(slice);
         }
-        #endregion
-
-        #region Protected Methods
-        /// <summary>
-        /// Calculates the RegSlope, RegConst and RegStdDev aggregates for the timeslice.
-        /// </summary>
-        protected DataValue ComputeRegression(TimeSlice slice, int valueType)
-        {
-            // get the values in the slice.
-            List<DataValue> values = GetValuesWithSimpleBounds(slice);
-
-            // check for empty slice.
-            if (values == null || values.Count == 0)
-            {
-                return GetNoDataValue(slice);
-            }
-
-            // get the regions.
-            List<SubRegion> regions = GetRegionsInValueSet(values, false, true);
-
-            List<double> xData = new List<double>();
-            List<double> yData = new List<double>();
-
-            double duration = 0;
-            bool nonGoodDataExists = false;
-
-            for (int ii = 0; ii < regions.Count; ii++)
-            {
-                if (StatusCode.IsGood(regions[ii].StatusCode))
-                {
-                    xData.Add(regions[ii].StartValue);
-                    yData.Add(duration);
-                }
-                else
-                {
-                    nonGoodDataExists = true;
-                }
-
-                // normalize to seconds.
-                duration += regions[ii].Duration/1000.0;
-            }
-
-            // check if no good data.
-            if (xData.Count == 0)
-            {
-                return GetNoDataValue(slice);
-            }
-
-            // compute the regression parameters.
-            double regSlope = 0;
-            double regConst = 0;
-            double regStdDev = 0;
-
-            if (xData.Count > 1)
-            {
-                double xAvg = 0;
-                double yAvg = 0;
-                double xxAgv = 0;
-                double xyAvg = 0;
-
-                for (int ii = 0; ii < xData.Count; ii++)
-                {
-                    xAvg += xData[ii];
-                    yAvg += yData[ii];
-                    xxAgv += xData[ii] * xData[ii];
-                    xyAvg += xData[ii] * yData[ii];
-                }
-
-                xAvg /= xData.Count;
-                yAvg /= xData.Count;
-                xxAgv /= xData.Count;
-                xyAvg /= xData.Count;
-
-                regSlope = (xyAvg - xAvg * yAvg) / (xxAgv - xAvg * xAvg);
-                regConst = yAvg - regSlope * xAvg;
-                
-                List<double> errors = new List<double>();
-
-                double eAvg = 0;
-
-                for (int ii = 0; ii < xData.Count; ii++)
-                {
-                    double error = yData[ii] - regConst - regSlope * xData[ii];
-                    errors.Add(error);
-                    eAvg += error;
-                }
-
-                eAvg /= errors.Count;
-
-                double variance = 0;
-
-                for (int ii = 0; ii < errors.Count; ii++)
-                {
-                    double error = errors[ii] - eAvg;
-                    variance += error * error;
-                }
-
-                variance /= errors.Count;
-                regStdDev = Math.Sqrt(variance);
-            }
-
-            // select the result.
-            double result = 0;
-
-            switch (valueType)
-            {
-                case 1: { result = regSlope;  break; }
-                case 2: { result = regConst;  break; }
-                case 3: { result = regStdDev; break; }
-            }
-            
-            // set the timestamp and status.
-            DataValue value = new DataValue();
-            value.WrappedValue = new Variant(result, TypeInfo.Scalars.Double);
-            value.SourceTimestamp = GetTimestamp(slice);
-            value.ServerTimestamp = GetTimestamp(slice);
-
-            if (nonGoodDataExists)
-            {
-                value.StatusCode = StatusCodes.UncertainDataSubNormal;
-            }
-
-            value.StatusCode = value.StatusCode.SetAggregateBits(AggregateBits.Calculated);
-
-            // return result.
-            return value;
-        }
 
         /// <summary>
         /// Calculates the StdDev, Variance, StdDev2 and Variance2 aggregates for the timeslice.
@@ -252,7 +124,7 @@ namespace Opc.Ua.Server
             // get the regions.
             List<SubRegion> regions = GetRegionsInValueSet(values, false, true);
 
-            List<double> xData = new List<double>();
+            var xData = new List<double>();
             double average = 0;
             bool nonGoodDataExists = false;
 
@@ -283,7 +155,7 @@ namespace Opc.Ua.Server
             for (int ii = 0; ii < xData.Count; ii++)
             {
                 double error = xData[ii] - average;
-                variance += error*error;
+                variance += error * error;
             }
 
             // use the sample variance if bounds are included.
@@ -291,8 +163,8 @@ namespace Opc.Ua.Server
             {
                 variance /= (xData.Count + 1);
             }
-            
-           // use the population variance if bounds are not included.
+
+            // use the population variance if bounds are not included.
             else
             {
                 variance /= xData.Count;
@@ -308,10 +180,11 @@ namespace Opc.Ua.Server
             }
 
             // set the timestamp and status.
-            DataValue value = new DataValue();
-            value.WrappedValue = new Variant(result, TypeInfo.Scalars.Double);
-            value.SourceTimestamp = GetTimestamp(slice);
-            value.ServerTimestamp = GetTimestamp(slice);
+            var value = new DataValue {
+                WrappedValue = new Variant(result, TypeInfo.Scalars.Double),
+                SourceTimestamp = GetTimestamp(slice),
+                ServerTimestamp = GetTimestamp(slice)
+            };
 
             if (nonGoodDataExists)
             {
@@ -323,6 +196,6 @@ namespace Opc.Ua.Server
             // return result.
             return value;
         }
-        #endregion
+
     }
 }

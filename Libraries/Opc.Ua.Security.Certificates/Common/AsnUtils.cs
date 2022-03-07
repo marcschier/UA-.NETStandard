@@ -28,7 +28,6 @@
  * ======================================================================*/
 
 using System;
-using System.Formats.Asn1;
 using System.Text;
 
 namespace Opc.Ua.Security.Certificates
@@ -42,10 +41,10 @@ namespace Opc.Ua.Security.Certificates
         {
             if (buffer == null || buffer.Length == 0)
             {
-                return String.Empty;
+                return string.Empty;
             }
 
-            StringBuilder builder = new StringBuilder(buffer.Length * 2);
+            var builder = new StringBuilder(buffer.Length * 2);
 
             if (invertEndian)
             {
@@ -115,48 +114,6 @@ namespace Opc.Ua.Security.Certificates
             }
 
             return bytes;
-        }
-
-        /// <summary>
-        /// Writer for Public Key parameters.
-        /// </summary>
-        /// <remarks>
-        /// https://www.itu.int/rec/T-REC-X.690-201508-I/en
-        /// section 8.3 (Encoding of an integer value).
-        /// </remarks>
-        /// <param name="writer">The writer</param>
-        /// <param name="integer">The key parameter</param>
-        internal static void WriteKeyParameterInteger(this AsnWriter writer, ReadOnlySpan<byte> integer)
-        {
-            if (integer[0] == 0)
-            {
-                int newStart = 1;
-
-                while (newStart < integer.Length)
-                {
-                    if (integer[newStart] >= 0x80)
-                    {
-                        newStart--;
-                        break;
-                    }
-
-                    if (integer[newStart] != 0)
-                    {
-                        break;
-                    }
-
-                    newStart++;
-                }
-
-                if (newStart == integer.Length)
-                {
-                    newStart--;
-                }
-
-                integer = integer.Slice(newStart);
-            }
-
-            writer.WriteIntegerUnsigned(integer);
         }
 
     }

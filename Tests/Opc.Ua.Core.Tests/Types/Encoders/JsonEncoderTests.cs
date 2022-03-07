@@ -48,7 +48,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
     [DisassemblyDiagnoser]
     public class JsonEncoderTests : EncoderCommon
     {
-        #region DataSource
+        
         static TestEnumType[] TestEnumArray = new TestEnumType[]
             { TestEnumType.One, TestEnumType.Two, TestEnumType.Hundred };
         static Int32[] TestInt32Array = new Int32[]
@@ -283,9 +283,9 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
             // IEncodeable
             {   BuiltInType.ExtensionObject, TestEncodeable, "{\"Body\":{\"Foo\":\"bar_999\"}}", "{\"Foo\":\"bar_999\"}"}
         }.ToArray();
-        #endregion
+        
 
-        #region Test Setup
+        
         [OneTimeSetUp]
         protected new void OneTimeSetUp()
         {
@@ -312,9 +312,9 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
         protected new void TearDown()
         {
         }
-        #endregion
+        
 
-        #region Benchmark Setup
+        
         /// <summary>
         /// Set up some variables for benchmarks.
         /// </summary>
@@ -335,9 +335,9 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
             m_memoryStream.Dispose();
             m_memoryStream = null;
         }
-        #endregion
+        
 
-        #region Test Methods
+        
         /// <summary>
         /// Validate constructor signature.
         /// </summary>
@@ -752,9 +752,9 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
                 }
             }
         }
-        #endregion
+        
 
-        #region Benchmarks
+        
         /// <summary>
         /// Benchmark overhead to create ServiceMessageContext.
         /// </summary>
@@ -789,9 +789,9 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
                 _ = jsonEncoder.CloseAndReturnText();
             }
         }
-        #endregion
+        
 
-        #region Private Methods
+        
         protected void TestEncoding(IEncoder encoder, bool topLevelIsArray = false)
         {
             if (topLevelIsArray)
@@ -843,11 +843,11 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
                 encodeables.ForEach(e => e.Dispose());
             }
         }
-        #endregion
+        
 
-        #region Private Fields
+        
         private IServiceMessageContext m_context;
         private MemoryStream m_memoryStream;
-        #endregion
+        
     }
 }

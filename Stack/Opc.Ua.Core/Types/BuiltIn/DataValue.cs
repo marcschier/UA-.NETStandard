@@ -35,22 +35,22 @@ namespace Opc.Ua
     /// </remarks>
     /// <example>
     /// <code lang="C#">
-    /// 
+    ///
     /// //define a new DataValue first where:
     /// //  (a) the value is a string, which is "abc123"
     /// //  (b) the statuscode is 0 (zero)
     /// //  (c) the timestamp is 'now'
     /// DataValue dv = new DataValue(new Variant("abc123"), new StatusCode(0), DateTime.Now);
-    /// 
+    ///
     /// </code>
     /// <code lang="Visual Basic">
-    /// 
+    ///
     /// 'define a new DataValue first where:
     /// '  (a) the value is a string, which is "abc123"
     /// '  (b) the statuscode is 0 (zero)
     /// '  (c) the timestamp is 'now'
     /// Dim dv As DataValue = New DataValue(New Variant("abc123"), New StatusCode(0), DateTime.Now);
-    /// 
+    ///
     /// </code>
     /// </example>
     /// <seealso cref="Variant"/>
@@ -58,7 +58,7 @@ namespace Opc.Ua
     [DataContract(Namespace = Namespaces.OpcUaXsd)]
     public class DataValue : IFormattable, IEquatable<DataValue>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object with default values.
         /// </summary>
@@ -197,9 +197,9 @@ namespace Opc.Ua
             m_sourceTimestamp = DateTime.MinValue;
             m_serverTimestamp = DateTime.MinValue;
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Determines if the specified object is equal to the object.
         /// </summary>
@@ -214,9 +214,8 @@ namespace Opc.Ua
                 return true;
             }
 
-            DataValue value = obj as DataValue;
 
-            if (value != null)
+            if (obj is DataValue value)
             {
                 if (this.m_statusCode != value.m_statusCode)
                 {
@@ -245,7 +244,7 @@ namespace Opc.Ua
 
                 return Utils.IsEqual(this.m_value.Value, value.m_value.Value);
             }
-            
+
             return false;
         }
 
@@ -322,9 +321,9 @@ namespace Opc.Ua
         {
             return ToString(null, null);
         }
-        #endregion
 
-        #region IFormattable Members
+
+
         /// <summary>
         /// Returns the string representation of the object.
         /// </summary>
@@ -343,9 +342,9 @@ namespace Opc.Ua
 
             throw new FormatException(Utils.Format("Invalid format string: '{0}'.", format));
         }
-        #endregion
 
-        #region ICloneable Members
+
+
         /// <summary>
         /// Makes a deep copy of the object.
         /// </summary>
@@ -356,9 +355,9 @@ namespace Opc.Ua
         {
             return new DataValue(this);
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The value of data value.
         /// </summary>
@@ -449,9 +448,9 @@ namespace Opc.Ua
             get { return m_serverPicoseconds; }
             set { m_serverPicoseconds = value; }
         }
-        #endregion
 
-        #region Static Methods
+
+
         /// <summary>
         /// Returns true if the status code is good.
         /// </summary>
@@ -504,23 +503,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Returns true if the status is good or uncertain.
-        /// </summary>
-        /// <remarks>
-        /// Returns true if the status is good or uncertain.
-        /// </remarks>
-        /// <param name="value">The value to check the quality of</param>
-        public static bool IsNotUncertain(DataValue value)
-        {
-            if (value != null)
-            {
-                return StatusCode.IsNotUncertain(value.m_statusCode);
-            }
-
-            return false;
-        }
-
-        /// <summary>
         /// Returns true if the status code is bad.
         /// </summary>
         /// <remarks>
@@ -555,7 +537,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Ensures the data value contains a value with the specified type. 
+        /// Ensures the data value contains a value with the specified type.
         /// </summary>
         public object GetValue(Type expectedType)
         {
@@ -569,9 +551,8 @@ namespace Opc.Ua
                     return null;
                 }
 
-                ExtensionObject extension = value as ExtensionObject;
 
-                if (extension != null)
+                if (value is ExtensionObject extension)
                 {
                     value = extension.Body;
                 }
@@ -608,9 +589,8 @@ namespace Opc.Ua
                 return (T)this.Value;
             }
 
-            ExtensionObject extension = this.Value as ExtensionObject;
 
-            if (extension != null)
+            if (this.Value is ExtensionObject extension)
             {
                 if (typeof(T).IsInstanceOfType(extension.Body))
                 {
@@ -620,19 +600,19 @@ namespace Opc.Ua
 
             return defaultValue;
         }
-        #endregion
 
-        #region Private Fields
+
+
         private Variant m_value;
         private StatusCode m_statusCode;
         private DateTime m_sourceTimestamp;
         private ushort m_sourcePicoseconds;
         private DateTime m_serverTimestamp;
         private ushort m_serverPicoseconds;
-        #endregion
+
     }
 
-    #region DataValueCollection Class
+
     /// <summary>
     /// A collection of DataValues.
     /// </summary>
@@ -715,6 +695,6 @@ namespace Opc.Ua
             return clone;
         }
     }
-    #endregion
+
 
 }//namespace

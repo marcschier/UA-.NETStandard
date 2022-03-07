@@ -21,13 +21,13 @@ namespace Opc.Ua
     /// </summary>
     public class UserIdentity : IUserIdentity
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object as an anonymous user.
         /// </summary>
         public UserIdentity()
         {
-            AnonymousIdentityToken token = new AnonymousIdentityToken();
+            var token = new AnonymousIdentityToken();
             Initialize(token);
         }
 
@@ -38,9 +38,10 @@ namespace Opc.Ua
         /// <param name="password">The password.</param>
         public UserIdentity(string username, string password)
         {
-            UserNameIdentityToken token = new UserNameIdentityToken();
-            token.UserName = username;
-            token.DecryptedPassword = password;
+            var token = new UserNameIdentityToken {
+                UserName = username,
+                DecryptedPassword = password
+            };
             Initialize(token);
         }
 
@@ -58,7 +59,10 @@ namespace Opc.Ua
         /// </summary>
         public UserIdentity(CertificateIdentifier certificateId)
         {
-            if (certificateId == null) throw new ArgumentNullException(nameof(certificateId));
+            if (certificateId == null)
+            {
+                throw new ArgumentNullException(nameof(certificateId));
+            }
 
             X509Certificate2 certificate = certificateId.Find().Result;
             if (certificate != null)
@@ -72,7 +76,11 @@ namespace Opc.Ua
         /// </summary>
         public UserIdentity(X509Certificate2 certificate)
         {
-            if (certificate == null) throw new ArgumentNullException(nameof(certificate));
+            if (certificate == null)
+            {
+                throw new ArgumentNullException(nameof(certificate));
+            }
+
             Initialize(certificate);
         }
 
@@ -84,9 +92,9 @@ namespace Opc.Ua
         {
             Initialize(token);
         }
-        #endregion
 
-        #region IUserIdentity Members
+
+
         /// <summary>
         /// Gets or sets the UserIdentityToken PolicyId associated with the UserIdentity.
         /// </summary>
@@ -95,44 +103,29 @@ namespace Opc.Ua
         /// </remarks>
         public string PolicyId
         {
-            get { return m_token.PolicyId; }
-            set { m_token.PolicyId = value; }
+            get => m_token.PolicyId;
+            set => m_token.PolicyId = value;
         }
 
         /// <summary cref="IUserIdentity.DisplayName" />
-        public string DisplayName
-        {
-            get { return m_displayName; }
-        }
+        public string DisplayName => m_displayName;
 
         /// <summary cref="IUserIdentity.TokenType" />
-        public UserTokenType TokenType
-        {
-            get { return m_tokenType; }
-        }
+        public UserTokenType TokenType => m_tokenType;
 
         /// <summary cref="IUserIdentity.IssuedTokenType" />
-        public XmlQualifiedName IssuedTokenType
-        {
-            get { return m_issuedTokenType; }
-        }
+        public XmlQualifiedName IssuedTokenType => m_issuedTokenType;
 
         /// <summary cref="IUserIdentity.SupportsSignatures" />
-        public bool SupportsSignatures
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public bool SupportsSignatures => false;
 
         /// <summary>
         ///  Get or sets the list of granted role ids associated to the UserIdentity.
         /// </summary>
         public NodeIdCollection GrantedRoleIds
         {
-            get { return m_grantedRoleIds; }
-            set { m_grantedRoleIds = value; }
+            get => m_grantedRoleIds;
+            set => m_grantedRoleIds = value;
         }
 
         /// <summary cref="IUserIdentity.GetIdentityToken" />
@@ -148,20 +141,23 @@ namespace Opc.Ua
                 return m_token;
             }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Initializes the object with a UA identity token
         /// </summary>
         private void Initialize(UserIdentityToken token)
         {
-            if (token == null) throw new ArgumentNullException(nameof(token));
+            if (token == null)
+            {
+                throw new ArgumentNullException(nameof(token));
+            }
+
             m_grantedRoleIds = new NodeIdCollection();
             m_token = token;
 
-            UserNameIdentityToken usernameToken = token as UserNameIdentityToken;
-            if (usernameToken != null)
+            if (token is UserNameIdentityToken usernameToken)
             {
                 m_tokenType = UserTokenType.UserName;
                 m_issuedTokenType = null;
@@ -169,8 +165,7 @@ namespace Opc.Ua
                 return;
             }
 
-            X509IdentityToken x509Token = token as X509IdentityToken;
-            if (x509Token != null)
+            if (token is X509IdentityToken x509Token)
             {
                 m_tokenType = UserTokenType.Certificate;
                 m_issuedTokenType = null;
@@ -186,8 +181,7 @@ namespace Opc.Ua
                 return;
             }
 
-            IssuedIdentityToken issuedToken = token as IssuedIdentityToken;
-            if (issuedToken != null)
+            if (token is IssuedIdentityToken issuedToken)
             {
                 if (issuedToken.IssuedTokenType == Ua.IssuedTokenType.JWT)
                 {
@@ -207,8 +201,7 @@ namespace Opc.Ua
                 }
             }
 
-            AnonymousIdentityToken anonymousToken = token as AnonymousIdentityToken;
-            if (anonymousToken != null)
+            if (token is AnonymousIdentityToken anonymousToken)
             {
                 m_tokenType = UserTokenType.Anonymous;
                 m_issuedTokenType = null;
@@ -224,28 +217,20 @@ namespace Opc.Ua
         /// </summary>
         private void Initialize(X509Certificate2 certificate)
         {
-            X509IdentityToken token = new X509IdentityToken();
-            token.CertificateData = certificate.RawData;
-            token.Certificate = certificate;
+            var token = new X509IdentityToken {
+                CertificateData = certificate.RawData,
+                Certificate = certificate
+            };
             Initialize(token);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private UserIdentityToken m_token;
         private string m_displayName;
         private UserTokenType m_tokenType;
         private XmlQualifiedName m_issuedTokenType;
         private NodeIdCollection m_grantedRoleIds;
-        #endregion
-    }
 
-    #region ImpersonationContext Class
-    /// <summary>
-    /// Stores information about the user that is currently being impersonated.
-    /// </summary>
-    public class ImpersonationContext
-    {
     }
-    #endregion
 }

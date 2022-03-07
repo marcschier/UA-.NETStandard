@@ -15,7 +15,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace Opc.Ua
-{          
+{
     /// <summary>
     /// A reference to a node.
     /// </summary>
@@ -41,7 +41,7 @@ namespace Opc.Ua
         /// <value>The target identifier.</value>
         ExpandedNodeId TargetId { get; }
     }
-    
+
     /// <summary>
     /// A reference to a node.
     /// </summary>
@@ -54,8 +54,8 @@ namespace Opc.Ua
         /// <param name="isInverse">if set to <c>true</c> this is inverse reference.</param>
         /// <param name="targetId">The target identifier.</param>
         void Add(
-            NodeId         referenceTypeId, 
-            bool           isInverse, 
+            NodeId referenceTypeId,
+            bool isInverse,
             ExpandedNodeId targetId);
 
         /// <summary>
@@ -66,19 +66,9 @@ namespace Opc.Ua
         /// <param name="targetId">The target identifier.</param>
         /// <returns>The result of removal.</returns>
         bool Remove(
-            NodeId         referenceTypeId, 
-            bool           isInverse, 
+            NodeId referenceTypeId,
+            bool isInverse,
             ExpandedNodeId targetId);
-
-        /// <summary>
-        /// Removes all of the specified references.
-        /// </summary>
-        /// <param name="referenceTypeId">The reference type identifier.</param>
-        /// <param name="isInverse">if set to <c>true</c> this is inverse reference.</param>
-        /// <returns>The result of removal.</returns>
-        bool RemoveAll(
-            NodeId referenceTypeId, 
-            bool   isInverse);
 
         /// <summary>
         /// Checks whether any references which meet the specified critia exist.
@@ -90,11 +80,11 @@ namespace Opc.Ua
         /// <param name="typeTree">The type tree.</param>
         /// <returns>True if reference exists.</returns>
         bool Exists(
-            NodeId         referenceTypeId, 
-            bool           isInverse, 
-            ExpandedNodeId targetId, 
-            bool           includeSubtypes, 
-            ITypeTable      typeTree);
+            NodeId referenceTypeId,
+            bool isInverse,
+            ExpandedNodeId targetId,
+            bool includeSubtypes,
+            ITypeTable typeTree);
 
         /// <summary>
         /// Returns a list of references which match the specified criteria.
@@ -105,9 +95,9 @@ namespace Opc.Ua
         /// <param name="typeTree">The type tree.</param>
         /// <returns>A list of references which match the specified criteria.</returns>
         IList<IReference> Find(
-            NodeId    referenceTypeId, 
-            bool      isInverse, 
-            bool      includeSubtypes, 
+            NodeId referenceTypeId,
+            bool isInverse,
+            bool includeSubtypes,
             ITypeTable typeTree);
 
         /// <summary>
@@ -120,18 +110,11 @@ namespace Opc.Ua
         /// <param name="index">The index.</param>
         /// <returns>A single target that meets the specifed criteria.</returns>
         ExpandedNodeId FindTarget(
-            NodeId    referenceTypeId, 
-            bool      isInverse, 
-            bool      includeSubtypes, 
-            ITypeTable typeTree, 
-            int       index);
-
-        /// <summary>
-        /// Returns a list of references to the specified target.
-        /// </summary>
-        /// <param name="targetId">The target identifier.</param>
-        /// <returns>A list of references to the specified target.</returns>
-        IList<IReference> FindReferencesToTarget(ExpandedNodeId targetId);
+            NodeId referenceTypeId,
+            bool isInverse,
+            bool includeSubtypes,
+            ITypeTable typeTree,
+            int index);
     }
 
     /// <summary>
@@ -139,7 +122,7 @@ namespace Opc.Ua
     /// </summary>
     public class ReferenceCollection : IReferenceCollection, IFormattable
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object.
         /// </summary>
@@ -147,9 +130,9 @@ namespace Opc.Ua
         {
             m_references = new IReferenceDictionary<object>();
         }
-        #endregion
-        
-        #region IFormattable Members
+
+
+
         /// <summary>
         /// Returns a string representation of the ReferenceCollection.
         /// </summary>
@@ -182,9 +165,9 @@ namespace Opc.Ua
 
             return Utils.Format("References {0}", m_references.Count);
         }
-        #endregion
 
-        #region IReferenceCollection Members
+
+
         /// <summary>
         /// Adds the reference to the node.
         /// </summary>
@@ -209,17 +192,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Removes all of the specified references.
-        /// </summary>
-        /// <param name="referenceTypeId">The reference type identifier.</param>
-        /// <param name="isInverse">if set to <c>true</c> this is inverse reference.</param>
-        /// <returns>The result of removal.</returns>
-        public bool RemoveAll(NodeId referenceTypeId, bool isInverse)
-        {
-            return m_references.RemoveAll(referenceTypeId, isInverse);
-        }
-
-        /// <summary>
         /// Checks whether any references which meet the specified critia exist.
         /// </summary>
         /// <param name="referenceTypeId">The reference type identifier.</param>
@@ -229,13 +201,13 @@ namespace Opc.Ua
         /// <param name="typeTree">The type tree.</param>
         /// <returns>True if reference exists.</returns>
         public bool Exists(
-            NodeId         referenceTypeId, 
-            bool           isInverse, 
-            ExpandedNodeId targetId, 
-            bool           includeSubtypes,
-            ITypeTable     typeTree)
+            NodeId referenceTypeId,
+            bool isInverse,
+            ExpandedNodeId targetId,
+            bool includeSubtypes,
+            ITypeTable typeTree)
         {
-            ReferenceNode reference = new ReferenceNode(referenceTypeId, isInverse, targetId);
+            var reference = new ReferenceNode(referenceTypeId, isInverse, targetId);
 
             // check for trivial case.
             if (m_references.ContainsKey(reference))
@@ -262,9 +234,9 @@ namespace Opc.Ua
         /// <param name="typeTree">The type tree.</param>
         /// <returns>A list of references which match the specified criteria.</returns>
         public IList<IReference> Find(
-            NodeId     referenceTypeId, 
-            bool       isInverse, 
-            bool       includeSubtypes, 
+            NodeId referenceTypeId,
+            bool isInverse,
+            bool includeSubtypes,
             ITypeTable typeTree)
         {
             // can't search subtypes without a type tree.
@@ -287,11 +259,11 @@ namespace Opc.Ua
         /// <param name="index">The index.</param>
         /// <returns>A single target that meets the specifed criteria.</returns>
         public ExpandedNodeId FindTarget(
-            NodeId     referenceTypeId,
-            bool       isInverse,
-            bool       includeSubtypes,
-            ITypeTable typeTree, 
-            int        index)
+            NodeId referenceTypeId,
+            bool isInverse,
+            bool includeSubtypes,
+            ITypeTable typeTree,
+            int index)
         {
             // get the list of matching references.
             IList<IReference> references = null;
@@ -315,39 +287,20 @@ namespace Opc.Ua
             return null;
         }
 
-        /// <summary>
-        /// Returns a list of references to the specified target.
-        /// </summary>
-        /// <param name="targetId">The target identifier.</param>
-        /// <returns>A list of references to the specified target.</returns>
-        public IList<IReference> FindReferencesToTarget(ExpandedNodeId targetId)
-        {
-            return m_references.FindReferencesToTarget(targetId);
-        }
-        #endregion
 
-        #region ICollection<IReference> Members
+
         /// <summary cref="ICollection{T}.Count" />
-        public int Count
-        {
-            get 
-            {
-                return m_references.Count;
-            }
-        }
-        
+        public int Count => m_references.Count;
+
         /// <summary cref="ICollection{T}.IsReadOnly" />
-        public bool IsReadOnly
-        {
-            get { return false; }
-        }
-        
+        public bool IsReadOnly => false;
+
         /// <summary cref="ICollection{T}.Add" />
         public void Add(IReference item)
         {
             m_references.Add(item, null);
         }
-        
+
         /// <summary cref="ICollection{T}.Remove" />
         public bool Remove(IReference item)
         {
@@ -365,53 +318,57 @@ namespace Opc.Ua
         {
             return m_references.ContainsKey(item);
         }
-        
+
         /// <summary cref="ICollection{T}.CopyTo" />
         public void CopyTo(IReference[] array, int arrayIndex)
         {
-            if (array == null) 
+            if (array == null)
+            {
                 throw new ArgumentNullException(nameof(array));
-            
-            if (arrayIndex < 0 || arrayIndex >= array.Length) 
-                throw new ArgumentOutOfRangeException(nameof(arrayIndex), "arrayIndex < 0 || arrayIndex >= array.Length");
+            }
 
-            KeyValuePair<IReference,object>[] elements = new KeyValuePair<IReference,object>[array.Length-arrayIndex];
+            if (arrayIndex < 0 || arrayIndex >= array.Length)
+            {
+                throw new ArgumentOutOfRangeException(nameof(arrayIndex), "arrayIndex < 0 || arrayIndex >= array.Length");
+            }
+
+            var elements = new KeyValuePair<IReference, object>[array.Length - arrayIndex];
             m_references.CopyTo(elements, 0);
 
             for (int ii = 0; ii < elements.Length; ii++)
             {
-                array[arrayIndex+ii] = elements[ii].Key;
+                array[arrayIndex + ii] = elements[ii].Key;
             }
         }
-        #endregion
 
-        #region IEnumerable<IReference> Members
+
+
         /// <summary cref="IEnumerable{T}.GetEnumerator" />
         public IEnumerator<IReference> GetEnumerator()
         {
             return m_references.Keys.GetEnumerator();
         }
-        #endregion
 
-        #region IEnumerable Members
+
+
         /// <summary cref="System.Collections.IEnumerable.GetEnumerator" />
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
-        #endregion
-        
-        #region Private Fields
-        private IReferenceDictionary<object> m_references;
-        #endregion
+
+
+
+        private readonly IReferenceDictionary<object> m_references;
+
     }
-    
+
     /// <summary>
     /// A dictionary designed to provide efficient lookups for references.
     /// </summary>
-    public class IReferenceDictionary<T> : IDictionary<IReference,T>
-    {        
-        #region Constructors
+    public class IReferenceDictionary<T> : IDictionary<IReference, T>
+    {
+
         /// <summary>
         /// Creates an empty dictionary.
         /// </summary>
@@ -419,11 +376,11 @@ namespace Opc.Ua
         {
             m_version = 0;
             m_references = new NodeIdDictionary<ReferenceTypeEntry>();
-            m_list = new LinkedList<KeyValuePair<IReference,T>>();
+            m_list = new LinkedList<KeyValuePair<IReference, T>>();
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Returns true if the dictionary contains a reference that matches any subtype of the reference type.
         /// </summary>
@@ -436,14 +393,17 @@ namespace Opc.Ua
             IReference reference,
             ITypeTable typeTree)
         {
-            if (typeTree == null) throw new ArgumentNullException(nameof(typeTree));
+            if (typeTree == null)
+            {
+                throw new ArgumentNullException(nameof(typeTree));
+            }
 
             if (!ValidateReference(reference, false))
             {
                 return false;
             }
-            
-            foreach (KeyValuePair<NodeId,ReferenceTypeEntry> entry in m_references)
+
+            foreach (KeyValuePair<NodeId, ReferenceTypeEntry> entry in m_references)
             {
                 if (typeTree.IsTypeOf(entry.Key, reference.ReferenceTypeId))
                 {
@@ -465,16 +425,16 @@ namespace Opc.Ua
         /// <returns>A list of references that match the direction and reference type.</returns>
         public IList<IReference> Find(
             NodeId referenceTypeId,
-            bool   isInverse)
-        {            
-            List<IReference> hits = new List<IReference>();
-            
+            bool isInverse)
+        {
+            var hits = new List<IReference>();
+
             // check for null.
             if (NodeId.IsNull(referenceTypeId))
             {
                 return hits;
             }
-            
+
             // look up the reference type.
             ReferenceTypeEntry entry = null;
 
@@ -497,21 +457,24 @@ namespace Opc.Ua
         /// <param name="typeTree">The type tree.</param>
         /// <returns>A list of references that match the direction and are subtypes of the reference type.</returns>
         public IList<IReference> Find(
-            NodeId     referenceTypeId,
-            bool       isInverse,
+            NodeId referenceTypeId,
+            bool isInverse,
             ITypeTable typeTree)
         {
-            if (typeTree == null) throw new ArgumentNullException(nameof(typeTree));
+            if (typeTree == null)
+            {
+                throw new ArgumentNullException(nameof(typeTree));
+            }
 
-            List<IReference> hits = new List<IReference>();
-            
+            var hits = new List<IReference>();
+
             // check for null.
             if (NodeId.IsNull(referenceTypeId))
             {
                 return hits;
             }
-            
-            foreach (KeyValuePair<NodeId,ReferenceTypeEntry> entry in m_references)
+
+            foreach (KeyValuePair<NodeId, ReferenceTypeEntry> entry in m_references)
             {
                 if (typeTree.IsTypeOf(entry.Key, referenceTypeId))
                 {
@@ -522,158 +485,43 @@ namespace Opc.Ua
             return hits;
         }
 
-        /// <summary>
-        /// Returns a list of references to the specified target.
-        /// </summary>
-        /// <param name="targetId">The target identifier.</param>
-        /// <returns>A list of references to the specified target.</returns>
-        public IList<IReference> FindReferencesToTarget(ExpandedNodeId targetId)
-        {
-            List<IReference> hits = new List<IReference>();
-            
-            // check for null.
-            if (NodeId.IsNull(targetId))
-            {
-                return hits;
-            }
 
-            // go throw list of references.
-            for (LinkedListNode<KeyValuePair<IReference,T>> node = m_list.First; node != null; node = node.Next)
-            {
-                if (node.Value.Key.TargetId == targetId)
-                {
-                    hits.Add(node.Value.Key);
-                }
-            }
 
-            return hits;
-        }
-
-        /// <summary>
-        /// Removes all of the references of the specified type and direction.
-        /// </summary>
-        /// <param name="referenceTypeId">The reference type identifier.</param>
-        /// <param name="isInverse">if set to <c>true</c> this is inverse reference.</param>
-        /// <returns>The result of removal.</returns>
-        public bool RemoveAll(NodeId referenceTypeId, bool isInverse)
-        {
-            // check for null.
-            if (NodeId.IsNull(referenceTypeId))
-            {
-                return false;
-            }
-
-            // look up the reference type.
-            ReferenceTypeEntry entry = null;
-
-            if (!m_references.TryGetValue(referenceTypeId, out entry))
-            {
-                return false;
-            }
-                        
-            if (isInverse)
-            {
-                if (entry.InverseTargets != null)
-                {
-                    foreach (LinkedListNode<KeyValuePair<IReference,T>> node in entry.InverseTargets.Values)
-                    {
-                        if (Object.ReferenceEquals(m_list, node.List))
-                        {
-                            m_list.Remove(node);
-                        }
-
-                        entry.InverseTargets = null;
-                    }
-                }
-                
-                if (entry.InverseExternalTargets != null)
-                {
-                    foreach (LinkedListNode<KeyValuePair<IReference,T>> node in entry.InverseExternalTargets.Values)
-                    {
-                        if (Object.ReferenceEquals(m_list, node.List))
-                        {
-                            m_list.Remove(node);
-                        }
-                    }
-
-                    entry.InverseExternalTargets = null;
-                }
-            }
-            else
-            {
-                if (entry.ForwardTargets != null)
-                {
-                    foreach (LinkedListNode<KeyValuePair<IReference,T>> node in entry.ForwardTargets.Values)
-                    {
-                        if (Object.ReferenceEquals(m_list, node.List))
-                        {
-                            m_list.Remove(node);
-                        }
-                    }
-
-                    entry.ForwardTargets = null;
-                }
-                
-                if (entry.ForwardExternalTargets != null)
-                {
-                    foreach (LinkedListNode<KeyValuePair<IReference,T>> node in entry.ForwardExternalTargets.Values)
-                    {
-                        if (Object.ReferenceEquals(m_list, node.List))
-                        {
-                            m_list.Remove(node);
-                        }
-                    }
-
-                    entry.ForwardExternalTargets = null;
-                }
-            }
-
-            // check for empty set.
-            if (entry.IsEmpty)
-            {
-                m_references.Remove(referenceTypeId);
-            }
-
-            return true;
-        }
-        #endregion
-
-        #region IDictionary<IReference,T> Members
         /// <summary cref="IDictionary.Add" />
         public void Add(IReference key, T value)
         {
             Add(key, value, false);
         }
-        
+
         /// <summary cref="IDictionary{TKey,TValue}.ContainsKey" />
         public bool ContainsKey(IReference key)
         {
-            KeyValuePair<IReference,T> target;
+            KeyValuePair<IReference, T> target;
 
             if (!TryGetEntry(key, out target))
             {
                 return false;
             }
-            
+
             return true;
         }
-        
+
         /// <summary cref="IDictionary{TKey,TValue}.Keys" />
         public ICollection<IReference> Keys
         {
-            get 
-            { 
-                List<IReference> keys = new List<IReference>();
+            get
+            {
+                var keys = new List<IReference>();
 
-                for (LinkedListNode<KeyValuePair<IReference,T>> node = m_list.First; node != null; node = node.Next)
+                for (LinkedListNode<KeyValuePair<IReference, T>> node = m_list.First; node != null; node = node.Next)
                 {
                     keys.Add(node.Value.Key);
                 }
-                    
+
                 return keys;
             }
         }
-        
+
         /// <summary cref="IDictionary.Remove" />
         public bool Remove(IReference key)
         {
@@ -684,7 +532,7 @@ namespace Opc.Ua
             }
 
             m_version++;
-            
+
             // look up the reference type.
             ReferenceTypeEntry entry = null;
 
@@ -696,7 +544,7 @@ namespace Opc.Ua
             // handle reference to external targets.            
             if (key.TargetId.IsAbsolute)
             {
-                Dictionary<ExpandedNodeId,LinkedListNode<KeyValuePair<IReference,T>>> targets = null;
+                Dictionary<ExpandedNodeId, LinkedListNode<KeyValuePair<IReference, T>>> targets = null;
 
                 if (key.IsInverse)
                 {
@@ -712,7 +560,7 @@ namespace Opc.Ua
                     return false;
                 }
 
-                LinkedListNode<KeyValuePair<IReference,T>> node;
+                LinkedListNode<KeyValuePair<IReference, T>> node;
 
                 if (!targets.TryGetValue(key.TargetId, out node))
                 {
@@ -726,7 +574,7 @@ namespace Opc.Ua
             // handle reference to internal target.
             else
             {
-                NodeIdDictionary<LinkedListNode<KeyValuePair<IReference,T>>> targets = null;
+                NodeIdDictionary<LinkedListNode<KeyValuePair<IReference, T>>> targets = null;
 
                 if (key.IsInverse)
                 {
@@ -742,7 +590,7 @@ namespace Opc.Ua
                     return false;
                 }
 
-                LinkedListNode<KeyValuePair<IReference,T>> node;
+                LinkedListNode<KeyValuePair<IReference, T>> node;
 
                 if (!targets.TryGetValue((NodeId)key.TargetId, out node))
                 {
@@ -761,40 +609,40 @@ namespace Opc.Ua
 
             return true;
         }
-        
+
         /// <summary cref="IDictionary{TKey,TValue}.TryGetValue" />
         public bool TryGetValue(IReference key, out T value)
         {
             value = default(T);
 
-            KeyValuePair<IReference,T> target;
+            KeyValuePair<IReference, T> target;
 
             if (!TryGetEntry(key, out target))
             {
                 return false;
             }
-            
+
             value = target.Value;
             return true;
         }
-                
+
 
         /// <summary cref="IDictionary{TKey,TValue}.Values" />
         public ICollection<T> Values
         {
-            get 
-            { 
-                List<T> values = new List<T>();
+            get
+            {
+                var values = new List<T>();
 
-                for (LinkedListNode<KeyValuePair<IReference,T>> node = m_list.First; node != null; node = node.Next)
+                for (LinkedListNode<KeyValuePair<IReference, T>> node = m_list.First; node != null; node = node.Next)
                 {
                     values.Add(node.Value.Value);
                 }
-                    
+
                 return values;
             }
         }
-        
+
         /// <summary>
         /// Gets or sets the value with the specified NodeId.
         /// </summary>
@@ -805,27 +653,24 @@ namespace Opc.Ua
             get
             {
                 ValidateReference(key, true);
-                
-                KeyValuePair<IReference,T> target;
+
+                KeyValuePair<IReference, T> target;
 
                 if (!TryGetEntry(key, out target))
                 {
                     throw new KeyNotFoundException();
                 }
-                
-                return target.Value;       
+
+                return target.Value;
             }
 
-            set
-            {
-                Add(key, value, true);
-            }
+            set => Add(key, value, true);
         }
-        #endregion
 
-        #region ICollection<KeyValuePair<IReference,T>> Members
+
+
         /// <summary cref="ICollection{T}.Add" />
-        public void Add(KeyValuePair<IReference,T> item)
+        public void Add(KeyValuePair<IReference, T> item)
         {
             Add(item.Key, item.Value);
         }
@@ -837,75 +682,66 @@ namespace Opc.Ua
             m_references.Clear();
             m_list.Clear();
         }
-        
+
         /// <summary cref="ICollection{T}.Contains" />
-        public bool Contains(KeyValuePair<IReference,T> item)
+        public bool Contains(KeyValuePair<IReference, T> item)
         {
-            KeyValuePair<IReference,T> target;
+            KeyValuePair<IReference, T> target;
 
             if (!TryGetEntry(item.Key, out target))
             {
                 return false;
             }
-            
+
             return Object.Equals(target.Value, item.Value);
         }
-        
+
         /// <summary cref="ICollection{T}.CopyTo" />
-        public void CopyTo(KeyValuePair<IReference,T>[] array, int arrayIndex)
-        { 
+        public void CopyTo(KeyValuePair<IReference, T>[] array, int arrayIndex)
+        {
             m_list.CopyTo(array, arrayIndex);
         }
 
         /// <summary cref="ICollection{T}.Count" />
-        public int Count
-        {
-            get 
-            { 
-                return m_list.Count;
-            }
-        }
-        
+        public int Count => m_list.Count;
+
         /// <summary cref="ICollection{T}.IsReadOnly" />
-        public bool IsReadOnly
-        {
-            get { return false; }
-        }
-        
+        public bool IsReadOnly => false;
+
         /// <summary cref="ICollection{T}.Remove" />
         public bool Remove(KeyValuePair<IReference, T> item)
         {
             return Remove(item.Key);
         }
-        #endregion
 
-        #region IEnumerable<KeyValuePair<IReference,T>> Members
+
+
         /// <summary cref="System.Collections.IEnumerable.GetEnumerator()" />
         public IEnumerator<KeyValuePair<IReference, T>> GetEnumerator()
-        {                      
-             return m_list.GetEnumerator();
+        {
+            return m_list.GetEnumerator();
         }
-        #endregion
 
-        #region IEnumerable Members
+
+
         /// <summary cref="System.Collections.IEnumerable.GetEnumerator()" />
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
-        #endregion
-        
-        #region Private Methods
-        #region ReferenceTypeEntry Class
+
+
+
+
         /// <summary>
         /// Stores the references for a particular reference type.
         /// </summary>
         private class ReferenceTypeEntry
         {
-            public NodeIdDictionary<LinkedListNode<KeyValuePair<IReference,T>>> ForwardTargets;
-            public Dictionary<ExpandedNodeId,LinkedListNode<KeyValuePair<IReference,T>>> ForwardExternalTargets;
-            public NodeIdDictionary<LinkedListNode<KeyValuePair<IReference,T>>> InverseTargets;
-            public Dictionary<ExpandedNodeId,LinkedListNode<KeyValuePair<IReference,T>>> InverseExternalTargets;
+            public NodeIdDictionary<LinkedListNode<KeyValuePair<IReference, T>>> ForwardTargets;
+            public Dictionary<ExpandedNodeId, LinkedListNode<KeyValuePair<IReference, T>>> ForwardExternalTargets;
+            public NodeIdDictionary<LinkedListNode<KeyValuePair<IReference, T>>> InverseTargets;
+            public Dictionary<ExpandedNodeId, LinkedListNode<KeyValuePair<IReference, T>>> InverseExternalTargets;
 
             /// <summary>
             /// Whether the entry is empty.
@@ -939,8 +775,8 @@ namespace Opc.Ua
                 }
             }
         }
-        #endregion 
-        
+
+
         /// <summary>
         /// Validates a reference passed as a parameter.
         /// </summary>
@@ -955,7 +791,7 @@ namespace Opc.Ua
                 {
                     throw new ArgumentNullException(nameof(key), "IReference must not be null.");
                 }
-                
+
                 return false;
             }
 
@@ -965,7 +801,7 @@ namespace Opc.Ua
                 {
                     throw new ArgumentNullException(nameof(key), "IReference does not have a valid ReferenceTypeId.");
                 }
-                
+
                 return false;
             }
 
@@ -975,7 +811,7 @@ namespace Opc.Ua
                 {
                     throw new ArgumentNullException(nameof(key), "IReference does not have a valid TargetId.");
                 }
-                
+
                 return false;
             }
 
@@ -988,9 +824,9 @@ namespace Opc.Ua
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
         /// <returns>The target entry associated with the reference.</returns>
-        private bool TryGetEntry(IReference key, out KeyValuePair<IReference,T> value)
+        private bool TryGetEntry(IReference key, out KeyValuePair<IReference, T> value)
         {
-            value = new KeyValuePair<IReference,T>();
+            value = new KeyValuePair<IReference, T>();
 
             // validate key.
             if (!ValidateReference(key, false))
@@ -1009,7 +845,7 @@ namespace Opc.Ua
             // handle reference to external targets.            
             if (key.TargetId.IsAbsolute)
             {
-                Dictionary<ExpandedNodeId,LinkedListNode<KeyValuePair<IReference,T>>> targets = null;
+                Dictionary<ExpandedNodeId, LinkedListNode<KeyValuePair<IReference, T>>> targets = null;
 
                 if (key.IsInverse)
                 {
@@ -1025,7 +861,7 @@ namespace Opc.Ua
                     return false;
                 }
 
-                LinkedListNode<KeyValuePair<IReference,T>> node;
+                LinkedListNode<KeyValuePair<IReference, T>> node;
 
                 if (targets.TryGetValue(key.TargetId, out node))
                 {
@@ -1037,7 +873,7 @@ namespace Opc.Ua
             // handle reference to internal target.
             else
             {
-                NodeIdDictionary<LinkedListNode<KeyValuePair<IReference,T>>> targets = null;
+                NodeIdDictionary<LinkedListNode<KeyValuePair<IReference, T>>> targets = null;
 
                 if (key.IsInverse)
                 {
@@ -1052,8 +888,8 @@ namespace Opc.Ua
                 {
                     return false;
                 }
-                
-                LinkedListNode<KeyValuePair<IReference,T>> node;
+
+                LinkedListNode<KeyValuePair<IReference, T>> node;
 
                 if (targets.TryGetValue((NodeId)key.TargetId, out node))
                 {
@@ -1064,7 +900,7 @@ namespace Opc.Ua
 
             return false;
         }
-        
+
         /// <summary>
         /// Adds or replaces a reference.
         /// </summary>
@@ -1075,7 +911,7 @@ namespace Opc.Ua
         {
             // validate key.
             ValidateReference(key, true);
-            
+
             m_version++;
 
             // look up the reference type.
@@ -1090,13 +926,13 @@ namespace Opc.Ua
             // handle reference to external targets.            
             if (key.TargetId.IsAbsolute)
             {
-                Dictionary<ExpandedNodeId,LinkedListNode<KeyValuePair<IReference,T>>> targets = null;
+                Dictionary<ExpandedNodeId, LinkedListNode<KeyValuePair<IReference, T>>> targets = null;
 
                 if (key.IsInverse)
                 {
                     if (entry.InverseExternalTargets == null)
                     {
-                        entry.InverseExternalTargets = new Dictionary<ExpandedNodeId,LinkedListNode<KeyValuePair<IReference,T>>>();
+                        entry.InverseExternalTargets = new Dictionary<ExpandedNodeId, LinkedListNode<KeyValuePair<IReference, T>>>();
                     }
 
                     targets = entry.InverseExternalTargets;
@@ -1105,17 +941,17 @@ namespace Opc.Ua
                 {
                     if (entry.ForwardExternalTargets == null)
                     {
-                        entry.ForwardExternalTargets = new Dictionary<ExpandedNodeId,LinkedListNode<KeyValuePair<IReference,T>>>();
+                        entry.ForwardExternalTargets = new Dictionary<ExpandedNodeId, LinkedListNode<KeyValuePair<IReference, T>>>();
                     }
 
                     targets = entry.ForwardExternalTargets;
                 }
 
                 // create a new target.
-                LinkedListNode<KeyValuePair<IReference,T>> node = new LinkedListNode<KeyValuePair<IReference,T>>(new KeyValuePair<IReference,T>(key, value));
-                
+                var node = new LinkedListNode<KeyValuePair<IReference, T>>(new KeyValuePair<IReference, T>(key, value));
+
                 // check if target already exists.
-                LinkedListNode<KeyValuePair<IReference,T>> existingNode = null;
+                LinkedListNode<KeyValuePair<IReference, T>> existingNode = null;
 
                 if (!targets.TryGetValue(key.TargetId, out existingNode))
                 {
@@ -1134,20 +970,20 @@ namespace Opc.Ua
                     m_list.AddAfter(existingNode, node);
                     m_list.Remove(existingNode);
                 }
-                
+
                 targets[key.TargetId] = node;
             }
 
             // handle reference to internal target.
             else
             {
-                NodeIdDictionary<LinkedListNode<KeyValuePair<IReference,T>>> targets = null;
+                NodeIdDictionary<LinkedListNode<KeyValuePair<IReference, T>>> targets = null;
 
                 if (key.IsInverse)
                 {
                     if (entry.InverseTargets == null)
                     {
-                        entry.InverseTargets = new NodeIdDictionary<LinkedListNode<KeyValuePair<IReference,T>>>();
+                        entry.InverseTargets = new NodeIdDictionary<LinkedListNode<KeyValuePair<IReference, T>>>();
                     }
 
                     targets = entry.InverseTargets;
@@ -1156,19 +992,19 @@ namespace Opc.Ua
                 {
                     if (entry.ForwardTargets == null)
                     {
-                        entry.ForwardTargets = new NodeIdDictionary<LinkedListNode<KeyValuePair<IReference,T>>>();
+                        entry.ForwardTargets = new NodeIdDictionary<LinkedListNode<KeyValuePair<IReference, T>>>();
                     }
 
                     targets = entry.ForwardTargets;
                 }
-                
-                NodeId targetId = (NodeId)key.TargetId;
+
+                var targetId = (NodeId)key.TargetId;
 
                 // create a new target.
-                LinkedListNode<KeyValuePair<IReference,T>> node = new LinkedListNode<KeyValuePair<IReference,T>>(new KeyValuePair<IReference,T>(key, value));
-                
+                var node = new LinkedListNode<KeyValuePair<IReference, T>>(new KeyValuePair<IReference, T>(key, value));
+
                 // check if target already exists.
-                LinkedListNode<KeyValuePair<IReference,T>> existingNode = null;
+                LinkedListNode<KeyValuePair<IReference, T>> existingNode = null;
 
                 if (!targets.TryGetValue(targetId, out existingNode))
                 {
@@ -1187,7 +1023,7 @@ namespace Opc.Ua
                     m_list.AddAfter(existingNode, node);
                     m_list.Remove(existingNode);
                 }
-                
+
                 targets[targetId] = node;
             }
         }
@@ -1205,7 +1041,7 @@ namespace Opc.Ua
             // handle reference to external targets.            
             if (reference.TargetId.IsAbsolute)
             {
-                Dictionary<ExpandedNodeId,LinkedListNode<KeyValuePair<IReference,T>>> targets = null;
+                Dictionary<ExpandedNodeId, LinkedListNode<KeyValuePair<IReference, T>>> targets = null;
 
                 if (reference.IsInverse)
                 {
@@ -1227,7 +1063,7 @@ namespace Opc.Ua
             // handle reference to internal target.
             else
             {
-                NodeIdDictionary<LinkedListNode<KeyValuePair<IReference,T>>> targets = null;
+                NodeIdDictionary<LinkedListNode<KeyValuePair<IReference, T>>> targets = null;
 
                 if (reference.IsInverse)
                 {
@@ -1254,23 +1090,23 @@ namespace Opc.Ua
         /// <param name="isInverse">if set to <c>true</c> this is inverse reference.</param>
         /// <param name="hits">The hits.</param>
         private static void Find(
-            ReferenceTypeEntry entry, 
-            bool               isInverse,
-            List<IReference>   hits)
+            ReferenceTypeEntry entry,
+            bool isInverse,
+            List<IReference> hits)
         {
             if (isInverse)
             {
                 if (entry.InverseTargets != null)
                 {
-                    foreach (LinkedListNode<KeyValuePair<IReference,T>> target in entry.InverseTargets.Values)
+                    foreach (LinkedListNode<KeyValuePair<IReference, T>> target in entry.InverseTargets.Values)
                     {
                         hits.Add(target.Value.Key);
                     }
                 }
-                
+
                 if (entry.InverseExternalTargets != null)
                 {
-                    foreach (LinkedListNode<KeyValuePair<IReference,T>> target in entry.InverseExternalTargets.Values)
+                    foreach (LinkedListNode<KeyValuePair<IReference, T>> target in entry.InverseExternalTargets.Values)
                     {
                         hits.Add(target.Value.Key);
                     }
@@ -1280,27 +1116,27 @@ namespace Opc.Ua
             {
                 if (entry.ForwardTargets != null)
                 {
-                    foreach (LinkedListNode<KeyValuePair<IReference,T>> target in entry.ForwardTargets.Values)
+                    foreach (LinkedListNode<KeyValuePair<IReference, T>> target in entry.ForwardTargets.Values)
                     {
                         hits.Add(target.Value.Key);
                     }
                 }
-                
+
                 if (entry.ForwardExternalTargets != null)
                 {
-                    foreach (LinkedListNode<KeyValuePair<IReference,T>> target in entry.ForwardExternalTargets.Values)
+                    foreach (LinkedListNode<KeyValuePair<IReference, T>> target in entry.ForwardExternalTargets.Values)
                     {
                         hits.Add(target.Value.Key);
                     }
                 }
             }
         }
-        #endregion
 
-        #region Private Fields
-        private NodeIdDictionary<ReferenceTypeEntry> m_references;
-        private LinkedList<KeyValuePair<IReference,T>> m_list;
+
+
+        private readonly NodeIdDictionary<ReferenceTypeEntry> m_references;
+        private readonly LinkedList<KeyValuePair<IReference, T>> m_list;
         private ulong m_version;
-        #endregion
+
     }
 }

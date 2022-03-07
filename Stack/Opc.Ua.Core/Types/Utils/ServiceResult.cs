@@ -25,7 +25,7 @@ namespace Opc.Ua
     [DataContract(Namespace = Namespaces.OpcUaXsd)]
     public class ServiceResult
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object with default values.
         /// </summary>
@@ -100,7 +100,7 @@ namespace Opc.Ua
             string namespaceUri,
             LocalizedText localizedText)
         :
-            this(code, symbolicId, namespaceUri, localizedText, (string)null, (ServiceResult)null)
+            this(code, symbolicId, namespaceUri, localizedText, null, (ServiceResult)null)
         {
         }
 
@@ -112,7 +112,7 @@ namespace Opc.Ua
             string symbolicId,
             string namespaceUri)
         :
-            this(code, symbolicId, namespaceUri, (string)null, (string)null, (ServiceResult)null)
+            this(code, symbolicId, namespaceUri, (string)null, null, (ServiceResult)null)
         {
         }
 
@@ -124,7 +124,7 @@ namespace Opc.Ua
             XmlQualifiedName symbolicId,
             LocalizedText localizedText)
         :
-            this(code, (symbolicId != null) ? symbolicId.Name : null, (symbolicId != null) ? symbolicId.Namespace : null, localizedText, (string)null, (ServiceResult)null)
+            this(code, (symbolicId != null) ? symbolicId.Name : null, (symbolicId != null) ? symbolicId.Namespace : null, localizedText, null, (ServiceResult)null)
         {
         }
 
@@ -135,7 +135,7 @@ namespace Opc.Ua
             StatusCode code,
             LocalizedText localizedText)
         :
-            this(code, (string)null, (string)null, localizedText, (string)null, (ServiceResult)null)
+            this(code, null, null, localizedText, null, (ServiceResult)null)
         {
         }
 
@@ -169,7 +169,7 @@ namespace Opc.Ua
             string additionalInfo,
             Exception innerException)
         {
-            ServiceResult innerResult = new ServiceResult(innerException);
+            var innerResult = new ServiceResult(innerException);
 
             // check if no new information provided.
             if (code.Code == innerResult.Code && symbolicId == null && localizedText == null && additionalInfo == null)
@@ -267,9 +267,7 @@ namespace Opc.Ua
             string defaultNamespaceUri,
             LocalizedText defaultLocalizedText)
         {
-            ServiceResultException sre = e as ServiceResultException;
-
-            if (sre != null)
+            if (e is ServiceResultException sre)
             {
                 m_code = sre.StatusCode;
                 m_namespaceUri = sre.NamespaceUri;
@@ -401,49 +399,15 @@ namespace Opc.Ua
                 }
             }
         }
-        #endregion
 
-        #region Static Interface
+
+
         /// <summary>
         /// A result representing a good status.
         /// </summary>
         public static ServiceResult Good => s_Good;
 
         private static readonly ServiceResult s_Good = new ServiceResult();
-
-        /// <summary>
-        /// Creates a new instance of a ServiceResult
-        /// </summary>
-        public static ServiceResult Create(uint code, TranslationInfo translation)
-        {
-            if (translation == null)
-            {
-                return new ServiceResult(code);
-            }
-
-            return new ServiceResult(code, new LocalizedText(translation));
-        }
-
-        /// <summary>
-        /// Creates a new instance of a ServiceResult
-        /// </summary>
-        public static ServiceResult Create(Exception e, TranslationInfo translation, uint defaultCode)
-        {
-            // replace the default code with the one from the exception.
-            ServiceResultException sre = e as ServiceResultException;
-
-            if (sre != null)
-            {
-                defaultCode = sre.StatusCode;
-            }
-
-            if (translation == null)
-            {
-                return new ServiceResult(e, defaultCode);
-            }
-
-            return new ServiceResult(defaultCode, new LocalizedText(translation), e);
-        }
 
         /// <summary>
         /// Creates a new instance of a ServiceResult
@@ -469,9 +433,8 @@ namespace Opc.Ua
         public static ServiceResult Create(Exception e, uint defaultCode, string format, params object[] args)
         {
             // replace the default code with the one from the exception.
-            ServiceResultException sre = e as ServiceResultException;
 
-            if (sre != null)
+            if (e is ServiceResultException sre)
             {
                 defaultCode = sre.StatusCode;
             }
@@ -497,45 +460,6 @@ namespace Opc.Ua
             if (status != null)
             {
                 return StatusCode.IsGood(status.m_code);
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Returns true if the status is bad or uncertain.
-        /// </summary>
-        public static bool IsNotGood(ServiceResult status)
-        {
-            if (status != null)
-            {
-                return StatusCode.IsNotGood(status.m_code);
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Returns true if the status code is uncertain.
-        /// </summary>
-        public static bool IsUncertain(ServiceResult status)
-        {
-            if (status != null)
-            {
-                return StatusCode.IsUncertain(status.m_code);
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Returns true if the status is good or uncertain.
-        /// </summary>
-        public static bool IsNotUncertain(ServiceResult status)
-        {
-            if (status != null)
-            {
-                return StatusCode.IsNotUncertain(status.m_code);
             }
 
             return true;
@@ -609,7 +533,7 @@ namespace Opc.Ua
         /// </summary>
         public static string BuildExceptionTrace(Exception exception)
         {
-            StringBuilder buffer = new StringBuilder();
+            var buffer = new StringBuilder();
 
             while (exception != null)
             {
@@ -621,7 +545,7 @@ namespace Opc.Ua
 
                 buffer.AppendFormat(CultureInfo.InvariantCulture, ">>> {0}", exception.Message);
 
-                if (!String.IsNullOrEmpty(exception.StackTrace))
+                if (!string.IsNullOrEmpty(exception.StackTrace))
                 {
                     string[] trace = exception.StackTrace.Split(Environment.NewLine.ToCharArray());
                     for (int ii = 0; ii < trace.Length; ii++)
@@ -639,16 +563,16 @@ namespace Opc.Ua
 
             return buffer.ToString();
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The status code associated with the result.
         /// </summary>
         public uint Code
         {
-            get { return m_code; }
-            private set { m_code = value; }
+            get => m_code;
+            private set => m_code = value;
         }
 
         /// <summary>
@@ -657,8 +581,8 @@ namespace Opc.Ua
         [DataMember(Order = 1)]
         public StatusCode StatusCode
         {
-            get { return m_code; }
-            private set { m_code = value.Code; }
+            get => m_code;
+            private set => m_code = value.Code;
         }
 
         /// <summary>
@@ -667,8 +591,8 @@ namespace Opc.Ua
         [DataMember(Order = 2)]
         public string NamespaceUri
         {
-            get { return m_namespaceUri; }
-            private set { m_namespaceUri = value; }
+            get => m_namespaceUri;
+            private set => m_namespaceUri = value;
         }
 
         /// <summary>
@@ -677,8 +601,8 @@ namespace Opc.Ua
         [DataMember(Order = 3)]
         public string SymbolicId
         {
-            get { return m_symbolicId; }
-            private set { m_symbolicId = value; }
+            get => m_symbolicId;
+            private set => m_symbolicId = value;
         }
 
         /// <summary>
@@ -687,8 +611,8 @@ namespace Opc.Ua
         [DataMember(Order = 4)]
         public LocalizedText LocalizedText
         {
-            get { return m_localizedText; }
-            private set { m_localizedText = value; }
+            get => m_localizedText;
+            private set => m_localizedText = value;
         }
 
         /// <summary>
@@ -697,8 +621,8 @@ namespace Opc.Ua
         [DataMember(Order = 5)]
         public string AdditionalInfo
         {
-            get { return m_additionalInfo; }
-            private set { m_additionalInfo = value; }
+            get => m_additionalInfo;
+            private set => m_additionalInfo = value;
         }
 
         /// <summary>
@@ -707,24 +631,24 @@ namespace Opc.Ua
         [DataMember(Order = 6)]
         public ServiceResult InnerResult
         {
-            get { return m_innerResult; }
-            private set { m_innerResult = value; }
+            get => m_innerResult;
+            private set => m_innerResult = value;
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Converts the value to a human readable string.
         /// </summary>
         public override string ToString()
         {
-            StringBuilder buffer = new StringBuilder();
+            var buffer = new StringBuilder();
 
             buffer.Append(LookupSymbolicId(m_code));
 
-            if (!String.IsNullOrEmpty(m_symbolicId))
+            if (!string.IsNullOrEmpty(m_symbolicId))
             {
-                if (!String.IsNullOrEmpty(m_namespaceUri))
+                if (!string.IsNullOrEmpty(m_namespaceUri))
                 {
                     buffer.AppendFormat(" ({0}:{1})", m_namespaceUri, m_symbolicId);
                 }
@@ -752,12 +676,12 @@ namespace Opc.Ua
         /// </summary>
         public string ToLongString()
         {
-            StringBuilder buffer = new StringBuilder();
+            var buffer = new StringBuilder();
 
             buffer.Append("Id: ");
             buffer.Append(StatusCodes.GetBrowseName(m_code));
 
-            if (!String.IsNullOrEmpty(m_symbolicId))
+            if (!string.IsNullOrEmpty(m_symbolicId))
             {
                 buffer.AppendLine();
                 buffer.Append("SymbolicId: ");
@@ -789,9 +713,9 @@ namespace Opc.Ua
 
             return buffer.ToString();
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Looks up a string in a string table.
         /// </summary>
@@ -818,20 +742,20 @@ namespace Opc.Ua
                     return exception.Message;
                 }
 
-                return String.Format(CultureInfo.InvariantCulture, "[{0}] {1}", exception.GetType().Name, exception.Message);
+                return string.Format(CultureInfo.InvariantCulture, "[{0}] {1}", exception.GetType().Name, exception.Message);
             }
 
-            return String.Empty;
+            return string.Empty;
         }
-        #endregion
 
-        #region Private Fields
+
+
         private uint m_code;
         private string m_symbolicId;
         private string m_namespaceUri;
         private LocalizedText m_localizedText;
         private string m_additionalInfo;
         private ServiceResult m_innerResult;
-        #endregion
+
     }
 }

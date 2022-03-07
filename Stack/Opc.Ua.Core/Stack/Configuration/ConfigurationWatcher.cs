@@ -14,21 +14,24 @@ using System;
 using System.IO;
 
 namespace Opc.Ua
-{   
+{
     /// <summary>
     /// Watches the configuration file and reports any changes.
     /// </summary>
     public class ConfigurationWatcher : IDisposable
     {
-        #region Constructors
+
         /// <summary>
         /// Creates the watcher for the configuration.
         /// </summary>
         public ConfigurationWatcher(ApplicationConfiguration configuration)
         {
-            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+            if (configuration == null)
+            {
+                throw new ArgumentNullException(nameof(configuration));
+            }
 
-            FileInfo fileInfo = new FileInfo(configuration.SourceFilePath);
+            var fileInfo = new FileInfo(configuration.SourceFilePath);
 
             if (!fileInfo.Exists)
             {
@@ -39,14 +42,14 @@ namespace Opc.Ua
             m_lastWriteTime = fileInfo.LastWriteTimeUtc;
             m_watcher = new System.Threading.Timer(Watcher_Changed, null, 5000, 5000);
         }
-        #endregion
-        
-        #region IDisposable Members
+
+
+
         /// <summary>
         /// Frees any unmanaged resources.
         /// </summary>
         public void Dispose()
-        {   
+        {
             Dispose(true);
         }
 
@@ -55,7 +58,7 @@ namespace Opc.Ua
         /// </summary>
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing) 
+            if (disposing)
             {
                 if (m_watcher != null)
                 {
@@ -64,9 +67,9 @@ namespace Opc.Ua
                 }
             }
         }
-        #endregion
 
-        #region Public Interface
+
+
         /// <summary>
         /// Raised when the configuration file changes.
         /// </summary>
@@ -88,9 +91,9 @@ namespace Opc.Ua
                 }
             }
         }
-        #endregion
-        
-        #region Private Methods
+
+
+
         /// <summary>
         /// Handles a file changed event.
         /// </summary>
@@ -98,7 +101,7 @@ namespace Opc.Ua
         {
             try
             {
-                FileInfo fileInfo = new FileInfo(m_configuration.SourceFilePath);
+                var fileInfo = new FileInfo(m_configuration.SourceFilePath);
 
                 if (!fileInfo.Exists)
                 {
@@ -124,24 +127,24 @@ namespace Opc.Ua
                 Utils.LogError(exception, "Unexpected error raising configuration file changed event.");
             }
         }
-        #endregion
 
-        #region Private Fields
-        private object m_lock = new object();
-        private ApplicationConfiguration m_configuration;
+
+
+        private readonly object m_lock = new object();
+        private readonly ApplicationConfiguration m_configuration;
         private System.Threading.Timer m_watcher;
         private DateTime m_lastWriteTime;
         private event EventHandler<ConfigurationWatcherEventArgs> m_Changed;
-        #endregion
+
     }
-    
-    #region ConfigurationWatcherEventArgs Class
+
+
     /// <summary>
     /// Stores the arguments passed when the configuration file changes.
     /// </summary>
     public class ConfigurationWatcherEventArgs : EventArgs
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object with a configuration and a file path.
         /// </summary>
@@ -152,30 +155,17 @@ namespace Opc.Ua
             m_configuration = configuration;
             m_filePath = filePath;
         }
-        #endregion
-        
-        #region Public Properties
-        /// <summary>
-        /// The application configuration which changed.
-        /// </summary>
-        public ApplicationConfiguration Configuration
-        {
-            get { return m_configuration; }
-        }
-        
+
         /// <summary>
         /// The path to the application configuration file.
         /// </summary>
-        public string FilePath
-        {
-            get { return m_filePath; }
-        }
-        #endregion
+        public string FilePath => m_filePath;
 
-        #region Private Fields
-        private ApplicationConfiguration m_configuration;
-        private string m_filePath;
-        #endregion
+
+
+        private readonly ApplicationConfiguration m_configuration;
+        private readonly string m_filePath;
+
     }
-    #endregion
+
 }

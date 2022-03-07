@@ -54,11 +54,11 @@ namespace Opc.Ua.Bindings
             }
 
             // build list of uris.
-            List<Uri> uris = new List<Uri>();
-            EndpointDescriptionCollection endpoints = new EndpointDescriptionCollection();
+            var uris = new List<Uri>();
+            var endpoints = new EndpointDescriptionCollection();
 
             // create the endpoint configuration to use.
-            EndpointConfiguration endpointConfiguration = EndpointConfiguration.Create(configuration);
+            var endpointConfiguration = EndpointConfiguration.Create(configuration);
             string computerName = Utils.GetHostName();
 
             for (int ii = 0; ii < baseAddresses.Count; ii++)
@@ -69,30 +69,30 @@ namespace Opc.Ua.Bindings
                     continue;
                 }
 
-                UriBuilder uri = new UriBuilder(baseAddresses[ii]);
+                var uri = new UriBuilder(baseAddresses[ii]);
 
-                if (String.Equals(uri.Host, "localhost", StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(uri.Host, "localhost", StringComparison.OrdinalIgnoreCase))
                 {
                     uri.Host = computerName;
                 }
 
-                ITransportListener listener = this.Create();
+                ITransportListener listener = Create();
                 if (listener != null)
                 {
-                    EndpointDescriptionCollection listenerEndpoints = new EndpointDescriptionCollection();
+                    var listenerEndpoints = new EndpointDescriptionCollection();
                     uris.Add(uri.Uri);
 
                     foreach (ServerSecurityPolicy policy in securityPolicies)
                     {
                         // create the endpoint description.
-                        EndpointDescription description = new EndpointDescription();
+                        var description = new EndpointDescription {
+                            EndpointUrl = uri.ToString(),
+                            Server = serverDescription,
 
-                        description.EndpointUrl = uri.ToString();
-                        description.Server = serverDescription;
-
-                        description.SecurityMode = policy.SecurityMode;
-                        description.SecurityPolicyUri = policy.SecurityPolicyUri;
-                        description.SecurityLevel = ServerSecurityPolicy.CalculateSecurityLevel(policy.SecurityMode, policy.SecurityPolicyUri);
+                            SecurityMode = policy.SecurityMode,
+                            SecurityPolicyUri = policy.SecurityPolicyUri,
+                            SecurityLevel = ServerSecurityPolicy.CalculateSecurityLevel(policy.SecurityMode, policy.SecurityPolicyUri)
+                        };
                         description.UserIdentityTokens = serverBase.GetUserTokenPolicies(configuration, description);
                         description.TransportProfileUri = Profiles.UaTcpTransport;
 
@@ -107,7 +107,7 @@ namespace Opc.Ua.Bindings
                                 instanceCertificateChain != null &&
                                 instanceCertificateChain.Count > 0)
                             {
-                                List<byte> serverCertificateChain = new List<byte>();
+                                var serverCertificateChain = new List<byte>();
 
                                 for (int i = 0; i < instanceCertificateChain.Count; i++)
                                 {

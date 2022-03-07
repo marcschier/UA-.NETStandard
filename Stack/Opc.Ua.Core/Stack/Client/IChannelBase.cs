@@ -25,12 +25,6 @@ namespace Opc.Ua
         bool UseBinaryEncoding { get; }
 
         /// <summary>
-        /// Schedules an outgoing request.
-        /// </summary>
-        /// <param name="request">The request.</param>
-        void ScheduleOutgoingRequest(IChannelOutgoingRequest request);
-
-        /// <summary>
         /// The operation contract for the InvokeService service.
         /// </summary>
         InvokeServiceResponseMessage InvokeService(InvokeServiceMessage request);
@@ -45,44 +39,4 @@ namespace Opc.Ua
         /// </summary>
         InvokeServiceResponseMessage EndInvokeService(IAsyncResult result);
     }
-
-    /// <summary>
-    /// An interface to an object that manages a request received from a client.
-    /// </summary>
-    public interface IChannelOutgoingRequest
-    {
-        /// <summary>
-        /// Gets the request.
-        /// </summary>
-        /// <value>The request.</value>
-        IServiceRequest Request { get; }
-
-        /// <summary>
-        /// Gets the handler that must be used to send the request.
-        /// </summary>
-        /// <value>The send request handler.</value>
-        ChannelSendRequestEventHandler Handler { get; }
-
-        /// <summary>
-        /// Used to call the default synchronous handler.
-        /// </summary>
-        /// <remarks>
-        /// This method may block the current thread so the caller must not call in the
-        /// thread that calls IServerBase.ScheduleIncomingRequest(). 
-        /// This method always traps any exceptions and reports them to the client as a fault.
-        /// </remarks>
-        void CallSynchronously();
-
-        /// <summary>
-        /// Used to indicate that the asynchronous operation has completed.
-        /// </summary>
-        /// <param name="response">The response. May be null if an error is provided.</param>
-        /// <param name="error">An error to result as a fault.</param>
-        void OperationCompleted(IServiceResponse response, ServiceResult error);
-    }
-
-    /// <summary>
-    /// A delegate used to dispatch outgoing service requests.
-    /// </summary>
-    public delegate IServiceResponse ChannelSendRequestEventHandler(IServiceRequest request);
 }

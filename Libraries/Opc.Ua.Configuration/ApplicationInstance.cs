@@ -2,7 +2,7 @@
  * Copyright (c) 2005-2021 The OPC Foundation, Inc. All rights reserved.
  *
  * OPC Foundation MIT License 1.00
- * 
+ *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
  * files (the "Software"), to deal in the Software without
@@ -11,7 +11,7 @@
  * copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following
  * conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
@@ -29,7 +29,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
@@ -44,7 +43,7 @@ namespace Opc.Ua.Configuration
     /// </summary>
     public class ApplicationInstance
     {
-        #region Ctors
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ApplicationInstance"/> class.
         /// </summary>
@@ -59,18 +58,6 @@ namespace Opc.Ua.Configuration
         {
             m_applicationConfiguration = applicationConfiguration;
         }
-        #endregion
-
-        #region Public Properties
-        /// <summary>
-        /// Gets or sets the name of the application.
-        /// </summary>
-        /// <value>The name of the application.</value>
-        public string ApplicationName
-        {
-            get { return m_applicationName; }
-            set { m_applicationName = value; }
-        }
 
         /// <summary>
         /// Gets or sets the type of the application.
@@ -78,8 +65,8 @@ namespace Opc.Ua.Configuration
         /// <value>The type of the application.</value>
         public ApplicationType ApplicationType
         {
-            get { return m_applicationType; }
-            set { m_applicationType = value; }
+            get => m_applicationType;
+            set => m_applicationType = value;
         }
 
         /// <summary>
@@ -88,8 +75,8 @@ namespace Opc.Ua.Configuration
         /// <value>The name of the config section.</value>
         public string ConfigSectionName
         {
-            get { return m_configSectionName; }
-            set { m_configSectionName = value; }
+            get => m_configSectionName;
+            set => m_configSectionName = value;
         }
 
         /// <summary>
@@ -98,24 +85,8 @@ namespace Opc.Ua.Configuration
         /// <value>The type of configuration file.</value>
         public Type ConfigurationType
         {
-            get { return m_configurationType; }
-            set { m_configurationType = value; }
-        }
-
-        /// <summary>
-        /// Gets the server.
-        /// </summary>
-        /// <value>The server.</value>
-        public ServerBase Server => m_server;
-
-        /// <summary>
-        /// Gets the application configuration used when the Start() method was called.
-        /// </summary>
-        /// <value>The application configuration.</value>
-        public ApplicationConfiguration ApplicationConfiguration
-        {
-            get { return m_applicationConfiguration; }
-            set { m_applicationConfiguration = value; }
+            get => m_configurationType;
+            set => m_configurationType = value;
         }
 
         /// <summary>
@@ -127,29 +98,6 @@ namespace Opc.Ua.Configuration
         /// Get or set the certificate password provider.
         /// </summary>
         public ICertificatePasswordProvider CertificatePasswordProvider { get; set; }
-        #endregion
-
-        #region Public Methods
-        /// <summary>
-        /// Processes the command line.
-        /// </summary>
-        /// <returns>
-        /// True if the arguments were processed; False otherwise.
-        /// </returns>
-        public bool ProcessCommandLine()
-        {
-            // ignore processing of command line
-            return false;
-        }
-
-        /// <summary>
-        /// Starts the UA server as a Windows Service.
-        /// </summary>
-        /// <param name="server">The server.</param>
-        public void StartAsService(ServerBase server)
-        {
-            throw new NotImplementedException(".NetStandard Opc.Ua libraries do not support to start as a windows service");
-        }
 
         /// <summary>
         /// Starts the UA server.
@@ -165,14 +113,6 @@ namespace Opc.Ua.Configuration
             }
 
             server.Start(m_applicationConfiguration);
-        }
-
-        /// <summary>
-        /// Stops the UA server.
-        /// </summary>
-        public void Stop()
-        {
-            m_server.Stop();
         }
 
         /// <summary>
@@ -224,84 +164,6 @@ namespace Opc.Ua.Configuration
 
                 return null;
             }
-        }
-
-        /// <summary>
-        /// Loads the configuration.
-        /// </summary>
-        public async Task<ApplicationConfiguration> LoadAppConfig(
-            bool silent,
-            Stream stream,
-            ApplicationType applicationType,
-            Type configurationType,
-            bool applyTraceSettings,
-            ICertificatePasswordProvider certificatePasswordProvider = null)
-        {
-            Utils.LogInfo("Loading application from stream.");
-
-            try
-            {
-                // load the configuration file.
-                ApplicationConfiguration configuration = await ApplicationConfiguration.Load(
-                    stream,
-                    applicationType,
-                    configurationType,
-                    applyTraceSettings,
-                    certificatePasswordProvider)
-                    .ConfigureAwait(false);
-
-                if (configuration == null)
-                {
-                    return null;
-                }
-
-                return configuration;
-            }
-            catch (Exception e)
-            {
-                Utils.LogError(e, "Could not load configuration from stream.");
-
-                // warn user.
-                if (!silent)
-                {
-                    if (MessageDlg != null)
-                    {
-                        MessageDlg.Message("Load Application Configuration: " + e.Message);
-                        await MessageDlg.ShowAsync().ConfigureAwait(false);
-                    }
-
-                    throw;
-                }
-
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Loads the application configuration.
-        /// </summary>
-        public async Task<ApplicationConfiguration> LoadApplicationConfiguration(Stream stream, bool silent)
-        {
-            ApplicationConfiguration configuration = null;
-
-            try
-            {
-                configuration = await LoadAppConfig(
-                    silent, stream, ApplicationType, ConfigurationType, true, CertificatePasswordProvider)
-                    .ConfigureAwait(false);
-            }
-            catch (Exception) when (silent)
-            {
-            }
-
-            if (configuration == null)
-            {
-                throw ServiceResultException.Create(StatusCodes.BadConfigurationError, "Could not load configuration.");
-            }
-
-            m_applicationConfiguration = FixupAppConfig(configuration);
-
-            return configuration;
         }
 
         /// <summary>
@@ -363,32 +225,6 @@ namespace Opc.Ua.Configuration
         }
 
         /// <summary>
-        /// Create a builder for a UA application configuration.
-        /// </summary>
-        public IApplicationConfigurationBuilderTypes Build(
-            string applicationUri,
-            string productUri
-            )
-        {
-            // App Uri and cert subject
-            ApplicationConfiguration = new ApplicationConfiguration {
-                ApplicationName = this.ApplicationName,
-                ApplicationType = this.ApplicationType,
-                ApplicationUri = applicationUri,
-                ProductUri = productUri,
-                TraceConfiguration = new TraceConfiguration {
-                    TraceMasks = Utils.TraceMasks.None
-                },
-                TransportQuotas = new TransportQuotas()
-            };
-
-            // Trace off
-            ApplicationConfiguration.TraceConfiguration.ApplySettings();
-
-            return new ApplicationConfigurationBuilder(this);
-        }
-
-        /// <summary>
         /// Checks for a valid application instance certificate.
         /// </summary>
         /// <param name="silent">if set to <c>true</c> no dialogs will be displayed.</param>
@@ -398,15 +234,6 @@ namespace Opc.Ua.Configuration
             ushort minimumKeySize)
         {
             return CheckApplicationInstanceCertificate(silent, minimumKeySize, CertificateFactory.DefaultLifeTime);
-        }
-
-        /// <summary>
-        /// Delete the application certificate.
-        /// </summary>
-        public async Task DeleteApplicationInstanceCertificate()
-        {
-            if (m_applicationConfiguration == null) throw new ArgumentException("Missing configuration.");
-            await DeleteApplicationInstanceCertificate(m_applicationConfiguration).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -439,7 +266,7 @@ namespace Opc.Ua.Configuration
             }
 
             // reload the certificate from disk in the cache.
-            var passwordProvider = configuration.SecurityConfiguration.CertificatePasswordProvider;
+            ICertificatePasswordProvider passwordProvider = configuration.SecurityConfiguration.CertificatePasswordProvider;
             await configuration.SecurityConfiguration.ApplicationCertificate.LoadPrivateKeyEx(passwordProvider).ConfigureAwait(false);
 
             // load the certificate
@@ -474,11 +301,11 @@ namespace Opc.Ua.Configuration
                 }
 
                 // check for missing thumbprint.
-                if (!String.IsNullOrEmpty(id.Thumbprint))
+                if (!string.IsNullOrEmpty(id.Thumbprint))
                 {
-                    if (!String.IsNullOrEmpty(id.SubjectName))
+                    if (!string.IsNullOrEmpty(id.SubjectName))
                     {
-                        CertificateIdentifier id2 = new CertificateIdentifier {
+                        var id2 = new CertificateIdentifier {
                             StoreType = id.StoreType,
                             StorePath = id.StorePath,
                             SubjectName = id.SubjectName
@@ -494,7 +321,7 @@ namespace Opc.Ua.Configuration
                         message.AppendLine("Use it instead?");
                         message.AppendLine("Requested: {0}");
                         message.AppendLine("Found: {1}");
-                        if (!await ApproveMessage(String.Format(message.ToString(), id.SubjectName, certificate.Subject), silent).ConfigureAwait(false))
+                        if (!await ApproveMessage(string.Format(message.ToString(), id.SubjectName, certificate.Subject), silent).ConfigureAwait(false))
                         {
                             throw ServiceResultException.Create(StatusCodes.BadConfigurationError,
                                 message.ToString(), id.SubjectName, certificate.Subject);
@@ -635,7 +462,7 @@ namespace Opc.Ua.Configuration
             // check uri.
             string applicationUri = X509Utils.GetApplicationUriFromCertificate(certificate);
 
-            if (String.IsNullOrEmpty(applicationUri))
+            if (string.IsNullOrEmpty(applicationUri))
             {
                 string message = "The Application URI could not be read from the certificate. Use certificate anyway?";
                 if (!await ApproveMessage(message, silent).ConfigureAwait(false))
@@ -672,13 +499,13 @@ namespace Opc.Ua.Configuration
             IList<string> certificateDomainNames = X509Utils.GetDomainsFromCertficate(certificate);
 
             Utils.LogInfo("Server Domain names:");
-            foreach (var name in serverDomainNames)
+            foreach (string name in serverDomainNames)
             {
                 Utils.LogInfo(" {0}", name);
             }
 
             Utils.LogInfo("Certificate Domain names:");
-            foreach (var name in certificateDomainNames)
+            foreach (string name in certificateDomainNames)
             {
                 Utils.LogInfo(" {0}", name);
             }
@@ -696,7 +523,7 @@ namespace Opc.Ua.Configuration
                     continue;
                 }
 
-                if (String.Equals(serverDomainNames[ii], "localhost", StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(serverDomainNames[ii], "localhost", StringComparison.OrdinalIgnoreCase))
                 {
                     if (Utils.FindStringIgnoreCase(certificateDomainNames, computerName))
                     {
@@ -780,7 +607,7 @@ namespace Opc.Ua.Configuration
                 Utils.GetAbsoluteDirectoryPath(id.StorePath, true, true, true);
             }
 
-            var passwordProvider = configuration.SecurityConfiguration.CertificatePasswordProvider;
+            ICertificatePasswordProvider passwordProvider = configuration.SecurityConfiguration.CertificatePasswordProvider;
             X509Certificate2 certificate = CertificateFactory.CreateCertificate(
                 configuration.ApplicationUri,
                 configuration.ApplicationName,
@@ -885,7 +712,10 @@ namespace Opc.Ua.Configuration
         /// <param name="certificate">The certificate to register.</param>
         private static async Task AddToTrustedStore(ApplicationConfiguration configuration, X509Certificate2 certificate)
         {
-            if (certificate == null) throw new ArgumentNullException(nameof(certificate));
+            if (certificate == null)
+            {
+                throw new ArgumentNullException(nameof(certificate));
+            }
 
             string storePath = null;
 
@@ -894,7 +724,7 @@ namespace Opc.Ua.Configuration
                 storePath = configuration.SecurityConfiguration.TrustedPeerCertificates.StorePath;
             }
 
-            if (String.IsNullOrEmpty(storePath))
+            if (string.IsNullOrEmpty(storePath))
             {
                 Utils.LogWarning("WARNING: Trusted peer store not specified.");
                 return;
@@ -944,7 +774,7 @@ namespace Opc.Ua.Configuration
                     }
 
                     // add new certificate.
-                    X509Certificate2 publicKey = new X509Certificate2(certificate.RawData);
+                    var publicKey = new X509Certificate2(certificate.RawData);
                     await store.Add(publicKey).ConfigureAwait(false);
 
                     Utils.LogInfo("Added application certificate to trusted peer store.");
@@ -979,15 +809,14 @@ namespace Opc.Ua.Configuration
                 return false;
             }
         }
-        #endregion
 
-        #region Private Fields
-        private string m_applicationName;
+
+
         private ApplicationType m_applicationType;
         private string m_configSectionName;
         private Type m_configurationType;
         private ServerBase m_server;
         private ApplicationConfiguration m_applicationConfiguration;
-        #endregion
+
     }
 }

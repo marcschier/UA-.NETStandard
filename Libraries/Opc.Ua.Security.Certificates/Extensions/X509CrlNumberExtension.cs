@@ -45,7 +45,7 @@ namespace Opc.Ua.Security.Certificates
     /// </remarks>
     public class X509CrlNumberExtension : X509Extension
     {
-        #region Constructors
+
         /// <summary>
         /// Creates an empty extension.
         /// </summary>
@@ -89,15 +89,15 @@ namespace Opc.Ua.Security.Certificates
             CrlNumber = crlNumber;
             RawData = Encode();
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Returns a formatted version of the Abstract Syntax Notation One (ASN.1)-encoded data as a string.
         /// </summary>
         public override string Format(bool multiLine)
         {
-            StringBuilder buffer = new StringBuilder();
+            var buffer = new StringBuilder();
             buffer.Append(kFriendlyName);
             buffer.Append('=');
             buffer.Append(CrlNumber);
@@ -110,14 +110,18 @@ namespace Opc.Ua.Security.Certificates
         /// </summary>
         public override void CopyFrom(AsnEncodedData asnEncodedData)
         {
-            if (asnEncodedData == null) throw new ArgumentNullException(nameof(asnEncodedData));
+            if (asnEncodedData == null)
+            {
+                throw new ArgumentNullException(nameof(asnEncodedData));
+            }
+
             Oid = asnEncodedData.Oid;
             RawData = asnEncodedData.RawData;
             Decode(RawData);
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The OID for a CRL Number extension.
         /// </summary>
@@ -128,15 +132,15 @@ namespace Opc.Ua.Security.Certificates
         /// </summary>
         /// <value>The uris.</value>
         public BigInteger CrlNumber { get; private set; }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Encode the CRL Number extension.
         /// </summary>
         private byte[] Encode()
         {
-            AsnWriter writer = new AsnWriter(AsnEncodingRules.DER);
+            var writer = new AsnWriter(AsnEncodingRules.DER);
             writer.WriteInteger(CrlNumber);
             return writer.Encode();
         }
@@ -150,7 +154,7 @@ namespace Opc.Ua.Security.Certificates
             {
                 try
                 {
-                    AsnReader dataReader = new AsnReader(data, AsnEncodingRules.DER);
+                    var dataReader = new AsnReader(data, AsnEncodingRules.DER);
                     CrlNumber = dataReader.ReadInteger();
                     dataReader.ThrowIfNotEmpty();
                 }
@@ -164,14 +168,14 @@ namespace Opc.Ua.Security.Certificates
                 throw new CryptographicException("Invalid CrlNumberOid.");
             }
         }
-        #endregion
 
-        #region Private Fields
+
+
         /// <summary>
         /// CRL Number extension string
         /// definitions see RFC 5280 5.2.3
         /// </summary>
         private const string kFriendlyName = "CRL Number";
-        #endregion
+
     }
 }

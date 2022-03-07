@@ -11,13 +11,10 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Opc.Ua
 {
-    #region ViewDescription Class
+
     /// <summary>
     /// Describes a view to browse or query.
     /// </summary>
@@ -41,5 +38,5 @@ namespace Opc.Ua
             return false;
         }
     }
-    #endregion
+
 }

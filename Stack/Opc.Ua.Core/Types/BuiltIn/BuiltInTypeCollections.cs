@@ -107,7 +107,7 @@ namespace Opc.Ua
     /// A collection of SByte values.
     /// </summary>
     /// <remarks>
-    /// Provides a strongly-typed list of <see cref="SByte"/> values.
+    /// Provides a strongly-typed list of <see cref="sbyte"/> values.
     /// </remarks>
     [CollectionDataContract(Name = "ListOfSByte", Namespace = Namespaces.OpcUaXsd, ItemName = "SByte")]
     public partial class SByteCollection : List<sbyte>
@@ -135,7 +135,7 @@ namespace Opc.Ua
         /// <remarks>
         /// Initializes the collection and populates it with the specified collection of SByte values
         /// </remarks>
-        /// <param name="collection">A collection of <see cref="SByte"/> values to populate this collection with</param>
+        /// <param name="collection">A collection of <see cref="sbyte"/> values to populate this collection with</param>
         public SByteCollection(IEnumerable<sbyte> collection) : base(collection) { }
 
         /// <summary>
@@ -144,7 +144,7 @@ namespace Opc.Ua
         /// <remarks>
         /// Converts an array to a collection.
         /// </remarks>
-        /// <param name="values">An array of <see cref="SByte"/> values to convert from</param>
+        /// <param name="values">An array of <see cref="sbyte"/> values to convert from</param>
         public static SByteCollection ToSByteCollection(sbyte[] values)
         {
             if (values != null)
@@ -183,7 +183,7 @@ namespace Opc.Ua
     /// A collection of SByte values.
     /// </summary>
     /// <remarks>
-    /// Provides a strongly-typed list of <see cref="SByte"/> values.
+    /// Provides a strongly-typed list of <see cref="sbyte"/> values.
     /// </remarks>
     [CollectionDataContract(Name = "ListOfSByte", Namespace = Namespaces.OpcUaXsd, ItemName = "SByte")]
     public partial class ByteCollection : List<byte>
@@ -211,7 +211,7 @@ namespace Opc.Ua
         /// <remarks>
         /// Initializes the collection and populates it with the specified collection of Byte values
         /// </remarks>
-        /// <param name="collection">A collection of <see cref="Byte"/> values to populate this collection with</param>
+        /// <param name="collection">A collection of <see cref="byte"/> values to populate this collection with</param>
         public ByteCollection(IEnumerable<byte> collection) : base(collection) { }
 
         /// <summary>
@@ -220,7 +220,7 @@ namespace Opc.Ua
         /// <remarks>
         /// Converts an array to a collection.
         /// </remarks>
-        /// <param name="values">An array of <see cref="Byte"/> values to convert from</param>
+        /// <param name="values">An array of <see cref="byte"/> values to convert from</param>
         public static ByteCollection ToByteCollection(byte[] values)
         {
             if (values != null)
@@ -417,7 +417,7 @@ namespace Opc.Ua
         /// Initializes an empty collection.
         /// </summary>
         /// <remarks>
-        /// Initializes an empty collection of <see cref="Int32"/>.
+        /// Initializes an empty collection of <see cref="int"/>.
         /// </remarks>
         public Int32Collection() { }
 
@@ -493,7 +493,7 @@ namespace Opc.Ua
         /// Initializes an empty collection.
         /// </summary>
         /// <remarks>
-        /// Initializes an empty collection of <see cref="UInt32"/>.
+        /// Initializes an empty collection of <see cref="uint"/>.
         /// </remarks>
         public UInt32Collection() { }
 
@@ -522,7 +522,7 @@ namespace Opc.Ua
         /// Converts an array to a collection.
         /// </remarks>
         /// <param name="values">
-        /// An array of <see cref="UInt32"/> values to return as a strongly-typed collection
+        /// An array of <see cref="uint"/> values to return as a strongly-typed collection
         /// </param>
         public static UInt32Collection ToUInt32Collection(uint[] values)
         {
@@ -541,7 +541,7 @@ namespace Opc.Ua
         /// Converts an array to a collection.
         /// </remarks>
         /// <param name="values">
-        /// An array of <see cref="UInt32"/> values to return as a strongly-typed collection
+        /// An array of <see cref="uint"/> values to return as a strongly-typed collection
         /// </param>
         public static implicit operator UInt32Collection(uint[] values)
         {
@@ -573,7 +573,7 @@ namespace Opc.Ua
         /// Initializes an empty collection.
         /// </summary>
         /// <remarks>
-        /// Initializes an empty collection of <see cref="Int64"/>.
+        /// Initializes an empty collection of <see cref="long"/>.
         /// </remarks>
         public Int64Collection() { }
 
@@ -1088,7 +1088,7 @@ namespace Opc.Ua
         /// </remarks>
         public new object MemberwiseClone()
         {
-            ByteStringCollection clone = new ByteStringCollection(this.Count);
+            var clone = new ByteStringCollection(Count);
 
             foreach (byte[] element in this)
             {
@@ -1171,7 +1171,7 @@ namespace Opc.Ua
         /// </remarks>
         public new object MemberwiseClone()
         {
-            XmlElementCollection clone = new XmlElementCollection(this.Count);
+            var clone = new XmlElementCollection(Count);
 
             foreach (XmlElement element in this)
             {

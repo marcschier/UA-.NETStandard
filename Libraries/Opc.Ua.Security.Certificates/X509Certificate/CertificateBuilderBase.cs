@@ -2,7 +2,7 @@
  * Copyright (c) 2005-2020 The OPC Foundation, Inc. All rights reserved.
  *
  * OPC Foundation MIT License 1.00
- * 
+ *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
  * files (the "Software"), to deal in the Software without
@@ -11,7 +11,7 @@
  * copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following
  * conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
@@ -30,8 +30,6 @@
 using System;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using System.Linq;
-using System.Collections.Generic;
 
 namespace Opc.Ua.Security.Certificates
 {
@@ -57,14 +55,15 @@ namespace Opc.Ua.Security.Certificates
         , ICertificateBuilderCreateForECDsaAny
 #endif
     {
-        #region Constructors
+
         /// <summary>
         /// Initialize a Certificate builder.
         /// </summary>
-        protected CertificateBuilderBase(X500DistinguishedName subjectName)
+        protected CertificateBuilderBase(X500DistinguishedName subjectName, X509Certificate2 issuerCAKeyCert = null)
         {
             m_issuerName = m_subjectName = subjectName;
             Initialize();
+            m_issuerCAKeyCert = issuerCAKeyCert;
         }
 
         /// <summary>
@@ -87,9 +86,9 @@ namespace Opc.Ua.Security.Certificates
             m_serialNumberLength = X509Defaults.SerialNumberLengthMin;
             m_extensions = new X509ExtensionCollection();
         }
-        #endregion
 
-        #region IX509Certificate Interface
+
+
         /// <inheritdoc/>
         public X500DistinguishedName SubjectName => m_subjectName;
 
@@ -103,109 +102,17 @@ namespace Opc.Ua.Security.Certificates
         public DateTime NotAfter => m_notAfter;
 
         /// <inheritdoc/>
-        public string SerialNumber => m_serialNumber.ToHexString(true);
-
-        /// <inheritdoc/>
-        public byte[] GetSerialNumber() { return m_serialNumber; }
-
-        /// <inheritdoc/>
         public HashAlgorithmName HashAlgorithmName => m_hashAlgorithmName;
 
-        /// <inheritdoc/>
-        public X509ExtensionCollection Extensions => m_extensions;
-        #endregion
 
-        #region Public Methods
+
         /// <inheritdoc/>
         public abstract X509Certificate2 CreateForRSA();
 
         /// <inheritdoc/>
-        public abstract X509Certificate2 CreateForRSA(X509SignatureGenerator generator);
-
-#if ECC_SUPPORT
-        /// <inheritdoc/>
-        public abstract X509Certificate2 CreateForECDsa();
-
-        /// <inheritdoc/>
-        public abstract X509Certificate2 CreateForECDsa(X509SignatureGenerator generator);
-#endif
-        /// <inheritdoc/>
-        public ICertificateBuilder SetSerialNumberLength(int length)
-        {
-            if (length > X509Defaults.SerialNumberLengthMax || length == 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(length), "SerialNumber length out of Range");
-            }
-            m_serialNumberLength = length;
-            m_presetSerial = false;
-            return this;
-        }
-
-        /// <inheritdoc/>
-        public ICertificateBuilder SetSerialNumber(byte[] serialNumber)
-        {
-            if (serialNumber.Length > X509Defaults.SerialNumberLengthMax ||
-                serialNumber.Length == 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(serialNumber), "SerialNumber array exceeds supported length.");
-            }
-            m_serialNumberLength = serialNumber.Length;
-            m_serialNumber = new byte[serialNumber.Length];
-            Array.Copy(serialNumber, m_serialNumber, serialNumber.Length);
-            m_serialNumber[m_serialNumberLength - 1] &= 0x7f;
-            m_presetSerial = true;
-            return this;
-        }
-
-        /// <inheritdoc/>
-        public ICertificateBuilder CreateSerialNumber()
-        {
-            NewSerialNumber();
-            m_presetSerial = true;
-            return this;
-        }
-
-        /// <inheritdoc/>
-        public ICertificateBuilder SetNotBefore(DateTime notBefore)
-        {
-            m_notBefore = notBefore;
-            return this;
-        }
-
-        /// <inheritdoc/>
-        public ICertificateBuilder SetNotAfter(DateTime notAfter)
-        {
-            m_notAfter = notAfter;
-            return this;
-        }
-
-        /// <inheritdoc/>
-        public ICertificateBuilder SetLifeTime(TimeSpan lifeTime)
-        {
-            m_notAfter = m_notBefore.Add(lifeTime);
-            return this;
-        }
-
-        /// <inheritdoc/>
         public ICertificateBuilder SetLifeTime(ushort months)
         {
-            m_notAfter = m_notBefore.AddMonths(months == 0 ? X509Defaults.LifeTime : (int)months);
-            return this;
-        }
-
-        /// <inheritdoc/>
-        public ICertificateBuilder SetHashAlgorithm(HashAlgorithmName hashAlgorithmName)
-        {
-            m_hashAlgorithmName = hashAlgorithmName;
-            return this;
-        }
-
-        /// <inheritdoc/>
-        public ICertificateBuilder SetCAConstraint(int pathLengthConstraint = -1)
-        {
-            m_isCA = true;
-            m_pathLengthConstraint = pathLengthConstraint;
-            m_serialNumberLength = X509Defaults.SerialNumberLengthMax;
+            m_notAfter = m_notBefore.AddMonths(months == 0 ? X509Defaults.LifeTime : months);
             return this;
         }
 
@@ -229,53 +136,17 @@ namespace Opc.Ua.Security.Certificates
         /// <inheritdoc/>
         public virtual ICertificateBuilder AddExtension(X509Extension extension)
         {
-            if (extension == null) throw new ArgumentNullException(nameof(extension));
+            if (extension == null)
+            {
+                throw new ArgumentNullException(nameof(extension));
+            }
+
             m_extensions.Add(extension);
             return this;
         }
 
-#if ECC_SUPPORT
-        /// <inheritdoc/>
-        public virtual ICertificateBuilderCreateForECDsaAny SetECCurve(ECCurve curve)
-        {
-            m_curve = curve;
-            return this;
-        }
 
-        /// <inheritdoc/>
-        public abstract ICertificateBuilderCreateForECDsaAny SetECDsaPublicKey(byte[] publicKey);
 
-        /// <inheritdoc/>
-        public virtual ICertificateBuilderCreateForECDsaAny SetECDsaPublicKey(ECDsa publicKey)
-        {
-            if (publicKey == null) throw new ArgumentNullException(nameof(publicKey));
-            m_ecdsaPublicKey = publicKey;
-            return this;
-        }
-#endif
-
-        /// <inheritdoc/>
-        public abstract ICertificateBuilderCreateForRSAAny SetRSAPublicKey(byte[] publicKey);
-
-        /// <inheritdoc/>
-        public virtual ICertificateBuilderCreateForRSAAny SetRSAPublicKey(RSA publicKey)
-        {
-            if (publicKey == null) throw new ArgumentNullException(nameof(publicKey));
-            m_rsaPublicKey = publicKey;
-            return this;
-        }
-
-        /// <inheritdoc/>
-        public virtual ICertificateBuilderIssuer SetIssuer(X509Certificate2 issuerCertificate)
-        {
-            if (issuerCertificate == null) throw new ArgumentNullException(nameof(issuerCertificate));
-            m_issuerCAKeyCert = issuerCertificate;
-            m_issuerName = issuerCertificate.SubjectName;
-            return this;
-        }
-        #endregion
-
-        #region Protected Methods
         /// <summary>
         /// The issuer CA certificate.
         /// </summary>
@@ -314,9 +185,9 @@ namespace Opc.Ua.Security.Certificates
             // A compliant certificate uses a positive serial number.
             m_serialNumber[m_serialNumberLength - 1] &= 0x7F;
         }
-        #endregion
 
-        #region Protected Fields
+
+
         /// <summary>
         /// If the certificate is a CA.
         /// </summary>
@@ -359,15 +230,15 @@ namespace Opc.Ua.Security.Certificates
         /// </summary>
         protected ECCurve? m_curve;
 #endif
-        #endregion
 
-        #region Private Fields
-        private X509Certificate2 m_issuerCAKeyCert;
+
+
+        private readonly X509Certificate2 m_issuerCAKeyCert;
         private DateTime m_notBefore;
         private DateTime m_notAfter;
         private HashAlgorithmName m_hashAlgorithmName;
-        private X500DistinguishedName m_subjectName;
-        private X500DistinguishedName m_issuerName;
-        #endregion
+        private readonly X500DistinguishedName m_subjectName;
+        private readonly X500DistinguishedName m_issuerName;
+
     }
 }

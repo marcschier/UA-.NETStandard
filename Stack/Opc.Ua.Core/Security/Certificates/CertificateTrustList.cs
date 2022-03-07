@@ -10,13 +10,9 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 */
 
-using System;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks;
-
 namespace Opc.Ua
 {
-    #region CertificateTrustList Class
+
     /// <summary>
     /// A list of trusted certificates.
     /// </summary>
@@ -38,7 +34,7 @@ namespace Opc.Ua
     /// </remarks>
     public partial class CertificateTrustList : CertificateStoreIdentifier
     {
-        #region Public Methods
+
         /// <summary>
         /// Returns an object to access the store containing the certificate of the trustlist.
         /// </summary>
@@ -55,61 +51,21 @@ namespace Opc.Ua
             lock (m_lock)
             {
                 if (m_store == null ||
-                    m_store.StoreType != this.StoreType ||
-                    m_store.StorePath != this.StorePath)
+                    m_store.StoreType != StoreType ||
+                    m_store.StorePath != StorePath)
                 {
-                    m_store = CreateStore(this.StoreType);
+                    m_store = CreateStore(StoreType);
                 }
-                m_store.Open(this.StorePath, true);
+                m_store.Open(StorePath, true);
                 return m_store;
             }
         }
 
-        /// <summary>
-        /// Returns the certificates in the trust list.
-        /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate")]
-        public async Task<X509Certificate2Collection> GetCertificates()
-        {
-            X509Certificate2Collection collection = new X509Certificate2Collection();
 
-            if (!String.IsNullOrEmpty(this.StorePath))
-            {
-                ICertificateStore store = null;
-                try
-                {
-                    store = OpenStore();
-                    collection = await store.Enumerate().ConfigureAwait(false);
-                }
-                catch (Exception)
-                {
-                    Utils.LogError("Could not load certificates from store: {0}.", this.StorePath);
-                }
-                finally
-                {
-                    store?.Close();
-                }
 
-            }
-
-            foreach (CertificateIdentifier trustedCertificate in TrustedCertificates)
-            {
-                X509Certificate2 certificate = await trustedCertificate.Find().ConfigureAwait(false);
-
-                if (certificate != null)
-                {
-                    collection.Add(certificate);
-                }
-            }
-
-            return collection;
-        }
-        #endregion
-
-        #region Private Members
         private object m_lock;
         private ICertificateStore m_store;
-        #endregion
+
     }
-    #endregion
+
 }

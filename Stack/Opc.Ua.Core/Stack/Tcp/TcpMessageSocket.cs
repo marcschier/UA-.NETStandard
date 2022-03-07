@@ -68,13 +68,13 @@ namespace Opc.Ua.Bindings
             };
         }
 
-        #region IDisposable Members
+
         /// <inheritdoc/>
         public void Dispose()
         {
             m_args.Dispose();
         }
-        #endregion
+
 
         /// <inheritdoc/>
         public object UserToken { get; set; }
@@ -126,8 +126,8 @@ namespace Opc.Ua.Bindings
         /// <inheritdoc/>
         public BufferCollection BufferList
         {
-            get { return m_args.BufferList as BufferCollection; }
-            set { m_args.BufferList = value; }
+            get => m_args.BufferList as BufferCollection;
+            set => m_args.BufferList = value;
         }
 
         /// <summary>
@@ -135,7 +135,7 @@ namespace Opc.Ua.Bindings
         /// </summary>
         public SocketAsyncEventArgs Args => m_args;
 
-        private SocketAsyncEventArgs m_args;
+        private readonly SocketAsyncEventArgs m_args;
         private event EventHandler<IMessageSocketAsyncEventArgs> m_internalComplete;
     }
 
@@ -153,12 +153,12 @@ namespace Opc.Ua.Bindings
             m_socketError = error;
         }
 
-        #region IDisposable Members
+
         /// <inheritdoc/>
         public void Dispose()
         {
         }
-        #endregion
+
 
         /// <inheritdoc/>
         public object UserToken { get; set; }
@@ -201,14 +201,11 @@ namespace Opc.Ua.Bindings
         /// <remarks>Not implememnted here.</remarks>
         public BufferCollection BufferList
         {
-            get { return null; }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get => null;
+            set => throw new NotImplementedException();
         }
 
-        private SocketError m_socketError;
+        private readonly SocketError m_socketError;
     }
 
     /// <summary>
@@ -243,7 +240,7 @@ namespace Opc.Ua.Bindings
     {
         private static readonly int DefaultRetryNextAddressTimeout = 1000;
 
-        #region Constructors
+
         /// <summary>
         /// Creates an unconnected socket.
         /// </summary>
@@ -252,7 +249,10 @@ namespace Opc.Ua.Bindings
             BufferManager bufferManager,
             int receiveBufferSize)
         {
-            if (bufferManager == null) throw new ArgumentNullException(nameof(bufferManager));
+            if (bufferManager == null)
+            {
+                throw new ArgumentNullException(nameof(bufferManager));
+            }
 
             m_sink = sink;
             m_socket = null;
@@ -272,8 +272,15 @@ namespace Opc.Ua.Bindings
             BufferManager bufferManager,
             int receiveBufferSize)
         {
-            if (socket == null) throw new ArgumentNullException(nameof(socket));
-            if (bufferManager == null) throw new ArgumentNullException(nameof(bufferManager));
+            if (socket == null)
+            {
+                throw new ArgumentNullException(nameof(socket));
+            }
+
+            if (bufferManager == null)
+            {
+                throw new ArgumentNullException(nameof(bufferManager));
+            }
 
             m_sink = sink;
             m_socket = socket;
@@ -282,9 +289,9 @@ namespace Opc.Ua.Bindings
             m_incomingMessageSize = -1;
             m_readComplete = OnReadComplete;
         }
-        #endregion
 
-        #region IDisposable Members
+
+
         /// <summary>
         /// Frees any unmanaged resources.
         /// </summary>
@@ -303,9 +310,9 @@ namespace Opc.Ua.Bindings
                 m_socket.Dispose();
             }
         }
-        #endregion
 
-        #region Connect/Disconnect Handling
+
+
         /// <summary>
         /// Gets the socket handle.
         /// </summary>
@@ -327,8 +334,15 @@ namespace Opc.Ua.Bindings
             object state,
             CancellationToken cts)
         {
-            if (endpointUrl == null) throw new ArgumentNullException(nameof(endpointUrl));
-            if (m_socket != null) throw new InvalidOperationException("The socket is already connected.");
+            if (endpointUrl == null)
+            {
+                throw new ArgumentNullException(nameof(endpointUrl));
+            }
+
+            if (m_socket != null)
+            {
+                throw new InvalidOperationException("The socket is already connected.");
+            }
 
             SocketError error = SocketError.NotInitialized;
             CallbackAction doCallback = (SocketError socketError) => callback(this, new TcpMessageSocketConnectAsyncEventArgs(socketError) { UserToken = state });
@@ -351,7 +365,7 @@ namespace Opc.Ua.Bindings
 
             // Get port
             int port = endpointUrl.Port;
-            if (port <= 0 || port > UInt16.MaxValue)
+            if (port <= 0 || port > ushort.MaxValue)
             {
                 port = Utils.UaTcpDefaultPort;
             }
@@ -465,9 +479,9 @@ namespace Opc.Ua.Bindings
                 }
             }
         }
-        #endregion
 
-        #region Read Handling
+
+
         /// <summary>
         /// Starts reading messages from the socket.
         /// </summary>
@@ -524,7 +538,10 @@ namespace Opc.Ua.Bindings
                     // after processing the ReadComplete and let the outer call handle it
                     if (!innerCall && !ServiceResult.IsBad(error))
                     {
-                        while (ReadNext()) ;
+                        while (ReadNext())
+                        {
+                            ;
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -623,7 +640,7 @@ namespace Opc.Ua.Bindings
                 try
                 {
                     // send notification (implementor responsible for freeing buffer) on success.
-                    ArraySegment<byte> messageChunk = new ArraySegment<byte>(m_receiveBuffer, 0, m_incomingMessageSize);
+                    var messageChunk = new ArraySegment<byte>(m_receiveBuffer, 0, m_incomingMessageSize);
 
                     // must allocate a new buffer for the next message.
                     m_receiveBuffer = null;
@@ -809,16 +826,15 @@ namespace Opc.Ua.Bindings
             }
             args.Dispose();
         }
-        #endregion
 
-        #region Write Handling
+
+
         /// <summary>
         /// Sends a buffer.
         /// </summary>
         public bool SendAsync(IMessageSocketAsyncEventArgs args)
         {
-            TcpMessageSocketAsyncEventArgs eventArgs = args as TcpMessageSocketAsyncEventArgs;
-            if (eventArgs == null)
+            if (!(args is TcpMessageSocketAsyncEventArgs eventArgs))
             {
                 throw new ArgumentNullException(nameof(args));
             }
@@ -829,9 +845,9 @@ namespace Opc.Ua.Bindings
             eventArgs.Args.SocketError = SocketError.NotConnected;
             return m_socket.SendAsync(eventArgs.Args);
         }
-        #endregion
 
-        #region Event factory
+
+
         /// <summary>
         /// Create event args for TcpMessageSocket.
         /// </summary>
@@ -839,11 +855,11 @@ namespace Opc.Ua.Bindings
         {
             return new TcpMessageSocketAsyncEventArgs();
         }
-        #endregion
 
-        #region Private Fields
+
+
         private IMessageSink m_sink;
-        private BufferManager m_bufferManager;
+        private readonly BufferManager m_bufferManager;
         private readonly int m_receiveBufferSize;
         private readonly EventHandler<SocketAsyncEventArgs> m_readComplete;
 
@@ -872,6 +888,6 @@ namespace Opc.Ua.Bindings
         private int m_bytesToReceive;
         private int m_incomingMessageSize;
         private ReadState m_readState;
-        #endregion
+
     }
 }

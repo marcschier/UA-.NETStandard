@@ -28,8 +28,8 @@ namespace Opc.Ua.Security
         [Obsolete("Replaced by ApplicationName")]
         public string Name
         {
-            get { return this.ApplicationName; }
-            set { this.ApplicationName = value; }
+            get => ApplicationName;
+            set => ApplicationName = value;
         }
 
         /// <summary>
@@ -38,8 +38,8 @@ namespace Opc.Ua.Security
         [Obsolete("Replaced by ApplicationUri")]
         public string Uri
         {
-            get { return this.ApplicationUri; }
-            set { this.ApplicationUri = value; }
+            get => ApplicationUri;
+            set => ApplicationUri = value;
         }
 
         /// <summary>
@@ -48,8 +48,8 @@ namespace Opc.Ua.Security
         [Obsolete("Replaced by TrustedCertificateStore")]
         public CertificateStoreIdentifier TrustedPeerStore
         {
-            get { return this.TrustedCertificateStore; }
-            set { this.TrustedCertificateStore = value; }
+            get => TrustedCertificateStore;
+            set => TrustedCertificateStore = value;
         }
 
         /// <summary>
@@ -58,8 +58,8 @@ namespace Opc.Ua.Security
         [Obsolete("Replaced by TrustedCertificates")]
         public CertificateList TrustedPeerCertificates
         {
-            get { return this.TrustedCertificates; }
-            set { this.TrustedCertificates = value; }
+            get => TrustedCertificates;
+            set => TrustedCertificates = value;
         }
 
         /// <summary>
@@ -68,8 +68,8 @@ namespace Opc.Ua.Security
         [Obsolete("Replaced by TrustedIssuerStore")]
         public CertificateStoreIdentifier TrustedIssuerStore
         {
-            get { return this.IssuerCertificateStore; }
-            set { this.IssuerCertificateStore = value; }
+            get => IssuerCertificateStore;
+            set => IssuerCertificateStore = value;
         }
 
         /// <summary>
@@ -78,8 +78,8 @@ namespace Opc.Ua.Security
         [Obsolete("Replaced by IssuerCertificates")]
         public CertificateList TrustedIssuerCertificates
         {
-            get { return this.IssuerCertificates; }
-            set { this.IssuerCertificates = value; }
+            get => IssuerCertificates;
+            set => IssuerCertificates = value;
         }
 
         /// <summary>
@@ -103,17 +103,17 @@ namespace Opc.Ua.Security
         /// </summary>
         public static CertificateIdentifier ToCertificateIdentifier(Opc.Ua.CertificateIdentifier input)
         {
-            if (input != null && !String.IsNullOrEmpty(input.StoreType) && !String.IsNullOrEmpty(input.StorePath))
+            if (input != null && !string.IsNullOrEmpty(input.StoreType) && !string.IsNullOrEmpty(input.StorePath))
             {
-                CertificateIdentifier output = new CertificateIdentifier();
-
-                output.StoreType = input.StoreType;
-                output.StorePath = input.StorePath;
-                output.SubjectName = input.SubjectName;
-                output.Thumbprint = input.Thumbprint;
-                output.ValidationOptions = (int)input.ValidationOptions;
-                output.OfflineRevocationList = null;
-                output.OnlineRevocationList = null;
+                var output = new CertificateIdentifier {
+                    StoreType = input.StoreType,
+                    StorePath = input.StorePath,
+                    SubjectName = input.SubjectName,
+                    Thumbprint = input.Thumbprint,
+                    ValidationOptions = (int)input.ValidationOptions,
+                    OfflineRevocationList = null,
+                    OnlineRevocationList = null
+                };
 
                 return output;
             }
@@ -126,7 +126,7 @@ namespace Opc.Ua.Security
         /// </summary>
         public static Opc.Ua.CertificateIdentifier FromCertificateIdentifier(CertificateIdentifier input)
         {
-            Opc.Ua.CertificateIdentifier output = new Opc.Ua.CertificateIdentifier();
+            var output = new Opc.Ua.CertificateIdentifier();
 
             if (input != null)
             {
@@ -145,13 +145,13 @@ namespace Opc.Ua.Security
         /// </summary>
         public static CertificateStoreIdentifier ToCertificateStoreIdentifier(Opc.Ua.CertificateStoreIdentifier input)
         {
-            if (input != null && !String.IsNullOrEmpty(input.StoreType) && !String.IsNullOrEmpty(input.StorePath))
+            if (input != null && !string.IsNullOrEmpty(input.StoreType) && !string.IsNullOrEmpty(input.StorePath))
             {
-                CertificateStoreIdentifier output = new CertificateStoreIdentifier();
-
-                output.StoreType = input.StoreType;
-                output.StorePath = input.StorePath;
-                output.ValidationOptions = (int)input.ValidationOptions;
+                var output = new CertificateStoreIdentifier {
+                    StoreType = input.StoreType,
+                    StorePath = input.StorePath,
+                    ValidationOptions = (int)input.ValidationOptions
+                };
 
                 return output;
             }
@@ -164,7 +164,7 @@ namespace Opc.Ua.Security
         /// </summary>
         public static Opc.Ua.CertificateTrustList FromCertificateStoreIdentifierToTrustList(CertificateStoreIdentifier input)
         {
-            Opc.Ua.CertificateTrustList output = new Opc.Ua.CertificateTrustList();
+            var output = new Opc.Ua.CertificateTrustList();
 
             if (input != null)
             {
@@ -181,7 +181,7 @@ namespace Opc.Ua.Security
         /// </summary>
         public static Opc.Ua.CertificateStoreIdentifier FromCertificateStoreIdentifier(CertificateStoreIdentifier input)
         {
-            Opc.Ua.CertificateStoreIdentifier output = new Opc.Ua.CertificateStoreIdentifier();
+            var output = new Opc.Ua.CertificateStoreIdentifier();
 
             if (input != null)
             {
@@ -198,7 +198,7 @@ namespace Opc.Ua.Security
         /// </summary>
         public static Opc.Ua.CertificateTrustList ToCertificateTrustList(CertificateStoreIdentifier input)
         {
-            Opc.Ua.CertificateTrustList output = new Opc.Ua.CertificateTrustList();
+            var output = new Opc.Ua.CertificateTrustList();
 
             if (input != null)
             {
@@ -215,11 +215,11 @@ namespace Opc.Ua.Security
         /// </summary>
         public static CertificateList ToCertificateList(Opc.Ua.CertificateIdentifierCollection input)
         {
-            CertificateList output = new CertificateList();
+            var output = new CertificateList();
 
             if (input != null)
             {
-                output.ValidationOptions = (int)0;
+                output.ValidationOptions = 0;
                 output.Certificates = new ListOfCertificateIdentifier();
 
                 for (int ii = 0; ii < input.Count; ii++)
@@ -236,7 +236,7 @@ namespace Opc.Ua.Security
         /// </summary>
         public static Opc.Ua.CertificateIdentifierCollection FromCertificateList(CertificateList input)
         {
-            Opc.Ua.CertificateIdentifierCollection output = new Opc.Ua.CertificateIdentifierCollection();
+            var output = new Opc.Ua.CertificateIdentifierCollection();
 
             if (input != null && input.Certificates != null)
             {
@@ -254,7 +254,7 @@ namespace Opc.Ua.Security
         /// </summary>
         public static ListOfBaseAddresses ToListOfBaseAddresses(ServerBaseConfiguration configuration)
         {
-            ListOfBaseAddresses addresses = new ListOfBaseAddresses();
+            var addresses = new ListOfBaseAddresses();
 
             if (configuration != null)
             {
@@ -283,7 +283,7 @@ namespace Opc.Ua.Security
         /// </summary>
         public static void FromListOfBaseAddresses(ServerBaseConfiguration configuration, ListOfBaseAddresses addresses)
         {
-            Dictionary<string, string> map = new Dictionary<string, string>();
+            var map = new Dictionary<string, string>();
 
             if (addresses != null && configuration != null)
             {
@@ -320,13 +320,14 @@ namespace Opc.Ua.Security
         /// </summary>
         public static ListOfSecurityProfiles ToListOfSecurityProfiles(ServerSecurityPolicyCollection policies)
         {
-            ListOfSecurityProfiles profiles = new ListOfSecurityProfiles();
-            profiles.Add(CreateProfile(SecurityPolicies.None));
-            profiles.Add(CreateProfile(SecurityPolicies.Basic128Rsa15));
-            profiles.Add(CreateProfile(SecurityPolicies.Basic256));
-            profiles.Add(CreateProfile(SecurityPolicies.Basic256Sha256));
-            profiles.Add(CreateProfile(SecurityPolicies.Aes128_Sha256_RsaOaep));
-            profiles.Add(CreateProfile(SecurityPolicies.Aes256_Sha256_RsaPss));
+            var profiles = new ListOfSecurityProfiles {
+                CreateProfile(SecurityPolicies.None),
+                CreateProfile(SecurityPolicies.Basic128Rsa15),
+                CreateProfile(SecurityPolicies.Basic256),
+                CreateProfile(SecurityPolicies.Basic256Sha256),
+                CreateProfile(SecurityPolicies.Aes128_Sha256_RsaOaep),
+                CreateProfile(SecurityPolicies.Aes256_Sha256_RsaPss)
+            };
 
             if (policies != null)
             {
@@ -350,7 +351,7 @@ namespace Opc.Ua.Security
         /// </summary>
         public static ServerSecurityPolicyCollection FromListOfSecurityProfiles(ListOfSecurityProfiles profiles)
         {
-            ServerSecurityPolicyCollection policies = new ServerSecurityPolicyCollection();
+            var policies = new ServerSecurityPolicyCollection();
 
             if (profiles != null)
             {
@@ -377,8 +378,9 @@ namespace Opc.Ua.Security
         /// </summary>
         private static ServerSecurityPolicy CreatePolicy(string profileUri)
         {
-            ServerSecurityPolicy policy = new ServerSecurityPolicy();
-            policy.SecurityPolicyUri = profileUri;
+            var policy = new ServerSecurityPolicy {
+                SecurityPolicyUri = profileUri
+            };
 
             if (profileUri != null)
             {
@@ -411,9 +413,10 @@ namespace Opc.Ua.Security
         /// </summary>
         private static Opc.Ua.Security.SecurityProfile CreateProfile(string profileUri)
         {
-            Opc.Ua.Security.SecurityProfile policy = new SecurityProfile();
-            policy.ProfileUri = profileUri;
-            policy.Enabled = false;
+            var policy = new SecurityProfile {
+                ProfileUri = profileUri,
+                Enabled = false
+            };
             return policy;
         }
     }

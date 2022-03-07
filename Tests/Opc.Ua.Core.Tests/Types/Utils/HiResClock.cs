@@ -52,7 +52,7 @@ namespace Opc.Ua.Core.Tests.Types.UtilsTests
         public readonly int Percent = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? 5 : 2;
 
 
-        #region Test Setup
+        
         [OneTimeSetUp]
         protected void OneTimeSetup()
         {
@@ -70,9 +70,9 @@ namespace Opc.Ua.Core.Tests.Types.UtilsTests
         {
             HiResClock.Reset();
         }
-        #endregion
+        
 
-        #region Test Methods
+        
         /// <summary>
         /// Validate HiResClock defaults, platform dependant.
         /// </summary>
@@ -159,6 +159,6 @@ namespace Opc.Ua.Core.Tests.Types.UtilsTests
             // test accuracy of counter vs. stop watch
             Assert.That(elapsed, Is.EqualTo(stopWatch.ElapsedMilliseconds).Within(Percent).Percent);
         }
-        #endregion
+        
     }
 }

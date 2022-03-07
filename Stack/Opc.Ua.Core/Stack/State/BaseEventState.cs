@@ -11,17 +11,12 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Xml;
-using System.IO;
-using System.Reflection;
-using Opc.Ua;
 
 namespace Opc.Ua
 {
     public partial class BaseEventState
     {
-        #region Initialization
+
         /// <summary>
         /// Initializes a new event.
         /// </summary>
@@ -30,16 +25,18 @@ namespace Opc.Ua
         /// <param name="severity">The severity for the event.</param>
         /// <param name="message">The default message.</param>
         public virtual void Initialize(
-            ISystemContext context, 
-            NodeState source, 
+            ISystemContext context,
+            NodeState source,
             EventSeverity severity,
             LocalizedText message)
         {
-            m_eventId = new PropertyState<byte[]>(this);
-            m_eventId.Value = Guid.NewGuid().ToByteArray();
+            m_eventId = new PropertyState<byte[]>(this) {
+                Value = Guid.NewGuid().ToByteArray()
+            };
 
-            m_eventType = new PropertyState<NodeId>(this);
-            m_eventType.Value = GetDefaultTypeDefinitionId(context.NamespaceUris);
+            m_eventType = new PropertyState<NodeId>(this) {
+                Value = GetDefaultTypeDefinitionId(context.NamespaceUris)
+            };
 
             TypeDefinitionId = m_eventType.Value;
 
@@ -47,30 +44,36 @@ namespace Opc.Ua
             {
                 if (!NodeId.IsNull(source.NodeId))
                 {
-                    m_sourceNode = new PropertyState<NodeId>(this);
-                    m_sourceNode.Value = source.NodeId;
+                    m_sourceNode = new PropertyState<NodeId>(this) {
+                        Value = source.NodeId
+                    };
                 }
 
                 if (!QualifiedName.IsNull(source.BrowseName))
                 {
-                    m_sourceName = new PropertyState<string>(this);
-                    m_sourceName.Value = source.BrowseName.Name;
+                    m_sourceName = new PropertyState<string>(this) {
+                        Value = source.BrowseName.Name
+                    };
                 }
             }
 
-            m_time = new PropertyState<DateTime>(this);
-            m_time.Value = DateTime.UtcNow;
+            m_time = new PropertyState<DateTime>(this) {
+                Value = DateTime.UtcNow
+            };
 
-            m_receiveTime = new PropertyState<DateTime>(this);
-            m_receiveTime.Value = DateTime.UtcNow;
+            m_receiveTime = new PropertyState<DateTime>(this) {
+                Value = DateTime.UtcNow
+            };
 
-            m_severity = new PropertyState<ushort>(this);
-            m_severity.Value = (ushort)severity;
+            m_severity = new PropertyState<ushort>(this) {
+                Value = (ushort)severity
+            };
 
-            m_message = new PropertyState<LocalizedText>(this);
-            m_message.Value = message;
+            m_message = new PropertyState<LocalizedText>(this) {
+                Value = message
+            };
         }
-        #endregion
+
     }
 
     /// <summary>

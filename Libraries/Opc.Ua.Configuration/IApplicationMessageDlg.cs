@@ -27,7 +27,6 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
 using System.Threading.Tasks;
 
 namespace Opc.Ua.Configuration
@@ -43,7 +42,7 @@ namespace Opc.Ua.Configuration
         /// </summary>
         /// <param name="text">The text of the message.</param>
         /// <param name="ask">If the application should ask the user.</param>
-        public abstract void Message(string text, Boolean ask = false);
+        public abstract void Message(string text, bool ask = false);
 
         /// <summary>
         /// Show the message and return result.

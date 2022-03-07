@@ -19,14 +19,14 @@ namespace Opc.Ua
     /// </summary>
     public class TransportListenerSettings
     {
-        #region Public Properties
+
         /// <summary>
         /// Gets or sets the descriptions for the endpoints supported by the listener.
         /// </summary>
         public EndpointDescriptionCollection Descriptions
         {
-            get { return m_descriptions; }
-            set { m_descriptions = value; }
+            get => m_descriptions;
+            set => m_descriptions = value;
         }
 
         /// <summary>
@@ -34,8 +34,8 @@ namespace Opc.Ua
         /// </summary>
         public EndpointConfiguration Configuration
         {
-            get { return m_configuration; }
-            set { m_configuration = value; }
+            get => m_configuration;
+            set => m_configuration = value;
         }
 
         /// <summary>
@@ -43,8 +43,8 @@ namespace Opc.Ua
         /// </summary>
         public X509Certificate2 ServerCertificate
         {
-            get { return m_serverCertificate; }
-            set { m_serverCertificate = value; }
+            get => m_serverCertificate;
+            set => m_serverCertificate = value;
         }
 
         /// <summary>
@@ -55,8 +55,8 @@ namespace Opc.Ua
         /// </value>
         public X509Certificate2Collection ServerCertificateChain
         {
-            get { return m_serverCertificateChain; }
-            set { m_serverCertificateChain = value; }
+            get => m_serverCertificateChain;
+            set => m_serverCertificateChain = value;
         }
 
         /// <summary>
@@ -68,8 +68,8 @@ namespace Opc.Ua
         /// </remarks>
         public ICertificateValidator CertificateValidator
         {
-            get { return m_certificateValidator; }
-            set { m_certificateValidator = value; }
+            get => m_certificateValidator;
+            set => m_certificateValidator = value;
         }
 
         /// <summary>
@@ -85,8 +85,8 @@ namespace Opc.Ua
         /// <seealso cref="Factory" />
         public NamespaceTable NamespaceUris
         {
-            get { return m_namespaceUris; }
-            set { m_namespaceUris = value; }
+            get => m_namespaceUris;
+            set => m_namespaceUris = value;
         }
 
         /// <summary>
@@ -105,8 +105,8 @@ namespace Opc.Ua
         /// <seealso cref="NamespaceUris" />
         public IEncodeableFactory Factory
         {
-            get { return m_channelFactory; }
-            set { m_channelFactory = value; }
+            get => m_channelFactory;
+            set => m_channelFactory = value;
         }
 
         /// <summary>
@@ -114,12 +114,12 @@ namespace Opc.Ua
         /// </summary>
         public bool ReverseConnectListener
         {
-            get { return m_reverseConnectListener; }
-            set { m_reverseConnectListener = value; }
+            get => m_reverseConnectListener;
+            set => m_reverseConnectListener = value;
         }
-        #endregion
 
-        #region Private Fields
+
+
         private EndpointDescriptionCollection m_descriptions;
         private EndpointConfiguration m_configuration;
         private X509Certificate2 m_serverCertificate;
@@ -128,6 +128,6 @@ namespace Opc.Ua
         private NamespaceTable m_namespaceUris;
         private IEncodeableFactory m_channelFactory;
         private bool m_reverseConnectListener;
-        #endregion
+
     }
 }

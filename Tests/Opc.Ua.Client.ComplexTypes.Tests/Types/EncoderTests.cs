@@ -46,7 +46,7 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
         public IServiceMessageContext EncoderContext;
         public Dictionary<StructureType, (ExpandedNodeId, Type)> TypeDictionary;
 
-        #region Test Setup
+        
         [OneTimeSetUp]
         protected new void OneTimeSetUp()
         {
@@ -77,9 +77,9 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
         protected new void TearDown()
         {
         }
-        #endregion Test Setup
+         Test Setup
 
-        #region Test Methods
+        
         /// <summary>
         /// Verify encode and decode of a structured type.
         /// </summary>
@@ -155,6 +155,6 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
             baseType[structureFieldParameter.Name] = null;
             EncodeDecodeComplexType(EncoderContext, encoderType, StructureType.Union, nodeId, emittedType);
         }
-        #endregion Test Methods
+         Test Methods
     }
 }

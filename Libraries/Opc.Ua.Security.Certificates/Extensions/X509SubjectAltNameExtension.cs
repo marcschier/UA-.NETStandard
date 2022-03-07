@@ -73,7 +73,7 @@ namespace Opc.Ua.Security.Certificates
     /// </remarks>
     public class X509SubjectAltNameExtension : X509Extension
     {
-        #region Constructors
+
         /// <summary>
         /// Creates an empty extension.
         /// </summary>
@@ -122,16 +122,16 @@ namespace Opc.Ua.Security.Certificates
             RawData = Encode();
             m_decoded = true;
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Returns a formatted version of the Abstract Syntax Notation One (ASN.1)-encoded data as a string.
         /// </summary>
         public override string Format(bool multiLine)
         {
             EnsureDecoded();
-            StringBuilder buffer = new StringBuilder();
+            var buffer = new StringBuilder();
             for (int ii = 0; ii < m_uris.Count; ii++)
             {
                 if (buffer.Length > 0)
@@ -197,14 +197,18 @@ namespace Opc.Ua.Security.Certificates
         /// </summary>
         public override void CopyFrom(AsnEncodedData asnEncodedData)
         {
-            if (asnEncodedData == null) throw new ArgumentNullException(nameof(asnEncodedData));
+            if (asnEncodedData == null)
+            {
+                throw new ArgumentNullException(nameof(asnEncodedData));
+            }
+
             Oid = asnEncodedData.Oid;
             RawData = asnEncodedData.RawData;
             m_decoded = false;
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The OID for a Subject Alternate Name extension.
         /// </summary>
@@ -253,9 +257,9 @@ namespace Opc.Ua.Security.Certificates
                 return m_ipAddresses.AsReadOnly();
             }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Create a normalized IPv4 or IPv6 address from a 4 byte or 16 byte array.
         /// </summary>
@@ -263,7 +267,7 @@ namespace Opc.Ua.Security.Certificates
         {
             try
             {
-                IPAddress address = new IPAddress(encodedIPAddress);
+                var address = new IPAddress(encodedIPAddress);
                 return address.ToString();
             }
             catch
@@ -279,13 +283,13 @@ namespace Opc.Ua.Security.Certificates
         private byte[] Encode()
         {
             var sanBuilder = new SubjectAlternativeNameBuilder();
-            foreach (var uri in m_uris)
+            foreach (string uri in m_uris)
             {
                 sanBuilder.AddUri(new Uri(uri));
             }
             EncodeGeneralNames(sanBuilder, m_domainNames);
             EncodeGeneralNames(sanBuilder, m_ipAddresses);
-            var extension = sanBuilder.Build();
+            X509Extension extension = sanBuilder.Build();
             return extension.RawData;
         }
 
@@ -299,7 +303,7 @@ namespace Opc.Ua.Security.Certificates
             foreach (string generalName in generalNames)
             {
                 IPAddress ipAddr;
-                if (String.IsNullOrWhiteSpace(generalName))
+                if (string.IsNullOrWhiteSpace(generalName))
                 {
                     continue;
                 }
@@ -347,34 +351,34 @@ namespace Opc.Ua.Security.Certificates
             {
                 try
                 {
-                    List<string> uris = new List<string>();
-                    List<string> domainNames = new List<string>();
-                    List<string> ipAddresses = new List<string>();
-                    AsnReader dataReader = new AsnReader(data, AsnEncodingRules.DER);
-                    var akiReader = dataReader.ReadSequence();
+                    var uris = new List<string>();
+                    var domainNames = new List<string>();
+                    var ipAddresses = new List<string>();
+                    var dataReader = new AsnReader(data, AsnEncodingRules.DER);
+                    AsnReader akiReader = dataReader.ReadSequence();
                     dataReader.ThrowIfNotEmpty();
                     if (akiReader != null)
                     {
-                        Asn1Tag uriTag = new Asn1Tag(TagClass.ContextSpecific, 6);
-                        Asn1Tag dnsTag = new Asn1Tag(TagClass.ContextSpecific, 2);
-                        Asn1Tag ipTag = new Asn1Tag(TagClass.ContextSpecific, 7);
+                        var uriTag = new Asn1Tag(TagClass.ContextSpecific, 6);
+                        var dnsTag = new Asn1Tag(TagClass.ContextSpecific, 2);
+                        var ipTag = new Asn1Tag(TagClass.ContextSpecific, 7);
 
                         while (akiReader.HasData)
                         {
                             Asn1Tag peekTag = akiReader.PeekTag();
                             if (peekTag == uriTag)
                             {
-                                var uri = akiReader.ReadCharacterString(UniversalTagNumber.IA5String, uriTag);
+                                string uri = akiReader.ReadCharacterString(UniversalTagNumber.IA5String, uriTag);
                                 uris.Add(uri);
                             }
                             else if (peekTag == dnsTag)
                             {
-                                var dnsName = akiReader.ReadCharacterString(UniversalTagNumber.IA5String, dnsTag);
+                                string dnsName = akiReader.ReadCharacterString(UniversalTagNumber.IA5String, dnsTag);
                                 domainNames.Add(dnsName);
                             }
                             else if (peekTag == ipTag)
                             {
-                                var ip = akiReader.ReadOctetString(ipTag);
+                                byte[] ip = akiReader.ReadOctetString(ipTag);
                                 ipAddresses.Add(IPAddressToString(ip));
                             }
                             else  // skip over
@@ -406,9 +410,9 @@ namespace Opc.Ua.Security.Certificates
         /// <param name="generalNames">The general names. DNS Hostnames, IPv4 or IPv6 addresses</param>
         private void Initialize(string applicationUri, IEnumerable<string> generalNames)
         {
-            List<string> uris = new List<string>();
-            List<string> domainNames = new List<string>();
-            List<string> ipAddresses = new List<string>();
+            var uris = new List<string>();
+            var domainNames = new List<string>();
+            var ipAddresses = new List<string>();
             uris.Add(applicationUri);
             foreach (string generalName in generalNames)
             {
@@ -426,9 +430,9 @@ namespace Opc.Ua.Security.Certificates
             m_domainNames = domainNames;
             m_ipAddresses = ipAddresses;
         }
-        #endregion
 
-        #region Private Fields
+
+
         /// <summary>
         /// Subject Alternate Name extension string
         /// definitions see RFC 5280 4.2.1.7
@@ -441,6 +445,6 @@ namespace Opc.Ua.Security.Certificates
         private List<string> m_domainNames;
         private List<string> m_ipAddresses;
         private bool m_decoded;
-        #endregion
+
     }
 }

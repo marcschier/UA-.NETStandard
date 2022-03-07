@@ -28,7 +28,6 @@
  * ======================================================================*/
 
 using System;
-using System.Diagnostics;
 using System.Formats.Asn1;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -85,42 +84,6 @@ namespace Opc.Ua.Security.Certificates
         }
 
         /// <summary>
-        /// Encode Tbs with a signature in ASN format.
-        /// </summary>
-        /// <returns>X509 ASN format of EncodedData+SignatureOID+Signature bytes.</returns>
-        public byte[] Encode()
-        {
-            AsnWriter writer = new AsnWriter(AsnEncodingRules.DER);
-
-            var tag = Asn1Tag.Sequence;
-            writer.PushSequence(tag);
-
-            // write Tbs encoded data
-            writer.WriteEncodedValue(Tbs);
-
-            // Signature Algorithm Identifier
-            if (SignatureAlgorithmIdentifier != null)
-            {
-                writer.WriteEncodedValue(SignatureAlgorithmIdentifier);
-            }
-            else
-            {
-                writer.PushSequence();
-                string signatureAlgorithmIdentifier = Oids.GetRSAOid(Name);
-                writer.WriteObjectIdentifier(signatureAlgorithmIdentifier);
-                writer.WriteNull();
-                writer.PopSequence();
-            }
-
-            // Add signature
-            writer.WriteBitString(Signature);
-
-            writer.PopSequence(tag);
-
-            return writer.Encode();
-        }
-
-        /// <summary>
         /// Decoder for the signature sequence.
         /// </summary>
         /// <param name="crl">The encoded CRL or certificate sequence.</param>
@@ -128,15 +91,15 @@ namespace Opc.Ua.Security.Certificates
         {
             try
             {
-                AsnReader crlReader = new AsnReader(crl, AsnEncodingRules.DER);
-                var seqReader = crlReader.ReadSequence(Asn1Tag.Sequence);
+                var crlReader = new AsnReader(crl, AsnEncodingRules.DER);
+                AsnReader seqReader = crlReader.ReadSequence(Asn1Tag.Sequence);
                 if (seqReader != null)
                 {
                     // Tbs encoded data
                     Tbs = seqReader.ReadEncodedValue().ToArray();
 
                     // Signature Algorithm Identifier
-                    var sigOid = seqReader.ReadSequence();
+                    AsnReader sigOid = seqReader.ReadSequence();
                     SignatureAlgorithm = sigOid.ReadObjectIdentifier();
                     Name = Oids.GetHashAlgorithmName(SignatureAlgorithm);
 
@@ -202,7 +165,7 @@ namespace Opc.Ua.Security.Certificates
         {
             using (ECDsa key = certificate.GetECDsaPublicKey())
             {
-                var decodedSignature = DecodeECDsa(Signature, key.KeySize);
+                byte[] decodedSignature = DecodeECDsa(Signature, key.KeySize);
                 return key.VerifyData(Tbs, decodedSignature, Name);
             }
         }
@@ -215,9 +178,9 @@ namespace Opc.Ua.Security.Certificates
         private string DecodeAlgorithm(byte[] oid)
         {
             var seqReader = new AsnReader(oid, AsnEncodingRules.DER);
-            var sigOid = seqReader.ReadSequence();
+            AsnReader sigOid = seqReader.ReadSequence();
             seqReader.ThrowIfNotEmpty();
-            var result = sigOid.ReadObjectIdentifier();
+            string result = sigOid.ReadObjectIdentifier();
             if (sigOid.HasData)
             {
                 sigOid.ReadNull();
@@ -227,39 +190,17 @@ namespace Opc.Ua.Security.Certificates
         }
 
         /// <summary>
-        /// Encode a ECDSA signature as ASN.1.
-        /// </summary>
-        /// <param name="signature">The signature to encode as ASN.1</param>
-        private static byte[] EncodeECDsa(byte[] signature)
-        {
-            // Encode from IEEE signature format to ASN1 DER encoded 
-            // signature format for ecdsa certificates.
-            // ECDSA-Sig-Value ::= SEQUENCE { r INTEGER, s INTEGER }
-            AsnWriter writer = new AsnWriter(AsnEncodingRules.DER);
-            var tag = Asn1Tag.Sequence;
-            writer.PushSequence(tag);
-
-            int segmentLength = signature.Length / 2;
-            writer.WriteIntegerUnsigned(new ReadOnlySpan<byte>(signature, 0, segmentLength));
-            writer.WriteIntegerUnsigned(new ReadOnlySpan<byte>(signature, segmentLength, segmentLength));
-
-            writer.PopSequence(tag);
-
-            return writer.Encode();
-        }
-
-        /// <summary>
         /// Decode a ECDSA signature from ASN.1.
         /// </summary>
         /// <param name="signature">The signature to decode from ASN.1</param>
         /// <param name="keySize">The keySize in bits.</param>
         private static byte[] DecodeECDsa(ReadOnlyMemory<byte> signature, int keySize)
         {
-            AsnReader reader = new AsnReader(signature, AsnEncodingRules.DER);
-            var seqReader = reader.ReadSequence();
+            var reader = new AsnReader(signature, AsnEncodingRules.DER);
+            AsnReader seqReader = reader.ReadSequence();
             reader.ThrowIfNotEmpty();
-            var r = seqReader.ReadIntegerBytes();
-            var s = seqReader.ReadIntegerBytes();
+            ReadOnlyMemory<byte> r = seqReader.ReadIntegerBytes();
+            ReadOnlyMemory<byte> s = seqReader.ReadIntegerBytes();
             seqReader.ThrowIfNotEmpty();
             keySize >>= 3;
             if (r.Span[0] == 0 && r.Length > keySize)
@@ -270,7 +211,7 @@ namespace Opc.Ua.Security.Certificates
             {
                 s = s.Slice(1);
             }
-            var result = new byte[2 * keySize];
+            byte[] result = new byte[2 * keySize];
             int offset = keySize - r.Length;
             r.CopyTo(new Memory<byte>(result, offset, r.Length));
             offset = 2 * keySize - s.Length;

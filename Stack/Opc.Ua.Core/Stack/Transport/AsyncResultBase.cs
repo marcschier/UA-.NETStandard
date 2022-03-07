@@ -20,7 +20,7 @@ namespace Opc.Ua
     /// </summary>
     public class AsyncResultBase : IAsyncResult, IDisposable
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes a new instance of the <see cref="AsyncResultBase"/> class.
         /// </summary>
@@ -56,13 +56,16 @@ namespace Opc.Ua
                 }
             }
         }
-        #endregion
 
-        #region IDisposable Members
+
+
         /// <summary>
         /// Frees any unmanaged resources.
         /// </summary>
-        public void Dispose() => Dispose(true);
+        public void Dispose()
+        {
+            Dispose(true);
+        }
 
         /// <summary>
         /// An overrideable version of the Dispose.
@@ -78,9 +81,9 @@ namespace Opc.Ua
                 DisposeWaitHandle(true);
             }
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// An object used to synchronize access to the result object.
         /// </summary>
@@ -118,9 +121,7 @@ namespace Opc.Ua
         /// <param name="ar">The result object returned from the Begin method.</param>
         public static void WaitForComplete(IAsyncResult ar)
         {
-            AsyncResultBase result = ar as AsyncResultBase;
-
-            if (result == null)
+            if (!(ar is AsyncResultBase result))
             {
                 throw new ArgumentException("IAsyncResult passed to call is not an instance of AsyncResultBase.");
             }
@@ -209,18 +210,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Called to reset the wait handle.
-        /// </summary>
-        public void Reset()
-        {
-            lock (Lock)
-            {
-                IsCompleted = false;
-                m_waitHandle?.Reset();
-            }
-        }
-
-        /// <summary>
         /// Called to invoke the callback after the asynchronous operation completes.
         /// </summary>
         public void OperationCompleted()
@@ -244,9 +233,9 @@ namespace Opc.Ua
             // invoke callback.
             m_callback?.Invoke(this);
         }
-        #endregion
 
-        #region Private Members
+
+
         /// <summary>
         /// Called to dispose the timer.
         /// </summary>
@@ -276,7 +265,7 @@ namespace Opc.Ua
         /// <param name="set"></param>
         private void DisposeWaitHandle(bool set)
         {
-            var waitHandle = Interlocked.Exchange(ref m_waitHandle, null);
+            ManualResetEvent waitHandle = Interlocked.Exchange(ref m_waitHandle, null);
             if (waitHandle != null)
             {
                 try
@@ -311,9 +300,9 @@ namespace Opc.Ua
                 Utils.LogTrace(e, "Unexpected error handling timeout for ChannelAsyncResult operation.");
             }
         }
-        #endregion
 
-        #region IAsyncResult Members
+
+
         /// <summary>
         /// Gets a user-defined object that qualifies or contains information about an asynchronous operation.
         /// </summary>
@@ -351,14 +340,14 @@ namespace Opc.Ua
         /// </summary>
         /// <returns>true if the operation is complete; otherwise, false.</returns>
         public bool IsCompleted { get; private set; }
-        #endregion
 
-        #region Private Fields
-        private AsyncCallback m_callback;
+
+
+        private readonly AsyncCallback m_callback;
         private ManualResetEvent m_waitHandle;
-        private DateTime m_deadline;
+        private readonly DateTime m_deadline;
         private Timer m_timer;
-        private CancellationTokenSource m_cts;
-        #endregion
+        private readonly CancellationTokenSource m_cts;
+
     }
 }

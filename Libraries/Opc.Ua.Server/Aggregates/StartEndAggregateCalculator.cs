@@ -29,7 +29,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Opc.Ua.Server
 {
@@ -38,7 +37,7 @@ namespace Opc.Ua.Server
     /// </summary>
     public class StartEndAggregateCalculator : AggregateCalculator
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the aggregate calculator.
         /// </summary>
@@ -55,14 +54,14 @@ namespace Opc.Ua.Server
             double processingInterval,
             bool stepped,
             AggregateConfiguration configuration)
-        : 
+        :
             base(aggregateId, startTime, endTime, processingInterval, stepped, configuration)
         {
             SetPartialBit = true;
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Computes the value for the timeslice.
         /// </summary>
@@ -108,9 +107,9 @@ namespace Opc.Ua.Server
 
             return base.ComputeValue(slice);
         }
-        #endregion
 
-        #region Protected Methods
+
+
         /// <summary>
         /// Calculate the Start and End aggregates for the timeslice.
         /// </summary>
@@ -172,7 +171,7 @@ namespace Opc.Ua.Server
                     }
                     catch (Exception)
                     {
-                        startValue = Double.NaN;
+                        startValue = double.NaN;
                     }
                 }
 
@@ -197,7 +196,7 @@ namespace Opc.Ua.Server
                     }
                     catch (Exception)
                     {
-                        endValue = Double.NaN;
+                        endValue = double.NaN;
                     }
 
                     break;
@@ -208,23 +207,24 @@ namespace Opc.Ua.Server
             }
 
             // check if no good data.
-            if (Double.IsNaN(startValue) || Double.IsNaN(endValue))
+            if (double.IsNaN(startValue) || double.IsNaN(endValue))
             {
                 return GetNoDataValue(slice);
             }
-            
-            DataValue value = new DataValue();
-            value.SourceTimestamp = GetTimestamp(slice);
-            value.ServerTimestamp = GetTimestamp(slice);
+
+            var value = new DataValue {
+                SourceTimestamp = GetTimestamp(slice),
+                ServerTimestamp = GetTimestamp(slice)
+            };
 
             // set status code.
             if (badDataSkipped)
             {
                 value.StatusCode = StatusCodes.UncertainDataSubNormal;
             }
-            
+
             value.StatusCode = value.StatusCode.SetAggregateBits(AggregateBits.Calculated);
-            
+
             // calculate delta.
             double delta = endValue - startValue;
 
@@ -299,7 +299,7 @@ namespace Opc.Ua.Server
             }
 
             DataValue start = values[0];
-            DataValue end = values[values.Count-1];
+            DataValue end = values[values.Count - 1];
 
             // check for bad bounds.
             if (StatusCode.IsBad(start.StatusCode) || StatusCode.IsBad(end.StatusCode))
@@ -318,7 +318,7 @@ namespace Opc.Ua.Server
             }
             catch (Exception)
             {
-                startValue = Double.NaN;
+                startValue = double.NaN;
             }
 
             double endValue = 0;
@@ -329,18 +329,19 @@ namespace Opc.Ua.Server
             }
             catch (Exception)
             {
-                endValue = Double.NaN;
+                endValue = double.NaN;
             }
 
             // check for bad bounds.
-            if (Double.IsNaN(startValue) || Double.IsNaN(endValue))
+            if (double.IsNaN(startValue) || double.IsNaN(endValue))
             {
                 return GetNoDataValue(slice);
             }
 
-            DataValue value = new DataValue();
-            value.SourceTimestamp = GetTimestamp(slice);
-            value.ServerTimestamp = GetTimestamp(slice);
+            var value = new DataValue {
+                SourceTimestamp = GetTimestamp(slice),
+                ServerTimestamp = GetTimestamp(slice)
+            };
 
             if (StatusCode.IsNotGood(start.StatusCode) || StatusCode.IsNotGood(end.StatusCode))
             {
@@ -365,6 +366,6 @@ namespace Opc.Ua.Server
             // return result.
             return value;
         }
-        #endregion
+
     }
 }

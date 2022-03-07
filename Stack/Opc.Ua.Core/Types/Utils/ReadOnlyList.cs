@@ -21,7 +21,7 @@ namespace Opc.Ua
     /// </summary>
     public class ReadOnlyList<T> : IList<T>, IList
     {
-        #region ICollection<T> Members
+
         /// <summary>
         /// Wraps an exising list.
         /// </summary>
@@ -42,7 +42,7 @@ namespace Opc.Ua
         {
             if (list != null && makeCopy)
             {
-                T[] values = new T[list.Count];
+                var values = new T[list.Count];
 
                 for (int ii = 0; ii < values.Length; ii++)
                 {
@@ -59,9 +59,9 @@ namespace Opc.Ua
                 m_list = Array.Empty<T>();
             }
         }
-        #endregion
 
-        #region ICollection<T> Members
+
+
         /// <summary>
         /// The number of items in the list.
         /// </summary>
@@ -111,9 +111,9 @@ namespace Opc.Ua
         {
             throw new NotSupportedException();
         }
-        #endregion
 
-        #region IList<T> Members
+
+
         /// <summary>
         /// Returns the list of the specified item in the list.
         /// </summary>
@@ -143,19 +143,13 @@ namespace Opc.Ua
         /// </summary>
         public T this[int index]
         {
-            get
-            {
-                return m_list[index];
-            }
+            get => m_list[index];
 
-            set
-            {
-                throw new NotSupportedException();
-            }
+            set => throw new NotSupportedException();
         }
-        #endregion
 
-        #region IEnumerable<T> Members
+
+
         /// <summary>
         /// Returns an enumerator for the list.
         /// </summary>
@@ -171,18 +165,6 @@ namespace Opc.Ua
         {
             return m_list.GetEnumerator();
         }
-        #endregion
-
-        #region Static Operators
-        /// <summary>
-        /// Creates a read-only list from a list.
-        /// </summary>
-        /// <param name="values">The list of values.</param>
-        /// <returns>The read-only list.</returns>
-        public static ReadOnlyList<T> ToList(T[] values)
-        {
-            return new ReadOnlyList<T>(values);
-        }
 
         /// <summary>
         /// Creates a read-only list from a list.
@@ -193,9 +175,9 @@ namespace Opc.Ua
         {
             return new ReadOnlyList<T>(values);
         }
-        #endregion
 
-        #region IList Members
+
+
         /// <summary>
         /// Adds an item to the <see cref="T:System.Collections.IList"/>.
         /// </summary>
@@ -217,7 +199,7 @@ namespace Opc.Ua
         /// </summary>
         bool IList.Contains(object value)
         {
-            return this.Contains((T)value);
+            return Contains((T)value);
         }
 
         /// <summary>
@@ -225,7 +207,7 @@ namespace Opc.Ua
         /// </summary>
         int IList.IndexOf(object value)
         {
-            return this.IndexOf((T)value);
+            return IndexOf((T)value);
         }
 
         /// <summary>
@@ -263,35 +245,29 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="System.Object"/> at the specified index.
+        /// Gets or sets the <see cref="object"/> at the specified index.
         /// </summary>
         object IList.this[int index]
         {
-            get
-            {
-                return this[index];
-            }
+            get => this[index];
 
-            set
-            {
-                this[index] = (T)value;
-            }
+            set => this[index] = (T)value;
         }
-        #endregion
 
-        #region ICollection Members
+
+
         /// <summary>
         /// Copies the elements of the <see cref="T:System.Collections.ICollection"/> to an <see cref="T:System.Array"/>, starting at a particular <see cref="T:System.Array"/> index.
         /// </summary>
         void ICollection.CopyTo(Array array, int index)
         {
-            this.CopyTo((T[])array, index);
+            CopyTo((T[])array, index);
         }
 
         /// <summary>
         /// Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
         /// </summary>
-        int ICollection.Count => this.Count;
+        int ICollection.Count => Count;
 
         /// <summary>
         /// Gets a value indicating whether access to the <see cref="T:System.Collections.ICollection"/> is synchronized (thread safe).
@@ -302,10 +278,10 @@ namespace Opc.Ua
         /// Gets an object that can be used to synchronize access to the <see cref="T:System.Collections.ICollection"/>.
         /// </summary>
         object ICollection.SyncRoot => false;
-        #endregion
 
-        #region Private Fields
-        private IList<T> m_list;
-        #endregion
+
+
+        private readonly IList<T> m_list;
+
     }
 }

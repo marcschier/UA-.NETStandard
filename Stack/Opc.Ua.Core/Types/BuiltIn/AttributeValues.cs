@@ -10,8 +10,6 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 */
 
-using System.Collections.Generic;
-
 namespace Opc.Ua
 {
     /// <summary>
@@ -183,66 +181,6 @@ namespace Opc.Ua
                 }
             }
 
-            return true;
-        }
-
-        /// <summary>
-        /// Checks if the actual array diminesions is compatible with the expected value rank and array dimensions.
-        /// </summary>
-        public static bool IsValid(IList<uint> actualArrayDimensions, int valueRank, IList<uint> expectedArrayDimensions)
-        {
-            // check if parameter omitted.
-            if (actualArrayDimensions == null || actualArrayDimensions.Count == 0)
-            {
-                return expectedArrayDimensions == null || expectedArrayDimensions.Count == 0;
-            }
-
-            // no array dimensions allowed for scalars.
-            if (valueRank == ValueRanks.Scalar)
-            {
-                return false;
-            }
-
-            // check if one dimension required.
-            if (valueRank == ValueRanks.OneDimension || valueRank == ValueRanks.ScalarOrOneDimension)
-            {
-                if (actualArrayDimensions.Count != 1)
-                {
-                    return false;
-                }
-            }
-
-            // check number of dimensions.
-            if (valueRank != ValueRanks.OneOrMoreDimensions)
-            {
-                if (actualArrayDimensions.Count != valueRank)
-                {
-                    return false;
-                }
-            }
-
-            // nothing more to do if expected dimensions omitted.
-            if (expectedArrayDimensions == null || expectedArrayDimensions.Count == 0)
-            {
-                return true;
-            }
-
-            // check dimensions.
-            if (expectedArrayDimensions.Count != actualArrayDimensions.Count)
-            {
-                return false;
-            }
-
-            // check length of each dimension.
-            for (int ii = 0; ii < expectedArrayDimensions.Count; ii++)
-            {
-                if (expectedArrayDimensions[ii] != actualArrayDimensions[ii] && expectedArrayDimensions[ii] != 0)
-                {
-                    return false;
-                }
-            }
-
-            // everything ok.
             return true;
         }
     }

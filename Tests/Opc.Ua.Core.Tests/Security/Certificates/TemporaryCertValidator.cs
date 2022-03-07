@@ -145,13 +145,13 @@ namespace Opc.Ua.Core.Tests
             TestUtils.CleanupTrustList(m_rejectedStore, dispose);
         }
 
-        #region Private Fields
+        
         private int m_disposed;
         private CertificateValidator m_certificateValidator;
         private DirectoryCertificateStore m_issuerStore;
         private DirectoryCertificateStore m_trustedStore;
         private DirectoryCertificateStore m_rejectedStore;
         private string m_pkiRoot;
-        #endregion
+        
     };
 }

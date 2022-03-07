@@ -45,15 +45,15 @@ namespace Opc.Ua.Configuration.Tests
     [Parallelizable]
     public class ApplicationInstanceTests
     {
-        #region Test Constants
+        
         public const string ApplicationName = "UA Configuration Test";
         public const string ApplicationUri = "urn:localhost:opcfoundation.org:ConfigurationTest";
         public const string ProductUri = "http://opcfoundation.org/UA/ConfigurationTest";
         public const string SubjectName = "CN=UA Configuration Test";
         public const string EndpointUrl = "opc.tcp://localhost:51000";
-        #endregion
+        
 
-        #region Test Setup
+        
         /// <summary>
         /// Test setup.
         /// </summary>
@@ -78,9 +78,9 @@ namespace Opc.Ua.Configuration.Tests
             catch
             { }
         }
-        #endregion
+        
 
-        #region Test Methods
+        
         /// <summary>
         /// Load a file configuration.
         /// </summary>
@@ -533,9 +533,9 @@ namespace Opc.Ua.Configuration.Tests
                 }
             }
         }
-        #endregion
+        
 
-        #region Private Methods
+        
         private X509Certificate2 CreateInvalidCert(InvalidCertType certType)
         {
             // reasonable defaults
@@ -631,10 +631,10 @@ namespace Opc.Ua.Configuration.Tests
             };
             return result;
         }
-        #endregion
+        
 
-        #region Private Fields
+        
         string m_pkiRoot;
-        #endregion
+        
     }
 }

@@ -64,7 +64,7 @@ namespace Opc.Ua.Client.ComplexTypes
         public DataTypeNotFoundException(string typeName, string message)
             : base(message)
         {
-            this.nodeId = NodeId.Null;
+            nodeId = NodeId.Null;
             this.typeName = typeName;
         }
 
@@ -125,7 +125,7 @@ namespace Opc.Ua.Client.ComplexTypes
         public DataTypeNotSupportedException(string typeName, string message)
             : base(message)
         {
-            this.nodeId = NodeId.Null;
+            nodeId = NodeId.Null;
             this.typeName = typeName;
         }
 

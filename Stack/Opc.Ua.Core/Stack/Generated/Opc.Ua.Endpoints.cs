@@ -39,24 +39,23 @@ using System.Runtime.Serialization;
 #endif
 
 #if (NET_STANDARD_ASYNC)
-using System.Threading.Tasks;
 #endif
 
 namespace Opc.Ua
 {
-    #region SessionEndpoint Class
+
     /// <summary>
     /// A endpoint object used by clients to access a UA service.
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [ServiceMessageContextBehavior()]
     [ServiceBehavior(Namespace = Namespaces.OpcUaWsdl, InstanceContextMode=InstanceContextMode.PerSession, ConcurrencyMode=ConcurrencyMode.Multiple)]
-    #endif
+#endif
     public partial class SessionEndpoint : EndpointBase, ISessionEndpoint, IDiscoveryEndpoint
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object when it is created by the WCF framework.
         /// </summary>
@@ -81,9 +80,9 @@ namespace Opc.Ua
         {
             this.CreateKnownTypes();
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The UA server instance that the endpoint is connected to.
         /// </summary>
@@ -97,13 +96,13 @@ namespace Opc.Ua
                 }
 
                 return ServerForContext as ISessionServer;
-             }
+            }
         }
-        #endregion
 
-        #region ISessionEndpoint Members
-        #region FindServers Service
-        #if (!OPCUA_EXCLUDE_FindServers)
+
+
+
+#if (!OPCUA_EXCLUDE_FindServers)
         /// <summary>
         /// Invokes the FindServers service.
         /// </summary>
@@ -138,7 +137,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the FindServers service.
         /// </summary>
@@ -163,7 +162,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the FindServers service.
         /// </summary>
@@ -210,12 +209,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region FindServersOnNetwork Service
-        #if (!OPCUA_EXCLUDE_FindServersOnNetwork)
+
+
+#if (!OPCUA_EXCLUDE_FindServersOnNetwork)
         /// <summary>
         /// Invokes the FindServersOnNetwork service.
         /// </summary>
@@ -243,7 +242,7 @@ namespace Opc.Ua
                    out servers);
 
                 response.LastCounterResetTime = lastCounterResetTime;
-                response.Servers              = servers;
+                response.Servers = servers;
             }
             finally
             {
@@ -253,7 +252,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the FindServersOnNetwork service.
         /// </summary>
@@ -278,7 +277,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the FindServersOnNetwork service.
         /// </summary>
@@ -325,12 +324,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region GetEndpoints Service
-        #if (!OPCUA_EXCLUDE_GetEndpoints)
+
+
+#if (!OPCUA_EXCLUDE_GetEndpoints)
         /// <summary>
         /// Invokes the GetEndpoints service.
         /// </summary>
@@ -365,7 +364,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the GetEndpoints service.
         /// </summary>
@@ -390,7 +389,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the GetEndpoints service.
         /// </summary>
@@ -437,12 +436,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region CreateSession Service
-        #if (!OPCUA_EXCLUDE_CreateSession)
+
+
+#if (!OPCUA_EXCLUDE_CreateSession)
         /// <summary>
         /// Invokes the CreateSession service.
         /// </summary>
@@ -488,15 +487,15 @@ namespace Opc.Ua
                    out serverSignature,
                    out maxRequestMessageSize);
 
-                response.SessionId                  = sessionId;
-                response.AuthenticationToken        = authenticationToken;
-                response.RevisedSessionTimeout      = revisedSessionTimeout;
-                response.ServerNonce                = serverNonce;
-                response.ServerCertificate          = serverCertificate;
-                response.ServerEndpoints            = serverEndpoints;
+                response.SessionId = sessionId;
+                response.AuthenticationToken = authenticationToken;
+                response.RevisedSessionTimeout = revisedSessionTimeout;
+                response.ServerNonce = serverNonce;
+                response.ServerCertificate = serverCertificate;
+                response.ServerEndpoints = serverEndpoints;
                 response.ServerSoftwareCertificates = serverSoftwareCertificates;
-                response.ServerSignature            = serverSignature;
-                response.MaxRequestMessageSize      = maxRequestMessageSize;
+                response.ServerSignature = serverSignature;
+                response.MaxRequestMessageSize = maxRequestMessageSize;
             }
             finally
             {
@@ -506,7 +505,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the CreateSession service.
         /// </summary>
@@ -531,7 +530,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the CreateSession service.
         /// </summary>
@@ -578,12 +577,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region ActivateSession Service
-        #if (!OPCUA_EXCLUDE_ActivateSession)
+
+
+#if (!OPCUA_EXCLUDE_ActivateSession)
         /// <summary>
         /// Invokes the ActivateSession service.
         /// </summary>
@@ -614,8 +613,8 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.ServerNonce     = serverNonce;
-                response.Results         = results;
+                response.ServerNonce = serverNonce;
+                response.Results = results;
                 response.DiagnosticInfos = diagnosticInfos;
             }
             finally
@@ -626,7 +625,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the ActivateSession service.
         /// </summary>
@@ -651,7 +650,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the ActivateSession service.
         /// </summary>
@@ -698,12 +697,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region CloseSession Service
-        #if (!OPCUA_EXCLUDE_CloseSession)
+
+
+#if (!OPCUA_EXCLUDE_CloseSession)
         /// <summary>
         /// Invokes the CloseSession service.
         /// </summary>
@@ -733,7 +732,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the CloseSession service.
         /// </summary>
@@ -758,7 +757,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the CloseSession service.
         /// </summary>
@@ -805,12 +804,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region Cancel Service
-        #if (!OPCUA_EXCLUDE_Cancel)
+
+
+#if (!OPCUA_EXCLUDE_Cancel)
         /// <summary>
         /// Invokes the Cancel service.
         /// </summary>
@@ -843,7 +842,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the Cancel service.
         /// </summary>
@@ -868,7 +867,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the Cancel service.
         /// </summary>
@@ -915,12 +914,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region AddNodes Service
-        #if (!OPCUA_EXCLUDE_AddNodes)
+
+
+#if (!OPCUA_EXCLUDE_AddNodes)
         /// <summary>
         /// Invokes the AddNodes service.
         /// </summary>
@@ -945,7 +944,7 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.Results         = results;
+                response.Results = results;
                 response.DiagnosticInfos = diagnosticInfos;
             }
             finally
@@ -956,7 +955,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the AddNodes service.
         /// </summary>
@@ -981,7 +980,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the AddNodes service.
         /// </summary>
@@ -1028,12 +1027,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region AddReferences Service
-        #if (!OPCUA_EXCLUDE_AddReferences)
+
+
+#if (!OPCUA_EXCLUDE_AddReferences)
         /// <summary>
         /// Invokes the AddReferences service.
         /// </summary>
@@ -1058,7 +1057,7 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.Results         = results;
+                response.Results = results;
                 response.DiagnosticInfos = diagnosticInfos;
             }
             finally
@@ -1069,7 +1068,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the AddReferences service.
         /// </summary>
@@ -1094,7 +1093,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the AddReferences service.
         /// </summary>
@@ -1141,12 +1140,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region DeleteNodes Service
-        #if (!OPCUA_EXCLUDE_DeleteNodes)
+
+
+#if (!OPCUA_EXCLUDE_DeleteNodes)
         /// <summary>
         /// Invokes the DeleteNodes service.
         /// </summary>
@@ -1171,7 +1170,7 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.Results         = results;
+                response.Results = results;
                 response.DiagnosticInfos = diagnosticInfos;
             }
             finally
@@ -1182,7 +1181,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the DeleteNodes service.
         /// </summary>
@@ -1207,7 +1206,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the DeleteNodes service.
         /// </summary>
@@ -1254,12 +1253,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region DeleteReferences Service
-        #if (!OPCUA_EXCLUDE_DeleteReferences)
+
+
+#if (!OPCUA_EXCLUDE_DeleteReferences)
         /// <summary>
         /// Invokes the DeleteReferences service.
         /// </summary>
@@ -1284,7 +1283,7 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.Results         = results;
+                response.Results = results;
                 response.DiagnosticInfos = diagnosticInfos;
             }
             finally
@@ -1295,7 +1294,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the DeleteReferences service.
         /// </summary>
@@ -1320,7 +1319,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the DeleteReferences service.
         /// </summary>
@@ -1367,12 +1366,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region Browse Service
-        #if (!OPCUA_EXCLUDE_Browse)
+
+
+#if (!OPCUA_EXCLUDE_Browse)
         /// <summary>
         /// Invokes the Browse service.
         /// </summary>
@@ -1399,7 +1398,7 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.Results         = results;
+                response.Results = results;
                 response.DiagnosticInfos = diagnosticInfos;
             }
             finally
@@ -1410,7 +1409,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the Browse service.
         /// </summary>
@@ -1435,7 +1434,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the Browse service.
         /// </summary>
@@ -1482,12 +1481,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region BrowseNext Service
-        #if (!OPCUA_EXCLUDE_BrowseNext)
+
+
+#if (!OPCUA_EXCLUDE_BrowseNext)
         /// <summary>
         /// Invokes the BrowseNext service.
         /// </summary>
@@ -1513,7 +1512,7 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.Results         = results;
+                response.Results = results;
                 response.DiagnosticInfos = diagnosticInfos;
             }
             finally
@@ -1524,7 +1523,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the BrowseNext service.
         /// </summary>
@@ -1549,7 +1548,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the BrowseNext service.
         /// </summary>
@@ -1596,12 +1595,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region TranslateBrowsePathsToNodeIds Service
-        #if (!OPCUA_EXCLUDE_TranslateBrowsePathsToNodeIds)
+
+
+#if (!OPCUA_EXCLUDE_TranslateBrowsePathsToNodeIds)
         /// <summary>
         /// Invokes the TranslateBrowsePathsToNodeIds service.
         /// </summary>
@@ -1626,7 +1625,7 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.Results         = results;
+                response.Results = results;
                 response.DiagnosticInfos = diagnosticInfos;
             }
             finally
@@ -1637,7 +1636,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the TranslateBrowsePathsToNodeIds service.
         /// </summary>
@@ -1662,7 +1661,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the TranslateBrowsePathsToNodeIds service.
         /// </summary>
@@ -1709,12 +1708,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region RegisterNodes Service
-        #if (!OPCUA_EXCLUDE_RegisterNodes)
+
+
+#if (!OPCUA_EXCLUDE_RegisterNodes)
         /// <summary>
         /// Invokes the RegisterNodes service.
         /// </summary>
@@ -1747,7 +1746,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the RegisterNodes service.
         /// </summary>
@@ -1772,7 +1771,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the RegisterNodes service.
         /// </summary>
@@ -1819,12 +1818,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region UnregisterNodes Service
-        #if (!OPCUA_EXCLUDE_UnregisterNodes)
+
+
+#if (!OPCUA_EXCLUDE_UnregisterNodes)
         /// <summary>
         /// Invokes the UnregisterNodes service.
         /// </summary>
@@ -1854,7 +1853,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the UnregisterNodes service.
         /// </summary>
@@ -1879,7 +1878,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the UnregisterNodes service.
         /// </summary>
@@ -1926,12 +1925,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region QueryFirst Service
-        #if (!OPCUA_EXCLUDE_QueryFirst)
+
+
+#if (!OPCUA_EXCLUDE_QueryFirst)
         /// <summary>
         /// Invokes the QueryFirst service.
         /// </summary>
@@ -1966,11 +1965,11 @@ namespace Opc.Ua
                    out diagnosticInfos,
                    out filterResult);
 
-                response.QueryDataSets     = queryDataSets;
+                response.QueryDataSets = queryDataSets;
                 response.ContinuationPoint = continuationPoint;
-                response.ParsingResults    = parsingResults;
-                response.DiagnosticInfos   = diagnosticInfos;
-                response.FilterResult      = filterResult;
+                response.ParsingResults = parsingResults;
+                response.DiagnosticInfos = diagnosticInfos;
+                response.FilterResult = filterResult;
             }
             finally
             {
@@ -1980,7 +1979,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the QueryFirst service.
         /// </summary>
@@ -2005,7 +2004,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the QueryFirst service.
         /// </summary>
@@ -2052,12 +2051,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region QueryNext Service
-        #if (!OPCUA_EXCLUDE_QueryNext)
+
+
+#if (!OPCUA_EXCLUDE_QueryNext)
         /// <summary>
         /// Invokes the QueryNext service.
         /// </summary>
@@ -2083,7 +2082,7 @@ namespace Opc.Ua
                    out queryDataSets,
                    out revisedContinuationPoint);
 
-                response.QueryDataSets            = queryDataSets;
+                response.QueryDataSets = queryDataSets;
                 response.RevisedContinuationPoint = revisedContinuationPoint;
             }
             finally
@@ -2094,7 +2093,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the QueryNext service.
         /// </summary>
@@ -2119,7 +2118,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the QueryNext service.
         /// </summary>
@@ -2166,12 +2165,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region Read Service
-        #if (!OPCUA_EXCLUDE_Read)
+
+
+#if (!OPCUA_EXCLUDE_Read)
         /// <summary>
         /// Invokes the Read service.
         /// </summary>
@@ -2198,7 +2197,7 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.Results         = results;
+                response.Results = results;
                 response.DiagnosticInfos = diagnosticInfos;
             }
             finally
@@ -2209,7 +2208,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the Read service.
         /// </summary>
@@ -2234,7 +2233,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the Read service.
         /// </summary>
@@ -2281,12 +2280,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region HistoryRead Service
-        #if (!OPCUA_EXCLUDE_HistoryRead)
+
+
+#if (!OPCUA_EXCLUDE_HistoryRead)
         /// <summary>
         /// Invokes the HistoryRead service.
         /// </summary>
@@ -2314,7 +2313,7 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.Results         = results;
+                response.Results = results;
                 response.DiagnosticInfos = diagnosticInfos;
             }
             finally
@@ -2325,7 +2324,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the HistoryRead service.
         /// </summary>
@@ -2350,7 +2349,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the HistoryRead service.
         /// </summary>
@@ -2397,12 +2396,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region Write Service
-        #if (!OPCUA_EXCLUDE_Write)
+
+
+#if (!OPCUA_EXCLUDE_Write)
         /// <summary>
         /// Invokes the Write service.
         /// </summary>
@@ -2427,7 +2426,7 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.Results         = results;
+                response.Results = results;
                 response.DiagnosticInfos = diagnosticInfos;
             }
             finally
@@ -2438,7 +2437,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the Write service.
         /// </summary>
@@ -2463,7 +2462,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the Write service.
         /// </summary>
@@ -2510,12 +2509,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region HistoryUpdate Service
-        #if (!OPCUA_EXCLUDE_HistoryUpdate)
+
+
+#if (!OPCUA_EXCLUDE_HistoryUpdate)
         /// <summary>
         /// Invokes the HistoryUpdate service.
         /// </summary>
@@ -2540,7 +2539,7 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.Results         = results;
+                response.Results = results;
                 response.DiagnosticInfos = diagnosticInfos;
             }
             finally
@@ -2551,7 +2550,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the HistoryUpdate service.
         /// </summary>
@@ -2576,7 +2575,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the HistoryUpdate service.
         /// </summary>
@@ -2623,12 +2622,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region Call Service
-        #if (!OPCUA_EXCLUDE_Call)
+
+
+#if (!OPCUA_EXCLUDE_Call)
         /// <summary>
         /// Invokes the Call service.
         /// </summary>
@@ -2653,7 +2652,7 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.Results         = results;
+                response.Results = results;
                 response.DiagnosticInfos = diagnosticInfos;
             }
             finally
@@ -2664,7 +2663,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the Call service.
         /// </summary>
@@ -2689,7 +2688,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the Call service.
         /// </summary>
@@ -2736,12 +2735,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region CreateMonitoredItems Service
-        #if (!OPCUA_EXCLUDE_CreateMonitoredItems)
+
+
+#if (!OPCUA_EXCLUDE_CreateMonitoredItems)
         /// <summary>
         /// Invokes the CreateMonitoredItems service.
         /// </summary>
@@ -2768,7 +2767,7 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.Results         = results;
+                response.Results = results;
                 response.DiagnosticInfos = diagnosticInfos;
             }
             finally
@@ -2779,7 +2778,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the CreateMonitoredItems service.
         /// </summary>
@@ -2804,7 +2803,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the CreateMonitoredItems service.
         /// </summary>
@@ -2851,12 +2850,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region ModifyMonitoredItems Service
-        #if (!OPCUA_EXCLUDE_ModifyMonitoredItems)
+
+
+#if (!OPCUA_EXCLUDE_ModifyMonitoredItems)
         /// <summary>
         /// Invokes the ModifyMonitoredItems service.
         /// </summary>
@@ -2883,7 +2882,7 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.Results         = results;
+                response.Results = results;
                 response.DiagnosticInfos = diagnosticInfos;
             }
             finally
@@ -2894,7 +2893,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the ModifyMonitoredItems service.
         /// </summary>
@@ -2919,7 +2918,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the ModifyMonitoredItems service.
         /// </summary>
@@ -2966,12 +2965,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region SetMonitoringMode Service
-        #if (!OPCUA_EXCLUDE_SetMonitoringMode)
+
+
+#if (!OPCUA_EXCLUDE_SetMonitoringMode)
         /// <summary>
         /// Invokes the SetMonitoringMode service.
         /// </summary>
@@ -2998,7 +2997,7 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.Results         = results;
+                response.Results = results;
                 response.DiagnosticInfos = diagnosticInfos;
             }
             finally
@@ -3009,7 +3008,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the SetMonitoringMode service.
         /// </summary>
@@ -3034,7 +3033,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the SetMonitoringMode service.
         /// </summary>
@@ -3081,12 +3080,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region SetTriggering Service
-        #if (!OPCUA_EXCLUDE_SetTriggering)
+
+
+#if (!OPCUA_EXCLUDE_SetTriggering)
         /// <summary>
         /// Invokes the SetTriggering service.
         /// </summary>
@@ -3118,9 +3117,9 @@ namespace Opc.Ua
                    out removeResults,
                    out removeDiagnosticInfos);
 
-                response.AddResults            = addResults;
-                response.AddDiagnosticInfos    = addDiagnosticInfos;
-                response.RemoveResults         = removeResults;
+                response.AddResults = addResults;
+                response.AddDiagnosticInfos = addDiagnosticInfos;
+                response.RemoveResults = removeResults;
                 response.RemoveDiagnosticInfos = removeDiagnosticInfos;
             }
             finally
@@ -3131,7 +3130,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the SetTriggering service.
         /// </summary>
@@ -3156,7 +3155,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the SetTriggering service.
         /// </summary>
@@ -3203,12 +3202,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region DeleteMonitoredItems Service
-        #if (!OPCUA_EXCLUDE_DeleteMonitoredItems)
+
+
+#if (!OPCUA_EXCLUDE_DeleteMonitoredItems)
         /// <summary>
         /// Invokes the DeleteMonitoredItems service.
         /// </summary>
@@ -3234,7 +3233,7 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.Results         = results;
+                response.Results = results;
                 response.DiagnosticInfos = diagnosticInfos;
             }
             finally
@@ -3245,7 +3244,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the DeleteMonitoredItems service.
         /// </summary>
@@ -3270,7 +3269,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the DeleteMonitoredItems service.
         /// </summary>
@@ -3317,12 +3316,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region CreateSubscription Service
-        #if (!OPCUA_EXCLUDE_CreateSubscription)
+
+
+#if (!OPCUA_EXCLUDE_CreateSubscription)
         /// <summary>
         /// Invokes the CreateSubscription service.
         /// </summary>
@@ -3356,10 +3355,10 @@ namespace Opc.Ua
                    out revisedLifetimeCount,
                    out revisedMaxKeepAliveCount);
 
-                response.SubscriptionId            = subscriptionId;
+                response.SubscriptionId = subscriptionId;
                 response.RevisedPublishingInterval = revisedPublishingInterval;
-                response.RevisedLifetimeCount      = revisedLifetimeCount;
-                response.RevisedMaxKeepAliveCount  = revisedMaxKeepAliveCount;
+                response.RevisedLifetimeCount = revisedLifetimeCount;
+                response.RevisedMaxKeepAliveCount = revisedMaxKeepAliveCount;
             }
             finally
             {
@@ -3369,7 +3368,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the CreateSubscription service.
         /// </summary>
@@ -3394,7 +3393,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the CreateSubscription service.
         /// </summary>
@@ -3441,12 +3440,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region ModifySubscription Service
-        #if (!OPCUA_EXCLUDE_ModifySubscription)
+
+
+#if (!OPCUA_EXCLUDE_ModifySubscription)
         /// <summary>
         /// Invokes the ModifySubscription service.
         /// </summary>
@@ -3479,8 +3478,8 @@ namespace Opc.Ua
                    out revisedMaxKeepAliveCount);
 
                 response.RevisedPublishingInterval = revisedPublishingInterval;
-                response.RevisedLifetimeCount      = revisedLifetimeCount;
-                response.RevisedMaxKeepAliveCount  = revisedMaxKeepAliveCount;
+                response.RevisedLifetimeCount = revisedLifetimeCount;
+                response.RevisedMaxKeepAliveCount = revisedMaxKeepAliveCount;
             }
             finally
             {
@@ -3490,7 +3489,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the ModifySubscription service.
         /// </summary>
@@ -3515,7 +3514,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the ModifySubscription service.
         /// </summary>
@@ -3562,12 +3561,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region SetPublishingMode Service
-        #if (!OPCUA_EXCLUDE_SetPublishingMode)
+
+
+#if (!OPCUA_EXCLUDE_SetPublishingMode)
         /// <summary>
         /// Invokes the SetPublishingMode service.
         /// </summary>
@@ -3593,7 +3592,7 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.Results         = results;
+                response.Results = results;
                 response.DiagnosticInfos = diagnosticInfos;
             }
             finally
@@ -3604,7 +3603,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the SetPublishingMode service.
         /// </summary>
@@ -3629,7 +3628,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the SetPublishingMode service.
         /// </summary>
@@ -3676,12 +3675,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region Publish Service
-        #if (!OPCUA_EXCLUDE_Publish)
+
+
+#if (!OPCUA_EXCLUDE_Publish)
         /// <summary>
         /// Invokes the Publish service.
         /// </summary>
@@ -3714,12 +3713,12 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.SubscriptionId           = subscriptionId;
+                response.SubscriptionId = subscriptionId;
                 response.AvailableSequenceNumbers = availableSequenceNumbers;
-                response.MoreNotifications        = moreNotifications;
-                response.NotificationMessage      = notificationMessage;
-                response.Results                  = results;
-                response.DiagnosticInfos          = diagnosticInfos;
+                response.MoreNotifications = moreNotifications;
+                response.NotificationMessage = notificationMessage;
+                response.Results = results;
+                response.DiagnosticInfos = diagnosticInfos;
             }
             finally
             {
@@ -3729,7 +3728,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the Publish service.
         /// </summary>
@@ -3754,7 +3753,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the Publish service.
         /// </summary>
@@ -3801,12 +3800,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region Republish Service
-        #if (!OPCUA_EXCLUDE_Republish)
+
+
+#if (!OPCUA_EXCLUDE_Republish)
         /// <summary>
         /// Invokes the Republish service.
         /// </summary>
@@ -3840,7 +3839,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the Republish service.
         /// </summary>
@@ -3865,7 +3864,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the Republish service.
         /// </summary>
@@ -3912,12 +3911,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region TransferSubscriptions Service
-        #if (!OPCUA_EXCLUDE_TransferSubscriptions)
+
+
+#if (!OPCUA_EXCLUDE_TransferSubscriptions)
         /// <summary>
         /// Invokes the TransferSubscriptions service.
         /// </summary>
@@ -3943,7 +3942,7 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.Results         = results;
+                response.Results = results;
                 response.DiagnosticInfos = diagnosticInfos;
             }
             finally
@@ -3954,7 +3953,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the TransferSubscriptions service.
         /// </summary>
@@ -3979,7 +3978,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the TransferSubscriptions service.
         /// </summary>
@@ -4026,12 +4025,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region DeleteSubscriptions Service
-        #if (!OPCUA_EXCLUDE_DeleteSubscriptions)
+
+
+#if (!OPCUA_EXCLUDE_DeleteSubscriptions)
         /// <summary>
         /// Invokes the DeleteSubscriptions service.
         /// </summary>
@@ -4056,7 +4055,7 @@ namespace Opc.Ua
                    out results,
                    out diagnosticInfos);
 
-                response.Results         = results;
+                response.Results = results;
                 response.DiagnosticInfos = diagnosticInfos;
             }
             finally
@@ -4067,7 +4066,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the DeleteSubscriptions service.
         /// </summary>
@@ -4092,7 +4091,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the DeleteSubscriptions service.
         /// </summary>
@@ -4139,140 +4138,140 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
-        #endregion
+#endif
+#endif
 
-        #region Protected Members
+
+
+
         /// <summary>
         /// Populates the known types table.
         /// </summary>
         protected virtual void CreateKnownTypes()
         {
-            #if (!OPCUA_EXCLUDE_FindServers)
+#if (!OPCUA_EXCLUDE_FindServers)
             SupportedServices.Add(DataTypeIds.FindServersRequest, new ServiceDefinition(typeof(FindServersRequest), new InvokeServiceEventHandler(FindServers)));
-            #endif
-            #if (!OPCUA_EXCLUDE_FindServersOnNetwork)
+#endif
+#if (!OPCUA_EXCLUDE_FindServersOnNetwork)
             SupportedServices.Add(DataTypeIds.FindServersOnNetworkRequest, new ServiceDefinition(typeof(FindServersOnNetworkRequest), new InvokeServiceEventHandler(FindServersOnNetwork)));
-            #endif
-            #if (!OPCUA_EXCLUDE_GetEndpoints)
+#endif
+#if (!OPCUA_EXCLUDE_GetEndpoints)
             SupportedServices.Add(DataTypeIds.GetEndpointsRequest, new ServiceDefinition(typeof(GetEndpointsRequest), new InvokeServiceEventHandler(GetEndpoints)));
-            #endif
-            #if (!OPCUA_EXCLUDE_CreateSession)
+#endif
+#if (!OPCUA_EXCLUDE_CreateSession)
             SupportedServices.Add(DataTypeIds.CreateSessionRequest, new ServiceDefinition(typeof(CreateSessionRequest), new InvokeServiceEventHandler(CreateSession)));
-            #endif
-            #if (!OPCUA_EXCLUDE_ActivateSession)
+#endif
+#if (!OPCUA_EXCLUDE_ActivateSession)
             SupportedServices.Add(DataTypeIds.ActivateSessionRequest, new ServiceDefinition(typeof(ActivateSessionRequest), new InvokeServiceEventHandler(ActivateSession)));
-            #endif
-            #if (!OPCUA_EXCLUDE_CloseSession)
+#endif
+#if (!OPCUA_EXCLUDE_CloseSession)
             SupportedServices.Add(DataTypeIds.CloseSessionRequest, new ServiceDefinition(typeof(CloseSessionRequest), new InvokeServiceEventHandler(CloseSession)));
-            #endif
-            #if (!OPCUA_EXCLUDE_Cancel)
+#endif
+#if (!OPCUA_EXCLUDE_Cancel)
             SupportedServices.Add(DataTypeIds.CancelRequest, new ServiceDefinition(typeof(CancelRequest), new InvokeServiceEventHandler(Cancel)));
-            #endif
-            #if (!OPCUA_EXCLUDE_AddNodes)
+#endif
+#if (!OPCUA_EXCLUDE_AddNodes)
             SupportedServices.Add(DataTypeIds.AddNodesRequest, new ServiceDefinition(typeof(AddNodesRequest), new InvokeServiceEventHandler(AddNodes)));
-            #endif
-            #if (!OPCUA_EXCLUDE_AddReferences)
+#endif
+#if (!OPCUA_EXCLUDE_AddReferences)
             SupportedServices.Add(DataTypeIds.AddReferencesRequest, new ServiceDefinition(typeof(AddReferencesRequest), new InvokeServiceEventHandler(AddReferences)));
-            #endif
-            #if (!OPCUA_EXCLUDE_DeleteNodes)
+#endif
+#if (!OPCUA_EXCLUDE_DeleteNodes)
             SupportedServices.Add(DataTypeIds.DeleteNodesRequest, new ServiceDefinition(typeof(DeleteNodesRequest), new InvokeServiceEventHandler(DeleteNodes)));
-            #endif
-            #if (!OPCUA_EXCLUDE_DeleteReferences)
+#endif
+#if (!OPCUA_EXCLUDE_DeleteReferences)
             SupportedServices.Add(DataTypeIds.DeleteReferencesRequest, new ServiceDefinition(typeof(DeleteReferencesRequest), new InvokeServiceEventHandler(DeleteReferences)));
-            #endif
-            #if (!OPCUA_EXCLUDE_Browse)
+#endif
+#if (!OPCUA_EXCLUDE_Browse)
             SupportedServices.Add(DataTypeIds.BrowseRequest, new ServiceDefinition(typeof(BrowseRequest), new InvokeServiceEventHandler(Browse)));
-            #endif
-            #if (!OPCUA_EXCLUDE_BrowseNext)
+#endif
+#if (!OPCUA_EXCLUDE_BrowseNext)
             SupportedServices.Add(DataTypeIds.BrowseNextRequest, new ServiceDefinition(typeof(BrowseNextRequest), new InvokeServiceEventHandler(BrowseNext)));
-            #endif
-            #if (!OPCUA_EXCLUDE_TranslateBrowsePathsToNodeIds)
+#endif
+#if (!OPCUA_EXCLUDE_TranslateBrowsePathsToNodeIds)
             SupportedServices.Add(DataTypeIds.TranslateBrowsePathsToNodeIdsRequest, new ServiceDefinition(typeof(TranslateBrowsePathsToNodeIdsRequest), new InvokeServiceEventHandler(TranslateBrowsePathsToNodeIds)));
-            #endif
-            #if (!OPCUA_EXCLUDE_RegisterNodes)
+#endif
+#if (!OPCUA_EXCLUDE_RegisterNodes)
             SupportedServices.Add(DataTypeIds.RegisterNodesRequest, new ServiceDefinition(typeof(RegisterNodesRequest), new InvokeServiceEventHandler(RegisterNodes)));
-            #endif
-            #if (!OPCUA_EXCLUDE_UnregisterNodes)
+#endif
+#if (!OPCUA_EXCLUDE_UnregisterNodes)
             SupportedServices.Add(DataTypeIds.UnregisterNodesRequest, new ServiceDefinition(typeof(UnregisterNodesRequest), new InvokeServiceEventHandler(UnregisterNodes)));
-            #endif
-            #if (!OPCUA_EXCLUDE_QueryFirst)
+#endif
+#if (!OPCUA_EXCLUDE_QueryFirst)
             SupportedServices.Add(DataTypeIds.QueryFirstRequest, new ServiceDefinition(typeof(QueryFirstRequest), new InvokeServiceEventHandler(QueryFirst)));
-            #endif
-            #if (!OPCUA_EXCLUDE_QueryNext)
+#endif
+#if (!OPCUA_EXCLUDE_QueryNext)
             SupportedServices.Add(DataTypeIds.QueryNextRequest, new ServiceDefinition(typeof(QueryNextRequest), new InvokeServiceEventHandler(QueryNext)));
-            #endif
-            #if (!OPCUA_EXCLUDE_Read)
+#endif
+#if (!OPCUA_EXCLUDE_Read)
             SupportedServices.Add(DataTypeIds.ReadRequest, new ServiceDefinition(typeof(ReadRequest), new InvokeServiceEventHandler(Read)));
-            #endif
-            #if (!OPCUA_EXCLUDE_HistoryRead)
+#endif
+#if (!OPCUA_EXCLUDE_HistoryRead)
             SupportedServices.Add(DataTypeIds.HistoryReadRequest, new ServiceDefinition(typeof(HistoryReadRequest), new InvokeServiceEventHandler(HistoryRead)));
-            #endif
-            #if (!OPCUA_EXCLUDE_Write)
+#endif
+#if (!OPCUA_EXCLUDE_Write)
             SupportedServices.Add(DataTypeIds.WriteRequest, new ServiceDefinition(typeof(WriteRequest), new InvokeServiceEventHandler(Write)));
-            #endif
-            #if (!OPCUA_EXCLUDE_HistoryUpdate)
+#endif
+#if (!OPCUA_EXCLUDE_HistoryUpdate)
             SupportedServices.Add(DataTypeIds.HistoryUpdateRequest, new ServiceDefinition(typeof(HistoryUpdateRequest), new InvokeServiceEventHandler(HistoryUpdate)));
-            #endif
-            #if (!OPCUA_EXCLUDE_Call)
+#endif
+#if (!OPCUA_EXCLUDE_Call)
             SupportedServices.Add(DataTypeIds.CallRequest, new ServiceDefinition(typeof(CallRequest), new InvokeServiceEventHandler(Call)));
-            #endif
-            #if (!OPCUA_EXCLUDE_CreateMonitoredItems)
+#endif
+#if (!OPCUA_EXCLUDE_CreateMonitoredItems)
             SupportedServices.Add(DataTypeIds.CreateMonitoredItemsRequest, new ServiceDefinition(typeof(CreateMonitoredItemsRequest), new InvokeServiceEventHandler(CreateMonitoredItems)));
-            #endif
-            #if (!OPCUA_EXCLUDE_ModifyMonitoredItems)
+#endif
+#if (!OPCUA_EXCLUDE_ModifyMonitoredItems)
             SupportedServices.Add(DataTypeIds.ModifyMonitoredItemsRequest, new ServiceDefinition(typeof(ModifyMonitoredItemsRequest), new InvokeServiceEventHandler(ModifyMonitoredItems)));
-            #endif
-            #if (!OPCUA_EXCLUDE_SetMonitoringMode)
+#endif
+#if (!OPCUA_EXCLUDE_SetMonitoringMode)
             SupportedServices.Add(DataTypeIds.SetMonitoringModeRequest, new ServiceDefinition(typeof(SetMonitoringModeRequest), new InvokeServiceEventHandler(SetMonitoringMode)));
-            #endif
-            #if (!OPCUA_EXCLUDE_SetTriggering)
+#endif
+#if (!OPCUA_EXCLUDE_SetTriggering)
             SupportedServices.Add(DataTypeIds.SetTriggeringRequest, new ServiceDefinition(typeof(SetTriggeringRequest), new InvokeServiceEventHandler(SetTriggering)));
-            #endif
-            #if (!OPCUA_EXCLUDE_DeleteMonitoredItems)
+#endif
+#if (!OPCUA_EXCLUDE_DeleteMonitoredItems)
             SupportedServices.Add(DataTypeIds.DeleteMonitoredItemsRequest, new ServiceDefinition(typeof(DeleteMonitoredItemsRequest), new InvokeServiceEventHandler(DeleteMonitoredItems)));
-            #endif
-            #if (!OPCUA_EXCLUDE_CreateSubscription)
+#endif
+#if (!OPCUA_EXCLUDE_CreateSubscription)
             SupportedServices.Add(DataTypeIds.CreateSubscriptionRequest, new ServiceDefinition(typeof(CreateSubscriptionRequest), new InvokeServiceEventHandler(CreateSubscription)));
-            #endif
-            #if (!OPCUA_EXCLUDE_ModifySubscription)
+#endif
+#if (!OPCUA_EXCLUDE_ModifySubscription)
             SupportedServices.Add(DataTypeIds.ModifySubscriptionRequest, new ServiceDefinition(typeof(ModifySubscriptionRequest), new InvokeServiceEventHandler(ModifySubscription)));
-            #endif
-            #if (!OPCUA_EXCLUDE_SetPublishingMode)
+#endif
+#if (!OPCUA_EXCLUDE_SetPublishingMode)
             SupportedServices.Add(DataTypeIds.SetPublishingModeRequest, new ServiceDefinition(typeof(SetPublishingModeRequest), new InvokeServiceEventHandler(SetPublishingMode)));
-            #endif
-            #if (!OPCUA_EXCLUDE_Publish)
+#endif
+#if (!OPCUA_EXCLUDE_Publish)
             SupportedServices.Add(DataTypeIds.PublishRequest, new ServiceDefinition(typeof(PublishRequest), new InvokeServiceEventHandler(Publish)));
-            #endif
-            #if (!OPCUA_EXCLUDE_Republish)
+#endif
+#if (!OPCUA_EXCLUDE_Republish)
             SupportedServices.Add(DataTypeIds.RepublishRequest, new ServiceDefinition(typeof(RepublishRequest), new InvokeServiceEventHandler(Republish)));
-            #endif
-            #if (!OPCUA_EXCLUDE_TransferSubscriptions)
+#endif
+#if (!OPCUA_EXCLUDE_TransferSubscriptions)
             SupportedServices.Add(DataTypeIds.TransferSubscriptionsRequest, new ServiceDefinition(typeof(TransferSubscriptionsRequest), new InvokeServiceEventHandler(TransferSubscriptions)));
-            #endif
-            #if (!OPCUA_EXCLUDE_DeleteSubscriptions)
+#endif
+#if (!OPCUA_EXCLUDE_DeleteSubscriptions)
             SupportedServices.Add(DataTypeIds.DeleteSubscriptionsRequest, new ServiceDefinition(typeof(DeleteSubscriptionsRequest), new InvokeServiceEventHandler(DeleteSubscriptions)));
-            #endif
+#endif
         }
-        #endregion
-    }
-    #endregion
 
-    #region DiscoveryEndpoint Class
+    }
+
+
+
     /// <summary>
     /// A endpoint object used by clients to access a UA service.
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     [ServiceMessageContextBehavior()]
     [ServiceBehavior(Namespace = Namespaces.OpcUaWsdl, InstanceContextMode=InstanceContextMode.PerSession, ConcurrencyMode=ConcurrencyMode.Multiple)]
-    #endif
+#endif
     public partial class DiscoveryEndpoint : EndpointBase, IDiscoveryEndpoint, IRegistrationEndpoint
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object when it is created by the WCF framework.
         /// </summary>
@@ -4297,9 +4296,9 @@ namespace Opc.Ua
         {
             this.CreateKnownTypes();
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The UA server instance that the endpoint is connected to.
         /// </summary>
@@ -4313,13 +4312,13 @@ namespace Opc.Ua
                 }
 
                 return ServerForContext as IDiscoveryServer;
-             }
+            }
         }
-        #endregion
 
-        #region IDiscoveryEndpoint Members
-        #region FindServers Service
-        #if (!OPCUA_EXCLUDE_FindServers)
+
+
+
+#if (!OPCUA_EXCLUDE_FindServers)
         /// <summary>
         /// Invokes the FindServers service.
         /// </summary>
@@ -4354,7 +4353,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the FindServers service.
         /// </summary>
@@ -4379,7 +4378,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the FindServers service.
         /// </summary>
@@ -4426,12 +4425,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region FindServersOnNetwork Service
-        #if (!OPCUA_EXCLUDE_FindServersOnNetwork)
+
+
+#if (!OPCUA_EXCLUDE_FindServersOnNetwork)
         /// <summary>
         /// Invokes the FindServersOnNetwork service.
         /// </summary>
@@ -4459,7 +4458,7 @@ namespace Opc.Ua
                    out servers);
 
                 response.LastCounterResetTime = lastCounterResetTime;
-                response.Servers              = servers;
+                response.Servers = servers;
             }
             finally
             {
@@ -4469,7 +4468,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the FindServersOnNetwork service.
         /// </summary>
@@ -4494,7 +4493,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the FindServersOnNetwork service.
         /// </summary>
@@ -4541,12 +4540,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region GetEndpoints Service
-        #if (!OPCUA_EXCLUDE_GetEndpoints)
+
+
+#if (!OPCUA_EXCLUDE_GetEndpoints)
         /// <summary>
         /// Invokes the GetEndpoints service.
         /// </summary>
@@ -4581,7 +4580,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the GetEndpoints service.
         /// </summary>
@@ -4606,7 +4605,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the GetEndpoints service.
         /// </summary>
@@ -4653,12 +4652,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region RegisterServer Service
-        #if (!OPCUA_EXCLUDE_RegisterServer)
+
+
+#if (!OPCUA_EXCLUDE_RegisterServer)
         /// <summary>
         /// Invokes the RegisterServer service.
         /// </summary>
@@ -4688,7 +4687,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the RegisterServer service.
         /// </summary>
@@ -4713,7 +4712,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the RegisterServer service.
         /// </summary>
@@ -4760,12 +4759,12 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
+#endif
+#endif
 
-        #region RegisterServer2 Service
-        #if (!OPCUA_EXCLUDE_RegisterServer2)
+
+
+#if (!OPCUA_EXCLUDE_RegisterServer2)
         /// <summary>
         /// Invokes the RegisterServer2 service.
         /// </summary>
@@ -4792,7 +4791,7 @@ namespace Opc.Ua
                    out diagnosticInfos);
 
                 response.ConfigurationResults = configurationResults;
-                response.DiagnosticInfos      = diagnosticInfos;
+                response.DiagnosticInfos = diagnosticInfos;
             }
             finally
             {
@@ -4802,7 +4801,7 @@ namespace Opc.Ua
             return response;
         }
 
-        #if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
+#if (OPCUA_USE_SYNCHRONOUS_ENDPOINTS)
         /// <summary>
         /// The operation contract for the RegisterServer2 service.
         /// </summary>
@@ -4827,7 +4826,7 @@ namespace Opc.Ua
                 throw fault;
             }
         }
-        #else
+#else
         /// <summary>
         /// Asynchronously calls the RegisterServer2 service.
         /// </summary>
@@ -4874,34 +4873,34 @@ namespace Opc.Ua
             }
         }
 
-        #endif
-        #endif
-        #endregion
-        #endregion
+#endif
+#endif
 
-        #region Protected Members
+
+
+
         /// <summary>
         /// Populates the known types table.
         /// </summary>
         protected virtual void CreateKnownTypes()
         {
-            #if (!OPCUA_EXCLUDE_FindServers)
+#if (!OPCUA_EXCLUDE_FindServers)
             SupportedServices.Add(DataTypeIds.FindServersRequest, new ServiceDefinition(typeof(FindServersRequest), new InvokeServiceEventHandler(FindServers)));
-            #endif
-            #if (!OPCUA_EXCLUDE_FindServersOnNetwork)
+#endif
+#if (!OPCUA_EXCLUDE_FindServersOnNetwork)
             SupportedServices.Add(DataTypeIds.FindServersOnNetworkRequest, new ServiceDefinition(typeof(FindServersOnNetworkRequest), new InvokeServiceEventHandler(FindServersOnNetwork)));
-            #endif
-            #if (!OPCUA_EXCLUDE_GetEndpoints)
+#endif
+#if (!OPCUA_EXCLUDE_GetEndpoints)
             SupportedServices.Add(DataTypeIds.GetEndpointsRequest, new ServiceDefinition(typeof(GetEndpointsRequest), new InvokeServiceEventHandler(GetEndpoints)));
-            #endif
-            #if (!OPCUA_EXCLUDE_RegisterServer)
+#endif
+#if (!OPCUA_EXCLUDE_RegisterServer)
             SupportedServices.Add(DataTypeIds.RegisterServerRequest, new ServiceDefinition(typeof(RegisterServerRequest), new InvokeServiceEventHandler(RegisterServer)));
-            #endif
-            #if (!OPCUA_EXCLUDE_RegisterServer2)
+#endif
+#if (!OPCUA_EXCLUDE_RegisterServer2)
             SupportedServices.Add(DataTypeIds.RegisterServer2Request, new ServiceDefinition(typeof(RegisterServer2Request), new InvokeServiceEventHandler(RegisterServer2)));
-            #endif
+#endif
         }
-        #endregion
+
     }
-    #endregion
+
 }

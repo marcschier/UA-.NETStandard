@@ -49,7 +49,7 @@ namespace Opc.Ua.Security.Certificates.Tests
     [SetCulture("en-us")]
     public class CertificateTestsForECDsa
     {
-        #region DataPointSources
+        
         public const string Subject = "CN=Test Cert Subject";
 
         [DatapointSource]
@@ -58,9 +58,9 @@ namespace Opc.Ua.Security.Certificates.Tests
 
         [DatapointSource]
         public ECCurveHashPair[] ECCurveHashPairs = GetECCurveHashPairs();
-        #endregion
+        
 
-        #region Test Setup
+        
         /// <summary>
         /// Set up a Global Discovery Server and Client instance and connect the session
         /// </summary>
@@ -76,9 +76,9 @@ namespace Opc.Ua.Security.Certificates.Tests
         protected void OneTimeTearDown()
         {
         }
-        #endregion
+        
 
-        #region Test Methods
+        
         /// <summary>
         /// Verify self signed app certs. Use one builder to create multiple certs.
         /// </summary>
@@ -350,9 +350,9 @@ namespace Opc.Ua.Security.Certificates.Tests
                 }
             });
         }
-        #endregion
+        
 
-        #region Private Methods
+        
         private static ECCurveHashPair[] GetECCurveHashPairs()
         {
             var result = new ECCurveHashPairCollection {
@@ -376,10 +376,10 @@ namespace Opc.Ua.Security.Certificates.Tests
                 TestContext.Out.WriteLine(ext.Format(false));
             }
         }
-        #endregion
+        
 
-        #region Private Fields
-        #endregion
+        
+        
     }
 }
 #endif

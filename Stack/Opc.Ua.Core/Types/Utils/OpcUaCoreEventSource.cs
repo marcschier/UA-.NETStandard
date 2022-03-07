@@ -11,11 +11,7 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Tracing;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 using static Opc.Ua.Utils;
 
@@ -27,7 +23,7 @@ namespace Opc.Ua
     [EventSource(Name = "OPC-UA-Core", Guid = "753029BC-A4AA-4440-8668-290D0692A72B")]
     internal sealed class OpcUaCoreEventSource : EventSource, ILogger
     {
-        #region Definitions
+
         private const int TraceId = 1;
         private const int DebugId = TraceId + 1;
         private const int InfoId = DebugId + 1;
@@ -88,9 +84,9 @@ namespace Opc.Ua
             /// </summary>
             public const EventKeywords Services = (EventKeywords)2;
         }
-        #endregion
 
-        #region ILogger Messages 
+
+
         /// <inheritdoc/>
         [Event(CriticalId, Keywords = Keywords.FormattedMessage, Level = EventLevel.Critical)]
         internal void Critical(int eventId, string eventName, string message)
@@ -134,9 +130,9 @@ namespace Opc.Ua
             WriteFormattedMessage(DebugId, eventId, eventName, message);
 #endif
         }
-        #endregion
 
-        #region ILogger Interface
+
+
         [NonEvent]
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
@@ -164,7 +160,10 @@ namespace Opc.Ua
         }
 
         [NonEvent]
-        public bool IsEnabled(LogLevel logLevel) => logLevel != LogLevel.None && IsEnabled();
+        public bool IsEnabled(LogLevel logLevel)
+        {
+            return logLevel != LogLevel.None && IsEnabled();
+        }
 
         [NonEvent]
         public IDisposable BeginScope<TState>(TState state)
@@ -191,36 +190,7 @@ namespace Opc.Ua
         }
 
 
-        [NonEvent]
-        private LogLevel GetDefaultLevel()
-        {
-            EventKeywords allMessageKeywords = Keywords.FormattedMessage;
 
-            if (IsEnabled(EventLevel.Verbose, allMessageKeywords))
-            {
-                return LogLevel.Trace;
-            }
-
-            if (IsEnabled(EventLevel.Informational, allMessageKeywords))
-            {
-                return LogLevel.Information;
-            }
-
-            if (IsEnabled(EventLevel.Warning, allMessageKeywords))
-            {
-                return LogLevel.Warning;
-            }
-
-            if (IsEnabled(EventLevel.Error, allMessageKeywords))
-            {
-                return LogLevel.Error;
-            }
-
-            return LogLevel.Critical;
-        }
-        #endregion
-
-        #region Service Events
         /// <summary>
         /// A server service call message.
         /// </summary>
@@ -300,6 +270,6 @@ namespace Opc.Ua
                 Utils.Log(LogLevel.Trace, SendResponseEventId, SendResponseMessage, channelId, requestId);
             }
         }
-        #endregion
+
     }
 }

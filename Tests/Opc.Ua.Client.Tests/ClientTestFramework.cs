@@ -77,13 +77,13 @@ namespace Opc.Ua.Client.Tests
             TestSetSimulation = CommonTestWorkers.NodeIdTestSetSimulation;
         }
 
-        #region DataPointSources
+        
         [DatapointSource]
         public static readonly string[] Policies = SecurityPolicies.GetDisplayNames()
             .Select(displayName => SecurityPolicies.GetUri(displayName)).ToArray();
-        #endregion
+        
 
-        #region Test Setup
+        
         /// <summary>
         /// Set up a Server and a Client instance.
         /// </summary>
@@ -231,9 +231,9 @@ namespace Opc.Ua.Client.Tests
             }
             return Task.CompletedTask;
         }
-        #endregion
+        
 
-        #region Nodes Test Set
+        
         /// <summary>
         /// Return a test set of nodes with static character.
         /// </summary>
@@ -253,9 +253,9 @@ namespace Opc.Ua.Client.Tests
         {
             return TestSetSimulation.Select(n => ExpandedNodeId.ToNodeId(n, namespaceUris)).Where(n => n != null).ToList();
         }
-        #endregion
+        
 
-        #region Benchmark Setup
+        
         /// <summary>
         /// Enumerator for security policies.
         /// </summary>
@@ -288,9 +288,9 @@ namespace Opc.Ua.Client.Tests
             OneTimeTearDownAsync().GetAwaiter().GetResult();
             Console.WriteLine("GlobalCleanup: Done");
         }
-        #endregion
+        
 
-        #region Public Methods
+        
         public void GetOperationLimits()
         {
             var operationLimits = new OperationLimits() {
@@ -340,9 +340,9 @@ namespace Opc.Ua.Client.Tests
             writer.WriteLine("Notifications           : {0}", subscription.Notifications.Count());
             writer.WriteLine("OutstandingMessageWorker: {0}", subscription.OutstandingMessageWorkers);
         }
-        #endregion
+        
 
-        #region Private Methods
+        
         private ExpandedNodeId[] ReadCustomTestSet(string param)
         {
             // load custom test sets
@@ -360,6 +360,6 @@ namespace Opc.Ua.Client.Tests
             }
             return Array.Empty<ExpandedNodeId>();
         }
-        #endregion
+        
     }
 }

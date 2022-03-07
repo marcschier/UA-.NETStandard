@@ -39,11 +39,6 @@ namespace Opc.Ua
         object SyncRoot { get; }
 
         /// <summary>
-        /// Returns a unique identifier for the table instance. Used to debug problems with shared tables.
-        /// </summary>
-        int InstanceId { get; }
-
-        /// <summary>
         /// Adds an extension type to the factory.
         /// </summary>
         /// <param name="systemType">The underlying system type to add to the factory</param>
@@ -71,12 +66,6 @@ namespace Opc.Ua
         /// </remarks>
         /// <param name="assembly">The assembly containing the types to add to the factory</param>
         void AddEncodeableTypes(Assembly assembly);
-
-        /// <summary>
-        /// Adds an enumerable of extension types to the factory.
-        /// </summary>
-        /// <param name="systemTypes">The underlying system types to add to the factory</param>
-        void AddEncodeableTypes(IEnumerable<Type> systemTypes);
 
         /// <summary>
         /// Returns the system type for the specified type id.

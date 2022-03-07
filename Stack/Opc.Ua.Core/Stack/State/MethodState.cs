@@ -11,14 +11,7 @@
 */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using System.Xml;
-using System.IO;
-using System.Runtime.Serialization;
-using System.Reflection;
-using System.Threading;
 
 namespace Opc.Ua
 {
@@ -27,7 +20,7 @@ namespace Opc.Ua
     /// </summary>
     public class MethodState : BaseInstanceState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -37,18 +30,8 @@ namespace Opc.Ua
             m_userExecutable = true;
         }
 
-        /// <summary>
-        /// Constructs an instance of a node.
-        /// </summary>
-        /// <param name="parent">The parent.</param>
-        /// <returns>The new node.</returns>
-        public static NodeState Construct(NodeState parent)
-        {
-            return new MethodState(parent);
-        }
-        #endregion
 
-        #region Initialization
+
         /// <summary>
         /// Initializes the instance with the default values.
         /// </summary>
@@ -65,33 +48,25 @@ namespace Opc.Ua
         /// </summary>
         protected override void Initialize(ISystemContext context, NodeState source)
         {
-            MethodState method = source as MethodState;
-
-            if (method != null)
+            if (source is MethodState method)
             {
                 m_executable = method.m_executable;
                 m_userExecutable = method.m_userExecutable;
             }
-            
+
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The identifier for the declaration of the method in the type model.
         /// </summary>
         public NodeId MethodDeclarationId
         {
-            get
-            {
-                return base.TypeDefinitionId;
-            }
+            get => base.TypeDefinitionId;
 
-            set
-            {
-                base.TypeDefinitionId = value;
-            }
+            set => base.TypeDefinitionId = value;
         }
 
         /// <summary>
@@ -99,11 +74,8 @@ namespace Opc.Ua
         /// </summary>
         public bool Executable
         {
-            get
-            { 
-                return m_executable;  
-            }
-            
+            get => m_executable;
+
             set
             {
                 if (m_executable != value)
@@ -120,11 +92,8 @@ namespace Opc.Ua
         /// </summary>
         public bool UserExecutable
         {
-            get
-            { 
-                return m_userExecutable;  
-            }
-            
+            get => m_userExecutable;
+
             set
             {
                 if (m_userExecutable != value)
@@ -135,9 +104,9 @@ namespace Opc.Ua
                 m_userExecutable = value;
             }
         }
-        #endregion
 
-        #region Event Callbacks
+
+
         /// <summary>
         /// Raised when the Executable attribute is read.
         /// </summary>
@@ -167,9 +136,9 @@ namespace Opc.Ua
         /// Raised when the method is called.
         /// </summary>
         public GenericMethodCalledEventHandler2 OnCallMethod2;
-        #endregion
 
-        #region Serialization Functions
+
+
         /// <summary>
         /// Exports a copt of the node to a node table.
         /// </summary>
@@ -179,12 +148,11 @@ namespace Opc.Ua
         {
             base.Export(context, node);
 
-            MethodNode methodNode = node as MethodNode;
 
-            if (methodNode != null)
+            if (node is MethodNode methodNode)
             {
-                methodNode.Executable = this.Executable;
-                methodNode.UserExecutable = this.UserExecutable;
+                methodNode.Executable = Executable;
+                methodNode.UserExecutable = UserExecutable;
             }
         }
 
@@ -254,7 +222,7 @@ namespace Opc.Ua
             {
                 attributesToSave |= AttributesToSave.UserExecutable;
             }
-            
+
             return attributesToSave;
         }
 
@@ -299,9 +267,9 @@ namespace Opc.Ua
                 m_userExecutable = decoder.ReadBoolean(null);
             }
         }
-        #endregion
 
-        #region Read Support Functions
+
+
         /// <summary>
         /// Reads the value for any non-value attribute.
         /// </summary>
@@ -351,9 +319,9 @@ namespace Opc.Ua
 
             return base.ReadNonValueAttribute(context, attributeId, ref value);
         }
-        #endregion
 
-        #region Write Support Functions
+
+
         /// <summary>
         /// Write the value for any non-value attribute.
         /// </summary>
@@ -427,19 +395,16 @@ namespace Opc.Ua
 
             return base.WriteNonValueAttribute(context, attributeId, value);
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The input arguments for the method.
         /// </summary>
         public PropertyState<Argument[]> InputArguments
         {
-            get
-            { 
-                return m_inputArguments;  
-            }
-            
+            get => m_inputArguments;
+
             set
             {
                 if (!Object.ReferenceEquals(m_inputArguments, value))
@@ -456,11 +421,8 @@ namespace Opc.Ua
         /// </summary>
         public PropertyState<Argument[]> OutputArguments
         {
-            get
-            { 
-                return m_outputArguments;  
-            }
-            
+            get => m_outputArguments;
+
             set
             {
                 if (!Object.ReferenceEquals(m_outputArguments, value))
@@ -471,9 +433,9 @@ namespace Opc.Ua
                 m_outputArguments = value;
             }
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Populates a list with the children that belong to the node.
         /// </summary>
@@ -564,9 +526,9 @@ namespace Opc.Ua
 
             return base.FindChild(context, browseName, createOrReplace, replacement);
         }
-        #endregion
 
-        #region Method Invocation
+
+
         /// <summary>
         /// Invokes the methods and returns the output parameters.
         /// </summary>
@@ -602,7 +564,7 @@ namespace Opc.Ua
             }
 
             // validate input arguments.
-            List<object> inputs = new List<object>();
+            var inputs = new List<object>();
 
             // check for too few or too many arguments.
             int expectedCount = 0;
@@ -621,7 +583,7 @@ namespace Opc.Ua
             {
                 return StatusCodes.BadTooManyArguments;
             }
-            
+
             // validate individual arguements.
             bool error = false;
 
@@ -645,7 +607,7 @@ namespace Opc.Ua
             }
 
             // set output arguments to default values.
-            List<object> outputs = new List<object>();
+            var outputs = new List<object>();
 
             if (OutputArguments != null)
             {
@@ -682,17 +644,6 @@ namespace Opc.Ua
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// Invokes the method, returns the result and output argument.
-        /// </summary>
-        protected virtual ServiceResult Call(
-            ISystemContext context,
-            IList<object> inputArguments,
-            IList<object> outputArguments)
-        {
-            return Call(context, null, inputArguments, outputArguments);
         }
 
         /// <summary>
@@ -753,7 +704,7 @@ namespace Opc.Ua
 
             Argument expectedArgument = arguments[index];
 
-            TypeInfo typeInfo = TypeInfo.IsInstanceOfDataType(
+            var typeInfo = TypeInfo.IsInstanceOfDataType(
                 inputArgument.Value,
                 expectedArgument.DataType,
                 expectedArgument.ValueRank,
@@ -780,14 +731,14 @@ namespace Opc.Ua
         {
             return TypeInfo.GetDefaultValue(outputArgument.DataType, outputArgument.ValueRank, context.TypeTable);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private bool m_executable;
         private bool m_userExecutable;
         private PropertyState<Argument[]> m_inputArguments;
         private PropertyState<Argument[]> m_outputArguments;
-        #endregion
+
     }
 
     /// <summary>

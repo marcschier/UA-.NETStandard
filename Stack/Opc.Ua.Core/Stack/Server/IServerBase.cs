@@ -49,17 +49,6 @@ namespace Opc.Ua
     /// </summary>
     public interface IEndpointIncomingRequest
     {
-        /// <summary>
-        /// Gets the request.
-        /// </summary>
-        /// <value>The request.</value>
-        IServiceRequest Request { get; }
-
-        /// <summary>
-        /// Gets the secure channel context associated with the request.
-        /// </summary>
-        /// <value>The secure channel context.</value>
-        SecureChannelContext SecureChannelContext { get; }
 
         /// <summary>
         /// Gets or sets the call data associated with the request.

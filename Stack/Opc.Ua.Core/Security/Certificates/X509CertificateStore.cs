@@ -62,7 +62,10 @@ namespace Opc.Ua
         /// </remarks>
         public void Open(string location, bool noPrivateKeys = true)
         {
-            if (location == null) throw new ArgumentNullException(nameof(location));
+            if (location == null)
+            {
+                throw new ArgumentNullException(nameof(location));
+            }
 
             m_storePath = location;
             m_noPrivateKeys = noPrivateKeys;
@@ -123,7 +126,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public Task<X509Certificate2Collection> Enumerate()
         {
-            using (X509Store store = new X509Store(m_storeName, m_storeLocation))
+            using (var store = new X509Store(m_storeName, m_storeLocation))
             {
                 store.Open(OpenFlags.ReadOnly);
                 return Task.FromResult(new X509Certificate2Collection(store.Certificates));
@@ -133,9 +136,12 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public Task Add(X509Certificate2 certificate, string password = null)
         {
-            if (certificate == null) throw new ArgumentNullException(nameof(certificate));
+            if (certificate == null)
+            {
+                throw new ArgumentNullException(nameof(certificate));
+            }
 
-            using (X509Store store = new X509Store(m_storeName, m_storeLocation))
+            using (var store = new X509Store(m_storeName, m_storeLocation))
             {
                 store.Open(OpenFlags.ReadWrite);
                 if (!store.Certificates.Contains(certificate))
@@ -145,7 +151,7 @@ namespace Opc.Ua
                         (Environment.OSVersion.Platform == PlatformID.Win32NT))
                     {
                         // see https://github.com/dotnet/runtime/issues/29144
-                        var temp = Guid.NewGuid().ToString();
+                        string temp = Guid.NewGuid().ToString();
                         using (var persistable = new X509Certificate2(certificate.Export(X509ContentType.Pfx, temp), temp,
                             X509KeyStorageFlags.PersistKeySet))
                         {
@@ -174,7 +180,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public Task<bool> Delete(string thumbprint)
         {
-            using (X509Store store = new X509Store(m_storeName, m_storeLocation))
+            using (var store = new X509Store(m_storeName, m_storeLocation))
             {
                 store.Open(OpenFlags.ReadWrite);
 
@@ -193,11 +199,11 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public Task<X509Certificate2Collection> FindByThumbprint(string thumbprint)
         {
-            using (X509Store store = new X509Store(m_storeName, m_storeLocation))
+            using (var store = new X509Store(m_storeName, m_storeLocation))
             {
                 store.Open(OpenFlags.ReadOnly);
 
-                X509Certificate2Collection collection = new X509Certificate2Collection();
+                var collection = new X509Certificate2Collection();
 
                 foreach (X509Certificate2 certificate in store.Certificates)
                 {
@@ -223,10 +229,6 @@ namespace Opc.Ua
 
         /// <inheritdoc/>
         /// <remarks>CRLs are not supported here.</remarks>
-        public bool SupportsCRLs => false;
-
-        /// <inheritdoc/>
-        /// <remarks>CRLs are not supported here.</remarks>
         public Task<StatusCode> IsRevoked(X509Certificate2 issuer, X509Certificate2 certificate)
         {
             return Task.FromResult((StatusCode)StatusCodes.BadNotSupported);
@@ -235,13 +237,6 @@ namespace Opc.Ua
         /// <inheritdoc/>
         /// <remarks>CRLs are not supported here.</remarks>
         public Task<X509CRLCollection> EnumerateCRLs()
-        {
-            throw new ServiceResultException(StatusCodes.BadNotSupported);
-        }
-
-        /// <inheritdoc/>
-        /// <remarks>CRLs are not supported here.</remarks>
-        public Task<X509CRLCollection> EnumerateCRLs(X509Certificate2 issuer, bool validateUpdateTime = true)
         {
             throw new ServiceResultException(StatusCodes.BadNotSupported);
         }

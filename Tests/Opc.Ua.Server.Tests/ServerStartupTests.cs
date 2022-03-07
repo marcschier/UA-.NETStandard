@@ -1,5 +1,5 @@
 /* ========================================================================
- * Copyright (c) 2005-2021 The OPC Foundation, Inc. All rights reserved.
+ * Copyright (c) 2005-2020 The OPC Foundation, Inc. All rights reserved.
  *
  * OPC Foundation MIT License 1.00
  * 
@@ -27,46 +27,43 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-#if !NETSTANDARD2_1 && !NET472_OR_GREATER && !NET5_0_OR_GREATER
+using System.Threading.Tasks;
+using NUnit.Framework;
 
-using Org.BouncyCastle.Asn1.X509;
-
-namespace Opc.Ua.Security.Certificates.BouncyCastle
+namespace Opc.Ua.Server.Tests
 {
     /// <summary>
-    /// A converter class to create a X509Name object 
-    /// from a X509Certificate subject.
+    /// Test Standard Server stratup.
     /// </summary>
-    /// <remarks>
-    /// Handles subtle differences in the string representation
-    /// of the .NET and the Bouncy Castle implementation.
-    /// </remarks>
-    public class CertificateFactoryX509Name : X509Name
+    [TestFixture, Category("Server")]
+    [SetCulture("en-us"), SetUICulture("en-us")]
+    [Parallelizable]
+    public class ServerStartupTests
     {
-        /// <summary>
-        /// Create the X509Name from a distinguished name.
-        /// </summary>
-        /// <param name="distinguishedName">The distinguished name.</param>
-        public CertificateFactoryX509Name(string distinguishedName) :
-            base(true, ConvertToX509Name(distinguishedName))
-        {
-        }
+        const double MaxAge = 10000;
+        const uint TimeoutHint = 10000;
+
+        [DatapointSource]
+        public string[] UriSchemes = { Utils.UriSchemeOpcTcp, Utils.UriSchemeHttps };
+
 
         /// <summary>
-        /// Create the X509Name from a distinguished name.
+        /// Start a server fixture with different uri schemes.
         /// </summary>
-        /// <param name="reverse">Reverse the order of the names.</param>
-        /// <param name="distinguishedName">The distinguished name.</param>
-        public CertificateFactoryX509Name(bool reverse, string distinguishedName) :
-            base(reverse, ConvertToX509Name(distinguishedName))
+        [Theory]
+        public async Task StartServerAsync(
+            string uriScheme
+            )
         {
+            var fixture = new ServerFixture<StandardServer>();
+            Assert.NotNull(fixture);
+            fixture.UriScheme = uriScheme;
+            var server = await fixture.StartAsync(TestContext.Out).ConfigureAwait(false);
+            fixture.SetTraceOutput(TestContext.Out);
+            Assert.NotNull(server);
+            await Task.Delay(1000).ConfigureAwait(false);
+            await fixture.StopAsync().ConfigureAwait(false);
         }
 
-        private static string ConvertToX509Name(string distinguishedName)
-        {
-            // convert from X509Certificate to bouncy castle DN entries
-            return distinguishedName.Replace("S=", "ST=");
-        }
     }
 }
-#endif

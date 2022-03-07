@@ -19,13 +19,13 @@ using System.Collections.Generic;
 
 namespace Opc.Ua.Bindings
 {
-    #region BufferCollection Class
+
     /// <summary>
     /// A collection of buffers.
     /// </summary>
     public class BufferCollection : List<ArraySegment<byte>>
     {
-        #region Constructors
+
         /// <summary>
         /// Creates an empty collection.
         /// </summary>
@@ -60,9 +60,9 @@ namespace Opc.Ua.Bindings
         {
             Add(new ArraySegment<byte>(array, offset, count));
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Returns the buffers to the manager before clearing the collection.
         /// </summary>
@@ -94,7 +94,7 @@ namespace Opc.Ua.Bindings
             {
                 int count = 0;
 
-                for (int ii = 0; ii < this.Count; ii++)
+                for (int ii = 0; ii < Count; ii++)
                 {
                     count += this[ii].Count;
                 }
@@ -102,17 +102,17 @@ namespace Opc.Ua.Bindings
                 return count;
             }
         }
-        #endregion
-    }
-    #endregion
 
-    #region BufferManager Class
+    }
+
+
+
     /// <summary>
     /// A thread safe wrapper for the buffer manager class.
     /// </summary>
     public class BufferManager
     {
-        #region Constructors
+
         /// <summary>
         /// Constructs the buffer manager.
         /// </summary>
@@ -126,9 +126,9 @@ namespace Opc.Ua.Bindings
             m_arrayPool = ArrayPool<byte>.Create(maxArrayLength, 4);
             m_maxBufferSize = maxBufferSize;
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Returns a buffer with at least the specified size.
         /// </summary>
@@ -334,18 +334,18 @@ namespace Opc.Ua.Bindings
                 m_arrayPool.Return(buffer);
             }
         }
-        #endregion
 
-        #region Private Fields
-        private object m_lock = new object();
-        private string m_name;
-        private int m_maxBufferSize;
+
+
+        private readonly object m_lock = new object();
+        private readonly string m_name;
+        private readonly int m_maxBufferSize;
 #if TRACE_MEMORY
         private int m_buffersTaken = 0;
 #endif
-        private ArrayPool<byte> m_arrayPool;
-        const byte m_cookieLocked = 0xa5;
-        const byte m_cookieUnlocked = 0x5a;
+        private readonly ArrayPool<byte> m_arrayPool;
+        private const byte m_cookieLocked = 0xa5;
+        private const byte m_cookieUnlocked = 0x5a;
 #if TRACK_MEMORY
         const byte m_cookieLength = 5;
         class Allocation
@@ -362,9 +362,9 @@ namespace Opc.Ua.Bindings
         private int m_id;
         private SortedDictionary<int,Allocation> m_allocations = new SortedDictionary<int,Allocation>();
 #else
-        const byte m_cookieLength = 1;
+        private const byte m_cookieLength = 1;
 #endif
-        #endregion
+
     }
-    #endregion
+
 }

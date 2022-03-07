@@ -39,7 +39,7 @@ namespace Opc.Ua.Server
     /// </summary>
     public class MonitoredItem : IEventMonitoredItem, ISampledDataChangeMonitoredItem, ITriggeredMonitoredItem
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object with its node type.
         /// </summary>
@@ -92,7 +92,10 @@ namespace Opc.Ua.Server
             bool discardOldest,
             double sourceSamplingInterval)
         {
-            if (itemToMonitor == null) throw new ArgumentNullException(nameof(itemToMonitor));
+            if (itemToMonitor == null)
+            {
+                throw new ArgumentNullException(nameof(itemToMonitor));
+            }
 
             Initialize();
 
@@ -134,7 +137,7 @@ namespace Opc.Ua.Server
             }
 
             // create aggregate calculator.
-            ServerAggregateFilter aggregateFilter = filterToUse as ServerAggregateFilter;
+            var aggregateFilter = filterToUse as ServerAggregateFilter;
 
             if (filterToUse is ServerAggregateFilter)
             {
@@ -195,9 +198,9 @@ namespace Opc.Ua.Server
             m_sourceSamplingInterval = 0;
             m_samplingError = ServiceResult.Good;
         }
-        #endregion
 
-        #region IMonitoredItem Members
+
+
         /// <summary>
         /// The node manager that created the item.
         /// </summary>
@@ -333,17 +336,6 @@ namespace Opc.Ua.Server
         }
 
         /// <summary>
-        /// Sets a flag indicating that the structure of the monitored node has changed.
-        /// </summary>
-        /// <remarks>
-        /// The StatusCode for next value reported by the monitored item will have the StructureChanged bit set.
-        /// </remarks>
-        public void SetStructureChanged()
-        {
-            m_structureChanged = true;
-        }
-
-        /// <summary>
         /// The filter used by the monitored item.
         /// </summary>
         public MonitoringFilter Filter => m_originalFilter;
@@ -352,11 +344,6 @@ namespace Opc.Ua.Server
         /// The event filter used by the monitored item.
         /// </summary>
         public EventFilter EventFilter => m_originalFilter as EventFilter;
-
-        /// <summary>
-        /// The data change filter used by the monitored item.
-        /// </summary>
-        public DataChangeFilter DataChangeFilter => m_originalFilter as DataChangeFilter;
 
         /// <summary>
         /// The session that owns the monitored item.
@@ -422,35 +409,6 @@ namespace Opc.Ua.Server
         public uint QueueSize => m_queueSize;
 
         /// <summary>
-        /// Gets number of elements actually contained in value queue.
-        /// </summary>
-        public int ItemsInQueue
-        {
-            get
-            {
-                lock (m_lock)
-                {
-                    if (m_events != null)
-                    {
-                        return m_events.Count;
-                    }
-
-                    if (m_queue != null)
-                    {
-                        return m_queue.ItemsInQueue;
-                    }
-
-                    return 0;
-                }
-            }
-        }
-
-        /// <summary>
-        /// The diagnostics masks to use when collecting notifications for the item.
-        /// </summary>
-        public DiagnosticsMasks DiagnosticsMasks => m_diagnosticsMasks;
-
-        /// <summary>
         /// The index range requested by the monitored item.
         /// </summary>
         public NumericRange IndexRange => m_parsedIndexRange;
@@ -476,37 +434,16 @@ namespace Opc.Ua.Server
         {
             lock (m_lock)
             {
-                ReadValueId valueId = new ReadValueId();
-
-                valueId.NodeId = m_nodeId;
-                valueId.AttributeId = m_attributeId;
-                valueId.IndexRange = m_indexRange;
-                valueId.ParsedIndexRange = m_parsedIndexRange;
-                valueId.DataEncoding = m_encoding;
-                valueId.Handle = m_managerHandle;
+                var valueId = new ReadValueId {
+                    NodeId = m_nodeId,
+                    AttributeId = m_attributeId,
+                    IndexRange = m_indexRange,
+                    ParsedIndexRange = m_parsedIndexRange,
+                    DataEncoding = m_encoding,
+                    Handle = m_managerHandle
+                };
 
                 return valueId;
-            }
-        }
-
-        /// <summary>
-        /// Sets an error that occured in the sampling group.
-        /// </summary>
-        /// <remarks>
-        /// The sampling group or node manager that owns the item may call this to indicate that
-        /// a fatal error occurred which means the item will no longer receive any data updates.
-        /// This error state can be cleared by calling this method and passing in ServiceResult.Good.
-        /// </remarks>
-        public void SetSamplingError(ServiceResult error)
-        {
-            lock (m_lock)
-            {
-                if (error == null)
-                {
-                    m_samplingError = ServiceResult.Good;
-                }
-
-                m_samplingError = error;
             }
         }
 
@@ -517,12 +454,12 @@ namespace Opc.Ua.Server
         {
             lock (m_lock)
             {
-                result = new MonitoredItemCreateResult();
-
-                result.MonitoredItemId = m_id;
-                result.RevisedSamplingInterval = m_samplingInterval;
-                result.RevisedQueueSize = m_queueSize;
-                result.StatusCode = StatusCodes.Good;
+                result = new MonitoredItemCreateResult {
+                    MonitoredItemId = m_id,
+                    RevisedSamplingInterval = m_samplingInterval,
+                    RevisedQueueSize = m_queueSize,
+                    StatusCode = StatusCodes.Good
+                };
 
                 if (ServiceResult.IsBad(m_samplingError))
                 {
@@ -540,11 +477,11 @@ namespace Opc.Ua.Server
         {
             lock (m_lock)
             {
-                result = new MonitoredItemModifyResult();
-
-                result.RevisedSamplingInterval = m_samplingInterval;
-                result.RevisedQueueSize = m_queueSize;
-                result.StatusCode = StatusCodes.Good;
+                result = new MonitoredItemModifyResult {
+                    RevisedSamplingInterval = m_samplingInterval,
+                    RevisedQueueSize = m_queueSize,
+                    StatusCode = StatusCodes.Good
+                };
 
                 if (ServiceResult.IsBad(m_samplingError))
                 {
@@ -588,18 +525,45 @@ namespace Opc.Ua.Server
                 m_queueSize = queueSize;
 
                 // check if aggregate filter has been updated.
-                ServerAggregateFilter aggregateFilter = filterToUse as ServerAggregateFilter;
+                var aggregateFilter = filterToUse as ServerAggregateFilter;
 
                 if (filterToUse is ServerAggregateFilter)
                 {
-                    ServerAggregateFilter existingFilter = filterToUse as ServerAggregateFilter;
+                    var existingFilter = filterToUse as ServerAggregateFilter;
 
                     bool match = existingFilter != null;
 
-                    if (match) if (existingFilter.AggregateType != aggregateFilter.AggregateType) match = false;
-                    if (match) if (existingFilter.ProcessingInterval != aggregateFilter.ProcessingInterval) match = false;
-                    if (match) if (existingFilter.StartTime != aggregateFilter.StartTime) match = false;
-                    if (match) if (!existingFilter.AggregateConfiguration.IsEqual(aggregateFilter.AggregateConfiguration)) match = false;
+                    if (match)
+                    {
+                        if (existingFilter.AggregateType != aggregateFilter.AggregateType)
+                        {
+                            match = false;
+                        }
+                    }
+
+                    if (match)
+                    {
+                        if (existingFilter.ProcessingInterval != aggregateFilter.ProcessingInterval)
+                        {
+                            match = false;
+                        }
+                    }
+
+                    if (match)
+                    {
+                        if (existingFilter.StartTime != aggregateFilter.StartTime)
+                        {
+                            match = false;
+                        }
+                    }
+
+                    if (match)
+                    {
+                        if (!existingFilter.AggregateConfiguration.IsEqual(aggregateFilter.AggregateConfiguration))
+                        {
+                            match = false;
+                        }
+                    }
 
                     if (!match)
                     {
@@ -663,14 +627,6 @@ namespace Opc.Ua.Server
                     m_nextSamplingTime = 0;
                 }
             }
-        }
-
-        /// <summary>
-        /// Changes the monitoring mode for the item.
-        /// </summary>
-        void ISampledDataChangeMonitoredItem.SetMonitoringMode(MonitoringMode monitoringMode)
-        {
-            SetMonitoringMode(monitoringMode);
         }
 
         /// <summary>
@@ -759,16 +715,16 @@ namespace Opc.Ua.Server
                 // make a shallow copy of the value.
                 if (value != null)
                 {
-                    Utils.LogTrace(Utils.TraceMasks.OperationDetail, "RECEIVED VALUE[{0}] Value={1}", this.m_id, value.WrappedValue);
+                    Utils.LogTrace(Utils.TraceMasks.OperationDetail, "RECEIVED VALUE[{0}] Value={1}", m_id, value.WrappedValue);
 
-                    DataValue copy = new DataValue();
-
-                    copy.WrappedValue = value.WrappedValue;
-                    copy.StatusCode = value.StatusCode;
-                    copy.SourceTimestamp = value.SourceTimestamp;
-                    copy.SourcePicoseconds = value.SourcePicoseconds;
-                    copy.ServerTimestamp = value.ServerTimestamp;
-                    copy.ServerPicoseconds = value.ServerPicoseconds;
+                    var copy = new DataValue {
+                        WrappedValue = value.WrappedValue,
+                        StatusCode = value.StatusCode,
+                        SourceTimestamp = value.SourceTimestamp,
+                        SourcePicoseconds = value.SourcePicoseconds,
+                        ServerTimestamp = value.ServerTimestamp,
+                        ServerPicoseconds = value.ServerPicoseconds
+                    };
 
                     value = copy;
 
@@ -784,10 +740,11 @@ namespace Opc.Ua.Server
                 {
                     if (value == null)
                     {
-                        value = new DataValue();
-                        value.StatusCode = error.StatusCode;
-                        value.SourceTimestamp = DateTime.UtcNow;
-                        value.ServerTimestamp = DateTime.UtcNow;
+                        value = new DataValue {
+                            StatusCode = error.StatusCode,
+                            SourceTimestamp = DateTime.UtcNow,
+                            ServerTimestamp = DateTime.UtcNow
+                        };
                     }
                 }
 
@@ -835,34 +792,6 @@ namespace Opc.Ua.Server
         }
 
         /// <summary>
-        /// Sets the overflow bit.
-        /// </summary>
-        private ServiceResult SetOverflowBit(
-            object value,
-            ServiceResult error)
-        {
-            DataValue dataValue = value as DataValue;
-
-            if (dataValue != null)
-            {
-                dataValue.StatusCode = dataValue.StatusCode.SetOverflow(true);
-            }
-
-            if (error != null)
-            {
-                error = new ServiceResult(
-                    error.StatusCode.SetOverflow(true),
-                    error.SymbolicId,
-                    error.NamespaceUri,
-                    error.LocalizedText,
-                    error.AdditionalInfo,
-                    error.InnerResult);
-            }
-
-            return error;
-        }
-
-        /// <summary>
         /// Adds a value to the queue.
         /// </summary>
         private void AddValueToQueue(DataValue value, ServiceResult error)
@@ -888,7 +817,7 @@ namespace Opc.Ua.Server
         /// <summary>
         /// Whether the item is monitoring all events produced by the server.
         /// </summary>
-        public bool MonitoringAllEvents => this.m_nodeId == ObjectIds.Server;
+        public bool MonitoringAllEvents => m_nodeId == ObjectIds.Server;
 
         /// <summary>
         /// Fetches the event fields from the event.
@@ -896,10 +825,10 @@ namespace Opc.Ua.Server
         private EventFieldList GetEventFields(FilterContext context, EventFilter filter, IFilterTarget instance)
         {
             // fetch the event fields.
-            EventFieldList fields = new EventFieldList();
-
-            fields.ClientHandle = m_clientHandle;
-            fields.Handle = instance;
+            var fields = new EventFieldList {
+                ClientHandle = m_clientHandle,
+                Handle = instance
+            };
 
             foreach (SimpleAttributeOperand clause in filter.SelectClauses)
             {
@@ -915,7 +844,7 @@ namespace Opc.Ua.Server
                 if (value != null)
                 {
                     // translate any localized text.
-                    LocalizedText text = value as LocalizedText;
+                    var text = value as LocalizedText;
 
                     if (text != null)
                     {
@@ -949,7 +878,10 @@ namespace Opc.Ua.Server
         /// </summary>
         public virtual void QueueEvent(IFilterTarget instance, bool bypassFilter)
         {
-            if (instance == null) throw new ArgumentNullException(nameof(instance));
+            if (instance == null)
+            {
+                throw new ArgumentNullException(nameof(instance));
+            }
 
             lock (m_lock)
             {
@@ -968,7 +900,7 @@ namespace Opc.Ua.Server
                 // check for duplicate instances being reported via multiple paths.
                 for (int ii = 0; ii < m_events.Count; ii++)
                 {
-                    EventFieldList processedEvent = m_events[ii] as EventFieldList;
+                    var processedEvent = m_events[ii];
 
                     if (processedEvent != null)
                     {
@@ -990,12 +922,11 @@ namespace Opc.Ua.Server
                 }
 
                 // construct the context to use for the event filter.
-                FilterContext context = new FilterContext(m_server.NamespaceUris, m_server.TypeTree, Session.PreferredLocales);
+                var context = new FilterContext(m_server.NamespaceUris, m_server.TypeTree, Session.PreferredLocales);
 
                 // event filter must be specified.
-                EventFilter filter = m_filterToUse as EventFilter;
 
-                if (filter == null)
+                if (!(m_filterToUse is EventFilter filter))
                 {
                     throw new ServiceResultException(StatusCodes.BadInternalError);
                 }
@@ -1041,38 +972,6 @@ namespace Opc.Ua.Server
         }
 
         /// <summary>
-        /// Whether the item has notifications that are ready to publish.
-        /// </summary>
-        [Obsolete("Not used - Use IsReadyToPublish")]
-        public virtual bool ReadyToPublish
-        {
-            get
-            {
-                lock (m_lock)
-                {
-                    // only publish if reporting.
-                    if (m_monitoringMode != MonitoringMode.Reporting)
-                    {
-                        return false;
-                    }
-
-                    return m_readyToPublish;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Used to check whether the item is ready to sample.
-        /// </summary>
-        public bool SamplingIntervalExpired()
-        {
-            lock (m_lock)
-            {
-                return TimeToNextSample <= 0;
-            }
-        }
-
-        /// <summary>
         /// Increments the sample time to the next interval.
         /// </summary>
         private void IncrementSampleTime()
@@ -1103,8 +1002,15 @@ namespace Opc.Ua.Server
         /// </summary>
         public virtual bool Publish(OperationContext context, Queue<EventFieldList> notifications)
         {
-            if (context == null) throw new ArgumentNullException(nameof(context));
-            if (notifications == null) throw new ArgumentNullException(nameof(notifications));
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            if (notifications == null)
+            {
+                throw new ArgumentNullException(nameof(notifications));
+            }
 
             lock (m_lock)
             {
@@ -1133,9 +1039,9 @@ namespace Opc.Ua.Server
                     if (m_overflow)
                     {
                         // construct event.
-                        EventQueueOverflowEventState e = new EventQueueOverflowEventState(null);
+                        var e = new EventQueueOverflowEventState(null);
 
-                        TranslationInfo message = new TranslationInfo(
+                        var message = new TranslationInfo(
                             "EventQueueOverflowEventState",
                             "en-US",
                             "Events lost due to queue overflow.");
@@ -1166,22 +1072,21 @@ namespace Opc.Ua.Server
 
                     for (int ii = 0; ii < m_events.Count; ii++)
                     {
-                        EventFieldList fields = (EventFieldList)m_events[ii];
+                        var fields = m_events[ii];
 
                         // apply any diagnostic masks.
                         for (int jj = 0; jj < fields.EventFields.Count; jj++)
                         {
                             object value = fields.EventFields[jj].Value;
 
-                            StatusResult result = value as StatusResult;
 
-                            if (result != null)
+                            if (value is StatusResult result)
                             {
                                 result.ApplyDiagnosticMasks(context.DiagnosticsMask, context.StringTable);
                             }
                         }
 
-                        notifications.Enqueue((EventFieldList)m_events[ii]);
+                        notifications.Enqueue(m_events[ii]);
                     }
 
                     m_events.Clear();
@@ -1213,9 +1118,20 @@ namespace Opc.Ua.Server
             Queue<MonitoredItemNotification> notifications,
             Queue<DiagnosticInfo> diagnostics)
         {
-            if (context == null) throw new ArgumentNullException(nameof(context));
-            if (notifications == null) throw new ArgumentNullException(nameof(notifications));
-            if (diagnostics == null) throw new ArgumentNullException(nameof(diagnostics));
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            if (notifications == null)
+            {
+                throw new ArgumentNullException(nameof(notifications));
+            }
+
+            if (diagnostics == null)
+            {
+                throw new ArgumentNullException(nameof(diagnostics));
+            }
 
             lock (m_lock)
             {
@@ -1335,10 +1251,10 @@ namespace Opc.Ua.Server
             }
 
             // copy data value.
-            MonitoredItemNotification item = new MonitoredItemNotification();
-
-            item.ClientHandle = m_clientHandle;
-            item.Value = value;
+            var item = new MonitoredItemNotification {
+                ClientHandle = m_clientHandle,
+                Value = value
+            };
 
             // apply timestamp filter.
             if (m_timestampsToReturn != TimestampsToReturn.Server && m_timestampsToReturn != TimestampsToReturn.Both)
@@ -1400,7 +1316,7 @@ namespace Opc.Ua.Server
                 {
                     if (m_monitoringMode == MonitoringMode.Disabled)
                     {
-                        return Int32.MaxValue;
+                        return int.MaxValue;
                     }
 
                     // node manager responsible for ensuring correct sampling.
@@ -1409,7 +1325,7 @@ namespace Opc.Ua.Server
                         return 0;
                     }
 
-                    var now = HiResClock.TickCount64;
+                    long now = HiResClock.TickCount64;
 
                     if (m_nextSamplingTime <= now)
                     {
@@ -1420,15 +1336,18 @@ namespace Opc.Ua.Server
                 }
             }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Applies the filter to value to determine if the new value should be kept.
         /// </summary>
         protected virtual bool ApplyFilter(DataValue value, ServiceResult error)
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             bool changed = ValueChanged(
                 value,
@@ -1452,7 +1371,10 @@ namespace Opc.Ua.Server
             DataChangeFilter filter,
             double range)
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             // select default data change filters.
             double deadband = 0.0;
@@ -1572,17 +1494,9 @@ namespace Opc.Ua.Server
                 return true;
             }
 
-            // check for arrays.
-            Array array1 = value1 as Array;
-            Array array2 = value2 as Array;
-
-            if (array1 == null || array2 == null)
+            if (!(value1 is Array array1) || !(value2 is Array array2))
             {
-
-                XmlElement xmlElement1 = value1 as XmlElement;
-                XmlElement xmlElement2 = value2 as XmlElement;
-
-                if (xmlElement1 != null && xmlElement2 != null)
+                if (value1 is XmlElement xmlElement1 && value2 is XmlElement xmlElement2)
                 {
                     return xmlElement1.OuterXml.Equals(xmlElement2.OuterXml);
                 }
@@ -1780,16 +1694,16 @@ namespace Opc.Ua.Server
         {
             m_subscription?.QueueOverflowHandler();
         }
-        #endregion
 
-        #region Private Members
-        private object m_lock = new object();
+
+
+        private readonly object m_lock = new object();
         private IServerInternal m_server;
         private INodeManager m_nodeManager;
         private object m_managerHandle;
         private uint m_subscriptionId;
         private uint m_id;
-        private int m_typeMask;
+        private readonly int m_typeMask;
         private NodeId m_nodeId;
         private uint m_attributeId;
         private string m_indexRange;
@@ -1822,6 +1736,6 @@ namespace Opc.Ua.Server
         private ServiceResult m_samplingError;
         private IAggregateCalculator m_calculator;
         private bool m_triggered;
-        #endregion
+
     }
 }

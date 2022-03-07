@@ -23,7 +23,7 @@ namespace Opc.Ua
     [DataContractAttribute]
     public class ServiceResultException : Exception
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -45,7 +45,7 @@ namespace Opc.Ua
         /// </summary>
         public ServiceResultException(Exception e, uint defaultCode) : base(e.Message, e)
         {
-            m_status = ServiceResult.Create(e, defaultCode, String.Empty);
+            m_status = ServiceResult.Create(e, defaultCode, string.Empty);
         }
 
         /// <summary>
@@ -102,9 +102,9 @@ namespace Opc.Ua
                 m_status = new ServiceResult(StatusCodes.Bad);
             }
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The identifier for the status code.
         /// </summary>
@@ -139,24 +139,24 @@ namespace Opc.Ua
         /// Nested error information.
         /// </summary>
         public ServiceResult InnerResult => m_status.InnerResult;
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Returns a formatted string with the contents of exception.
         /// </summary>
         public string ToLongString()
         {
-            StringBuilder buffer = new StringBuilder();
+            var buffer = new StringBuilder();
 
             buffer.AppendLine(Message);
             buffer.Append(m_status.ToLongString());
 
             return buffer.ToString();
         }
-        #endregion
 
-        #region Static Interface
+
+
         /// <summary>
         /// Creates a new instance of a ServiceResultException
         /// </summary>
@@ -190,9 +190,9 @@ namespace Opc.Ua
         {
             return new ServiceResultException(new ServiceResult(code, index, diagnosticInfos, stringTable));
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Extracts an exception message from a Result object.
         /// </summary>
@@ -210,13 +210,13 @@ namespace Opc.Ua
 
             return status.ToString();
         }
-        #endregion
 
-        #region Private Fields
-        private ServiceResult m_status;
-        #endregion
 
-        #region Private Constants
+
+        private readonly ServiceResult m_status;
+
+
+
         /// <summary>
         /// Wraps string constants defined in the class.
         /// </summary>
@@ -224,6 +224,6 @@ namespace Opc.Ua
         {
             public const string DefaultMessage = "A UA specific error occurred.";
         }
-        #endregion
+
     }
 }

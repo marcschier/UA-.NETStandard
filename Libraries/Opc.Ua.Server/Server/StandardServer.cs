@@ -45,7 +45,7 @@ namespace Opc.Ua.Server
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
     public partial class StandardServer : SessionServerBase
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object with default values.
         /// </summary>
@@ -53,9 +53,9 @@ namespace Opc.Ua.Server
         {
             m_nodeManagerFactories = new List<INodeManagerFactory>();
         }
-        #endregion
 
-        #region IDisposable Members
+
+
         /// <summary>
         /// An overrideable version of the Dispose.
         /// </summary>
@@ -91,9 +91,9 @@ namespace Opc.Ua.Server
 
             base.Dispose(disposing);
         }
-        #endregion
 
-        #region IServer Methods
+
+
         /// <summary>
         /// Invokes the FindServers service.
         /// </summary>
@@ -136,7 +136,7 @@ namespace Opc.Ua.Server
                 }
 
                 // build list of unique servers.
-                Dictionary<string, ApplicationDescription> uniqueServers = new Dictionary<string, ApplicationDescription>();
+                var uniqueServers = new Dictionary<string, ApplicationDescription>();
 
                 foreach (EndpointDescription description in GetEndpoints())
                 {
@@ -241,7 +241,7 @@ namespace Opc.Ua.Server
             if (baseAddresses.Count != 0)
             {
                 // localize the application name if requested.
-                LocalizedText applicationName = this.ServerDescription.ApplicationName;
+                LocalizedText applicationName = ServerDescription.ApplicationName;
 
                 if (localeIds != null && localeIds.Count > 0)
                 {
@@ -259,7 +259,7 @@ namespace Opc.Ua.Server
                 endpoints = TranslateEndpointDescriptions(
                     parsedEndpointUrl,
                     baseAddresses,
-                    this.Endpoints,
+                    Endpoints,
                     application);
             }
 
@@ -323,9 +323,9 @@ namespace Opc.Ua.Server
             try
             {
                 // check the server uri.
-                if (!String.IsNullOrEmpty(serverUri))
+                if (!string.IsNullOrEmpty(serverUri))
                 {
-                    if (serverUri != this.Configuration.ApplicationUri)
+                    if (serverUri != Configuration.ApplicationUri)
                     {
                         throw new ServiceResultException(StatusCodes.BadServerUriInvalid);
                     }
@@ -353,8 +353,8 @@ namespace Opc.Ua.Server
                             string certificateApplicationUri = X509Utils.GetApplicationUriFromCertificate(parsedClientCertificate);
 
                             // verify if applicationUri from ApplicationDescription matches the applicationUri in the client certificate.
-                            if (!String.IsNullOrEmpty(certificateApplicationUri) &&
-                                !String.IsNullOrEmpty(clientDescription.ApplicationUri) &&
+                            if (!string.IsNullOrEmpty(certificateApplicationUri) &&
+                                !string.IsNullOrEmpty(clientDescription.ApplicationUri) &&
                                 certificateApplicationUri != clientDescription.ApplicationUri)
                             {
                                 throw ServiceResultException.Create(
@@ -412,7 +412,7 @@ namespace Opc.Ua.Server
                             InstanceCertificateChain != null &&
                             InstanceCertificateChain.Count > 0)
                         {
-                            List<byte> serverCertificateChain = new List<byte>();
+                            var serverCertificateChain = new List<byte>();
 
                             for (int i = 0; i < InstanceCertificateChain.Count; i++)
                             {
@@ -513,7 +513,7 @@ namespace Opc.Ua.Server
             try
             {
                 // validate client's software certificates.
-                List<SoftwareCertificate> softwareCertificates = new List<SoftwareCertificate>();
+                var softwareCertificates = new List<SoftwareCertificate>();
 
                 if (context.SecurityPolicyUri != SecurityPolicies.None)
                 {
@@ -656,28 +656,6 @@ namespace Opc.Ua.Server
             }
 
             return false;
-        }
-
-        /// <summary>
-        /// Creates the response header.
-        /// </summary>
-        /// <param name="requestHeader">The object that contains description for the RequestHeader DataType.</param>
-        /// <param name="exception">The exception used to create DiagnosticInfo assigned to the ServiceDiagnostics.</param>
-        /// <returns>Returns a description for the ResponseHeader DataType. </returns>
-        protected ResponseHeader CreateResponse(RequestHeader requestHeader, ServiceResultException exception)
-        {
-            ResponseHeader responseHeader = new ResponseHeader();
-
-            responseHeader.ServiceResult = exception.StatusCode;
-
-            responseHeader.Timestamp = DateTime.UtcNow;
-            responseHeader.RequestHandle = requestHeader.RequestHandle;
-
-            StringTable stringTable = new StringTable();
-            responseHeader.ServiceDiagnostics = new DiagnosticInfo(exception, (DiagnosticsMasks)requestHeader.ReturnDiagnostics, true, stringTable);
-            responseHeader.StringTable = stringTable.ToArray();
-
-            return responseHeader;
         }
 
         /// <summary>
@@ -1470,7 +1448,7 @@ namespace Opc.Ua.Server
                 /*
                 if (notificationMessage != null)
                 {
-                    Utils.LogTrace(m_eventId, 
+                    Utils.LogTrace(m_eventId,
                         "PublishResponse: SubId={0} SeqNo={1}, PublishTime={2:mm:ss.fff}, Time={3:mm:ss.fff}",
                         subscriptionId,
                         notificationMessage.SequenceNumber,
@@ -1498,107 +1476,6 @@ namespace Opc.Ua.Server
             finally
             {
                 OnRequestComplete(context);
-            }
-        }
-
-        /// <summary>
-        /// Begins an asynchronous publish operation.
-        /// </summary>
-        /// <param name="request">The request.</param>
-        public virtual void BeginPublish(IEndpointIncomingRequest request)
-        {
-            PublishRequest input = (PublishRequest)request.Request;
-            OperationContext context = ValidateRequest(input.RequestHeader, RequestType.Publish);
-
-            try
-            {
-                AsyncPublishOperation operation = new AsyncPublishOperation(context, request, this);
-
-                uint subscriptionId = 0;
-                UInt32Collection availableSequenceNumbers = null;
-                bool moreNotifications = false;
-                NotificationMessage notificationMessage = null;
-                StatusCodeCollection results = null;
-                DiagnosticInfoCollection diagnosticInfos = null;
-
-                notificationMessage = ServerInternal.SubscriptionManager.Publish(
-                    context,
-                    input.SubscriptionAcknowledgements,
-                    operation,
-                    out subscriptionId,
-                    out availableSequenceNumbers,
-                    out moreNotifications,
-                    out results,
-                    out diagnosticInfos);
-
-                // request completed asychrnously.
-                if (notificationMessage != null)
-                {
-                    OnRequestComplete(context);
-
-                    operation.Response.ResponseHeader = CreateResponse(input.RequestHeader, context.StringTable);
-                    operation.Response.SubscriptionId = subscriptionId;
-                    operation.Response.AvailableSequenceNumbers = availableSequenceNumbers;
-                    operation.Response.MoreNotifications = moreNotifications;
-                    operation.Response.Results = results;
-                    operation.Response.DiagnosticInfos = diagnosticInfos;
-                    operation.Response.NotificationMessage = notificationMessage;
-
-                    Utils.LogTrace("PUBLISH: #{0} Completed Synchronously", input.RequestHeader.RequestHandle);
-                    request.OperationCompleted(operation.Response, null);
-                }
-            }
-            catch (ServiceResultException e)
-            {
-                OnRequestComplete(context);
-
-                lock (ServerInternal.DiagnosticsWriteLock)
-                {
-                    ServerInternal.ServerDiagnostics.RejectedRequestsCount++;
-
-                    if (IsSecurityError(e.StatusCode))
-                    {
-                        ServerInternal.ServerDiagnostics.SecurityRejectedRequestsCount++;
-                    }
-                }
-
-                throw TranslateException(context, e);
-            }
-        }
-
-        /// <summary>
-        /// Completes an asynchronous publish operation.
-        /// </summary>
-        /// <param name="request">The request.</param>
-        public virtual void CompletePublish(IEndpointIncomingRequest request)
-        {
-            AsyncPublishOperation operation = (AsyncPublishOperation)request.Calldata;
-            OperationContext context = operation.Context;
-
-            try
-            {
-                if (ServerInternal.SubscriptionManager.CompletePublish(context, operation))
-                {
-                    operation.Response.ResponseHeader = CreateResponse(request.Request.RequestHeader, context.StringTable);
-                    request.OperationCompleted(operation.Response, null);
-                    OnRequestComplete(context);
-                }
-            }
-            catch (ServiceResultException e)
-            {
-                OnRequestComplete(context);
-
-                lock (ServerInternal.DiagnosticsWriteLock)
-                {
-                    ServerInternal.ServerDiagnostics.RejectedRequestsCount++;
-
-                    if (IsSecurityError(e.StatusCode))
-                    {
-                        ServerInternal.ServerDiagnostics.SecurityRejectedRequestsCount++;
-                    }
-                }
-
-                throw TranslateException(context, e);
             }
         }
 
@@ -2116,9 +1993,9 @@ namespace Opc.Ua.Server
                 OnRequestComplete(context);
             }
         }
-        #endregion
 
-        #region Public Methods used by the Host Process
+
+
         /// <summary>
         /// The state object associated with the server.
         /// It provides the shared components for the Server.
@@ -2141,29 +2018,12 @@ namespace Opc.Ua.Server
         }
 
         /// <summary>
-        /// Returns the current status of the server.
-        /// </summary>
-        /// <returns>Returns a ServerStatusDataType object</returns>
-        public ServerStatusDataType GetStatus()
-        {
-            lock (m_lock)
-            {
-                if (m_serverInternal == null)
-                {
-                    throw new ServiceResultException(StatusCodes.BadServerHalted);
-                }
-
-                return m_serverInternal.Status.Value;
-            }
-        }
-
-        /// <summary>
         /// Registers the server with the discovery server.
         /// </summary>
         /// <returns>Boolean value.</returns>
         public bool RegisterWithDiscoveryServer()
         {
-            ApplicationConfiguration configuration = new ApplicationConfiguration(base.Configuration);
+            var configuration = new ApplicationConfiguration(base.Configuration);
 
             // use a dedicated certificate validator with the registration, but derive behavior from server config
             var registrationCertificateValidator = new CertificateValidationEventHandler(RegistrationValidator_CertificateValidation);
@@ -2203,8 +2063,9 @@ namespace Opc.Ua.Server
                                     endpoint.UpdateBeforeConnect = false;
                                 }
 
-                                RequestHeader requestHeader = new RequestHeader();
-                                requestHeader.Timestamp = DateTime.UtcNow;
+                                var requestHeader = new RequestHeader {
+                                    Timestamp = DateTime.UtcNow
+                                };
 
                                 // create the client.
                                 client = RegistrationClient.Create(
@@ -2218,14 +2079,14 @@ namespace Opc.Ua.Server
                                 // register the server.
                                 if (m_useRegisterServer2)
                                 {
-                                    ExtensionObjectCollection discoveryConfiguration = new ExtensionObjectCollection();
+                                    var discoveryConfiguration = new ExtensionObjectCollection();
                                     StatusCodeCollection configurationResults = null;
                                     DiagnosticInfoCollection diagnosticInfos = null;
-                                    MdnsDiscoveryConfiguration mdnsDiscoveryConfig = new MdnsDiscoveryConfiguration {
+                                    var mdnsDiscoveryConfig = new MdnsDiscoveryConfiguration {
                                         ServerCapabilities = configuration.ServerConfiguration.ServerCapabilities,
                                         MdnsServerName = Utils.GetHostName()
                                     };
-                                    ExtensionObject extensionObject = new ExtensionObject(mdnsDiscoveryConfig);
+                                    var extensionObject = new ExtensionObject(mdnsDiscoveryConfig);
                                     discoveryConfiguration.Add(extensionObject);
                                     client.RegisterServer2(
                                         requestHeader,
@@ -2367,13 +2228,6 @@ namespace Opc.Ua.Server
                 Utils.LogError(e, "Unexpected exception handling registration timer.");
             }
         }
-        #endregion
-
-        #region Protected Members used for Request Processing
-        /// <summary>
-        /// The synchronization object.
-        /// </summary>
-        protected object Lock => m_lock;
 
         /// <summary>
         /// The state object associated with the server.
@@ -2440,18 +2294,6 @@ namespace Opc.Ua.Server
                 LogInfo(TraceMasks.StartStop, "Server - Enter {0} state.", state.ToString());
 
                 m_serverInternal.CurrentState = state;
-            }
-        }
-
-        /// <summary>
-        /// Reports an error during initialization after the base server object has been started.
-        /// </summary>
-        /// <param name="error">The error.</param>
-        protected virtual void SetServerError(ServiceResult error)
-        {
-            lock (m_lock)
-            {
-                ServerError = error;
             }
         }
 
@@ -2579,7 +2421,7 @@ namespace Opc.Ua.Server
             }
 
             // create new result object.
-            ServiceResult result = new ServiceResult(
+            var result = new ServiceResult(
                 e.StatusCode,
                 e.SymbolicId,
                 e.NamespaceUri,
@@ -2590,23 +2432,6 @@ namespace Opc.Ua.Server
             // translate result.
             result = m_serverInternal.ResourceManager.Translate(preferredLocales, result);
             return new ServiceResultException(result);
-        }
-
-        /// <summary>
-        /// Translates a service result.
-        /// </summary>
-        /// <param name="diagnosticsMasks">The fields to return.</param>
-        /// <param name="preferredLocales">The preferred locales.</param>
-        /// <param name="result">The result.</param>
-        /// <returns>Returns a class that combines the status code and diagnostic info structures.</returns>
-        protected virtual ServiceResult TranslateResult(DiagnosticsMasks diagnosticsMasks, IList<string> preferredLocales, ServiceResult result)
-        {
-            if (result == null)
-            {
-                return null;
-            }
-
-            return m_serverInternal.ResourceManager.Translate(preferredLocales, result);
         }
 
         /// <summary>
@@ -2625,9 +2450,9 @@ namespace Opc.Ua.Server
                 m_serverInternal.RequestManager.RequestCompleted(context);
             }
         }
-        #endregion
 
-        #region Protected Members used for Initialization
+
+
         /// <summary>
         /// Raised when the configuration changes.
         /// </summary>
@@ -2658,7 +2483,7 @@ namespace Opc.Ua.Server
         /// <remarks>
         /// Servers are free to ignore changes if it is difficult/impossible to apply them without a restart.
         /// </remarks>
-        protected override void OnUpdateConfiguration(ApplicationConfiguration configuration)
+        protected virtual void OnUpdateConfiguration(ApplicationConfiguration configuration)
         {
             lock (m_lock)
             {
@@ -2732,29 +2557,29 @@ namespace Opc.Ua.Server
             // ensure at least one user token policy exists.
             if (configuration.ServerConfiguration.UserTokenPolicies.Count == 0)
             {
-                UserTokenPolicy userTokenPolicy = new UserTokenPolicy();
-
-                userTokenPolicy.TokenType = UserTokenType.Anonymous;
+                var userTokenPolicy = new UserTokenPolicy {
+                    TokenType = UserTokenType.Anonymous
+                };
                 userTokenPolicy.PolicyId = userTokenPolicy.TokenType.ToString();
 
                 configuration.ServerConfiguration.UserTokenPolicies.Add(userTokenPolicy);
             }
 
             // set server description.
-            serverDescription = new ApplicationDescription();
-
-            serverDescription.ApplicationUri = configuration.ApplicationUri;
-            serverDescription.ApplicationName = new LocalizedText("en-US", configuration.ApplicationName);
-            serverDescription.ApplicationType = configuration.ApplicationType;
-            serverDescription.ProductUri = configuration.ProductUri;
-            serverDescription.DiscoveryUrls = GetDiscoveryUrls();
+            serverDescription = new ApplicationDescription {
+                ApplicationUri = configuration.ApplicationUri,
+                ApplicationName = new LocalizedText("en-US", configuration.ApplicationName),
+                ApplicationType = configuration.ApplicationType,
+                ProductUri = configuration.ProductUri,
+                DiscoveryUrls = GetDiscoveryUrls()
+            };
 
             endpoints = new EndpointDescriptionCollection();
             IList<EndpointDescription> endpointsForHost = null;
 
-            foreach (var scheme in Utils.DefaultUriSchemes)
+            foreach (string scheme in Utils.DefaultUriSchemes)
             {
-                var binding = bindingFactory.GetBinding(scheme);
+                ITransportListenerFactory binding = bindingFactory.GetBinding(scheme);
                 if (binding != null)
                 {
                     endpointsForHost = binding.CreateServiceHost(
@@ -2780,14 +2605,6 @@ namespace Opc.Ua.Server
         public override ServiceHost CreateServiceHost(ServerBase server, params Uri[] addresses)
         {
             return new ServiceHost(this, typeof(SessionEndpoint), addresses);
-        }
-
-        /// <summary>
-        /// Returns the service contract to use.
-        /// </summary>
-        protected override Type GetServiceContract()
-        {
-            return typeof(ISessionEndpoint);
         }
 
         /// <summary>
@@ -2820,7 +2637,7 @@ namespace Opc.Ua.Server
                         new CertificateValidator(),
                         InstanceCertificate);
 
-                    // create the manager responsible for providing localized string resources.                    
+                    // create the manager responsible for providing localized string resources.
                     Utils.LogInfo(TraceMasks.StartStop, "Server - CreateResourceManager.");
                     ResourceManager resourceManager = CreateResourceManager(m_serverInternal, configuration);
 
@@ -2877,8 +2694,9 @@ namespace Opc.Ua.Server
 
                         ApplicationDescription serverDescription = ServerDescription;
 
-                        m_registrationInfo = new RegisteredServer();
-                        m_registrationInfo.ServerUri = serverDescription.ApplicationUri;
+                        m_registrationInfo = new RegisteredServer {
+                            ServerUri = serverDescription.ApplicationUri
+                        };
                         m_registrationInfo.ServerNames.Add(serverDescription.ApplicationName);
                         m_registrationInfo.ProductUri = serverDescription.ProductUri;
                         m_registrationInfo.ServerType = serverDescription.ApplicationType;
@@ -2891,9 +2709,9 @@ namespace Opc.Ua.Server
 
                         for (int ii = 0; ii < BaseAddresses.Count; ii++)
                         {
-                            UriBuilder uri = new UriBuilder(BaseAddresses[ii].DiscoveryUrl);
+                            var uri = new UriBuilder(BaseAddresses[ii].DiscoveryUrl);
 
-                            if (String.Equals(uri.Host, "localhost", StringComparison.OrdinalIgnoreCase))
+                            if (string.Equals(uri.Host, "localhost", StringComparison.OrdinalIgnoreCase))
                             {
                                 uri.Host = computerName;
                             }
@@ -2908,11 +2726,12 @@ namespace Opc.Ua.Server
 
                         if (endpoint == null)
                         {
-                            endpoint = new EndpointDescription();
-                            endpoint.EndpointUrl = Utils.Format(Utils.DiscoveryUrls[0], "localhost");
-                            endpoint.SecurityLevel = ServerSecurityPolicy.CalculateSecurityLevel(MessageSecurityMode.SignAndEncrypt, SecurityPolicies.Basic256Sha256);
-                            endpoint.SecurityMode = MessageSecurityMode.SignAndEncrypt;
-                            endpoint.SecurityPolicyUri = SecurityPolicies.Basic256Sha256;
+                            endpoint = new EndpointDescription {
+                                EndpointUrl = Utils.Format(Utils.DiscoveryUrls[0], "localhost"),
+                                SecurityLevel = ServerSecurityPolicy.CalculateSecurityLevel(MessageSecurityMode.SignAndEncrypt, SecurityPolicies.Basic256Sha256),
+                                SecurityMode = MessageSecurityMode.SignAndEncrypt,
+                                SecurityPolicyUri = SecurityPolicies.Basic256Sha256
+                            };
                             endpoint.Server.ApplicationType = ApplicationType.DiscoveryServer;
                         }
 
@@ -2943,21 +2762,21 @@ namespace Opc.Ua.Server
                     OnServerStarted(m_serverInternal);
 
                     // monitor the configuration file.
-                    if (!String.IsNullOrEmpty(configuration.SourceFilePath))
+                    if (!string.IsNullOrEmpty(configuration.SourceFilePath))
                     {
                         Utils.LogInfo(TraceMasks.StartStop, "Server - Configuration watcher started.");
                         m_configurationWatcher = new ConfigurationWatcher(configuration);
-                        m_configurationWatcher.Changed += this.OnConfigurationChanged;
+                        m_configurationWatcher.Changed += OnConfigurationChanged;
                     }
 
                     CertificateValidator.CertificateUpdate += OnCertificateUpdate;
                 }
                 catch (Exception e)
                 {
-                    var message = "Unexpected error starting application";
+                    string message = "Unexpected error starting application";
                     Utils.LogCritical(TraceMasks.StartStop, e, message);
                     m_serverInternal = null;
-                    ServiceResult error = ServiceResult.Create(e, StatusCodes.BadInternalError, message);
+                    var error = ServiceResult.Create(e, StatusCodes.BadInternalError, message);
                     ServerError = error;
                     throw new ServiceResultException(error);
                 }
@@ -3026,7 +2845,7 @@ namespace Opc.Ua.Server
             try
             {
                 // check for connected clients.
-                IList<Session> currentessions = this.ServerInternal.SessionManager.GetSessions();
+                IList<Session> currentessions = ServerInternal.SessionManager.GetSessions();
 
                 if (currentessions.Count > 0)
                 {
@@ -3044,7 +2863,7 @@ namespace Opc.Ua.Server
                         ServerInternal.Status.Variable.ClearChangeMasks(ServerInternal.DefaultSystemContext, true);
 
                         // exit if all client connections are closed.
-                        var sessions = ServerInternal.SessionManager.GetSessions().Count;
+                        int sessions = ServerInternal.SessionManager.GetSessions().Count;
                         if (sessions == 0)
                         {
                             break;
@@ -3083,7 +2902,7 @@ namespace Opc.Ua.Server
         /// <returns>The manager.</returns>
         protected virtual AggregateManager CreateAggregateManager(IServerInternal server, ApplicationConfiguration configuration)
         {
-            AggregateManager manager = new AggregateManager(server);
+            var manager = new AggregateManager(server);
 
             manager.RegisterFactory(ObjectIds.AggregateFunction_Interpolative, BrowseNames.AggregateFunction_Interpolative, Aggregators.CreateStandardCalculator);
             manager.RegisterFactory(ObjectIds.AggregateFunction_Average, BrowseNames.AggregateFunction_Average, Aggregators.CreateStandardCalculator);
@@ -3139,7 +2958,7 @@ namespace Opc.Ua.Server
         /// <returns>Returns an object that manages access to localized resources, the return type is <seealso cref="ResourceManager"/>.</returns>
         protected virtual ResourceManager CreateResourceManager(IServerInternal server, ApplicationConfiguration configuration)
         {
-            ResourceManager resourceManager = new ResourceManager(server, configuration);
+            var resourceManager = new ResourceManager(server, configuration);
 
             // load default text for all status codes.
             resourceManager.LoadDefaultText();
@@ -3157,7 +2976,7 @@ namespace Opc.Ua.Server
         {
             IList<INodeManager> nodeManagers = new List<INodeManager>();
 
-            foreach (var nodeManagerFactory in m_nodeManagerFactories)
+            foreach (INodeManagerFactory nodeManagerFactory in m_nodeManagerFactories)
             {
                 nodeManagers.Add(nodeManagerFactory.Create(server, configuration));
             }
@@ -3216,38 +3035,12 @@ namespace Opc.Ua.Server
             // may be overridden by the subclass.
         }
 
-        /// <summary>
-        /// The node manager factories that are used on startup of the server.
-        /// </summary>
-        public IEnumerable<INodeManagerFactory> NodeManagerFactories => m_nodeManagerFactories;
 
-        /// <summary>
-        /// Add a node manager factory which is used on server start
-        /// to instantiate the node manager in the server.
-        /// </summary>
-        /// <param name="nodeManagerFactory">The node manager factory used to create the NodeManager.</param>
-        public virtual void AddNodeManager(INodeManagerFactory nodeManagerFactory)
-        {
-            m_nodeManagerFactories.Add(nodeManagerFactory);
-        }
 
-        /// <summary>
-        /// Remove a node manager factory from the list of node managers.
-        /// Does not remove a NodeManager from a running server,
-        /// only removes the factory before the server starts.
-        /// </summary>
-        /// <param name="nodeManagerFactory">The node manager factory to remove.</param>
-        public virtual void RemoveNodeManager(INodeManagerFactory nodeManagerFactory)
-        {
-            m_nodeManagerFactories.Remove(nodeManagerFactory);
-        }
-        #endregion
-
-        #region Private Properties
         private OperationLimitsState OperationLimits => ServerInternal.ServerObject.ServerCapabilities.OperationLimits;
-        #endregion
 
-        #region Private Fields
+
+
         private readonly object m_lock = new object();
         private readonly object m_registrationLock = new object();
         private ServerInternalData m_serverInternal;
@@ -3260,7 +3053,7 @@ namespace Opc.Ua.Server
         private int m_lastRegistrationInterval;
         private int m_minNonceLength;
         private bool m_useRegisterServer2;
-        private IList<INodeManagerFactory> m_nodeManagerFactories;
-        #endregion
+        private readonly IList<INodeManagerFactory> m_nodeManagerFactories;
+
     }
 }

@@ -27,9 +27,6 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
-using System.Reflection;
-
 namespace Opc.Ua
 {
     /// <summary>

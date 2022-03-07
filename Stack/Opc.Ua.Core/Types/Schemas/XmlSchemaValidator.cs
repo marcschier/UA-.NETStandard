@@ -25,7 +25,7 @@ namespace Opc.Ua.Schema.Xml
     /// </summary>
     public class XmlSchemaValidator : SchemaValidator
     {
-        #region Constructors
+
         /// <summary>
         /// Intializes the object with default values.
         /// </summary>
@@ -41,28 +41,6 @@ namespace Opc.Ua.Schema.Xml
         {
             SetResourcePaths(WellKnownDictionaries);
         }
-        #endregion
-
-        #region Public Members
-        /// <summary>
-        /// The schema set that was validated.
-        /// </summary>
-        public XmlSchemaSet SchemaSet => m_schemaSet;
-        /// <summary>
-        /// The schema that was validated.
-        /// </summary>
-        public XmlSchema TargetSchema => m_schema;
-
-        /// <summary>
-        /// Generates the code from the contents of the address space.
-        /// </summary>
-        public void Validate(string inputPath)
-        {
-            using (Stream istrm = File.OpenRead(inputPath))
-            {
-                Validate(istrm);
-            }
-        }
 
         /// <summary>
         /// Generates the code from the contents of the address space.
@@ -73,7 +51,7 @@ namespace Opc.Ua.Schema.Xml
             {
                 m_schema = XmlSchema.Read(xmlReader, new ValidationEventHandler(OnValidate));
 
-                var assembly = typeof(XmlSchemaValidator).GetTypeInfo().Assembly;
+                Assembly assembly = typeof(XmlSchemaValidator).GetTypeInfo().Assembly;
                 foreach (XmlSchemaImport import in m_schema.Includes)
                 {
                     string location = null;
@@ -83,11 +61,11 @@ namespace Opc.Ua.Schema.Xml
                         location = import.SchemaLocation;
                     }
 
-                    FileInfo fileInfo = new FileInfo(location);
-                    var settings = Utils.DefaultXmlReaderSettings();
+                    var fileInfo = new FileInfo(location);
+                    XmlReaderSettings settings = Utils.DefaultXmlReaderSettings();
                     if (!fileInfo.Exists)
                     {
-                        using (StreamReader strm = new StreamReader(assembly.GetManifestResourceStream(location)))
+                        using (var strm = new StreamReader(assembly.GetManifestResourceStream(location)))
                         using (var schemaReader = XmlReader.Create(strm, settings))
                         {
                             import.Schema = XmlSchema.Read(schemaReader, new ValidationEventHandler(OnValidate));
@@ -112,16 +90,16 @@ namespace Opc.Ua.Schema.Xml
         /// <summary>
         /// Returns the schema for the specified type (returns the entire schema if null).
         /// </summary>
-        public override string GetSchema(string typeName)
+        public string GetSchema(string typeName)
         {
-            XmlWriterSettings settings = new XmlWriterSettings();
+            var settings = new XmlWriterSettings {
+                Encoding = Encoding.UTF8,
+                Indent = true,
+                IndentChars = "    "
+            };
 
-            settings.Encoding = Encoding.UTF8;
-            settings.Indent = true;
-            settings.IndentChars = "    ";
-
-            MemoryStream ostrm = new MemoryStream();
-            XmlWriter writer = XmlWriter.Create(ostrm, settings);
+            var ostrm = new MemoryStream();
+            var writer = XmlWriter.Create(ostrm, settings);
 
             try
             {
@@ -133,13 +111,11 @@ namespace Opc.Ua.Schema.Xml
                 {
                     foreach (XmlSchemaObject current in m_schema.Elements.Values)
                     {
-                        XmlSchemaElement element = current as XmlSchemaElement;
-
-                        if (element != null)
+                        if (current is XmlSchemaElement element)
                         {
                             if (element.Name == typeName)
                             {
-                                XmlSchema schema = new XmlSchema();
+                                var schema = new XmlSchema();
                                 schema.Items.Add(element.ElementSchemaType);
                                 schema.Items.Add(element);
                                 schema.Write(writer);
@@ -157,20 +133,20 @@ namespace Opc.Ua.Schema.Xml
 
             return new UTF8Encoding().GetString(ostrm.ToArray());
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Handles a validation error.
         /// </summary>
-        static void OnValidate(object sender, ValidationEventArgs args)
+        private static void OnValidate(object sender, ValidationEventArgs args)
         {
             Utils.LogError("Error in XML schema validation: {0}", args.Message);
             throw new InvalidOperationException(args.Message, args.Exception);
         }
-        #endregion
 
-        #region Private Fields
+
+
         /// <summary>
         /// The well known schemas embedded in the assembly.
         /// </summary>
@@ -180,6 +156,6 @@ namespace Opc.Ua.Schema.Xml
         };
         private XmlSchema m_schema;
         private XmlSchemaSet m_schemaSet;
-        #endregion
+
     }
 }

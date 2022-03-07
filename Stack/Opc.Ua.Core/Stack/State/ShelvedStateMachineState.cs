@@ -10,15 +10,11 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace Opc.Ua
 {
-    partial class ShelvedStateMachineState
+    public partial class ShelvedStateMachineState
     {
-        #region Initialization
+
         /// <summary>
         /// Initializes the object as a collection of counters which change value on read.
         /// </summary>
@@ -29,21 +25,18 @@ namespace Opc.Ua
             UpdateStateVariable(context, Objects.ShelvedStateMachineType_Unshelved, CurrentState);
             UpdateTransitionVariable(context, 0, LastTransition);
         }
-        #endregion
 
-        #region Overriden Members
+
+
         /// <summary>
         /// The table of states belonging to the state machine.
         /// </summary>
-        protected override ElementInfo[] StateTable
-        {
-            get { return s_StateTable; }
-        }
+        protected override ElementInfo[] StateTable => s_StateTable;
 
         /// <summary>
         /// A table of valid states.
         /// </summary>
-        private ElementInfo[] s_StateTable = new ElementInfo[]
+        private readonly ElementInfo[] s_StateTable = new ElementInfo[]
         {
             new ElementInfo(Objects.ShelvedStateMachineType_OneShotShelved, BrowseNames.OneShotShelve, 1),
             new ElementInfo(Objects.ShelvedStateMachineType_TimedShelved, BrowseNames.TimedShelved, 2),
@@ -53,15 +46,12 @@ namespace Opc.Ua
         /// <summary>
         /// The table of transitions belonging to the state machine.
         /// </summary>
-        protected override ElementInfo[] TransitionTable
-        {
-            get { return s_TransitionTable; }
-        }
+        protected override ElementInfo[] TransitionTable => s_TransitionTable;
 
         /// <summary>
         /// A table of valid transitions.
         /// </summary>
-        private ElementInfo[] s_TransitionTable = new ElementInfo[]
+        private readonly ElementInfo[] s_TransitionTable = new ElementInfo[]
         {
             new ElementInfo(Objects.ShelvedStateMachineType_OneShotShelvedToTimedShelved, BrowseNames.OneShotShelvedToTimedShelved, 1),
             new ElementInfo(Objects.ShelvedStateMachineType_OneShotShelvedToUnshelved, BrowseNames.OneShotShelvedToUnshelved, 2),
@@ -74,15 +64,12 @@ namespace Opc.Ua
         /// <summary>
         /// The mapping between transitions and their from and to states.
         /// </summary>
-        protected override uint[,] TransitionMappings
-        {
-            get { return s_TransitionMappings; }
-        }
+        protected override uint[,] TransitionMappings => s_TransitionMappings;
 
         /// <summary>
         /// A table of the to and from states for the transitions.
         /// </summary>
-        private uint[,] s_TransitionMappings = new uint[,]
+        private readonly uint[,] s_TransitionMappings = new uint[,]
         {
             { Objects.ShelvedStateMachineType_OneShotShelvedToTimedShelved, Objects.ShelvedStateMachineType_OneShotShelved, Objects.ShelvedStateMachineType_TimedShelved, 0 },
             { Objects.ShelvedStateMachineType_OneShotShelvedToUnshelved, Objects.ShelvedStateMachineType_OneShotShelved, Objects.ShelvedStateMachineType_Unshelved, 1 },
@@ -95,15 +82,12 @@ namespace Opc.Ua
         /// <summary>
         /// The mapping between causes, the current state and a transition.
         /// </summary>
-        protected override uint[,] CauseMappings
-        {
-            get { return s_CauseMappings; }
-        }
+        protected override uint[,] CauseMappings => s_CauseMappings;
 
         /// <summary>
         /// A table of transitions for the available causes.
         /// </summary>
-        private uint[,] s_CauseMappings = new uint[,]
+        private readonly uint[,] s_CauseMappings = new uint[,]
         {
             { Methods.ShelvedStateMachineType_TimedShelve, Objects.ShelvedStateMachineType_OneShotShelved, Objects.ShelvedStateMachineType_OneShotShelvedToTimedShelved },
             { Methods.ShelvedStateMachineType_Unshelve, Objects.ShelvedStateMachineType_OneShotShelved, Objects.ShelvedStateMachineType_OneShotShelvedToUnshelved },
@@ -112,6 +96,6 @@ namespace Opc.Ua
             { Methods.ShelvedStateMachineType_OneShotShelve, Objects.ShelvedStateMachineType_Unshelved, Objects.ShelvedStateMachineType_UnshelvedToOneShotShelved },
             { Methods.ShelvedStateMachineType_TimedShelve, Objects.ShelvedStateMachineType_Unshelved, Objects.ShelvedStateMachineType_UnshelvedToTimedShelved },
         };
-        #endregion
+
     }
 }

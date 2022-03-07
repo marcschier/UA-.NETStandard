@@ -10,8 +10,6 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 */
 
-using System;
-
 namespace Opc.Ua
 {
     /// <summary>
@@ -19,7 +17,7 @@ namespace Opc.Ua
 	/// </summary>
 	public interface IServiceMessageContext
     {
-        #region Public Properties
+
         /// <summary>
         /// Returns the object used to synchronize access to the context.
         /// </summary>
@@ -64,6 +62,6 @@ namespace Opc.Ua
         /// The factory used to create encodeable objects.
         /// </summary>
         IEncodeableFactory Factory { get; }
-        #endregion
+
     }
 }

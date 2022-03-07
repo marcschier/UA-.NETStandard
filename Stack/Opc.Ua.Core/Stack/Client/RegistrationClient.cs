@@ -20,7 +20,7 @@ namespace Opc.Ua
     /// </summary>
     public partial class RegistrationClient
     {
-        #region Constructors
+
 
         /// <summary>
         /// Creates a binding for to use for discovering servers.
@@ -30,34 +30,41 @@ namespace Opc.Ua
         /// <param name="endpointConfiguration">The endpoint configuration.</param>
         /// <param name="instanceCertificate">The instance certificate.</param>
         /// <returns></returns>
-        public static RegistrationClient Create( 
+        public static RegistrationClient Create(
             ApplicationConfiguration configuration,
-            EndpointDescription      description,
-            EndpointConfiguration    endpointConfiguration,
-            X509Certificate2         instanceCertificate)
+            EndpointDescription description,
+            EndpointConfiguration endpointConfiguration,
+            X509Certificate2 instanceCertificate)
         {
-            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
-            if (description == null) throw new ArgumentNullException(nameof(description));
+            if (configuration == null)
+            {
+                throw new ArgumentNullException(nameof(configuration));
+            }
+
+            if (description == null)
+            {
+                throw new ArgumentNullException(nameof(description));
+            }
 
             ITransportChannel channel = RegistrationChannel.Create(
-                configuration, 
-                description, 
-                endpointConfiguration, 
+                configuration,
+                description,
+                endpointConfiguration,
                 instanceCertificate,
                 new ServiceMessageContext());
 
             return new RegistrationClient(channel);
         }
 
-        #endregion
+
     }
-    
+
     /// <summary>
     /// A channel object used by clients to access a UA discovery service.
     /// </summary>
     public partial class RegistrationChannel
     {
-        #region Constructors
+
         /// <summary>
         /// Creates a new transport channel that supports the IRegistrationChannel service contract.
         /// </summary>
@@ -85,19 +92,20 @@ namespace Opc.Ua
             // create a registration channel.
             if (channel == null)
             {
-                Uri endpointUrl = new Uri(description.EndpointUrl);
+                var endpointUrl = new Uri(description.EndpointUrl);
                 channel = new RegistrationChannel();
 
-                TransportChannelSettings settings = new TransportChannelSettings();
-                settings.Configuration = endpointConfiguration;
-                settings.Description = description;
-                settings.ClientCertificate = clientCertificate;
+                var settings = new TransportChannelSettings {
+                    Configuration = endpointConfiguration,
+                    Description = description,
+                    ClientCertificate = clientCertificate
+                };
                 channel.Initialize(endpointUrl, settings);
             }
 
             return channel;
         }
 
-        #endregion
-    } 
+
+    }
 }

@@ -10,8 +10,6 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 */
 
-using System;
-
 namespace Opc.Ua.Bindings
 {
     /// <summary>
@@ -48,7 +46,7 @@ namespace Opc.Ua.Bindings
         /// A chunk for a generic message.
         /// </summary>
         public const uint MessageIntermediate = Message | Intermediate;
-        
+
         /// <summary>
         /// A chunk for a generic message.
         /// </summary>
@@ -124,9 +122,9 @@ namespace Opc.Ua.Bindings
                 case ReverseHello:
                 case Acknowledge:
                 case Error:
-                    {
-                        return true;
-                    }
+                {
+                    return true;
+                }
             }
 
             if (((messageType & ChunkTypeMask) != Final) && ((messageType & ChunkTypeMask) != Intermediate))
@@ -139,14 +137,14 @@ namespace Opc.Ua.Bindings
                 case Message:
                 case Open:
                 case Close:
-                    {
-                        break;
-                    }
+                {
+                    break;
+                }
 
                 default:
-                    {
-                        return false;
-                    }
+                {
+                    return false;
+                }
             }
 
             return true;
@@ -226,7 +224,7 @@ namespace Opc.Ua.Bindings
         /// <summary>
         /// Sequence numbers may only rollover if they are larger than this value.
         /// </summary>
-        public const uint MinSequenceNumber = UInt32.MaxValue - 1024;
+        public const uint MinSequenceNumber = uint.MaxValue - 1024;
 
         /// <summary>
         /// The first sequence number after a rollover must be less than this value.

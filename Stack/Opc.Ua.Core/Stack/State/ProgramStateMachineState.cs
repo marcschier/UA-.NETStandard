@@ -10,18 +10,13 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 */
 
-using System;
 using System.Collections.Generic;
-using System.Xml;
-using System.IO;
-using System.Reflection;
-using Opc.Ua;
 
 namespace Opc.Ua
 {
     public partial class ProgramStateMachineState
     {
-        #region Initialization
+
         /// <summary>
         /// Initializes the object as a collection of counters which change value on read.
         /// </summary>
@@ -32,40 +27,34 @@ namespace Opc.Ua
             UpdateStateVariable(context, Objects.ProgramStateMachineType_Ready, CurrentState);
             UpdateTransitionVariable(context, 0, LastTransition);
         }
-        #endregion
-        
-        #region Overriden Members
+
+
+
         /// <summary>
         /// The table of states belonging to the state machine.
         /// </summary>
-        protected override ElementInfo[] StateTable
-        {
-            get { return s_StateTable; }
-        }
+        protected override ElementInfo[] StateTable => s_StateTable;
 
         /// <summary>
         /// A table of valid states.
         /// </summary>
-        private ElementInfo[] s_StateTable = new ElementInfo[]
+        private readonly ElementInfo[] s_StateTable = new ElementInfo[]
         {
             new ElementInfo(Objects.ProgramStateMachineType_Ready, BrowseNames.Ready, 1),
             new ElementInfo(Objects.ProgramStateMachineType_Running, BrowseNames.Running, 2),
             new ElementInfo(Objects.ProgramStateMachineType_Suspended, BrowseNames.Suspended, 3),
             new ElementInfo(Objects.ProgramStateMachineType_Halted, BrowseNames.Halted, 4)
         };
-        
+
         /// <summary>
         /// The table of transitions belonging to the state machine.
         /// </summary>
-        protected override ElementInfo[] TransitionTable
-        {
-            get { return s_TransitionTable; }
-        }
+        protected override ElementInfo[] TransitionTable => s_TransitionTable;
 
         /// <summary>
         /// A table of valid transitions.
         /// </summary>
-        private ElementInfo[] s_TransitionTable = new ElementInfo[]
+        private readonly ElementInfo[] s_TransitionTable = new ElementInfo[]
         {
             new ElementInfo(Objects.ProgramStateMachineType_HaltedToReady, BrowseNames.HaltedToReady, 1),
             new ElementInfo(Objects.ProgramStateMachineType_ReadyToRunning, BrowseNames.ReadyToRunning, 2),
@@ -77,19 +66,16 @@ namespace Opc.Ua
             new ElementInfo(Objects.ProgramStateMachineType_SuspendedToReady, BrowseNames.SuspendedToReady, 8),
             new ElementInfo(Objects.ProgramStateMachineType_ReadyToHalted, BrowseNames.ReadyToHalted, 9)
         };
-        
+
         /// <summary>
         /// The mapping between transitions and their from and to states.
         /// </summary>
-        protected override uint[,] TransitionMappings
-        {
-            get { return s_TransitionMappings; }
-        }
+        protected override uint[,] TransitionMappings => s_TransitionMappings;
 
         /// <summary>
         /// A table of the to and from states for the transitions.
         /// </summary>
-        private uint[,] s_TransitionMappings = new uint[,]
+        private readonly uint[,] s_TransitionMappings = new uint[,]
         {
             { Objects.ProgramStateMachineType_HaltedToReady, Objects.ProgramStateMachineType_Halted, Objects.ProgramStateMachineType_Ready, 1 },
             { Objects.ProgramStateMachineType_ReadyToRunning, Objects.ProgramStateMachineType_Ready, Objects.ProgramStateMachineType_Running, 1 },
@@ -101,19 +87,16 @@ namespace Opc.Ua
             { Objects.ProgramStateMachineType_SuspendedToReady, Objects.ProgramStateMachineType_Suspended, Objects.ProgramStateMachineType_Ready, 1 },
             { Objects.ProgramStateMachineType_ReadyToHalted, Objects.ProgramStateMachineType_Ready, Objects.ProgramStateMachineType_Halted, 1 }
         };
-        
+
         /// <summary>
         /// The mapping between causes, the current state and a transition.
         /// </summary>
-        protected override uint[,] CauseMappings
-        {
-            get { return s_CauseMappings; }
-        }
-        
+        protected override uint[,] CauseMappings => s_CauseMappings;
+
         /// <summary>
         /// A table of transitions for the available causes.
         /// </summary>
-        private uint[,] s_CauseMappings = new uint[,]
+        private readonly uint[,] s_CauseMappings = new uint[,]
         {
             { Methods.ProgramStateMachineType_Reset, Objects.ProgramStateMachineType_Halted, Objects.ProgramStateMachineType_HaltedToReady },
             { Methods.ProgramStateMachineType_Start, Objects.ProgramStateMachineType_Ready, Objects.ProgramStateMachineType_ReadyToRunning },
@@ -124,7 +107,7 @@ namespace Opc.Ua
             { Methods.ProgramStateMachineType_Reset, Objects.ProgramStateMachineType_Suspended, Objects.ProgramStateMachineType_SuspendedToReady },
             { Methods.ProgramStateMachineType_Halt, Objects.ProgramStateMachineType_Suspended, Objects.ProgramStateMachineType_SuspendedToHalted }
         };
-        
+
 
         /// <summary>
         /// Creates an instance of an audit event.
@@ -136,7 +119,7 @@ namespace Opc.Ua
         {
             return new ProgramTransitionAuditEventState(null);
         }
-        
+
         /// <summary>
         /// Updates an audit event after the method is invoked.
         /// </summary>
@@ -146,7 +129,7 @@ namespace Opc.Ua
             uint causeId,
             AuditUpdateStateEventState e,
             ServiceResult result)
-        {            
+        {
             base.UpdateAuditEvent(
                 context,
                 causeMethod,
@@ -157,9 +140,7 @@ namespace Opc.Ua
             // update program specific event fields.
             if (ServiceResult.IsGood(result))
             {
-                ProgramTransitionAuditEventState e2 = e as ProgramTransitionAuditEventState;
-
-                if (e2 != null)
+                if (e is ProgramTransitionAuditEventState e2)
                 {
                     e2.SetChildValue(context, BrowseNames.Transition, LastTransition, false);
                 }
@@ -181,10 +162,10 @@ namespace Opc.Ua
 
             return null;
         }
-        #endregion
 
-        #region Protected Methods
-        #region Start Cause Handlers
+
+
+
         /// <summary>
         /// Checks whether the start method is executable.
         /// </summary>
@@ -193,7 +174,7 @@ namespace Opc.Ua
             NodeState node,
             ref bool value)
         {
-            value = IsCausePermitted(context, Methods.ProgramStateMachineType_Start, false);        
+            value = IsCausePermitted(context, Methods.ProgramStateMachineType_Start, false);
             return ServiceResult.Good;
         }
 
@@ -205,10 +186,10 @@ namespace Opc.Ua
             NodeState node,
             ref bool value)
         {
-            value = IsCausePermitted(context, Methods.ProgramStateMachineType_Start, true);       
+            value = IsCausePermitted(context, Methods.ProgramStateMachineType_Start, true);
             return ServiceResult.Good;
         }
-        
+
         /// <summary>
         /// Handles the start method.
         /// </summary>
@@ -220,9 +201,9 @@ namespace Opc.Ua
         {
             return DoCause(context, method, Methods.ProgramStateMachineType_Start, inputArguments, outputArguments);
         }
-        #endregion
-        
-        #region Suspend Cause Handlers
+
+
+
         /// <summary>
         /// Checks whether the suspend method is executable.
         /// </summary>
@@ -231,7 +212,7 @@ namespace Opc.Ua
             NodeState node,
             ref bool value)
         {
-            value = IsCausePermitted(context, Methods.ProgramStateMachineType_Suspend, false);        
+            value = IsCausePermitted(context, Methods.ProgramStateMachineType_Suspend, false);
             return ServiceResult.Good;
         }
 
@@ -243,10 +224,10 @@ namespace Opc.Ua
             NodeState node,
             ref bool value)
         {
-            value = IsCausePermitted(context, Methods.ProgramStateMachineType_Suspend, true);       
+            value = IsCausePermitted(context, Methods.ProgramStateMachineType_Suspend, true);
             return ServiceResult.Good;
         }
-        
+
         /// <summary>
         /// Handles the suspend method.
         /// </summary>
@@ -258,9 +239,9 @@ namespace Opc.Ua
         {
             return DoCause(context, method, Methods.ProgramStateMachineType_Suspend, inputArguments, outputArguments);
         }
-        #endregion
-        
-        #region Resume Cause Handlers
+
+
+
         /// <summary>
         /// Checks whether the resume method is executable.
         /// </summary>
@@ -269,7 +250,7 @@ namespace Opc.Ua
             NodeState node,
             ref bool value)
         {
-            value = IsCausePermitted(context, Methods.ProgramStateMachineType_Resume, false);        
+            value = IsCausePermitted(context, Methods.ProgramStateMachineType_Resume, false);
             return ServiceResult.Good;
         }
 
@@ -281,10 +262,10 @@ namespace Opc.Ua
             NodeState node,
             ref bool value)
         {
-            value = IsCausePermitted(context, Methods.ProgramStateMachineType_Resume, true);       
+            value = IsCausePermitted(context, Methods.ProgramStateMachineType_Resume, true);
             return ServiceResult.Good;
         }
-        
+
         /// <summary>
         /// Handles the resume method.
         /// </summary>
@@ -296,9 +277,9 @@ namespace Opc.Ua
         {
             return DoCause(context, method, Methods.ProgramStateMachineType_Resume, inputArguments, outputArguments);
         }
-        #endregion
-        
-        #region Halt Cause Handlers
+
+
+
         /// <summary>
         /// Checks whether the halt method is executable.
         /// </summary>
@@ -307,7 +288,7 @@ namespace Opc.Ua
             NodeState node,
             ref bool value)
         {
-            value = IsCausePermitted(context, Methods.ProgramStateMachineType_Halt, false);        
+            value = IsCausePermitted(context, Methods.ProgramStateMachineType_Halt, false);
             return ServiceResult.Good;
         }
 
@@ -319,10 +300,10 @@ namespace Opc.Ua
             NodeState node,
             ref bool value)
         {
-            value = IsCausePermitted(context, Methods.ProgramStateMachineType_Halt, true);       
+            value = IsCausePermitted(context, Methods.ProgramStateMachineType_Halt, true);
             return ServiceResult.Good;
         }
-        
+
         /// <summary>
         /// Handles the halt method.
         /// </summary>
@@ -334,9 +315,9 @@ namespace Opc.Ua
         {
             return DoCause(context, method, Methods.ProgramStateMachineType_Halt, inputArguments, outputArguments);
         }
-        #endregion
-        
-        #region Reset Cause Handlers
+
+
+
         /// <summary>
         /// Checks whether the reset method is executable.
         /// </summary>
@@ -345,7 +326,7 @@ namespace Opc.Ua
             NodeState node,
             ref bool value)
         {
-            value = IsCausePermitted(context, Methods.ProgramStateMachineType_Reset, false);        
+            value = IsCausePermitted(context, Methods.ProgramStateMachineType_Reset, false);
             return ServiceResult.Good;
         }
 
@@ -357,10 +338,10 @@ namespace Opc.Ua
             NodeState node,
             ref bool value)
         {
-            value = IsCausePermitted(context, Methods.ProgramStateMachineType_Reset, true);       
+            value = IsCausePermitted(context, Methods.ProgramStateMachineType_Reset, true);
             return ServiceResult.Good;
         }
-        
+
         /// <summary>
         /// Handles the reset method.
         /// </summary>
@@ -372,7 +353,7 @@ namespace Opc.Ua
         {
             return DoCause(context, method, Methods.ProgramStateMachineType_Reset, inputArguments, outputArguments);
         }
-        #endregion
-        #endregion
+
+
     }
 }

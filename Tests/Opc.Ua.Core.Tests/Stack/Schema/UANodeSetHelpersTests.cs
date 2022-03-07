@@ -43,7 +43,7 @@ namespace Opc.Ua.Core.Tests.Stack.Schema
     public class UANodeSetHelpersTests
     {
 
-        #region Test Setup
+        
         [OneTimeSetUp]
         protected void OneTimeSetUp()
         {
@@ -64,9 +64,9 @@ namespace Opc.Ua.Core.Tests.Stack.Schema
         protected void TearDown()
         {
         }
-        #endregion
+        
 
-        #region Test Methods
+        
         /// <summary>
         /// Test Structure Field ArrayDimensions attribute is correctly imported repsectively exported
         /// </summary>
@@ -198,5 +198,5 @@ namespace Opc.Ua.Core.Tests.Stack.Schema
             }
         }
     }
-    #endregion
+    
 }

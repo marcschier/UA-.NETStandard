@@ -27,17 +27,9 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using System.Xml;
-using System.Runtime.Serialization;
-using Opc.Ua;
-
 namespace Opc.Ua.Gds
 {
-    #region DataType Identifiers
+
     /// <summary>
     /// A class that declares constants for all DataTypes in the Model Design.
     /// </summary>
@@ -50,9 +42,9 @@ namespace Opc.Ua.Gds
         /// </summary>
         public const uint ApplicationRecordDataType = 1;
     }
-    #endregion
 
-    #region Method Identifiers
+
+
     /// <summary>
     /// A class that declares constants for all Methods in the Model Design.
     /// </summary>
@@ -545,9 +537,9 @@ namespace Opc.Ua.Gds
         /// </summary>
         public const uint Directory_GetCertificateStatus = 225;
     }
-    #endregion
 
-    #region Object Identifiers
+
+
     /// <summary>
     /// A class that declares constants for all Objects in the Model Design.
     /// </summary>
@@ -670,9 +662,9 @@ namespace Opc.Ua.Gds
         /// </summary>
         public const uint ApplicationRecordDataType_Encoding_DefaultJson = 8001;
     }
-    #endregion
 
-    #region ObjectType Identifiers
+
+
     /// <summary>
     /// A class that declares constants for all ObjectTypes in the Model Design.
     /// </summary>
@@ -745,9 +737,9 @@ namespace Opc.Ua.Gds
         /// </summary>
         public const uint AccessTokenIssuedAuditEventType = 975;
     }
-    #endregion
 
-    #region Variable Identifiers
+
+
     /// <summary>
     /// A class that declares constants for all Variables in the Model Design.
     /// </summary>
@@ -2125,9 +2117,9 @@ namespace Opc.Ua.Gds
         /// </summary>
         public const uint OpcUaGds_XmlSchema_ApplicationRecordDataType = 131;
     }
-    #endregion
 
-    #region DataType Node Identifiers
+
+
     /// <summary>
     /// A class that declares constants for all DataTypes in the Model Design.
     /// </summary>
@@ -2140,9 +2132,9 @@ namespace Opc.Ua.Gds
         /// </summary>
         public static readonly ExpandedNodeId ApplicationRecordDataType = new ExpandedNodeId(Opc.Ua.Gds.DataTypes.ApplicationRecordDataType, Opc.Ua.Gds.Namespaces.OpcUaGds);
     }
-    #endregion
 
-    #region Method Node Identifiers
+
+
     /// <summary>
     /// A class that declares constants for all Methods in the Model Design.
     /// </summary>
@@ -2635,9 +2627,9 @@ namespace Opc.Ua.Gds
         /// </summary>
         public static readonly ExpandedNodeId Directory_GetCertificateStatus = new ExpandedNodeId(Opc.Ua.Gds.Methods.Directory_GetCertificateStatus, Opc.Ua.Gds.Namespaces.OpcUaGds);
     }
-    #endregion
 
-    #region Object Node Identifiers
+
+
     /// <summary>
     /// A class that declares constants for all Objects in the Model Design.
     /// </summary>
@@ -2760,9 +2752,9 @@ namespace Opc.Ua.Gds
         /// </summary>
         public static readonly ExpandedNodeId ApplicationRecordDataType_Encoding_DefaultJson = new ExpandedNodeId(Opc.Ua.Gds.Objects.ApplicationRecordDataType_Encoding_DefaultJson, Opc.Ua.Gds.Namespaces.OpcUaGds);
     }
-    #endregion
 
-    #region ObjectType Node Identifiers
+
+
     /// <summary>
     /// A class that declares constants for all ObjectTypes in the Model Design.
     /// </summary>
@@ -2835,9 +2827,9 @@ namespace Opc.Ua.Gds
         /// </summary>
         public static readonly ExpandedNodeId AccessTokenIssuedAuditEventType = new ExpandedNodeId(Opc.Ua.Gds.ObjectTypes.AccessTokenIssuedAuditEventType, Opc.Ua.Gds.Namespaces.OpcUaGds);
     }
-    #endregion
 
-    #region Variable Node Identifiers
+
+
     /// <summary>
     /// A class that declares constants for all Variables in the Model Design.
     /// </summary>
@@ -4215,9 +4207,9 @@ namespace Opc.Ua.Gds
         /// </summary>
         public static readonly ExpandedNodeId OpcUaGds_XmlSchema_ApplicationRecordDataType = new ExpandedNodeId(Opc.Ua.Gds.Variables.OpcUaGds_XmlSchema_ApplicationRecordDataType, Opc.Ua.Gds.Namespaces.OpcUaGds);
     }
-    #endregion
 
-    #region BrowseName Declarations
+
+
     /// <summary>
     /// Declares all of the BrowseNames used in the Model Design.
     /// </summary>
@@ -4474,9 +4466,9 @@ namespace Opc.Ua.Gds
         /// </summary>
         public const string UserTokenPolicies = "UserTokenPolicies";
     }
-    #endregion
 
-    #region Namespace Declarations
+
+
     /// <summary>
     /// Defines constants for all namespaces referenced by the model design.
     /// </summary>
@@ -4503,5 +4495,5 @@ namespace Opc.Ua.Gds
         /// </summary>
         public const string OpcUaXsd = "http://opcfoundation.org/UA/2008/02/Types.xsd";
     }
-    #endregion
+
 }

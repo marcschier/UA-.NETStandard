@@ -25,7 +25,7 @@ namespace Opc.Ua
     /// </remarks>
     public struct NumericRange : IFormattable, IEquatable<NumericRange>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object with a begin index.
         /// </summary>
@@ -65,9 +65,9 @@ namespace Opc.Ua
             Begin = begin;
             End = end;
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The begining of the numeric range.
         /// </summary>
@@ -77,7 +77,7 @@ namespace Opc.Ua
         /// <exception cref="ArgumentOutOfRangeException">Thrown when the value is less than -1, or when the value is greater than the end</exception>
         public int Begin
         {
-            get { return m_begin; }
+            get => m_begin;
 
             set
             {
@@ -105,7 +105,7 @@ namespace Opc.Ua
         /// than -1 or when the end is less than the beginning</exception>
         public int End
         {
-            get { return m_end; }
+            get => m_end;
 
             set
             {
@@ -175,90 +175,13 @@ namespace Opc.Ua
         /// <value>The sub ranges.</value>
         public NumericRange[] SubRanges
         {
-            get
-            {
-                return m_subranges;
-            }
+            get => m_subranges;
 
-            set
-            {
-                m_subranges = value;
-            }
-        }
-        #endregion
-
-        #region Public Methods
-        /// <summary>
-        /// Ensures the bounds are valid values for the object passed in.
-        /// </summary>
-        /// <remarks>
-        /// Returns false if the object is not indexable or if the numeric range is out-of-bounds.
-        /// </remarks>
-        /// <param name="value">The value to check</param>
-        public bool EnsureValid(object value)
-        {
-            int count = -1;
-
-            // check for collections.
-            ICollection collection = value as ICollection;
-
-            if (collection != null)
-            {
-                count = collection.Count;
-            }
-            else
-            {
-                // check for arrays.
-                Array array = value as Array;
-
-                if (array != null)
-                {
-                    count = array.Length;
-                }
-            }
-
-            // ensure bounds are less than count.
-            return EnsureValid(count);
+            set => m_subranges = value;
         }
 
-        /// <summary>
-        /// Ensures the bounds are valid values for a collection with the specified length.
-        /// </summary>
-        /// <remarks>
-        /// Returns false if the numeric range is out-of-bounds.
-        /// </remarks>
-        /// <param name="count">The value to check is within range</param>
-        public bool EnsureValid(int count)
-        {
-            // object not indexable.
-            if (count == -1)
-            {
-                return false;
-            }
 
-            // check bounds.
-            if (m_begin > count || m_end >= count)
-            {
-                return false;
-            }
 
-            // set begin.
-            if (m_begin < 0)
-            {
-                m_begin = 0;
-            }
-
-            // set end.
-            if (m_end < 0)
-            {
-                m_end = count;
-            }
-
-            return true;
-        }
-        #endregion
-
-        #region Overridden Methods
         /// <summary>
         /// Returns true if the objects are equal.
         /// </summary>
@@ -270,7 +193,7 @@ namespace Opc.Ua
         {
             if (obj is NumericRange)
             {
-                return this.Equals((NumericRange)obj);
+                return Equals((NumericRange)obj);
             }
 
             return false;
@@ -335,9 +258,9 @@ namespace Opc.Ua
         {
             return ToString(null, null);
         }
-        #endregion
 
-        #region IFormattable Members
+
+
         /// <summary>
         /// Formats the numeric range as a string.
         /// </summary>
@@ -353,17 +276,17 @@ namespace Opc.Ua
             {
                 if (m_end < 0)
                 {
-                    return String.Format(formatProvider, "{0}", m_begin);
+                    return string.Format(formatProvider, "{0}", m_begin);
                 }
 
-                return String.Format(formatProvider, "{0}:{1}", m_begin, m_end);
+                return string.Format(formatProvider, "{0}:{1}", m_begin, m_end);
             }
 
             throw new FormatException(Utils.Format("Invalid format string: '{0}'.", format));
         }
-        #endregion
 
-        #region Static Members
+
+
         /// <summary>
         /// An empty numeric range.
         /// </summary>
@@ -384,7 +307,7 @@ namespace Opc.Ua
         {
             range = NumericRange.Empty;
 
-            if (String.IsNullOrEmpty(textToParse))
+            if (string.IsNullOrEmpty(textToParse))
             {
                 return ServiceResult.Good;
             }
@@ -395,7 +318,7 @@ namespace Opc.Ua
             if (index >= 0)
             {
                 int start = 0;
-                List<NumericRange> subranges = new List<NumericRange>();
+                var subranges = new List<NumericRange>();
 
                 for (int ii = 0; ii < textToParse.Length; ii++)
                 {
@@ -403,7 +326,7 @@ namespace Opc.Ua
 
                     if (ch == ',' || ii == textToParse.Length - 1)
                     {
-                        NumericRange subrange = new NumericRange();
+                        var subrange = new NumericRange();
                         string subtext = (ch == ',') ? textToParse.Substring(start, ii - start) : textToParse.Substring(start);
                         ServiceResult result = Validate(subtext, out subrange);
 
@@ -486,15 +409,13 @@ namespace Opc.Ua
         /// </summary>
         private StatusCode ApplyMultiRange(ref object value)
         {
-            Array array = value as Array;
+            var array = value as Array;
             TypeInfo typeInfo = null;
 
             // check for matrix.
             if (array == null)
             {
-                Matrix matrix = value as Matrix;
-
-                if (matrix == null || matrix.Dimensions.Length != m_subranges.Length)
+                if (!(value is Matrix matrix) || matrix.Dimensions.Length != m_subranges.Length)
                 {
                     value = null;
                     return StatusCodes.BadIndexRangeNoData;
@@ -623,12 +544,12 @@ namespace Opc.Ua
                 return StatusCodes.BadIndexRangeNoData;
             }
 
-            TypeInfo dstTypeInfo = TypeInfo.Construct(dst);
+            var dstTypeInfo = TypeInfo.Construct(dst);
 
             // check for subset of string or byte string.
             if (dstTypeInfo.ValueRank == ValueRanks.Scalar)
             {
-                if (this.Dimensions > 1)
+                if (Dimensions > 1)
                 {
                     return StatusCodes.BadIndexRangeInvalid;
                 }
@@ -636,22 +557,21 @@ namespace Opc.Ua
                 // check for subset of string.
                 if (dstTypeInfo.BuiltInType == BuiltInType.String)
                 {
-                    string srcString = src as string;
                     char[] dstString = ((string)dst).ToCharArray();
 
-                    if (srcString == null || srcString.Length != this.Count)
+                    if (!(src is string srcString) || srcString.Length != Count)
                     {
                         return StatusCodes.BadIndexRangeInvalid;
                     }
 
-                    if (this.m_begin >= dstString.Length || ((this.m_end > 0 && this.m_end >= dstString.Length)))
+                    if (m_begin >= dstString.Length || ((m_end > 0 && m_end >= dstString.Length)))
                     {
                         return StatusCodes.BadIndexRangeNoData;
                     }
 
                     for (int jj = 0; jj < srcString.Length; jj++)
                     {
-                        dstString[this.m_begin + jj] = srcString[jj];
+                        dstString[m_begin + jj] = srcString[jj];
                     }
 
                     dst = new string(dstString);
@@ -661,22 +581,21 @@ namespace Opc.Ua
                 // update elements within a byte string.
                 else if (dstTypeInfo.BuiltInType == BuiltInType.ByteString)
                 {
-                    byte[] srcString = src as byte[];
                     byte[] dstString = (byte[])dst;
 
-                    if (srcString == null || srcString.Length != this.Count)
+                    if (!(src is byte[] srcString) || srcString.Length != Count)
                     {
                         return StatusCodes.BadIndexRangeInvalid;
                     }
 
-                    if (this.m_begin >= dstString.Length || ((this.m_end > 0 && this.m_end >= dstString.Length)))
+                    if (m_begin >= dstString.Length || ((m_end > 0 && m_end >= dstString.Length)))
                     {
                         return StatusCodes.BadIndexRangeNoData;
                     }
 
                     for (int jj = 0; jj < srcString.Length; jj++)
                     {
-                        dstString[this.m_begin + jj] = srcString[jj];
+                        dstString[m_begin + jj] = srcString[jj];
                     }
 
                     return StatusCodes.Good;
@@ -686,15 +605,13 @@ namespace Opc.Ua
                 return StatusCodes.BadIndexRangeInvalid;
             }
 
-            Array srcArray = src as Array;
-            Array dstArray = dst as Array;
+            var srcArray = src as Array;
+            var dstArray = dst as Array;
 
             // check for destinations specified as a matrix.
             if (dstArray == null)
             {
-                Matrix matrix = dst as Matrix;
-
-                if (matrix == null || m_subranges == null || matrix.Dimensions.Length != m_subranges.Length)
+                if (!(dst is Matrix matrix) || m_subranges == null || matrix.Dimensions.Length != m_subranges.Length)
                 {
                     return StatusCodes.BadIndexRangeInvalid;
                 }
@@ -705,9 +622,7 @@ namespace Opc.Ua
             // check for input specified as a matrix.
             if (srcArray == null)
             {
-                Matrix matrix = src as Matrix;
-
-                if (matrix == null || m_subranges == null || matrix.Dimensions.Length != m_subranges.Length)
+                if (!(src is Matrix matrix) || m_subranges == null || matrix.Dimensions.Length != m_subranges.Length)
                 {
                     return StatusCodes.BadIndexRangeInvalid;
                 }
@@ -715,7 +630,7 @@ namespace Opc.Ua
                 srcArray = matrix.ToArray();
             }
 
-            TypeInfo srcTypeInfo = TypeInfo.Construct(srcArray);
+            var srcTypeInfo = TypeInfo.Construct(srcArray);
 
             if (srcTypeInfo.BuiltInType != dstTypeInfo.BuiltInType)
             {
@@ -735,19 +650,19 @@ namespace Opc.Ua
                     return StatusCodes.BadIndexRangeInvalid;
                 }
 
-                if (srcArray.Length != this.Count)
+                if (srcArray.Length != Count)
                 {
                     return StatusCodes.BadIndexRangeInvalid;
                 }
 
-                if (this.m_begin >= dstArray.Length || ((this.m_end > 0 && this.m_end >= dstArray.Length)))
+                if (m_begin >= dstArray.Length || ((m_end > 0 && m_end >= dstArray.Length)))
                 {
                     return StatusCodes.BadIndexRangeNoData;
                 }
 
                 for (int jj = 0; jj < srcArray.Length; jj++)
                 {
-                    dstArray.SetValue(srcArray.GetValue(jj), this.m_begin + jj);
+                    dstArray.SetValue(srcArray.GetValue(jj), m_begin + jj);
                 }
 
                 if (dst is Matrix)
@@ -933,7 +848,7 @@ namespace Opc.Ua
                 }
             }
 
-            if(dst is Matrix)
+            if (dst is Matrix)
             {
                 // dstArray is a copy of the data of the dst Matrix so create new Matrix with modified data
                 dst = new Matrix(dstArray, dstTypeInfo.BuiltInType);
@@ -954,7 +869,7 @@ namespace Opc.Ua
         public StatusCode ApplyRange(ref object value)
         {
             // check for empty range.
-            if (this.m_begin == -1 && this.m_end == -1)
+            if (m_begin == -1 && m_end == -1)
             {
                 return StatusCodes.Good;
             }
@@ -965,7 +880,7 @@ namespace Opc.Ua
                 return StatusCodes.Good;
             }
 
-            Array array = value as Array;
+            var array = value as Array;
 
             // check for list type.
             IList list = null;
@@ -987,9 +902,8 @@ namespace Opc.Ua
             if (array == null && list == null)
             {
                 // check for string.
-                String chars = value as String;
 
-                if (chars != null)
+                if (value is string chars)
                 {
                     isString = true;
                     array = chars.ToCharArray();
@@ -1002,7 +916,7 @@ namespace Opc.Ua
                 return ApplyMultiRange(ref value);
             }
 
-            if(list == null && array == null)
+            if (list == null && array == null)
             {
                 value = null;
                 return StatusCodes.BadIndexRangeNoData;
@@ -1020,7 +934,7 @@ namespace Opc.Ua
                 length = array.Length;
             }
 
-            int begin = this.m_begin;
+            int begin = m_begin;
 
             // choose a default start.
             if (begin == -1)
@@ -1036,7 +950,7 @@ namespace Opc.Ua
             }
 
             // only copy if actually asking for a subset.
-            int end = this.m_end;
+            int end = m_end;
 
             // check if looking for a single element.
             if (end == -1)
@@ -1111,13 +1025,13 @@ namespace Opc.Ua
 
             return range;
         }
-        #endregion
 
-        #region Private Fields
+
+
         private int m_begin;
         private int m_end;
         private NumericRange[] m_subranges;
-        #endregion
+
 
     }//class
 

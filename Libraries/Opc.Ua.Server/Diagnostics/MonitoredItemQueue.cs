@@ -27,7 +27,6 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
 using System.Collections.Generic;
 
 namespace Opc.Ua.Server
@@ -54,7 +53,7 @@ namespace Opc.Ua.Server
             m_discardedValueHandler = discardedValueHandler;
         }
 
-        #region Public Methods
+
         /// <summary>
         /// The delegate for the discarded value handler.
         /// </summary>
@@ -73,27 +72,6 @@ namespace Opc.Ua.Server
                 }
 
                 return (uint)m_values.Length;
-            }
-        }
-
-        /// <summary>
-        /// Gets number of elements actually contained in value queue.
-        /// </summary>
-        public int ItemsInQueue
-        {
-            get
-            {
-                if (m_values == null)
-                {
-                    return 0;
-                }
-
-                if (m_start < m_end)
-                {
-                    return m_end - m_start - 1;
-                }
-
-                return m_values.Length - m_start + m_end - 1;
             }
         }
 
@@ -141,7 +119,7 @@ namespace Opc.Ua.Server
             int end = m_end;
 
             // create new queue.
-            DataValue[] values = new DataValue[length];
+            var values = new DataValue[length];
             ServiceResult[] errors = null;
 
             if ((diagnosticsMasks & DiagnosticsMasks.OperationAll) != 0)
@@ -250,9 +228,9 @@ namespace Opc.Ua.Server
         {
             return Dequeue(out value, out error);
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Adds the value to the queue. Discards values if the queue is full.
         /// </summary>
@@ -418,7 +396,7 @@ namespace Opc.Ua.Server
                 status.Overflow = true;
 
                 // have to copy before updating because the ServiceResult is invariant.
-                ServiceResult copy = new ServiceResult(
+                var copy = new ServiceResult(
                     status,
                     error.SymbolicId,
                     error.NamespaceUri,
@@ -429,10 +407,10 @@ namespace Opc.Ua.Server
                 error = copy;
             }
         }
-        #endregion
 
-        #region Private Fields
-        private uint m_monitoredItemId;
+
+
+        private readonly uint m_monitoredItemId;
         private DataValue[] m_values;
         private ServiceResult[] m_errors;
         private int m_start;
@@ -441,7 +419,7 @@ namespace Opc.Ua.Server
         private bool m_discardOldest;
         private long m_nextSampleTime;
         private long m_samplingInterval;
-        DiscardedValueHandler m_discardedValueHandler;
-        #endregion
+        private readonly DiscardedValueHandler m_discardedValueHandler;
+
     }
 }

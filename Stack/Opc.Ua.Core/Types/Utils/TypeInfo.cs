@@ -186,7 +186,7 @@ namespace Opc.Ua
     /// </summary>
     public class TypeInfo : IFormattable
     {
-        #region Constructors
+
         /// <summary>
         /// Constructs an unknown type.
         /// </summary>
@@ -206,9 +206,9 @@ namespace Opc.Ua
             m_builtInType = builtInType;
             m_valueRank = valueRank;
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// Returns the data type id that describes a value.
         /// </summary>
@@ -225,9 +225,7 @@ namespace Opc.Ua
 
             if (dataTypeId == Opc.Ua.NodeId.Null)
             {
-                Matrix matrix = value as Matrix;
-
-                if (matrix != null)
+                if (value is Matrix matrix)
                 {
                     return GetDataTypeId(matrix.TypeInfo);
                 }
@@ -243,7 +241,7 @@ namespace Opc.Ua
         /// <returns>An data type identifier for a node in a server's address space.</returns>
         public static NodeId GetDataTypeId(Type type)
         {
-            TypeInfo typeInfo = TypeInfo.Construct(type);
+            var typeInfo = TypeInfo.Construct(type);
 
             NodeId dataTypeId = GetDataTypeId(typeInfo);
 
@@ -313,13 +311,11 @@ namespace Opc.Ua
                 return ValueRanks.Any;
             }
 
-            TypeInfo typeInfo = TypeInfo.Construct(value);
+            var typeInfo = TypeInfo.Construct(value);
 
             if (typeInfo.BuiltInType == BuiltInType.Null)
             {
-                Matrix matrix = value as Matrix;
-
-                if (matrix != null)
+                if (value is Matrix matrix)
                 {
                     return matrix.TypeInfo.ValueRank;
                 }
@@ -335,7 +331,7 @@ namespace Opc.Ua
         /// <returns>The array rank of the <paramref name="type"/> </returns>
         public static int GetValueRank(Type type)
         {
-            TypeInfo typeInfo = TypeInfo.Construct(type);
+            var typeInfo = TypeInfo.Construct(type);
 
             if (typeInfo.BuiltInType == BuiltInType.Null)
             {
@@ -448,29 +444,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Returns true if a 'null' value exists for the built-in type
-        /// in all data encodings.
-        /// </summary>
-        /// <param name="builtInType">The built in type to check.</param>
-        /// <returns>
-        /// True if the built-in type is a type that is nullable.
-        /// </returns>
-        public static bool IsEncodingNullableType(BuiltInType builtInType)
-        {
-            if (builtInType >= BuiltInType.Boolean && builtInType <= BuiltInType.Double)
-            {
-                return false;
-            }
-
-            if (builtInType == BuiltInType.DataValue || builtInType == BuiltInType.DiagnosticInfo)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
         /// Returns the BuiltInType type for the DataTypeId.
         /// </summary>
         /// <param name="datatypeId">The data type identyfier for a node in a server's address space..</param>
@@ -486,7 +459,7 @@ namespace Opc.Ua
             {
                 if (typeId != null && typeId.NamespaceIndex == 0 && typeId.IdType == Opc.Ua.IdType.Numeric)
                 {
-                    BuiltInType id = (BuiltInType)(int)(uint)typeId.Identifier;
+                    var id = (BuiltInType)(int)(uint)typeId.Identifier;
 
                     if (id > BuiltInType.Null && id <= BuiltInType.Enumeration && id != BuiltInType.DiagnosticInfo)
                     {
@@ -525,21 +498,21 @@ namespace Opc.Ua
 
             switch ((uint)datatypeId.Identifier)
             {
-                case DataTypes.Boolean: { return typeof(Boolean); }
-                case DataTypes.SByte: { return typeof(SByte); }
-                case DataTypes.Byte: { return typeof(Byte); }
-                case DataTypes.Int16: { return typeof(Int16); }
-                case DataTypes.UInt16: { return typeof(UInt16); }
-                case DataTypes.Int32: { return typeof(Int32); }
-                case DataTypes.UInt32: { return typeof(UInt32); }
-                case DataTypes.Int64: { return typeof(Int64); }
-                case DataTypes.UInt64: { return typeof(UInt64); }
-                case DataTypes.Float: { return typeof(Single); }
-                case DataTypes.Double: { return typeof(Double); }
-                case DataTypes.String: { return typeof(String); }
+                case DataTypes.Boolean: { return typeof(bool); }
+                case DataTypes.SByte: { return typeof(sbyte); }
+                case DataTypes.Byte: { return typeof(byte); }
+                case DataTypes.Int16: { return typeof(short); }
+                case DataTypes.UInt16: { return typeof(ushort); }
+                case DataTypes.Int32: { return typeof(int); }
+                case DataTypes.UInt32: { return typeof(uint); }
+                case DataTypes.Int64: { return typeof(long); }
+                case DataTypes.UInt64: { return typeof(ulong); }
+                case DataTypes.Float: { return typeof(float); }
+                case DataTypes.Double: { return typeof(double); }
+                case DataTypes.String: { return typeof(string); }
                 case DataTypes.DateTime: { return typeof(DateTime); }
                 case DataTypes.Guid: { return typeof(Uuid); }
-                case DataTypes.ByteString: { return typeof(Byte[]); }
+                case DataTypes.ByteString: { return typeof(byte[]); }
                 case DataTypes.XmlElement: { return typeof(XmlElement); }
                 case DataTypes.NodeId: { return typeof(NodeId); }
                 case DataTypes.ExpandedNodeId: { return typeof(ExpandedNodeId); }
@@ -553,7 +526,7 @@ namespace Opc.Ua
                 case DataTypes.Number: { return typeof(Variant); }
                 case DataTypes.Integer: { return typeof(Variant); }
                 case DataTypes.UInteger: { return typeof(Variant); }
-                case DataTypes.Enumeration: { return typeof(Int32); }
+                case DataTypes.Enumeration: { return typeof(int); }
 
                 // subtype of DateTime
                 case DataTypes.UtcTime: goto case DataTypes.DateTime;
@@ -880,11 +853,10 @@ namespace Opc.Ua
             }
 
             // check every element in the array or matrix.     
-            Array array = value as Array;
+            var array = value as Array;
             if (array == null)
             {
-                Matrix matrix = value as Matrix;
-                if (matrix != null)
+                if (value is Matrix matrix)
                 {
                     array = matrix.Elements;
                 }
@@ -933,7 +905,7 @@ namespace Opc.Ua
                         element = ((Variant)element).Value;
                     }
 
-                    TypeInfo elementInfo = TypeInfo.IsInstanceOfDataType(
+                    var elementInfo = TypeInfo.IsInstanceOfDataType(
                         element,
                         expectedDataTypeId,
                         ValueRanks.Scalar,
@@ -970,14 +942,12 @@ namespace Opc.Ua
 
             if (BuiltInType == BuiltInType.ExtensionObject)
             {
-                IEncodeable encodeable = value as IEncodeable;
-                if (encodeable != null)
+                if (value is IEncodeable encodeable)
                 {
                     return ExpandedNodeId.ToNodeId(encodeable.TypeId, namespaceUris);
                 }
 
-                ExtensionObject extension = value as ExtensionObject;
-                if (extension != null)
+                if (value is ExtensionObject extension)
                 {
                     encodeable = extension.Body as IEncodeable;
                     if (encodeable != null)
@@ -1131,9 +1101,7 @@ namespace Opc.Ua
             // check for instances of matrices.
             if (typeInfo.BuiltInType == BuiltInType.Null)
             {
-                Matrix matrix = value as Matrix;
-
-                if (matrix != null)
+                if (value is Matrix matrix)
                 {
                     return matrix.TypeInfo;
                 }
@@ -1321,7 +1289,7 @@ namespace Opc.Ua
                 case BuiltInType.Byte: { return (byte)0; }
                 case BuiltInType.Int16: { return (short)0; }
                 case BuiltInType.UInt16: { return (ushort)0; }
-                case BuiltInType.Int32: { return (int)0; }
+                case BuiltInType.Int32: { return 0; }
                 case BuiltInType.UInt32: { return (uint)0; }
                 case BuiltInType.Int64: { return (long)0; }
                 case BuiltInType.UInt64: { return (ulong)0; }
@@ -1339,7 +1307,7 @@ namespace Opc.Ua
                 case BuiltInType.LocalizedText: { return LocalizedText.Null; }
                 case BuiltInType.Variant: { return Variant.Null; }
                 case BuiltInType.DataValue: { return null; }
-                case BuiltInType.Enumeration: { return (int)0; }
+                case BuiltInType.Enumeration: { return 0; }
                 case BuiltInType.Number: { return (double)0; }
                 case BuiltInType.Integer: { return (long)0; }
                 case BuiltInType.UInteger: { return (ulong)0; }
@@ -1396,7 +1364,7 @@ namespace Opc.Ua
                     case DataTypes.Integer: { return (long)0; }
                     case DataTypes.IdType: { return (int)IdType.Numeric; }
                     case DataTypes.NodeClass: { return (int)NodeClass.Unspecified; }
-                    case DataTypes.Enumeration: { return (int)0; }
+                    case DataTypes.Enumeration: { return 0; }
                 }
             }
 
@@ -1510,18 +1478,6 @@ namespace Opc.Ua
         /// Casts a value to the specified target type.
         /// </summary>
         /// <param name="source">The instance of a source value.</param>
-        /// <param name="targetType">Type of the target.</param>
-        /// <returns>Return casted value.<see cref="DBNull"/></returns>
-        /// <exception cref="InvalidCastException">if imposible to cast.</exception>
-        public static object Cast(object source, BuiltInType targetType)
-        {
-            return Cast(source, TypeInfo.Construct(source), targetType);
-        }
-
-        /// <summary>
-        /// Casts a value to the specified target type.
-        /// </summary>
-        /// <param name="source">The instance of a source value.</param>
         /// <param name="sourceType">Type of the source.</param>
         /// <param name="targetType">Type of the target.</param>
         /// <returns>Return casted value.</returns>
@@ -1586,131 +1542,8 @@ namespace Opc.Ua
             throw new InvalidCastException();
         }
 
-        /// <summary>
-        /// Converts the array using the specified conversion function.
-        /// </summary>
-        /// <param name="dst">The destination array (must have the same size as the source array).</param>
-        /// <param name="dstType">The data type of the elements in the destination array.</param>
-        /// <param name="src">The source array.</param>
-        /// <param name="srcType">The data type of the elements in the source array.</param>
-        /// <param name="convertor">The handler which does the conversion.</param>
-        public static void CastArray(Array dst, BuiltInType dstType, Array src, BuiltInType srcType, CastArrayElementHandler convertor)
-        {
-            bool isSrcVariant = src.GetType().GetElementType() == typeof(Variant);
-            bool isDstVariant = dst.GetType().GetElementType() == typeof(Variant);
 
-            // optimize performance if dealing with a one dimensional array.
-            if (src.Rank == 1)
-            {
-                for (int ii = 0; ii < dst.Length; ii++)
-                {
-                    object element = src.GetValue(ii);
 
-                    if (isSrcVariant)
-                    {
-                        element = ((Variant)element).Value;
-                    }
-
-                    if (convertor != null)
-                    {
-                        element = convertor(element, srcType, dstType);
-                    }
-
-                    if (isDstVariant)
-                    {
-                        element = new Variant(element);
-                    }
-
-                    dst.SetValue(element, ii);
-                }
-
-                return;
-            }
-
-            // do it the hard way for multidimensional arrays.
-            int[] dimensions = new int[src.Rank];
-
-            for (int ii = 0; ii < dimensions.Length; ii++)
-            {
-                dimensions[ii] = src.GetLength(ii);
-            }
-
-            int length = dst.Length;
-            int[] indexes = new int[dimensions.Length];
-
-            for (int ii = 0; ii < length; ii++)
-            {
-                int divisor = dst.Length;
-
-                for (int jj = 0; jj < indexes.Length; jj++)
-                {
-                    divisor /= dimensions[jj];
-                    indexes[jj] = (ii / divisor) % dimensions[jj];
-                }
-
-                object element = src.GetValue(indexes);
-
-                if (element != null)
-                {
-                    if (isSrcVariant)
-                    {
-                        element = ((Variant)element).Value;
-                    }
-
-                    if (convertor != null)
-                    {
-                        element = convertor(element, srcType, dstType);
-                    }
-
-                    if (isDstVariant)
-                    {
-                        element = new Variant(element);
-                    }
-
-                    dst.SetValue(element, indexes);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Converts the array.
-        /// </summary>
-        /// <param name="srcArray">The source array.</param>
-        /// <param name="srcType">The type of the source array.</param>
-        /// <param name="dstType">The type of the converted array.</param>
-        /// <param name="convertor">The handler which does the conversion.</param>
-        /// <returns>The converted array.</returns>
-        public static Array CastArray(Array srcArray, BuiltInType srcType, BuiltInType dstType, CastArrayElementHandler convertor)
-        {
-            if (srcArray == null)
-            {
-                return null;
-            }
-
-            int[] dimensions = new int[srcArray.Rank];
-
-            for (int ii = 0; ii < dimensions.Length; ii++)
-            {
-                dimensions[ii] = srcArray.GetLength(ii);
-            }
-
-            Array dstArray = TypeInfo.CreateArray(dstType, dimensions);
-            CastArray(dstArray, dstType, srcArray, srcType, convertor);
-
-            return dstArray;
-        }
-
-        /// <summary>
-        /// A delegate for a function that converts an array element.
-        /// </summary>
-        /// <param name="source">The element to be converted.</param>
-        /// <param name="srcType">The type of the source element.</param>
-        /// <param name="dstType">The type of the converted value.</param>
-        /// <returns>The converted</returns>
-        public delegate object CastArrayElementHandler(object source, BuiltInType srcType, BuiltInType dstType);
-        #endregion
-
-        #region Private Methods
         /// <summary>
         /// Maps the type name to a built-in type.
         /// </summary>
@@ -1919,7 +1752,7 @@ namespace Opc.Ua
 
                 case BuiltInType.StatusCode:
                 {
-                    StatusCode code = (StatusCode)value;
+                    var code = (StatusCode)value;
                     return (ushort)(code.CodeBits >> 16);
                 }
             }
@@ -2318,7 +2151,7 @@ namespace Opc.Ua
 
                 case BuiltInType.Guid:
                 {
-                    Guid? guid = value as Guid?;
+                    var guid = value as Guid?;
 
                     if (guid != null)
                     {
@@ -2360,7 +2193,7 @@ namespace Opc.Ua
                         return Array.Empty<byte>();
                     }
 
-                    using (System.IO.MemoryStream ostrm = new System.IO.MemoryStream())
+                    using (var ostrm = new System.IO.MemoryStream())
                     {
                         byte buffer = 0;
                         bool firstByte = false;
@@ -2368,17 +2201,17 @@ namespace Opc.Ua
 
                         for (int ii = 0; ii < text.Length; ii++)
                         {
-                            if (!Char.IsWhiteSpace(text, ii) && !Char.IsLetterOrDigit(text, ii))
+                            if (!char.IsWhiteSpace(text, ii) && !char.IsLetterOrDigit(text, ii))
                             {
                                 throw new FormatException("Invalid character in ByteString. " + text[ii]);
                             }
 
-                            if (Char.IsWhiteSpace(text, ii))
+                            if (char.IsWhiteSpace(text, ii))
                             {
                                 continue;
                             }
 
-                            int index = digits.IndexOf(Char.ToUpper(text[ii]));
+                            int index = digits.IndexOf(char.ToUpper(text[ii]));
 
                             if (index < 0)
                             {
@@ -2434,7 +2267,7 @@ namespace Opc.Ua
 
                 case BuiltInType.String:
                 {
-                    XmlDocument document = new XmlDocument();
+                    var document = new XmlDocument();
                     document.LoadInnerXml((string)value);
                     return document.DocumentElement;
                 }
@@ -2658,11 +2491,11 @@ namespace Opc.Ua
                 return null;
             }
 
-            TypeInfo elementType = new TypeInfo(sourceType.BuiltInType, ValueRanks.Scalar);
+            var elementType = new TypeInfo(sourceType.BuiltInType, ValueRanks.Scalar);
 
             if (input.Rank == 1)
             {
-                T[] copy = new T[input.Length];
+                var copy = new T[input.Length];
 
                 for (int ii = 0; ii < input.Length; ii++)
                 {
@@ -2688,7 +2521,7 @@ namespace Opc.Ua
                 int x = input.GetLength(0);
                 int y = input.GetLength(1);
 
-                T[,] copy = new T[x, y];
+                var copy = new T[x, y];
 
                 for (int ii = 0; ii < x; ii++)
                 {
@@ -2719,7 +2552,7 @@ namespace Opc.Ua
                 dimensions[ii] = input.GetLength(ii);
             }
 
-            Array output = Array.CreateInstance(typeof(T), dimensions);
+            var output = Array.CreateInstance(typeof(T), dimensions);
 
             int length = output.Length;
             int[] indexes = new int[dimensions.Length];
@@ -2750,15 +2583,15 @@ namespace Opc.Ua
 
             return output;
         }
-        #endregion
 
-        #region Private Fields
-        private BuiltInType m_builtInType;
-        private int m_valueRank;
+
+
+        private readonly BuiltInType m_builtInType;
+        private readonly int m_valueRank;
         private static readonly TypeInfo s_Unknown = new TypeInfo();
-        #endregion
 
-        #region Scalars Class
+
+
         /// <summary>
         /// Constants for scalar types.
         /// </summary>
@@ -2890,9 +2723,9 @@ namespace Opc.Ua
             /// </summary>
             public static readonly TypeInfo DiagnosticInfo = new TypeInfo(BuiltInType.DiagnosticInfo, ValueRanks.Scalar);
         }
-        #endregion
 
-        #region Arrays Class
+
+
         /// <summary>
         /// Constants for one dimensional array types.
         /// </summary>
@@ -3024,9 +2857,9 @@ namespace Opc.Ua
             /// </summary>
             public static readonly TypeInfo DiagnosticInfo = new TypeInfo(BuiltInType.DiagnosticInfo, ValueRanks.OneDimension);
         }
-        #endregion
 
-        #region IFormattable Members
+
+
         /// <summary>
         /// Formats the type information as a string.
         /// </summary>
@@ -3042,7 +2875,7 @@ namespace Opc.Ua
         {
             if (format == null)
             {
-                System.Text.StringBuilder buffer = new System.Text.StringBuilder();
+                var buffer = new System.Text.StringBuilder();
                 buffer.Append(m_builtInType);
 
                 if (m_valueRank >= 0)
@@ -3062,9 +2895,9 @@ namespace Opc.Ua
 
             throw new FormatException(Utils.Format("Invalid format string: '{0}'.", format));
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Determines if the specified object is equal to the object.
         /// </summary>
@@ -3078,8 +2911,7 @@ namespace Opc.Ua
                 return true;
             }
 
-            TypeInfo typeInfo = obj as TypeInfo;
-            if (typeInfo != null)
+            if (obj is TypeInfo typeInfo)
             {
                 return (m_builtInType == typeInfo.BuiltInType &&
                     m_valueRank == typeInfo.ValueRank);
@@ -3095,6 +2927,6 @@ namespace Opc.Ua
         {
             return base.GetHashCode();
         }
-        #endregion
+
     }
 }

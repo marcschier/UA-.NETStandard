@@ -12,7 +12,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Opc.Ua
 {
@@ -32,13 +31,13 @@ namespace Opc.Ua
         void Push(IReference reference);
     }
 
-    #region NodeBrowser Class
+
     /// <summary>
     /// A thread safe object which browses the references for an node.
     /// </summary>
     public class NodeBrowser : INodeBrowser
     {
-        #region Constructors
+
         /// <summary>
         /// Creates a new browser object with a set of filters.
         /// </summary>
@@ -74,9 +73,9 @@ namespace Opc.Ua
                 }
             }
         }
-        #endregion
 
-        #region IDisposable Members
+
+
         /// <summary>
         /// Frees any unmanaged resources.
         /// </summary>
@@ -92,9 +91,9 @@ namespace Opc.Ua
         {
             // nothing to do.
         }
-        #endregion
 
-        #region INodeBrowser Methods
+
+
         /// <summary>
         /// Returns the next reference. Null if no more references.
         /// </summary>
@@ -131,9 +130,9 @@ namespace Opc.Ua
                 m_pushBack = reference;
             }
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Returns true if the target node is required (used to apply view filters);
         /// </summary>
@@ -196,7 +195,7 @@ namespace Opc.Ua
                 m_references.Add(reference);
             }
         }
-        
+
         /// <summary>
         /// Adds a reference to target entity.
         /// </summary>
@@ -230,97 +229,68 @@ namespace Opc.Ua
                 m_references.Add(new NodeStateReference(referenceTypeId, isInverse, targetId));
             }
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// Thr synchronization lock used by the browser.
         /// </summary>
-        protected object DataLock
-        {
-            get { return m_lock; }
-        }
+        protected object DataLock => m_lock;
 
         /// <summary>
         /// The table of types known to the UA server.
         /// </summary>
-        public ISystemContext SystemContext
-        {
-            get { return m_context; }
-        }
-        
-        /// <summary>
-        /// The view being browsed.
-        /// </summary>
-        public ViewDescription View
-        {
-            get { return m_view; }
-        }
+        public ISystemContext SystemContext => m_context;
 
         /// <summary>
         /// The type of reference to return.
         /// </summary>
-        public NodeId ReferenceType
-        {
-            get { return m_referenceType; }
-        }
+        public NodeId ReferenceType => m_referenceType;
 
         /// <summary>
         /// Whether to return subtypes of the reference.
         /// </summary>
-        public bool IncludeSubtypes
-        {
-            get { return m_includeSubtypes; }
-        }
+        public bool IncludeSubtypes => m_includeSubtypes;
 
         /// <summary>
         /// The direction for the references to return.
         /// </summary>
-        public BrowseDirection BrowseDirection
-        {
-            get { return m_browseDirection; }
-        }
+        public BrowseDirection BrowseDirection => m_browseDirection;
 
         /// <summary>
         /// The browse name of the targets to return.
         /// </summary>
-        public QualifiedName BrowseName
-        {
-            get { return m_browseName; }
-        }
+        public QualifiedName BrowseName => m_browseName;
 
         /// <summary>
         /// Indicates that the browser only returned easy to access references stored in memory.
         /// </summary>
-        public bool InternalOnly
-        {
-            get { return m_internalOnly; }
-        }
-        #endregion
+        public bool InternalOnly => m_internalOnly;
 
-        #region Private Fields
-        private object m_lock = new object();
-        private ISystemContext m_context;
-        private ViewDescription m_view;
-        private NodeId m_referenceType;
-        private bool m_includeSubtypes;
-        private BrowseDirection m_browseDirection;
+
+
+        private readonly object m_lock = new object();
+        private readonly ISystemContext m_context;
+        private readonly ViewDescription m_view;
+        private readonly NodeId m_referenceType;
+        private readonly bool m_includeSubtypes;
+        private readonly BrowseDirection m_browseDirection;
         private IReference m_pushBack;
-        private List<IReference> m_references;
-        private QualifiedName m_browseName;
-        private bool m_internalOnly;
+        private readonly List<IReference> m_references;
+        private readonly QualifiedName m_browseName;
+        private readonly bool m_internalOnly;
         private int m_index;
-        #endregion
-    }
-    #endregion
 
-    #region NodeStateReference Class
+    }
+
+
+
     /// <summary>
     /// Stores the a reference for a node.
     /// </summary>
     public class NodeStateReference : IReference
     {
-        #region Constructors
+
         /// <summary>
         /// Constructs a reference to an internal target.
         /// </summary>
@@ -342,44 +312,32 @@ namespace Opc.Ua
             m_targetId = targetId;
             m_target = null;
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The internal target of the reference.
         /// </summary>
-        public NodeState Target
-        {
-            get { return m_target; }
-        }
-        #endregion
+        public NodeState Target => m_target;
 
-        #region IReference Members
+
+
         /// <summary cref="IReference.ReferenceTypeId" />
-        public NodeId ReferenceTypeId
-        {
-            get { return m_referenceTypeId; }
-        }
+        public NodeId ReferenceTypeId => m_referenceTypeId;
 
         /// <summary cref="IReference.IsInverse" />
-        public bool IsInverse
-        {
-            get { return m_isInverse; }
-        }
+        public bool IsInverse => m_isInverse;
 
         /// <summary cref="IReference.TargetId" />
-        public ExpandedNodeId TargetId
-        {
-            get { return m_targetId; }
-        }
-        #endregion
+        public ExpandedNodeId TargetId => m_targetId;
 
-        #region Private Fields
-        private NodeId m_referenceTypeId;
-        private bool m_isInverse;
-        private ExpandedNodeId m_targetId;
-        private NodeState m_target;
-        #endregion
+
+
+        private readonly NodeId m_referenceTypeId;
+        private readonly bool m_isInverse;
+        private readonly ExpandedNodeId m_targetId;
+        private readonly NodeState m_target;
+
     }
-    #endregion
+
 }

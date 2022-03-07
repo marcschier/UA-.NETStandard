@@ -93,49 +93,10 @@ namespace Opc.Ua
         NodeId FindReferenceType(QualifiedName browseName);
 
         /// <summary>
-        /// Checks if the identifier <paramref name="encodingId"/> represents a that provides encodings 
-        /// for the <paramref name="datatypeId "/>.
-        /// </summary>
-        /// <param name="encodingId">The id the encoding node .</param>
-        /// <param name="datatypeId">The id of the DataType node.</param>
-        /// <returns>
-        /// 	<c>true</c> if <paramref name="encodingId"/> is encoding of the <paramref name="datatypeId"/>; otherwise, <c>false</c>.
-        /// </returns>
-        bool IsEncodingOf(ExpandedNodeId encodingId, ExpandedNodeId datatypeId);
-
-        /// <summary>
-        /// Determines if the value contained in an extension object <paramref name="value"/> matches the expected data type.
-        /// </summary>
-        /// <param name="expectedTypeId">The identifier of the expected type .</param>
-        /// <param name="value">The value.</param>
-        /// <returns>
-        /// 	<c>true</c> if the value contained in an extension object <paramref name="value"/> matches the 
-        /// 	expected data type; otherwise, <c>false</c>.
-        /// </returns>
-        bool IsEncodingFor(NodeId expectedTypeId, ExtensionObject value);
-
-        /// <summary>
-        /// Determines if the value is an encoding of the <paramref name="value"/>
-        /// </summary>
-        /// <param name="expectedTypeId">The expected type id.</param>
-        /// <param name="value">The value.</param>
-        /// <returns>
-        /// 	<c>true</c> the value is an encoding of the <paramref name="value"/>; otherwise, <c>false</c>.
-        /// </returns>
-        bool IsEncodingFor(NodeId expectedTypeId, object value);
-
-        /// <summary>
         /// Returns the data type for the specified encoding.
         /// </summary>
         /// <param name="encodingId">The encoding id.</param>
         /// <returns></returns>
         NodeId FindDataTypeId(ExpandedNodeId encodingId);
-
-        /// <summary>
-        /// Returns the data type for the specified encoding.
-        /// </summary>
-        /// <param name="encodingId">The encoding id.</param>
-        /// <returns>The data type for the <paramref name="encodingId"/></returns>
-        NodeId FindDataTypeId(NodeId encodingId);
     }
 }

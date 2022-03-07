@@ -2,7 +2,7 @@
  * Copyright (c) 2005-2020 The OPC Foundation, Inc. All rights reserved.
  *
  * OPC Foundation MIT License 1.00
- * 
+ *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
  * files (the "Software"), to deal in the Software without
@@ -11,7 +11,7 @@
  * copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following
  * conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
@@ -41,7 +41,7 @@ namespace Opc.Ua.Server
     /// </summary>
     public class SessionManager : ISessionManager, IDisposable
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the manager with its configuration.
         /// </summary>
@@ -49,8 +49,15 @@ namespace Opc.Ua.Server
             IServerInternal server,
             ApplicationConfiguration configuration)
         {
-            if (server == null) throw new ArgumentNullException(nameof(server));
-            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+            if (server == null)
+            {
+                throw new ArgumentNullException(nameof(server));
+            }
+
+            if (configuration == null)
+            {
+                throw new ArgumentNullException(nameof(configuration));
+            }
 
             m_server = server;
 
@@ -67,9 +74,9 @@ namespace Opc.Ua.Server
             // create a event to signal shutdown.
             m_shutdownEvent = new ManualResetEvent(true);
         }
-        #endregion
 
-        #region IDisposable Members        
+
+
         /// <summary>
         /// Frees any unmanaged resources.
         /// </summary>
@@ -101,9 +108,9 @@ namespace Opc.Ua.Server
                 m_shutdownEvent.Set();
             }
         }
-        #endregion
 
-        #region Public Interface
+
+
         /// <summary>
         /// Starts the session manager.
         /// </summary>
@@ -185,7 +192,7 @@ namespace Opc.Ua.Server
                 // can assign a simple identifier if secured.
                 authenticationToken = null;
 
-                if (!String.IsNullOrEmpty(context.ChannelContext.SecureChannelId))
+                if (!string.IsNullOrEmpty(context.ChannelContext.SecureChannelId))
                 {
                     if (context.ChannelContext.EndpointDescription.SecurityMode != MessageSecurityMode.None)
                     {
@@ -215,7 +222,7 @@ namespace Opc.Ua.Server
                 serverNonce = Utils.Nonce.CreateNonce((uint)m_minNonceLength);
 
                 // assign client name.
-                if (String.IsNullOrEmpty(sessionName))
+                if (string.IsNullOrEmpty(sessionName))
                 {
                     sessionName = Utils.Format("Session {0}", sessionId);
                 }
@@ -312,7 +319,7 @@ namespace Opc.Ua.Server
                 {
                     if (m_ImpersonateUser != null)
                     {
-                        ImpersonateEventArgs args = new ImpersonateEventArgs(newIdentity, userTokenPolicy, context.ChannelContext.EndpointDescription);
+                        var args = new ImpersonateEventArgs(newIdentity, userTokenPolicy, context.ChannelContext.EndpointDescription);
                         m_ImpersonateUser(session, args);
 
                         if (ServiceResult.IsBad(args.IdentityValidationError))
@@ -425,12 +432,15 @@ namespace Opc.Ua.Server
         /// </summary>
         /// <remarks>
         /// This method verifies that the session id is valid and that it uses secure channel id
-        /// associated with current thread. It also verifies that the timestamp is not too 
+        /// associated with current thread. It also verifies that the timestamp is not too
         /// and that the sequence number is not out of order (update requests only).
         /// </remarks>
         public virtual OperationContext ValidateRequest(RequestHeader requestHeader, RequestType requestType)
         {
-            if (requestHeader == null) throw new ArgumentNullException(nameof(requestHeader));
+            if (requestHeader == null)
+            {
+                throw new ArgumentNullException(nameof(requestHeader));
+            }
 
             Session session = null;
 
@@ -447,7 +457,7 @@ namespace Opc.Ua.Server
                     // find session.
                     if (!m_sessions.TryGetValue(requestHeader.AuthenticationToken, out session))
                     {
-                        var Handler = m_ValidateSessionLessRequest;
+                        EventHandler<ValidateSessionLessRequestEventArgs> Handler = m_ValidateSessionLessRequest;
 
                         if (Handler != null)
                         {
@@ -474,9 +484,7 @@ namespace Opc.Ua.Server
             }
             catch (Exception e)
             {
-                ServiceResultException sre = e as ServiceResultException;
-
-                if (sre != null && sre.StatusCode == StatusCodes.BadSessionNotActivated)
+                if (e is ServiceResultException sre && sre.StatusCode == StatusCodes.BadSessionNotActivated)
                 {
                     if (session != null)
                     {
@@ -487,9 +495,9 @@ namespace Opc.Ua.Server
                 throw new ServiceResultException(e, StatusCodes.BadUnexpectedError);
             }
         }
-        #endregion
 
-        #region Protected Methods
+
+
         /// <summary>
         /// Creates a new instance of a session.
         /// </summary>
@@ -509,7 +517,7 @@ namespace Opc.Ua.Server
             int maxRequestAge, // TBD - Remove unused parameter.
             int maxContinuationPoints) // TBD - Remove unused parameter.
         {
-            Session session = new Session(
+            var session = new Session(
                 context,
                 m_server,
                 serverCertificate,
@@ -558,9 +566,9 @@ namespace Opc.Ua.Server
                 }
             }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Periodically checks if the sessions have timed out.
         /// </summary>
@@ -609,32 +617,32 @@ namespace Opc.Ua.Server
                 Utils.LogError(e, "Server - Session Monitor Thread Exited Unexpectedly");
             }
         }
-        #endregion
 
-        #region Private Fields
-        private object m_lock = new object();
-        private IServerInternal m_server;
-        private Dictionary<NodeId, Session> m_sessions;
+
+
+        private readonly object m_lock = new object();
+        private readonly IServerInternal m_server;
+        private readonly Dictionary<NodeId, Session> m_sessions;
         private long m_lastSessionId;
-        private ManualResetEvent m_shutdownEvent;
+        private readonly ManualResetEvent m_shutdownEvent;
 
-        private int m_minSessionTimeout;
-        private int m_maxSessionTimeout;
-        private int m_maxSessionCount;
-        private int m_maxRequestAge;
-        private int m_maxBrowseContinuationPoints;
-        private int m_maxHistoryContinuationPoints;
-        private int m_minNonceLength;
+        private readonly int m_minSessionTimeout;
+        private readonly int m_maxSessionTimeout;
+        private readonly int m_maxSessionCount;
+        private readonly int m_maxRequestAge;
+        private readonly int m_maxBrowseContinuationPoints;
+        private readonly int m_maxHistoryContinuationPoints;
+        private readonly int m_minNonceLength;
 
-        private object m_eventLock = new object();
+        private readonly object m_eventLock = new object();
         private event SessionEventHandler m_SessionCreated;
         private event SessionEventHandler m_SessionActivated;
         private event SessionEventHandler m_SessionClosing;
         private event ImpersonateEventHandler m_ImpersonateUser;
         private event EventHandler<ValidateSessionLessRequestEventArgs> m_ValidateSessionLessRequest;
-        #endregion
 
-        #region ISessionManager Members
+
+
         /// <inheritdoc/>
         public event SessionEventHandler SessionCreated
         {
@@ -716,26 +724,6 @@ namespace Opc.Ua.Server
         }
 
         /// <inheritdoc/>
-        public event EventHandler<ValidateSessionLessRequestEventArgs> ValidateSessionLessRequest
-        {
-            add
-            {
-                lock (m_eventLock)
-                {
-                    m_ValidateSessionLessRequest += value;
-                }
-            }
-
-            remove
-            {
-                lock (m_eventLock)
-                {
-                    m_ValidateSessionLessRequest -= value;
-                }
-            }
-        }
-
-        /// <inheritdoc/>
         public IList<Session> GetSessions()
         {
             lock (m_lock)
@@ -743,7 +731,7 @@ namespace Opc.Ua.Server
                 return new List<Session>(m_sessions.Values);
             }
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -775,11 +763,6 @@ namespace Opc.Ua.Server
         event ImpersonateEventHandler ImpersonateUser;
 
         /// <summary>
-        /// Raised to validate a session-less request.
-        /// </summary>
-        event EventHandler<ValidateSessionLessRequestEventArgs> ValidateSessionLessRequest;
-
-        /// <summary>
         /// Returns all of the sessions known to the session manager.
         /// </summary>
         /// <returns>A list of the sessions.</returns>
@@ -787,7 +770,7 @@ namespace Opc.Ua.Server
     }
 
     /// <summary>
-    /// The possible reasons for a session related eventg. 
+    /// The possible reasons for a session related eventg.
     /// </summary>
     public enum SessionEventReason
     {
@@ -817,13 +800,13 @@ namespace Opc.Ua.Server
     /// </summary>
     public delegate void SessionEventHandler(Session session, SessionEventReason reason);
 
-    #region ImpersonateEventArgs Class
+
     /// <summary>
     /// A class which provides the event arguments for session related event.
     /// </summary>
     public class ImpersonateEventArgs : EventArgs
     {
-        #region Constructors
+
         /// <summary>
         /// Creates a new instance.
         /// </summary>
@@ -833,32 +816,21 @@ namespace Opc.Ua.Server
             m_userTokenPolicy = userTokenPolicy;
             m_endpointDescription = endpointDescription;
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The new user identity for the session.
         /// </summary>
-        public UserIdentityToken NewIdentity
-        {
-            get { return m_newIdentity; }
-        }
-
-        /// <summary>
-        /// The user token policy selected by the client.
-        /// </summary>
-        public UserTokenPolicy UserTokenPolicy
-        {
-            get { return m_userTokenPolicy; }
-        }
+        public UserIdentityToken NewIdentity => m_newIdentity;
 
         /// <summary>
         /// An application defined handle that can be used for access control operations.
         /// </summary>
         public IUserIdentity Identity
         {
-            get { return m_identity; }
-            set { m_identity = value; }
+            get => m_identity;
+            set => m_identity = value;
         }
 
         /// <summary>
@@ -866,8 +838,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public IUserIdentity EffectiveIdentity
         {
-            get { return m_effectiveIdentity; }
-            set { m_effectiveIdentity = value; }
+            get => m_effectiveIdentity;
+            set => m_effectiveIdentity = value;
         }
 
         /// <summary>
@@ -875,42 +847,34 @@ namespace Opc.Ua.Server
         /// </summary>
         public ServiceResult IdentityValidationError
         {
-            get { return m_identityValidationError; }
-            set { m_identityValidationError = value; }
+            get => m_identityValidationError;
+            set => m_identityValidationError = value;
         }
 
-        /// <summary>
-        /// Get the EndpointDescription  
-        /// </summary>
-        public EndpointDescription EndpointDescription
-        {
-            get { return m_endpointDescription; }
-        }
-        #endregion
 
-        #region Private Fields
-        private UserIdentityToken m_newIdentity;
-        private UserTokenPolicy m_userTokenPolicy;
+
+        private readonly UserIdentityToken m_newIdentity;
+        private readonly UserTokenPolicy m_userTokenPolicy;
         private ServiceResult m_identityValidationError;
         private IUserIdentity m_identity;
         private IUserIdentity m_effectiveIdentity;
-        private EndpointDescription m_endpointDescription;
-        #endregion
+        private readonly EndpointDescription m_endpointDescription;
+
     }
 
     /// <summary>
     /// The delegate for functions used to receive impersonation events.
     /// </summary>
     public delegate void ImpersonateEventHandler(Session session, ImpersonateEventArgs args);
-    #endregion
 
-    #region ImpersonateEventArgs Class
+
+
     /// <summary>
     /// A class which provides the event arguments for session related event.
     /// </summary>
     public class ValidateSessionLessRequestEventArgs : EventArgs
     {
-        #region Constructors
+
         /// <summary>
         /// Creates a new instance.
         /// </summary>
@@ -919,9 +883,9 @@ namespace Opc.Ua.Server
             AuthenticationToken = authenticationToken;
             RequestType = requestType;
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The request type for the request.
         /// </summary>
@@ -941,7 +905,7 @@ namespace Opc.Ua.Server
         /// Set to indicate that an error occurred validating the session-less request and that it should be rejected.
         /// </summary>
         public ServiceResult Error { get; set; }
-        #endregion
+
     }
-    #endregion
+
 }

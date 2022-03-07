@@ -22,7 +22,7 @@ namespace Opc.Ua.Test
     /// </summary>
     public class DataComparer
     {
-        #region Constructors
+
         /// <summary>
         /// Constructs an instance of the data comparer.
         /// </summary>
@@ -31,20 +31,9 @@ namespace Opc.Ua.Test
             m_context = context;
             m_throwOnError = true;
         }
-        #endregion
 
-        #region Public Properties
-        /// <summary>
-        /// Gets or set a flag indicating whether an exception should be thrown on error.
-        /// </summary>
-        public bool ThrowOnError
-        {
-            get { return m_throwOnError; }
-            set { m_throwOnError = value; }
-        }
-        #endregion
 
-        #region Boolean Functions
+
         /// <summary>
         /// This method compares two Boolean values.
         /// </summary>
@@ -60,9 +49,9 @@ namespace Opc.Ua.Test
             }
             return true;
         }
-        #endregion
 
-        #region SByte Functions
+
+
         /// <summary>
         /// This method compares two SByte values.
         /// </summary>
@@ -79,9 +68,9 @@ namespace Opc.Ua.Test
 
             return true;
         }
-        #endregion
 
-        #region Byte Functions
+
+
         /// <summary>
         /// This method compares two Byte values.
         /// </summary>
@@ -98,9 +87,9 @@ namespace Opc.Ua.Test
 
             return true;
         }
-        #endregion
 
-        #region Int16 Functions
+
+
         /// <summary>
         /// This method compares two Int16 values.
         /// </summary>
@@ -117,9 +106,9 @@ namespace Opc.Ua.Test
 
             return true;
         }
-        #endregion
 
-        #region UInt16 Functions
+
+
         /// <summary>
         /// This method compares two UInt16 values.
         /// </summary>
@@ -136,9 +125,9 @@ namespace Opc.Ua.Test
 
             return true;
         }
-        #endregion
 
-        #region Int32 Functions
+
+
         /// <summary>
         /// This method compares two Int32 values.
         /// </summary>
@@ -155,9 +144,9 @@ namespace Opc.Ua.Test
 
             return true;
         }
-        #endregion
 
-        #region UInt32 Functions
+
+
         /// <summary>
         /// This method compares two UInt32 values.
         /// </summary>
@@ -174,9 +163,9 @@ namespace Opc.Ua.Test
 
             return true;
         }
-        #endregion
 
-        #region Int64 Functions
+
+
         /// <summary>
         /// This method compares two Int64 values.
         /// </summary>
@@ -193,9 +182,9 @@ namespace Opc.Ua.Test
 
             return true;
         }
-        #endregion
 
-        #region UInt64 Functions
+
+
         /// <summary>
         /// This method compares two UInt64 values.
         /// </summary>
@@ -212,9 +201,9 @@ namespace Opc.Ua.Test
 
             return true;
         }
-        #endregion
 
-        #region Float Functions
+
+
         /// <summary>
         /// This method compares two Float values.
         /// </summary>
@@ -226,7 +215,7 @@ namespace Opc.Ua.Test
         {
             if (value1 != value2)
             {
-                if (Single.IsNaN(value1) && Single.IsNaN(value2))
+                if (float.IsNaN(value1) && float.IsNaN(value2))
                 {
                     return true;
                 }
@@ -236,9 +225,9 @@ namespace Opc.Ua.Test
 
             return true;
         }
-        #endregion
 
-        #region Double Functions
+
+
         /// <summary>
         /// This method compares two Double values.
         /// </summary>
@@ -250,7 +239,7 @@ namespace Opc.Ua.Test
         {
             if (value1 != value2)
             {
-                if (Double.IsNaN(value1) && Double.IsNaN(value2))
+                if (double.IsNaN(value1) && double.IsNaN(value2))
                 {
                     return true;
                 }
@@ -267,9 +256,9 @@ namespace Opc.Ua.Test
 
             return true;
         }
-        #endregion
 
-        #region String Functions
+
+
         /// <summary>
         /// This method compares two String values.
         /// </summary>
@@ -286,9 +275,9 @@ namespace Opc.Ua.Test
 
             return true;
         }
-        #endregion
 
-        #region DateTime Functions
+
+
         /// <summary>
         /// This method compares two DateTime values.
         /// </summary>
@@ -322,9 +311,9 @@ namespace Opc.Ua.Test
             // allow milliseconds to be truncated.
             return Math.Abs((value1 - value2).Ticks) < 10000;
         }
-        #endregion
 
-        #region Guid Functions
+
+
         /// <summary>
         /// This method compares two Guid values.
         /// </summary>
@@ -341,9 +330,9 @@ namespace Opc.Ua.Test
 
             return true;
         }
-        #endregion
 
-        #region ByteString Functions
+
+
         /// <summary>
         /// This method compares two ByteString values.
         /// </summary>
@@ -378,9 +367,9 @@ namespace Opc.Ua.Test
 
             return true;
         }
-        #endregion
 
-        #region XmlElement Functions
+
+
         /// <summary>
         /// This method compares two XmlElement values.
         /// </summary>
@@ -421,7 +410,7 @@ namespace Opc.Ua.Test
                         return ReportError(attribute1, attribute2);
                     }
 
-                    string prefix = (attribute1.Name.Length > 5) ? attribute1.Name.Substring(6) : String.Empty;
+                    string prefix = (attribute1.Name.Length > 5) ? attribute1.Name.Substring(6) : string.Empty;
 
                     if (attribute1.Value != value2.GetNamespaceOfPrefix(prefix))
                     {
@@ -485,9 +474,9 @@ namespace Opc.Ua.Test
 
             return true;
         }
-        #endregion
 
-        #region NodeId Functions
+
+
         /// <summary>
         /// This method compares two NodeId values.
         /// </summary>
@@ -519,9 +508,9 @@ namespace Opc.Ua.Test
 
             return true;
         }
-        #endregion
 
-        #region ExpandedNodeId Functions
+
+
         /// <summary>
         /// This method compares two ExpandedNodeId values.
         /// </summary>
@@ -548,8 +537,8 @@ namespace Opc.Ua.Test
 
             if (value1 != value2)
             {
-                NodeId nodeId1 = ExpandedNodeId.ToNodeId(value1, m_context.NamespaceUris);
-                NodeId nodeId2 = ExpandedNodeId.ToNodeId(value2, m_context.NamespaceUris);
+                var nodeId1 = ExpandedNodeId.ToNodeId(value1, m_context.NamespaceUris);
+                var nodeId2 = ExpandedNodeId.ToNodeId(value2, m_context.NamespaceUris);
 
                 if (nodeId1 != nodeId2)
                 {
@@ -559,9 +548,9 @@ namespace Opc.Ua.Test
 
             return true;
         }
-        #endregion
 
-        #region StatusCode Functions
+
+
         /// <summary>
         /// This method compares two StatusCode values.
         /// </summary>
@@ -578,9 +567,9 @@ namespace Opc.Ua.Test
 
             return true;
         }
-        #endregion
 
-        #region DiagnosticInfo Functions
+
+
         /// <summary>
         /// This method compares two DiagnosticInfo values.
         /// </summary>
@@ -642,9 +631,9 @@ namespace Opc.Ua.Test
 
             return true;
         }
-        #endregion
 
-        #region QualifiedName Functions
+
+
         /// <summary>
         /// This method compares two QualifiedName values.
         /// </summary>
@@ -684,9 +673,9 @@ namespace Opc.Ua.Test
             }
             return true;
         }
-        #endregion
 
-        #region LocalizedText Functions
+
+
         /// <summary>
         /// This method compares two LocalizedText values.
         /// </summary>
@@ -726,9 +715,9 @@ namespace Opc.Ua.Test
             }
             return true;
         }
-        #endregion
 
-        #region Variant Functions
+
+
         /// <summary>
         /// This method compares two Variant values.
         /// </summary>
@@ -815,9 +804,9 @@ namespace Opc.Ua.Test
 
             return ReportError(value1.Value, value2.Value);
         }
-        #endregion
 
-        #region DataValue Functions
+
+
         /// <summary>
         /// This method compares two DataValues.
         /// </summary>
@@ -869,9 +858,9 @@ namespace Opc.Ua.Test
 
             return true;
         }
-        #endregion
 
-        #region Matrix Functions
+
+
         /// <summary>
         /// This method compares two DataValues.
         /// </summary>
@@ -903,9 +892,9 @@ namespace Opc.Ua.Test
 
             return true;
         }
-        #endregion
 
-        #region ExtensionObject Functions
+
+
         /// <summary>
         /// The factory to use when decoding extension objects.
         /// </summary>        
@@ -935,9 +924,8 @@ namespace Opc.Ua.Test
         {
             object body = value.Body;
 
-            IEncodeable encodeable = body as IEncodeable;
 
-            if (encodeable != null)
+            if (body is IEncodeable encodeable)
             {
                 return encodeable;
             }
@@ -953,12 +941,11 @@ namespace Opc.Ua.Test
                 Factory = EncodeableFactory
             };
 
-            XmlElement xml = body as XmlElement;
 
-            if (xml != null)
+            if (body is XmlElement xml)
             {
                 XmlQualifiedName xmlName = Opc.Ua.EncodeableFactory.GetXmlName(expectedType);
-                XmlDecoder decoder = new XmlDecoder(xml, context);
+                var decoder = new XmlDecoder(xml, context);
 
                 decoder.PushNamespace(xmlName.Namespace);
                 body = decoder.ReadEncodeable(xmlName.Name, expectedType);
@@ -968,11 +955,10 @@ namespace Opc.Ua.Test
                 return (IEncodeable)body;
             }
 
-            byte[] bytes = body as byte[];
 
-            if (bytes != null)
+            if (body is byte[] bytes)
             {
-                BinaryDecoder decoder = new BinaryDecoder(bytes, context);
+                var decoder = new BinaryDecoder(bytes, context);
                 body = decoder.ReadEncodeable(null, expectedType);
                 decoder.Close();
 
@@ -1009,10 +995,7 @@ namespace Opc.Ua.Test
                 return body1 == body2;
             }
 
-            byte[] bytes1 = value1.Body as byte[];
-            byte[] bytes2 = value2.Body as byte[];
-
-            if (bytes1 != null && bytes2 != null)
+            if (value1.Body is byte[] bytes1 && value2.Body is byte[] bytes2)
             {
                 if (!CompareExpandedNodeId(value1.TypeId, value2.TypeId))
                 {
@@ -1022,10 +1005,7 @@ namespace Opc.Ua.Test
                 return CompareByteString(bytes1, bytes2);
             }
 
-            XmlElement xml1 = value1.Body as XmlElement;
-            XmlElement xml2 = value2.Body as XmlElement;
-
-            if (xml1 != null && xml2 != null)
+            if (value1.Body is XmlElement xml1 && value2.Body is XmlElement xml2)
             {
                 if (!CompareExpandedNodeId(value1.TypeId, value2.TypeId))
                 {
@@ -1056,10 +1036,7 @@ namespace Opc.Ua.Test
                 return true;
             }
 
-            IEncodeable encodeable1 = value1 as IEncodeable;
-            IEncodeable encodeable2 = value2 as IEncodeable;
-
-            if (encodeable1 != null && encodeable2 != null)
+            if (value1 is IEncodeable encodeable1 && value2 is IEncodeable encodeable2)
             {
                 if (encodeable1.IsEqual(encodeable1))
                 {
@@ -1069,9 +1046,9 @@ namespace Opc.Ua.Test
 
             return false;
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// The delegate used to compare two values.   
         /// </summary> 
@@ -1166,11 +1143,11 @@ namespace Opc.Ua.Test
 
             return false;
         }
-        #endregion
 
-        #region Private Fields
-        private IServiceMessageContext m_context;
-        private bool m_throwOnError;
-        #endregion
+
+
+        private readonly IServiceMessageContext m_context;
+        private readonly bool m_throwOnError;
+
     }
 }

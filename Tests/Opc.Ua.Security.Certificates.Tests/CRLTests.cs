@@ -46,7 +46,7 @@ namespace Opc.Ua.Security.Certificates.Tests
     [SetCulture("en-us")]
     public class CRLTests
     {
-        #region DataPointSources
+        
         [DatapointSource]
         public CRLAsset[] CRLTestCases = new AssetCollection<CRLAsset>(TestUtils.EnumerateTestAssets("*.crl")).ToArray();
 
@@ -55,9 +55,9 @@ namespace Opc.Ua.Security.Certificates.Tests
             { 2048, HashAlgorithmName.SHA256 },
             { 3072, HashAlgorithmName.SHA384 },
             { 4096, HashAlgorithmName.SHA512 } }.ToArray();
-        #endregion
+        
 
-        #region Test Setup
+        
         /// <summary>
         /// Set up a Global Discovery Server and Client instance and connect the session
         /// </summary>
@@ -76,9 +76,9 @@ namespace Opc.Ua.Security.Certificates.Tests
         protected void OneTimeTearDown()
         {
         }
-        #endregion
+        
 
-        #region Test Methods
+        
         /// <summary>
         /// Verify self signed app certs.
         /// </summary>
@@ -210,9 +210,9 @@ namespace Opc.Ua.Security.Certificates.Tests
                 Assert.True(x509Crl.VerifySignature(issuerPubKey, true));
             }
         }
-        #endregion
+        
 
-        #region Private Methods
+        
         private string WriteCRL(X509CRL x509Crl)
         {
             var stringBuilder = new StringBuilder();
@@ -236,11 +236,11 @@ namespace Opc.Ua.Security.Certificates.Tests
             }
             return stringBuilder.ToString();
         }
-        #endregion
+        
 
-        #region Private Fields
+        
         X509Certificate2 m_issuerCert;
-        #endregion
+        
     }
 
 }

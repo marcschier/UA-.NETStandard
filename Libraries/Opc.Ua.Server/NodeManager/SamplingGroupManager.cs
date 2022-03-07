@@ -29,9 +29,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Security.Principal;
 
 namespace Opc.Ua.Server
 {
@@ -40,24 +37,31 @@ namespace Opc.Ua.Server
     /// </summary>
     public class SamplingGroupManager : IDisposable
     {
-        #region Constructors
+
         /// <summary>
         /// Creates a new instance of a sampling group.
         /// </summary>
         public SamplingGroupManager(
-            IServerInternal                server,
-            INodeManager                   nodeManager,
-            uint                           maxQueueSize,
+            IServerInternal server,
+            INodeManager nodeManager,
+            uint maxQueueSize,
             IEnumerable<SamplingRateGroup> samplingRates)
         {
-            if (server == null)      throw new ArgumentNullException(nameof(server));
-            if (nodeManager == null) throw new ArgumentNullException(nameof(nodeManager));
+            if (server == null)
+            {
+                throw new ArgumentNullException(nameof(server));
+            }
 
-            m_server          = server;
-            m_nodeManager     = nodeManager;
-            m_samplingGroups  = new List<SamplingGroup>();
-            m_sampledItems    = new Dictionary<ISampledDataChangeMonitoredItem,SamplingGroup>();
-            m_maxQueueSize    = maxQueueSize;
+            if (nodeManager == null)
+            {
+                throw new ArgumentNullException(nameof(nodeManager));
+            }
+
+            m_server = server;
+            m_nodeManager = nodeManager;
+            m_samplingGroups = new List<SamplingGroup>();
+            m_sampledItems = new Dictionary<ISampledDataChangeMonitoredItem, SamplingGroup>();
+            m_maxQueueSize = maxQueueSize;
 
             if (samplingRates != null)
             {
@@ -74,9 +78,9 @@ namespace Opc.Ua.Server
                 m_samplingRates = new List<SamplingRateGroup>(s_DefaultSamplingRates);
             }
         }
-        #endregion
 
-        #region IDisposable Members
+
+
         /// <summary>
         /// Frees any unmanaged resources.
         /// </summary>
@@ -115,40 +119,20 @@ namespace Opc.Ua.Server
                 }
             }
         }
-        #endregion
-
-        #region Public Methods
-        /// <summary>
-        /// Stops all sampling groups and clears all items.
-        /// </summary>
-        public virtual void Shutdown()
-        {
-            lock (m_lock)
-            {
-                // stop sampling groups.
-                foreach (SamplingGroup samplingGroup in m_samplingGroups)
-                {
-                    samplingGroup.Shutdown();
-                }
-
-                m_samplingGroups.Clear();
-                m_sampledItems.Clear();
-            }
-        }
 
         /// <summary>
         /// Creates a new monitored item and calls StartMonitoring().
         /// </summary>
         public virtual MonitoredItem CreateMonitoredItem(
-            OperationContext           context,
-            uint                       subscriptionId,
-            double                     publishingInterval,
-            TimestampsToReturn         timestampsToReturn,
-            uint                       monitoredItemId,
-            object                     managerHandle,
+            OperationContext context,
+            uint subscriptionId,
+            double publishingInterval,
+            TimestampsToReturn timestampsToReturn,
+            uint monitoredItemId,
+            object managerHandle,
             MonitoredItemCreateRequest itemToCreate,
-            Range                      range,
-            double                     minimumSamplingInterval)
+            Range range,
+            double minimumSamplingInterval)
         {
             // use publishing interval as sampling interval.
             double samplingInterval = itemToCreate.RequestedParameters.SamplingInterval;
@@ -185,7 +169,7 @@ namespace Opc.Ua.Server
             {
                 if (queueSize == 0)
                 {
-                    queueSize = Int32.MaxValue;
+                    queueSize = int.MaxValue;
                 }
 
                 samplingInterval = 0;
@@ -248,24 +232,24 @@ namespace Opc.Ua.Server
         /// <param name="minimumSamplingInterval">The minimum sampling interval.</param>
         /// <returns>The monitored item.</returns>
         protected virtual MonitoredItem CreateMonitoredItem(
-            IServerInternal     server,
-            INodeManager        nodeManager,
-            object              managerHandle,
-            uint                subscriptionId,
-            uint                id,
-            Session             session,
-            ReadValueId         itemToMonitor,
-            DiagnosticsMasks    diagnosticsMasks,
-            TimestampsToReturn  timestampsToReturn,
-            MonitoringMode      monitoringMode,
-            uint                clientHandle,
-            MonitoringFilter    originalFilter,
-            MonitoringFilter    filterToUse,
-            Range               range,
-            double              samplingInterval,
-            uint                queueSize,
-            bool                discardOldest,
-            double              minimumSamplingInterval)
+            IServerInternal server,
+            INodeManager nodeManager,
+            object managerHandle,
+            uint subscriptionId,
+            uint id,
+            Session session,
+            ReadValueId itemToMonitor,
+            DiagnosticsMasks diagnosticsMasks,
+            TimestampsToReturn timestampsToReturn,
+            MonitoringMode monitoringMode,
+            uint clientHandle,
+            MonitoringFilter originalFilter,
+            MonitoringFilter filterToUse,
+            Range range,
+            double samplingInterval,
+            uint queueSize,
+            bool discardOldest,
+            double minimumSamplingInterval)
         {
             return new MonitoredItem(
                 server,
@@ -291,11 +275,11 @@ namespace Opc.Ua.Server
         /// Modifies a monitored item and calls ModifyMonitoring().
         /// </summary>
         public virtual ServiceResult ModifyMonitoredItem(
-            OperationContext           context,
-            TimestampsToReturn         timestampsToReturn,
-            ISampledDataChangeMonitoredItem   monitoredItem,
+            OperationContext context,
+            TimestampsToReturn timestampsToReturn,
+            ISampledDataChangeMonitoredItem monitoredItem,
             MonitoredItemModifyRequest itemToModify,
-            Range                      range)
+            Range range)
         {
             // use existing interval as sampling interval.
             double samplingInterval = itemToModify.RequestedParameters.SamplingInterval;
@@ -394,7 +378,7 @@ namespace Opc.Ua.Server
                 }
 
                 // create a new sampling group.
-                SamplingGroup samplingGroup2 = new SamplingGroup(
+                var samplingGroup2 = new SamplingGroup(
                     m_server,
                     m_nodeManager,
                     m_samplingRates,
@@ -475,7 +459,7 @@ namespace Opc.Ua.Server
         {
             lock (m_lock)
             {
-                List<SamplingGroup> unusedGroups = new List<SamplingGroup>();
+                var unusedGroups = new List<SamplingGroup>();
 
                 // apply changes to groups.
                 foreach (SamplingGroup samplingGroup in m_samplingGroups)
@@ -494,16 +478,16 @@ namespace Opc.Ua.Server
                 }
             }
         }
-        #endregion
 
-        #region Private Fields
-        private object m_lock = new object();
-        private IServerInternal m_server;
-        private INodeManager m_nodeManager;
-        private List<SamplingGroup> m_samplingGroups;
-        private Dictionary<ISampledDataChangeMonitoredItem,SamplingGroup> m_sampledItems;
-        private List<SamplingRateGroup> m_samplingRates;
-        private uint m_maxQueueSize;
+
+
+        private readonly object m_lock = new object();
+        private readonly IServerInternal m_server;
+        private readonly INodeManager m_nodeManager;
+        private readonly List<SamplingGroup> m_samplingGroups;
+        private readonly Dictionary<ISampledDataChangeMonitoredItem, SamplingGroup> m_sampledItems;
+        private readonly List<SamplingRateGroup> m_samplingRates;
+        private readonly uint m_maxQueueSize;
 
         /// <summary>
         /// The default sampling rates.
@@ -521,6 +505,6 @@ namespace Opc.Ua.Server
             new SamplingRateGroup(3600000, 900000, 0)
         };
 
-        #endregion
+
     }
 }

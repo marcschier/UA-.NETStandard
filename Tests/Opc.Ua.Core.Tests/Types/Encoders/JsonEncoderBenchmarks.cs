@@ -146,7 +146,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
             }
         }
 
-        #region Private Methods
+        
         private void TestEncoding(IEncoder encoder)
         {
             int payLoadSize = PayLoadSize;
@@ -160,9 +160,9 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
                 encoder.WriteInt32Array("Array", m_list);
             }
         }
-        #endregion
+        
 
-        #region Test Setup
+        
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
@@ -180,9 +180,9 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
             m_memoryStream = null;
             m_memoryManager = null;
         }
-        #endregion
+        
 
-        #region Benchmark Setup
+        
         /// <summary>
         /// Set up some variables for benchmarks.
         /// </summary>
@@ -205,14 +205,14 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
             m_memoryStream = null;
             m_memoryManager = null;
         }
-        #endregion
+        
 
-        #region Private Fields
+        
         private static NodeId m_nodeId = new NodeId(1234);
         private static IList<Int32> m_list = new List<Int32>() { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
         private IServiceMessageContext m_context;
         private MemoryStream m_memoryStream;
         private Microsoft.IO.RecyclableMemoryStreamManager m_memoryManager;
-        #endregion
+        
     }
 }

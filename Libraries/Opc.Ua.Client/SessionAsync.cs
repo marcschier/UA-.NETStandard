@@ -30,8 +30,6 @@
 #if CLIENT_ASYNC
 
 using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Opc.Ua.Client
 {
@@ -41,66 +39,7 @@ namespace Opc.Ua.Client
     /// </summary>
     public partial class Session : SessionClient, IDisposable
     {
-        #region Subscription Methods
-        /// <summary>
-        /// Removes a subscription from the session.
-        /// </summary>
-        /// <param name="subscription">The subscription to remove.</param>
-        public async Task<bool> RemoveSubscriptionAsync(Subscription subscription)
-        {
-            if (subscription == null) throw new ArgumentNullException(nameof(subscription));
 
-            if (subscription.Created)
-            {
-                await subscription.DeleteAsync(false).ConfigureAwait(false);
-            }
-
-            lock (SyncRoot)
-            {
-                if (!m_subscriptions.Remove(subscription))
-                {
-                    return false;
-                }
-
-                subscription.Session = null;
-            }
-
-            if (m_SubscriptionsChanged != null)
-            {
-                m_SubscriptionsChanged(this, null);
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Removes a list of subscriptions from the sessiont.
-        /// </summary>
-        /// <param name="subscriptions">The list of subscriptions to remove.</param>
-        public async Task<bool> RemoveSubscriptionsAsync(IEnumerable<Subscription> subscriptions)
-        {
-            if (subscriptions == null) throw new ArgumentNullException(nameof(subscriptions));
-
-            List<Subscription> subscriptionsToDelete = new List<Subscription>();
-
-            bool removed = PrepareSubscriptionsToDelete(subscriptions, subscriptionsToDelete);
-
-            foreach (Subscription subscription in subscriptionsToDelete)
-            {
-                await subscription.DeleteAsync(true).ConfigureAwait(false);
-            }
-
-            if (removed)
-            {
-                if (m_SubscriptionsChanged != null)
-                {
-                    m_SubscriptionsChanged(this, null);
-                }
-            }
-
-            return removed;
-        }
-        #endregion
     }
 }
 #endif

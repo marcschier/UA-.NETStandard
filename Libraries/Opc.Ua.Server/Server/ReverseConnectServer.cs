@@ -2,7 +2,7 @@
  * Copyright (c) 2005-2020 The OPC Foundation, Inc. All rights reserved.
  *
  * OPC Foundation MIT License 1.00
- * 
+ *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
  * files (the "Software"), to deal in the Software without
@@ -11,7 +11,7 @@
  * copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following
  * conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
@@ -29,7 +29,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 
@@ -165,7 +164,6 @@ namespace Opc.Ua.Server
             m_connections = new Dictionary<Uri, ReverseConnectProperty>();
         }
 
-        #region StandardServer overrides
         /// <inheritdoc/>
         protected override void OnServerStarted(IServerInternal server)
         {
@@ -188,69 +186,9 @@ namespace Opc.Ua.Server
             DisposeTimer();
             base.OnServerStopping();
         }
-        #endregion
 
-        #region Public Properties
-        /// <summary>
-        /// Add a reverse connection url.
-        /// </summary>
-        public virtual void AddReverseConnection(Uri url, int timeout = 0, int maxSessionCount = 0, bool enabled = true)
-        {
-            if (m_connections.ContainsKey(url))
-            {
-                throw new ArgumentException("Connection for specified clientUrl is already configured", nameof(url));
-            }
-            else
-            {
-                var reverseConnection = new ReverseConnectProperty(url, timeout, maxSessionCount, false, enabled);
-                lock (m_connectionsLock)
-                {
-                    m_connections[url] = reverseConnection;
-                    Utils.LogInfo("Reverse Connection added for EndpointUrl: {0}.", url);
 
-                    StartTimer(false);
-                }
-            }
-        }
 
-        /// <summary>
-        /// Remove a reverse connection url.
-        /// </summary>
-        /// <returns>true if the reverse connection is found and removed</returns>
-        public virtual bool RemoveReverseConnection(Uri url)
-        {
-            if (url == null) throw new ArgumentNullException(nameof(url));
-            lock (m_connectionsLock)
-            {
-                bool connectionRemoved = m_connections.Remove(url);
-
-                if (connectionRemoved)
-                {
-                    Utils.LogInfo("Reverse Connection removed for EndpointUrl: {0}.", url);
-                }
-
-                if (m_connections.Count == 0)
-                {
-                    DisposeTimer();
-                }
-
-                return connectionRemoved;
-            }
-        }
-
-        /// <summary>
-        /// Return a dictionary of configured reverse connection Urls.
-        /// </summary>
-        public virtual ReadOnlyDictionary<Uri, ReverseConnectProperty> GetReverseConnections()
-        {
-            lock (m_connectionsLock)
-            {
-                return new ReadOnlyDictionary<Uri, ReverseConnectProperty>(m_connections);
-            }
-        }
-        #endregion
-
-        #region Private Properties
         /// <summary>
         /// Timer callback to establish new reverse connections.
         /// </summary>
@@ -260,7 +198,7 @@ namespace Opc.Ua.Server
             {
                 lock (m_connectionsLock)
                 {
-                    foreach (var reverseConnection in m_connections.Values)
+                    foreach (ReverseConnectProperty reverseConnection in m_connections.Values)
                     {
                         // recharge a rejected connection after timeout
                         if (reverseConnection.LastState == ReverseConnectState.Rejected &&
@@ -345,7 +283,7 @@ namespace Opc.Ua.Server
         }
 
         /// <summary>
-        /// Restart the timer. 
+        /// Restart the timer.
         /// </summary>
         private void StartTimer(bool forceRestart)
         {
@@ -387,8 +325,8 @@ namespace Opc.Ua.Server
         {
             lock (m_connectionsLock)
             {
-                var toRemove = m_connections.Where(r => r.Value.ConfigEntry == configEntry);
-                foreach (var entry in toRemove)
+                IEnumerable<KeyValuePair<Uri, ReverseConnectProperty>> toRemove = m_connections.Where(r => r.Value.ConfigEntry == configEntry);
+                foreach (KeyValuePair<Uri, ReverseConnectProperty> entry in toRemove)
                 {
                     m_connections.Remove(entry.Key);
                 }
@@ -403,7 +341,7 @@ namespace Opc.Ua.Server
             ClearConnections(true);
 
             // get the configuration for the reverse connections.
-            var reverseConnect = configuration?.ServerConfiguration?.ReverseConnect;
+            ReverseConnectServerConfiguration reverseConnect = configuration?.ServerConfiguration?.ReverseConnect;
 
             // add configuration reverse client connection properties.
             if (reverseConnect != null)
@@ -415,9 +353,9 @@ namespace Opc.Ua.Server
                     m_rejectTimeout = reverseConnect.RejectTimeout > 0 ? reverseConnect.RejectTimeout : DefaultReverseConnectRejectTimeout;
                     if (reverseConnect.Clients != null)
                     {
-                        foreach (var client in reverseConnect.Clients)
+                        foreach (ReverseConnectClient client in reverseConnect.Clients)
                         {
-                            var uri = Utils.ParseUri(client.EndpointUrl);
+                            Uri uri = Utils.ParseUri(client.EndpointUrl);
                             if (uri != null)
                             {
                                 if (m_connections.ContainsKey(uri))
@@ -435,15 +373,15 @@ namespace Opc.Ua.Server
                 }
             }
         }
-        #endregion
 
-        #region Private Fields
+
+
         private Timer m_reverseConnectTimer;
         private int m_connectInterval;
         private int m_connectTimeout;
         private int m_rejectTimeout;
-        private Dictionary<Uri, ReverseConnectProperty> m_connections;
-        private object m_connectionsLock = new object();
-        #endregion
+        private readonly Dictionary<Uri, ReverseConnectProperty> m_connections;
+        private readonly object m_connectionsLock = new object();
+
     }
 }

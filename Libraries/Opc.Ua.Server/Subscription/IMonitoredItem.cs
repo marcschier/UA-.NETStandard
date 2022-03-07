@@ -27,11 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Xml;
-using System.Threading;
 
 namespace Opc.Ua.Server
 {
@@ -189,11 +185,6 @@ namespace Opc.Ua.Server
         void QueueValue(DataValue value, ServiceResult error);
 
         /// <summary>
-        /// The filter used by the monitored item.
-        /// </summary>
-        DataChangeFilter DataChangeFilter { get; }
-
-        /// <summary>
         /// Publishes all available data change notifications.
         /// </summary>
         /// <returns>True if the caller should re-queue the item for publishing after the next interval elaspses.</returns>
@@ -234,10 +225,6 @@ namespace Opc.Ua.Server
     /// </summary>
     public interface ISampledDataChangeMonitoredItem : IDataChangeMonitoredItem2
     {
-        /// <summary>
-        /// The diagnostics mask specified fro the monitored item.
-        /// </summary>
-        DiagnosticsMasks DiagnosticsMasks { get; }
 
         /// <summary>
         /// The queue size for the item.
@@ -248,11 +235,6 @@ namespace Opc.Ua.Server
         /// The minimum sampling interval for the item.
         /// </summary>
         double MinimumSamplingInterval { get; }
-
-        /// <summary>
-        /// Used to check whether the item is ready to sample.
-        /// </summary>
-        bool SamplingIntervalExpired();
 
         /// <summary>
         /// Returns the parameters that can be used to read the monitored item.
@@ -272,11 +254,6 @@ namespace Opc.Ua.Server
             double samplingInterval,
             uint queueSize,
             bool discardOldest);
-
-        /// <summary>
-        /// Changes the monitoring mode for the item.
-        /// </summary>
-        void SetMonitoringMode(MonitoringMode monitoringMode);
 
         /// <summary>
         /// Updates the sampling interval for an item.

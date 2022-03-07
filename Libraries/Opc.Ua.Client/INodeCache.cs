@@ -27,9 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace Opc.Ua.Client
 {
@@ -38,26 +36,11 @@ namespace Opc.Ua.Client
     /// </summary>
     public interface INodeCache : INodeTable, ITypeTable
     {
-        /// <summary>
-        /// Loads the UA defined types into the cache.
-        /// </summary>
-        /// <param name="context">The context.</param>
-        void LoadUaDefinedTypes(ISystemContext context);
-
-        /// <summary>
-        /// Removes all nodes from the cache.
-        /// </summary>
-        void Clear();
 
         /// <summary>
         /// Fetches a node from the server and updates the cache.
         /// </summary>
         Node FetchNode(ExpandedNodeId nodeId);
-
-        /// <summary>
-        /// Adds the supertypes of the node to the cache.
-        /// </summary>
-        void FetchSuperTypes(ExpandedNodeId nodeId);
 
         /// <summary>
         /// Returns the references of the specified node that meet the criteria specified.
@@ -68,20 +51,5 @@ namespace Opc.Ua.Client
         /// Returns a display name for a node.
         /// </summary>
         string GetDisplayText(INode node);
-
-        /// <summary>
-        /// Returns a display name for a node.
-        /// </summary>
-        string GetDisplayText(ExpandedNodeId nodeId);
-
-        /// <summary>
-        /// Returns a display name for the target of a reference.
-        /// </summary>
-        string GetDisplayText(ReferenceDescription reference);
-
-        /// <summary>
-        /// Builds the relative path from a type to a node.
-        /// </summary>
-        NodeId BuildBrowsePath(ILocalNode node, IList<QualifiedName> browsePath);
     }
 }

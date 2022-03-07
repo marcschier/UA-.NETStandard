@@ -29,35 +29,32 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Security.Principal;
 
 namespace Opc.Ua.Server
-{    
+{
     /// <summary>
     /// An object that manages aggregate factories supported by the server.
     /// </summary>
     public class AggregateManager : IDisposable
     {
-        #region Constructors
+
         /// <summary>
         /// Initilizes the manager.
         /// </summary>
         public AggregateManager(IServerInternal server)
         {
             m_server = server;
-            m_factories = new Dictionary<NodeId,AggregatorFactory>();
+            m_factories = new Dictionary<NodeId, AggregatorFactory>();
             m_minimumProcessingInterval = 1000;
         }
-        #endregion
-        
-        #region IDisposable Members
+
+
+
         /// <summary>
         /// Frees any unmanaged resources.
         /// </summary>
         public void Dispose()
-        {   
+        {
             Dispose(true);
         }
 
@@ -66,15 +63,15 @@ namespace Opc.Ua.Server
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "m_requestTimer")]
         protected virtual void Dispose(bool disposing)
-        {  
+        {
             if (disposing)
             {
                 // TBD
-            }            
+            }
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// Checks if the aggregate is supported by the server.
         /// </summary>
@@ -96,7 +93,7 @@ namespace Opc.Ua.Server
         /// <summary>
         /// The minimum processing interval for any aggregate calculation.
         /// </summary>
-        public double MinimumProcessingInterval 
+        public double MinimumProcessingInterval
         {
             get
             {
@@ -126,27 +123,16 @@ namespace Opc.Ua.Server
             {
                 if (m_defaultConfiguration == null)
                 {
-                    m_defaultConfiguration = new AggregateConfiguration();
-                    m_defaultConfiguration.PercentDataBad = 100;
-                    m_defaultConfiguration.PercentDataGood = 100;
-                    m_defaultConfiguration.TreatUncertainAsBad = false;
-                    m_defaultConfiguration.UseSlopedExtrapolation = false;
-                    m_defaultConfiguration.UseServerCapabilitiesDefaults = false;
+                    m_defaultConfiguration = new AggregateConfiguration {
+                        PercentDataBad = 100,
+                        PercentDataGood = 100,
+                        TreatUncertainAsBad = false,
+                        UseSlopedExtrapolation = false,
+                        UseServerCapabilitiesDefaults = false
+                    };
                 }
 
                 return m_defaultConfiguration;
-            }
-        }
-
-        /// <summary>
-        /// Sets the default aggregate configuration.
-        /// </summary>
-        /// <param name="configuration">The default aggregate configuration..</param>
-        public void SetDefaultConfiguration(AggregateConfiguration configuration)
-        {
-            lock (m_lock)
-            {
-                m_defaultConfiguration = configuration;
             }
         }
 
@@ -217,28 +203,16 @@ namespace Opc.Ua.Server
             }
         }
 
-        /// <summary>
-        /// Unregisters an aggregate factory.
-        /// </summary>
-        /// <param name="aggregateId">The id of the aggregate function.</param>
-        public void RegisterFactory(NodeId aggregateId)
-        {
-            lock (m_lock)
-            {
-                m_factories.Remove(aggregateId);
-            }
-        }
-        #endregion
 
-        #region Private Methods
-        #endregion
 
-        #region Private Fields
-        private object m_lock = new object();
-        private IServerInternal m_server;
+
+
+
+        private readonly object m_lock = new object();
+        private readonly IServerInternal m_server;
         private AggregateConfiguration m_defaultConfiguration;
-        private Dictionary<NodeId,AggregatorFactory> m_factories;
+        private readonly Dictionary<NodeId, AggregatorFactory> m_factories;
         private double m_minimumProcessingInterval;
-        #endregion
+
     }
 }

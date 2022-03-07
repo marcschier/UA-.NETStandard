@@ -21,7 +21,7 @@ namespace Opc.Ua.Bindings
     /// </summary>
     public class TcpReverseConnectChannel : TcpListenerChannel
     {
-        #region Constructors
+
         /// <summary>
         /// Attaches the object to an existing socket.
         /// </summary>
@@ -35,16 +35,16 @@ namespace Opc.Ua.Bindings
             base(contextId, listener, bufferManager, quotas, null, null, endpoints)
         {
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// The channel name used in trace output.
         /// </summary>
         public override string ChannelName => "TCPREVERSECONNECTCHANNEL";
-        #endregion
 
-        #region Socket Event Handlers
+
+
         /// <summary>
         /// Processes an incoming message.
         /// </summary>
@@ -78,9 +78,9 @@ namespace Opc.Ua.Bindings
                 }
             }
         }
-        #endregion
 
-        #region Connect/Reconnect Sequence
+
+
         /// <summary>
         /// Processes a ReverseHello message from the server.
         /// </summary>
@@ -95,18 +95,18 @@ namespace Opc.Ua.Bindings
 
             try
             {
-                MemoryStream istrm = new MemoryStream(messageChunk.Array, messageChunk.Offset, messageChunk.Count, false);
-                BinaryDecoder decoder = new BinaryDecoder(istrm, Quotas.MessageContext);
+                var istrm = new MemoryStream(messageChunk.Array, messageChunk.Offset, messageChunk.Count, false);
+                var decoder = new BinaryDecoder(istrm, Quotas.MessageContext);
                 istrm.Seek(TcpMessageLimits.MessageTypeAndSize, SeekOrigin.Current);
 
                 // read peer information.
                 string serverUri = decoder.ReadString(null);
                 string endpointUrlString = decoder.ReadString(null);
-                Uri endpointUri = new Uri(endpointUrlString);
+                var endpointUri = new Uri(endpointUrlString);
 
                 State = TcpChannelState.Connecting;
 
-                Task t = Task.Run(async () => {
+                var t = Task.Run(async () => {
                     try
                     {
                         if (false == await Listener.TransferListenerChannel(Id, serverUri, endpointUri).ConfigureAwait(false))
@@ -134,6 +134,6 @@ namespace Opc.Ua.Bindings
 
             return false;
         }
-        #endregion
+
     }
 }

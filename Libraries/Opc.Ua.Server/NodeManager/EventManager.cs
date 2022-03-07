@@ -29,9 +29,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Security.Principal;
 
 namespace Opc.Ua.Server
 {
@@ -40,21 +37,24 @@ namespace Opc.Ua.Server
     /// </summary>
     public class EventManager : IDisposable
     {
-        #region Constructors
+
         /// <summary>
         /// Creates a new instance of a sampling group.
         /// </summary>
         public EventManager(IServerInternal server, uint maxQueueSize)
         {
-            if (server == null) throw new ArgumentNullException(nameof(server));
+            if (server == null)
+            {
+                throw new ArgumentNullException(nameof(server));
+            }
 
             m_server = server;
-            m_monitoredItems = new Dictionary<uint,IEventMonitoredItem>();
+            m_monitoredItems = new Dictionary<uint, IEventMonitoredItem>();
             m_maxEventQueueSize = maxQueueSize;
         }
-        #endregion
 
-        #region IDisposable Members
+
+
         /// <summary>
         /// Frees any unmanaged resources.
         /// </summary>
@@ -84,61 +84,20 @@ namespace Opc.Ua.Server
                 }
             }
         }
-        #endregion
-
-        #region Public Methods
-        /// <summary>
-        /// Reports an event.
-        /// </summary>
-        public static void ReportEvent(IFilterTarget e, IList<IEventMonitoredItem> monitoredItems)
-        {
-            if (e == null) throw new ArgumentNullException(nameof(e));
-
-            foreach (IEventMonitoredItem monitoredItem in monitoredItems)
-            {
-                monitoredItem.QueueEvent(e);
-            }
-        }
-
-        /// <summary>
-        /// Creates a set of monitored items.
-        /// </summary>
-        [Obsolete("Replaced by variant that includes the publishingInterval")]
-        public MonitoredItem CreateMonitoredItem(
-            OperationContext           context,
-            INodeManager               nodeManager,
-            object                     handle,
-            uint                       subscriptionId,
-            uint                       monitoredItemId,
-            TimestampsToReturn         timestampsToReturn,
-            MonitoredItemCreateRequest itemToCreate,
-            EventFilter                filter)
-        {
-            return CreateMonitoredItem(
-                context,
-                nodeManager,
-                handle,
-                subscriptionId,
-                monitoredItemId,
-                timestampsToReturn,
-                0,
-                itemToCreate,
-                filter);
-        }
 
         /// <summary>
         /// Creates a set of monitored items.
         /// </summary>
         public MonitoredItem CreateMonitoredItem(
-            OperationContext           context,
-            INodeManager               nodeManager,
-            object                     handle,
-            uint                       subscriptionId,
-            uint                       monitoredItemId,
-            TimestampsToReturn         timestampsToReturn,
-            double                     publishingInterval,
+            OperationContext context,
+            INodeManager nodeManager,
+            object handle,
+            uint subscriptionId,
+            uint monitoredItemId,
+            TimestampsToReturn timestampsToReturn,
+            double publishingInterval,
             MonitoredItemCreateRequest itemToCreate,
-            EventFilter                filter)
+            EventFilter filter)
         {
             lock (m_lock)
             {
@@ -159,7 +118,7 @@ namespace Opc.Ua.Server
                 }
 
                 // create the monitored item.
-                MonitoredItem monitoredItem = new MonitoredItem(
+                var monitoredItem = new MonitoredItem(
                     m_server,
                     nodeManager,
                     handle,
@@ -189,11 +148,11 @@ namespace Opc.Ua.Server
         /// Modifies a monitored item.
         /// </summary>
         public void ModifyMonitoredItem(
-            OperationContext           context,
-            IEventMonitoredItem        monitoredItem,
-            TimestampsToReturn         timestampsToReturn,
+            OperationContext context,
+            IEventMonitoredItem monitoredItem,
+            TimestampsToReturn timestampsToReturn,
             MonitoredItemModifyRequest itemToModify,
-            EventFilter                filter)
+            EventFilter filter)
         {
             lock (m_lock)
             {
@@ -246,13 +205,13 @@ namespace Opc.Ua.Server
                 return new List<IEventMonitoredItem>(m_monitoredItems.Values);
             }
         }
-        #endregion
 
-        #region Private Fields
-        private object m_lock = new object();
-        private IServerInternal m_server;
-        private Dictionary<uint, IEventMonitoredItem> m_monitoredItems;
-        private uint m_maxEventQueueSize;
-        #endregion
+
+
+        private readonly object m_lock = new object();
+        private readonly IServerInternal m_server;
+        private readonly Dictionary<uint, IEventMonitoredItem> m_monitoredItems;
+        private readonly uint m_maxEventQueueSize;
+
     }
 }

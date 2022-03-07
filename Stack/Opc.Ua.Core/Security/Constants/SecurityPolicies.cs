@@ -23,7 +23,7 @@ namespace Opc.Ua
     /// </summary>
     public static class SecurityPolicies
     {
-        #region Public Constants
+
         /// <summary>
         /// The base URI for all policy URIs.
         /// </summary>
@@ -63,9 +63,9 @@ namespace Opc.Ua
         /// The URI for the Https security policy.
         /// </summary>
         public const string Https = BaseUri + "Https";
-        #endregion
 
-        #region Static Methods
+
+
         private static bool IsPlatformSupportedUri(string name)
         {
             if (name.Equals(nameof(Aes256_Sha256_RsaPss)) &&
@@ -142,9 +142,9 @@ namespace Opc.Ua
                 nameof(Aes128_Sha256_RsaOaep),
                 nameof(Aes256_Sha256_RsaPss) };
             var defaultUris = new List<string>();
-            foreach (var name in defaultNames)
+            foreach (string name in defaultNames)
             {
-                var uri = GetUri(name);
+                string uri = GetUri(name);
                 if (uri != null)
                 {
                     defaultUris.Add(uri);
@@ -158,10 +158,10 @@ namespace Opc.Ua
         /// </summary>
         public static EncryptedData Encrypt(X509Certificate2 certificate, string securityPolicyUri, byte[] plainText)
         {
-            EncryptedData encryptedData = new EncryptedData();
-
-            encryptedData.Algorithm = null;
-            encryptedData.Data = plainText;
+            var encryptedData = new EncryptedData {
+                Algorithm = null,
+                Data = plainText
+            };
 
             // check if nothing to do.
             if (plainText == null)
@@ -170,7 +170,7 @@ namespace Opc.Ua
             }
 
             // nothing more to do if no encryption.
-            if (String.IsNullOrEmpty(securityPolicyUri))
+            if (string.IsNullOrEmpty(securityPolicyUri))
             {
                 return encryptedData;
             }
@@ -230,7 +230,7 @@ namespace Opc.Ua
             }
 
             // nothing more to do if no encryption.
-            if (String.IsNullOrEmpty(securityPolicyUri))
+            if (string.IsNullOrEmpty(securityPolicyUri))
             {
                 return dataToDecrypt.Data;
             }
@@ -269,7 +269,7 @@ namespace Opc.Ua
 
                 case SecurityPolicies.None:
                 {
-                    if (String.IsNullOrEmpty(dataToDecrypt.Algorithm))
+                    if (string.IsNullOrEmpty(dataToDecrypt.Algorithm))
                     {
                         return dataToDecrypt.Data;
                     }
@@ -296,7 +296,7 @@ namespace Opc.Ua
         /// </summary>
         public static SignatureData Sign(X509Certificate2 certificate, string securityPolicyUri, byte[] dataToSign)
         {
-            SignatureData signatureData = new SignatureData();
+            var signatureData = new SignatureData();
 
             // check if nothing to do.
             if (dataToSign == null)
@@ -305,7 +305,7 @@ namespace Opc.Ua
             }
 
             // nothing more to do if no encryption.
-            if (String.IsNullOrEmpty(securityPolicyUri))
+            if (string.IsNullOrEmpty(securityPolicyUri))
             {
                 return signatureData;
             }
@@ -367,7 +367,7 @@ namespace Opc.Ua
             }
 
             // nothing more to do if no encryption.
-            if (String.IsNullOrEmpty(securityPolicyUri))
+            if (string.IsNullOrEmpty(securityPolicyUri))
             {
                 return true;
             }
@@ -439,6 +439,6 @@ namespace Opc.Ua
                 "Unexpected security policy Uri: {0}",
                 securityPolicyUri);
         }
-        #endregion
+
     }
 }

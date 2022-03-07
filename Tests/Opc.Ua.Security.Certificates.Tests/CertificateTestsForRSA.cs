@@ -49,7 +49,7 @@ namespace Opc.Ua.Security.Certificates.Tests
     [SetCulture("en-us")]
     public class CertificateTestsForRSA
     {
-        #region DataPointSources
+        
         public const string Subject = "CN=Test Cert Subject";
 
         [DatapointSource]
@@ -60,9 +60,9 @@ namespace Opc.Ua.Security.Certificates.Tests
             { 2048, HashAlgorithmName.SHA256 },
             { 3072, HashAlgorithmName.SHA384 },
             { 4096, HashAlgorithmName.SHA512 } }.ToArray();
-        #endregion
+        
 
-        #region Test Setup
+        
         /// <summary>
         /// Set up a Global Discovery Server and Client instance and connect the session
         /// </summary>
@@ -78,9 +78,9 @@ namespace Opc.Ua.Security.Certificates.Tests
         protected void OneTimeTearDown()
         {
         }
-        #endregion
+        
 
-        #region Test Methods
+        
         /// <summary>
         /// Verify self signed app certs. Use one builder to create multiple certs.
         /// </summary>
@@ -457,9 +457,9 @@ namespace Opc.Ua.Security.Certificates.Tests
                 });
             }
         }
-        #endregion
+        
 
-        #region Private Methods
+        
         private void WriteCertificate(X509Certificate2 cert, string message)
         {
             TestContext.Out.WriteLine(message);
@@ -469,10 +469,10 @@ namespace Opc.Ua.Security.Certificates.Tests
                 TestContext.Out.WriteLine(ext.Format(false));
             }
         }
-        #endregion
+        
 
-        #region Private Fields
-        #endregion
+        
+        
     }
 
 }

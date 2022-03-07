@@ -24,7 +24,7 @@ namespace Opc.Ua
     /// </summary>
     public class BinaryEncoder : IEncoder, IDisposable
     {
-        #region Constructor
+
         /// <summary>
         /// Creates an encoder that writes to a memory buffer.
         /// </summary>
@@ -42,7 +42,10 @@ namespace Opc.Ua
         /// </summary>
         public BinaryEncoder(byte[] buffer, int start, int count, IServiceMessageContext context)
         {
-            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
+            if (buffer == null)
+            {
+                throw new ArgumentNullException(nameof(buffer));
+            }
 
             m_ostrm = new MemoryStream(buffer, start, count);
             m_writer = new BinaryWriter(m_ostrm);
@@ -56,7 +59,10 @@ namespace Opc.Ua
         /// </summary>
         public BinaryEncoder(Stream stream, IServiceMessageContext context, bool leaveOpen = false)
         {
-            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            if (stream == null)
+            {
+                throw new ArgumentNullException(nameof(stream));
+            }
 
             m_ostrm = stream;
             m_writer = new BinaryWriter(m_ostrm, Encoding.UTF8, leaveOpen);
@@ -64,9 +70,9 @@ namespace Opc.Ua
             m_leaveOpen = leaveOpen;
             m_nestingLevel = 0;
         }
-        #endregion
 
-        #region IDisposable Members
+
+
         /// <summary>
         /// Frees any unmanaged resources.
         /// </summary>
@@ -91,9 +97,9 @@ namespace Opc.Ua
                 m_ostrm?.Dispose();
             }
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// Initializes the tables used to map namespace and server uris during encoding.
         /// </summary>
@@ -148,15 +154,9 @@ namespace Opc.Ua
         /// </summary>
         public int Position
         {
-            get
-            {
-                return (int)m_writer.BaseStream.Position;
-            }
+            get => (int)m_writer.BaseStream.Position;
 
-            set
-            {
-                m_writer.Seek(value, SeekOrigin.Begin);
-            }
+            set => m_writer.Seek(value, SeekOrigin.Begin);
         }
 
         /// <summary>
@@ -172,11 +172,18 @@ namespace Opc.Ua
         /// </summary>
         public static byte[] EncodeMessage(IEncodeable message, IServiceMessageContext context)
         {
-            if (message == null) throw new ArgumentNullException(nameof(message));
-            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (message == null)
+            {
+                throw new ArgumentNullException(nameof(message));
+            }
+
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
 
             // create encoder.
-            BinaryEncoder encoder = new BinaryEncoder(context);
+            var encoder = new BinaryEncoder(context);
 
             // encode message
             encoder.EncodeMessage(message);
@@ -186,62 +193,27 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Encodes a session-less message to a buffer.
-        /// </summary>
-        public static void EncodeSessionLessMessage(IEncodeable message, Stream stream, IServiceMessageContext context, bool leaveOpen = false)
-        {
-            if (message == null) throw new ArgumentNullException(nameof(message));
-            if (context == null) throw new ArgumentNullException(nameof(context));
-
-            // create encoder.
-            BinaryEncoder encoder = new BinaryEncoder(stream, context);
-
-            try
-            {
-                long start = encoder.m_ostrm.Position;
-
-                // write the type id.
-                encoder.WriteNodeId(null, DataTypeIds.SessionlessInvokeRequestType);
-
-                // write the message.
-                SessionLessServiceMessage envelope = new SessionLessServiceMessage();
-                envelope.NamespaceUris = context.NamespaceUris;
-                envelope.ServerUris = context.ServerUris;
-                envelope.Message = message;
-
-                envelope.Encode(encoder);
-
-                // check that the max message size was not exceeded.
-                if (context.MaxMessageSize > 0 && context.MaxMessageSize < (int)(encoder.m_ostrm.Position - start))
-                {
-                    throw ServiceResultException.Create(
-                        StatusCodes.BadEncodingLimitsExceeded,
-                        "MaxMessageSize {0} < {1}",
-                        context.MaxMessageSize,
-                        (int)(encoder.m_ostrm.Position - start));
-                }
-            }
-            finally
-            {
-                // close encoder.
-                if (!leaveOpen)
-                {
-                    encoder.CloseAndReturnBuffer();
-                }
-            }
-        }
-
-        /// <summary>
         /// Encodes a message in a stream.
         /// </summary>
         public static void EncodeMessage(IEncodeable message, Stream stream, IServiceMessageContext context, bool leaveOpen = false)
         {
-            if (message == null) throw new ArgumentNullException(nameof(message));
-            if (stream == null) throw new ArgumentNullException(nameof(stream));
-            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (message == null)
+            {
+                throw new ArgumentNullException(nameof(message));
+            }
+
+            if (stream == null)
+            {
+                throw new ArgumentNullException(nameof(stream));
+            }
+
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
 
             // create encoder.
-            BinaryEncoder encoder = new BinaryEncoder(stream, context);
+            var encoder = new BinaryEncoder(stream, context);
 
             // encode message
             encoder.EncodeMessage(message);
@@ -258,12 +230,15 @@ namespace Opc.Ua
         /// </summary>
         public void EncodeMessage(IEncodeable message)
         {
-            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (message == null)
+            {
+                throw new ArgumentNullException(nameof(message));
+            }
 
             long start = m_ostrm.Position;
 
             // convert the namespace uri to an index.
-            NodeId typeId = ExpandedNodeId.ToNodeId(message.BinaryEncodingId, m_context.NamespaceUris);
+            var typeId = ExpandedNodeId.ToNodeId(message.BinaryEncodingId, m_context.NamespaceUris);
 
             // write the type id.
             WriteNodeId(null, typeId);
@@ -281,32 +256,6 @@ namespace Opc.Ua
                     (int)(m_ostrm.Position - start));
             }
         }
-
-        /// <summary>
-        /// Saves a string table from a binary stream.
-        /// </summary>
-        public void SaveStringTable(StringTable stringTable)
-        {
-            if (stringTable == null || stringTable.Count <= 1)
-            {
-                WriteInt32(null, -1);
-                return;
-            }
-
-            WriteInt32(null, stringTable.Count - 1);
-
-            for (uint ii = 1; ii < stringTable.Count; ii++)
-            {
-                WriteString(null, stringTable.GetString(ii));
-            }
-        }
-        #endregion
-
-        #region IEncoder Members
-        /// <summary>
-        /// The type of encoding being used.
-        /// </summary>
-        public EncodingType EncodingType => EncodingType.Binary;
 
         /// <summary>
         /// The message context associated with the encoder.
@@ -459,7 +408,7 @@ namespace Opc.Ua
             // check for max value.
             if (ticks >= DateTime.MaxValue.Ticks)
             {
-                ticks = Int64.MaxValue;
+                ticks = long.MaxValue;
             }
 
             // check for min value.
@@ -489,7 +438,7 @@ namespace Opc.Ua
         /// </summary>
         public void WriteGuid(string fieldName, Guid value)
         {
-            m_writer.Write(((Guid)value).ToByteArray());
+            m_writer.Write(value.ToByteArray());
         }
 
         /// <summary>
@@ -589,7 +538,7 @@ namespace Opc.Ua
             byte encoding = GetNodeIdEncoding(value.IdType, value.Identifier, namespaceIndex);
 
             // add the bit indicating a uri string is encoded as well.
-            if (!String.IsNullOrEmpty(value.NamespaceUri))
+            if (!string.IsNullOrEmpty(value.NamespaceUri))
             {
                 encoding |= 0x80;
             }
@@ -906,7 +855,7 @@ namespace Opc.Ua
                 return;
             }
 
-            IEncodeable encodeable = value.Body as IEncodeable;
+            var encodeable = value.Body as IEncodeable;
 
             // write the type id.
             ExpandedNodeId typeId = value.TypeId;
@@ -923,7 +872,7 @@ namespace Opc.Ua
                 }
             }
 
-            NodeId localTypeId = ExpandedNodeId.ToNodeId(typeId, m_context.NamespaceUris);
+            var localTypeId = ExpandedNodeId.ToNodeId(typeId, m_context.NamespaceUris);
 
             if (NodeId.IsNull(localTypeId) && !NodeId.IsNull(typeId))
             {
@@ -966,18 +915,16 @@ namespace Opc.Ua
             }
 
             // write binary bodies.
-            byte[] bytes = body as byte[];
 
-            if (bytes != null)
+            if (body is byte[] bytes)
             {
                 WriteByteString(null, bytes);
                 return;
             }
 
             // write XML bodies.
-            XmlElement xml = body as XmlElement;
 
-            if (xml != null)
+            if (body is XmlElement xml)
             {
                 WriteXmlElement(null, xml);
                 return;
@@ -1011,7 +958,7 @@ namespace Opc.Ua
             // must pre-encode and then write the bytes.
             else
             {
-                BinaryEncoder encoder = new BinaryEncoder(this.m_context);
+                var encoder = new BinaryEncoder(m_context);
                 encoder.WriteEncodeable(null, encodeable, null);
                 bytes = encoder.CloseAndReturnBuffer();
                 WriteByteString(null, bytes);
@@ -1035,7 +982,11 @@ namespace Opc.Ua
             // create a default object if a null object specified.
             if (value == null)
             {
-                if (systemType == null) throw new ArgumentNullException(nameof(systemType));
+                if (systemType == null)
+                {
+                    throw new ArgumentNullException(nameof(systemType));
+                }
+
                 value = Activator.CreateInstance(systemType) as IEncodeable;
             }
 
@@ -1055,7 +1006,10 @@ namespace Opc.Ua
         /// </summary>
         public void WriteEnumerated(string fieldName, Enum value)
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             WriteInt32(null, Convert.ToInt32(value, CultureInfo.InvariantCulture));
         }
@@ -1298,24 +1252,6 @@ namespace Opc.Ua
         /// Writes a GUID array to the stream.
         /// </summary>
         public void WriteGuidArray(string fieldName, IList<Uuid> values)
-        {
-            // write length.
-            if (WriteArrayLength(values))
-            {
-                return;
-            }
-
-            // write contents.
-            for (int ii = 0; ii < values.Count; ii++)
-            {
-                WriteGuid(null, values[ii]);
-            }
-        }
-
-        /// <summary>
-        /// Writes a GUID array to the stream.
-        /// </summary>
-        public void WriteGuidArray(string fieldName, IList<Guid> values)
         {
             // write length.
             if (WriteArrayLength(values))
@@ -1640,8 +1576,7 @@ namespace Opc.Ua
                         break;
                     case BuiltInType.Variant:
                         // try to write IEncodeable Array
-                        IEncodeable[] encodeableArray = array as IEncodeable[];
-                        if (encodeableArray != null)
+                        if (array is IEncodeable[] encodeableArray)
                         {
                             WriteEncodeableArray(fieldName, encodeableArray, array.GetType().GetElementType());
                             return;
@@ -1653,8 +1588,7 @@ namespace Opc.Ua
                         int[] ints = array as int[];
                         if (ints == null)
                         {
-                            Enum[] enums = array as Enum[];
-                            if (enums != null)
+                            if (array is Enum[] enums)
                             {
                                 ints = new int[enums.Length];
                                 for (int ii = 0; ii < enums.Length; ii++)
@@ -1695,8 +1629,7 @@ namespace Opc.Ua
                  * a list of all the values in the Array. The total number of values is equal to the product of the dimensions.
                  * The number of values is 0 if one or more dimension is less than or equal to 0.*/
 
-                Matrix matrix = array as Matrix;
-                if (matrix == null)
+                if (!(array is Matrix matrix))
                 {
                     // there is no Dimensions to write
                     WriteInt32(null, -1);
@@ -1704,7 +1637,7 @@ namespace Opc.Ua
                 }
 
                 // Write the Dimensions
-                WriteInt32Array(null, (int[])matrix.Dimensions);
+                WriteInt32Array(null, matrix.Dimensions);
 
                 switch (matrix.TypeInfo.BuiltInType)
                 {
@@ -1740,7 +1673,7 @@ namespace Opc.Ua
                     }
                     case BuiltInType.Int16:
                     {
-                        Int16[] values = (Int16[])matrix.Elements;
+                        short[] values = (short[])matrix.Elements;
                         // write contents.
                         for (int ii = 0; ii < values.Length; ii++)
                         {
@@ -1750,7 +1683,7 @@ namespace Opc.Ua
                     }
                     case BuiltInType.UInt16:
                     {
-                        UInt16[] values = (UInt16[])matrix.Elements;
+                        ushort[] values = (ushort[])matrix.Elements;
                         // write contents.
                         for (int ii = 0; ii < values.Length; ii++)
                         {
@@ -1761,7 +1694,7 @@ namespace Opc.Ua
                     case BuiltInType.Enumeration:
                     case BuiltInType.Int32:
                     {
-                        Int32[] values = (Int32[])matrix.Elements;
+                        int[] values = (int[])matrix.Elements;
                         // write contents.
                         for (int ii = 0; ii < values.Length; ii++)
                         {
@@ -1771,7 +1704,7 @@ namespace Opc.Ua
                     }
                     case BuiltInType.UInt32:
                     {
-                        UInt32[] values = (UInt32[])matrix.Elements;
+                        uint[] values = (uint[])matrix.Elements;
                         // write contents.
                         for (int ii = 0; ii < values.Length; ii++)
                         {
@@ -1781,7 +1714,7 @@ namespace Opc.Ua
                     }
                     case BuiltInType.Int64:
                     {
-                        Int64[] values = (Int64[])matrix.Elements;
+                        long[] values = (long[])matrix.Elements;
                         // write contents.
                         for (int ii = 0; ii < values.Length; ii++)
                         {
@@ -1791,7 +1724,7 @@ namespace Opc.Ua
                     }
                     case BuiltInType.UInt64:
                     {
-                        UInt64[] values = (UInt64[])matrix.Elements;
+                        ulong[] values = (ulong[])matrix.Elements;
                         // write contents.
                         for (int ii = 0; ii < values.Length; ii++)
                         {
@@ -1831,7 +1764,7 @@ namespace Opc.Ua
                     }
                     case BuiltInType.DateTime:
                     {
-                        DateTime[] values = (DateTime[])matrix.Elements;
+                        var values = (DateTime[])matrix.Elements;
                         // write contents.
                         for (int ii = 0; ii < values.Length; ii++)
                         {
@@ -1841,7 +1774,7 @@ namespace Opc.Ua
                     }
                     case BuiltInType.Guid:
                     {
-                        Uuid[] values = (Uuid[])matrix.Elements;
+                        var values = (Uuid[])matrix.Elements;
                         // write contents.
                         for (int ii = 0; ii < values.Length; ii++)
                         {
@@ -1861,7 +1794,7 @@ namespace Opc.Ua
                     }
                     case BuiltInType.XmlElement:
                     {
-                        XmlElement[] values = (XmlElement[])matrix.Elements;
+                        var values = (XmlElement[])matrix.Elements;
                         // write contents.
                         for (int ii = 0; ii < values.Length; ii++)
                         {
@@ -1871,7 +1804,7 @@ namespace Opc.Ua
                     }
                     case BuiltInType.NodeId:
                     {
-                        NodeId[] values = (NodeId[])matrix.Elements;
+                        var values = (NodeId[])matrix.Elements;
                         // write contents.
                         for (int ii = 0; ii < values.Length; ii++)
                         {
@@ -1881,7 +1814,7 @@ namespace Opc.Ua
                     }
                     case BuiltInType.ExpandedNodeId:
                     {
-                        ExpandedNodeId[] values = (ExpandedNodeId[])matrix.Elements;
+                        var values = (ExpandedNodeId[])matrix.Elements;
                         // write contents.
                         for (int ii = 0; ii < values.Length; ii++)
                         {
@@ -1891,7 +1824,7 @@ namespace Opc.Ua
                     }
                     case BuiltInType.StatusCode:
                     {
-                        StatusCode[] values = (StatusCode[])matrix.Elements;
+                        var values = (StatusCode[])matrix.Elements;
                         // write contents.
                         for (int ii = 0; ii < values.Length; ii++)
                         {
@@ -1901,7 +1834,7 @@ namespace Opc.Ua
                     }
                     case BuiltInType.QualifiedName:
                     {
-                        QualifiedName[] values = (QualifiedName[])matrix.Elements;
+                        var values = (QualifiedName[])matrix.Elements;
                         // write contents.
                         for (int ii = 0; ii < values.Length; ii++)
                         {
@@ -1911,7 +1844,7 @@ namespace Opc.Ua
                     }
                     case BuiltInType.LocalizedText:
                     {
-                        LocalizedText[] values = (LocalizedText[])matrix.Elements;
+                        var values = (LocalizedText[])matrix.Elements;
                         // write contents.
                         for (int ii = 0; ii < values.Length; ii++)
                         {
@@ -1921,7 +1854,7 @@ namespace Opc.Ua
                     }
                     case BuiltInType.ExtensionObject:
                     {
-                        ExtensionObject[] values = (ExtensionObject[])matrix.Elements;
+                        var values = (ExtensionObject[])matrix.Elements;
                         // write contents.
                         for (int ii = 0; ii < values.Length; ii++)
                         {
@@ -1931,7 +1864,7 @@ namespace Opc.Ua
                     }
                     case BuiltInType.DataValue:
                     {
-                        DataValue[] values = (DataValue[])matrix.Elements;
+                        var values = (DataValue[])matrix.Elements;
                         // write contents.
                         for (int ii = 0; ii < values.Length; ii++)
                         {
@@ -1941,9 +1874,7 @@ namespace Opc.Ua
                     }
                     case BuiltInType.Variant:
                     {
-                        Variant[] variants = matrix.Elements as Variant[];
-
-                        if (variants != null)
+                        if (matrix.Elements is Variant[] variants)
                         {
                             for (int ii = 0; ii < variants.Length; ii++)
                             {
@@ -1953,8 +1884,7 @@ namespace Opc.Ua
                         }
 
                         // try to write IEncodeable Array
-                        IEncodeable[] encodeableArray = matrix.Elements as IEncodeable[];
-                        if (encodeableArray != null)
+                        if (matrix.Elements is IEncodeable[] encodeableArray)
                         {
                             for (int ii = 0; ii < encodeableArray.Length; ii++)
                             {
@@ -1963,9 +1893,8 @@ namespace Opc.Ua
                             break;
                         }
 
-                        object[] objects = matrix.Elements as object[];
 
-                        if (objects != null)
+                        if (matrix.Elements is object[] objects)
                         {
                             for (int ii = 0; ii < objects.Length; ii++)
                             {
@@ -1979,7 +1908,7 @@ namespace Opc.Ua
                     }
                     case BuiltInType.DiagnosticInfo:
                     {
-                        DiagnosticInfo[] values = (DiagnosticInfo[])matrix.Elements;
+                        var values = (DiagnosticInfo[])matrix.Elements;
                         // write contents.
                         for (int ii = 0; ii < values.Length; ii++)
                         {
@@ -1997,9 +1926,9 @@ namespace Opc.Ua
                 }
             }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Writes an object array to the stream (converts to Variant first).
         /// </summary>
@@ -2083,13 +2012,13 @@ namespace Opc.Ua
                 {
                     uint id = Convert.ToUInt32(identifier, CultureInfo.InvariantCulture);
 
-                    if (id <= Byte.MaxValue && namespaceIndex == 0)
+                    if (id <= byte.MaxValue && namespaceIndex == 0)
                     {
                         encoding = NodeIdEncodingBits.TwoByte;
                         break;
                     }
 
-                    if (id <= UInt16.MaxValue && namespaceIndex <= Byte.MaxValue)
+                    if (id <= ushort.MaxValue && namespaceIndex <= byte.MaxValue)
                     {
                         encoding = NodeIdEncodingBits.FourByte;
                         break;
@@ -2284,11 +2213,9 @@ namespace Opc.Ua
                     case BuiltInType.Enumeration:
                     {
                         // Check whether the value to encode is int array.
-                        int[] ints = valueToEncode as int[];
-                        if (ints == null)
+                        if (!(valueToEncode is int[] ints))
                         {
-                            Enum[] enums = valueToEncode as Enum[];
-                            if (enums == null)
+                            if (!(valueToEncode is Enum[] enums))
                             {
                                 throw new ServiceResultException(
                                     StatusCodes.BadEncodingError,
@@ -2307,17 +2234,14 @@ namespace Opc.Ua
 
                     case BuiltInType.Variant:
                     {
-                        Variant[] variants = valueToEncode as Variant[];
-
-                        if (variants != null)
+                        if (valueToEncode is Variant[] variants)
                         {
                             WriteVariantArray(null, variants);
                             break;
                         }
 
-                        object[] objects = valueToEncode as object[];
 
-                        if (objects != null)
+                        if (valueToEncode is object[] objects)
                         {
                             WriteObjectArray(null, objects);
                             break;
@@ -2342,24 +2266,24 @@ namespace Opc.Ua
                 // write the dimensions.
                 if (value.TypeInfo.ValueRank > 1)
                 {
-                    WriteInt32Array(null, (int[])matrix.Dimensions);
+                    WriteInt32Array(null, matrix.Dimensions);
                 }
             }
         }
-        #endregion
 
-        #region Private Fields
-        private Stream m_ostrm;
-        private BinaryWriter m_writer;
-        private bool m_leaveOpen;
-        private IServiceMessageContext m_context;
+
+
+        private readonly Stream m_ostrm;
+        private readonly BinaryWriter m_writer;
+        private readonly bool m_leaveOpen;
+        private readonly IServiceMessageContext m_context;
         private ushort[] m_namespaceMappings;
         private ushort[] m_serverMappings;
         private uint m_nestingLevel;
-        #endregion
+
     }
 
-    #region Internal Enumerations
+
     /// <summary>
     /// The possible values for the node id encoding byte.
     /// </summary>
@@ -2413,17 +2337,6 @@ namespace Opc.Ua
     }
 
     /// <summary>
-    /// The possible values for the data value encoding byte.
-    /// </summary>
-    [Flags]
-    internal enum ExtensionObjectEncodingBits
-    {
-        TypeId = 0x01,
-        BinaryBody = 0x02,
-        XmlBody = 0x04
-    }
-
-    /// <summary>
     /// The possible values for Variant encoding bits.
     /// </summary>
     [Flags]
@@ -2433,5 +2346,5 @@ namespace Opc.Ua
         ArrayDimensions = 0x40,
         TypeMask = 0x3F
     }
-    #endregion
+
 }

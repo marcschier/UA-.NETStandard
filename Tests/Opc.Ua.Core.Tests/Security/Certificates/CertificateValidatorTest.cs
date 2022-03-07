@@ -54,7 +54,7 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
     [SetCulture("en-us")]
     public class CertificateValidatorTest
     {
-        #region Test Setup
+        
         public const string RootCASubject = "CN=Root CA Test Cert";
 
         /// <summary>
@@ -208,9 +208,9 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
         protected void TearDown()
         {
         }
-        #endregion
+        
 
-        #region Test Methods
+        
         /// <summary>
         /// Verify self signed app certs are not trusted.
         /// </summary>
@@ -1232,7 +1232,7 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
             });
         }
 
-        #region tests with missing revocation list when revocation is enforced
+        
         /// <summary>
         /// Certificate chain with revoced certificate,
         /// with CA CRLs missing and revocation status enforced.
@@ -1561,20 +1561,20 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
                 }
             }
         }
-        #endregion missing revocation list when revocation is enforced
+         missing revocation list when revocation is enforced
 
-        #endregion Test Methods
+         Test Methods
 
-        #region Private Methods
+        
         private void OnCertificateUpdate(object sender, CertificateUpdateEventArgs e)
         {
         }
         private void OnCertificateValidation(object sender, CertificateValidationEventArgs e)
         {
         }
-        #endregion
+        
 
-        #region Private Fields
+        
         private const int kCaChainCount = 3;
         private const int kGoodApplicationsTestCount = 3;
         private IList<ApplicationTestData> m_goodApplicationTestSet;
@@ -1587,7 +1587,7 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
         private X509Certificate2Collection m_appCerts;
         private X509Certificate2Collection m_appSelfSignedCerts;
         private X509Certificate2Collection m_notYetValidAppCerts;
-        #endregion
+        
     }
 
     /// <summary>

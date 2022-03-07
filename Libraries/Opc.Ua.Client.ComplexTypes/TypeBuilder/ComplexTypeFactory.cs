@@ -38,7 +38,7 @@ namespace Opc.Ua.Client.ComplexTypes
     public class ComplexTypeBuilderFactory :
         IComplexTypeFactory
     {
-        AssemblyModule m_moduleFactory;
+        private readonly AssemblyModule m_moduleFactory;
 
         /// <summary>
         /// Factory creates types in the assembly module.

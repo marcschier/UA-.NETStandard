@@ -11,7 +11,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,7 +21,7 @@ namespace Opc.Ua.Bindings
     /// </summary>
     public class ChannelAsyncOperation<T> : IAsyncResult, IDisposable
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object with a callback
         /// </summary>
@@ -33,14 +32,14 @@ namespace Opc.Ua.Bindings
             m_synchronous = false;
             m_completed = false;
 
-            if (timeout > 0 && timeout != Int32.MaxValue)
+            if (timeout > 0 && timeout != int.MaxValue)
             {
                 m_timer = new Timer(new TimerCallback(OnTimeout), null, timeout, Timeout.Infinite);
             }
         }
-        #endregion
 
-        #region IDisposable Members
+
+
         /// <summary>
         /// Frees any unmanaged resources.
         /// </summary>
@@ -70,9 +69,9 @@ namespace Opc.Ua.Bindings
                 }
             }
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Called when an asynchronous operation completes.
         /// </summary>
@@ -169,7 +168,7 @@ namespace Opc.Ua.Bindings
                 {
                     lock (m_lock)
                     {
-                        // Dispose the event 
+                        // Dispose the event
                         if (m_event != null)
                         {
                             m_event.Dispose();
@@ -191,27 +190,8 @@ namespace Opc.Ua.Bindings
             }
         }
 
-        /// <summary>
-        /// Stores additional state information associated with the operation.
-        /// </summary>
-        public IDictionary<string, object> Properties
-        {
-            get
-            {
-                lock (m_lock)
-                {
-                    if (m_properties == null)
-                    {
-                        m_properties = new Dictionary<string, object>();
-                    }
 
-                    return m_properties;
-                }
-            }
-        }
-        #endregion
 
-        #region IAsyncResult Members
         /// <summary cref="IAsyncResult.AsyncState" />
         public object AsyncState
         {
@@ -264,9 +244,9 @@ namespace Opc.Ua.Bindings
                 }
             }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Called when the operation times out.
         /// </summary>
@@ -318,8 +298,7 @@ namespace Opc.Ua.Bindings
             {
                 if (doNotBlock)
                 {
-                    Task.Run(() =>
-                    {
+                    Task.Run(() => {
                         m_callback(this);
                     });
                 }
@@ -338,19 +317,18 @@ namespace Opc.Ua.Bindings
 
             return true;
         }
-        #endregion
 
-        #region Private Fields
-        private object m_lock = new object();
-        private AsyncCallback m_callback;
-        private object m_asyncState;
-        private bool m_synchronous;
+
+
+        private readonly object m_lock = new object();
+        private readonly AsyncCallback m_callback;
+        private readonly object m_asyncState;
+        private readonly bool m_synchronous;
         private bool m_completed;
         private ManualResetEvent m_event;
         private T m_response;
         private ServiceResult m_error;
         private Timer m_timer;
-        private Dictionary<string, object> m_properties;
-        #endregion
+
     }
 }

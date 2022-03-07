@@ -38,7 +38,7 @@ namespace Opc.Ua.Server
     /// </summary>
     public class OperationContext : IOperationContext
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the context with a session.
         /// </summary>
@@ -47,18 +47,21 @@ namespace Opc.Ua.Server
         /// <param name="identity">The identity used in the request.</param>
         public OperationContext(RequestHeader requestHeader, RequestType requestType, IUserIdentity identity = null)
         {
-            if (requestHeader == null) throw new ArgumentNullException(nameof(requestHeader));
-            
-            m_channelContext    = SecureChannelContext.Current;
-            m_session           = null;
-            m_identity          = identity;
-            m_preferredLocales  = Array.Empty<string>();
-            m_diagnosticsMask   = (DiagnosticsMasks)requestHeader.ReturnDiagnostics;
-            m_stringTable       = new StringTable();
-            m_auditLogEntryId   = requestHeader.AuditEntryId;
-            m_requestId         = Utils.IncrementIdentifier(ref s_lastRequestId);
-            m_requestType       = requestType;
-            m_clientHandle      = requestHeader.RequestHandle;
+            if (requestHeader == null)
+            {
+                throw new ArgumentNullException(nameof(requestHeader));
+            }
+
+            m_channelContext = SecureChannelContext.Current;
+            m_session = null;
+            m_identity = identity;
+            m_preferredLocales = Array.Empty<string>();
+            m_diagnosticsMask = (DiagnosticsMasks)requestHeader.ReturnDiagnostics;
+            m_stringTable = new StringTable();
+            m_auditLogEntryId = requestHeader.AuditEntryId;
+            m_requestId = Utils.IncrementIdentifier(ref s_lastRequestId);
+            m_requestType = requestType;
+            m_clientHandle = requestHeader.RequestHandle;
             m_operationDeadline = DateTime.MaxValue;
 
             if (requestHeader.TimeoutHint > 0)
@@ -75,20 +78,27 @@ namespace Opc.Ua.Server
         /// <param name="session">The session.</param>
         public OperationContext(RequestHeader requestHeader, RequestType requestType, Session session)
         {
-            if (requestHeader == null) throw new ArgumentNullException(nameof(requestHeader));
-            if (session == null)       throw new ArgumentNullException(nameof(session));
-            
-            m_channelContext     = SecureChannelContext.Current;
-            m_session            = session;
-            m_identity           = session.EffectiveIdentity;
-            m_preferredLocales   = session.PreferredLocales;
-            m_diagnosticsMask    = (DiagnosticsMasks)requestHeader.ReturnDiagnostics;
-            m_stringTable        = new StringTable();
-            m_auditLogEntryId    = requestHeader.AuditEntryId;
-            m_requestId          = Utils.IncrementIdentifier(ref s_lastRequestId);
-            m_requestType        = requestType;
-            m_clientHandle       = requestHeader.RequestHandle;
-            m_operationDeadline  = DateTime.MaxValue;
+            if (requestHeader == null)
+            {
+                throw new ArgumentNullException(nameof(requestHeader));
+            }
+
+            if (session == null)
+            {
+                throw new ArgumentNullException(nameof(session));
+            }
+
+            m_channelContext = SecureChannelContext.Current;
+            m_session = session;
+            m_identity = session.EffectiveIdentity;
+            m_preferredLocales = session.PreferredLocales;
+            m_diagnosticsMask = (DiagnosticsMasks)requestHeader.ReturnDiagnostics;
+            m_stringTable = new StringTable();
+            m_auditLogEntryId = requestHeader.AuditEntryId;
+            m_requestId = Utils.IncrementIdentifier(ref s_lastRequestId);
+            m_requestType = requestType;
+            m_clientHandle = requestHeader.RequestHandle;
+            m_operationDeadline = DateTime.MaxValue;
 
             if (requestHeader.TimeoutHint > 0)
             {
@@ -103,18 +113,21 @@ namespace Opc.Ua.Server
         /// <param name="diagnosticsMasks">The diagnostics masks.</param>
         public OperationContext(Session session, DiagnosticsMasks diagnosticsMasks)
         {
-            if (session == null) throw new ArgumentNullException(nameof(session));
-            
-            m_channelContext    = null;
-            m_session           = session;
-            m_identity          = session.EffectiveIdentity;
-            m_preferredLocales  = session.PreferredLocales;
-            m_diagnosticsMask   = diagnosticsMasks;
-            m_stringTable       = new StringTable();
-            m_auditLogEntryId   = null;
-            m_requestId         = 0;
-            m_requestType       = RequestType.Unknown;
-            m_clientHandle      = 0;
+            if (session == null)
+            {
+                throw new ArgumentNullException(nameof(session));
+            }
+
+            m_channelContext = null;
+            m_session = session;
+            m_identity = session.EffectiveIdentity;
+            m_preferredLocales = session.PreferredLocales;
+            m_diagnosticsMask = diagnosticsMasks;
+            m_stringTable = new StringTable();
+            m_auditLogEntryId = null;
+            m_requestId = 0;
+            m_requestType = RequestType.Unknown;
+            m_clientHandle = 0;
             m_operationDeadline = DateTime.MaxValue;
         }
 
@@ -124,45 +137,42 @@ namespace Opc.Ua.Server
         /// <param name="monitoredItem">The monitored item.</param>
         public OperationContext(IMonitoredItem monitoredItem)
         {
-            if (monitoredItem == null) throw new ArgumentNullException(nameof(monitoredItem));
-            
+            if (monitoredItem == null)
+            {
+                throw new ArgumentNullException(nameof(monitoredItem));
+            }
+
             m_channelContext = null;
             m_session = monitoredItem.Session;
 
             if (m_session != null)
             {
                 m_identity = m_session.Identity;
-                m_preferredLocales  = m_session.PreferredLocales;
-            }                
-                
-            m_diagnosticsMask   = DiagnosticsMasks.SymbolicId;
-            m_stringTable       = new StringTable();
-            m_auditLogEntryId   = null;
-            m_requestId         = 0;
-            m_requestType       = RequestType.Unknown;
-            m_clientHandle      = 0;
+                m_preferredLocales = m_session.PreferredLocales;
+            }
+
+            m_diagnosticsMask = DiagnosticsMasks.SymbolicId;
+            m_stringTable = new StringTable();
+            m_auditLogEntryId = null;
+            m_requestId = 0;
+            m_requestType = RequestType.Unknown;
+            m_clientHandle = 0;
             m_operationDeadline = DateTime.MaxValue;
         }
-        #endregion   
-                
-        #region Public Properties
+
+
+
         /// <summary>
         /// The context for the secure channel used to send the request.
         /// </summary>
         /// <value>The channel context.</value>
-        public SecureChannelContext ChannelContext
-        {
-            get { return m_channelContext; }
-        }
+        public SecureChannelContext ChannelContext => m_channelContext;
 
         /// <summary>
         /// The session associated with the context.
         /// </summary>
         /// <value>The session.</value>
-        public Session Session
-        {
-            get { return m_session; }
-        }
+        public Session Session => m_session;
 
         /// <summary>
         /// The security policy used for the secure channel.
@@ -170,8 +180,8 @@ namespace Opc.Ua.Server
         /// <value>The security policy URI.</value>
         public string SecurityPolicyUri
         {
-            get 
-            { 
+            get
+            {
                 if (m_channelContext != null && m_channelContext.EndpointDescription != null)
                 {
                     return m_channelContext.EndpointDescription.SecurityPolicyUri;
@@ -180,33 +190,24 @@ namespace Opc.Ua.Server
                 return null;
             }
         }
-        
+
         /// <summary>
         /// The type of request.
         /// </summary>
         /// <value>The type of the request.</value>
-        public RequestType RequestType
-        {
-            get { return m_requestType; }
-        }
+        public RequestType RequestType => m_requestType;
 
         /// <summary>
         /// A unique identifier assigned to the request by the server.
         /// </summary>
         /// <value>The request id.</value>
-        public uint RequestId
-        {
-            get { return m_requestId; }
-        }
+        public uint RequestId => m_requestId;
 
         /// <summary>
         /// The handle assigned by the client to the request.
         /// </summary>
         /// <value>The client handle.</value>
-        public uint ClientHandle
-        {
-            get { return m_clientHandle; }
-        }
+        public uint ClientHandle => m_clientHandle;
 
         /// <summary>
         /// Updates the status code (thread safe).
@@ -214,19 +215,19 @@ namespace Opc.Ua.Server
         /// <param name="statusCode">The status code.</param>
         public void SetStatusCode(StatusCode statusCode)
         {
-            Interlocked.Exchange(ref m_operationStatus, (long)statusCode.Code);
+            Interlocked.Exchange(ref m_operationStatus, statusCode.Code);
         }
-        #endregion
 
-        #region IOperationContext Members
+
+
         /// <summary>
         /// The identifier for the session (null if multiple sessions are associated with the operation).
         /// </summary>
         /// <value>The session id.</value>
         public NodeId SessionId
         {
-            get 
-            { 
+            get
+            {
                 if (m_session != null)
                 {
                     return m_session.Id;
@@ -240,28 +241,19 @@ namespace Opc.Ua.Server
         /// The identity context to use when processing the request.
         /// </summary>
         /// <value>The user identity.</value>
-        public IUserIdentity UserIdentity
-        {
-            get { return m_identity; }
-        }
+        public IUserIdentity UserIdentity => m_identity;
 
         /// <summary>
         /// The locales to use for the operation.
         /// </summary>
         /// <value>The preferred locales.</value>
-        public IList<string> PreferredLocales
-        {
-            get { return m_preferredLocales; }
-        }
+        public IList<string> PreferredLocales => m_preferredLocales;
 
         /// <summary>
         /// The diagnostics mask specified with the request.
         /// </summary>
         /// <value>The diagnostics mask.</value>
-        public DiagnosticsMasks DiagnosticsMask
-        {
-            get { return m_diagnosticsMask; }
-        }
+        public DiagnosticsMasks DiagnosticsMask => m_diagnosticsMask;
 
         /// <summary>
         /// A table of diagnostics strings to return in the response.
@@ -270,53 +262,41 @@ namespace Opc.Ua.Server
         /// <remarks>
         /// This object is thread safe.
         /// </remarks>
-        public StringTable StringTable
-        {
-            get { return m_stringTable; }
-        }
+        public StringTable StringTable => m_stringTable;
 
         /// <summary>
         /// When the request times out.
         /// </summary>
         /// <value>The operation deadline.</value>
-        public DateTime OperationDeadline
-        {
-            get { return m_operationDeadline; }
-        }
+        public DateTime OperationDeadline => m_operationDeadline;
 
         /// <summary>
         /// The current status of the request (used to check for timeouts/client cancel requests).
         /// </summary>
         /// <value>The operation status.</value>
-        public StatusCode OperationStatus
-        {
-            get { return (uint)m_operationStatus; }
-        }
+        public StatusCode OperationStatus => (uint)m_operationStatus;
 
         /// <summary>
         /// The audit log entry id provided by the client which must be included in an audit events generated by the server.
         /// </summary>
         /// <value>The audit entry id.</value>
-        public string AuditEntryId
-        {
-            get { return m_auditLogEntryId; }
-        }
-        #endregion
+        public string AuditEntryId => m_auditLogEntryId;
 
-        #region Private Fields
-        private SecureChannelContext m_channelContext;
-        private Session m_session;
-        private IUserIdentity m_identity;
-        private IList<string> m_preferredLocales;
-        private DiagnosticsMasks m_diagnosticsMask;
-        private StringTable m_stringTable;
-        private string m_auditLogEntryId;
-        private uint m_requestId;        
-        private RequestType m_requestType;
-        private uint m_clientHandle;
-        private DateTime m_operationDeadline;
+
+
+        private readonly SecureChannelContext m_channelContext;
+        private readonly Session m_session;
+        private readonly IUserIdentity m_identity;
+        private readonly IList<string> m_preferredLocales;
+        private readonly DiagnosticsMasks m_diagnosticsMask;
+        private readonly StringTable m_stringTable;
+        private readonly string m_auditLogEntryId;
+        private readonly uint m_requestId;
+        private readonly RequestType m_requestType;
+        private readonly uint m_clientHandle;
+        private readonly DateTime m_operationDeadline;
         private long m_operationStatus;
         private static long s_lastRequestId;
-        #endregion
+
     }
 }

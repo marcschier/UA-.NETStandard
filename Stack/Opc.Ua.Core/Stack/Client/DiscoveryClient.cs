@@ -22,7 +22,7 @@ namespace Opc.Ua
     /// </summary>
     public partial class DiscoveryClient
     {
-        #region Constructors
+
         /// <summary>
         /// Creates a binding for to use for discovering servers.
         /// </summary>
@@ -140,9 +140,9 @@ namespace Opc.Ua
             ITransportChannel channel = DiscoveryChannel.Create(discoveryUrl, endpointConfiguration, new ServiceMessageContext(), clientCertificate);
             return new DiscoveryClient(channel);
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Invokes the GetEndpoints service.
         /// </summary>
@@ -154,7 +154,7 @@ namespace Opc.Ua
 
             GetEndpoints(
                 null,
-                this.Endpoint.EndpointUrl,
+                Endpoint.EndpointUrl,
                 null,
                 profileUris,
                 out endpoints);
@@ -167,9 +167,9 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="profileUris">The collection of profile URIs.</param>
         /// <returns></returns>
-        public async virtual Task<EndpointDescriptionCollection> GetEndpointsAsync(StringCollection profileUris)
+        public virtual async Task<EndpointDescriptionCollection> GetEndpointsAsync(StringCollection profileUris)
         {
-            var endpoints = await GetEndpointsAsync(null, this.Endpoint.EndpointUrl, null, profileUris).ConfigureAwait(false);
+            EndpointDescriptionCollection endpoints = await GetEndpointsAsync(null, Endpoint.EndpointUrl, null, profileUris).ConfigureAwait(false);
             return PatchEndpointUrls(endpoints);
         }
 
@@ -184,7 +184,7 @@ namespace Opc.Ua
 
             FindServers(
                 null,
-                this.Endpoint.EndpointUrl,
+                Endpoint.EndpointUrl,
                 null,
                 serverUris,
                 out servers);
@@ -199,9 +199,9 @@ namespace Opc.Ua
         /// <returns></returns>
         public virtual async Task<ApplicationDescriptionCollection> FindServersAsync(StringCollection serverUris)
         {
-            var response = await FindServersAsync(
+            FindServersResponse response = await FindServersAsync(
                 null,
-                this.Endpoint.EndpointUrl,
+                Endpoint.EndpointUrl,
                 null,
                 serverUris,
                 CancellationToken.None).ConfigureAwait(false);
@@ -234,9 +234,9 @@ namespace Opc.Ua
 
             return servers;
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Helper to get endpoints async.
         /// </summary>
@@ -251,7 +251,7 @@ namespace Opc.Ua
                     endpointUrl, localeIds, profileUris, callback, state),
                 result => {
                     EndpointDescriptionCollection endpoints;
-                    var response = EndGetEndpoints(result, out endpoints);
+                    ResponseHeader response = EndGetEndpoints(result, out endpoints);
                     return endpoints;
                 },
                 TaskCreationOptions.DenyChildAttach);
@@ -266,7 +266,7 @@ namespace Opc.Ua
             // it may return URLs that are not accessible to the client. This problem can be avoided 
             // by assuming that the domain in the URL used to call GetEndpoints can be used to 
             // access any of the endpoints. This code patches the returned endpoints accordingly.
-            Uri endpointUrl = Utils.ParseUri(this.Endpoint.EndpointUrl);
+            Uri endpointUrl = Utils.ParseUri(Endpoint.EndpointUrl);
             if (endpointUrl != null)
             {
                 // patch discovery Url to endpoint Url used for service call
@@ -275,9 +275,10 @@ namespace Opc.Ua
                     Uri discoveryEndPointUri = Utils.ParseUri(discoveryEndPoint.EndpointUrl);
                     if (endpointUrl.Scheme == discoveryEndPointUri.Scheme)
                     {
-                        UriBuilder builder = new UriBuilder(discoveryEndPointUri);
-                        builder.Host = endpointUrl.DnsSafeHost;
-                        builder.Port = endpointUrl.Port;
+                        var builder = new UriBuilder(discoveryEndPointUri) {
+                            Host = endpointUrl.DnsSafeHost,
+                            Port = endpointUrl.Port
+                        };
                         discoveryEndPoint.EndpointUrl = builder.ToString();
                     }
 
@@ -285,13 +286,13 @@ namespace Opc.Ua
                         discoveryEndPoint.Server.DiscoveryUrls != null)
                     {
                         discoveryEndPoint.Server.DiscoveryUrls.Clear();
-                        discoveryEndPoint.Server.DiscoveryUrls.Add(this.Endpoint.EndpointUrl.ToString());
+                        discoveryEndPoint.Server.DiscoveryUrls.Add(Endpoint.EndpointUrl.ToString());
                     }
                 }
             }
             return endpoints;
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -299,7 +300,7 @@ namespace Opc.Ua
     /// </summary>
     public partial class DiscoveryChannel
     {
-        #region Constructors
+
         /// <summary>
         /// Creates a new transport channel that supports the ISessionChannel service contract.
         /// </summary>
@@ -315,11 +316,11 @@ namespace Opc.Ua
             X509Certificate2 clientCertificate = null)
         {
             // create a dummy description.
-            EndpointDescription endpoint = new EndpointDescription();
-
-            endpoint.EndpointUrl = discoveryUrl.ToString();
-            endpoint.SecurityMode = MessageSecurityMode.None;
-            endpoint.SecurityPolicyUri = SecurityPolicies.None;
+            var endpoint = new EndpointDescription {
+                EndpointUrl = discoveryUrl.ToString(),
+                SecurityMode = MessageSecurityMode.None,
+                SecurityPolicyUri = SecurityPolicies.None
+            };
             endpoint.Server.ApplicationUri = endpoint.EndpointUrl;
             endpoint.Server.ApplicationType = ApplicationType.DiscoveryServer;
 
@@ -358,7 +359,7 @@ namespace Opc.Ua
                 endpoint,
                 endpointConfiguration,
                 clientCertificate,
-                (X509Certificate2Collection)null,
+                null,
                 messageContext);
 
             return channel;
@@ -388,12 +389,12 @@ namespace Opc.Ua
                 endpoint,
                 endpointConfiguration,
                 clientCertificate,
-                (X509Certificate2Collection)null,
+                null,
                 messageContext);
 
             return channel;
         }
 
-        #endregion
+
     }
 }

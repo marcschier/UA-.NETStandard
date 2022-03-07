@@ -29,7 +29,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Opc.Ua.Server
 {
@@ -38,7 +37,7 @@ namespace Opc.Ua.Server
     /// </summary>
     public class MinMaxAggregateCalculator : AggregateCalculator
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the aggregate calculator.
         /// </summary>
@@ -55,14 +54,14 @@ namespace Opc.Ua.Server
             double processingInterval,
             bool stepped,
             AggregateConfiguration configuration)
-        : 
+        :
             base(aggregateId, startTime, endTime, processingInterval, stepped, configuration)
         {
             SetPartialBit = true;
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Computes the value for the timeslice.
         /// </summary>
@@ -128,9 +127,9 @@ namespace Opc.Ua.Server
 
             return base.ComputeValue(slice);
         }
-        #endregion
 
-        #region Protected Methods
+
+
         /// <summary>
         /// Calculate the Minimum, Maximum, MinimumActualTime and MaximumActualTime aggregates for the timeslice.
         /// </summary>
@@ -145,10 +144,10 @@ namespace Opc.Ua.Server
                 return GetNoDataValue(slice);
             }
 
-            double minimumGoodValue = Double.MaxValue;
-            double minimumUncertainValue = Double.MaxValue;
-            double maximumGoodValue = Double.MinValue;
-            double maximumUncertainValue = Double.MinValue;
+            double minimumGoodValue = double.MaxValue;
+            double minimumUncertainValue = double.MaxValue;
+            double maximumGoodValue = double.MinValue;
+            double maximumUncertainValue = double.MinValue;
 
             DateTime minimumGoodTimestamp = DateTime.MinValue;
             DateTime maximumGoodTimestamp = DateTime.MinValue;
@@ -304,9 +303,10 @@ namespace Opc.Ua.Server
             }
 
             // create processed value.
-            DataValue value = new DataValue();
-            value.WrappedValue = new Variant(processedValue, processedType);
-            value.StatusCode = statusCode;
+            var value = new DataValue {
+                WrappedValue = new Variant(processedValue, processedType),
+                StatusCode = statusCode
+            };
 
             if (returnActualTime)
             {
@@ -336,8 +336,8 @@ namespace Opc.Ua.Server
                 return GetNoDataValue(slice);
             }
 
-            double minimumGoodValue = Double.MaxValue;
-            double maximumGoodValue = Double.MinValue;
+            double minimumGoodValue = double.MaxValue;
+            double maximumGoodValue = double.MinValue;
 
             DateTime minimumGoodTimestamp = DateTime.MinValue;
             DateTime maximumGoodTimestamp = DateTime.MinValue;
@@ -481,9 +481,10 @@ namespace Opc.Ua.Server
             }
 
             // create processed value.
-            DataValue value = new DataValue();
-            value.WrappedValue = new Variant(processedValue, processedType);
-            value.StatusCode = GetTimeBasedStatusCode(slice, values, statusCode);
+            var value = new DataValue {
+                WrappedValue = new Variant(processedValue, processedType),
+                StatusCode = GetTimeBasedStatusCode(slice, values, statusCode)
+            };
 
             // zero value if status is bad.
             if (StatusCode.IsBad(value.StatusCode))
@@ -522,6 +523,6 @@ namespace Opc.Ua.Server
 
             return value;
         }
-        #endregion
+
     }
 }

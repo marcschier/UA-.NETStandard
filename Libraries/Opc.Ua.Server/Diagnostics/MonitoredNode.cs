@@ -29,8 +29,6 @@
 
 using System;
 using System.Collections.Generic;
-using Opc.Ua;
-using Opc.Ua.Server;
 
 namespace Opc.Ua.Server
 {
@@ -44,7 +42,7 @@ namespace Opc.Ua.Server
     /// </remarks>
     public class MonitoredNode2
     {
-        #region Public Interface
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MonitoredNode2"/> class.
         /// </summary>
@@ -61,8 +59,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public CustomNodeManager2 NodeManager
         {
-            get { return m_nodeManager; }
-            set { m_nodeManager = value; }
+            get => m_nodeManager;
+            set => m_nodeManager = value;
         }
 
         /// <summary>
@@ -70,8 +68,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public NodeState Node
         {
-            get { return m_node; }
-            set { m_node = value; }
+            get => m_node;
+            set => m_node = value;
         }
 
         /// <summary>
@@ -79,8 +77,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public List<MonitoredItem> DataChangeMonitoredItems
         {
-            get { return m_dataChangeMonitoredItems; }
-            private set { m_dataChangeMonitoredItems = value; }
+            get => m_dataChangeMonitoredItems;
+            private set => m_dataChangeMonitoredItems = value;
         }
 
         /// <summary>
@@ -88,8 +86,8 @@ namespace Opc.Ua.Server
         /// </summary>
         public List<IEventMonitoredItem> EventMonitoredItems
         {
-            get { return m_eventMonitoredItems; }
-            private set { m_eventMonitoredItems = value; }
+            get => m_eventMonitoredItems;
+            private set => m_eventMonitoredItems = value;
         }
 
         /// <summary>
@@ -198,7 +196,7 @@ namespace Opc.Ua.Server
         /// <param name="e">The event.</param>
         public void OnReportEvent(ISystemContext context, NodeState node, IFilterTarget e)
         {
-            List<IEventMonitoredItem> eventMonitoredItems = new List<IEventMonitoredItem>();
+            var eventMonitoredItems = new List<IEventMonitoredItem>();
 
             lock (NodeManager.Lock)
             {
@@ -218,9 +216,8 @@ namespace Opc.Ua.Server
             for (int ii = 0; ii < eventMonitoredItems.Count; ii++)
             {
                 IEventMonitoredItem monitoredItem = eventMonitoredItems[ii];
-                BaseEventState baseEventState = e as BaseEventState;
 
-                if (baseEventState != null)
+                if (e is BaseEventState baseEventState)
                 {
                     ServiceResult validationResult = NodeManager.ValidateRolePermissions(new OperationContext(monitoredItem),
                         baseEventState?.EventType?.Value, PermissionType.ReceiveEvents);
@@ -291,12 +288,12 @@ namespace Opc.Ua.Server
             NodeState node,
             MonitoredItem monitoredItem)
         {
-            DataValue value = new DataValue();
-
-            value.Value = null;
-            value.ServerTimestamp = DateTime.UtcNow;
-            value.SourceTimestamp = DateTime.MinValue;
-            value.StatusCode = StatusCodes.Good;
+            var value = new DataValue {
+                Value = null,
+                ServerTimestamp = DateTime.UtcNow,
+                SourceTimestamp = DateTime.MinValue,
+                StatusCode = StatusCodes.Good
+            };
 
             ServiceResult error = node.ReadAttribute(
                 context,
@@ -312,13 +309,13 @@ namespace Opc.Ua.Server
 
             monitoredItem.QueueValue(value, error);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private CustomNodeManager2 m_nodeManager;
         private NodeState m_node;
         private List<MonitoredItem> m_dataChangeMonitoredItems;
         private List<IEventMonitoredItem> m_eventMonitoredItems;
-        #endregion
+
     }
 }

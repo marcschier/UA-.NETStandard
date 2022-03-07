@@ -50,7 +50,7 @@ namespace Opc.Ua.Security.Certificates
     /// </remarks>
     public class X509AuthorityKeyIdentifierExtension : X509Extension
     {
-        #region Constructors
+
         /// <summary>
         /// Creates an empty extension.
         /// </summary>
@@ -84,7 +84,11 @@ namespace Opc.Ua.Security.Certificates
             byte[] subjectKeyIdentifier
             )
         {
-            if (subjectKeyIdentifier == null) throw new ArgumentNullException(nameof(subjectKeyIdentifier));
+            if (subjectKeyIdentifier == null)
+            {
+                throw new ArgumentNullException(nameof(subjectKeyIdentifier));
+            }
+
             m_keyIdentifier = subjectKeyIdentifier;
             base.Oid = new Oid(AuthorityKeyIdentifier2Oid, kFriendlyName);
             base.Critical = false;
@@ -103,9 +107,21 @@ namespace Opc.Ua.Security.Certificates
             byte[] serialNumber
             )
         {
-            if (subjectKeyIdentifier == null) throw new ArgumentNullException(nameof(subjectKeyIdentifier));
-            if (authorityName == null) throw new ArgumentNullException(nameof(authorityName));
-            if (serialNumber == null) throw new ArgumentNullException(nameof(serialNumber));
+            if (subjectKeyIdentifier == null)
+            {
+                throw new ArgumentNullException(nameof(subjectKeyIdentifier));
+            }
+
+            if (authorityName == null)
+            {
+                throw new ArgumentNullException(nameof(authorityName));
+            }
+
+            if (serialNumber == null)
+            {
+                throw new ArgumentNullException(nameof(serialNumber));
+            }
+
             m_issuer = authorityName;
             m_keyIdentifier = subjectKeyIdentifier;
             m_serialNumber = serialNumber;
@@ -123,15 +139,15 @@ namespace Opc.Ua.Security.Certificates
         {
             Decode(rawData);
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Returns a formatted version of the Authority Key Identifier as a string.
         /// </summary>
         public override string Format(bool multiLine)
         {
-            StringBuilder buffer = new StringBuilder();
+            var buffer = new StringBuilder();
 
             if (m_keyIdentifier != null && m_keyIdentifier.Length > 0)
             {
@@ -190,14 +206,18 @@ namespace Opc.Ua.Security.Certificates
         /// </summary>
         public override void CopyFrom(AsnEncodedData asnEncodedData)
         {
-            if (asnEncodedData == null) throw new ArgumentNullException(nameof(asnEncodedData));
+            if (asnEncodedData == null)
+            {
+                throw new ArgumentNullException(nameof(asnEncodedData));
+            }
+
             base.Oid = asnEncodedData.Oid;
             base.RawData = asnEncodedData.RawData;
             Decode(asnEncodedData.RawData);
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The OID for a Authority Key Identifier extension.
         /// </summary>
@@ -214,41 +234,26 @@ namespace Opc.Ua.Security.Certificates
         public string KeyIdentifier => m_keyIdentifier.ToHexString();
 
         /// <summary>
-        /// The identifier for the key as a byte array.
-        /// </summary>
-        public byte[] GetKeyIdentifier() => m_keyIdentifier;
-
-        /// <summary>
-        /// A list of distinguished names for the issuer.
-        /// </summary>
-        public X500DistinguishedName Issuer => m_issuer;
-
-        /// <summary>
         /// The serial number of the authority key as a big endian hexadecimal string.
         /// </summary>
         public string SerialNumber => m_serialNumber.ToHexString(true);
 
-        /// <summary>
-        /// The serial number of the authority key as a byte array in little endian order.
-        /// </summary>
-        public byte[] GetSerialNumber() => m_serialNumber;
-        #endregion
 
-        #region Private Methods
+
         private byte[] Encode()
         {
-            AsnWriter writer = new AsnWriter(AsnEncodingRules.DER);
+            var writer = new AsnWriter(AsnEncodingRules.DER);
             writer.PushSequence();
 
             if (m_keyIdentifier != null)
             {
-                Asn1Tag keyIdTag = new Asn1Tag(TagClass.ContextSpecific, 0);
+                var keyIdTag = new Asn1Tag(TagClass.ContextSpecific, 0);
                 writer.WriteOctetString(m_keyIdentifier, keyIdTag);
             }
 
             if (m_issuer != null)
             {
-                Asn1Tag issuerNameTag = new Asn1Tag(TagClass.ContextSpecific, 1);
+                var issuerNameTag = new Asn1Tag(TagClass.ContextSpecific, 1);
                 writer.PushSequence(issuerNameTag);
 
                 // Add the issuer to constructed context-specific 4 (GeneralName.directoryName)
@@ -256,7 +261,7 @@ namespace Opc.Ua.Security.Certificates
                 // X.680 2015-08 31.2.7: "The tagging construction specifies explicit tagging if any of the following holds:
                 // ... (c) ... the type defined by "Type" is an untagged choice type, ... "
                 // Since this is a Context-Specific tag the output is the same
-                Asn1Tag directoryNameTag = new Asn1Tag(TagClass.ContextSpecific, 4, true);
+                var directoryNameTag = new Asn1Tag(TagClass.ContextSpecific, 4, true);
                 writer.PushSetOf(directoryNameTag);
                 writer.WriteEncodedValue(m_issuer.RawData);
                 writer.PopSetOf(directoryNameTag);
@@ -265,8 +270,8 @@ namespace Opc.Ua.Security.Certificates
 
             if (m_serialNumber != null)
             {
-                Asn1Tag issuerSerialTag = new Asn1Tag(TagClass.ContextSpecific, 2);
-                BigInteger issuerSerial = new BigInteger(m_serialNumber);
+                var issuerSerialTag = new Asn1Tag(TagClass.ContextSpecific, 2);
+                var issuerSerial = new BigInteger(m_serialNumber);
                 writer.WriteInteger(issuerSerial, issuerSerialTag);
             }
 
@@ -282,14 +287,14 @@ namespace Opc.Ua.Security.Certificates
             {
                 try
                 {
-                    AsnReader dataReader = new AsnReader(data, AsnEncodingRules.DER);
-                    var akiReader = dataReader.ReadSequence();
+                    var dataReader = new AsnReader(data, AsnEncodingRules.DER);
+                    AsnReader akiReader = dataReader.ReadSequence();
                     dataReader.ThrowIfNotEmpty();
                     if (akiReader != null)
                     {
-                        Asn1Tag keyIdTag = new Asn1Tag(TagClass.ContextSpecific, 0);
-                        Asn1Tag dnameSequencyTag = new Asn1Tag(TagClass.ContextSpecific, 1, true);
-                        Asn1Tag serialNumberTag = new Asn1Tag(TagClass.ContextSpecific, 2);
+                        var keyIdTag = new Asn1Tag(TagClass.ContextSpecific, 0);
+                        var dnameSequencyTag = new Asn1Tag(TagClass.ContextSpecific, 1, true);
+                        var serialNumberTag = new Asn1Tag(TagClass.ContextSpecific, 2);
                         while (akiReader.HasData)
                         {
                             Asn1Tag peekTag = akiReader.PeekTag();
@@ -304,7 +309,7 @@ namespace Opc.Ua.Security.Certificates
                                 AsnReader issuerReader = akiReader.ReadSequence(new Asn1Tag(TagClass.ContextSpecific, 1));
                                 if (issuerReader != null)
                                 {
-                                    Asn1Tag directoryNameTag = new Asn1Tag(TagClass.ContextSpecific, 4, true);
+                                    var directoryNameTag = new Asn1Tag(TagClass.ContextSpecific, 4, true);
                                     m_issuer = new X500DistinguishedName(issuerReader.ReadSequence(directoryNameTag).ReadEncodedValue().ToArray());
                                     issuerReader.ThrowIfNotEmpty();
                                 }
@@ -330,9 +335,9 @@ namespace Opc.Ua.Security.Certificates
             }
             throw new CryptographicException("Invalid AuthorityKeyIdentifierOid.");
         }
-        #endregion
 
-        #region Private Fields
+
+
         /// <summary>
         /// Authority Key Identifier extension string
         /// definitions see RFC 5280 4.2.1.1
@@ -344,6 +349,6 @@ namespace Opc.Ua.Security.Certificates
         private byte[] m_keyIdentifier;
         private X500DistinguishedName m_issuer;
         private byte[] m_serialNumber;
-        #endregion
+
     }
 }

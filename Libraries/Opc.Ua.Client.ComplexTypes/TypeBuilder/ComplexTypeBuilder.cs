@@ -41,7 +41,7 @@ namespace Opc.Ua.Client.ComplexTypes
     /// </summary>
     public class ComplexTypeBuilder : IComplexTypeBuilder
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object with default values.
         /// </summary>
@@ -56,9 +56,9 @@ namespace Opc.Ua.Client.ComplexTypes
             m_moduleName = FindModuleName(moduleName, targetNamespace, targetNamespaceIndex);
             m_moduleBuilder = moduleFactory.GetModuleBuilder();
         }
-        #endregion Constructors
 
-        #region Public Members
+
+
         /// <summary>
         /// The target namespace of the type builder.
         /// </summary>
@@ -79,14 +79,14 @@ namespace Opc.Ua.Client.ComplexTypes
             {
                 throw new ArgumentNullException(nameof(enumeratedType));
             }
-            var enumBuilder = m_moduleBuilder.DefineEnum(
+            EnumBuilder enumBuilder = m_moduleBuilder.DefineEnum(
                 GetFullQualifiedTypeName(enumeratedType.Name),
                 TypeAttributes.Public,
                 typeof(int));
             enumBuilder.DataContractAttribute(m_targetNamespace);
-            foreach (var enumValue in enumeratedType.EnumeratedValue)
+            foreach (Schema.Binary.EnumeratedValue enumValue in enumeratedType.EnumeratedValue)
             {
-                var newEnum = enumBuilder.DefineLiteral(enumValue.Name, enumValue.Value);
+                FieldBuilder newEnum = enumBuilder.DefineLiteral(enumValue.Name, enumValue.Value);
                 newEnum.EnumMemberAttribute(enumValue.Name, enumValue.Value);
             }
             return enumBuilder.CreateTypeInfo();
@@ -103,14 +103,14 @@ namespace Opc.Ua.Client.ComplexTypes
                 throw new ArgumentNullException(nameof(typeDefinition));
             }
 
-            var enumBuilder = m_moduleBuilder.DefineEnum(
+            EnumBuilder enumBuilder = m_moduleBuilder.DefineEnum(
                 GetFullQualifiedTypeName(typeName),
                 TypeAttributes.Public,
                 typeof(int));
             enumBuilder.DataContractAttribute(m_targetNamespace);
-            foreach (var enumValue in enumDefinition.Fields)
+            foreach (EnumField enumValue in enumDefinition.Fields)
             {
-                var newEnum = enumBuilder.DefineLiteral(enumValue.Name, (int)enumValue.Value);
+                FieldBuilder newEnum = enumBuilder.DefineLiteral(enumValue.Name, (int)enumValue.Value);
                 newEnum.EnumMemberAttribute(enumValue.Name, (int)enumValue.Value);
             }
             return enumBuilder.CreateTypeInfo();
@@ -127,16 +127,16 @@ namespace Opc.Ua.Client.ComplexTypes
                 throw new ArgumentNullException(nameof(enumDefinition));
             }
 
-            var enumBuilder = m_moduleBuilder.DefineEnum(
+            EnumBuilder enumBuilder = m_moduleBuilder.DefineEnum(
                 GetFullQualifiedTypeName(typeName),
                 TypeAttributes.Public,
                 typeof(int));
             enumBuilder.DataContractAttribute(m_targetNamespace);
-            foreach (var extensionObject in enumDefinition)
+            foreach (ExtensionObject extensionObject in enumDefinition)
             {
                 var enumValue = extensionObject.Body as EnumValueType;
-                var name = enumValue.DisplayName.Text;
-                var newEnum = enumBuilder.DefineLiteral(name, (int)enumValue.Value);
+                string name = enumValue.DisplayName.Text;
+                FieldBuilder newEnum = enumBuilder.DefineLiteral(name, (int)enumValue.Value);
                 newEnum.EnumMemberAttribute(name, (int)enumValue.Value);
             }
             return enumBuilder.CreateTypeInfo();
@@ -153,16 +153,16 @@ namespace Opc.Ua.Client.ComplexTypes
                 throw new ArgumentNullException(nameof(enumDefinition));
             }
 
-            var enumBuilder = m_moduleBuilder.DefineEnum(
+            EnumBuilder enumBuilder = m_moduleBuilder.DefineEnum(
                 GetFullQualifiedTypeName(typeName),
                 TypeAttributes.Public,
                 typeof(int));
             enumBuilder.DataContractAttribute(m_targetNamespace);
             int value = 0;
-            foreach (var enumValue in enumDefinition)
+            foreach (LocalizedText enumValue in enumDefinition)
             {
-                var name = enumValue.Text;
-                var newEnum = enumBuilder.DefineLiteral(name, value);
+                string name = enumValue.Text;
+                FieldBuilder newEnum = enumBuilder.DefineLiteral(name, value);
                 newEnum.EnumMemberAttribute(name, value);
                 value++;
             }
@@ -189,7 +189,7 @@ namespace Opc.Ua.Client.ComplexTypes
                 case StructureType.Structure:
                 default: baseType = typeof(BaseComplexType); break;
             }
-            var structureBuilder = m_moduleBuilder.DefineType(
+            TypeBuilder structureBuilder = m_moduleBuilder.DefineType(
                 GetFullQualifiedTypeName(name),
                 TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.Serializable,
                 baseType);
@@ -197,23 +197,23 @@ namespace Opc.Ua.Client.ComplexTypes
             structureBuilder.StructureDefinitionAttribute(structureDefinition);
             return new ComplexTypeFieldBuilder(structureBuilder, structureDefinition.StructureType);
         }
-        #endregion Public Members
 
-        #region Private Members
+
+
         /// <summary>
         /// Create a unique namespace module name for the type.
         /// </summary>
         private string FindModuleName(string moduleName, string targetNamespace, int targetNamespaceIndex)
         {
-            if (String.IsNullOrWhiteSpace(moduleName))
+            if (string.IsNullOrWhiteSpace(moduleName))
             {
                 // remove space chars in malformed namespace url
-                var tempNamespace = targetNamespace.Replace(" ", "");
-                Uri uri = new Uri(tempNamespace, UriKind.RelativeOrAbsolute);
-                var tempName = uri.IsAbsoluteUri ? uri.AbsolutePath : uri.ToString();
+                string tempNamespace = targetNamespace.Replace(" ", "");
+                var uri = new Uri(tempNamespace, UriKind.RelativeOrAbsolute);
+                string tempName = uri.IsAbsoluteUri ? uri.AbsolutePath : uri.ToString();
 
                 tempName = tempName.Replace("/", "");
-                var splitName = tempName.Split(':');
+                string[] splitName = tempName.Split(':');
                 moduleName = splitName.Last();
             }
             return moduleName;
@@ -225,20 +225,20 @@ namespace Opc.Ua.Client.ComplexTypes
         /// <param name="browseName">The browse name of the type.</param>
         private string GetFullQualifiedTypeName(QualifiedName browseName)
         {
-            var result = "Opc.Ua.ComplexTypes." + m_moduleName + ".";
+            string result = "Opc.Ua.ComplexTypes." + m_moduleName + ".";
             if (browseName.NamespaceIndex > 1)
             {
                 result += browseName.NamespaceIndex + ".";
             }
             return result + browseName.Name;
         }
-        #endregion Private Members
 
-        #region Private Fields
+
+
         private readonly ModuleBuilder m_moduleBuilder;
         private readonly string m_targetNamespace;
         private readonly string m_moduleName;
         private readonly int m_targetNamespaceIndex;
-        #endregion Private Fields
+
     }
 }//namespace

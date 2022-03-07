@@ -57,7 +57,7 @@ namespace Opc.Ua
     /// </remarks>
     public static partial class Utils
     {
-        #region Public Logger Objects
+
         /// <summary>
         /// The high performance EventSource log interface.
         /// </summary>
@@ -67,20 +67,6 @@ namespace Opc.Ua
         /// ILogger abstraction used by all Utils.LogXXX methods.
         /// </summary>
         public static ILogger Logger { get; private set; } = new TraceEventLogger();
-
-        /// <summary>
-        /// Sets the LogLevel for the TraceEventLogger.
-        /// </summary>
-        /// <remarks>
-        /// The setting is ignored if ILogger is replaced. 
-        /// </remarks>
-        public static void SetLogLevel(LogLevel logLevel)
-        {
-            if (Logger is TraceEventLogger tlogger)
-            {
-                tlogger.LogLevel = logLevel;
-            }
-        }
 
         /// <summary>
         /// Sets the ILogger.
@@ -96,9 +82,9 @@ namespace Opc.Ua
         /// </summary>
         /// <remarks>By default true, however a call to SetLogger disables it.</remarks>
         public static bool UseTraceEvent { get; set; } = true;
-        #endregion
 
-        #region Certificate Log Methods
+
+
         /// <summary>
         /// Formats and writes a log message for a certificate.
         /// </summary>
@@ -146,7 +132,7 @@ namespace Opc.Ua
         {
             if (Logger.IsEnabled(logLevel))
             {
-                var builder = new StringBuilder()
+                StringBuilder builder = new StringBuilder()
                     .Append(message);
                 if (certificate != null)
                 {
@@ -172,48 +158,6 @@ namespace Opc.Ua
                 }
             }
         }
-        #endregion
-
-        #region Debug Log Methods
-        /// <summary>
-        /// Formats and writes a debug log message.
-        /// </summary>
-        /// <param name="eventId">The event id associated with the log.</param>
-        /// <param name="exception">The exception to log.</param>
-        /// <param name="message">Format string of the log message in message template format. Example: <code>"User {User} logged in from {Address}"</code></param>
-        /// <param name="args">An object array that contains zero or more objects to format.</param>
-        /// <example>LogDebug(0, exception, "Error while processing request from {Address}", address)</example>
-        [Conditional("DEBUG")]
-        public static void LogDebug(EventId eventId, Exception exception, string message, params object[] args)
-        {
-            Log(LogLevel.Debug, eventId, exception, message, args);
-        }
-
-        /// <summary>
-        /// Formats and writes a debug log message.
-        /// </summary>
-        /// <param name="eventId">The event id associated with the log.</param>
-        /// <param name="message">Format string of the log message in message template format. Example: <code>"User {User} logged in from {Address}"</code></param>
-        /// <param name="args">An object array that contains zero or more objects to format.</param>
-        /// <example>LogDebug(0, "Processing request from {Address}", address)</example>
-        [Conditional("DEBUG")]
-        public static void LogDebug(EventId eventId, string message, params object[] args)
-        {
-            Log(LogLevel.Debug, eventId, message, args);
-        }
-
-        /// <summary>
-        /// Formats and writes a debug log message.
-        /// </summary>
-        /// <param name="exception">The exception to log.</param>
-        /// <param name="message">Format string of the log message in message template format. Example: <code>"User {User} logged in from {Address}"</code></param>
-        /// <param name="args">An object array that contains zero or more objects to format.</param>
-        /// <example>LogDebug(exception, "Error while processing request from {Address}", address)</example>
-        [Conditional("DEBUG")]
-        public static void LogDebug(Exception exception, string message, params object[] args)
-        {
-            Log(LogLevel.Debug, exception, message, args);
-        }
 
         /// <summary>
         /// Formats and writes a debug log message.
@@ -225,28 +169,6 @@ namespace Opc.Ua
         public static void LogDebug(string message, params object[] args)
         {
             Log(LogLevel.Debug, message, args);
-        }
-        #endregion
-
-        #region Trace Log Methods
-        /// <summary>
-        /// Formats and writes a trace log message.
-        /// </summary>
-        /// <param name="eventId">The event id associated with the log.</param>
-        /// <param name="exception">The exception to log.</param>
-        /// <param name="message">Format string of the log message in message template format. Example: <code>"User {User} logged in from {Address}"</code></param>
-        /// <param name="args">An object array that contains zero or more objects to format.</param>
-        /// <example>LogTrace(0, exception, "Error while processing request from {Address}", address)</example>
-        public static void LogTrace(EventId eventId, Exception exception, string message, params object[] args)
-        {
-            if (EventLog.IsEnabled())
-            {
-                EventLog.Log(LogLevel.Trace, eventId, exception, message, args);
-            }
-            else if (Logger.IsEnabled(LogLevel.Trace))
-            {
-                Log(LogLevel.Trace, eventId, exception, message, args);
-            }
         }
 
         /// <summary>
@@ -304,21 +226,6 @@ namespace Opc.Ua
                 Log(LogLevel.Trace, 0, message, args);
             }
         }
-        #endregion
-
-        #region Information Log Methods
-        /// <summary>
-        /// Formats and writes an informational log message.
-        /// </summary>
-        /// <param name="eventId">The event id associated with the log.</param>
-        /// <param name="exception">The exception to log.</param>
-        /// <param name="message">Format string of the log message in message template format. Example: <code>"User {User} logged in from {Address}"</code></param>
-        /// <param name="args">An object array that contains zero or more objects to format.</param>
-        /// <example>LogInformation(0, exception, "Error while processing request from {Address}", address)</example>
-        public static void LogInfo(EventId eventId, Exception exception, string message, params object[] args)
-        {
-            Log(LogLevel.Information, eventId, exception, message, args);
-        }
 
         /// <summary>
         /// Formats and writes an informational log message.
@@ -354,9 +261,9 @@ namespace Opc.Ua
         {
             Log(LogLevel.Information, message, args);
         }
-        #endregion
 
-        #region Warning Log Methods
+
+
         /// <summary>
         /// Formats and writes a warning log message.
         /// </summary>
@@ -404,21 +311,6 @@ namespace Opc.Ua
         {
             Log(LogLevel.Warning, message, args);
         }
-        #endregion
-
-        #region Error Log Methods
-        /// <summary>
-        /// Formats and writes an error log message.
-        /// </summary>
-        /// <param name="eventId">The event id associated with the log.</param>
-        /// <param name="exception">The exception to log.</param>
-        /// <param name="message">Format string of the log message in message template format. Example: <code>"User {User} logged in from {Address}"</code></param>
-        /// <param name="args">An object array that contains zero or more objects to format.</param>
-        /// <example>LogError(0, exception, "Error while processing request from {Address}", address)</example>
-        public static void LogError(EventId eventId, Exception exception, string message, params object[] args)
-        {
-            Log(LogLevel.Error, eventId, exception, message, args);
-        }
 
         /// <summary>
         /// Formats and writes an error log message.
@@ -454,9 +346,9 @@ namespace Opc.Ua
         {
             Log(LogLevel.Error, message, args);
         }
-        #endregion
 
-        #region Critical Log Methods
+
+
         /// <summary>
         /// Formats and writes a critical log message.
         /// </summary>
@@ -470,43 +362,8 @@ namespace Opc.Ua
             Log(LogLevel.Critical, eventId, exception, message, args);
         }
 
-        /// <summary>
-        /// Formats and writes a critical log message.
-        /// </summary>
-        /// <param name="eventId">The event id associated with the log.</param>
-        /// <param name="message">Format string of the log message in message template format. Example: <code>"User {User} logged in from {Address}"</code></param>
-        /// <param name="args">An object array that contains zero or more objects to format.</param>
-        /// <example>LogCritical(0, "Processing request from {Address}", address)</example>
-        public static void LogCritical(EventId eventId, string message, params object[] args)
-        {
-            Log(LogLevel.Critical, eventId, message, args);
-        }
 
-        /// <summary>
-        /// Formats and writes a critical log message.
-        /// </summary>
-        /// <param name="exception">The exception to log.</param>
-        /// <param name="message">Format string of the log message in message template format. Example: <code>"User {User} logged in from {Address}"</code></param>
-        /// <param name="args">An object array that contains zero or more objects to format.</param>
-        /// <example>LogCritical(exception, "Error while processing request from {Address}", address)</example>
-        public static void LogCritical(Exception exception, string message, params object[] args)
-        {
-            Log(LogLevel.Critical, exception, message, args);
-        }
 
-        /// <summary>
-        /// Formats and writes a critical log message.
-        /// </summary>
-        /// <param name="message">Format string of the log message in message template format. Example: <code>"User {User} logged in from {Address}"</code></param>
-        /// <param name="args">An object array that contains zero or more objects to format.</param>
-        /// <example>LogCritical("Processing request from {Address}", address)</example>
-        public static void LogCritical(string message, params object[] args)
-        {
-            Log(LogLevel.Critical, message, args);
-        }
-        #endregion
-
-        #region Log Methods
         /// <summary>
         /// Formats and writes a log message at the specified log level.
         /// </summary>
@@ -593,33 +450,9 @@ namespace Opc.Ua
                 Logger.Log(logLevel, eventId, exception, message, args);
             }
         }
-        #endregion
 
-        #region Scope Method
-        /// <summary>
-        /// Formats the message and creates a scope.
-        /// </summary>
-        /// <param name="messageFormat">Format string of the log message in message template format. Example: <code>"User {User} logged in from {Address}"</code></param>
-        /// <param name="args">An object array that contains zero or more objects to format.</param>
-        /// <returns>A disposable scope object. Can be null.</returns>
-        /// <example>
-        /// using(BeginScope("Processing request from {Address}", address))
-        /// {
-        /// }
-        /// </example>
-        public static IDisposable BeginScope(
-            string messageFormat,
-            params object[] args)
-        {
-            if (EventLog.IsEnabled())
-            {
-                return EventLog.BeginScope(messageFormat, args);
-            }
-            return Logger.BeginScope(messageFormat, args);
-        }
-        #endregion
 
-        #region Private Methods
+
         /// <summary>
         /// To determine a mask from the log level.
         /// </summary>
@@ -650,6 +483,6 @@ namespace Opc.Ua
             }
             return mask;
         }
-        #endregion
+
     }
 }

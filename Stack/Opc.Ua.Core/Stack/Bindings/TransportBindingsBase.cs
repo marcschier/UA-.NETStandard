@@ -44,14 +44,14 @@ namespace Opc.Ua.Bindings
             AddBindings(defaultBindings);
         }
 
-        #region Public Properties
+
         /// <summary>
         /// Dictionary of bindings.
         /// </summary>
         protected Dictionary<string, T> Bindings { get; private set; }
-        #endregion
 
-        #region ITransportBindings
+
+
         /// <inheritdoc/>
         public T GetBinding(string uriScheme)
         {
@@ -68,26 +68,9 @@ namespace Opc.Ua.Bindings
         }
 
         /// <inheritdoc/>
-        public bool HasBinding(string uriScheme)
-        {
-            T binding;
-            if (Bindings.TryGetValue(uriScheme, out binding))
-            {
-                return true;
-            }
-            return false;
-        }
-
-        /// <inheritdoc/>
-        public void SetBinding(T binding)
-        {
-            Bindings[binding.UriScheme] = binding;
-        }
-
-        /// <inheritdoc/>
         public IEnumerable<Type> AddBindings(Assembly assembly)
         {
-            var bindings = assembly.GetExportedTypes().Where(type => IsBindingType(type));
+            IEnumerable<Type> bindings = assembly.GetExportedTypes().Where(type => IsBindingType(type));
             return AddBindings(bindings);
         }
 
@@ -97,8 +80,7 @@ namespace Opc.Ua.Bindings
             var result = new List<Type>();
             foreach (Type bindingType in bindings)
             {
-                var binding = Activator.CreateInstance(bindingType) as T;
-                if (binding != null)
+                if (Activator.CreateInstance(bindingType) is T binding)
                 {
                     Bindings[binding.UriScheme] = binding;
                     result.Add(bindingType);
@@ -106,9 +88,9 @@ namespace Opc.Ua.Bindings
             }
             return result;
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Validate the type is a transport listener.
         /// </summary>
@@ -119,15 +101,14 @@ namespace Opc.Ua.Bindings
                 return false;
             }
 
-            var bindingTypeInfo = bindingType.GetTypeInfo();
+            System.Reflection.TypeInfo bindingTypeInfo = bindingType.GetTypeInfo();
             if (bindingTypeInfo.IsAbstract ||
                 !typeof(T).GetTypeInfo().IsAssignableFrom(bindingTypeInfo))
             {
                 return false;
             }
 
-            var listener = Activator.CreateInstance(bindingType) as T;
-            if (listener == null)
+            if (!(Activator.CreateInstance(bindingType) is T listener))
             {
                 return false;
             }
@@ -159,7 +140,7 @@ namespace Opc.Ua.Bindings
 
                 if (assembly != null)
                 {
-                    var listeners = AddBindings(assembly);
+                    IEnumerable<Type> listeners = AddBindings(assembly);
                     return listeners.Any();
                 }
             }
@@ -169,6 +150,6 @@ namespace Opc.Ua.Bindings
             }
             return false;
         }
-        #endregion
+
     }
 }

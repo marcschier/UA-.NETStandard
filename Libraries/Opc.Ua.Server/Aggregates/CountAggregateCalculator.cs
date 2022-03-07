@@ -29,7 +29,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Opc.Ua.Server
 {
@@ -38,7 +37,7 @@ namespace Opc.Ua.Server
     /// </summary>
     public class CountAggregateCalculator : AggregateCalculator
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the aggregate calculator.
         /// </summary>
@@ -55,14 +54,14 @@ namespace Opc.Ua.Server
             double processingInterval,
             bool stepped,
             AggregateConfiguration configuration)
-        : 
+        :
             base(aggregateId, startTime, endTime, processingInterval, stepped, configuration)
         {
             SetPartialBit = true;
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Computes the value for the timeslice.
         /// </summary>
@@ -103,9 +102,9 @@ namespace Opc.Ua.Server
 
             return base.ComputeValue(slice);
         }
-        #endregion
 
-        #region Protected Methods
+
+
         /// <summary>
         /// Calculates the Count aggregate for the timeslice.
         /// </summary>
@@ -132,10 +131,11 @@ namespace Opc.Ua.Server
             }
 
             // set the timestamp and status.
-            DataValue value = new DataValue();
-            value.WrappedValue = new Variant(count, TypeInfo.Scalars.Int32);
-            value.SourceTimestamp = GetTimestamp(slice);
-            value.ServerTimestamp = GetTimestamp(slice);           
+            var value = new DataValue {
+                WrappedValue = new Variant(count, TypeInfo.Scalars.Int32),
+                SourceTimestamp = GetTimestamp(slice),
+                ServerTimestamp = GetTimestamp(slice)
+            };
             value.StatusCode = value.StatusCode.SetAggregateBits(AggregateBits.Calculated);
             value.StatusCode = GetValueBasedStatusCode(slice, values, value.StatusCode);
 
@@ -166,10 +166,11 @@ namespace Opc.Ua.Server
             }
 
             // set the timestamp and status.
-            DataValue value = new DataValue();
-            value.WrappedValue = new Variant(count, TypeInfo.Scalars.Int32);
-            value.SourceTimestamp = GetTimestamp(slice);
-            value.ServerTimestamp = GetTimestamp(slice);
+            var value = new DataValue {
+                WrappedValue = new Variant(count, TypeInfo.Scalars.Int32),
+                SourceTimestamp = GetTimestamp(slice),
+                ServerTimestamp = GetTimestamp(slice)
+            };
             value.StatusCode = value.StatusCode.SetAggregateBits(AggregateBits.Calculated);
 
             // return result.
@@ -219,10 +220,11 @@ namespace Opc.Ua.Server
             }
 
             // set the timestamp and status.
-            DataValue value = new DataValue();
-            value.WrappedValue = new Variant(duration, TypeInfo.Scalars.Double);
-            value.SourceTimestamp = GetTimestamp(slice);
-            value.ServerTimestamp = GetTimestamp(slice);
+            var value = new DataValue {
+                WrappedValue = new Variant(duration, TypeInfo.Scalars.Double),
+                SourceTimestamp = GetTimestamp(slice),
+                ServerTimestamp = GetTimestamp(slice)
+            };
             value.StatusCode = value.StatusCode.SetAggregateBits(AggregateBits.Calculated);
             value.StatusCode = GetTimeBasedStatusCode(regions, value.StatusCode);
 
@@ -245,7 +247,7 @@ namespace Opc.Ua.Server
             }
 
             // determine whether a transition occurs at the StartTime
-            double lastValue = Double.NaN;
+            double lastValue = double.NaN;
 
             if (slice.EarlyBound != null)
             {
@@ -257,7 +259,7 @@ namespace Opc.Ua.Server
                     }
                     catch (Exception)
                     {
-                        lastValue = Double.NaN;
+                        lastValue = double.NaN;
                     }
                 }
             }
@@ -283,7 +285,7 @@ namespace Opc.Ua.Server
                     continue;
                 }
 
-                if (!Double.IsNaN(lastValue))
+                if (!double.IsNaN(lastValue))
                 {
                     if (lastValue != nextValue)
                     {
@@ -295,16 +297,17 @@ namespace Opc.Ua.Server
             }
 
             // set the timestamp and status.
-            DataValue value = new DataValue();
-            value.WrappedValue = new Variant(count, TypeInfo.Scalars.Int32);
-            value.SourceTimestamp = GetTimestamp(slice);
-            value.ServerTimestamp = GetTimestamp(slice);
+            var value = new DataValue {
+                WrappedValue = new Variant(count, TypeInfo.Scalars.Int32),
+                SourceTimestamp = GetTimestamp(slice),
+                ServerTimestamp = GetTimestamp(slice)
+            };
             value.StatusCode = value.StatusCode.SetAggregateBits(AggregateBits.Calculated);
             value.StatusCode = GetValueBasedStatusCode(slice, values, value.StatusCode);
 
             // return result.
             return value;
         }
-        #endregion
+
     }
 }

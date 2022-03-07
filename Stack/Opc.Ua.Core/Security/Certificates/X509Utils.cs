@@ -17,7 +17,6 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Threading.Tasks;
 using Opc.Ua.Security.Certificates;
 
 namespace Opc.Ua
@@ -34,12 +33,12 @@ namespace Opc.Ua
         /// <returns>The DNS names.</returns>
         public static IList<string> GetDomainsFromCertficate(X509Certificate2 certificate)
         {
-            List<string> dnsNames = new List<string>();
+            var dnsNames = new List<string>();
 
             // extracts the domain from the subject name.
             List<string> fields = X509Utils.ParseDistinguishedName(certificate.Subject);
 
-            StringBuilder builder = new StringBuilder();
+            var builder = new StringBuilder();
 
             for (int ii = 0; ii < fields.Count; ii++)
             {
@@ -75,7 +74,7 @@ namespace Opc.Ua
 
                     for (int jj = 0; jj < dnsNames.Count; jj++)
                     {
-                        if (String.Equals(dnsNames[jj], hostname, StringComparison.OrdinalIgnoreCase))
+                        if (string.Equals(dnsNames[jj], hostname, StringComparison.OrdinalIgnoreCase))
                         {
                             found = true;
                             break;
@@ -165,32 +164,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Checks that the domain in the URL provided matches one of the domains in the certificate.
-        /// </summary>
-        /// <param name="certificate">The certificate.</param>
-        /// <param name="endpointUrl">The endpoint url to verify.</param>
-        /// <returns>True if the certificate matches the url.</returns>
-        public static bool DoesUrlMatchCertificate(X509Certificate2 certificate, Uri endpointUrl)
-        {
-            if (endpointUrl == null || certificate == null)
-            {
-                return false;
-            }
-
-            IList<string> domainNames = GetDomainsFromCertficate(certificate);
-
-            for (int jj = 0; jj < domainNames.Count; jj++)
-            {
-                if (String.Equals(domainNames[jj], endpointUrl.DnsSafeHost, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        /// <summary>
         /// Determines whether the certificate is allowed to be an issuer.
         /// </summary>
         public static bool IsIssuerAllowed(X509Certificate2 certificate)
@@ -210,7 +183,7 @@ namespace Opc.Ua
         /// </summary>
         public static bool IsCertificateAuthority(X509Certificate2 certificate)
         {
-            var constraints = X509Extensions.FindExtension<X509BasicConstraintsExtension>(certificate);
+            X509BasicConstraintsExtension constraints = X509Extensions.FindExtension<X509BasicConstraintsExtension>(certificate);
             if (constraints != null)
             {
                 return constraints.CertificateAuthority;
@@ -223,7 +196,7 @@ namespace Opc.Ua
         /// </summary>
         public static X509KeyUsageFlags GetKeyUsage(X509Certificate2 cert)
         {
-            var allFlags = X509KeyUsageFlags.None;
+            X509KeyUsageFlags allFlags = X509KeyUsageFlags.None;
             foreach (X509KeyUsageExtension ext in cert.Extensions.OfType<X509KeyUsageExtension>())
             {
                 allFlags |= ext.KeyUsages;
@@ -237,7 +210,7 @@ namespace Opc.Ua
         public static bool CompareDistinguishedName(string name1, string name2)
         {
             // check for simple equality.
-            if (String.Equals(name1, name2, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(name1, name2, StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
@@ -259,7 +232,7 @@ namespace Opc.Ua
             // compare each.
             for (int ii = 0; ii < fields1.Count; ii++)
             {
-                if (!String.Equals(fields1[ii], fields2[ii], StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(fields1[ii], fields2[ii], StringComparison.OrdinalIgnoreCase))
                 {
                     return false;
                 }
@@ -295,7 +268,7 @@ namespace Opc.Ua
             // compare each entry
             for (int ii = 0; ii < parsedName.Count; ii++)
             {
-                if (!String.Equals(parsedName[ii], certificateName[ii], StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(parsedName[ii], certificateName[ii], StringComparison.OrdinalIgnoreCase))
                 {
                     return false;
                 }
@@ -309,9 +282,9 @@ namespace Opc.Ua
         /// </summary>
         public static List<string> ParseDistinguishedName(string name)
         {
-            List<string> fields = new List<string>();
+            var fields = new List<string>();
 
-            if (String.IsNullOrEmpty(name))
+            if (string.IsNullOrEmpty(name))
             {
                 return fields;
             }
@@ -335,9 +308,20 @@ namespace Opc.Ua
                 {
                     ii--;
 
-                    while (ii >= 0 && Char.IsWhiteSpace(name[ii])) ii--;
-                    while (ii >= 0 && (Char.IsLetterOrDigit(name[ii]) || name[ii] == '.')) ii--;
-                    while (ii >= 0 && Char.IsWhiteSpace(name[ii])) ii--;
+                    while (ii >= 0 && char.IsWhiteSpace(name[ii]))
+                    {
+                        ii--;
+                    }
+
+                    while (ii >= 0 && (char.IsLetterOrDigit(name[ii]) || name[ii] == '.'))
+                    {
+                        ii--;
+                    }
+
+                    while (ii >= 0 && char.IsWhiteSpace(name[ii]))
+                    {
+                        ii--;
+                    }
 
                     if (ii >= 0)
                     {
@@ -348,7 +332,7 @@ namespace Opc.Ua
                 }
             }
 
-            StringBuilder buffer = new StringBuilder();
+            var buffer = new StringBuilder();
 
             string key = null;
             string value = null;
@@ -356,7 +340,10 @@ namespace Opc.Ua
 
             for (int ii = 0; ii < name.Length; ii++)
             {
-                while (ii < name.Length && Char.IsWhiteSpace(name[ii])) ii++;
+                while (ii < name.Length && char.IsWhiteSpace(name[ii]))
+                {
+                    ii++;
+                }
 
                 if (ii >= name.Length)
                 {
@@ -381,7 +368,11 @@ namespace Opc.Ua
 
                         if (ch == end)
                         {
-                            while (ii < name.Length && name[ii] != delimiter) ii++;
+                            while (ii < name.Length && name[ii] != delimiter)
+                            {
+                                ii++;
+                            }
+
                             break;
                         }
 
@@ -485,28 +476,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Get the certificate by issuer and serial number.
-        /// </summary>
-        public static async Task<X509Certificate2> FindIssuerCABySerialNumberAsync(
-            ICertificateStore store,
-            string issuer,
-            string serialnumber)
-        {
-            X509Certificate2Collection certificates = await store.Enumerate().ConfigureAwait(false);
-
-            foreach (var certificate in certificates)
-            {
-                if (X509Utils.CompareDistinguishedName(certificate.Subject, issuer) &&
-                    Utils.IsEqual(certificate.SerialNumber, serialnumber))
-                {
-                    return certificate;
-                }
-            }
-
-            return null;
-        }
-
-        /// <summary>
         /// Extension to add a certificate to a <see cref="ICertificateStore"/>.
         /// </summary>
         /// <remarks>
@@ -525,7 +494,7 @@ namespace Opc.Ua
             string password = null)
         {
             // add cert to the store.
-            if (!String.IsNullOrEmpty(storePath) && !String.IsNullOrEmpty(storeType))
+            if (!string.IsNullOrEmpty(storePath) && !string.IsNullOrEmpty(storeType))
             {
                 using (ICertificateStore store = Opc.Ua.CertificateStoreIdentifier.CreateStore(storeType))
                 {
@@ -540,30 +509,6 @@ namespace Opc.Ua
                 }
             }
             return certificate;
-        }
-
-        /// <summary>
-        /// Get the hash algorithm from the hash size in bits.
-        /// </summary>
-        /// <param name="hashSizeInBits"></param>
-        public static HashAlgorithmName GetRSAHashAlgorithmName(uint hashSizeInBits)
-        {
-            if (hashSizeInBits <= 160)
-            {
-                return HashAlgorithmName.SHA1;
-            }
-            else if (hashSizeInBits <= 256)
-            {
-                return HashAlgorithmName.SHA256;
-            }
-            else if (hashSizeInBits <= 384)
-            {
-                return HashAlgorithmName.SHA384;
-            }
-            else
-            {
-                return HashAlgorithmName.SHA512;
-            }
         }
     }
 }

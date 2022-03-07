@@ -32,7 +32,7 @@ namespace Opc.Ua
     [DataContract(Namespace = Namespaces.OpcUaXsd)]
     public class DiagnosticInfo : IFormattable
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object with default values.
         /// </summary>
@@ -54,7 +54,10 @@ namespace Opc.Ua
         /// <exception cref="ArgumentNullException">Thrown when the value is null</exception>
         public DiagnosticInfo(DiagnosticInfo value)
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             m_symbolicId = value.m_symbolicId;
             m_namespaceUri = value.m_namespaceUri;
@@ -195,7 +198,10 @@ namespace Opc.Ua
             DiagnosticsMasks diagnosticsMask,
             StringTable stringTable)
         {
-            if (stringTable == null) throw new ArgumentNullException(nameof(stringTable));
+            if (stringTable == null)
+            {
+                throw new ArgumentNullException(nameof(stringTable));
+            }
 
             m_symbolicId = -1;
             m_namespaceUri = -1;
@@ -210,7 +216,7 @@ namespace Opc.Ua
                 string symbolicId = result.SymbolicId;
                 string namespaceUri = result.NamespaceUri;
 
-                if (!String.IsNullOrEmpty(symbolicId))
+                if (!string.IsNullOrEmpty(symbolicId))
                 {
                     m_symbolicId = stringTable.GetIndex(result.SymbolicId);
 
@@ -220,7 +226,7 @@ namespace Opc.Ua
                         stringTable.Append(symbolicId);
                     }
 
-                    if (!String.IsNullOrEmpty(namespaceUri))
+                    if (!string.IsNullOrEmpty(namespaceUri))
                     {
                         m_namespaceUri = stringTable.GetIndex(namespaceUri);
 
@@ -237,7 +243,7 @@ namespace Opc.Ua
             {
                 if (!Opc.Ua.LocalizedText.IsNullOrEmpty(result.LocalizedText))
                 {
-                    if (!String.IsNullOrEmpty(result.LocalizedText.Locale))
+                    if (!string.IsNullOrEmpty(result.LocalizedText.Locale))
                     {
                         m_locale = stringTable.GetIndex(result.LocalizedText.Locale);
 
@@ -281,9 +287,9 @@ namespace Opc.Ua
                 }
             }
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The index of the symbolic id in the string table.
         /// </summary>
@@ -293,8 +299,8 @@ namespace Opc.Ua
         [DataMember(Order = 1, IsRequired = false)]
         public int SymbolicId
         {
-            get { return m_symbolicId; }
-            set { m_symbolicId = value; }
+            get => m_symbolicId;
+            set => m_symbolicId = value;
         }
 
         /// <summary>
@@ -306,8 +312,8 @@ namespace Opc.Ua
         [DataMember(Order = 2, IsRequired = false)]
         public int NamespaceUri
         {
-            get { return m_namespaceUri; }
-            set { m_namespaceUri = value; }
+            get => m_namespaceUri;
+            set => m_namespaceUri = value;
         }
 
         /// <summary>
@@ -316,8 +322,8 @@ namespace Opc.Ua
         [DataMember(Order = 3, IsRequired = false)]
         public int Locale
         {
-            get { return m_locale; }
-            set { m_locale = value; }
+            get => m_locale;
+            set => m_locale = value;
         }
 
         /// <summary>
@@ -326,8 +332,8 @@ namespace Opc.Ua
         [DataMember(Order = 4, IsRequired = false)]
         public int LocalizedText
         {
-            get { return m_localizedText; }
-            set { m_localizedText = value; }
+            get => m_localizedText;
+            set => m_localizedText = value;
         }
 
         /// <summary>
@@ -339,8 +345,8 @@ namespace Opc.Ua
         [DataMember(Order = 5, IsRequired = false, EmitDefaultValue = false)]
         public string AdditionalInfo
         {
-            get { return m_additionalInfo; }
-            set { m_additionalInfo = value; }
+            get => m_additionalInfo;
+            set => m_additionalInfo = value;
         }
 
         /// <summary>
@@ -352,8 +358,8 @@ namespace Opc.Ua
         [DataMember(Order = 6, IsRequired = false)]
         public StatusCode InnerStatusCode
         {
-            get { return m_innerStatusCode; }
-            set { m_innerStatusCode = value; }
+            get => m_innerStatusCode;
+            set => m_innerStatusCode = value;
         }
 
         /// <summary>
@@ -365,12 +371,12 @@ namespace Opc.Ua
         [DataMember(Order = 7, IsRequired = false, EmitDefaultValue = false)]
         public DiagnosticInfo InnerDiagnosticInfo
         {
-            get { return m_innerDiagnosticInfo; }
-            set { m_innerDiagnosticInfo = value; }
+            get => m_innerDiagnosticInfo;
+            set => m_innerDiagnosticInfo = value;
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Determines if the specified object is equal to the object.
         /// </summary>
@@ -384,43 +390,42 @@ namespace Opc.Ua
                 return true;
             }
 
-            DiagnosticInfo value = obj as DiagnosticInfo;
 
-            if (value != null)
+            if (obj is DiagnosticInfo value)
             {
-                if (this.m_symbolicId != value.m_symbolicId)
+                if (m_symbolicId != value.m_symbolicId)
                 {
                     return false;
                 }
 
-                if (this.m_namespaceUri != value.m_namespaceUri)
+                if (m_namespaceUri != value.m_namespaceUri)
                 {
                     return false;
                 }
 
-                if (this.m_locale != value.m_locale)
+                if (m_locale != value.m_locale)
                 {
                     return false;
                 }
 
-                if (this.m_localizedText != value.m_localizedText)
+                if (m_localizedText != value.m_localizedText)
                 {
                     return false;
                 }
 
-                if (this.m_additionalInfo != value.m_additionalInfo)
+                if (m_additionalInfo != value.m_additionalInfo)
                 {
                     return false;
                 }
 
-                if (this.m_innerStatusCode != value.m_innerStatusCode)
+                if (m_innerStatusCode != value.m_innerStatusCode)
                 {
                     return false;
                 }
 
-                if (this.m_innerDiagnosticInfo != null)
+                if (m_innerDiagnosticInfo != null)
                 {
-                    return this.m_innerDiagnosticInfo.Equals(value.m_innerDiagnosticInfo);
+                    return m_innerDiagnosticInfo.Equals(value.m_innerDiagnosticInfo);
                 }
 
                 return value.m_innerDiagnosticInfo == null;
@@ -439,21 +444,21 @@ namespace Opc.Ua
         {
             int hash = 0;
 
-            hash ^= this.m_symbolicId.GetHashCode();
-            hash ^= this.m_namespaceUri.GetHashCode();
-            hash ^= this.m_locale.GetHashCode();
-            hash ^= this.m_localizedText.GetHashCode();
+            hash ^= m_symbolicId.GetHashCode();
+            hash ^= m_namespaceUri.GetHashCode();
+            hash ^= m_locale.GetHashCode();
+            hash ^= m_localizedText.GetHashCode();
 
-            if (this.m_additionalInfo != null)
+            if (m_additionalInfo != null)
             {
-                hash ^= this.m_additionalInfo.GetHashCode();
+                hash ^= m_additionalInfo.GetHashCode();
             }
 
-            hash ^= this.m_innerStatusCode.GetHashCode();
+            hash ^= m_innerStatusCode.GetHashCode();
 
-            if (this.m_innerDiagnosticInfo != null)
+            if (m_innerDiagnosticInfo != null)
             {
-                hash ^= this.m_innerDiagnosticInfo.GetHashCode();
+                hash ^= m_innerDiagnosticInfo.GetHashCode();
             }
 
             return 0;
@@ -469,9 +474,9 @@ namespace Opc.Ua
         {
             return ToString(null, null);
         }
-        #endregion
 
-        #region IFormattable Members
+
+
         /// <summary>
         /// Returns the string representation of the object.
         /// </summary>
@@ -490,9 +495,9 @@ namespace Opc.Ua
 
             throw new FormatException(Utils.Format("Invalid format string: '{0}'.", format));
         }
-        #endregion
 
-        #region ICloneable Members
+
+
         /// <summary>
         /// Makes a deep copy of the object.
         /// </summary>
@@ -503,9 +508,9 @@ namespace Opc.Ua
         {
             return new DiagnosticInfo(this);
         }
-        #endregion
 
-        #region Private Members
+
+
         private int m_symbolicId;
         private int m_namespaceUri;
         private int m_locale;
@@ -513,10 +518,10 @@ namespace Opc.Ua
         private string m_additionalInfo;
         private StatusCode m_innerStatusCode;
         private DiagnosticInfo m_innerDiagnosticInfo;
-        #endregion
+
     }
 
-    #region DiagnosticInfoCollection Class
+
     /// <summary>
     /// A collection of DiagnosticInfo objects.
     /// </summary>
@@ -589,7 +594,7 @@ namespace Opc.Ua
         /// </remarks>
         public new object MemberwiseClone()
         {
-            DiagnosticInfoCollection clone = new DiagnosticInfoCollection(this.Count);
+            var clone = new DiagnosticInfoCollection(Count);
 
             foreach (DiagnosticInfo element in this)
             {
@@ -599,6 +604,6 @@ namespace Opc.Ua
             return clone;
         }
     }//class
-    #endregion
+
 
 }//namespace

@@ -21,28 +21,30 @@ namespace Opc.Ua
 	/// </summary>
     public partial class ClientBase : IDisposable
     {
-        #region Constructors
+
         /// <summary>
         /// Intializes the object with a channel and a message context.
         /// </summary>
         /// <param name="channel">The channel.</param>
         public ClientBase(ITransportChannel channel)
         {
-            if (channel == null) throw new ArgumentNullException(nameof(channel));
+            if (channel == null)
+            {
+                throw new ArgumentNullException(nameof(channel));
+            }
 
             m_channel = channel;
             m_useTransportChannel = true;
 
-            UaChannelBase uaChannel = channel as UaChannelBase;
 
-            if (uaChannel != null)
+            if (channel is UaChannelBase uaChannel)
             {
                 m_useTransportChannel = uaChannel.m_uaBypassChannel != null || uaChannel.UseBinaryEncoding;
             }
         }
-        #endregion
 
-        #region IDisposable Members
+
+
         /// <summary>
         /// Frees any unmanaged resources.
         /// </summary>
@@ -61,9 +63,9 @@ namespace Opc.Ua
 
             m_disposed = true;
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The description of the endpoint.
         /// </summary>
@@ -76,24 +78,6 @@ namespace Opc.Ua
                 if (channel != null)
                 {
                     return channel.EndpointDescription;
-                }
-
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// The configuration for the endpoint.
-        /// </summary>
-        public EndpointConfiguration EndpointConfiguration
-        {
-            get
-            {
-                ITransportChannel channel = TransportChannel;
-
-                if (channel != null)
-                {
-                    return channel.EndpointConfiguration;
                 }
 
                 return null;
@@ -163,38 +147,14 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// The channel being wrapped by the client object.
-        /// </summary>
-        internal IChannelBase InnerChannel
-        {
-            get
-            {
-                ITransportChannel channel = TransportChannel;
-
-                if (channel != null)
-                {
-                    return m_channel as IChannelBase;
-                }
-
-                return null;
-            }
-        }
-
-        /// <summary>
         /// What diagnostics the server should return in the response.
         /// </summary>
         /// <value>The diagnostics.</value>
         public DiagnosticsMasks ReturnDiagnostics
         {
-            get
-            {
-                return m_returnDiagnostics;
-            }
+            get => m_returnDiagnostics;
 
-            set
-            {
-                m_returnDiagnostics = value;
-            }
+            set => m_returnDiagnostics = value;
         }
 
         /// <summary>
@@ -225,26 +185,8 @@ namespace Opc.Ua
             }
         }
 
-        /// <summary>
-        /// Gets a value that indicates whether to use the TransportChannel when sending requests.
-        /// </summary>
-        protected bool UseTransportChannel
-        {
-            get
-            {
-                ITransportChannel channel = TransportChannel;
 
-                if (channel == null)
-                {
-                    throw new ObjectDisposedException("TransportChannel is not available.");
-                }
 
-                return m_useTransportChannel;
-            }
-        }
-        #endregion
-
-        #region Public Methods
         /// <summary>
         /// Closes the channel.
         /// </summary>
@@ -264,13 +206,7 @@ namespace Opc.Ua
         /// Whether the object has been disposed.
         /// </summary>
         /// <value><c>true</c> if disposed; otherwise, <c>false</c>.</value>
-        public bool Disposed
-        {
-            get
-            {
-                return m_disposed;
-            }
-        }
+        public bool Disposed => m_disposed;
 
         /// <summary>
         /// Generates a unique request handle.
@@ -279,9 +215,9 @@ namespace Opc.Ua
         {
             return (uint)Utils.IncrementIdentifier(ref m_nextRequestHandle);
         }
-        #endregion
 
-        #region Protected Methods
+
+
         /// <summary>
         /// Closes the channel.
         /// </summary>
@@ -326,10 +262,7 @@ namespace Opc.Ua
         /// An object used to synchronize access to the session state.
         /// </summary>
         /// <value>The synchronization object.</value>
-        protected object SyncRoot
-        {
-            get { return m_lock; }
-        }
+        protected object SyncRoot => m_lock;
 
         /// <summary>
         /// The authorization token used to connect to the server.
@@ -337,25 +270,9 @@ namespace Opc.Ua
         /// <value>The authentication token.</value>
         protected NodeId AuthenticationToken
         {
-            get
-            {
-                return m_authenticationToken;
-            }
+            get => m_authenticationToken;
 
-            set
-            {
-                m_authenticationToken = value;
-            }
-        }
-
-        /// <summary>
-        /// Updates the header of a service request.
-        /// </summary>
-        /// <param name="request">The request.</param>
-        [Obsolete("Must override the version with useDefault parameter.")]
-        protected virtual void UpdateRequestHeader(IServiceRequest request)
-        {
-            UpdateRequestHeader(request, request == null);
+            set => m_authenticationToken = value;
         }
 
         /// <summary>
@@ -469,9 +386,9 @@ namespace Opc.Ua
                 throw new ServiceResultException(new ServiceResult(header.ServiceResult, header.ServiceDiagnostics, header.StringTable));
             }
         }
-        #endregion
 
-        #region Static Methods
+
+
         /// <summary>
         /// Validates a response returned by the server.
         /// </summary>
@@ -569,18 +486,18 @@ namespace Opc.Ua
 
             return null;
         }
-        #endregion
 
-        #region Private Fields
-        private object m_lock = new object();
+
+
+        private readonly object m_lock = new object();
         private ITransportChannel m_channel;
         private NodeId m_authenticationToken;
         private DiagnosticsMasks m_returnDiagnostics;
         private int m_nextRequestHandle;
         private int m_pendingRequestCount;
         private bool m_disposed;
-        private bool m_useTransportChannel;
-        #endregion
+        private readonly bool m_useTransportChannel;
+
     }
 
     /// <summary>
@@ -588,7 +505,7 @@ namespace Opc.Ua
 	/// </summary>
     public partial class SessionClient
     {
-        #region IDisposable Implementation
+
         /// <summary>
         /// An overrideable version of the Dispose.
         /// </summary>
@@ -602,35 +519,23 @@ namespace Opc.Ua
 
             base.Dispose(disposing);
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The server assigned identifier for the current session.
         /// </summary>
         /// <value>The session id.</value>
-        public NodeId SessionId
-        {
-            get
-            {
-                return m_sessionId;
-            }
-        }
+        public NodeId SessionId => m_sessionId;
 
         /// <summary>
         /// Whether a session has beed created with the server.
         /// </summary>
         /// <value><c>true</c> if connected; otherwise, <c>false</c>.</value>
-        public bool Connected
-        {
-            get
-            {
-                return m_sessionId != null;
-            }
-        }
-        #endregion
+        public bool Connected => m_sessionId != null;
 
-        #region Protected Methods
+
+
         /// <summary>
         /// Called when a new session is created.
         /// </summary>
@@ -644,11 +549,11 @@ namespace Opc.Ua
                 AuthenticationToken = sessionCookie;
             }
         }
-        #endregion
 
-        #region Private Fields
-        private object m_lock = new object();
+
+
+        private readonly object m_lock = new object();
         private NodeId m_sessionId;
-        #endregion
+
     }
 }

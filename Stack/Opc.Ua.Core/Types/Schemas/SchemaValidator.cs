@@ -25,7 +25,7 @@ namespace Opc.Ua.Schema
     /// </summary>
     public class SchemaValidator
     {
-        #region Constructors
+
         /// <summary>
         /// Intializes the object with default values.
         /// </summary>
@@ -48,9 +48,9 @@ namespace Opc.Ua.Schema
                 m_knownFiles = new Dictionary<string, string>();
             }
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The file that was validated.
         /// </summary>
@@ -65,15 +65,15 @@ namespace Opc.Ua.Schema
         /// A table of files which have been loaded.
         /// </summary>
         public IDictionary<string, object> LoadedFiles => m_loadedFiles;
-        #endregion
 
-        #region Protected Methods
+
+
         /// <summary>
         /// Returns true if the QName is null,
         /// </summary>
         protected static bool IsNull(XmlQualifiedName name)
         {
-            if (name != null && !String.IsNullOrEmpty(name.Name))
+            if (name != null && !string.IsNullOrEmpty(name.Name))
             {
                 return false;
             }
@@ -84,17 +84,9 @@ namespace Opc.Ua.Schema
         /// <summary>
         /// Formats a string and throws an exception.
         /// </summary>
-        protected static Exception Exception(string format)
-        {
-            throw new FormatException(format);
-        }
-
-        /// <summary>
-        /// Formats a string and throws an exception.
-        /// </summary>
         protected static Exception Exception(string format, object arg1)
         {
-            return new InvalidOperationException(String.Format(CultureInfo.InvariantCulture, format, arg1));
+            return new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, format, arg1));
         }
 
         /// <summary>
@@ -102,7 +94,7 @@ namespace Opc.Ua.Schema
         /// </summary>
         protected static Exception Exception(string format, object arg1, object arg2)
         {
-            return new InvalidOperationException(String.Format(CultureInfo.InvariantCulture, format, arg1, arg2));
+            return new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, format, arg1, arg2));
         }
 
         /// <summary>
@@ -110,7 +102,7 @@ namespace Opc.Ua.Schema
         /// </summary>
         protected static Exception Exception(string format, object arg1, object arg2, object arg3)
         {
-            return new InvalidOperationException(String.Format(CultureInfo.InvariantCulture, format, arg1, arg2, arg3));
+            return new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, format, arg1, arg2, arg3));
         }
 
         /// <summary>
@@ -123,20 +115,6 @@ namespace Opc.Ua.Schema
             object schema = LoadFile(type, stream);
 
             FilePath = null;
-
-            return schema;
-        }
-
-        /// <summary>
-        /// Loads an input file for validation.
-        /// </summary>
-        protected object LoadInput(System.Type type, string path)
-        {
-            m_loadedFiles.Clear();
-
-            object schema = LoadFile(type, path);
-
-            FilePath = path;
 
             return schema;
         }
@@ -155,7 +133,7 @@ namespace Opc.Ua.Schema
             // check if a valid path provided.
             FileInfo fileInfo = null;
 
-            if (!String.IsNullOrEmpty(path))
+            if (!string.IsNullOrEmpty(path))
             {
                 fileInfo = new FileInfo(path);
 
@@ -181,7 +159,7 @@ namespace Opc.Ua.Schema
                 return LoadResource(type, location, assembly);
             }
 
-            if (!String.IsNullOrEmpty(path))
+            if (!string.IsNullOrEmpty(path))
             {
                 if (!File.Exists(path))
                 {
@@ -190,7 +168,7 @@ namespace Opc.Ua.Schema
                 }
 
                 // check for file in the same directory as the input file.
-                FileInfo inputInfo = new FileInfo(FilePath);
+                var inputInfo = new FileInfo(FilePath);
 
                 fileInfo = new FileInfo(inputInfo.DirectoryName + Path.DirectorySeparatorChar + fileInfo.Name);
 
@@ -216,10 +194,10 @@ namespace Opc.Ua.Schema
         /// </summary>
         protected static object LoadFile(System.Type type, string path)
         {
-            using (StreamReader reader = new StreamReader(new FileStream(path, FileMode.Open)))
-            using (XmlReader xmlReader = XmlReader.Create(reader, Utils.DefaultXmlReaderSettings()))
+            using (var reader = new StreamReader(new FileStream(path, FileMode.Open)))
+            using (var xmlReader = XmlReader.Create(reader, Utils.DefaultXmlReaderSettings()))
             {
-                XmlSerializer serializer = new XmlSerializer(type);
+                var serializer = new XmlSerializer(type);
                 return serializer.Deserialize(xmlReader);
             }
         }
@@ -229,10 +207,10 @@ namespace Opc.Ua.Schema
         /// </summary>
         protected static object LoadFile(System.Type type, Stream stream)
         {
-            using (StreamReader reader = new StreamReader(stream))
-            using (XmlReader xmlReader = XmlReader.Create(reader, Utils.DefaultXmlReaderSettings()))
+            using (var reader = new StreamReader(stream))
+            using (var xmlReader = XmlReader.Create(reader, Utils.DefaultXmlReaderSettings()))
             {
-                XmlSerializer serializer = new XmlSerializer(type);
+                var serializer = new XmlSerializer(type);
                 return serializer.Deserialize(xmlReader);
             }
         }
@@ -249,17 +227,17 @@ namespace Opc.Ua.Schema
                     assembly = typeof(SchemaValidator).GetTypeInfo().Assembly;
                 }
 
-                using (StreamReader reader = new StreamReader(assembly.GetManifestResourceStream(path)))
-                using (XmlReader xmlReader = XmlReader.Create(reader, Utils.DefaultXmlReaderSettings()))
+                using (var reader = new StreamReader(assembly.GetManifestResourceStream(path)))
+                using (var xmlReader = XmlReader.Create(reader, Utils.DefaultXmlReaderSettings()))
                 {
-                    XmlSerializer serializer = new XmlSerializer(type);
+                    var serializer = new XmlSerializer(type);
                     return serializer.Deserialize(xmlReader);
                 }
 
             }
             catch (Exception e)
             {
-                throw new FileNotFoundException(String.Format(CultureInfo.InvariantCulture, "Could not load resource '{0}'.", path), e);
+                throw new FileNotFoundException(string.Format(CultureInfo.InvariantCulture, "Could not load resource '{0}'.", path), e);
             }
         }
 
@@ -279,22 +257,12 @@ namespace Opc.Ua.Schema
                 }
             }
         }
-        #endregion
 
-        #region Public Methods
-        /// <summary>
-        /// Returns the schema for the specified type (returns the entire schema if null).
-        /// </summary>
-        public virtual string GetSchema(string typeName)
-        {
-            return null;
-        }
 
-        #endregion
 
-        #region Private Fields
-        private Dictionary<string, string> m_knownFiles;
-        private Dictionary<string, object> m_loadedFiles;
-        #endregion
+
+        private readonly Dictionary<string, string> m_knownFiles;
+        private readonly Dictionary<string, object> m_loadedFiles;
+
     }
 }

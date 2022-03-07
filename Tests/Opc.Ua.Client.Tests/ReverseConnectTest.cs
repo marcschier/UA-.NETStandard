@@ -50,10 +50,10 @@ namespace Opc.Ua.Client.Tests
     {
         Uri m_endpointUrl;
 
-        #region DataPointSources
-        #endregion
+        
+        
 
-        #region Test Setup
+        
         /// <summary>
         /// Setup a server and client fixture.
         /// </summary>
@@ -113,9 +113,9 @@ namespace Opc.Ua.Client.Tests
         {
             return base.TearDown();
         }
-        #endregion
+        
 
-        #region Test Methods
+        
         /// <summary>
         /// Get endpoints using a reverse connection.
         /// </summary>
@@ -243,9 +243,9 @@ namespace Opc.Ua.Client.Tests
             Assert.NotNull(result);
             session.Dispose();
         }
-        #endregion
+        
 
-        #region Private Methods
+        
         private async Task RequireEndpoints()
         {
             await m_requiredLock.WaitAsync().ConfigureAwait(false);
@@ -261,7 +261,7 @@ namespace Opc.Ua.Client.Tests
                 m_requiredLock.Release();
             }
         }
-        #endregion
+        
 
         private SemaphoreSlim m_requiredLock = new SemaphoreSlim(1);
     }

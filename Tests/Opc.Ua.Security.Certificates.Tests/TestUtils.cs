@@ -38,7 +38,7 @@ using System.Text;
 
 namespace Opc.Ua.Security.Certificates.Tests
 {
-    #region KeyHashPair Helper
+    
     public class KeyHashPair : IFormattable
     {
         public KeyHashPair(ushort keySize, HashAlgorithmName hashAlgorithmName)
@@ -88,10 +88,10 @@ namespace Opc.Ua.Security.Certificates.Tests
             Add(new KeyHashPair(keySize, hashAlgorithmName));
         }
     }
-    #endregion
+    
 
 #if ECC_SUPPORT
-    #region ECCurveHashPair Helper
+    
     public class ECCurveHashPair : IFormattable
     {
         public ECCurveHashPair(ECCurve curve, HashAlgorithmName hashAlgorithmName)
@@ -149,10 +149,10 @@ namespace Opc.Ua.Security.Certificates.Tests
             Add(new ECCurveHashPair(curve, hashAlgorithmName));
         }
     }
-    #endregion
+    
 #endif
 
-    #region Asset Helpers
+    
     public interface IAsset
     {
         void Initialize(byte[] crl, string path);
@@ -237,9 +237,9 @@ namespace Opc.Ua.Security.Certificates.Tests
             Add(asset);
         }
     }
-    #endregion
+    
 
-    #region TestUtils
+    
     /// <summary>
     /// Test helpers.
     /// </summary>
@@ -280,5 +280,5 @@ namespace Opc.Ua.Security.Certificates.Tests
             return stringBuilder.ToString();
         }
     }
-    #endregion
+    
 }

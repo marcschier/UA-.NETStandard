@@ -29,7 +29,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Opc.Ua.Server
 {
@@ -38,17 +37,18 @@ namespace Opc.Ua.Server
     /// </summary>
     public class AggregateCalculator : IAggregateCalculator
     {
-        #region Constructors
+
         /// <summary>
         /// Creates a default aggregator.
         /// </summary>
         protected AggregateCalculator(NodeId aggregateId)
         {
-            AggregateConfiguration configuration = new AggregateConfiguration();
-            configuration.TreatUncertainAsBad = false;
-            configuration.PercentDataBad = 100;
-            configuration.PercentDataGood = 100;
-            configuration.UseSlopedExtrapolation = false;
+            var configuration = new AggregateConfiguration {
+                TreatUncertainAsBad = false,
+                PercentDataBad = 100,
+                PercentDataGood = 100,
+                UseSlopedExtrapolation = false
+            };
             Initialize(aggregateId, DateTime.UtcNow, DateTime.MaxValue, 1000, false, configuration);
         }
 
@@ -109,9 +109,9 @@ namespace Opc.Ua.Server
 
             m_values = new LinkedList<DataValue>();
         }
-        #endregion
 
-        #region IAggregateCalculator Members
+
+
         /// <summary>
         /// The aggregate function applied by the calculator.
         /// </summary>
@@ -239,7 +239,7 @@ namespace Opc.Ua.Server
             {
                 value.WrappedValue = Variant.Null;
             }
-            
+
             // delete uneeded data.
             if (TimeFlowsBackward)
             {
@@ -316,9 +316,9 @@ namespace Opc.Ua.Server
 
             return CurrentSlice.EndTime <= currentTime;
         }
-        #endregion
 
-        #region Protected Methods
+
+
         /// <summary>
         /// The start time for the request. 
         /// </summary>
@@ -343,11 +343,11 @@ namespace Opc.Ua.Server
         /// The configuration to use when processing.
         /// </summary>
         protected AggregateConfiguration Configuration { get; private set; }
-        
+
         /// <summary>
         /// Whether to use the server timestamp for all processing.
         /// </summary>
-        protected bool UseServerTimestamp { get; private set; } 
+        protected bool UseServerTimestamp { get; private set; }
 
         /// <summary>
         /// True if data is being processed in reverse order.
@@ -384,7 +384,7 @@ namespace Opc.Ua.Server
         {
             if (value1 == null)
             {
-                return (value2 == null)?0:-1;
+                return (value2 == null) ? 0 : -1;
             }
 
             if (value2 == null)
@@ -426,31 +426,10 @@ namespace Opc.Ua.Server
         {
             if (value2 == null)
             {
-                return (value1 == null)?0:+1;
+                return (value1 == null) ? 0 : +1;
             }
 
             return CompareTimestamps(value1, value2.Value);
-        }
-
-        /// <summary>
-        /// Compares timestamps for two DataValues according to the current UseServerTimestamp setting.
-        /// </summary>
-        /// <param name="value1">The first value to compare.</param>
-        /// <param name="value2">The second value to compare.</param>
-        /// <returns>Less than 0 if value1 is earlier than value2; 0 if they are equal; Greater than zero otherwise.</returns>
-        protected int CompareTimestamps(LinkedListNode<DataValue> value1, LinkedListNode<DataValue> value2)
-        {
-            if (value1 == null)
-            {
-                return (value2 == null)?0:-1;
-            }
-
-            if (value2 == null)
-            {
-                return +1;
-            }
-
-            return CompareTimestamps(value1.Value, value2.Value);
         }
 
         /// <summary>
@@ -505,7 +484,7 @@ namespace Opc.Ua.Server
 
             return true;
         }
- 
+
         /// <summary>
         /// Stores information about a slice of data to be processed.
         /// </summary>
@@ -574,7 +553,7 @@ namespace Opc.Ua.Server
         /// <returns>The new time slice.</returns>
         protected TimeSlice CreateSlice(TimeSlice previousSlice)
         {
-            TimeSlice slice = new TimeSlice();
+            var slice = new TimeSlice();
 
             // ensure slice is oriented from past to future even if request is going backwards.
             if (TimeFlowsBackward)
@@ -641,7 +620,7 @@ namespace Opc.Ua.Server
 
             if (!TimeFlowsBackward && slice.LastProcessedValue != null)
             {
-                start = slice.LastProcessedValue.Next; 
+                start = slice.LastProcessedValue.Next;
             }
 
             // reset the begin bound each time we go through the values.
@@ -649,7 +628,7 @@ namespace Opc.Ua.Server
             {
                 slice.Begin = null;
             }
-            
+
             // initialize slice from value list.
             for (LinkedListNode<DataValue> ii = start; ii != null; ii = ii.Next)
             {
@@ -832,9 +811,10 @@ namespace Opc.Ua.Server
         /// <returns>The interpolated value.</returns>
         protected DataValue Interpolate(DateTime timestamp, TimeSlice reference)
         {
-            TimeSlice slice = new TimeSlice();
-            slice.StartTime = timestamp;
-            slice.EndTime = timestamp;
+            var slice = new TimeSlice {
+                StartTime = timestamp,
+                EndTime = timestamp
+            };
             UpdateSlice(slice);
 
             // check for value at the timestamp.
@@ -843,7 +823,7 @@ namespace Opc.Ua.Server
                 if (IsGood(slice.Begin.Value))
                 {
                     return slice.Begin.Value;
-                }                
+                }
             }
 
             DataValue dataValue = null;
@@ -856,7 +836,7 @@ namespace Opc.Ua.Server
                 if (slice.EarlyBound != null && slice.LateBound != null)
                 {
                     dataValue = SlopedInterpolate(timestamp, slice.EarlyBound.Value, slice.LateBound.Value);
-                    
+
                     if (!Object.ReferenceEquals(slice.EarlyBound.Next, slice.LateBound))
                     {
                         dataValue.StatusCode = dataValue.StatusCode.SetCodeBits(StatusCodes.UncertainDataSubNormal);
@@ -916,11 +896,12 @@ namespace Opc.Ua.Server
                 return new DataValue(Variant.Null, StatusCodes.BadNoData, timestamp, timestamp);
             }
 
-            DataValue dataValue = new DataValue();
-            dataValue.WrappedValue = earlyBound.WrappedValue;
-            dataValue.SourceTimestamp = timestamp;
-            dataValue.ServerTimestamp = timestamp;
-            dataValue.StatusCode = StatusCodes.Good;
+            var dataValue = new DataValue {
+                WrappedValue = earlyBound.WrappedValue,
+                SourceTimestamp = timestamp,
+                ServerTimestamp = timestamp,
+                StatusCode = StatusCodes.Good
+            };
 
             // update status code.
             if (StatusCode.IsBad(earlyBound.StatusCode))
@@ -974,11 +955,12 @@ namespace Opc.Ua.Server
                 double calculatedValue = slope * (timestamp - earlyBound.SourceTimestamp).TotalMilliseconds + earlyValue;
 
                 // convert back to original type.
-                DataValue dataValue = new DataValue();
-                dataValue.WrappedValue = CastToOriginalType(calculatedValue, earlyBound);
-                dataValue.SourceTimestamp = timestamp;
-                dataValue.ServerTimestamp = timestamp;
-                dataValue.StatusCode = StatusCodes.Good;
+                var dataValue = new DataValue {
+                    WrappedValue = CastToOriginalType(calculatedValue, earlyBound),
+                    SourceTimestamp = timestamp,
+                    ServerTimestamp = timestamp,
+                    StatusCode = StatusCodes.Good
+                };
 
                 // update status code.
                 if (StatusCode.IsNotGood(earlyBound.StatusCode) || StatusCode.IsNotGood(lateBound.StatusCode))
@@ -1065,7 +1047,7 @@ namespace Opc.Ua.Server
             // look for an end bound.
             bool revertToStepped = false;
             LinkedListNode<DataValue> endBound = startBound.Next;
-            
+
             if (!Stepped)
             {
                 if (endBound != null)
@@ -1111,7 +1093,7 @@ namespace Opc.Ua.Server
                 return null;
             }
 
-            List<DataValue> values = new List<DataValue>();
+            var values = new List<DataValue>();
 
             // add the start point.
             DataValue startBound = GetSimpleBound(slice.StartTime, slice);
@@ -1157,7 +1139,7 @@ namespace Opc.Ua.Server
                 return null;
             }
 
-            List<DataValue> values = new List<DataValue>();
+            var values = new List<DataValue>();
 
             // initialize slice from value list.
             for (LinkedListNode<DataValue> ii = slice.Begin; ii != null; ii = ii.Next)
@@ -1202,7 +1184,7 @@ namespace Opc.Ua.Server
                 return null;
             }
 
-            List<DataValue> values = new List<DataValue>();
+            var values = new List<DataValue>();
 
             // add the start point.
             DataValue startBound = Interpolate(slice.StartTime, slice);
@@ -1236,7 +1218,7 @@ namespace Opc.Ua.Server
 
             return values;
         }
-        
+
         /// <summary>
         /// A subset of a slice bounded by two raw data points.
         /// </summary>
@@ -1285,7 +1267,7 @@ namespace Opc.Ua.Server
             }
 
             SubRegion currentRegion = null;
-            List<SubRegion> regions = new List<SubRegion>();
+            var regions = new List<SubRegion>();
 
             for (int ii = 0; ii < values.Count; ii++)
             {
@@ -1397,17 +1379,18 @@ namespace Opc.Ua.Server
 
                         currentRegion.Duration = (currentTime - currentRegion.StartTime).TotalMilliseconds;
                     }
-                     
+
                     regions.Add(currentRegion);
                 }
 
                 // start a new region.
-                currentRegion = new SubRegion();
-                currentRegion.StartValue = currentValue;
-                currentRegion.EndValue = currentValue;
-                currentRegion.StartTime = currentTime;
-                currentRegion.StatusCode = currentStatus;
-                currentRegion.DataPoint = values[ii];
+                currentRegion = new SubRegion {
+                    StartValue = currentValue,
+                    EndValue = currentValue,
+                    StartTime = currentTime,
+                    StatusCode = currentStatus,
+                    DataPoint = values[ii]
+                };
             }
 
             return regions;
@@ -1509,13 +1492,13 @@ namespace Opc.Ua.Server
             statusCode = statusCode.SetCodeBits(StatusCodes.Good);
 
             // uncertain if the good duration is less than the configured threshold.
-            if ((goodDuration/totalDuration)*100 < Configuration.PercentDataGood)
+            if ((goodDuration / totalDuration) * 100 < Configuration.PercentDataGood)
             {
                 statusCode = statusCode.SetCodeBits(StatusCodes.UncertainDataSubNormal);
             }
 
             // bad if the bad duration is greater than or equal to the configured threshold.
-            if ((badDuration/totalDuration)*100 >= Configuration.PercentDataBad)
+            if ((badDuration / totalDuration) * 100 >= Configuration.PercentDataBad)
             {
                 statusCode = StatusCodes.Bad;
             }
@@ -1523,12 +1506,12 @@ namespace Opc.Ua.Server
             // always calculated.
             return statusCode;
         }
-        #endregion
 
-        #region Private Fields
+
+
         private LinkedList<DataValue> m_values;
         private DateTime m_startOfData;
         private DateTime m_endOfData;
-        #endregion
+
     }
 }

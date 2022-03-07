@@ -60,7 +60,7 @@ namespace Opc.Ua
         bool IsEqual(IEncodeable encodeable);
     }
 
-    #region IEncodeableCollection
+
     /// <summary>
     /// A collection of encodeable objects.
     /// </summary>
@@ -112,5 +112,5 @@ namespace Opc.Ua
             return ToIEncodeableCollection(values);
         }
     }
-    #endregion
+
 }

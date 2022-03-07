@@ -128,7 +128,7 @@ namespace Opc.Ua.Bindings
     /// </summary>
     public interface IMessageSocket : IDisposable
     {
-        #region Connect/Disconnect Handling
+
         /// <summary>
         /// Gets the socket handle.
         /// </summary>
@@ -153,9 +153,9 @@ namespace Opc.Ua.Bindings
         /// Forcefully closes the socket.
         /// </summary>
         void Close();
-        #endregion
 
-        #region Read Handling
+
+
         /// <summary>
         /// Starts reading messages from the socket.
         /// </summary>
@@ -165,21 +165,21 @@ namespace Opc.Ua.Bindings
         /// Changes the sink used to report reads.
         /// </summary>
         void ChangeSink(IMessageSink sink);
-        #endregion
 
-        #region Write Handling
+
+
         /// <summary>
         /// Sends a buffer.
         /// </summary>
         bool SendAsync(IMessageSocketAsyncEventArgs args);
-        #endregion
 
-        #region Event factory
+
+
         /// <summary>
         /// Get the message socket event args.
         /// </summary>
         IMessageSocketAsyncEventArgs MessageSocketEventArgs();
-        #endregion
+
     }
 
     /// <summary>

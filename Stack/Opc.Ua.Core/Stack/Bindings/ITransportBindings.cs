@@ -14,7 +14,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks;
 
 namespace Opc.Ua.Bindings
 {
@@ -52,18 +51,6 @@ namespace Opc.Ua.Bindings
         /// </summary>
         /// <param name="uriScheme">The uri scheme.</param>
         T GetBinding(string uriScheme);
-
-        /// <summary>
-        /// Return if there is a transport listener for a uri scheme.
-        /// </summary>
-        /// <param name="uriScheme">The uri scheme.</param>
-        bool HasBinding(string uriScheme);
-
-        /// <summary>
-        /// Set the transport factory to the binding.
-        /// Overrides other bindings with the same uri scheme.
-        /// </summary>
-        void SetBinding(T binding);
 
         /// <summary>
         /// Add all bindings with interface exported from a assembly.

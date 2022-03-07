@@ -12,7 +12,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Opc.Ua
 {
@@ -107,7 +106,7 @@ namespace Opc.Ua
     /// </summary>
     public class SystemContext : ISystemContext, IOperationContext
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SystemContext"/> class.
         /// </summary>
@@ -125,17 +124,17 @@ namespace Opc.Ua
             m_nodeStateFactory = new NodeStateFactory();
             m_operationContext = context;
         }
-        #endregion
 
-        #region ISystemContext Members
+
+
         /// <summary>
         /// An application defined handle for the system.
         /// </summary>
         /// <value>The system handle.</value>
         public object SystemHandle
         {
-            get { return m_systemHandle; }
-            set { m_systemHandle = value; }
+            get => m_systemHandle;
+            set => m_systemHandle = value;
         }
 
         /// <summary>
@@ -154,10 +153,7 @@ namespace Opc.Ua
                 return m_sessionId;
             }
 
-            set
-            {
-                m_sessionId = value;
-            }
+            set => m_sessionId = value;
         }
 
         /// <summary>
@@ -176,10 +172,7 @@ namespace Opc.Ua
                 return m_userIdentity;
             }
 
-            set
-            {
-                m_userIdentity = value;
-            }
+            set => m_userIdentity = value;
         }
 
         /// <summary>
@@ -198,10 +191,7 @@ namespace Opc.Ua
                 return m_preferredLocales;
             }
 
-            set
-            {
-                m_preferredLocales = value;
-            }
+            set => m_preferredLocales = value;
         }
 
         /// <summary>
@@ -220,10 +210,7 @@ namespace Opc.Ua
                 return m_auditEntryId;
             }
 
-            set
-            {
-                m_auditEntryId = value;
-            }
+            set => m_auditEntryId = value;
         }
 
         /// <summary>
@@ -232,8 +219,8 @@ namespace Opc.Ua
         /// <value>The namespace URIs.</value>
         public NamespaceTable NamespaceUris
         {
-            get { return m_namespaceUris; }
-            set { m_namespaceUris = value; }
+            get => m_namespaceUris;
+            set => m_namespaceUris = value;
         }
 
         /// <summary>
@@ -242,8 +229,8 @@ namespace Opc.Ua
         /// <value>The server URIs.</value>
         public StringTable ServerUris
         {
-            get { return m_serverUris; }
-            set { m_serverUris = value; }
+            get => m_serverUris;
+            set => m_serverUris = value;
         }
 
         /// <summary>
@@ -252,8 +239,8 @@ namespace Opc.Ua
         /// <value>The type table.</value>
         public ITypeTable TypeTable
         {
-            get { return m_typeTable; }
-            set { m_typeTable = value; }
+            get => m_typeTable;
+            set => m_typeTable = value;
         }
 
         /// <summary>
@@ -262,8 +249,8 @@ namespace Opc.Ua
         /// <value>The encodeable factory.</value>
         public IEncodeableFactory EncodeableFactory
         {
-            get { return m_encodeableFactory; }
-            set { m_encodeableFactory = value; }
+            get => m_encodeableFactory;
+            set => m_encodeableFactory = value;
         }
 
         /// <summary>
@@ -272,8 +259,8 @@ namespace Opc.Ua
         /// <value>The node state factory.</value>
         public NodeStateFactory NodeStateFactory
         {
-            get { return m_nodeStateFactory; }
-            set { m_nodeStateFactory = value; }
+            get => m_nodeStateFactory;
+            set => m_nodeStateFactory = value;
         }
 
         /// <summary>
@@ -282,43 +269,24 @@ namespace Opc.Ua
         /// <value>The node idetifiers factory.</value>
         public INodeIdFactory NodeIdFactory
         {
-            get { return m_nodeIdFactory; }
-            set { m_nodeIdFactory = value; }
+            get => m_nodeIdFactory;
+            set => m_nodeIdFactory = value;
         }
-        #endregion
-        
-        #region Public Members
+
+
+
         /// <summary>
         /// The operation context associated with the system context.
         /// </summary>
         /// <value>The operation context.</value>
         public IOperationContext OperationContext
         {
-            get { return m_operationContext; }
-            protected set { m_operationContext = value; }
+            get => m_operationContext;
+            protected set => m_operationContext = value;
         }
 
-        /// <summary>
-        /// Creates a copy of the context that can be used with the specified operation context.
-        /// </summary>
-        /// <param name="context">The operation context to use.</param>
-        /// <returns>
-        /// A copy of the system context that references the new operation context.
-        /// </returns>
-        public ISystemContext Copy(IOperationContext context)
-        {
-            SystemContext copy = (SystemContext)MemberwiseClone();
 
-            if (context != null)
-            {
-                copy.m_operationContext = context;
-            }
 
-            return copy;
-        }
-        #endregion
-
-        #region IOperationContext Members
         /// <summary>
         /// The diagnostics mask associated with the operation.
         /// </summary>
@@ -386,9 +354,9 @@ namespace Opc.Ua
                 return StatusCodes.Good;
             }
         }
-        #endregion
 
-        #region Private Fields
+
+
         private object m_systemHandle;
         private NodeId m_sessionId;
         private IList<string> m_preferredLocales;
@@ -401,6 +369,6 @@ namespace Opc.Ua
         private INodeIdFactory m_nodeIdFactory;
         private IOperationContext m_operationContext;
         private NodeStateFactory m_nodeStateFactory;
-        #endregion
+
     }
 }

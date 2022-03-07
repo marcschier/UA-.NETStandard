@@ -36,7 +36,7 @@ namespace Opc.Ua
     [DataContract(Namespace = Namespaces.OpcUaXsd)]
     public partial struct Variant : IFormattable
     {
-        #region Constructors
+
         /// <summary>
         /// Creates a deep copy of the value.
         /// </summary>
@@ -63,7 +63,7 @@ namespace Opc.Ua
 
 #if DEBUG
 
-            TypeInfo sanityCheck = TypeInfo.Construct(m_value);
+            var sanityCheck = TypeInfo.Construct(m_value);
 
             // except special case byte array vs. bytestring
             if (sanityCheck.BuiltInType == BuiltInType.ByteString &&
@@ -758,9 +758,9 @@ namespace Opc.Ua
             m_typeInfo = TypeInfo.Arrays.Variant;
             Set(value);
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The value stored in the object.
         /// </summary>
@@ -773,13 +773,13 @@ namespace Opc.Ua
             get
             {
                 // create encoder.
-                XmlEncoder encoder = new XmlEncoder(MessageContextExtension.CurrentContext);
+                var encoder = new XmlEncoder(MessageContextExtension.CurrentContext);
 
                 // write value.
                 encoder.WriteVariantContents(m_value, m_typeInfo);
 
                 // create document from encoder.
-                XmlDocument document = new XmlDocument();
+                var document = new XmlDocument();
                 document.LoadInnerXml(encoder.Close());
 
                 // return element.
@@ -798,7 +798,7 @@ namespace Opc.Ua
                 TypeInfo typeInfo = null;
 
                 // create decoder.
-                XmlDecoder decoder = new XmlDecoder(value, MessageContextExtension.CurrentContext);
+                var decoder = new XmlDecoder(value, MessageContextExtension.CurrentContext);
 
                 try
                 {
@@ -825,21 +825,21 @@ namespace Opc.Ua
         /// The value stored in the object.
         /// </summary>
         /// <remarks>
-        /// The value stored -as <see cref="Object"/>- within the Variant object.
+        /// The value stored -as <see cref="object"/>- within the Variant object.
         /// </remarks>
         public object Value
         {
-            get { return m_value; }
-            set { Set(value, TypeInfo.Construct(value)); }
+            get => m_value;
+            set => Set(value, TypeInfo.Construct(value));
         }
 
         /// <summary>
         /// The type information for the matrix.
         /// </summary>
         public TypeInfo TypeInfo => m_typeInfo;
-        #endregion
 
-        #region IFormattable Members
+
+
         /// <summary>
         /// Returns the string representation of the object.
         /// </summary>
@@ -853,7 +853,7 @@ namespace Opc.Ua
         {
             if (format == null)
             {
-                StringBuilder buffer = new StringBuilder();
+                var buffer = new StringBuilder();
                 AppendFormat(buffer, m_value, formatProvider);
                 return buffer.ToString();
             }
@@ -902,15 +902,14 @@ namespace Opc.Ua
             // convert XML element to string.
             if (m_typeInfo.BuiltInType == BuiltInType.XmlElement && m_typeInfo.ValueRank < 0)
             {
-                XmlElement xml = (XmlElement)value;
+                var xml = (XmlElement)value;
                 buffer.AppendFormat(formatProvider, "{0}", xml.OuterXml);
                 return;
             }
 
             // recusrively write individual elements of an array.
-            Array array = value as Array;
 
-            if (array != null && m_typeInfo.ValueRank <= 1)
+            if (value is Array array && m_typeInfo.ValueRank <= 1)
             {
                 buffer.Append('{');
 
@@ -949,9 +948,9 @@ namespace Opc.Ua
             // let the object format itself.
             buffer.AppendFormat(formatProvider, "{0}", value);
         }
-        #endregion
 
-        #region ICloneable Members
+
+
         /// <summary>
         /// Makes a deep copy of the object.
         /// </summary>
@@ -960,11 +959,11 @@ namespace Opc.Ua
         /// </remarks>
         public new object MemberwiseClone()
         {
-            return new Variant(Utils.Clone(this.Value));
+            return new Variant(Utils.Clone(Value));
         }
-        #endregion
 
-        #region Static Operators
+
+
         /// <summary>
         /// Returns true if the objects are not equal.
         /// </summary>
@@ -1525,9 +1524,9 @@ namespace Opc.Ua
         {
             return new Variant(value);
         }
-        #endregion
 
-        #region Static Fields
+
+
         /// <summary>
         /// An constant containing a null Variant structure.
         /// </summary>
@@ -1535,9 +1534,9 @@ namespace Opc.Ua
         /// An constant containing a null Variant structure.
         /// </remarks>
         public static readonly Variant Null = new Variant();
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Determines if the specified object is equal to the object.
         /// </summary>
@@ -1546,7 +1545,7 @@ namespace Opc.Ua
         /// </remarks>
         public override bool Equals(object obj)
         {
-            Variant? variant = obj as Variant?;
+            var variant = obj as Variant?;
 
             if (variant != null)
             {
@@ -1561,7 +1560,7 @@ namespace Opc.Ua
         /// </summary>
         public override int GetHashCode()
         {
-            if (this.m_value != null)
+            if (m_value != null)
             {
                 return m_value.GetHashCode();
             }
@@ -1576,9 +1575,9 @@ namespace Opc.Ua
         {
             return ToString(null, null);
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Initializes the object with a bool value.
         /// </summary>
@@ -2060,7 +2059,7 @@ namespace Opc.Ua
 
             if (value != null)
             {
-                Uuid[] uuids = new Uuid[value.Length];
+                var uuids = new Uuid[value.Length];
 
                 for (int ii = 0; ii < value.Length; ii++)
                 {
@@ -2229,7 +2228,7 @@ namespace Opc.Ua
 
             if (value != null)
             {
-                Variant[] anyValues = new Variant[value.Length];
+                var anyValues = new Variant[value.Length];
 
                 for (int ii = 0; ii < value.Length; ii++)
                 {
@@ -2241,9 +2240,9 @@ namespace Opc.Ua
 
             m_typeInfo = TypeInfo.Arrays.Variant;
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Stores a scalar value in the variant.
         /// </summary>
@@ -2264,9 +2263,8 @@ namespace Opc.Ua
                     }
 
                     // check for matrix
-                    Matrix matrix = value as Matrix;
 
-                    if (matrix != null)
+                    if (value is Matrix matrix)
                     {
                         m_value = matrix;
                         return;
@@ -2281,7 +2279,7 @@ namespace Opc.Ua
                 // convert Guids to Uuids.
                 case BuiltInType.Guid:
                 {
-                    Guid? guid = value as Guid?;
+                    var guid = value as Guid?;
 
                     if (guid != null)
                     {
@@ -2296,9 +2294,7 @@ namespace Opc.Ua
                 // convert encodeables to extension objects.
                 case BuiltInType.ExtensionObject:
                 {
-                    IEncodeable encodeable = value as IEncodeable;
-
-                    if (encodeable != null)
+                    if (value is IEncodeable encodeable)
                     {
                         m_value = new ExtensionObject(encodeable);
                         return;
@@ -2360,9 +2356,7 @@ namespace Opc.Ua
                 // convert Guids to Uuids.
                 case BuiltInType.Guid:
                 {
-                    Guid[] guids = array as Guid[];
-
-                    if (guids != null)
+                    if (array is Guid[] guids)
                     {
                         Set(guids);
                         return;
@@ -2375,11 +2369,9 @@ namespace Opc.Ua
                 // convert encodeables to extension objects.
                 case BuiltInType.ExtensionObject:
                 {
-                    IEncodeable[] encodeables = array as IEncodeable[];
-
-                    if (encodeables != null)
+                    if (array is IEncodeable[] encodeables)
                     {
-                        ExtensionObject[] extensions = new ExtensionObject[encodeables.Length];
+                        var extensions = new ExtensionObject[encodeables.Length];
 
                         for (int ii = 0; ii < encodeables.Length; ii++)
                         {
@@ -2397,11 +2389,9 @@ namespace Opc.Ua
                 // convert objects to variants objects.
                 case BuiltInType.Variant:
                 {
-                    object[] objects = array as object[];
-
-                    if (objects != null)
+                    if (array is object[] objects)
                     {
-                        Variant[] variants = new Variant[objects.Length];
+                        var variants = new Variant[objects.Length];
 
                         for (int ii = 0; ii < objects.Length; ii++)
                         {
@@ -2438,9 +2428,7 @@ namespace Opc.Ua
             {
                 if (typeInfo.BuiltInType == BuiltInType.ExtensionObject)
                 {
-                    IEncodeable encodeable = value[ii] as IEncodeable;
-
-                    if (encodeable != null)
+                    if (value[ii] is IEncodeable encodeable)
                     {
                         array.SetValue(new ExtensionObject(encodeable), ii);
                         continue;
@@ -2473,7 +2461,7 @@ namespace Opc.Ua
                 return;
             }
 
-            Array array = value as Array;
+            var array = value as Array;
 
             // handle one dimensional arrays.
             if (typeInfo.ValueRank <= 1)
@@ -2486,9 +2474,8 @@ namespace Opc.Ua
                 }
 
                 // handle lists.
-                IList list = value as IList;
 
-                if (list != null)
+                if (value is IList list)
                 {
                     SetList(list, typeInfo);
                     return;
@@ -2504,9 +2491,8 @@ namespace Opc.Ua
             }
 
             // handle matrix.
-            Matrix matrix = value as Matrix;
 
-            if (matrix != null)
+            if (value is Matrix matrix)
             {
                 m_value = matrix;
                 m_typeInfo = matrix.TypeInfo;
@@ -2518,15 +2504,15 @@ namespace Opc.Ua
                    StatusCodes.BadNotSupported,
                    Utils.Format("Arrays of the type '{0}' cannot be stored in a Variant object.", value.GetType().FullName));
         }
-        #endregion
 
-        #region Private Members
+
+
         private object m_value;
         private TypeInfo m_typeInfo;
-        #endregion
+
     }
 
-    #region VariantCollection Class
+
     /// <summary>
     /// A collection of Variant objects.
     /// </summary>
@@ -2592,7 +2578,7 @@ namespace Opc.Ua
         /// </remarks>
         public new object MemberwiseClone()
         {
-            VariantCollection clone = new VariantCollection(this.Count);
+            var clone = new VariantCollection(Count);
 
             foreach (Variant element in this)
             {
@@ -2602,7 +2588,7 @@ namespace Opc.Ua
             return clone;
         }
     }//class
-    #endregion
+
 
     /// <summary>
     /// Wraps a multi-dimensional array for use within a Variant.
@@ -2610,13 +2596,16 @@ namespace Opc.Ua
     [DataContract(Namespace = Namespaces.OpcUaXsd)]
     public class Matrix : IFormattable
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the matrix with a multidimensional array.
         /// </summary>
         public Matrix(Array value, BuiltInType builtInType)
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             m_elements = value;
             m_dimensions = new int[value.Rank];
@@ -2630,7 +2619,7 @@ namespace Opc.Ua
             m_typeInfo = new TypeInfo(builtInType, m_dimensions.Length);
 
 #if DEBUG
-            TypeInfo sanityCheck = TypeInfo.Construct(m_elements);
+            var sanityCheck = TypeInfo.Construct(m_elements);
             System.Diagnostics.Debug.Assert(sanityCheck.BuiltInType == builtInType || (sanityCheck.BuiltInType == BuiltInType.ByteString && builtInType == BuiltInType.Byte));
 #endif
         }
@@ -2640,7 +2629,10 @@ namespace Opc.Ua
         /// </summary>
         public Matrix(Array elements, BuiltInType builtInType, params int[] dimensions)
         {
-            if (elements == null) throw new ArgumentNullException(nameof(elements));
+            if (elements == null)
+            {
+                throw new ArgumentNullException(nameof(elements));
+            }
 
             m_elements = elements;
             m_dimensions = dimensions;
@@ -2667,16 +2659,16 @@ namespace Opc.Ua
             m_typeInfo = new TypeInfo(builtInType, m_dimensions.Length);
 
 #if DEBUG
-            TypeInfo sanityCheck = TypeInfo.Construct(m_elements);
+            var sanityCheck = TypeInfo.Construct(m_elements);
             System.Diagnostics.Debug.Assert(sanityCheck.BuiltInType == builtInType ||
                 (sanityCheck.BuiltInType == BuiltInType.Int32 && builtInType == BuiltInType.Enumeration) ||
                 (sanityCheck.BuiltInType == BuiltInType.ByteString && builtInType == BuiltInType.Byte) ||
                 (builtInType == BuiltInType.Variant));
 #endif
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The elements of the matrix.
         /// </summary>
@@ -2701,7 +2693,7 @@ namespace Opc.Ua
         /// </summary>
         public Array ToArray()
         {
-            Array array = Array.CreateInstance(m_elements.GetType().GetElementType(), m_dimensions);
+            var array = Array.CreateInstance(m_elements.GetType().GetElementType(), m_dimensions);
 
             int[] indexes = new int[m_dimensions.Length];
 
@@ -2724,9 +2716,9 @@ namespace Opc.Ua
 
             return array;
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Determines if the specified object is equal to the object.
         /// </summary>
@@ -2740,9 +2732,8 @@ namespace Opc.Ua
                 return true;
             }
 
-            Matrix matrix = obj as Matrix;
 
-            if (matrix != null)
+            if (obj is Matrix matrix)
             {
                 if (!m_typeInfo.Equals(matrix.TypeInfo))
                 {
@@ -2777,9 +2768,9 @@ namespace Opc.Ua
             }
             return base.GetHashCode();
         }
-        #endregion
 
-        #region IFormattable Members
+
+
         /// <summary>
         /// Returns the string representation of the object.
         /// </summary>
@@ -2796,7 +2787,7 @@ namespace Opc.Ua
         {
             if (format == null)
             {
-                StringBuilder buffer = new StringBuilder();
+                var buffer = new StringBuilder();
 
                 buffer.AppendFormat("{0}[", m_elements.GetType().GetElementType().Name);
 
@@ -2817,9 +2808,9 @@ namespace Opc.Ua
 
             throw new FormatException(Utils.Format("Invalid format string: '{0}'.", format));
         }
-        #endregion
 
-        #region ICloneable Members
+
+
         /// <summary>
         /// Makes a deep copy of the object.
         /// </summary>
@@ -2830,12 +2821,12 @@ namespace Opc.Ua
         {
             return new Matrix((Array)Utils.Clone(m_elements), m_typeInfo.BuiltInType, (int[])Utils.Clone(m_dimensions));
         }
-        #endregion
 
-        #region Private Fields
-        private Array m_elements;
-        private int[] m_dimensions;
-        private TypeInfo m_typeInfo;
-        #endregion
+
+
+        private readonly Array m_elements;
+        private readonly int[] m_dimensions;
+        private readonly TypeInfo m_typeInfo;
+
     }
 }//namespace

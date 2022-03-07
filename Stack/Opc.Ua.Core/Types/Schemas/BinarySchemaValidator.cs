@@ -27,7 +27,7 @@ namespace Opc.Ua.Schema.Binary
     /// </summary>
     public class BinarySchemaValidator : SchemaValidator
     {
-        #region Constructors
+
         /// <summary>
         /// Intializes the object with default values.
         /// </summary>
@@ -43,23 +43,13 @@ namespace Opc.Ua.Schema.Binary
         {
             SetResourcePaths(WellKnownDictionaries);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The dictionary that was validated.
         /// </summary>
         public TypeDictionary Dictionary { get; private set; }
-
-        /// <summary>
-        /// The types defined in the dictionary.
-        /// </summary>
-        public IList<TypeDescription> ValidatedDescriptions => m_validatedDescriptions;
-
-        /// <summary>
-        /// Any warnings during validation.
-        /// </summary>
-        public ICollection<string> Warnings => m_warnings;
 
         /// <summary>
         /// Generates the code from the contents of the address space.
@@ -72,34 +62,24 @@ namespace Opc.Ua.Schema.Binary
         }
 
         /// <summary>
-        /// Generates the code from the contents of the address space.
-        /// </summary>
-        public async Task Validate(string inputPath)
-        {
-            // read and parse the file.
-            Dictionary = (TypeDictionary)LoadInput(typeof(TypeDictionary), inputPath);
-            await Validate().ConfigureAwait(false);
-        }
-
-        /// <summary>
         /// Returns the schema for the specified type (returns the entire schema if null).
         /// </summary>
-        public override string GetSchema(string typeName)
+        public string GetSchema(string typeName)
         {
-            XmlWriterSettings settings = new XmlWriterSettings();
+            var settings = new XmlWriterSettings {
+                Encoding = Encoding.UTF8,
+                Indent = true,
+                IndentChars = "    "
+            };
 
-            settings.Encoding = Encoding.UTF8;
-            settings.Indent = true;
-            settings.IndentChars = "    ";
-
-            MemoryStream ostrm = new MemoryStream();
-            XmlWriter writer = XmlWriter.Create(ostrm, settings);
+            var ostrm = new MemoryStream();
+            var writer = XmlWriter.Create(ostrm, settings);
 
             try
             {
                 if (typeName == null)
                 {
-                    XmlSerializer serializer = new XmlSerializer(typeof(TypeDictionary));
+                    var serializer = new XmlSerializer(typeof(TypeDictionary));
                     serializer.Serialize(writer, Dictionary);
                 }
                 else
@@ -108,12 +88,12 @@ namespace Opc.Ua.Schema.Binary
 
                     if (!m_descriptions.TryGetValue(new XmlQualifiedName(typeName, Dictionary.TargetNamespace), out description))
                     {
-                        XmlSerializer serializer = new XmlSerializer(typeof(TypeDictionary));
+                        var serializer = new XmlSerializer(typeof(TypeDictionary));
                         serializer.Serialize(writer, Dictionary);
                     }
                     else
                     {
-                        XmlSerializer serializer = new XmlSerializer(typeof(TypeDescription));
+                        var serializer = new XmlSerializer(typeof(TypeDescription));
                         serializer.Serialize(writer, description);
                     }
                 }
@@ -126,9 +106,9 @@ namespace Opc.Ua.Schema.Binary
 
             return new UTF8Encoding().GetString(ostrm.ToArray(), 0, (int)ostrm.Length);
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Generates the code from the contents of the address space.
         /// </summary>
@@ -149,9 +129,9 @@ namespace Opc.Ua.Schema.Binary
             else
             {
                 // always import builtin types, unless wellknown library
-                if (!WellKnownDictionaries.Any(n => String.Equals(n[0], Dictionary.TargetNamespace)))
+                if (!WellKnownDictionaries.Any(n => string.Equals(n[0], Dictionary.TargetNamespace)))
                 {
-                    ImportDirective directive = new ImportDirective { Namespace = Namespaces.OpcUa };
+                    var directive = new ImportDirective { Namespace = Namespaces.OpcUa };
                     await Import(directive).ConfigureAwait(false);
                 }
             }
@@ -175,7 +155,7 @@ namespace Opc.Ua.Schema.Binary
                 foreach (TypeDescription description in m_validatedDescriptions)
                 {
                     ValidateDescription(description);
-                    m_warnings.Add(String.Format(CultureInfo.InvariantCulture, "{0} '{1}' validated.", description.GetType().Name, description.Name));
+                    m_warnings.Add(string.Format(CultureInfo.InvariantCulture, "{0} '{1}' validated.", description.GetType().Name, description.Name));
                 }
             }
         }
@@ -191,10 +171,10 @@ namespace Opc.Ua.Schema.Binary
                 return;
             }
 
-            TypeDictionary dictionary = (TypeDictionary)Load(typeof(TypeDictionary), directive.Namespace, directive.Location);
+            var dictionary = (TypeDictionary)Load(typeof(TypeDictionary), directive.Namespace, directive.Location);
 
             // verify namespace.
-            if (!String.IsNullOrEmpty(dictionary.TargetNamespace) && directive.Namespace != dictionary.TargetNamespace)
+            if (!string.IsNullOrEmpty(dictionary.TargetNamespace) && directive.Namespace != dictionary.TargetNamespace)
             {
                 throw Exception("Imported dictionary '{0}' does not match uri specified: '{1}'.", dictionary.TargetNamespace, directive.Namespace);
             }
@@ -235,7 +215,7 @@ namespace Opc.Ua.Schema.Binary
             {
                 for (int ii = 0; ii < documentation.Text.Length; ii++)
                 {
-                    if (!String.IsNullOrEmpty(documentation.Text[ii]))
+                    if (!string.IsNullOrEmpty(documentation.Text[ii]))
                     {
                         return false;
                     }
@@ -267,9 +247,8 @@ namespace Opc.Ua.Schema.Binary
                 return true;
             }
 
-            OpaqueType opaqueType = description as OpaqueType;
 
-            if (opaqueType != null)
+            if (description is OpaqueType opaqueType)
             {
                 if (opaqueType.LengthInBitsSpecified)
                 {
@@ -304,9 +283,8 @@ namespace Opc.Ua.Schema.Binary
                 }
             }
 
-            EnumeratedType enumerated = description as EnumeratedType;
 
-            if (enumerated != null)
+            if (description is EnumeratedType enumerated)
             {
                 if (enumerated.LengthInBitsSpecified)
                 {
@@ -315,9 +293,7 @@ namespace Opc.Ua.Schema.Binary
             }
             else
             {
-                OpaqueType opaque = description as OpaqueType;
-
-                if (opaque != null)
+                if (description is OpaqueType opaque)
                 {
                     if (opaque.LengthInBitsSpecified)
                     {
@@ -334,19 +310,19 @@ namespace Opc.Ua.Schema.Binary
         /// </summary>
         private static bool IsValidName(string name)
         {
-            if (String.IsNullOrEmpty(name))
+            if (string.IsNullOrEmpty(name))
             {
                 return false;
             }
 
-            if (!Char.IsLetter(name[0]) && name[0] != '_' && name[0] != '"')
+            if (!char.IsLetter(name[0]) && name[0] != '_' && name[0] != '"')
             {
                 return false;
             }
 
             for (int ii = 1; ii < name.Length; ii++)
             {
-                if (Char.IsLetter(name[ii]) || Char.IsDigit(name[ii]))
+                if (char.IsLetter(name[ii]) || char.IsDigit(name[ii]))
                 {
                     continue;
                 }
@@ -392,24 +368,21 @@ namespace Opc.Ua.Schema.Binary
         /// </summary>
         private void ValidateDescription(TypeDescription description)
         {
-            OpaqueType opaque = description as OpaqueType;
-
-            if (opaque != null)
+            if (description is OpaqueType opaque)
             {
                 if (!opaque.LengthInBitsSpecified)
                 {
-                    m_warnings.Add(String.Format(CultureInfo.InvariantCulture, "Warning: The opaque type '{0}' does not have a length specified.", description.Name));
+                    m_warnings.Add(string.Format(CultureInfo.InvariantCulture, "Warning: The opaque type '{0}' does not have a length specified.", description.Name));
                 }
 
                 if (IsNull(opaque.Documentation))
                 {
-                    m_warnings.Add(String.Format(CultureInfo.InvariantCulture, "Warning: The opaque type '{0}' does not have any documentation.", description.Name));
+                    m_warnings.Add(string.Format(CultureInfo.InvariantCulture, "Warning: The opaque type '{0}' does not have any documentation.", description.Name));
                 }
             }
 
-            EnumeratedType enumerated = description as EnumeratedType;
 
-            if (enumerated != null)
+            if (description is EnumeratedType enumerated)
             {
 
                 if (!enumerated.LengthInBitsSpecified)
@@ -418,9 +391,8 @@ namespace Opc.Ua.Schema.Binary
                 }
             }
 
-            StructuredType structure = description as StructuredType;
 
-            if (structure != null)
+            if (description is StructuredType structure)
             {
                 if (structure.Field == null || structure.Field.Length == 0)
                 {
@@ -429,7 +401,7 @@ namespace Opc.Ua.Schema.Binary
 
                 int bitCount = 0;
 
-                Dictionary<string, FieldType> fields = new Dictionary<string, FieldType>();
+                var fields = new Dictionary<string, FieldType>();
 
                 for (int ii = 0; ii < structure.Field.Length; ii++)
                 {
@@ -463,7 +435,7 @@ namespace Opc.Ua.Schema.Binary
         /// </summary>
         private void ValidateField(StructuredType description, Dictionary<string, FieldType> fields, FieldType field)
         {
-            if (field == null || String.IsNullOrEmpty(field.Name))
+            if (field == null || string.IsNullOrEmpty(field.Name))
             {
                 throw Exception("The structured type '{0}' has an unnamed field.", description.Name);
             }
@@ -483,7 +455,7 @@ namespace Opc.Ua.Schema.Binary
                 throw Exception("Field '{1}' in structured type '{0}' has an unrecognized type '{2}'.", description.Name, field.Name, field.TypeName);
             }
 
-            if (!String.IsNullOrEmpty(field.LengthField))
+            if (!string.IsNullOrEmpty(field.LengthField))
             {
                 if (!fields.ContainsKey(field.LengthField))
                 {
@@ -496,7 +468,7 @@ namespace Opc.Ua.Schema.Binary
                 }
             }
 
-            if (!String.IsNullOrEmpty(field.SwitchField))
+            if (!string.IsNullOrEmpty(field.SwitchField))
             {
                 if (!fields.ContainsKey(field.SwitchField))
                 {
@@ -509,13 +481,13 @@ namespace Opc.Ua.Schema.Binary
                 }
             }
         }
-        #endregion
 
-        #region Private Fields
+
+
         /// <summary>
         /// Well known embedded binary schemas.
         /// </summary>
-        protected readonly static string[][] WellKnownDictionaries = new string[][]
+        protected static readonly string[][] WellKnownDictionaries = new string[][]
         {
             new string[] { Namespaces.OpcBinarySchema,   "Opc.Ua.Types.Schemas.StandardTypes.bsd" },
             new string[] { Namespaces.OpcUaBuiltInTypes, "Opc.Ua.Types.Schemas.BuiltInTypes.bsd"  },
@@ -525,6 +497,6 @@ namespace Opc.Ua.Schema.Binary
         private Dictionary<XmlQualifiedName, TypeDescription> m_descriptions;
         private List<TypeDescription> m_validatedDescriptions;
         private List<string> m_warnings;
-        #endregion
+
     }
 }

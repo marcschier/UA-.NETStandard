@@ -12,10 +12,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Xml;
 
 namespace Opc.Ua
 {
@@ -33,7 +30,7 @@ namespace Opc.Ua
     [KnownType(typeof(ViewNode))]
     public partial class NodeSet : IEnumerable<Node>
     {
-        #region Constructors
+
         /// <summary>
         /// Creates an empty nodeset.
         /// </summary>
@@ -44,45 +41,8 @@ namespace Opc.Ua
             m_nodes = new Dictionary<NodeId, Node>();
         }
 
-        /// <summary>
-        /// Loads a nodeset from a stream.
-        /// </summary>
-        /// <param name="istrm">The input stream.</param>
-        /// <returns>The set of nodes</returns>
-        public static NodeSet Read(Stream istrm)
-        {
-            using (XmlReader reader = XmlReader.Create(istrm, Utils.DefaultXmlReaderSettings()))
-            {
-                DataContractSerializer serializer = new DataContractSerializer(typeof(NodeSet));
-                return serializer.ReadObject(reader) as NodeSet;
-            }
-        }
 
-        /// <summary>
-        /// Write a nodeset to a stream.
-        /// </summary>
-        /// <param name="istrm">The input stream.</param>
-        public void Write(Stream istrm)
-        {
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.Encoding = Encoding.UTF8;
-            settings.Indent = true;
-            XmlWriter writer = XmlWriter.Create(istrm, settings);
 
-            try
-            {
-                DataContractSerializer serializer = new DataContractSerializer(typeof(NodeSet));
-                serializer.WriteObject(writer, this);
-            }
-            finally
-            {
-                writer.Flush();
-                writer.Dispose();
-            }
-        }
-        #endregion
-
-        #region IEnumerable<IReference> Members
         /// <summary>
         /// Returns an enumerator that iterates through the collection.
         /// </summary>
@@ -93,9 +53,9 @@ namespace Opc.Ua
         {
             return new List<Node>(m_nodes.Values).GetEnumerator();
         }
-        #endregion
 
-        #region IEnumerable Members
+
+
         /// <summary>
         /// Returns an enumerator that iterates through a collection.
         /// </summary>
@@ -106,9 +66,9 @@ namespace Opc.Ua
         {
             return GetEnumerator();
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Adds a node to the set.
         /// </summary>
@@ -118,7 +78,10 @@ namespace Opc.Ua
         /// </remarks>
         public void Add(Node node)
         {
-            if (node == null) throw new ArgumentNullException(nameof(node));
+            if (node == null)
+            {
+                throw new ArgumentNullException(nameof(node));
+            }
 
             if (NodeId.IsNull(node.NodeId))
             {
@@ -197,7 +160,7 @@ namespace Opc.Ua
         /// <returns>Translated value.</returns>
         private object TranslateValue(object value, NamespaceTable namespaceUris, StringTable serverUris)
         {
-            TypeInfo typeInfo = TypeInfo.Construct(value);
+            var typeInfo = TypeInfo.Construct(value);
 
             // do nothing for unknown types.
             if (typeInfo == null)
@@ -232,9 +195,7 @@ namespace Opc.Ua
 
                 case BuiltInType.ExtensionObject:
                 {
-                    Argument argument = ExtensionObject.ToEncodeable((ExtensionObject)value) as Argument;
-
-                    if (argument != null)
+                    if (ExtensionObject.ToEncodeable((ExtensionObject)value) is Argument argument)
                     {
                         argument.DataType = Translate(argument.DataType, m_namespaceUris, namespaceUris);
                     }
@@ -258,16 +219,15 @@ namespace Opc.Ua
         /// </remarks>
         public Node Add(ILocalNode nodeToExport, NamespaceTable namespaceUris, StringTable serverUris)
         {
-            Node node = Node.Copy(nodeToExport);
+            var node = Node.Copy(nodeToExport);
 
             node.NodeId = Translate(nodeToExport.NodeId, m_namespaceUris, namespaceUris);
             node.BrowseName = Translate(nodeToExport.BrowseName, m_namespaceUris, namespaceUris);
 
-            VariableNode variableToExport = nodeToExport as VariableNode;
 
-            if (variableToExport != null)
+            if (nodeToExport is VariableNode variableToExport)
             {
-                VariableNode variableNode = (VariableNode)node;
+                var variableNode = (VariableNode)node;
 
                 object value = TranslateValue(variableNode.Value.Value, namespaceUris, serverUris);
                 variableNode.Value = new Variant(value);
@@ -275,11 +235,10 @@ namespace Opc.Ua
                 variableNode.DataType = Translate(variableToExport.DataType, m_namespaceUris, namespaceUris);
             }
 
-            VariableTypeNode variableTypeToExport = nodeToExport as VariableTypeNode;
 
-            if (variableTypeToExport != null)
+            if (nodeToExport is VariableTypeNode variableTypeToExport)
             {
-                VariableTypeNode variableTypeNode = (VariableTypeNode)node;
+                var variableTypeNode = (VariableTypeNode)node;
 
                 object value = TranslateValue(variableTypeNode.Value.Value, namespaceUris, serverUris);
                 variableTypeNode.Value = new Variant(value);
@@ -289,11 +248,11 @@ namespace Opc.Ua
 
             foreach (IReference referenceToExport in nodeToExport.References)
             {
-                ReferenceNode reference = new ReferenceNode();
-
-                reference.ReferenceTypeId = Translate(referenceToExport.ReferenceTypeId, m_namespaceUris, namespaceUris);
-                reference.IsInverse = referenceToExport.IsInverse;
-                reference.TargetId = Translate(referenceToExport.TargetId, m_namespaceUris, m_serverUris, namespaceUris, serverUris);
+                var reference = new ReferenceNode {
+                    ReferenceTypeId = Translate(referenceToExport.ReferenceTypeId, m_namespaceUris, namespaceUris),
+                    IsInverse = referenceToExport.IsInverse,
+                    TargetId = Translate(referenceToExport.TargetId, m_namespaceUris, m_serverUris, namespaceUris, serverUris)
+                };
 
                 node.References.Add(reference);
             }
@@ -312,26 +271,13 @@ namespace Opc.Ua
         /// <param name="serverUris">The server URIs.</param>
         public void AddReference(Node node, ReferenceNode referenceToExport, NamespaceTable namespaceUris, StringTable serverUris)
         {
-            ReferenceNode reference = new ReferenceNode();
-
-            reference.ReferenceTypeId = Translate(referenceToExport.ReferenceTypeId, m_namespaceUris, namespaceUris);
-            reference.IsInverse = referenceToExport.IsInverse;
-            reference.TargetId = Translate(referenceToExport.TargetId, m_namespaceUris, m_serverUris, namespaceUris, serverUris);
+            var reference = new ReferenceNode {
+                ReferenceTypeId = Translate(referenceToExport.ReferenceTypeId, m_namespaceUris, namespaceUris),
+                IsInverse = referenceToExport.IsInverse,
+                TargetId = Translate(referenceToExport.TargetId, m_namespaceUris, m_serverUris, namespaceUris, serverUris)
+            };
 
             node.References.Add(reference);
-        }
-
-        /// <summary>
-        /// Removes a node from the set.
-        /// </summary>
-        /// <param name="nodeId">The node identifier.</param>
-        /// <returns>The result of the removal.</returns>
-        /// <remarks>
-        /// The NodeId must reference the strings for the node set.
-        /// </remarks>
-        public bool Remove(NodeId nodeId)
-        {
-            return m_nodes.Remove(nodeId);
         }
 
         /// <summary>
@@ -350,129 +296,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Returns the node in the set.
-        /// </summary>
-        /// <param name="nodeId">The node identifier.</param>
-        /// <returns>The node in the set.</returns>
-        /// <remarks>
-        /// The NodeId must reference the strings for the node set.
-        /// </remarks>
-        public Node Find(NodeId nodeId)
-        {
-            Node node = null;
-
-            if (m_nodes.TryGetValue(nodeId, out node))
-            {
-                return node;
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Returns the node in the set.
-        /// </summary>
-        /// <param name="nodeId">The node identifier.</param>
-        /// <param name="namespaceUris">The namespace URIs.</param>
-        /// <returns>The node in the set.</returns>
-        /// <remarks>
-        /// The NodeId namespace is translated before the node is looked up.
-        /// </remarks>
-        public Node Find(NodeId nodeId, NamespaceTable namespaceUris)
-        {
-            if (nodeId == null) throw new ArgumentNullException(nameof(nodeId));
-            if (namespaceUris == null) throw new ArgumentNullException(nameof(namespaceUris));
-
-            // check for unknown namespace index.
-            string ns = namespaceUris.GetString(nodeId.NamespaceIndex);
-
-            if (ns == null)
-            {
-                return null;
-            }
-
-            // check for unknown namespace uri.
-            int nsIndex = m_namespaceUris.GetIndex(ns);
-
-            if (nsIndex < 0)
-            {
-                return null;
-            }
-
-            // create translated node identifier.
-            NodeId localId = new NodeId(nodeId.Identifier, (ushort)nsIndex);
-
-            // look up node.
-            Node node = null;
-
-            if (m_nodes.TryGetValue(localId, out node))
-            {
-                return node;
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Translates all namespace/server indexes in attributes or references and returns a copy of the node.
-        /// </summary>
-        /// <param name="nodeToImport">The node to import.</param>
-        /// <param name="namespaceUris">The namespace URIs.</param>
-        /// <param name="serverUris">The server URIs.</param>
-        /// <returns>Translated copy of the node.</returns>
-        /// <remarks>
-        /// Only imports references stored in the References collection.
-        /// </remarks>
-        public Node Copy(Node nodeToImport, NamespaceTable namespaceUris, StringTable serverUris)
-        {
-            Node node = Node.Copy(nodeToImport);
-
-            node.NodeId = Translate(nodeToImport.NodeId, namespaceUris, m_namespaceUris);
-            node.BrowseName = Translate(nodeToImport.BrowseName, namespaceUris, m_namespaceUris);
-
-            VariableNode variableToImport = nodeToImport as VariableNode;
-
-            if (variableToImport != null)
-            {
-                VariableNode variable = (VariableNode)node;
-
-                variable.DataType = Translate(variableToImport.DataType, namespaceUris, m_namespaceUris);
-
-                if (variableToImport.Value.Value != null)
-                {
-                    variable.Value = new Variant(ImportValue(variableToImport.Value.Value, namespaceUris, serverUris));
-                }
-            }
-
-            VariableTypeNode variableTypeToImport = nodeToImport as VariableTypeNode;
-
-            if (variableTypeToImport != null)
-            {
-                VariableTypeNode variableType = (VariableTypeNode)node;
-
-                variableType.DataType = Translate(variableTypeToImport.DataType, namespaceUris, m_namespaceUris);
-
-                if (variableTypeToImport.Value.Value != null)
-                {
-                    variableType.Value = new Variant(ImportValue(variableTypeToImport.Value.Value, namespaceUris, serverUris));
-                }
-            }
-
-            foreach (ReferenceNode referenceToImport in nodeToImport.References)
-            {
-                ReferenceNode reference = new ReferenceNode();
-
-                reference.ReferenceTypeId = Translate(referenceToImport.ReferenceTypeId, namespaceUris, m_namespaceUris);
-                reference.IsInverse = referenceToImport.IsInverse;
-                reference.TargetId = Translate(referenceToImport.TargetId, namespaceUris, serverUris, m_namespaceUris, m_serverUris);
-
-                node.References.Add(reference);
-            }
-
-            return node;
-        }
-
-        /// <summary>
         /// Recursively imports any NodeIds or ExpandedNodeIds contained in a value.
         /// </summary>
         /// <param name="value">The value.</param>
@@ -481,9 +304,7 @@ namespace Opc.Ua
         /// <returns></returns>
         private object ImportValue(object value, NamespaceTable namespaceUris, StringTable serverUris)
         {
-            Array array = value as Array;
-
-            if (array != null)
+            if (value is Array array)
             {
                 Type elementType = array.GetType().GetElementType();
 
@@ -492,7 +313,7 @@ namespace Opc.Ua
                     return array;
                 }
 
-                Array copy = Array.CreateInstance(elementType, array.Length);
+                var copy = Array.CreateInstance(elementType, array.Length);
 
                 for (int ii = 0; ii < array.Length; ii++)
                 {
@@ -502,27 +323,24 @@ namespace Opc.Ua
                 return copy;
             }
 
-            NodeId nodeId = value as NodeId;
+            var nodeId = value as NodeId;
 
             if (nodeId != null)
             {
                 return Import(nodeId, namespaceUris);
             }
 
-            ExpandedNodeId expandedNodeId = value as ExpandedNodeId;
+            var expandedNodeId = value as ExpandedNodeId;
 
             if (expandedNodeId != null)
             {
                 return Import(expandedNodeId, namespaceUris, serverUris);
             }
 
-            ExtensionObject extension = value as ExtensionObject;
 
-            if (extension != null)
+            if (value is ExtensionObject extension)
             {
-                Argument argument = ExtensionObject.ToEncodeable(extension) as Argument;
-
-                if (argument != null)
+                if (ExtensionObject.ToEncodeable(extension) is Argument argument)
                 {
                     argument.DataType = Import(argument.DataType, namespaceUris);
                 }
@@ -554,18 +372,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Updates the nodeset string tables and returns a NodeId that references those tables.
-        /// </summary>
-        /// <param name="nodeId">The node identifier.</param>
-        /// <param name="namespaceUris">The namespace URIs.</param>
-        /// <param name="serverUris">The server URIs.</param>
-        /// <returns>A  NodeId that references those tables.</returns>
-        public ExpandedNodeId Export(ExpandedNodeId nodeId, NamespaceTable namespaceUris, StringTable serverUris)
-        {
-            return Translate(nodeId, m_namespaceUris, m_serverUris, namespaceUris, serverUris);
-        }
-
-        /// <summary>
         /// Updates the specified string tables and returns a NodeId that references those tables.
         /// </summary>
         /// <param name="nodeId">The node identifier.</param>
@@ -576,19 +382,16 @@ namespace Opc.Ua
         {
             return Translate(nodeId, namespaceUris, serverUris, m_namespaceUris, m_serverUris);
         }
-        #endregion
 
-        #region Private Members
+
+
         /// <summary>
         /// The table of namespaces.
         /// </summary>
         [DataMember(Name = "NamespaceUris", Order = 1)]
         internal StringCollection NamespaceUris
         {
-            get
-            {
-                return new StringCollection(m_namespaceUris.ToArray());
-            }
+            get => new StringCollection(m_namespaceUris.ToArray());
 
             set
             {
@@ -609,10 +412,7 @@ namespace Opc.Ua
         [DataMember(Name = "ServerUris", Order = 2)]
         internal StringCollection ServerUris
         {
-            get
-            {
-                return new StringCollection(m_serverUris.ToArray());
-            }
+            get => new StringCollection(m_serverUris.ToArray());
 
             set
             {
@@ -633,10 +433,7 @@ namespace Opc.Ua
         [DataMember(Name = "Nodes", Order = 3)]
         internal NodeCollection Nodes
         {
-            get
-            {
-                return new NodeCollection(m_nodes.Values);
-            }
+            get => new NodeCollection(m_nodes.Values);
 
             set
             {
@@ -664,8 +461,15 @@ namespace Opc.Ua
             NamespaceTable targetNamespaceUris,
             NamespaceTable sourceNamespaceUris)
         {
-            if (targetNamespaceUris == null) throw new ArgumentNullException(nameof(targetNamespaceUris));
-            if (sourceNamespaceUris == null) throw new ArgumentNullException(nameof(sourceNamespaceUris));
+            if (targetNamespaceUris == null)
+            {
+                throw new ArgumentNullException(nameof(targetNamespaceUris));
+            }
+
+            if (sourceNamespaceUris == null)
+            {
+                throw new ArgumentNullException(nameof(sourceNamespaceUris));
+            }
 
             if (NodeId.IsNull(nodeId))
             {
@@ -703,8 +507,15 @@ namespace Opc.Ua
             NamespaceTable targetNamespaceUris,
             NamespaceTable sourceNamespaceUris)
         {
-            if (targetNamespaceUris == null) throw new ArgumentNullException(nameof(targetNamespaceUris));
-            if (sourceNamespaceUris == null) throw new ArgumentNullException(nameof(sourceNamespaceUris));
+            if (targetNamespaceUris == null)
+            {
+                throw new ArgumentNullException(nameof(targetNamespaceUris));
+            }
+
+            if (sourceNamespaceUris == null)
+            {
+                throw new ArgumentNullException(nameof(sourceNamespaceUris));
+            }
 
             if (QualifiedName.IsNull(qname))
             {
@@ -751,13 +562,27 @@ namespace Opc.Ua
             NamespaceTable sourceNamespaceUris,
             StringTable sourceServerUris)
         {
-            if (targetNamespaceUris == null) throw new ArgumentNullException(nameof(targetNamespaceUris));
-            if (sourceNamespaceUris == null) throw new ArgumentNullException(nameof(sourceNamespaceUris));
+            if (targetNamespaceUris == null)
+            {
+                throw new ArgumentNullException(nameof(targetNamespaceUris));
+            }
+
+            if (sourceNamespaceUris == null)
+            {
+                throw new ArgumentNullException(nameof(sourceNamespaceUris));
+            }
 
             if (nodeId.ServerIndex > 0)
             {
-                if (targetServerUris == null) throw new ArgumentNullException(nameof(targetServerUris));
-                if (sourceServerUris == null) throw new ArgumentNullException(nameof(sourceServerUris));
+                if (targetServerUris == null)
+                {
+                    throw new ArgumentNullException(nameof(targetServerUris));
+                }
+
+                if (sourceServerUris == null)
+                {
+                    throw new ArgumentNullException(nameof(sourceServerUris));
+                }
             }
 
             if (NodeId.IsNull(nodeId))
@@ -774,7 +599,7 @@ namespace Opc.Ua
 
             if (nodeId.ServerIndex > 0)
             {
-                if (String.IsNullOrEmpty(namespaceUri))
+                if (string.IsNullOrEmpty(namespaceUri))
                 {
                     namespaceUri = sourceNamespaceUris.GetString(nodeId.NamespaceIndex);
                 }
@@ -793,7 +618,7 @@ namespace Opc.Ua
 
             ushort namespaceIndex = 0;
 
-            if (!String.IsNullOrEmpty(namespaceUri))
+            if (!string.IsNullOrEmpty(namespaceUri))
             {
                 int index = targetNamespaceUris.GetIndex(namespaceUri);
 
@@ -807,12 +632,12 @@ namespace Opc.Ua
 
             return new NodeId(nodeId.Identifier, namespaceIndex);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private NamespaceTable m_namespaceUris;
         private StringTable m_serverUris;
         private Dictionary<NodeId, Node> m_nodes;
-        #endregion
+
     }
 }

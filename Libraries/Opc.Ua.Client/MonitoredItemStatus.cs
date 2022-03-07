@@ -36,7 +36,7 @@ namespace Opc.Ua.Client
     /// </summary>
     public class MonitoredItemStatus
     {
-        #region Constructors
+
         /// <summary>
         /// Creates a empty object.
         /// </summary>
@@ -59,9 +59,9 @@ namespace Opc.Ua.Client
             m_queueSize = 0;
             m_discardOldest = true;
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The identifier assigned by the server.
         /// </summary>
@@ -71,71 +71,6 @@ namespace Opc.Ua.Client
         /// Whether the item has been created on the server.
         /// </summary>
         public bool Created => m_id != 0;
-
-        /// <summary>
-        /// Any error condition associated with the monitored item.
-        /// </summary>
-        public ServiceResult Error => m_error;
-
-        /// <summary>
-        /// The node id being monitored.
-        /// </summary>
-        public NodeId NodeId => m_nodeId;
-
-        /// <summary>
-        /// The attribute being monitored.
-        /// </summary>
-        public uint AttributeId => m_attributeId;
-
-        /// <summary>
-        /// The range of array indexes to being monitored.
-        /// </summary>
-        public string IndexRange => m_indexRange;
-
-        /// <summary>
-        /// The encoding to use when returning notifications.
-        /// </summary>
-        public QualifiedName DataEncoding => m_encoding;
-
-        /// <summary>
-        /// The monitoring mode.
-        /// </summary>
-        public MonitoringMode MonitoringMode => m_monitoringMode;
-
-        /// <summary>
-        /// The identifier assigned by the client.
-        /// </summary>
-        public uint ClientHandle => m_clientHandle;
-
-        /// <summary>
-        /// The sampling interval.
-        /// </summary>
-        public double SamplingInterval => m_samplingInterval;
-
-        /// <summary>
-        /// The filter to use to select values to return.
-        /// </summary>
-        public MonitoringFilter Filter => m_filter;
-
-        /// <summary>
-        /// The length of the queue used to buffer values.
-        /// </summary>
-        public uint QueueSize => m_queueSize;
-
-        /// <summary>
-        /// Whether to discard the oldest entries in the queue when it is full.
-        /// </summary>
-        public bool DiscardOldest => m_discardOldest;
-        #endregion
-
-        #region Public Methods
-        /// <summary>
-        /// Updates the monitoring mode.
-        /// </summary>
-        public void SetMonitoringMode(MonitoringMode monitoringMode)
-        {
-            m_monitoringMode = monitoringMode;
-        }
 
         /// <summary>
         /// Updates the object with the results of a translate browse paths request.
@@ -155,8 +90,15 @@ namespace Opc.Ua.Client
             MonitoredItemCreateResult result,
             ServiceResult error)
         {
-            if (request == null) throw new ArgumentNullException(nameof(request));
-            if (result == null) throw new ArgumentNullException(nameof(result));
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            if (result == null)
+            {
+                throw new ArgumentNullException(nameof(result));
+            }
 
             m_nodeId = request.ItemToMonitor.NodeId;
             m_attributeId = request.ItemToMonitor.AttributeId;
@@ -188,7 +130,10 @@ namespace Opc.Ua.Client
         /// </summary>
         internal void SetTransferResult(MonitoredItem monitoredItem)
         {
-            if (monitoredItem == null) throw new ArgumentNullException(nameof(monitoredItem));
+            if (monitoredItem == null)
+            {
+                throw new ArgumentNullException(nameof(monitoredItem));
+            }
 
             m_nodeId = monitoredItem.ResolvedNodeId;
             m_attributeId = monitoredItem.AttributeId;
@@ -215,8 +160,15 @@ namespace Opc.Ua.Client
             MonitoredItemModifyResult result,
             ServiceResult error)
         {
-            if (request == null) throw new ArgumentNullException(nameof(request));
-            if (result == null) throw new ArgumentNullException(nameof(result));
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            if (result == null)
+            {
+                throw new ArgumentNullException(nameof(result));
+            }
 
             m_error = error;
 
@@ -239,24 +191,15 @@ namespace Opc.Ua.Client
         }
 
         /// <summary>
-        /// Updates the object with the results of a delete item request.
-        /// </summary>
-        internal void SetDeleteResult(ServiceResult error)
-        {
-            m_id = 0;
-            m_error = error;
-        }
-
-        /// <summary>
         /// Sets the error state for the monitored item status.
         /// </summary>
         internal void SetError(ServiceResult error)
         {
             m_error = error;
         }
-        #endregion
 
-        #region Private Fields
+
+
         private uint m_id;
         private ServiceResult m_error;
         private NodeId m_nodeId;
@@ -269,6 +212,6 @@ namespace Opc.Ua.Client
         private MonitoringFilter m_filter;
         private uint m_queueSize;
         private bool m_discardOldest;
-        #endregion
+
     }
 }

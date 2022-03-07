@@ -48,7 +48,7 @@ namespace Opc.Ua.Core.Tests.Types.BuiltIn
         protected RandomSource RandomSource { get; private set; }
         protected DataGenerator DataGenerator { get; private set; }
 
-        #region Test Setup
+        
         [OneTimeSetUp]
         protected void OneTimeSetUp()
         {
@@ -90,15 +90,15 @@ namespace Opc.Ua.Core.Tests.Types.BuiltIn
             RandomSource = new RandomSource(randomSeed + RandomStart);
             DataGenerator = new DataGenerator(RandomSource);
         }
-        #endregion
+        
 
-        #region DataPointSources
+        
         [DatapointSource]
         public static BuiltInType[] BuiltInTypes = ((BuiltInType[])Enum.GetValues(typeof(BuiltInType)))
             .ToList().Where(b => (b > BuiltInType.Null) && (b < BuiltInType.DataValue)).ToArray();
-        #endregion
+        
 
-        #region Test Methods
+        
         /// <summary>
         /// Initialize Variant with BuiltInType Scalar.
         /// </summary>
@@ -212,9 +212,9 @@ namespace Opc.Ua.Core.Tests.Types.BuiltIn
             // default value is null
             Assert.Null(TypeInfo.GetDefaultValue(BuiltInType.ExtensionObject));
         }
-        #endregion
+        
 
-        #region NodeId utilities
+        
         [Theory]
         [TestCase(-1)]
         public void NullIdNodeIdComparison(Opc.Ua.IdType idType)
@@ -248,7 +248,7 @@ namespace Opc.Ua.Core.Tests.Types.BuiltIn
             int comparisonResult2 = nodeId.CompareTo(dataValue);
             Assert.IsFalse(comparisonResult2 == 0); // assert fails - this is the root cause for the previous assertion failures
         }
-        #endregion
+        
     }
 
 }

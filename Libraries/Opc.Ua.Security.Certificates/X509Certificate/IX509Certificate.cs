@@ -60,26 +60,9 @@ namespace Opc.Ua.Security.Certificates
         DateTime NotAfter { get; }
 
         /// <summary>
-        /// The serial number of the certificate
-        /// as a big-endian hexadecimal string.
-        /// </summary>
-        string SerialNumber { get; }
-
-        /// <summary>
-        /// The serial number of the certificate
-        /// as an array of bytes in little-endian order.
-        /// </summary>
-        byte[] GetSerialNumber();
-
-        /// <summary>
         /// The hash algorithm used to create the signature.
         /// </summary>
         HashAlgorithmName HashAlgorithmName { get; }
-
-        /// <summary>
-        /// A collection of X509 extensions.
-        /// </summary>
-        X509ExtensionCollection Extensions { get; }
     }
 }
 

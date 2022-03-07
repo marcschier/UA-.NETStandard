@@ -24,7 +24,7 @@ namespace Opc.Ua.Bindings
     /// </summary>
     public class TcpListenerChannel : UaSCUaBinaryChannel
     {
-        #region Constructors
+
         /// <summary>
         /// Attaches the object to an existing socket.
         /// </summary>
@@ -57,9 +57,9 @@ namespace Opc.Ua.Bindings
             m_listener = listener;
             m_queuedResponses = new SortedDictionary<uint, IServiceResponse>();
         }
-        #endregion
 
-        #region IDisposable Members
+
+
         /// <summary>
         /// An overrideable version of the Dispose.
         /// </summary>
@@ -74,9 +74,9 @@ namespace Opc.Ua.Bindings
 
             base.Dispose(disposing);
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// The channel name used in trace output.
         /// </summary>
@@ -103,7 +103,10 @@ namespace Opc.Ua.Bindings
         /// </summary>
         public void Attach(uint channelId, Socket socket)
         {
-            if (socket == null) throw new ArgumentNullException(nameof(socket));
+            if (socket == null)
+            {
+                throw new ArgumentNullException(nameof(socket));
+            }
 
             lock (DataLock)
             {
@@ -132,7 +135,10 @@ namespace Opc.Ua.Bindings
         /// </summary>
         public void SendResponse(uint requestId, IServiceResponse response)
         {
-            if (response == null) throw new ArgumentNullException(nameof(response));
+            if (response == null)
+            {
+                throw new ArgumentNullException(nameof(response));
+            }
 
             lock (DataLock)
             {
@@ -187,12 +193,12 @@ namespace Opc.Ua.Bindings
                 }
             }
         }
-        #endregion
 
-        #region Socket Event Handlers
-        #endregion
 
-        #region Error Handling Functions
+
+
+
+
         /// <summary>
         /// Handles a socket error.
         /// </summary>
@@ -307,9 +313,8 @@ namespace Opc.Ua.Bindings
                 }
 
                 // get reason for cleanup.
-                ServiceResult reason = state as ServiceResult;
 
-                if (reason == null)
+                if (!(state is ServiceResult reason))
                 {
                     reason = new ServiceResult(StatusCodes.BadTimeout);
                 }
@@ -352,31 +357,6 @@ namespace Opc.Ua.Bindings
         }
 
         /// <summary>
-        /// Called to send queued responses after a reconnect.
-        /// </summary>
-        private void OnChannelReconnected(object state)
-        {
-            SortedDictionary<uint, IServiceResponse> responses = state as SortedDictionary<uint, IServiceResponse>;
-
-            if (responses == null)
-            {
-                return;
-            }
-
-            foreach (KeyValuePair<uint, IServiceResponse> response in responses)
-            {
-                try
-                {
-                    SendResponse(response.Key, response.Value);
-                }
-                catch (Exception e)
-                {
-                    Utils.LogError(e, "Unexpected error re-sending request (ID={0}).", response.Key);
-                }
-            }
-        }
-
-        /// <summary>
         /// Sends an error message over the socket.
         /// </summary>
         protected void SendErrorMessage(ServiceResult error)
@@ -387,7 +367,7 @@ namespace Opc.Ua.Bindings
 
             try
             {
-                BinaryEncoder encoder = new BinaryEncoder(buffer, 0, SendBufferSize, Quotas.MessageContext);
+                var encoder = new BinaryEncoder(buffer, 0, SendBufferSize, Quotas.MessageContext);
 
                 encoder.WriteUInt32(null, TcpMessageType.Error);
                 encoder.WriteUInt32(null, 0);
@@ -421,11 +401,11 @@ namespace Opc.Ua.Bindings
             try
             {
                 // construct fault.
-                ServiceFault response = new ServiceFault();
+                var response = new ServiceFault();
 
                 response.ResponseHeader.ServiceResult = fault.Code;
 
-                StringTable stringTable = new StringTable();
+                var stringTable = new StringTable();
 
                 response.ResponseHeader.ServiceDiagnostics = new DiagnosticInfo(
                     fault,
@@ -496,11 +476,11 @@ namespace Opc.Ua.Bindings
             try
             {
                 // construct fault.
-                ServiceFault response = new ServiceFault();
+                var response = new ServiceFault();
 
                 response.ResponseHeader.ServiceResult = fault.Code;
 
-                StringTable stringTable = new StringTable();
+                var stringTable = new StringTable();
 
                 response.ResponseHeader.ServiceDiagnostics = new DiagnosticInfo(
                     fault,
@@ -551,9 +531,9 @@ namespace Opc.Ua.Bindings
         {
             m_responseRequired = responseRequired;
         }
-        #endregion
 
-        #region Connect/Reconnect Sequence
+
+
         /// <summary>
         /// Returns a new token id.
         /// </summary>
@@ -561,9 +541,9 @@ namespace Opc.Ua.Bindings
         {
             return Utils.IncrementIdentifier(ref m_lastTokenId);
         }
-        #endregion
 
-        #region Protected Functions
+
+
         /// <summary>
         /// Reset the sorted dictionary of queued responses after reconnect.
         /// </summary>
@@ -577,16 +557,16 @@ namespace Opc.Ua.Bindings
         /// The channel request event handler.
         /// </summary>
         protected TcpChannelRequestEventHandler RequestReceived => m_requestReceived;
-        #endregion
 
-        #region Private Fields
-        private ITcpChannelListener m_listener;
+
+
+        private readonly ITcpChannelListener m_listener;
         private bool m_responseRequired;
         private SortedDictionary<uint, IServiceResponse> m_queuedResponses;
         private TcpChannelRequestEventHandler m_requestReceived;
         private long m_lastTokenId;
         private Timer m_cleanupTimer;
-        #endregion
+
     }
 
     /// <summary>

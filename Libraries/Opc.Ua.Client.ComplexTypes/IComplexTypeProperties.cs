@@ -102,7 +102,7 @@ namespace Opc.Ua.Client.ComplexTypes
         /// <summary>
         /// Optional mask for the field in the property.
         /// </summary>
-        public UInt32 OptionalFieldMask;
+        public uint OptionalFieldMask;
     }
 
     /// <summary>
@@ -118,7 +118,7 @@ namespace Opc.Ua.Client.ComplexTypes
         /// <summary>
         /// Get ordered list of property names.
         /// </summary>
-        IList<String> GetPropertyNames();
+        IList<string> GetPropertyNames();
 
         /// <summary>
         /// Get ordered list of property types.

@@ -11,34 +11,31 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Opc.Ua
 {
-	/// <summary>
-	/// The description of a value to read.
-	/// </summary>
+    /// <summary>
+    /// The description of a value to read.
+    /// </summary>
     public partial class HistoryReadValueId
     {
-        #region Supporting Properties and Methods
+
         /// <summary>
         /// A handle assigned to the item during processing.
         /// </summary>
         public object Handle
         {
-            get { return m_handle;  }
-            set { m_handle = value; }
+            get => m_handle;
+            set => m_handle = value;
         }
-        
+
         /// <summary>
         /// Whether the value has been processed.
         /// </summary>
         public bool Processed
         {
-            get { return m_processed;  }
-            set { m_processed = value; }
+            get => m_processed;
+            set => m_processed = value;
         }
 
         /// <summary>
@@ -46,10 +43,10 @@ namespace Opc.Ua
         /// </summary>
         public NumericRange ParsedIndexRange
         {
-            get { return m_parsedIndexRange;  }
-            set { m_parsedIndexRange = value; }
+            get => m_parsedIndexRange;
+            set => m_parsedIndexRange = value;
         }
-                
+
         /// <summary>
         /// Validates a read value id parameter.
         /// </summary>
@@ -71,7 +68,7 @@ namespace Opc.Ua
             valueId.ParsedIndexRange = NumericRange.Empty;
 
             // parse the index range if specified.
-            if (!String.IsNullOrEmpty(valueId.IndexRange))
+            if (!string.IsNullOrEmpty(valueId.IndexRange))
             {
                 try
                 {
@@ -79,23 +76,23 @@ namespace Opc.Ua
                 }
                 catch (Exception e)
                 {
-                    return ServiceResult.Create(e, StatusCodes.BadIndexRangeInvalid, String.Empty);
+                    return ServiceResult.Create(e, StatusCodes.BadIndexRangeInvalid, string.Empty);
                 }
             }
             else
             {
                 valueId.ParsedIndexRange = NumericRange.Empty;
             }
-            
+
             // passed basic validation.
             return null;
         }
-        #endregion
-                            
-        #region Private Fields
+
+
+
         private object m_handle;
         private bool m_processed;
         private NumericRange m_parsedIndexRange;
-        #endregion
+
     }
 }

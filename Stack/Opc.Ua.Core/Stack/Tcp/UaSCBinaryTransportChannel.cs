@@ -23,7 +23,7 @@ namespace Opc.Ua.Bindings
     /// </summary>
     public class UaSCUaBinaryTransportChannel : ITransportChannel, IMessageSocketChannel
     {
-        #region Constructors
+
         /// <summary>
         /// Create a transport channel from a message socket factory.
         /// </summary>
@@ -32,9 +32,9 @@ namespace Opc.Ua.Bindings
         {
             m_messageSocketFactory = messageSocketFactory;
         }
-        #endregion
 
-        #region IDisposable Members
+
+
         /// <summary>
         /// Frees any unmanaged resources.
         /// </summary>
@@ -54,9 +54,9 @@ namespace Opc.Ua.Bindings
                 m_channel = null;
             }
         }
-        #endregion
 
-        #region IMessageSocketChannel Members
+
+
         /// <summary>
         /// Returns the channel's underlying message socket if connected / available.
         /// </summary>
@@ -64,9 +64,9 @@ namespace Opc.Ua.Bindings
         {
             get { lock (m_lock) { return m_channel?.Socket; } }
         }
-        #endregion
 
-        #region ITransportChannel Members
+
+
         /// <summary>
         /// A masking indicating which features are implemented.
         /// </summary>
@@ -103,8 +103,8 @@ namespace Opc.Ua.Bindings
         /// </summary>
         public int OperationTimeout
         {
-            get { return m_operationTimeout; }
-            set { m_operationTimeout = value; }
+            get => m_operationTimeout;
+            set => m_operationTimeout = value;
         }
 
         /// <summary>
@@ -162,7 +162,7 @@ namespace Opc.Ua.Bindings
                 CreateChannel(null);
 
                 // begin connect operation.
-                return m_channel.BeginConnect(this.m_url, m_operationTimeout, callback, callbackData);
+                return m_channel.BeginConnect(m_url, m_operationTimeout, callback, callbackData);
             }
         }
 
@@ -184,7 +184,10 @@ namespace Opc.Ua.Bindings
         /// <remarks>
         /// Calling this method will cause outstanding requests over the current secure channel to fail.
         /// </remarks>
-        public void Reconnect() => Reconnect(null);
+        public void Reconnect()
+        {
+            Reconnect(null);
+        }
 
         /// <summary>
         /// Closes any existing secure channel and opens a new one.
@@ -396,27 +399,27 @@ namespace Opc.Ua.Bindings
             m_operationTimeout = settings.Configuration.OperationTimeout;
 
             // initialize the quotas.
-            m_quotas = new ChannelQuotas();
-
-            m_quotas.MaxBufferSize = m_settings.Configuration.MaxBufferSize;
-            m_quotas.MaxMessageSize = m_settings.Configuration.MaxMessageSize;
-            m_quotas.ChannelLifetime = m_settings.Configuration.ChannelLifetime;
-            m_quotas.SecurityTokenLifetime = m_settings.Configuration.SecurityTokenLifetime;
-
-            m_quotas.MessageContext = new ServiceMessageContext() {
-                MaxArrayLength = m_settings.Configuration.MaxArrayLength,
-                MaxByteStringLength = m_settings.Configuration.MaxByteStringLength,
+            m_quotas = new ChannelQuotas {
+                MaxBufferSize = m_settings.Configuration.MaxBufferSize,
                 MaxMessageSize = m_settings.Configuration.MaxMessageSize,
-                MaxStringLength = m_settings.Configuration.MaxStringLength,
-                NamespaceUris = m_settings.NamespaceUris,
-                ServerUris = new StringTable(),
-                Factory = m_settings.Factory
+                ChannelLifetime = m_settings.Configuration.ChannelLifetime,
+                SecurityTokenLifetime = m_settings.Configuration.SecurityTokenLifetime,
+
+                MessageContext = new ServiceMessageContext() {
+                    MaxArrayLength = m_settings.Configuration.MaxArrayLength,
+                    MaxByteStringLength = m_settings.Configuration.MaxByteStringLength,
+                    MaxMessageSize = m_settings.Configuration.MaxMessageSize,
+                    MaxStringLength = m_settings.Configuration.MaxStringLength,
+                    NamespaceUris = m_settings.NamespaceUris,
+                    ServerUris = new StringTable(),
+                    Factory = m_settings.Factory
+                },
+
+                CertificateValidator = settings.CertificateValidator
             };
 
-            m_quotas.CertificateValidator = settings.CertificateValidator;
-
             // create the buffer manager.
-            m_bufferManager = new BufferManager("Client", (int)Int32.MaxValue, settings.Configuration.MaxBufferSize);
+            m_bufferManager = new BufferManager("Client", int.MaxValue, settings.Configuration.MaxBufferSize);
         }
 
         /// <summary>
@@ -454,17 +457,17 @@ namespace Opc.Ua.Bindings
                 m_channel.ReverseSocket = true;
             }
         }
-        #endregion
 
-        #region Private Fields
-        private object m_lock = new object();
+
+
+        private readonly object m_lock = new object();
         private Uri m_url;
         private int m_operationTimeout;
         private TransportChannelSettings m_settings;
         private ChannelQuotas m_quotas;
         private BufferManager m_bufferManager;
         private UaSCUaBinaryClientChannel m_channel;
-        private IMessageSocketFactory m_messageSocketFactory;
-        #endregion
+        private readonly IMessageSocketFactory m_messageSocketFactory;
+
     }
 }

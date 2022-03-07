@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AssemblyName>Opc.Ua.Client.ComplexTypes</AssemblyName>
-    <TargetFrameworks>$(LibxTargetFrameworks)</TargetFrameworks>
+    <TargetFramework>net6.0</TargetFramework>
     <PackageId>OPCFoundation.NetStandard.Opc.Ua.Client.ComplexTypes</PackageId>
     <RootNameSpace>Opc.Ua.Client.ComplexTypes</RootNameSpace>
     <Description>OPC UA Complex Types Client Class Library</Description>
@@ -15,6 +15,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="C:\git\furly\opc-connect\ua\/Licenses/OPC Foundation REDISTRIBUTABLES Agreement of Use.txt" />
+    <None Remove="C:\git\furly\opc-connect\ua\/nuget/logo.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Stack\Opc.Ua.Core\Opc.Ua.Core.csproj" />
     <ProjectReference Include="..\Opc.Ua.Client\Opc.Ua.Client.csproj" />
   </ItemGroup>
@@ -23,7 +28,7 @@
     <DefineConstants>$(DefineConstants);SIGNASSEMBLY</DefineConstants>
   </PropertyGroup>
 
-  
+
   <Target Name="GetPackagingOutputs" />
 
 </Project>

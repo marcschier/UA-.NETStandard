@@ -19,10 +19,10 @@ namespace Opc.Ua
     /// </summary>
     public static partial class StatusCodes
     {
-        #region Static Helper Functions
+
         /// <summary>
-		/// Returns the browse name for the attribute.
-		/// </summary>
+        /// Returns the browse name for the attribute.
+        /// </summary>
         public static string GetBrowseName(uint identifier)
         {
             FieldInfo[] fields = typeof(StatusCodes).GetFields(BindingFlags.Public | BindingFlags.Static);
@@ -35,7 +35,7 @@ namespace Opc.Ua
                 }
             }
 
-            return System.String.Empty;
+            return string.Empty;
         }
 
         /// <summary>
@@ -74,6 +74,6 @@ namespace Opc.Ua
 
             return 0;
         }
-        #endregion
+
     }
 }

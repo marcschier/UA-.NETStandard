@@ -37,7 +37,7 @@ namespace Opc.Ua.Client.ComplexTypes
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
     public class StructureFieldAttribute : Attribute
     {
-        #region Constructors
+
         /// <summary>
         /// Initialize a field attribute with defaults.
         /// </summary>
@@ -47,23 +47,23 @@ namespace Opc.Ua.Client.ComplexTypes
             MaxStringLength = 0;
             IsOptional = false;
         }
-        #endregion Constructors
 
-        #region  Public Properties
+
+
         /// <summary>
         /// The value rank of the field.
         /// </summary>
-        public Int32 ValueRank { get; set; }
+        public int ValueRank { get; set; }
 
         /// <summary>
         /// The maximum string length of the field.
         /// </summary>
-        public UInt32 MaxStringLength { get; set; }
+        public uint MaxStringLength { get; set; }
 
         /// <summary>
         /// If the field is optional.
         /// </summary>
         public bool IsOptional { get; set; }
-        #endregion Public Properties
+
     }
 }//namespace

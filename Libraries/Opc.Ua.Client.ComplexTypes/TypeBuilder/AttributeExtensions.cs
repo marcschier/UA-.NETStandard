@@ -39,7 +39,7 @@ namespace Opc.Ua.Client.ComplexTypes
     /// </summary>
     public static class AttributeExtensions
     {
-        #region Extensions
+
         /// <summary>
         /// Get the return type of an item in a collection.
         /// </summary>
@@ -53,7 +53,7 @@ namespace Opc.Ua.Client.ComplexTypes
         /// </summary>
         public static void DataContractAttribute(this TypeBuilder builder, string Namespace)
         {
-            var attribute = DataContractAttributeBuilder(Namespace);
+            CustomAttributeBuilder attribute = DataContractAttributeBuilder(Namespace);
             builder.SetCustomAttribute(attribute);
         }
 
@@ -62,7 +62,7 @@ namespace Opc.Ua.Client.ComplexTypes
         /// </summary>
         public static void DataContractAttribute(this EnumBuilder builder, string Namespace)
         {
-            var attribute = DataContractAttributeBuilder(Namespace);
+            CustomAttributeBuilder attribute = DataContractAttributeBuilder(Namespace);
             builder.SetCustomAttribute(attribute);
         }
 
@@ -71,7 +71,7 @@ namespace Opc.Ua.Client.ComplexTypes
         /// </summary>
         public static void DataMemberAttribute(this PropertyBuilder typeBuilder, string name, bool isRequired, int order)
         {
-            var attribute = DataMemberAttributeBuilder(name, isRequired, order);
+            CustomAttributeBuilder attribute = DataMemberAttributeBuilder(name, isRequired, order);
             typeBuilder.SetCustomAttribute(attribute);
         }
 
@@ -82,10 +82,10 @@ namespace Opc.Ua.Client.ComplexTypes
             this TypeBuilder typeBuilder,
             StructureDefinition structureDefinition)
         {
-            var attributeType = typeof(StructureDefinitionAttribute);
-            var baseDataType = ComplexTypes.StructureDefinitionAttribute.FromBaseType(structureDefinition.BaseDataType);
+            Type attributeType = typeof(StructureDefinitionAttribute);
+            StructureBaseDataType baseDataType = ComplexTypes.StructureDefinitionAttribute.FromBaseType(structureDefinition.BaseDataType);
             ConstructorInfo ctorInfo = attributeType.GetConstructor(Type.EmptyTypes);
-            CustomAttributeBuilder builder = new CustomAttributeBuilder(
+            var builder = new CustomAttributeBuilder(
                 ctorInfo,
                 Array.Empty<object>(),  // constructor arguments
                 new[]           // properties to assign
@@ -113,9 +113,9 @@ namespace Opc.Ua.Client.ComplexTypes
             ExpandedNodeId xmlEncodingId
             )
         {
-            var attributeType = typeof(StructureTypeIdAttribute);
+            Type attributeType = typeof(StructureTypeIdAttribute);
             ConstructorInfo ctorInfo = attributeType.GetConstructor(Type.EmptyTypes);
-            CustomAttributeBuilder builder = new CustomAttributeBuilder(
+            var builder = new CustomAttributeBuilder(
                 ctorInfo,
                 Array.Empty<object>(),  // constructor arguments
                 new[]           // properties to assign
@@ -140,9 +140,9 @@ namespace Opc.Ua.Client.ComplexTypes
             this PropertyBuilder typeBuilder,
             StructureField structureField)
         {
-            var attributeType = typeof(StructureFieldAttribute);
+            Type attributeType = typeof(StructureFieldAttribute);
             ConstructorInfo ctorInfo = attributeType.GetConstructor(Type.EmptyTypes);
-            CustomAttributeBuilder builder = new CustomAttributeBuilder(
+            var builder = new CustomAttributeBuilder(
                 ctorInfo,
                 Array.Empty<object>(),  // constructor arguments
                 new[]           // properties to assign
@@ -165,10 +165,10 @@ namespace Opc.Ua.Client.ComplexTypes
         /// </summary>
         public static void EnumMemberAttribute(this FieldBuilder typeBuilder, string Name, int Value)
         {
-            var attributeType = typeof(EnumMemberAttribute);
-            Type[] ctorParams = new Type[] { typeof(string) };
+            Type attributeType = typeof(EnumMemberAttribute);
+            var ctorParams = new Type[] { typeof(string) };
             ConstructorInfo ctorInfo = attributeType.GetConstructor(Type.EmptyTypes);
-            CustomAttributeBuilder builder = new CustomAttributeBuilder(
+            var builder = new CustomAttributeBuilder(
                 ctorInfo,
                 Array.Empty<object>(),  // constructor arguments
                 new[]           // properties to assign
@@ -181,17 +181,17 @@ namespace Opc.Ua.Client.ComplexTypes
                 });
             typeBuilder.SetCustomAttribute(builder);
         }
-        #endregion Extensions
 
-        #region Private Static Members
+
+
         /// <summary>
         /// Build the DataMember attribute.
         /// </summary>
         private static CustomAttributeBuilder DataMemberAttributeBuilder(string name, bool isRequired, int order)
         {
-            var attributeType = typeof(DataMemberAttribute);
+            Type attributeType = typeof(DataMemberAttribute);
             ConstructorInfo ctorInfo = attributeType.GetConstructor(Type.EmptyTypes);
-            CustomAttributeBuilder builder = new CustomAttributeBuilder(
+            var builder = new CustomAttributeBuilder(
                 ctorInfo,
                 Array.Empty<object>(),  // constructor arguments
                 new[]           // properties to assign
@@ -214,9 +214,9 @@ namespace Opc.Ua.Client.ComplexTypes
         /// </summary>
         private static CustomAttributeBuilder DataContractAttributeBuilder(string Namespace)
         {
-            var attributeType = typeof(DataContractAttribute);
+            Type attributeType = typeof(DataContractAttribute);
             ConstructorInfo ctorInfo = attributeType.GetConstructor(Type.EmptyTypes);
-            CustomAttributeBuilder builder = new CustomAttributeBuilder(
+            var builder = new CustomAttributeBuilder(
                 ctorInfo,
                 Array.Empty<object>(),  // constructor arguments
                 new[]           // properties to assign
@@ -229,7 +229,7 @@ namespace Opc.Ua.Client.ComplexTypes
                 });
             return builder;
         }
-        #endregion Private Static Members
+
 
     }
 }//namespace

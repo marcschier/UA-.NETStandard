@@ -45,14 +45,14 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
     [SetCulture("en-us")]
     public class CertificateStoreTest
     {
-        #region DataPointSources
+        
         public const string X509StoreSubject = "CN=Opc.Ua.Core.Tests, O=OPC Foundation, OU=X509Store, C=US";
 
         [DatapointSource]
         public string[] CertStores = GetCertStores();
-        #endregion
+        
 
-        #region Test Setup
+        
         /// <summary>
         /// Clean up the test cert store folder.
         /// </summary>
@@ -75,9 +75,9 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
                 }
             }
         }
-        #endregion
+        
 
-        #region Test Methods
+        
         /// <summary>
         /// Verify new app certificate is stored in X509Store with private key.
         /// </summary>
@@ -196,9 +196,9 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
                     CertificateStoreType.X509Store,
                     "System\\UA_MachineDefault"));
         }
-        #endregion
+        
 
-        #region Private Methods
+        
         private X509Certificate2 GetTestCert()
         {
             return m_testCertificate ??
@@ -216,10 +216,10 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
             }
             return result.ToArray();
         }
-        #endregion
+        
 
-        #region Private Fields
+        
         private X509Certificate2 m_testCertificate;
-        #endregion
+        
     }
 }

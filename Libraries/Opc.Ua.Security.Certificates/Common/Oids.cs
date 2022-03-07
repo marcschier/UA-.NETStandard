@@ -130,62 +130,6 @@ namespace Opc.Ua.Security.Certificates
         public const string CRLDistributionPoint = "2.5.29.31";
 
         /// <summary>
-        /// Get the RSA oid for a hash algorithm signature.
-        /// </summary>
-        /// <param name="hashAlgorithm">The hash algorithm name.</param>
-        public static string GetRSAOid(HashAlgorithmName hashAlgorithm)
-        {
-            if (hashAlgorithm == HashAlgorithmName.SHA1)
-            {
-                return Oids.RsaPkcs1Sha1;
-            }
-            else if (hashAlgorithm == HashAlgorithmName.SHA256)
-            {
-                return Oids.RsaPkcs1Sha256;
-            }
-            else if (hashAlgorithm == HashAlgorithmName.SHA384)
-            {
-                return Oids.RsaPkcs1Sha384;
-            }
-            else if (hashAlgorithm == HashAlgorithmName.SHA512)
-            {
-                return Oids.RsaPkcs1Sha512;
-            }
-            else
-            {
-                throw new NotSupportedException($"Signing RSA with hash {hashAlgorithm.Name} is not supported. ");
-            }
-        }
-
-        /// <summary>
-        /// Get the ECDsa oid for a hash algorithm signature.
-        /// </summary>
-        /// <param name="hashAlgorithm">The hash algorithm name.</param>
-        public static string GetECDsaOid(HashAlgorithmName hashAlgorithm)
-        {
-            if (hashAlgorithm == HashAlgorithmName.SHA1)
-            {
-                return Oids.ECDsaWithSha1;
-            }
-            else if (hashAlgorithm == HashAlgorithmName.SHA256)
-            {
-                return Oids.ECDsaWithSha256;
-            }
-            else if (hashAlgorithm == HashAlgorithmName.SHA384)
-            {
-                return Oids.ECDsaWithSha384;
-            }
-            else if (hashAlgorithm == HashAlgorithmName.SHA512)
-            {
-                return Oids.ECDsaWithSha512;
-            }
-            else
-            {
-                throw new NotSupportedException($"Signing ECDsa with hash {hashAlgorithm.Name} is not supported. ");
-            }
-        }
-
-        /// <summary>
         /// Get the hash algorithm used to sign a certificate.
         /// </summary>
         /// <param name="oid">The signature algorithm oid.</param>

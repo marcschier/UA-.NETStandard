@@ -24,7 +24,7 @@ namespace Opc.Ua
     /// </summary>
     public class XmlEncoder : IEncoder, IDisposable
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object with default values.
         /// </summary>
@@ -36,11 +36,12 @@ namespace Opc.Ua
             m_context = context;
             m_nestingLevel = 0;
 
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.CheckCharacters = false;
-            settings.ConformanceLevel = ConformanceLevel.Auto;
-            settings.NamespaceHandling = NamespaceHandling.OmitDuplicates;
-            settings.NewLineHandling = NewLineHandling.Replace;
+            var settings = new XmlWriterSettings {
+                CheckCharacters = false,
+                ConformanceLevel = ConformanceLevel.Auto,
+                NamespaceHandling = NamespaceHandling.OmitDuplicates,
+                NewLineHandling = NewLineHandling.Replace
+            };
 
             m_writer = XmlWriter.Create(m_destination, settings);
         }
@@ -127,9 +128,9 @@ namespace Opc.Ua
 
             PushNamespace(namespaceUri);
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Initializes the tables used to map namespace and server uris during encoding.
         /// </summary>
@@ -149,38 +150,6 @@ namespace Opc.Ua
             if (serverUris != null && m_context.ServerUris != null)
             {
                 m_serverMappings = serverUris.CreateMapping(m_context.ServerUris, false);
-            }
-        }
-
-        /// <summary>
-        /// Saves a string table from an XML stream.
-        /// </summary>
-        /// <param name="tableName">Name of the table.</param>
-        /// <param name="elementName">Name of the element.</param>
-        /// <param name="stringTable">The string table.</param>
-        public void SaveStringTable(string tableName, string elementName, StringTable stringTable)
-        {
-            if (stringTable == null || stringTable.Count <= 1)
-            {
-                return;
-            }
-
-            PushNamespace(Namespaces.OpcUaXsd);
-
-            try
-            {
-                Push(tableName, Namespaces.OpcUaXsd);
-
-                for (ushort ii = 1; ii < stringTable.Count; ii++)
-                {
-                    WriteString(elementName, stringTable.GetString(ii));
-                }
-
-                Pop();
-            }
-            finally
-            {
-                PopNamespace();
             }
         }
 
@@ -224,9 +193,9 @@ namespace Opc.Ua
 
             return null;
         }
-        #endregion
 
-        #region IDisposable Members
+
+
         /// <summary>
         /// Frees any unmanaged resources.
         /// </summary>
@@ -250,13 +219,6 @@ namespace Opc.Ua
                 }
             }
         }
-        #endregion
-
-        #region IEncoder Members
-        /// <summary>
-        /// The type of encoding being used.
-        /// </summary>
-        public EncodingType EncodingType => EncodingType.Xml;
 
         /// <summary>
         /// The message context associated with the encoder.
@@ -399,15 +361,15 @@ namespace Opc.Ua
         {
             if (BeginField(fieldName, false, false))
             {
-                if (Single.IsNaN(value))
+                if (float.IsNaN(value))
                 {
                     m_writer.WriteValue("NaN");
                 }
-                else if (Single.IsPositiveInfinity(value))
+                else if (float.IsPositiveInfinity(value))
                 {
                     m_writer.WriteValue("INF");
                 }
-                else if (Single.IsNegativeInfinity(value))
+                else if (float.IsNegativeInfinity(value))
                 {
                     m_writer.WriteValue("-INF");
                 }
@@ -450,7 +412,7 @@ namespace Opc.Ua
                     throw new ServiceResultException(StatusCodes.BadEncodingLimitsExceeded);
                 }
 
-                if (!String.IsNullOrWhiteSpace(value))
+                if (!string.IsNullOrWhiteSpace(value))
                 {
                     m_writer.WriteString(value);
                 }
@@ -560,7 +522,7 @@ namespace Opc.Ua
                         namespaceIndex = m_namespaceMappings[namespaceIndex];
                     }
 
-                    StringBuilder buffer = new StringBuilder();
+                    var buffer = new StringBuilder();
                     NodeId.Format(buffer, value.Identifier, value.IdType, namespaceIndex);
                     WriteString("Identifier", buffer.ToString());
                 }
@@ -596,7 +558,7 @@ namespace Opc.Ua
                         serverIndex = m_serverMappings[serverIndex];
                     }
 
-                    StringBuilder buffer = new StringBuilder();
+                    var buffer = new StringBuilder();
                     ExpandedNodeId.Format(buffer, value.Identifier, value.IdType, namespaceIndex, value.NamespaceUri, serverIndex);
                     WriteString("Identifier", buffer.ToString());
                 }
@@ -702,12 +664,12 @@ namespace Opc.Ua
 
                 if (value != null)
                 {
-                    if (!String.IsNullOrEmpty(value.Locale))
+                    if (!string.IsNullOrEmpty(value.Locale))
                     {
                         WriteString("Locale", value.Locale);
                     }
 
-                    if (!String.IsNullOrEmpty(value.Text))
+                    if (!string.IsNullOrEmpty(value.Text))
                     {
                         WriteString("Text", value.Text);
                     }
@@ -793,7 +755,7 @@ namespace Opc.Ua
                     return;
                 }
 
-                IEncodeable encodeable = value.Body as IEncodeable;
+                var encodeable = value.Body as IEncodeable;
 
                 // write the type id.
                 ExpandedNodeId typeId = value.TypeId;
@@ -810,7 +772,7 @@ namespace Opc.Ua
                     }
                 }
 
-                NodeId localTypeId = ExpandedNodeId.ToNodeId(typeId, m_context.NamespaceUris);
+                var localTypeId = ExpandedNodeId.ToNodeId(typeId, m_context.NamespaceUris);
 
                 if (NodeId.IsNull(localTypeId) && !NodeId.IsNull(typeId))
                 {
@@ -888,8 +850,8 @@ namespace Opc.Ua
             {
                 if (value != null)
                 {
-                    var valueSymbol = value.ToString();
-                    var valueInt32 = Convert.ToInt32(value, CultureInfo.InvariantCulture).ToString();
+                    string valueSymbol = value.ToString();
+                    string valueInt32 = Convert.ToInt32(value, CultureInfo.InvariantCulture).ToString();
                     if (valueSymbol != valueInt32)
                     {
                         m_writer.WriteString(Utils.Format("{0}_{1}", valueSymbol, valueInt32));
@@ -1285,35 +1247,6 @@ namespace Opc.Ua
         /// Writes a GUID array to the stream.
         /// </summary>
         public void WriteGuidArray(string fieldName, IList<Uuid> values)
-        {
-            if (BeginField(fieldName, values == null, true, true))
-            {
-                // check the length.
-                if (m_context.MaxArrayLength > 0 && m_context.MaxArrayLength < values.Count)
-                {
-                    throw new ServiceResultException(StatusCodes.BadEncodingLimitsExceeded);
-                }
-
-                PushNamespace(Namespaces.OpcUaXsd);
-
-                if (values != null)
-                {
-                    for (int ii = 0; ii < values.Count; ii++)
-                    {
-                        WriteGuid("Guid", values[ii]);
-                    }
-                }
-
-                PopNamespace();
-
-                EndField(fieldName);
-            }
-        }
-
-        /// <summary>
-        /// Writes a GUID array to the stream.
-        /// </summary>
-        public void WriteGuidArray(string fieldName, IList<Guid> values)
         {
             if (BeginField(fieldName, values == null, true, true))
             {
@@ -1742,9 +1675,9 @@ namespace Opc.Ua
                 EndField(fieldName);
             }
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Writes the contents of an Variant to the stream.
         /// </summary>
@@ -1826,11 +1759,9 @@ namespace Opc.Ua
 
                         case BuiltInType.Enumeration:
                         {
-                            int[] ints = value as int[];
-                            if (ints == null)
+                            if (!(value is int[] ints))
                             {
-                                Enum[] enums = value as Enum[];
-                                if (enums == null)
+                                if (!(value is Enum[] enums))
                                 {
                                     throw new ServiceResultException(
                                         StatusCodes.BadEncodingError,
@@ -1849,17 +1780,14 @@ namespace Opc.Ua
 
                         case BuiltInType.Variant:
                         {
-                            Variant[] variants = value as Variant[];
-
-                            if (variants != null)
+                            if (value is Variant[] variants)
                             {
                                 WriteVariantArray("ListOfVariant", variants);
                                 return;
                             }
 
-                            object[] objects = value as object[];
 
-                            if (objects != null)
+                            if (value is object[] objects)
                             {
                                 WriteObjectArray("ListOfVariant", objects);
                                 return;
@@ -1903,9 +1831,8 @@ namespace Opc.Ua
             }
 
             // encode byte body.
-            byte[] bytes = body as byte[];
 
-            if (bytes != null)
+            if (body is byte[] bytes)
             {
                 m_writer.WriteStartElement("ByteString", Namespaces.OpcUaXsd);
                 m_writer.WriteString(Convert.ToBase64String(bytes, Base64FormattingOptions.InsertLineBreaks));
@@ -1914,18 +1841,16 @@ namespace Opc.Ua
             }
 
             // encode xml body.
-            XmlElement xml = body as XmlElement;
-            if (xml != null)
+            if (body is XmlElement xml)
             {
-                using (XmlReader reader = XmlReader.Create(new StringReader(xml.OuterXml), Utils.DefaultXmlReaderSettings()))
+                using (var reader = XmlReader.Create(new StringReader(xml.OuterXml), Utils.DefaultXmlReaderSettings()))
                 {
                     m_writer.WriteNode(reader, false);
                     return;
                 }
             }
 
-            IEncodeable encodeable = body as IEncodeable;
-            if (encodeable == null)
+            if (!(body is IEncodeable encodeable))
             {
                 throw new ServiceResultException(
                     StatusCodes.BadEncodingError,
@@ -2024,11 +1949,9 @@ namespace Opc.Ua
                             case BuiltInType.DiagnosticInfo: { WriteDiagnosticInfoArray(fieldName, (DiagnosticInfo[])array); return; }
                             case BuiltInType.Enumeration:
                             {
-                                int[] ints = array as int[];
-                                if (ints == null)
+                                if (!(array is int[] ints))
                                 {
-                                    Enum[] enums = array as Enum[];
-                                    if (enums == null)
+                                    if (!(array is Enum[] enums))
                                     {
                                         throw new ServiceResultException(
                                             StatusCodes.BadEncodingError,
@@ -2047,25 +1970,21 @@ namespace Opc.Ua
 
                             case BuiltInType.Variant:
                             {
-                                Variant[] variants = array as Variant[];
-
-                                if (variants != null)
+                                if (array is Variant[] variants)
                                 {
                                     WriteVariantArray(fieldName, variants);
                                     return;
                                 }
 
                                 // try to write IEncodeable Array
-                                IEncodeable[] encodeableArray = array as IEncodeable[];
-                                if (encodeableArray != null)
+                                if (array is IEncodeable[] encodeableArray)
                                 {
                                     WriteEncodeableArray(fieldName, encodeableArray, array.GetType().GetElementType());
                                     return;
                                 }
 
-                                object[] objects = array as object[];
 
-                                if (objects != null)
+                                if (array is object[] objects)
                                 {
                                     WriteObjectArray(fieldName, objects);
                                     return;
@@ -2087,7 +2006,7 @@ namespace Opc.Ua
                 // write matrix.
                 else if (valueRank > ValueRanks.OneDimension)
                 {
-                    Matrix matrix = (Matrix)array;
+                    var matrix = (Matrix)array;
                     if (BeginField(fieldName, matrix == null, true, true))
                     {
                         PushNamespace(Namespaces.OpcUaXsd);
@@ -2112,9 +2031,9 @@ namespace Opc.Ua
             }
         }
 
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Writes an DataValue array to the stream.
         /// </summary>
@@ -2158,7 +2077,7 @@ namespace Opc.Ua
         private bool BeginField(string fieldName, bool isDefault, bool isNillable, bool isArrayElement = false)
         {
             // specifying a null field name means the start/end tags should not be written.
-            if (!String.IsNullOrEmpty(fieldName))
+            if (!string.IsNullOrEmpty(fieldName))
             {
                 if (isNillable && isDefault && !isArrayElement)
                 {
@@ -2187,22 +2106,22 @@ namespace Opc.Ua
         /// </summary>
         private void EndField(string fieldName)
         {
-            if (!String.IsNullOrEmpty(fieldName))
+            if (!string.IsNullOrEmpty(fieldName))
             {
                 m_writer.WriteEndElement();
             }
         }
-        #endregion
 
-        #region Private Fields
+
+
         private StringBuilder m_destination;
         private XmlWriter m_writer;
         private Stack<string> m_namespaces;
         private XmlQualifiedName m_root;
-        private IServiceMessageContext m_context;
+        private readonly IServiceMessageContext m_context;
         private ushort[] m_namespaceMappings;
         private ushort[] m_serverMappings;
         private uint m_nestingLevel;
-        #endregion
+
     }
 }

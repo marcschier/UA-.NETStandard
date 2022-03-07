@@ -20,7 +20,7 @@ namespace Opc.Ua.Bindings
     /// </summary>
     public class ArraySegmentStream : Stream
     {
-        #region Constructors
+
         /// <summary>
         /// Attaches the stream to a set of buffers
         /// </summary>
@@ -63,9 +63,9 @@ namespace Opc.Ua.Bindings
 
             SetCurrentBuffer(0);
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Returns ownership of the buffers stored in the stream.
         /// </summary>
@@ -73,7 +73,7 @@ namespace Opc.Ua.Bindings
         /// <returns></returns>
         public BufferCollection GetBuffers(string owner)
         {
-            BufferCollection buffers = new BufferCollection(m_buffers.Count);
+            var buffers = new BufferCollection(m_buffers.Count);
 
             for (int ii = 0; ii < m_buffers.Count; ii++)
             {
@@ -85,26 +85,17 @@ namespace Opc.Ua.Bindings
 
             return buffers;
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary cref="Stream.CanRead" />
-        public override bool CanRead
-        {
-            get { return true; }
-        }
+        public override bool CanRead => true;
 
         /// <summary cref="Stream.CanSeek" />
-        public override bool CanSeek
-        {
-            get { return true; }
-        }
+        public override bool CanSeek => true;
 
         /// <summary cref="Stream.CanWrite" />
-        public override bool CanWrite
-        {
-            get { return true; }
-        }
+        public override bool CanWrite => true;
 
         /// <summary cref="Stream.Flush" />
         public override void Flush()
@@ -113,23 +104,14 @@ namespace Opc.Ua.Bindings
         }
 
         /// <summary cref="Stream.Length" />
-        public override long Length
-        {
-            get { return GetAbsoluteLength(); }
-        }
+        public override long Length => GetAbsoluteLength();
 
         /// <summary cref="Stream.Position" />
         public override long Position
         {
-            get
-            {
-                return GetAbsolutePosition();
-            }
+            get => GetAbsolutePosition();
 
-            set
-            {
-                Seek(value, SeekOrigin.Begin);
-            }
+            set => Seek(value, SeekOrigin.Begin);
         }
 
         /// <summary cref="Stream.Read(byte[], int, int)" />
@@ -273,9 +255,9 @@ namespace Opc.Ua.Bindings
                 SetCurrentBuffer(m_bufferIndex + 1);
             }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Sets the current buffer.
         /// </summary>
@@ -344,18 +326,18 @@ namespace Opc.Ua.Bindings
 
             return m_buffers[index].Count;
         }
-        #endregion
 
-        #region Private Fields
+
+
         private int m_bufferIndex;
         private ArraySegment<byte> m_currentBuffer;
         private int m_currentPosition;
-        private BufferCollection m_buffers;
-        private BufferManager m_bufferManager;
-        private int m_start;
-        private int m_count;
-        private int m_bufferSize;
+        private readonly BufferCollection m_buffers;
+        private readonly BufferManager m_bufferManager;
+        private readonly int m_start;
+        private readonly int m_count;
+        private readonly int m_bufferSize;
         private int m_endOfLastBuffer;
-        #endregion
+
     }
 }

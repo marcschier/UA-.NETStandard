@@ -31,7 +31,6 @@
 
 using System;
 using System.Security.Cryptography;
-using System.IO;
 using System.Text;
 
 namespace Opc.Ua.Security.Certificates
@@ -41,7 +40,7 @@ namespace Opc.Ua.Security.Certificates
     /// </summary>
     public static class PEMReader
     {
-        #region Public Methods
+
         /// <summary>
         /// Import a PKCS#8 private key or RSA private key from PEM.
         /// The PKCS#8 private key may be encrypted using a password.
@@ -60,7 +59,7 @@ namespace Opc.Ua.Security.Certificates
             {
                 string pemText = Encoding.UTF8.GetString(pemDataBlob);
                 int count = 0;
-                foreach (var label in labels)
+                foreach (string label in labels)
                 {
                     count++;
                     string beginlabel = $"-----BEGIN {label}-----";
@@ -76,17 +75,17 @@ namespace Opc.Ua.Security.Certificates
                     {
                         continue;
                     }
-                    var pemData = pemText.Substring(beginIndex, endIndex - beginIndex);
+                    string pemData = pemText.Substring(beginIndex, endIndex - beginIndex);
                     byte[] pemDecoded = new byte[pemData.Length];
                     int bytesDecoded;
                     if (Convert.TryFromBase64Chars(pemData, pemDecoded, out bytesDecoded))
                     {
-                        RSA rsaPrivateKey = RSA.Create();
+                        var rsaPrivateKey = RSA.Create();
                         int bytesRead;
                         switch (count)
                         {
                             case 1:
-                                if (String.IsNullOrEmpty(password))
+                                if (string.IsNullOrEmpty(password))
                                 {
                                     throw new ArgumentException("Need password for encrypted private key.");
                                 }
@@ -109,10 +108,10 @@ namespace Opc.Ua.Security.Certificates
             }
             throw new ArgumentException("No private PEM key found.");
         }
-        #endregion
 
-        #region Private Methods
-        #endregion
+
+
+
     }
 }
 #endif

@@ -27,10 +27,6 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace Opc.Ua.Server
 {
     /// <summary>
@@ -38,7 +34,7 @@ namespace Opc.Ua.Server
     /// </summary>
     public class ServerSystemContext : Opc.Ua.SystemContext
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SystemContext"/> class.
         /// </summary>
@@ -82,17 +78,17 @@ namespace Opc.Ua.Server
             TypeTable = server.TypeTree;
             EncodeableFactory = server.Factory;
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The operation context associated with system context.
         /// </summary>
         /// <value>The operation context.</value>
         public new OperationContext OperationContext
         {
-            get { return base.OperationContext as OperationContext; } 
-            set { base.OperationContext = value; }
+            get => base.OperationContext as OperationContext;
+            set => base.OperationContext = value;
         }
 
         /// <summary>
@@ -113,7 +109,7 @@ namespace Opc.Ua.Server
         /// </returns>
         public ServerSystemContext Copy(OperationContext context)
         {
-            ServerSystemContext copy = (ServerSystemContext)MemberwiseClone();
+            var copy = (ServerSystemContext)MemberwiseClone();
 
             if (context != null)
             {
@@ -132,7 +128,7 @@ namespace Opc.Ua.Server
         /// </returns>
         public ServerSystemContext Copy(Session session)
         {
-            ServerSystemContext copy = (ServerSystemContext)MemberwiseClone();
+            var copy = (ServerSystemContext)MemberwiseClone();
 
             copy.OperationContext = null;
 
@@ -161,7 +157,7 @@ namespace Opc.Ua.Server
         /// </returns>
         public ServerSystemContext Copy(ServerSystemContext context)
         {
-            ServerSystemContext copy = (ServerSystemContext)MemberwiseClone();
+            var copy = (ServerSystemContext)MemberwiseClone();
 
             if (context != null)
             {
@@ -177,6 +173,6 @@ namespace Opc.Ua.Server
 
             return copy;
         }
-        #endregion
+
     }
 }

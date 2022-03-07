@@ -44,12 +44,12 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
     [Parallelizable]
     public class EncodeableTypesTests : EncoderCommon
     {
-        #region DataPointSources
+        
         [DatapointSource]
         public Type[] TypeArray = typeof(BaseObjectState).Assembly.GetExportedTypes().Where(type => IsEncodeableType(type)).ToArray();
-        #endregion
+        
 
-        #region Test Methods
+        
         /// <summary>
         /// Verify encode and decode of an encodable type.
         /// </summary>
@@ -177,9 +177,9 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
             Assert.AreEqual(expected, result, encodeInfo);
             Assert.IsTrue(Opc.Ua.Utils.IsEqual(expected, result), "Opc.Ua.Utils.IsEqual failed to compare expected and result. " + encodeInfo);
         }
-        #endregion
+        
 
-        #region Private Methods
+        
         /// <summary>
         /// Create an instance of an encodeable type with default values.
         /// </summary>
@@ -254,6 +254,6 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
                 }
             }
         }
-        #endregion
+        
     }
 }

@@ -2,7 +2,7 @@
  * Copyright (c) 2005-2020 The OPC Foundation, Inc. All rights reserved.
  *
  * OPC Foundation MIT License 1.00
- * 
+ *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
  * files (the "Software"), to deal in the Software without
@@ -11,7 +11,7 @@
  * copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following
  * conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
@@ -33,7 +33,6 @@ using System;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Linq;
-using System.Collections.Generic;
 
 namespace Opc.Ua.Security.Certificates
 {
@@ -42,14 +41,6 @@ namespace Opc.Ua.Security.Certificates
     /// </summary>
     public class CertificateBuilder : CertificateBuilderBase
     {
-        #region Constructors
-        /// <summary>
-        /// Create a Certificate builder.
-        /// </summary>
-        public static ICertificateBuilder Create(X500DistinguishedName subjectName)
-        {
-            return new CertificateBuilder(subjectName);
-        }
 
         /// <summary>
         /// Create a Certificate builder.
@@ -74,9 +65,9 @@ namespace Opc.Ua.Security.Certificates
             : base(subjectName)
         {
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <inheritdoc/>
         public override X509Certificate2 CreateForRSA()
         {
@@ -96,16 +87,16 @@ namespace Opc.Ua.Security.Certificates
                 rsaPublicKey = rsaKeyPair;
             }
 
-            var padding = RSASignaturePadding.Pkcs1;
+            RSASignaturePadding padding = RSASignaturePadding.Pkcs1;
             var request = new CertificateRequest(SubjectName, rsaPublicKey, HashAlgorithmName, padding);
 
             CreateX509Extensions(request, false);
 
             X509Certificate2 signedCert;
-            var serialNumber = m_serialNumber.Reverse().ToArray();
+            byte[] serialNumber = m_serialNumber.Reverse().ToArray();
             if (IssuerCAKeyCert != null)
             {
-                var issuerSubjectName = IssuerCAKeyCert.SubjectName;
+                X500DistinguishedName issuerSubjectName = IssuerCAKeyCert.SubjectName;
                 using (RSA rsaIssuerKey = IssuerCAKeyCert.GetRSAPrivateKey())
                 {
                     signedCert = request.Create(
@@ -132,7 +123,7 @@ namespace Opc.Ua.Security.Certificates
         }
 
         /// <inheritdoc/>
-        public override X509Certificate2 CreateForRSA(X509SignatureGenerator generator)
+        public X509Certificate2 CreateForRSA(X509SignatureGenerator generator)
         {
             CreateDefaults();
 
@@ -141,7 +132,7 @@ namespace Opc.Ua.Security.Certificates
                 throw new NotSupportedException("Need an issuer certificate or a public key for a signature generator.");
             }
 
-            var issuerSubjectName = SubjectName;
+            X500DistinguishedName issuerSubjectName = SubjectName;
             if (IssuerCAKeyCert != null)
             {
                 issuerSubjectName = IssuerCAKeyCert.SubjectName;
@@ -172,7 +163,7 @@ namespace Opc.Ua.Security.Certificates
 
 #if ECC_SUPPORT
         /// <inheritdoc/>
-        public override X509Certificate2 CreateForECDsa()
+        public X509Certificate2 CreateForECDsa()
         {
             if (m_ecdsaPublicKey != null && IssuerCAKeyCert == null)
             {
@@ -198,7 +189,7 @@ namespace Opc.Ua.Security.Certificates
 
             CreateX509Extensions(request, true);
 
-            var serialNumber = m_serialNumber.Reverse().ToArray();
+            byte[] serialNumber = m_serialNumber.Reverse().ToArray();
             if (IssuerCAKeyCert != null)
             {
                 using (ECDsa issuerKey = IssuerCAKeyCert.GetECDsaPrivateKey())
@@ -226,7 +217,7 @@ namespace Opc.Ua.Security.Certificates
         }
 
         /// <inheritdoc/>
-        public override X509Certificate2 CreateForECDsa(X509SignatureGenerator generator)
+        public X509Certificate2 CreateForECDsa(X509SignatureGenerator generator)
         {
             if (IssuerCAKeyCert == null)
             {
@@ -265,9 +256,12 @@ namespace Opc.Ua.Security.Certificates
         }
 
         /// <inheritdoc/>
-        public override ICertificateBuilderCreateForECDsaAny SetECDsaPublicKey(byte[] publicKey)
+        public ICertificateBuilderCreateForECDsaAny SetECDsaPublicKey(byte[] publicKey)
         {
-            if (publicKey == null) throw new ArgumentNullException(nameof(publicKey));
+            if (publicKey == null)
+            {
+                throw new ArgumentNullException(nameof(publicKey));
+            }
 #if NET472_OR_GREATER
             throw new NotSupportedException("Import a ECDsaPublicKey is not supported on this platform.");
 #else
@@ -292,9 +286,12 @@ namespace Opc.Ua.Security.Certificates
 #endif
 
         /// <inheritdoc/>
-        public override ICertificateBuilderCreateForRSAAny SetRSAPublicKey(byte[] publicKey)
+        public ICertificateBuilderCreateForRSAAny SetRSAPublicKey(byte[] publicKey)
         {
-            if (publicKey == null) throw new ArgumentNullException(nameof(publicKey));
+            if (publicKey == null)
+            {
+                throw new ArgumentNullException(nameof(publicKey));
+            }
 #if NET472_OR_GREATER
             throw new NotSupportedException("Import a RSAPublicKey is not supported on this platform.");
 #else
@@ -316,9 +313,9 @@ namespace Opc.Ua.Security.Certificates
             return this;
 #endif
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Create some defaults needed to build the certificate.
         /// </summary>
@@ -393,7 +390,7 @@ namespace Opc.Ua.Security.Certificates
 
             if (!m_isCA)
             {
-                // Enhanced key usage 
+                // Enhanced key usage
                 request.CertificateExtensions.Add(
                     new X509EnhancedKeyUsageExtension(
                         new OidCollection {
@@ -402,7 +399,7 @@ namespace Opc.Ua.Security.Certificates
                         }, true));
             }
 
-            foreach (var extension in m_extensions)
+            foreach (X509Extension extension in m_extensions)
             {
                 request.CertificateExtensions.Add(extension);
             }
@@ -429,10 +426,10 @@ namespace Opc.Ua.Security.Certificates
                 return new X509BasicConstraintsExtension(m_isCA, false, 0, true);
             }
         }
-        #endregion
 
-        #region Private Fields
-        #endregion
+
+
+
     }
 }
 #endif

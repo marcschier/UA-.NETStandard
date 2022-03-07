@@ -43,12 +43,12 @@ namespace Opc.Ua.Security.Certificates.Tests
     [SetCulture("en-us")]
     public class ExtensionTests
     {
-        #region DataPointSources
+        
         [DatapointSource]
         public CertificateAsset[] CertificateTestCases = new AssetCollection<CertificateAsset>(TestUtils.EnumerateTestAssets("*.?er")).ToArray();
-        #endregion
+        
 
-        #region Test Methods
+        
         [Theory]
         public void DecodeExtensions(
             CertificateAsset certAsset
@@ -198,13 +198,13 @@ namespace Opc.Ua.Security.Certificates.Tests
             Assert.AreEqual(crlNumber, decodednumber.CrlNumber);
         }
 
-        #endregion
+        
 
-        #region Private Methods
-        #endregion
+        
+        
 
-        #region Private Fields
-        #endregion
+        
+        
     }
 
 }

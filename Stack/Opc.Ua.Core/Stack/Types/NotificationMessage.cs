@@ -12,8 +12,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Opc.Ua
 {
@@ -22,14 +20,14 @@ namespace Opc.Ua
     /// </summary>
     public partial class NotificationMessage
     {
-        #region Public Interface
+
         /// <summary>
         /// The string table that was received with the message.
         /// </summary>
         public List<string> StringTable
         {
-            get { return m_stringTable;  }
-            set { m_stringTable = value; }
+            get => m_stringTable;
+            set => m_stringTable = value;
         }
 
         /// <summary>
@@ -58,7 +56,7 @@ namespace Opc.Ua
         /// </summary>
         public IList<MonitoredItemNotification> GetDataChanges(bool reverse)
         {
-            List<MonitoredItemNotification> datachanges = new List<MonitoredItemNotification>();
+            var datachanges = new List<MonitoredItemNotification>();
 
             for (int jj = 0; jj < m_notificationData.Count; jj++)
             {
@@ -69,16 +67,15 @@ namespace Opc.Ua
                     continue;
                 }
 
-                DataChangeNotification notification = extension.Body as DataChangeNotification;
-                                
-                if (notification == null)
+
+                if (!(extension.Body is DataChangeNotification notification))
                 {
                     continue;
                 }
-    
+
                 if (reverse)
                 {
-                    for (int ii = notification.MonitoredItems.Count-1; ii >= 0; ii--)
+                    for (int ii = notification.MonitoredItems.Count - 1; ii >= 0; ii--)
                     {
                         MonitoredItemNotification datachange = notification.MonitoredItems[ii];
 
@@ -106,13 +103,13 @@ namespace Opc.Ua
 
             return datachanges;
         }
-        
+
         /// <summary>
         /// Returns the events contained in the notification message.
         /// </summary>
         public IList<EventFieldList> GetEvents(bool reverse)
         {
-            List<EventFieldList> events = new List<EventFieldList>();
+            var events = new List<EventFieldList>();
 
             foreach (ExtensionObject extension in m_notificationData)
             {
@@ -121,16 +118,15 @@ namespace Opc.Ua
                     continue;
                 }
 
-                EventNotificationList notification = extension.Body as EventNotificationList;
-                                
-                if (notification == null)
+
+                if (!(extension.Body is EventNotificationList notification))
                 {
                     continue;
-                }            
-    
+                }
+
                 if (reverse)
                 {
-                    for (int ii = notification.Events.Count-1; ii >= 0; ii--)
+                    for (int ii = notification.Events.Count - 1; ii >= 0; ii--)
                     {
                         EventFieldList eventFields = notification.Events[ii];
 
@@ -158,10 +154,10 @@ namespace Opc.Ua
 
             return events;
         }
-        #endregion
 
-        #region Private Fields
+
+
         private List<string> m_stringTable;
-        #endregion
+
     }
 }

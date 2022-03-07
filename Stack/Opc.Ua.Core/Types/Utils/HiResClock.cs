@@ -51,33 +51,18 @@ namespace Opc.Ua
             {
                 if (s_Default.m_disabled)
                 {
-                    return (long)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond);
+                    return DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
                 }
                 return (long)(Stopwatch.GetTimestamp() / s_Default.m_ticksPerMillisecond);
             }
         }
 
         /// <summary>
-        /// Return the frequency of the ticks.
-        /// </summary>
-        public static long Frequency => s_Default.m_disabled ?
-            TimeSpan.TicksPerSecond : s_Default.m_frequency;
-
-        /// <summary>
-        /// Return the number of ticks per millisecond.
-        /// </summary>
-        public static double TicksPerMillisecond => s_Default.m_disabled ?
-            TimeSpan.TicksPerMillisecond : s_Default.m_ticksPerMillisecond;
-
-        /// <summary>
         /// Disables the hires clock.
         /// </summary>
         public static bool Disabled
         {
-            get
-            {
-                return s_Default.m_disabled;
-            }
+            get => s_Default.m_disabled;
 
             set
             {
@@ -109,15 +94,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Reset the baseline and allow a new initialization.
-        /// </summary>
-        public static void Reset()
-        {
-            // reset baseline
-            s_Default = new HiResClock();
-        }
-
-        /// <summary>
         /// Constructs a HiRes clock class.
         /// </summary>
         private HiResClock()
@@ -145,11 +121,11 @@ namespace Opc.Ua
         /// </summary>
         private static HiResClock s_Default = new HiResClock();
 
-        private long m_frequency;
-        private long m_baseline;
-        private long m_offset;
-        private double m_ticksPerMillisecond;
-        private decimal m_ratio;
+        private readonly long m_frequency;
+        private readonly long m_baseline;
+        private readonly long m_offset;
+        private readonly double m_ticksPerMillisecond;
+        private readonly decimal m_ratio;
         private bool m_disabled;
         private bool m_initialized;
     }

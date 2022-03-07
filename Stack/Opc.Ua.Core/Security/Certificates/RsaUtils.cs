@@ -22,7 +22,7 @@ namespace Opc.Ua
     /// </summary>
     internal static class RsaUtils
     {
-        #region Public Enum
+
         public enum Padding
         {
             Pkcs1,
@@ -40,9 +40,9 @@ namespace Opc.Ua
             }
             throw new ServiceResultException("Invalid Padding");
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Return the plaintext block size for RSA OAEP encryption.
         /// </summary>
@@ -214,7 +214,7 @@ namespace Opc.Ua
             byte[] encryptedBuffer = outputBuffer.Array;
             RSAEncryptionPadding rsaPadding = GetRSAEncryptionPadding(padding);
 
-            using (MemoryStream ostrm = new MemoryStream(
+            using (var ostrm = new MemoryStream(
                 encryptedBuffer,
                 outputBuffer.Offset,
                 outputBuffer.Count))
@@ -262,10 +262,10 @@ namespace Opc.Ua
                 // decode length.
                 int length = 0;
 
-                length += (((int)plainText.Array[plainText.Offset + 0]));
-                length += (((int)plainText.Array[plainText.Offset + 1]) << 8);
-                length += (((int)plainText.Array[plainText.Offset + 2]) << 16);
-                length += (((int)plainText.Array[plainText.Offset + 3]) << 24);
+                length += plainText.Array[plainText.Offset + 0];
+                length += (plainText.Array[plainText.Offset + 1] << 8);
+                length += (plainText.Array[plainText.Offset + 2] << 16);
+                length += (plainText.Array[plainText.Offset + 3] << 24);
 
                 if (length > (plainText.Count - plainText.Offset - 4))
                 {
@@ -300,7 +300,7 @@ namespace Opc.Ua
             byte[] decryptedBuffer = outputBuffer.Array;
             RSAEncryptionPadding rsaPadding = GetRSAEncryptionPadding(padding);
 
-            using (MemoryStream ostrm = new MemoryStream(
+            using (var ostrm = new MemoryStream(
                 decryptedBuffer,
                 outputBuffer.Offset,
                 outputBuffer.Count))
@@ -326,7 +326,7 @@ namespace Opc.Ua
         {
             try
             {
-                Opc.Ua.Test.RandomSource randomSource = new Opc.Ua.Test.RandomSource();
+                var randomSource = new Opc.Ua.Test.RandomSource();
                 int blockSize = 0x10;
                 byte[] testBlock = new byte[blockSize];
                 randomSource.NextBytes(testBlock, 0, blockSize);
@@ -354,6 +354,6 @@ namespace Opc.Ua
             }
 #endif
         });
-        #endregion
+
     }
 }

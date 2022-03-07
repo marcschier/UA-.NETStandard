@@ -20,7 +20,7 @@ namespace Opc.Ua.Bindings
 {
     public partial class UaSCUaBinaryChannel
     {
-        #region Token Handling Members
+
         /// <summary>
         /// Returns the current security token.
         /// </summary>
@@ -41,12 +41,12 @@ namespace Opc.Ua.Bindings
         /// </summary>
         protected ChannelToken CreateToken()
         {
-            ChannelToken token = new ChannelToken();
-
-            token.ChannelId = m_channelId;
-            token.TokenId = 0;
-            token.CreatedAt = DateTime.UtcNow;
-            token.Lifetime = (int)Quotas.SecurityTokenLifetime;
+            var token = new ChannelToken {
+                ChannelId = m_channelId,
+                TokenId = 0,
+                CreatedAt = DateTime.UtcNow,
+                Lifetime = Quotas.SecurityTokenLifetime
+            };
 
             Utils.LogInfo("ChannelId {0}: Token #{1} created. CreatedAt={2:HH:mm:ss.fff}. Lifetime={3}.",
                 Id, token.TokenId, token.CreatedAt, token.Lifetime);
@@ -86,9 +86,9 @@ namespace Opc.Ua.Bindings
             m_previousToken = null;
             m_currentToken = null;
         }
-        #endregion
 
-        #region Symmetric Cryptography Functions
+
+
         /// <summary>
         /// The byte length of the MAC (a.k.a signature) attached to each message.
         /// </summary>
@@ -270,16 +270,15 @@ namespace Opc.Ua.Bindings
                 int headerSize = TcpMessageLimits.SymmetricHeaderSize + TcpMessageLimits.SequenceHeaderSize;
 
                 // write the body to stream.
-                ArraySegmentStream ostrm = new ArraySegmentStream(
+                var ostrm = new ArraySegmentStream(
                     BufferManager,
                     SendBufferSize,
                     headerSize,
                     maxPayloadSize);
 
                 // check for encodeable body.
-                IEncodeable encodeable = messageBody as IEncodeable;
 
-                if (encodeable != null)
+                if (messageBody is IEncodeable encodeable)
                 {
                     // debug code used to verify that message aborts are handled correctly.
                     // int maxMessageSize = Quotas.MessageContext.MaxMessageSize;
@@ -291,11 +290,11 @@ namespace Opc.Ua.Bindings
                 }
 
                 // check for raw bytes.
-                ArraySegment<byte>? rawBytes = messageBody as ArraySegment<byte>?;
+                var rawBytes = messageBody as ArraySegment<byte>?;
 
                 if (rawBytes != null)
                 {
-                    BinaryEncoder encoder = new BinaryEncoder(ostrm, Quotas.MessageContext);
+                    var encoder = new BinaryEncoder(ostrm, Quotas.MessageContext);
                     encoder.WriteRawBytes(rawBytes.Value.Array, rawBytes.Value.Offset, rawBytes.Value.Count);
                     encoder.Close();
                 }
@@ -309,7 +308,7 @@ namespace Opc.Ua.Bindings
                     chunksToProcess.Add(new ArraySegment<byte>(buffer, 0, 0));
                 }
 
-                BufferCollection chunksToSend = new BufferCollection(chunksToProcess.Capacity);
+                var chunksToSend = new BufferCollection(chunksToProcess.Capacity);
 
                 int messageSize = 0;
 
@@ -324,8 +323,8 @@ namespace Opc.Ua.Bindings
                         continue;
                     }
 
-                    MemoryStream strm = new MemoryStream(chunkToProcess.Array, 0, SendBufferSize);
-                    BinaryEncoder encoder = new BinaryEncoder(strm, Quotas.MessageContext);
+                    var strm = new MemoryStream(chunkToProcess.Array, 0, SendBufferSize);
+                    var encoder = new BinaryEncoder(strm, Quotas.MessageContext);
 
                     // check if the message needs to be aborted.
                     if (MessageLimitsExceeded(isRequest, messageSize + chunkToProcess.Count - headerSize, ii + 1))
@@ -333,7 +332,7 @@ namespace Opc.Ua.Bindings
                         encoder.WriteUInt32(null, messageType | TcpMessageType.Abort);
 
                         // replace the body in the chunk with an error message.
-                        BinaryEncoder errorEncoder = new BinaryEncoder(
+                        var errorEncoder = new BinaryEncoder(
                             chunkToProcess.Array,
                             chunkToProcess.Offset,
                             chunkToProcess.Count,
@@ -421,7 +420,7 @@ namespace Opc.Ua.Bindings
                     if (SecurityMode == MessageSecurityMode.SignAndEncrypt)
                     {
                         // encrypt the data.
-                        ArraySegment<byte> dataToEncrypt = new ArraySegment<byte>(chunkToProcess.Array, TcpMessageLimits.SymmetricHeaderSize, encoder.Position - TcpMessageLimits.SymmetricHeaderSize);
+                        var dataToEncrypt = new ArraySegment<byte>(chunkToProcess.Array, TcpMessageLimits.SymmetricHeaderSize, encoder.Position - TcpMessageLimits.SymmetricHeaderSize);
                         Encrypt(token, dataToEncrypt, isRequest);
                     }
 
@@ -456,7 +455,7 @@ namespace Opc.Ua.Bindings
             out uint requestId,
             out uint sequenceNumber)
         {
-            BinaryDecoder decoder = new BinaryDecoder(buffer.Array, buffer.Offset, buffer.Count, Quotas.MessageContext);
+            var decoder = new BinaryDecoder(buffer.Array, buffer.Offset, buffer.Count, Quotas.MessageContext);
 
             uint messageType = decoder.ReadUInt32(null);
             uint messageSize = decoder.ReadUInt32(null);
@@ -696,7 +695,7 @@ namespace Opc.Ua.Bindings
             HMAC hmac = (useClientKeys) ? token.ClientHmac : token.ServerHmac;
 
             // compute hash.
-            MemoryStream istrm = new MemoryStream(dataToSign.Array, dataToSign.Offset, dataToSign.Count, false);
+            var istrm = new MemoryStream(dataToSign.Array, dataToSign.Offset, dataToSign.Count, false);
             byte[] signature = hmac.ComputeHash(istrm);
             istrm.Dispose();
 
@@ -717,7 +716,7 @@ namespace Opc.Ua.Bindings
             HMAC hmac = (useClientKeys) ? token.ClientHmac : token.ServerHmac;
 
             // compute hash.
-            MemoryStream istrm = new MemoryStream(dataToVerify.Array, dataToVerify.Offset, dataToVerify.Count, false);
+            var istrm = new MemoryStream(dataToVerify.Array, dataToVerify.Offset, dataToVerify.Count, false);
             byte[] computedSignature = hmac.ComputeHash(istrm);
             istrm.Dispose();
 
@@ -808,9 +807,9 @@ namespace Opc.Ua.Bindings
                 decryptor.TransformBlock(blockToDecrypt, start, count, blockToDecrypt, start);
             }
         }
-        #endregion
 
-        #region Private Fields
+
+
         private ChannelToken m_currentToken;
         private ChannelToken m_previousToken;
         private ChannelToken m_renewedToken;
@@ -818,6 +817,6 @@ namespace Opc.Ua.Bindings
         private int m_signatureKeySize;
         private int m_encryptionKeySize;
         private int m_encryptionBlockSize;
-        #endregion
+
     }
 }

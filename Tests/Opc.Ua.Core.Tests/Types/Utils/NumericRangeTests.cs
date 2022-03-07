@@ -43,7 +43,7 @@ namespace Opc.Ua.Core.Tests.Types.NumericRange
     public class NumericRangeTests
     {
 
-        #region Test Setup
+        
         [OneTimeSetUp]
         protected void OneTimeSetUp()
         {
@@ -64,9 +64,9 @@ namespace Opc.Ua.Core.Tests.Types.NumericRange
         protected void TearDown()
         {
         }
-        #endregion
+        
 
-        #region Test Methods
+        
         /// <summary>
         /// Test that NumericRange can be applied to Matrix objects
         /// </summary>
@@ -184,6 +184,6 @@ namespace Opc.Ua.Core.Tests.Types.NumericRange
 
     }
 
-    #endregion
+    
 
 }

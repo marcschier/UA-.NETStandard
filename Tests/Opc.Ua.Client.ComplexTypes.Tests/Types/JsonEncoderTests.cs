@@ -48,7 +48,7 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
         public ServiceMessageContext EncoderContext;
         public Dictionary<StructureType, (ExpandedNodeId, Type)> TypeDictionary;
 
-        #region Test Setup
+        
         [OneTimeSetUp]
         protected new void OneTimeSetUp()
         {
@@ -76,9 +76,9 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
         protected new void TearDown()
         {
         }
-        #endregion Test Setup
+         Test Setup
 
-        #region DataSource
+        
         /// <summary>
         /// Constants used by test data set.
         /// </summary>
@@ -111,9 +111,9 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
             //{   BuiltInType.Float, float.PositiveInfinity, "Infinity", "Infinity" },
             {   BuiltInType.Double, (double)7.77, "7.77", "7.77" }
         }.ToArray();
-        #endregion DataSource
+         DataSource
 
-        #region Test Methods
+        
         /// <summary>
         /// Verify reversible Json encoding for Structure as body of ExtensionObject.
         /// </summary>
@@ -247,9 +247,9 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
                 jsonValidationData.ExpectedNonReversible ?? jsonValidationData.ExpectedReversible,
                 false);
         }
-        #endregion Test Methods
+         Test Methods
 
-        #region Private Methods
+        
         protected void EncodeJsonComplexTypeVerifyResult(
             BuiltInType builtInType,
             ExtensionObject data,
@@ -420,6 +420,6 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
             }
             return expected;
         }
-        #endregion Private Methods
+         Private Methods
     }
 }

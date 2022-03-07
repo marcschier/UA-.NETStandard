@@ -34,14 +34,14 @@ namespace Opc.Ua
     /// </remarks>
     public class EncodeableFactory : IEncodeableFactory
     {
-        #region Constructors
+
         /// <summary>
         /// Creates a factory initialized with the types in the core library.
         /// </summary>
         public EncodeableFactory()
         {
             m_encodeableTypes = new Dictionary<ExpandedNodeId, System.Type>();
-            AddEncodeableTypes(this.GetType().GetTypeInfo().Assembly);
+            AddEncodeableTypes(GetType().GetTypeInfo().Assembly);
 
 #if DEBUG
             m_instanceId = Interlocked.Increment(ref m_globalInstanceCount);
@@ -89,8 +89,8 @@ namespace Opc.Ua
         {
             try
             {
-                AssemblyName an = new AssemblyName(assemblyName);
-                Assembly assembly = Assembly.Load(an);
+                var an = new AssemblyName(assemblyName);
+                var assembly = Assembly.Load(an);
                 AddEncodeableTypes(assembly);
             }
             catch (Exception)
@@ -98,19 +98,16 @@ namespace Opc.Ua
                 Utils.LogError("Could not load encodeable types from assembly: {0}", assemblyName);
             }
         }
-        #endregion
 
-        #region Static Members
+
+
         /// <summary>
         /// The default factory for the process.
         /// </summary>
         /// <remarks>
         /// The default factory for the process.
         /// </remarks>
-        public static EncodeableFactory GlobalFactory
-        {
-            get { return s_globalFactory; }
-        }
+        public static EncodeableFactory GlobalFactory => s_globalFactory;
 
         /// <summary>
         /// Returns the xml qualified name for the specified system type id.
@@ -132,11 +129,9 @@ namespace Opc.Ua
             {
                 for (int ii = 0; ii < attributes.Length; ii++)
                 {
-                    DataContractAttribute contract = attributes[ii] as DataContractAttribute;
-
-                    if (contract != null)
+                    if (attributes[ii] is DataContractAttribute contract)
                     {
-                        if (String.IsNullOrEmpty(contract.Name))
+                        if (string.IsNullOrEmpty(contract.Name))
                         {
                             return new XmlQualifiedName(systemType.Name, contract.Namespace);
                         }
@@ -152,11 +147,9 @@ namespace Opc.Ua
             {
                 for (int ii = 0; ii < attributes.Length; ii++)
                 {
-                    CollectionDataContractAttribute contract = attributes[ii] as CollectionDataContractAttribute;
-
-                    if (contract != null)
+                    if (attributes[ii] is CollectionDataContractAttribute contract)
                     {
-                        if (String.IsNullOrEmpty(contract.Name))
+                        if (string.IsNullOrEmpty(contract.Name))
                         {
                             return new XmlQualifiedName(systemType.Name, contract.Namespace);
                         }
@@ -166,38 +159,23 @@ namespace Opc.Ua
                 }
             }
 
-            if (systemType == typeof(System.Byte[]))
+            if (systemType == typeof(byte[]))
             {
                 return new XmlQualifiedName("ByteString");
             }
 
             return new XmlQualifiedName(systemType.FullName);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// Returns the object used to synchronize access to the factory.
         /// </summary>
         /// <remarks>
         /// Returns the object used to synchronize access to the factory.
         /// </remarks>
-        public object SyncRoot
-        {
-            get { return m_lock; }
-        }
-
-        /// <summary>
-        /// Returns a unique identifier for the table instance. Used to debug problems with shared tables.
-        /// </summary>
-        public int InstanceId
-        {
-#if DEBUG
-            get { return m_instanceId; }
-#else
-            get { return 0; }
-#endif
-        }
+        public object SyncRoot => m_lock;
 
         /// <summary>
         /// Adds an extension type to the factory.
@@ -220,9 +198,8 @@ namespace Opc.Ua
                     return;
                 }
 
-                IEncodeable encodeable = Activator.CreateInstance(systemType) as IEncodeable;
 
-                if (encodeable == null)
+                if (!(Activator.CreateInstance(systemType) is IEncodeable encodeable))
                 {
                     return;
                 }
@@ -341,26 +318,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Adds an enumerable of extension types to the factory.
-        /// </summary>
-        /// <param name="systemTypes">The underlying system types to add to the factory</param>
-        public void AddEncodeableTypes(IEnumerable<System.Type> systemTypes)
-        {
-            lock (m_lock)
-            {
-                foreach (var type in systemTypes)
-                {
-                    if (type.GetTypeInfo().IsAbstract)
-                    {
-                        continue;
-                    }
-
-                    AddEncodeableType(type);
-                }
-            }
-        }
-
-        /// <summary>
         /// Returns the system type for the specified type id.
         /// </summary>
         /// <remarks>
@@ -386,19 +343,19 @@ namespace Opc.Ua
         /// The dictionary of encodeabe types.
         /// </summary>
         public IReadOnlyDictionary<ExpandedNodeId, Type> EncodeableTypes => m_encodeableTypes;
-        #endregion
 
-        #region Private Fields
-        private object m_lock = new object();
-        private Dictionary<ExpandedNodeId, Type> m_encodeableTypes;
-        private static EncodeableFactory s_globalFactory = new EncodeableFactory();
+
+
+        private readonly object m_lock = new object();
+        private readonly Dictionary<ExpandedNodeId, Type> m_encodeableTypes;
+        private static readonly EncodeableFactory s_globalFactory = new EncodeableFactory();
 
 #if DEBUG
-        private bool m_shared;
-        private int m_instanceId;
+        private readonly bool m_shared;
+        private readonly int m_instanceId;
         private static int m_globalInstanceCount;
 #endif
-        #endregion
+
 
     }//class
 }//namespace

@@ -24,25 +24,25 @@ namespace Opc.Ua
     /// </summary>
     public class JsonEncoder : IEncoder, IDisposable
     {
-        #region Private Fields
+
         private const int kStreamWriterBufferSize = 1024;
         private Stream m_stream;
-        private MemoryStream m_memoryStream;
+        private readonly MemoryStream m_memoryStream;
         private StreamWriter m_writer;
         private Stack<string> m_namespaces;
         private bool m_commaRequired;
         private bool m_inVariantWithEncoding;
-        private IServiceMessageContext m_context;
+        private readonly IServiceMessageContext m_context;
         private ushort[] m_namespaceMappings;
         private ushort[] m_serverMappings;
         private uint m_nestingLevel;
-        private bool m_topLevelIsArray;
+        private readonly bool m_topLevelIsArray;
         private bool m_levelOneSkipped;
         private bool m_dontWriteClosing;
         private bool m_leaveOpen;
-        #endregion
 
-        #region Constructors
+
+
         /// <summary>
         /// 
         /// </summary>
@@ -151,90 +151,6 @@ namespace Opc.Ua
                 m_writer.Write("{");
             }
         }
-        #endregion
-
-        #region Public Methods
-        /// <summary>
-        /// Encodes a session-less message to a buffer.
-        /// </summary>
-        public static void EncodeSessionLessMessage(IEncodeable message, Stream stream, IServiceMessageContext context, bool leaveOpen = false)
-        {
-            if (message == null) throw new ArgumentNullException(nameof(message));
-            if (context == null) throw new ArgumentNullException(nameof(context));
-
-            // create encoder.
-            JsonEncoder encoder = new JsonEncoder(context, true, false, stream, leaveOpen);
-            try
-            {
-                long start = stream.Position;
-
-                // write the message.
-                var envelope = new SessionLessServiceMessage {
-                    NamespaceUris = context.NamespaceUris,
-                    ServerUris = context.ServerUris,
-                    Message = message
-                };
-
-                envelope.Encode(encoder);
-
-                // check that the max message size was not exceeded.
-                if (context.MaxMessageSize > 0 && context.MaxMessageSize < (int)(stream.Position - start))
-                {
-                    throw ServiceResultException.Create(
-                        StatusCodes.BadEncodingLimitsExceeded,
-                        "MaxMessageSize {0} < {1}",
-                        context.MaxMessageSize,
-                        (int)(stream.Position - start));
-                }
-
-                encoder.Close();
-            }
-            finally
-            {
-                if (leaveOpen)
-                {
-                    stream.Position = 0;
-                }
-                encoder.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// Encodes a message in a stream.
-        /// </summary>
-        public static ArraySegment<byte> EncodeMessage(IEncodeable message, byte[] buffer, IServiceMessageContext context)
-        {
-            if (message == null) throw new ArgumentNullException(nameof(message));
-            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
-            if (context == null) throw new ArgumentNullException(nameof(context));
-
-            using (MemoryStream stream = new MemoryStream(buffer, true))
-            using (var encoder = new JsonEncoder(context, true, false, stream))
-            {
-                // encode message
-                encoder.EncodeMessage(message);
-                int length = encoder.Close();
-
-                return new ArraySegment<byte>(buffer, 0, length);
-            }
-        }
-
-        /// <summary>
-        /// Encodes a message with its header.
-        /// </summary>
-        public void EncodeMessage(IEncodeable message)
-        {
-            if (message == null) throw new ArgumentNullException(nameof(message));
-
-            // convert the namespace uri to an index.
-            NodeId typeId = ExpandedNodeId.ToNodeId(message.TypeId, m_context.NamespaceUris);
-
-            // write the type id.
-            WriteNodeId("TypeId", typeId);
-
-            // write the message.
-            WriteEncodeable("Body", message, message.GetType());
-        }
 
         /// <summary>
         /// Initializes the tables used to map namespace and server uris during encoding.
@@ -256,23 +172,6 @@ namespace Opc.Ua
             {
                 m_serverMappings = serverUris.CreateMapping(m_context.ServerUris, false);
             }
-        }
-
-        /// <summary>
-        /// Completes writing and returns the JSON text.
-        /// </summary>
-        public string CloseAndReturnText()
-        {
-            Close();
-            if (m_memoryStream == null)
-            {
-                if (m_stream is MemoryStream memoryStream)
-                {
-                    return Encoding.UTF8.GetString(memoryStream.ToArray());
-                }
-                throw new NotSupportedException("Cannot get text from external stream. Use Close or MemoryStream instead.");
-            }
-            return Encoding.UTF8.GetString(m_memoryStream.ToArray());
         }
 
         /// <summary>
@@ -302,9 +201,9 @@ namespace Opc.Ua
             }
             return length;
         }
-        #endregion
 
-        #region IDisposable Members
+
+
         /// <summary>
         /// Frees any unmanaged resources.
         /// </summary>
@@ -326,13 +225,6 @@ namespace Opc.Ua
                 }
             }
         }
-        #endregion
-
-        #region IEncoder Members
-        /// <summary>
-        /// The type of encoding being used.
-        /// </summary>
-        public EncodingType EncodingType => EncodingType.Json;
 
         /// <summary>
         /// The message context associated with the encoder.
@@ -389,7 +281,7 @@ namespace Opc.Ua
                 m_writer.Write(",");
             }
 
-            if (!String.IsNullOrEmpty(fieldName))
+            if (!string.IsNullOrEmpty(fieldName))
             {
                 m_writer.Write("\"");
                 EscapeString(fieldName);
@@ -421,7 +313,7 @@ namespace Opc.Ua
                 m_writer.Write(",");
             }
 
-            if (!String.IsNullOrEmpty(fieldName))
+            if (!string.IsNullOrEmpty(fieldName))
             {
                 m_writer.Write("\"");
                 EscapeString(fieldName);
@@ -506,7 +398,7 @@ namespace Opc.Ua
 
         private void WriteSimpleField(string fieldName, string value, bool quotes)
         {
-            if (!String.IsNullOrEmpty(fieldName))
+            if (!string.IsNullOrEmpty(fieldName))
             {
                 if (value == null)
                 {
@@ -689,21 +581,21 @@ namespace Opc.Ua
         /// </summary>
         public void WriteFloat(string fieldName, float value)
         {
-            if (fieldName != null && !IncludeDefaultNumberValues && (value > -Single.Epsilon) && (value < Single.Epsilon))
+            if (fieldName != null && !IncludeDefaultNumberValues && (value > -float.Epsilon) && (value < float.Epsilon))
             {
                 WriteSimpleField(fieldName, null, false);
                 return;
             }
 
-            if (Single.IsNaN(value))
+            if (float.IsNaN(value))
             {
                 WriteSimpleField(fieldName, "NaN", true);
             }
-            else if (Single.IsPositiveInfinity(value))
+            else if (float.IsPositiveInfinity(value))
             {
                 WriteSimpleField(fieldName, "Infinity", true);
             }
-            else if (Single.IsNegativeInfinity(value))
+            else if (float.IsNegativeInfinity(value))
             {
                 WriteSimpleField(fieldName, "-Infinity", true);
             }
@@ -718,21 +610,21 @@ namespace Opc.Ua
         /// </summary>
         public void WriteDouble(string fieldName, double value)
         {
-            if (fieldName != null && !IncludeDefaultNumberValues && (value > -Double.Epsilon) && (value < Double.Epsilon))
+            if (fieldName != null && !IncludeDefaultNumberValues && (value > -double.Epsilon) && (value < double.Epsilon))
             {
                 WriteSimpleField(fieldName, null, false);
                 return;
             }
 
-            if (Double.IsNaN(value))
+            if (double.IsNaN(value))
             {
                 WriteSimpleField(fieldName, "NaN", true);
             }
-            else if (Double.IsPositiveInfinity(value))
+            else if (double.IsPositiveInfinity(value))
             {
                 WriteSimpleField(fieldName, "Infinity", true);
             }
-            else if (Double.IsNegativeInfinity(value))
+            else if (double.IsNegativeInfinity(value))
             {
                 WriteSimpleField(fieldName, "-Infinity", true);
             }
@@ -841,8 +733,8 @@ namespace Opc.Ua
                 return;
             }
 
-            var xml = value.OuterXml;
-            var bytes = Encoding.UTF8.GetBytes(xml);
+            string xml = value.OuterXml;
+            byte[] bytes = Encoding.UTF8.GetBytes(xml);
 
             WriteSimpleField(fieldName, Convert.ToBase64String(bytes), true);
         }
@@ -856,8 +748,8 @@ namespace Opc.Ua
 
             if (!UseReversibleEncoding && namespaceIndex > 1)
             {
-                var uri = m_context.NamespaceUris.GetString(namespaceIndex);
-                if (!String.IsNullOrEmpty(uri))
+                string uri = m_context.NamespaceUris.GetString(namespaceIndex);
+                if (!string.IsNullOrEmpty(uri))
                 {
                     WriteSimpleField(fieldName, uri, true);
                     return;
@@ -973,9 +865,9 @@ namespace Opc.Ua
 
             if (serverIndex >= 1)
             {
-                var uri = m_context.ServerUris.GetString(serverIndex);
+                string uri = m_context.ServerUris.GetString(serverIndex);
 
-                if (!String.IsNullOrEmpty(uri))
+                if (!string.IsNullOrEmpty(uri))
                 {
                     WriteSimpleField("ServerUri", uri, true);
                     PopStructure();
@@ -1124,7 +1016,7 @@ namespace Opc.Ua
 
                 WriteSimpleField("Text", value.Text, true);
 
-                if (!String.IsNullOrEmpty(value.Locale))
+                if (!string.IsNullOrEmpty(value.Locale))
                 {
                     WriteSimpleField("Locale", value.Locale, true);
                 }
@@ -1134,24 +1026,6 @@ namespace Opc.Ua
             else
             {
                 WriteSimpleField(fieldName, value.Text, true);
-            }
-        }
-
-        /// <summary>
-        /// Writes an Variant to the stream with the especified reversible encoding parameter
-        /// </summary>
-        public void WriteVariant(string fieldName, Variant value, bool useReversibleEncoding)
-        {
-            bool currentValue = UseReversibleEncoding;
-
-            try
-            {
-                UseReversibleEncoding = useReversibleEncoding;
-                WriteVariant(fieldName, value);
-            }
-            finally
-            {
-                UseReversibleEncoding = currentValue;
             }
         }
 
@@ -1198,7 +1072,7 @@ namespace Opc.Ua
                 m_writer.Write(",");
             }
 
-            if (!String.IsNullOrEmpty(fieldName))
+            if (!string.IsNullOrEmpty(fieldName))
             {
                 m_writer.Write("\"");
                 EscapeString(fieldName);
@@ -1209,9 +1083,7 @@ namespace Opc.Ua
 
             if (UseReversibleEncoding && !isNull)
             {
-                Matrix matrix = value.Value as Matrix;
-
-                if (matrix != null)
+                if (value.Value is Matrix matrix)
                 {
                     WriteInt32Array("Dimensions", matrix.Dimensions);
                 }
@@ -1220,24 +1092,6 @@ namespace Opc.Ua
             }
 
             m_nestingLevel--;
-        }
-
-        /// <summary>
-        /// Writes an DataValue array to the stream.
-        /// </summary>
-        public void WriteDataValue(string fieldName, DataValue value, bool useReversibleEncoding)
-        {
-            bool currentValue = UseReversibleEncoding;
-
-            try
-            {
-                UseReversibleEncoding = useReversibleEncoding;
-                WriteDataValue(fieldName, value);
-            }
-            finally
-            {
-                UseReversibleEncoding = currentValue;
-            }
         }
 
         /// <summary>
@@ -1304,8 +1158,7 @@ namespace Opc.Ua
             if (!UseReversibleEncoding && encodeable != null)
             {
                 // non reversible encoding, only the content of the Body field is encoded
-                var structureType = value.Body as IStructureTypeInfo;
-                if (structureType != null &&
+                if (value.Body is IStructureTypeInfo structureType &&
                     structureType.StructureType == StructureType.Union)
                 {
                     encodeable.Encode(this);
@@ -1422,14 +1275,14 @@ namespace Opc.Ua
         public void WriteEnumerated(string fieldName, Enum value)
         {
             int numeric = Convert.ToInt32(value, CultureInfo.InvariantCulture);
-            var numericString = numeric.ToString();
+            string numericString = numeric.ToString();
             if (UseReversibleEncoding)
             {
                 WriteSimpleField(fieldName, numericString, false);
             }
             else
             {
-                var valueString = value.ToString();
+                string valueString = value.ToString();
                 if (valueString == numericString)
                 {
                     WriteSimpleField(fieldName, numericString, true);
@@ -1446,7 +1299,7 @@ namespace Opc.Ua
         /// </summary>
         public void WriteEnumerated(string fieldName, int numeric)
         {
-            var numericString = numeric.ToString(CultureInfo.InvariantCulture);
+            string numericString = numeric.ToString(CultureInfo.InvariantCulture);
             WriteSimpleField(fieldName, numericString, !UseReversibleEncoding);
         }
 
@@ -1812,33 +1665,6 @@ namespace Opc.Ua
         /// Writes a GUID array to the stream.
         /// </summary>
         public void WriteGuidArray(string fieldName, IList<Uuid> values)
-        {
-            if (values == null || (values.Count == 0 && !m_inVariantWithEncoding))
-            {
-                WriteSimpleField(fieldName, null, false);
-                return;
-            }
-
-            PushArray(fieldName);
-
-            // check the length.
-            if (m_context.MaxArrayLength > 0 && m_context.MaxArrayLength < values.Count)
-            {
-                throw new ServiceResultException(StatusCodes.BadEncodingLimitsExceeded);
-            }
-
-            for (int ii = 0; ii < values.Count; ii++)
-            {
-                WriteGuid(null, values[ii]);
-            }
-
-            PopArray();
-        }
-
-        /// <summary>
-        /// Writes a GUID array to the stream.
-        /// </summary>
-        public void WriteGuidArray(string fieldName, IList<Guid> values)
         {
             if (values == null || (values.Count == 0 && !m_inVariantWithEncoding))
             {
@@ -2260,13 +2086,13 @@ namespace Opc.Ua
             }
             else
             {
-                if (arrayType != typeof(Int32))
+                if (arrayType != typeof(int))
                 {
                     throw new ServiceResultException(
                         StatusCodes.BadEncodingError,
                         Utils.Format("Type '{0}' is not allowed in an Enumeration.", arrayType.FullName));
                 }
-                foreach (Int32 value in values)
+                foreach (int value in values)
                 {
                     WriteEnumerated(null, value);
                 }
@@ -2274,9 +2100,9 @@ namespace Opc.Ua
 
             PopArray();
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Writes the contents of an Variant to the stream.
         /// </summary>
@@ -2330,8 +2156,7 @@ namespace Opc.Ua
                 else if (typeInfo.ValueRank >= ValueRanks.OneDimension)
                 {
                     int valueRank = typeInfo.ValueRank;
-                    Matrix matrix = value as Matrix;
-                    if (matrix != null)
+                    if (value is Matrix matrix)
                     {
                         if (UseReversibleEncoding)
                         {
@@ -2414,8 +2239,7 @@ namespace Opc.Ua
                     case BuiltInType.DiagnosticInfo: { WriteDiagnosticInfoArray(fieldName, (DiagnosticInfo[])array); return; }
                     case BuiltInType.Enumeration:
                     {
-                        Array enumArray = array as Array;
-                        if (enumArray == null)
+                        if (!(array is Array enumArray))
                         {
                             throw ServiceResultException.Create(
                                 StatusCodes.BadEncodingError,
@@ -2427,25 +2251,21 @@ namespace Opc.Ua
 
                     case BuiltInType.Variant:
                     {
-                        Variant[] variants = array as Variant[];
-
-                        if (variants != null)
+                        if (array is Variant[] variants)
                         {
                             WriteVariantArray(fieldName, variants);
                             return;
                         }
 
                         // try to write IEncodeable Array
-                        IEncodeable[] encodeableArray = array as IEncodeable[];
-                        if (encodeableArray != null)
+                        if (array is IEncodeable[] encodeableArray)
                         {
                             WriteEncodeableArray(fieldName, encodeableArray, array.GetType().GetElementType());
                             return;
                         }
 
-                        object[] objects = array as object[];
 
-                        if (objects != null)
+                        if (array is object[] objects)
                         {
                             WriteObjectArray(fieldName, objects);
                             return;
@@ -2461,8 +2281,7 @@ namespace Opc.Ua
             // write matrix.
             else if (valueRank > ValueRanks.OneDimension)
             {
-                Matrix matrix = array as Matrix;
-                if (matrix != null)
+                if (array is Matrix matrix)
                 {
                     int index = 0;
                     WriteStructureMatrix(fieldName, matrix, 0, ref index, matrix.TypeInfo);
@@ -2471,9 +2290,9 @@ namespace Opc.Ua
             }
         }
 
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Write multi dimensional array in structure.
         /// </summary>
@@ -2497,7 +2316,7 @@ namespace Opc.Ua
 
             try
             {
-                var arrayLen = matrix.Dimensions[dim];
+                int arrayLen = matrix.Dimensions[dim];
                 if (dim == matrix.Dimensions.Length - 1)
                 {
                     // Create a slice of values for the top dimension
@@ -2515,7 +2334,7 @@ namespace Opc.Ua
                 else
                 {
                     PushArray(fieldName);
-                    for (var i = 0; i < arrayLen; i++)
+                    for (int i = 0; i < arrayLen; i++)
                     {
                         WriteStructureMatrix(null, matrix, dim + 1, ref index, typeInfo);
                     }
@@ -2528,17 +2347,6 @@ namespace Opc.Ua
             }
         }
 
-        /// <summary>
-        /// Write multi dimensional array in Variant.
-        /// </summary>
-        private void WriteVariantMatrix(string fieldName, Matrix value)
-        {
-            PushStructure(fieldName);
-            WriteVariant("Matrix", new Variant(value.Elements, new TypeInfo(value.TypeInfo.BuiltInType, ValueRanks.OneDimension)));
-            WriteInt32Array("Dimensions", value.Dimensions);
-            PopStructure();
-        }
 
-        #endregion
     }
 }

@@ -70,7 +70,7 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
         protected ComplexTypeBuilder m_complexTypeBuilder;
         protected int m_nodeIdCount;
 
-        #region Test Setup
+        
         [OneTimeSetUp]
         protected new void OneTimeSetUp()
         {
@@ -98,9 +98,9 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
         protected new void TearDown()
         {
         }
-        #endregion Test Setup
+         Test Setup
 
-        #region DataPointSources
+        
         public class StructureFieldParameter : IFormattable
         {
             public StructureFieldParameter(StructureField structureField)
@@ -123,9 +123,9 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
 
         [DatapointSource]
         public StructureFieldParameter[] StructureField = GetAllBuiltInTypesFields().Select(s => new StructureFieldParameter(s)).ToArray();
-        #endregion DataPointSources
+         DataPointSources
 
-        #region Public Methods
+        
         public Type BuildComplexTypeWithAllBuiltInTypes(
             StructureType structureType, string testFunc)
         {
@@ -317,9 +317,9 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
         {
             return new ExtensionObject(nodeId, data);
         }
-        #endregion Public Methods
+         Public Methods
 
-        #region Private Field
-        #endregion Private Field
+        
+         Private Field
     }
 }

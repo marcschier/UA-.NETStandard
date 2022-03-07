@@ -55,14 +55,14 @@ namespace Opc.Ua.Core.Tests.Types.ContentFilter
     [Parallelizable]
     public class ContentFilterTests
     {
-        #region Shared Properties
+        
         public EventFilter Filter { get;}
         public FilterContext FilterContext { get;}
         public TestFilterTarget TestFilterTarget { get; }
         
-        #endregion
+        
 
-        #region Constructor
+        
         public ContentFilterTests()
         {
             // construct the context to use for the event filter.
@@ -76,9 +76,9 @@ namespace Opc.Ua.Core.Tests.Types.ContentFilter
 
             TestFilterTarget = new TestFilterTarget();
         }
-        #endregion
+        
 
-        #region Test Setup
+        
         [OneTimeSetUp]
         protected void OneTimeSetUp()
         {
@@ -98,9 +98,9 @@ namespace Opc.Ua.Core.Tests.Types.ContentFilter
         protected void TearDown()
         {
         }
-        #endregion
+        
 
-        #region Test Methods
+        
 
         [Test]
         [TestCase(5, 3, 7, true)]
@@ -312,6 +312,6 @@ namespace Opc.Ua.Core.Tests.Types.ContentFilter
         }
 
 
-        #endregion
+        
     }
 }

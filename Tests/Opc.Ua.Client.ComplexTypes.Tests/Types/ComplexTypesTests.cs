@@ -42,7 +42,7 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
     [Parallelizable]
     public class ComplexSampleTypesBuilder : ComplexTypesCommon
     {
-        #region Tests
+        
         /// <summary>
         /// Create a structure type from a DataTypeDefinition.
         /// Activate an object and verify it is the expected type
@@ -132,9 +132,9 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
                 }
             }
         }
-        #endregion Tests
+         Tests
 
-        #region Private Methods
-        #endregion Private Methods
+        
+         Private Methods
     }
 }

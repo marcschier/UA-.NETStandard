@@ -12,7 +12,7 @@
 
 namespace Opc.Ua
 {
-    #region MessageContextExtension Class
+
     /// <summary>
     /// Uses to add the service message context to the operation context.
     /// </summary>
@@ -54,5 +54,5 @@ namespace Opc.Ua
         /// </summary>
         public IServiceMessageContext MessageContext { get; private set; }
     }
-    #endregion
+
 }

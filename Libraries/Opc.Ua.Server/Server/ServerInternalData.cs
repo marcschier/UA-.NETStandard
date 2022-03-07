@@ -56,7 +56,7 @@ namespace Opc.Ua.Server
     /// </remarks>
     public class ServerInternalData : IServerInternal, IDisposable
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the datastore with the server configuration.
         /// </summary>
@@ -100,9 +100,9 @@ namespace Opc.Ua.Server
             // create the default system context.
             m_defaultSystemContext = new ServerSystemContext(this);
         }
-        #endregion
 
-        #region IDisposable Members
+
+
         /// <summary>
         /// Frees any unmanaged resources.
         /// </summary>
@@ -127,26 +127,20 @@ namespace Opc.Ua.Server
                 Utils.SilentDispose(m_subscriptionManager);
             }
         }
-        #endregion
 
-        #region Public Interface
+
+
         /// <summary>
         /// The session manager to use with the server.
         /// </summary>
         /// <value>The session manager.</value>
-        public SessionManager SessionManager
-        {
-            get { return m_sessionManager; }
-        }
+        public SessionManager SessionManager => m_sessionManager;
 
         /// <summary>
         /// The subscription manager to use with the server.
         /// </summary>
         /// <value>The subscription manager.</value>
-        public SubscriptionManager SubscriptionManager
-        {
-            get { return m_subscriptionManager; }
-        }
+        public SubscriptionManager SubscriptionManager => m_subscriptionManager;
 
         /// <summary>
         /// Stores the MasterNodeManager and the CoreNodeManager
@@ -190,64 +184,37 @@ namespace Opc.Ua.Server
             m_sessionManager = sessionManager;
             m_subscriptionManager = subscriptionManager;
         }
-        #endregion
-
-        #region IServerInternal Members
-
-        /// <summary>
-        /// The endpoint addresses used by the server.
-        /// </summary>
-        /// <value>The endpoint addresses.</value>
-        public IEnumerable<Uri> EndpointAddresses
-        {
-            get { return m_endpointAddresses; }
-        }
 
 
         /// <summary>
         /// The context to use when serializing/deserializing extension objects.
         /// </summary>
         /// <value>The message context.</value>
-        public IServiceMessageContext MessageContext
-        {
-            get { return m_messageContext; }
-        }
+        public IServiceMessageContext MessageContext => m_messageContext;
 
         /// <summary>
         /// The default system context for the server.
         /// </summary>
         /// <value>The default system context.</value>
-        public ServerSystemContext DefaultSystemContext
-        {
-            get { return m_defaultSystemContext; }
-        }
+        public ServerSystemContext DefaultSystemContext => m_defaultSystemContext;
 
         /// <summary>
         /// The table of namespace uris known to the server.
         /// </summary>
         /// <value>The namespace URIs.</value>
-        public NamespaceTable NamespaceUris
-        {
-            get { return m_namespaceUris; }
-        }
+        public NamespaceTable NamespaceUris => m_namespaceUris;
 
         /// <summary>
         /// The table of remote server uris known to the server.
         /// </summary>
         /// <value>The server URIs.</value>
-        public StringTable ServerUris
-        {
-            get { return m_serverUris; }
-        }
+        public StringTable ServerUris => m_serverUris;
 
         /// <summary>
         /// The factory used to create encodeable objects that the server understands.
         /// </summary>
         /// <value>The factory.</value>
-        public IEncodeableFactory Factory
-        {
-            get { return m_factory; }
-        }
+        public IEncodeableFactory Factory => m_factory;
 
 
         /// <summary>
@@ -259,65 +226,44 @@ namespace Opc.Ua.Server
         /// Node managers must populate this table with all types that they define.
         /// This object is thread safe.
         /// </remarks>
-        public TypeTable TypeTree
-        {
-            get { return m_typeTree; }
-        }
+        public TypeTable TypeTree => m_typeTree;
 
         /// <summary>
         /// The master node manager for the server.
         /// </summary>
         /// <value>The node manager.</value>
-        public MasterNodeManager NodeManager
-        {
-            get { return m_nodeManager; }
-        }
+        public MasterNodeManager NodeManager => m_nodeManager;
 
         /// <summary>
         /// The internal node manager for the servers.
         /// </summary>
         /// <value>The core node manager.</value>
-        public CoreNodeManager CoreNodeManager
-        {
-            get { return m_coreNodeManager; }
-        }
+        public CoreNodeManager CoreNodeManager => m_coreNodeManager;
 
 
         /// <summary>
         /// Returns the node manager that managers the server diagnostics.
         /// </summary>
         /// <value>The diagnostics node manager.</value>
-        public DiagnosticsNodeManager DiagnosticsNodeManager
-        {
-            get { return m_diagnosticsNodeManager; }
-        }
+        public DiagnosticsNodeManager DiagnosticsNodeManager => m_diagnosticsNodeManager;
 
         /// <summary>
         /// The manager for events that all components use to queue events that occur.
         /// </summary>
         /// <value>The event manager.</value>
-        public EventManager EventManager
-        {
-            get { return m_eventManager; }
-        }
+        public EventManager EventManager => m_eventManager;
 
         /// <summary>
         /// A manager for localized resources that components can use to localize text.
         /// </summary>
         /// <value>The resource manager.</value>
-        public ResourceManager ResourceManager
-        {
-            get { return m_resourceManager; }
-        }
+        public ResourceManager ResourceManager => m_resourceManager;
 
         /// <summary>
         /// A manager for outstanding requests that allows components to receive notifications if the timeout or are cancelled.
         /// </summary>
         /// <value>The request manager.</value>
-        public RequestManager RequestManager
-        {
-            get { return m_requestManager; }
-        }
+        public RequestManager RequestManager => m_requestManager;
 
         /// <summary>
         /// A manager for aggregate calculators supported by the server.
@@ -325,36 +271,27 @@ namespace Opc.Ua.Server
         /// <value>The aggregate manager.</value>
         public AggregateManager AggregateManager
         {
-            get { return m_aggregateManager; }
-            set { m_aggregateManager = value; }
+            get => m_aggregateManager;
+            set => m_aggregateManager = value;
         }
 
         /// <summary>
         /// The manager for active sessions.
         /// </summary>
         /// <value>The session manager.</value>
-        ISessionManager IServerInternal.SessionManager
-        {
-            get { return m_sessionManager; }
-        }
+        ISessionManager IServerInternal.SessionManager => m_sessionManager;
 
         /// <summary>
         /// The manager for active subscriptions.
         /// </summary>
-        ISubscriptionManager IServerInternal.SubscriptionManager
-        {
-            get { return m_subscriptionManager; }
-        }
+        ISubscriptionManager IServerInternal.SubscriptionManager => m_subscriptionManager;
 
 
         /// <summary>
         /// Returns the status object for the server.
         /// </summary>
         /// <value>The status.</value>
-        public ServerStatusValue Status
-        {
-            get { return m_serverStatus; }
-        }
+        public ServerStatusValue Status => m_serverStatus;
 
         /// <summary>
         /// Gets or sets the current state of the server.
@@ -383,19 +320,13 @@ namespace Opc.Ua.Server
         /// Returns the Server object node
         /// </summary>
         /// <value>The Server object node.</value>
-        public ServerObjectState ServerObject
-        {
-            get { return m_serverObject; }
-        }
+        public ServerObjectState ServerObject => m_serverObject;
 
         /// <summary>
         /// Used to synchronize access to the server diagnostics.
         /// </summary>
         /// <value>The diagnostics lock.</value>
-        public object DiagnosticsLock
-        {
-            get { return m_dataLock; }
-        }
+        public object DiagnosticsLock => m_dataLock;
 
         /// <summary>
         /// Used to synchronize write access to
@@ -419,10 +350,7 @@ namespace Opc.Ua.Server
         /// Returns the diagnostics structure for the server.
         /// </summary>
         /// <value>The server diagnostics.</value>
-        public ServerDiagnosticsSummaryDataType ServerDiagnostics
-        {
-            get { return m_serverDiagnostics; }
-        }
+        public ServerDiagnosticsSummaryDataType ServerDiagnostics => m_serverDiagnostics;
 
         /// <summary>
         /// Whether the server is currently running.
@@ -446,30 +374,17 @@ namespace Opc.Ua.Server
                 lock (m_serverStatus.Lock)
                 {
                     if (m_serverStatus.Value.State == ServerState.Running)
+                    {
                         return true;
+                    }
 
                     if (m_serverStatus.Value.State == ServerState.Shutdown && m_serverStatus.Value.SecondsTillShutdown > 0)
+                    {
                         return true;
+                    }
 
                     return false;
                 }
-            }
-        }
-
-        /// <summary>
-        /// Whether the server is collecting diagnostics.
-        /// </summary>
-        /// <value><c>true</c> if diagnostics are enabled; otherwise, <c>false</c>.</value>
-        public bool DiagnosticsEnabled
-        {
-            get
-            {
-                if (m_diagnosticsNodeManager == null)
-                {
-                    return false;
-                }
-
-                return m_diagnosticsNodeManager.DiagnosticsEnabled;
             }
         }
 
@@ -503,7 +418,7 @@ namespace Opc.Ua.Server
         {
             if (m_serverObject != null)
             {
-                m_serverObject.ReportEvent(this.DefaultSystemContext, e);
+                m_serverObject.ReportEvent(DefaultSystemContext, e);
             }
         }
 
@@ -541,9 +456,9 @@ namespace Opc.Ua.Server
             m_subscriptionManager.ConditionRefresh2(context, subscriptionId, monitoredItemId);
         }
 
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Creates the ServerObject and attaches it to the NodeManager.
         /// </summary>
@@ -569,8 +484,8 @@ namespace Opc.Ua.Server
                 serverObject.ServerCapabilities.MaxByteStringLength.Value = (uint)m_configuration.TransportQuotas.MaxByteStringLength;
 
                 // Any operational limits Property that is provided shall have a non zero value.
-                var operationLimits = serverObject.ServerCapabilities.OperationLimits;
-                var configOperationLimits = m_configuration.ServerConfiguration.OperationLimits;
+                OperationLimitsState operationLimits = serverObject.ServerCapabilities.OperationLimits;
+                OperationLimits configOperationLimits = m_configuration.ServerConfiguration.OperationLimits;
                 if (configOperationLimits != null)
                 {
                     operationLimits.MaxNodesPerRead = SetPropertyValue(operationLimits.MaxNodesPerRead, configOperationLimits.MaxNodesPerRead);
@@ -604,7 +519,7 @@ namespace Opc.Ua.Server
 
                 // setup PublishSubscribe Status State value
                 PubSubState pubSubState = PubSubState.Disabled;
-                
+
                 var default_PubSubState = (BaseVariableState)m_diagnosticsNodeManager.FindPredefinedNode(
                     VariableIds.PublishSubscribe_Status_State,
                     typeof(BaseVariableState));
@@ -631,11 +546,11 @@ namespace Opc.Ua.Server
                 serverObject.ServerDiagnostics.EnabledFlag.MinimumSamplingInterval = 1000;
 
                 // initialize status.
-                ServerStatusDataType serverStatus = new ServerStatusDataType();
-
-                serverStatus.StartTime = DateTime.UtcNow;
-                serverStatus.CurrentTime = DateTime.UtcNow;
-                serverStatus.State = ServerState.Shutdown;
+                var serverStatus = new ServerStatusDataType {
+                    StartTime = DateTime.UtcNow,
+                    CurrentTime = DateTime.UtcNow,
+                    State = ServerState.Shutdown
+                };
                 serverStatus.BuildInfo.ProductName = m_serverDescription.ProductName;
                 serverStatus.BuildInfo.ProductUri = m_serverDescription.ProductUri;
                 serverStatus.BuildInfo.ManufacturerName = m_serverDescription.ManufacturerName;
@@ -649,26 +564,26 @@ namespace Opc.Ua.Server
                 m_serverStatus = new ServerStatusValue(
                     serverObject.ServerStatus,
                     serverStatus,
-                    m_dataLock);
-
-                m_serverStatus.Timestamp = DateTime.UtcNow;
-                m_serverStatus.OnBeforeRead = OnReadServerStatus;
+                    m_dataLock) {
+                    Timestamp = DateTime.UtcNow,
+                    OnBeforeRead = OnReadServerStatus
+                };
 
                 // initialize diagnostics.
-                m_serverDiagnostics = new ServerDiagnosticsSummaryDataType();
-
-                m_serverDiagnostics.ServerViewCount = 0;
-                m_serverDiagnostics.CurrentSessionCount = 0;
-                m_serverDiagnostics.CumulatedSessionCount = 0;
-                m_serverDiagnostics.SecurityRejectedSessionCount = 0;
-                m_serverDiagnostics.RejectedSessionCount = 0;
-                m_serverDiagnostics.SessionTimeoutCount = 0;
-                m_serverDiagnostics.SessionAbortCount = 0;
-                m_serverDiagnostics.PublishingIntervalCount = 0;
-                m_serverDiagnostics.CurrentSubscriptionCount = 0;
-                m_serverDiagnostics.CumulatedSubscriptionCount = 0;
-                m_serverDiagnostics.SecurityRejectedRequestsCount = 0;
-                m_serverDiagnostics.RejectedRequestsCount = 0;
+                m_serverDiagnostics = new ServerDiagnosticsSummaryDataType {
+                    ServerViewCount = 0,
+                    CurrentSessionCount = 0,
+                    CumulatedSessionCount = 0,
+                    SecurityRejectedSessionCount = 0,
+                    RejectedSessionCount = 0,
+                    SessionTimeoutCount = 0,
+                    SessionAbortCount = 0,
+                    PublishingIntervalCount = 0,
+                    CurrentSubscriptionCount = 0,
+                    CumulatedSubscriptionCount = 0,
+                    SecurityRejectedRequestsCount = 0,
+                    RejectedRequestsCount = 0
+                };
 
                 m_diagnosticsNodeManager.CreateServerDiagnostics(
                     m_defaultSystemContext,
@@ -680,7 +595,7 @@ namespace Opc.Ua.Server
                     m_defaultSystemContext,
                     m_configuration.ServerConfiguration.DiagnosticsEnabled);
 
-                ConfigurationNodeManager configurationNodeManager = m_diagnosticsNodeManager as ConfigurationNodeManager;
+                var configurationNodeManager = m_diagnosticsNodeManager as ConfigurationNodeManager;
                 configurationNodeManager?.CreateServerConfiguration(
                     m_defaultSystemContext,
                     m_configuration);
@@ -787,18 +702,18 @@ namespace Opc.Ua.Server
             }
             return property;
         }
-        #endregion
 
-        #region Private Fields
-        private ServerProperties m_serverDescription;
-        private ApplicationConfiguration m_configuration;
-        private List<Uri> m_endpointAddresses;
-        private IServiceMessageContext m_messageContext;
-        private ServerSystemContext m_defaultSystemContext;
-        private NamespaceTable m_namespaceUris;
-        private StringTable m_serverUris;
-        private IEncodeableFactory m_factory;
-        private TypeTable m_typeTree;
+
+
+        private readonly ServerProperties m_serverDescription;
+        private readonly ApplicationConfiguration m_configuration;
+        private readonly List<Uri> m_endpointAddresses;
+        private readonly IServiceMessageContext m_messageContext;
+        private readonly ServerSystemContext m_defaultSystemContext;
+        private readonly NamespaceTable m_namespaceUris;
+        private readonly StringTable m_serverUris;
+        private readonly IEncodeableFactory m_factory;
+        private readonly TypeTable m_typeTree;
         private ResourceManager m_resourceManager;
         private RequestManager m_requestManager;
         private AggregateManager m_aggregateManager;
@@ -809,10 +724,10 @@ namespace Opc.Ua.Server
         private SessionManager m_sessionManager;
         private SubscriptionManager m_subscriptionManager;
 
-        private object m_dataLock = new object();
+        private readonly object m_dataLock = new object();
         private ServerObjectState m_serverObject;
         private ServerStatusValue m_serverStatus;
         private ServerDiagnosticsSummaryDataType m_serverDiagnostics;
-        #endregion
+
     }
 }

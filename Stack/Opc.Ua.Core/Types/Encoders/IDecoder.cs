@@ -20,10 +20,6 @@ namespace Opc.Ua
     /// </summary>
     public interface IDecoder
     {
-        /// <summary>
-        /// The type of encoding being used.
-        /// </summary>
-        EncodingType EncodingType { get; }
 
         /// <summary>
         /// The message context associated with the decoder.

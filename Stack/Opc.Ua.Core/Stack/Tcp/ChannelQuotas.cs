@@ -17,7 +17,7 @@ namespace Opc.Ua.Bindings
     /// </summary>
     public class ChannelQuotas
     {
-        #region Constructors
+
         /// <summary>
         /// Creates an object with default values.
         /// </summary>
@@ -29,9 +29,9 @@ namespace Opc.Ua.Bindings
             m_channelLifetime = TcpMessageLimits.DefaultChannelLifetime;
             m_securityTokenLifetime = TcpMessageLimits.DefaultSecurityTokenLifeTime;
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The context to use when encoding/decoding messages.
         /// </summary>
@@ -163,16 +163,16 @@ namespace Opc.Ua.Bindings
                 }
             }
         }
-        #endregion
 
-        #region Private Fields
-        private object m_lock = new object();
+
+
+        private readonly object m_lock = new object();
         private int m_maxMessageSize;
         private int m_maxBufferSize;
         private int m_channelLifetime;
         private int m_securityTokenLifetime;
         private IServiceMessageContext m_messageContext;
         private ICertificateValidator m_certificateValidator;
-        #endregion
+
     }
 }

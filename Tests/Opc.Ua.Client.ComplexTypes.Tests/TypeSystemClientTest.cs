@@ -69,7 +69,7 @@ namespace Opc.Ua.Client.ComplexTypes.Tests
             m_uriScheme = uriScheme;
         }
 
-        #region Test Setup
+        
         /// <summary>
         /// Set up a Server and a Client instance.
         /// </summary>
@@ -139,9 +139,9 @@ namespace Opc.Ua.Client.ComplexTypes.Tests
         {
             m_serverFixture.SetTraceOutput(TestContext.Out);
         }
-        #endregion
+        
 
-        #region Test Methods
+        
         [Test, Order(100)]
         [TestCase(false, false, false)]
         [TestCase(true, false, false)]
@@ -164,6 +164,6 @@ namespace Opc.Ua.Client.ComplexTypes.Tests
                 TestContext.Out.WriteLine("Type: {0} ", type.FullName);
             }
         }
-        #endregion
+        
     }
 }

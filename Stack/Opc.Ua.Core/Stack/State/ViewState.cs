@@ -10,9 +10,6 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 */
 
-using System;
-using System.Collections.Generic;
-
 namespace Opc.Ua
 {
     /// <summary> 
@@ -20,7 +17,7 @@ namespace Opc.Ua
     /// </summary>
     public class ViewState : NodeState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -28,18 +25,8 @@ namespace Opc.Ua
         {
         }
 
-        /// <summary>
-        /// Constructs an instance of a node.
-        /// </summary>
-        /// <param name="parent">The parent.</param>
-        /// <returns>The new node.</returns>
-        public static NodeState Construct(NodeState parent)
-        {
-            return new ViewState();
-        }
-        #endregion
 
-        #region Initialization
+
         /// <summary>
         /// Initializes the instance with the default values.
         /// </summary>
@@ -61,9 +48,7 @@ namespace Opc.Ua
         /// </summary>
         protected override void Initialize(ISystemContext context, NodeState source)
         {
-            ViewState instance = source as ViewState;
-
-            if (instance != null)
+            if (source is ViewState instance)
             {
                 m_eventNotifier = instance.m_eventNotifier;
                 m_containsNoLoops = instance.m_containsNoLoops;
@@ -71,44 +56,13 @@ namespace Opc.Ua
 
             base.Initialize(context, source);
         }
-        #endregion
-
-        #region Public Members
-        /// <summary>
-        /// Makes a copy of the node and all children.
-        /// </summary>
-        /// <returns>
-        /// A new object that is a copy of this instance.
-        /// </returns>
-        public object MemberwiseClone(NodeState parent)
-        {
-            ViewState clone = new ViewState();
-
-            if (m_children != null)
-            {
-                clone.m_children = new List<BaseInstanceState>(m_children.Count);
-
-                for (int ii = 0; ii < m_children.Count; ii++)
-                {
-                    BaseInstanceState child = (BaseInstanceState)m_children[ii].MemberwiseClone();
-                    clone.m_children.Add(child);
-                }
-            }
-
-            clone.m_changeMasks = NodeStateChangeMasks.None;
-
-            return clone;
-        }
 
         /// <summary>
         /// The inverse name for the reference.
         /// </summary>
         public byte EventNotifier
         {
-            get
-            {
-                return m_eventNotifier;
-            }
+            get => m_eventNotifier;
 
             set
             {
@@ -126,10 +80,7 @@ namespace Opc.Ua
         /// </summary>
         public bool ContainsNoLoops
         {
-            get
-            {
-                return m_containsNoLoops;
-            }
+            get => m_containsNoLoops;
 
             set
             {
@@ -141,9 +92,9 @@ namespace Opc.Ua
                 m_containsNoLoops = value;
             }
         }
-        #endregion
 
-        #region Event Callbacks
+
+
         /// <summary>
         /// Raised when the EventNotifier attribute is read.
         /// </summary>
@@ -163,9 +114,9 @@ namespace Opc.Ua
         /// Raised when the ContainsNoLoops attribute is written.
         /// </summary>
         public NodeAttributeEventHandler<bool> OnWriteContainsNoLoops;
-        #endregion
 
-        #region Serialization Functions
+
+
         /// <summary>
         /// Exports a copy of the node to a node table.
         /// </summary>
@@ -175,12 +126,11 @@ namespace Opc.Ua
         {
             base.Export(context, node);
 
-            ViewNode viewNode = node as ViewNode;
 
-            if (viewNode != null)
+            if (node is ViewNode viewNode)
             {
-                viewNode.EventNotifier = this.EventNotifier;
-                viewNode.ContainsNoLoops = this.ContainsNoLoops;
+                viewNode.EventNotifier = EventNotifier;
+                viewNode.ContainsNoLoops = ContainsNoLoops;
             }
         }
 
@@ -295,9 +245,9 @@ namespace Opc.Ua
                 m_containsNoLoops = decoder.ReadBoolean(null);
             }
         }
-        #endregion
 
-        #region Read Support Functions
+
+
         /// <summary>
         /// Reads the value for any non-value attribute.
         /// </summary>
@@ -347,9 +297,9 @@ namespace Opc.Ua
 
             return base.ReadNonValueAttribute(context, attributeId, ref value);
         }
-        #endregion
 
-        #region Write Support Functions
+
+
         /// <summary>
         /// Write the value for any non-value attribute.
         /// </summary>
@@ -423,11 +373,11 @@ namespace Opc.Ua
 
             return base.WriteNonValueAttribute(context, attributeId, value);
         }
-        #endregion
 
-        #region Private Fields
+
+
         private byte m_eventNotifier;
         private bool m_containsNoLoops;
-        #endregion
+
     }
 }

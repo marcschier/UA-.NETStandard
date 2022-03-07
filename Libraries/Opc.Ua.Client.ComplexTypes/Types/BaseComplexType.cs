@@ -46,7 +46,7 @@ namespace Opc.Ua.Client.ComplexTypes
         IComplexTypeProperties,
         IStructureTypeInfo
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object with default values.
         /// </summary>
@@ -83,9 +83,9 @@ namespace Opc.Ua.Client.ComplexTypes
             TypeId = ExpandedNodeId.Null;
             m_context = MessageContextExtension.CurrentContext;
         }
-        #endregion Constructors
 
-        #region Public Properties
+
+
         /// <summary cref="IEncodeable.TypeId" />
         public ExpandedNodeId TypeId { get; set; }
 
@@ -106,15 +106,15 @@ namespace Opc.Ua.Client.ComplexTypes
         /// </returns>
         public new virtual object MemberwiseClone()
         {
-            Type thisType = this.GetType();
-            BaseComplexType clone = Activator.CreateInstance(thisType) as BaseComplexType;
+            Type thisType = GetType();
+            var clone = Activator.CreateInstance(thisType) as BaseComplexType;
 
             clone.TypeId = TypeId;
             clone.BinaryEncodingId = BinaryEncodingId;
             clone.XmlEncodingId = XmlEncodingId;
 
             // clone all properties of derived class
-            foreach (var property in GetPropertyEnumerator())
+            foreach (ComplexTypePropertyAttribute property in GetPropertyEnumerator())
             {
                 property.SetValue(clone, Utils.Clone(property.GetValue(this)));
             }
@@ -126,8 +126,8 @@ namespace Opc.Ua.Client.ComplexTypes
         public virtual void Encode(IEncoder encoder)
         {
             encoder.PushNamespace(XmlNamespace);
-            
-            foreach (var property in GetPropertyEnumerator())
+
+            foreach (ComplexTypePropertyAttribute property in GetPropertyEnumerator())
             {
                 EncodeProperty(encoder, property.PropertyInfo, property.ValueRank);
             }
@@ -140,7 +140,7 @@ namespace Opc.Ua.Client.ComplexTypes
         {
             decoder.PushNamespace(XmlNamespace);
 
-            foreach (var property in GetPropertyEnumerator())
+            foreach (ComplexTypePropertyAttribute property in GetPropertyEnumerator())
             {
                 DecodeProperty(decoder, property.PropertyInfo, property.ValueRank);
             }
@@ -161,13 +161,13 @@ namespace Opc.Ua.Client.ComplexTypes
                 return false;
             }
 
-            var valueType = valueBaseType.GetType();
-            if (this.GetType() != valueType)
+            Type valueType = valueBaseType.GetType();
+            if (GetType() != valueType)
             {
                 return false;
             }
 
-            foreach (var property in GetPropertyEnumerator())
+            foreach (ComplexTypePropertyAttribute property in GetPropertyEnumerator())
             {
                 if (!Utils.IsEqual(property.GetValue(this), property.GetValue(valueBaseType)))
                 {
@@ -183,9 +183,9 @@ namespace Opc.Ua.Client.ComplexTypes
         {
             return ToString(null, null);
         }
-        #endregion Public Properties
 
-        #region IFormattable Members
+
+
         /// <summary>
         /// Returns the string representation of the complex type.
         /// </summary>
@@ -199,9 +199,9 @@ namespace Opc.Ua.Client.ComplexTypes
         {
             if (format == null)
             {
-                StringBuilder body = new StringBuilder();
+                var body = new StringBuilder();
 
-                foreach (var property in GetPropertyEnumerator())
+                foreach (ComplexTypePropertyAttribute property in GetPropertyEnumerator())
                 {
                     AppendPropertyValue(formatProvider, body, property.GetValue(this), property.ValueRank);
                 }
@@ -211,9 +211,9 @@ namespace Opc.Ua.Client.ComplexTypes
                     return body.Append('}').ToString();
                 }
 
-                if (!NodeId.IsNull(this.TypeId))
+                if (!NodeId.IsNull(TypeId))
                 {
-                    return String.Format(formatProvider, "{{{0}}}", this.TypeId);
+                    return string.Format(formatProvider, "{{{0}}}", TypeId);
                 }
 
                 return "(null)";
@@ -221,9 +221,9 @@ namespace Opc.Ua.Client.ComplexTypes
 
             throw new FormatException(Utils.Format("Invalid format string: '{0}'.", format));
         }
-        #endregion IFormattable Members
 
-        #region IComplexTypeProperties
+
+
         /// <summary cref="IComplexTypeProperties.GetPropertyCount()" />
         public virtual int GetPropertyCount()
         {
@@ -267,9 +267,9 @@ namespace Opc.Ua.Client.ComplexTypes
         {
             return m_propertyList;
         }
-        #endregion IComplexTypeProperties
 
-        #region Private Members
+
+
 
         /// <summary>
         /// Formatting helper.
@@ -303,7 +303,7 @@ namespace Opc.Ua.Client.ComplexTypes
                 bool first = true;
                 var enumerable = value as IEnumerable;
                 body.Append('[');
-                foreach (var item in enumerable)
+                foreach (object item in enumerable)
                 {
                     if (!first)
                     {
@@ -379,58 +379,58 @@ namespace Opc.Ua.Client.ComplexTypes
         /// </summary>
         private void EncodeProperty(IEncoder encoder, string name, PropertyInfo property)
         {
-            var propertyType = property.PropertyType;
-            if (propertyType == typeof(Boolean))
+            Type propertyType = property.PropertyType;
+            if (propertyType == typeof(bool))
             {
-                encoder.WriteBoolean(name, (Boolean)property.GetValue(this));
+                encoder.WriteBoolean(name, (bool)property.GetValue(this));
             }
-            else if (propertyType == typeof(SByte))
+            else if (propertyType == typeof(sbyte))
             {
-                encoder.WriteSByte(name, (SByte)property.GetValue(this));
+                encoder.WriteSByte(name, (sbyte)property.GetValue(this));
             }
-            else if (propertyType == typeof(Byte))
+            else if (propertyType == typeof(byte))
             {
-                encoder.WriteByte(name, (Byte)property.GetValue(this));
+                encoder.WriteByte(name, (byte)property.GetValue(this));
             }
-            else if (propertyType == typeof(Int16))
+            else if (propertyType == typeof(short))
             {
-                encoder.WriteInt16(name, (Int16)property.GetValue(this));
+                encoder.WriteInt16(name, (short)property.GetValue(this));
             }
-            else if (propertyType == typeof(UInt16))
+            else if (propertyType == typeof(ushort))
             {
-                encoder.WriteUInt16(name, (UInt16)property.GetValue(this));
+                encoder.WriteUInt16(name, (ushort)property.GetValue(this));
             }
             else if (propertyType.IsEnum)
             {
                 encoder.WriteEnumerated(name, (Enum)property.GetValue(this));
             }
-            else if (propertyType == typeof(Int32))
+            else if (propertyType == typeof(int))
             {
-                encoder.WriteInt32(name, (Int32)property.GetValue(this));
+                encoder.WriteInt32(name, (int)property.GetValue(this));
             }
-            else if (propertyType == typeof(UInt32))
+            else if (propertyType == typeof(uint))
             {
-                encoder.WriteUInt32(name, (UInt32)property.GetValue(this));
+                encoder.WriteUInt32(name, (uint)property.GetValue(this));
             }
-            else if (propertyType == typeof(Int64))
+            else if (propertyType == typeof(long))
             {
-                encoder.WriteInt64(name, (Int64)property.GetValue(this));
+                encoder.WriteInt64(name, (long)property.GetValue(this));
             }
-            else if (propertyType == typeof(UInt64))
+            else if (propertyType == typeof(ulong))
             {
-                encoder.WriteUInt64(name, (UInt64)property.GetValue(this));
+                encoder.WriteUInt64(name, (ulong)property.GetValue(this));
             }
-            else if (propertyType == typeof(Single))
+            else if (propertyType == typeof(float))
             {
-                encoder.WriteFloat(name, (Single)property.GetValue(this));
+                encoder.WriteFloat(name, (float)property.GetValue(this));
             }
-            else if (propertyType == typeof(Double))
+            else if (propertyType == typeof(double))
             {
-                encoder.WriteDouble(name, (Double)property.GetValue(this));
+                encoder.WriteDouble(name, (double)property.GetValue(this));
             }
-            else if (propertyType == typeof(String))
+            else if (propertyType == typeof(string))
             {
-                encoder.WriteString(name, (String)property.GetValue(this));
+                encoder.WriteString(name, (string)property.GetValue(this));
             }
             else if (propertyType == typeof(DateTime))
             {
@@ -440,9 +440,9 @@ namespace Opc.Ua.Client.ComplexTypes
             {
                 encoder.WriteGuid(name, (Uuid)property.GetValue(this));
             }
-            else if (propertyType == typeof(Byte[]))
+            else if (propertyType == typeof(byte[]))
             {
-                encoder.WriteByteString(name, (Byte[])property.GetValue(this));
+                encoder.WriteByteString(name, (byte[])property.GetValue(this));
             }
             else if (propertyType == typeof(XmlElement))
             {
@@ -500,28 +500,28 @@ namespace Opc.Ua.Client.ComplexTypes
         /// </summary>
         private void EncodePropertyArray(IEncoder encoder, string name, PropertyInfo property)
         {
-            var elementType = property.PropertyType.GetElementType() ?? property.PropertyType.GetItemType();
-            if (elementType == typeof(Boolean))
+            Type elementType = property.PropertyType.GetElementType() ?? property.PropertyType.GetItemType();
+            if (elementType == typeof(bool))
             {
                 encoder.WriteBooleanArray(name, (BooleanCollection)property.GetValue(this));
             }
-            else if (elementType == typeof(SByte))
+            else if (elementType == typeof(sbyte))
             {
                 encoder.WriteSByteArray(name, (SByteCollection)property.GetValue(this));
             }
-            else if (elementType == typeof(Byte))
+            else if (elementType == typeof(byte))
             {
                 encoder.WriteByteArray(name, (ByteCollection)property.GetValue(this));
             }
-            else if (elementType == typeof(Int16))
+            else if (elementType == typeof(short))
             {
                 encoder.WriteInt16Array(name, (Int16Collection)property.GetValue(this));
             }
-            else if (elementType == typeof(UInt16))
+            else if (elementType == typeof(ushort))
             {
                 encoder.WriteUInt16Array(name, (UInt16Collection)property.GetValue(this));
             }
-            else if (elementType == typeof(Int32))
+            else if (elementType == typeof(int))
             {
                 encoder.WriteInt32Array(name, (Int32Collection)property.GetValue(this));
             }
@@ -529,27 +529,27 @@ namespace Opc.Ua.Client.ComplexTypes
             {
                 encoder.WriteEnumeratedArray(name, (Array)property.GetValue(this), elementType);
             }
-            else if (elementType == typeof(UInt32))
+            else if (elementType == typeof(uint))
             {
                 encoder.WriteUInt32Array(name, (UInt32Collection)property.GetValue(this));
             }
-            else if (elementType == typeof(Int64))
+            else if (elementType == typeof(long))
             {
                 encoder.WriteInt64Array(name, (Int64Collection)property.GetValue(this));
             }
-            else if (elementType == typeof(UInt64))
+            else if (elementType == typeof(ulong))
             {
                 encoder.WriteUInt64Array(name, (UInt64Collection)property.GetValue(this));
             }
-            else if (elementType == typeof(Single))
+            else if (elementType == typeof(float))
             {
                 encoder.WriteFloatArray(name, (FloatCollection)property.GetValue(this));
             }
-            else if (elementType == typeof(Double))
+            else if (elementType == typeof(double))
             {
                 encoder.WriteDoubleArray(name, (DoubleCollection)property.GetValue(this));
             }
-            else if (elementType == typeof(String))
+            else if (elementType == typeof(string))
             {
                 encoder.WriteStringArray(name, (StringCollection)property.GetValue(this));
             }
@@ -561,7 +561,7 @@ namespace Opc.Ua.Client.ComplexTypes
             {
                 encoder.WriteGuidArray(name, (UuidCollection)property.GetValue(this));
             }
-            else if (elementType == typeof(Byte[]))
+            else if (elementType == typeof(byte[]))
             {
                 encoder.WriteByteStringArray(name, (ByteStringCollection)property.GetValue(this));
             }
@@ -607,7 +607,7 @@ namespace Opc.Ua.Client.ComplexTypes
             }
             else if (typeof(IEncodeable).IsAssignableFrom(elementType))
             {
-                var value = property.GetValue(this);
+                object value = property.GetValue(this);
                 if (!(value is IEncodeableCollection encodable))
                 {
                     encodable = IEncodeableCollection.ToIEncodeableCollection(value as IEncodeable[]);
@@ -656,24 +656,24 @@ namespace Opc.Ua.Client.ComplexTypes
         /// </summary>
         private void DecodeProperty(IDecoder decoder, string name, PropertyInfo property)
         {
-            var propertyType = property.PropertyType;
-            if (propertyType == typeof(Boolean))
+            Type propertyType = property.PropertyType;
+            if (propertyType == typeof(bool))
             {
                 property.SetValue(this, decoder.ReadBoolean(name));
             }
-            else if (propertyType == typeof(SByte))
+            else if (propertyType == typeof(sbyte))
             {
                 property.SetValue(this, decoder.ReadSByte(name));
             }
-            else if (propertyType == typeof(Byte))
+            else if (propertyType == typeof(byte))
             {
                 property.SetValue(this, decoder.ReadByte(name));
             }
-            else if (propertyType == typeof(Int16))
+            else if (propertyType == typeof(short))
             {
                 property.SetValue(this, decoder.ReadInt16(name));
             }
-            else if (propertyType == typeof(UInt16))
+            else if (propertyType == typeof(ushort))
             {
                 property.SetValue(this, decoder.ReadUInt16(name));
             }
@@ -681,31 +681,31 @@ namespace Opc.Ua.Client.ComplexTypes
             {
                 property.SetValue(this, decoder.ReadEnumerated(name, propertyType));
             }
-            else if (propertyType == typeof(Int32))
+            else if (propertyType == typeof(int))
             {
                 property.SetValue(this, decoder.ReadInt32(name));
             }
-            else if (propertyType == typeof(UInt32))
+            else if (propertyType == typeof(uint))
             {
                 property.SetValue(this, decoder.ReadUInt32(name));
             }
-            else if (propertyType == typeof(Int64))
+            else if (propertyType == typeof(long))
             {
                 property.SetValue(this, decoder.ReadInt64(name));
             }
-            else if (propertyType == typeof(UInt64))
+            else if (propertyType == typeof(ulong))
             {
                 property.SetValue(this, decoder.ReadUInt64(name));
             }
-            else if (propertyType == typeof(Single))
+            else if (propertyType == typeof(float))
             {
                 property.SetValue(this, decoder.ReadFloat(name));
             }
-            else if (propertyType == typeof(Double))
+            else if (propertyType == typeof(double))
             {
                 property.SetValue(this, decoder.ReadDouble(name));
             }
-            else if (propertyType == typeof(String))
+            else if (propertyType == typeof(string))
             {
                 property.SetValue(this, decoder.ReadString(name));
             }
@@ -717,7 +717,7 @@ namespace Opc.Ua.Client.ComplexTypes
             {
                 property.SetValue(this, decoder.ReadGuid(name));
             }
-            else if (propertyType == typeof(Byte[]))
+            else if (propertyType == typeof(byte[]))
             {
                 property.SetValue(this, decoder.ReadByteString(name));
             }
@@ -777,24 +777,24 @@ namespace Opc.Ua.Client.ComplexTypes
         /// </summary>
         private void DecodePropertyArray(IDecoder decoder, string name, PropertyInfo property)
         {
-            var elementType = property.PropertyType.GetElementType() ?? property.PropertyType.GetItemType();
-            if (elementType == typeof(Boolean))
+            Type elementType = property.PropertyType.GetElementType() ?? property.PropertyType.GetItemType();
+            if (elementType == typeof(bool))
             {
                 property.SetValue(this, decoder.ReadBooleanArray(name));
             }
-            else if (elementType == typeof(SByte))
+            else if (elementType == typeof(sbyte))
             {
                 property.SetValue(this, decoder.ReadSByteArray(name));
             }
-            else if (elementType == typeof(Byte))
+            else if (elementType == typeof(byte))
             {
                 property.SetValue(this, decoder.ReadByteArray(name));
             }
-            else if (elementType == typeof(Int16))
+            else if (elementType == typeof(short))
             {
                 property.SetValue(this, decoder.ReadInt16Array(name));
             }
-            else if (elementType == typeof(UInt16))
+            else if (elementType == typeof(ushort))
             {
                 property.SetValue(this, decoder.ReadUInt16Array(name));
             }
@@ -802,31 +802,31 @@ namespace Opc.Ua.Client.ComplexTypes
             {
                 property.SetValue(this, decoder.ReadEnumeratedArray(name, elementType));
             }
-            else if (elementType == typeof(Int32))
+            else if (elementType == typeof(int))
             {
                 property.SetValue(this, decoder.ReadInt32Array(name));
             }
-            else if (elementType == typeof(UInt32))
+            else if (elementType == typeof(uint))
             {
                 property.SetValue(this, decoder.ReadUInt32Array(name));
             }
-            else if (elementType == typeof(Int64))
+            else if (elementType == typeof(long))
             {
                 property.SetValue(this, decoder.ReadInt64Array(name));
             }
-            else if (elementType == typeof(UInt64))
+            else if (elementType == typeof(ulong))
             {
                 property.SetValue(this, decoder.ReadUInt64Array(name));
             }
-            else if (elementType == typeof(Single))
+            else if (elementType == typeof(float))
             {
                 property.SetValue(this, decoder.ReadFloatArray(name));
             }
-            else if (elementType == typeof(Double))
+            else if (elementType == typeof(double))
             {
                 property.SetValue(this, decoder.ReadDoubleArray(name));
             }
-            else if (elementType == typeof(String))
+            else if (elementType == typeof(string))
             {
                 property.SetValue(this, decoder.ReadStringArray(name));
             }
@@ -838,7 +838,7 @@ namespace Opc.Ua.Client.ComplexTypes
             {
                 property.SetValue(this, decoder.ReadGuidArray(name));
             }
-            else if (elementType == typeof(Byte[]))
+            else if (elementType == typeof(byte[]))
             {
                 property.SetValue(this, decoder.ReadByteStringArray(name));
             }
@@ -915,10 +915,10 @@ namespace Opc.Ua.Client.ComplexTypes
             }
 
             m_propertyList = new List<ComplexTypePropertyAttribute>();
-            var properties = GetType().GetProperties();
-            foreach (var property in properties)
+            PropertyInfo[] properties = GetType().GetProperties();
+            foreach (PropertyInfo property in properties)
             {
-                StructureFieldAttribute fieldAttribute = (StructureFieldAttribute)
+                var fieldAttribute = (StructureFieldAttribute)
                     property.GetCustomAttribute(typeof(StructureFieldAttribute));
 
                 if (fieldAttribute == null)
@@ -926,7 +926,7 @@ namespace Opc.Ua.Client.ComplexTypes
                     continue;
                 }
 
-                DataMemberAttribute dataAttribute = (DataMemberAttribute)
+                var dataAttribute = (DataMemberAttribute)
                     property.GetCustomAttribute(typeof(DataMemberAttribute));
 
                 var newProperty = new ComplexTypePropertyAttribute(property, fieldAttribute, dataAttribute);
@@ -936,10 +936,10 @@ namespace Opc.Ua.Client.ComplexTypes
             m_propertyList = m_propertyList.OrderBy(p => p.Order).ToList();
             m_propertyDict = m_propertyList.ToDictionary(p => p.Name, p => p);
         }
-        #endregion Private Members
 
 
-        #region Protected Properties
+
+
 
         /// <summary>
         /// Provide XmlNamespace based on systemType
@@ -957,9 +957,9 @@ namespace Opc.Ua.Client.ComplexTypes
             }
         }
 
-        #endregion
 
-        #region Protected Fields
+
+
         /// <summary>
         /// The list of properties of this complex type.
         /// </summary>
@@ -968,13 +968,13 @@ namespace Opc.Ua.Client.ComplexTypes
         /// The list of properties as dictionary.
         /// </summary>
         protected Dictionary<string, ComplexTypePropertyAttribute> m_propertyDict;
-        #endregion Protected Fields
 
-        #region Private Fields
+
+
         private IServiceMessageContext m_context;
         private StructureBaseDataType m_structureBaseType;
         private XmlQualifiedName m_xmlName;
-        #endregion Private Fields
+
 
     }
 }//namespace

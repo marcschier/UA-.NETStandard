@@ -17,9 +17,9 @@ namespace Opc.Ua
     /// <summary>
     ///  A channel object used by clients to access a UA service.
     /// </summary>
-    public partial class SessionChannel 
+    public partial class SessionChannel
     {
-        #region Constructors
+
         /// <summary>
         /// Creates a new transport channel that supports the ISessionChannel service contract.
         /// </summary>
@@ -101,6 +101,6 @@ namespace Opc.Ua
 
             return channel;
         }
-        #endregion
+
     }
 }

@@ -28,12 +28,6 @@
  * ======================================================================*/
 
 using System;
-using System.Collections.ObjectModel;
-using System.Collections.Generic;
-using System.Text;
-using System.Runtime.Serialization;
-using System.Security.Principal;
-using System.Security.Cryptography.X509Certificates;
 
 #pragma warning disable 0618
 
@@ -44,11 +38,6 @@ namespace Opc.Ua.Server
     /// </summary>
     public interface IServerInternal
     {
-        /// <summary>
-        /// The endpoint addresses used by the server.
-        /// </summary>
-        /// <value>The endpoint addresses.</value>
-        IEnumerable<Uri> EndpointAddresses { get; }
 
         /// <summary>
         /// The context to use when serializing/deserializing extension objects.
@@ -90,7 +79,7 @@ namespace Opc.Ua.Server
         /// This object is thread safe.
         /// </remarks>
         TypeTable TypeTree { get; }
-        
+
         /// <summary>
         /// The master node manager for the server.
         /// </summary>
@@ -126,7 +115,7 @@ namespace Opc.Ua.Server
         /// </summary>
         /// <value>The request manager.</value>
         RequestManager RequestManager { get; }
-        
+
         /// <summary>
         /// A manager for aggregate calculators supported by the server.
         /// </summary>
@@ -143,7 +132,7 @@ namespace Opc.Ua.Server
         /// The manager for active subscriptions.
         /// </summary>
         ISubscriptionManager SubscriptionManager { get; }
-        
+
         /// <summary>
         /// Whether the server is currently running.
         /// </summary>
@@ -192,12 +181,6 @@ namespace Opc.Ua.Server
         /// </summary>
         /// <value>The server diagnostics.</value>
         ServerDiagnosticsSummaryDataType ServerDiagnostics { get; }
-        
-        /// <summary>
-        /// Whether the server is collecting diagnostics.
-        /// </summary>
-        /// <value><c>true</c> if diagnostics is enabled; otherwise, <c>false</c>.</value>
-        bool DiagnosticsEnabled { get; }
 
         /// <summary>
         /// Closes the specified session.

@@ -27,8 +27,6 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
 namespace Opc.Ua.Security.Certificates
@@ -76,16 +74,6 @@ namespace Opc.Ua.Security.Certificates
     { }
 
     /// <summary>
-    /// The interface to create a certificate.
-    /// </summary>
-    public interface ICertificateBuilderCreate
-        : ICertificateBuilderCreateForRSA
-#if ECC_SUPPORT
-        , ICertificateBuilderCreateForECDsa
-#endif
-    { }
-
-    /// <summary>
     /// The interface to use a signature generator.
     /// </summary>
     public interface ICertificateBuilderCreateGenerator
@@ -119,76 +107,12 @@ namespace Opc.Ua.Security.Certificates
     /// </summary>
     public interface ICertificateBuilderConfig
     {
-        /// <summary>
-        /// Set the length of the serial number.
-        /// </summary>
-        /// <remarks>
-        /// The length of the serial number shall
-        /// not exceed <see cref="X509Defaults.SerialNumberLengthMax"/> octets.
-        /// </remarks>
-        /// <param name="length"></param>
-        ICertificateBuilder SetSerialNumberLength(int length);
-
-        /// <summary>
-        /// Set the value of the serial number directly
-        /// using a byte array.
-        /// </summary>
-        /// <remarks>
-        /// The length of the serial number shall
-        /// not exceed <see cref="X509Defaults.SerialNumberLengthMax"/> octets.
-        /// </remarks>
-        /// <param name="serialNumber">The serial number as an array of bytes in little endian order.</param>
-        ICertificateBuilder SetSerialNumber(byte[] serialNumber);
-
-        /// <summary>
-        /// Create a new serial number and preserve
-        /// it until the certificate is created.
-        /// </summary>
-        /// <remarks>
-        /// The serial number may be needed to create an extension.
-        /// This function makes it available before the
-        /// cert is created.
-        /// </remarks>
-        ICertificateBuilder CreateSerialNumber();
-
-        /// <summary>
-        /// Set the date when the certificate becomes valid.
-        /// </summary>
-        /// <param name="notBefore">The date.</param>
-        ICertificateBuilder SetNotBefore(DateTime notBefore);
-
-        /// <summary>
-        /// Set the certificate expiry date.
-        /// </summary>
-        /// <param name="notAfter">The date after which the certificate is expired.</param>
-        ICertificateBuilder SetNotAfter(DateTime notAfter);
-
-        /// <summary>
-        /// Set the lifetime of the certificate using Timespan.
-        /// </summary>
-        /// <param name="lifeTime">The lifetime as <see creftype="Timespan"/>.</param>
-        ICertificateBuilder SetLifeTime(TimeSpan lifeTime);
 
         /// <summary>
         /// Set the lifetime of the certificate in month starting now.
         /// </summary>
         /// <param name="months">The lifetime in months.</param>
         ICertificateBuilder SetLifeTime(ushort months);
-
-        /// <summary>
-        /// Set the hash algorithm to use for the signature.
-        /// </summary>
-        /// <param name="hashAlgorithmName">The hash algorithm name.</param>
-        ICertificateBuilder SetHashAlgorithm(HashAlgorithmName hashAlgorithmName);
-
-        /// <summary>
-        /// Set the CA flag and the path length constraints of the certificate.
-        /// </summary>
-        /// <param name="pathLengthConstraint">
-        /// The path length constraint to use.
-        /// -1 corresponds to None, other values constrain the chain length.
-        /// </param>
-        ICertificateBuilder SetCAConstraint(int pathLengthConstraint = -1);
 
         /// <summary>
         /// Add an extension to the certificate in addition to the default extensions.
@@ -218,18 +142,6 @@ namespace Opc.Ua.Security.Certificates
     /// </summary>
     public interface ICertificateBuilderSetIssuer
     {
-        /// <summary>
-        /// Set the issuer certificate which is used to sign the certificate.
-        /// </summary>
-        /// <remarks>
-        /// The issuer certificate must contain a private key which matches
-        /// the selected sign algorithm if no generator is avilable.
-        /// If a <see cref="X509SignatureGenerator"/> is used for signing the
-        /// the issuer certificate can be set with a public key to create
-        /// the X509 extensions.
-        /// </remarks>
-        /// <param name="issuerCertificate">The issuer certificate.</param>
-        ICertificateBuilderIssuer SetIssuer(X509Certificate2 issuerCertificate);
     }
 
     /// <summary>
@@ -250,11 +162,6 @@ namespace Opc.Ua.Security.Certificates
     /// </summary>
     public interface ICertificateBuilderECCParameter
     {
-        /// <summary>
-        /// Set the ECC Curve parameter.
-        /// </summary>
-        /// <param name="curve">The ECCurve.</param>
-        ICertificateBuilderCreateForECDsaAny SetECCurve(ECCurve curve);
     }
 #endif
 
@@ -263,17 +170,6 @@ namespace Opc.Ua.Security.Certificates
     /// </summary>
     public interface ICertificateBuilderRSAPublicKey
     {
-        /// <summary>
-        /// Set the public key using a ASN.1 encoded byte array.
-        /// </summary>
-        /// <param name="publicKey">The public key as encoded byte array.</param>
-        ICertificateBuilderCreateForRSAAny SetRSAPublicKey(byte[] publicKey);
-
-        /// <summary>
-        /// Set the public key using a RSA public key.
-        /// </summary>
-        /// <param name="publicKey">The RSA public key.</param>
-        ICertificateBuilderCreateForRSAAny SetRSAPublicKey(RSA publicKey);
     }
 
 #if ECC_SUPPORT
@@ -282,17 +178,6 @@ namespace Opc.Ua.Security.Certificates
     /// </summary>
     public interface ICertificateBuilderECDsaPublicKey
     {
-        /// <summary>
-        /// Set the public key using a ASN.1 encoded byte array.
-        /// </summary>
-        /// <param name="publicKey">The public key as encoded byte array.</param>
-        ICertificateBuilderCreateForECDsaAny SetECDsaPublicKey(byte[] publicKey);
-
-        /// <summary>
-        /// Set the public key using a ECDSA public key.
-        /// </summary>
-        /// <param name="publicKey">The ECDsa public key.</param>
-        ICertificateBuilderCreateForECDsaAny SetECDsaPublicKey(ECDsa publicKey);
     }
 #endif
 
@@ -313,11 +198,6 @@ namespace Opc.Ua.Security.Certificates
     /// </summary>
     public interface ICertificateBuilderCreateForRSAGenerator
     {
-        /// <summary>
-        /// Create the RSA certificate with signature using an external generator.
-        /// </summary>
-        /// <returns>The signed certificate.</returns>
-        X509Certificate2 CreateForRSA(X509SignatureGenerator generator);
     }
 
 #if ECC_SUPPORT
@@ -326,11 +206,6 @@ namespace Opc.Ua.Security.Certificates
     /// </summary>
     public interface ICertificateBuilderCreateForECDsa
     {
-        /// <summary>
-        /// Create the ECC certificate with signature.
-        /// </summary>
-        /// <returns>The signed certificate.</returns>
-        X509Certificate2 CreateForECDsa();
     }
 
     /// <summary>
@@ -338,11 +213,6 @@ namespace Opc.Ua.Security.Certificates
     /// </summary>
     public interface ICertificateBuilderCreateForECDsaGenerator
     {
-        /// <summary>
-        /// Create the ECDSA certificate with signature using an external generator.
-        /// </summary>
-        /// <returns>The signed certificate.</returns>
-        X509Certificate2 CreateForECDsa(X509SignatureGenerator generator);
     }
 #endif
 }

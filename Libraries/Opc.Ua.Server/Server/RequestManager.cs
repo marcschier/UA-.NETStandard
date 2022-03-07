@@ -38,22 +38,25 @@ namespace Opc.Ua.Server
     /// </summary>
     public class RequestManager : IDisposable
     {
-        #region Constructors
+
         /// <summary>
         /// Initilizes the manager.
         /// </summary>
         /// <param name="server"></param>
         public RequestManager(IServerInternal server)
         {
-            if (server == null) throw new ArgumentNullException(nameof(server));
+            if (server == null)
+            {
+                throw new ArgumentNullException(nameof(server));
+            }
 
             m_server = server;
             m_requests = new Dictionary<uint, OperationContext>();
             m_requestTimer = null;
         }
-        #endregion
 
-        #region IDisposable Members
+
+
         /// <summary>
         /// Frees any unmanaged resources.
         /// </summary>
@@ -87,30 +90,6 @@ namespace Opc.Ua.Server
                 m_requestTimer = null;
             }
         }
-        #endregion
-
-        #region Public Members
-        /// <summary>
-        /// Raised when the status of an outstanding request changes.
-        /// </summary>
-        public event RequestCancelledEventHandler RequestCancelled
-        {
-            add
-            {
-                lock (m_lock)
-                {
-                    m_RequestCancelled += value;
-                }
-            }
-
-            remove
-            {
-                lock (m_lock)
-                {
-                    m_RequestCancelled -= value;
-                }
-            }
-        }
 
         /// <summary>
         /// Called when a new request arrives.
@@ -118,7 +97,10 @@ namespace Opc.Ua.Server
         /// <param name="context"></param>
         public void RequestReceived(OperationContext context)
         {
-            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
 
             lock (m_requestsLock)
             {
@@ -136,7 +118,10 @@ namespace Opc.Ua.Server
         /// </summary>
         public void RequestCompleted(OperationContext context)
         {
-            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
 
             lock (m_requestsLock)
             {
@@ -150,7 +135,7 @@ namespace Opc.Ua.Server
         /// </summary>
         public void CancelRequests(uint requestHandle, out uint cancelCount)
         {
-            List<uint> cancelledRequests = new List<uint>();
+            var cancelledRequests = new List<uint>();
 
             // flag requests as cancelled.
             lock (m_requestsLock)
@@ -187,15 +172,15 @@ namespace Opc.Ua.Server
                 }
             }
         }
-        #endregion
 
-        #region Private Methods
+
+
         /// <summary>
         /// Checks for any expired requests and changes their status.
         /// </summary>
         private void OnTimerExpired(object state)
         {
-            List<uint> expiredRequests = new List<uint>();
+            var expiredRequests = new List<uint>();
 
             // flag requests as expired.
             lock (m_requestsLock)
@@ -243,17 +228,17 @@ namespace Opc.Ua.Server
                 }
             }
         }
-        #endregion
 
-        #region Private Fields
-        private object m_lock = new object();
+
+
+        private readonly object m_lock = new object();
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1823:AvoidUnusedPrivateFields")]
-        private IServerInternal m_server;
-        private Dictionary<uint, OperationContext> m_requests;
-        private object m_requestsLock = new object();
+        private readonly IServerInternal m_server;
+        private readonly Dictionary<uint, OperationContext> m_requests;
+        private readonly object m_requestsLock = new object();
         private Timer m_requestTimer;
         private event RequestCancelledEventHandler m_RequestCancelled;
-        #endregion
+
     }
 
     /// <summary>

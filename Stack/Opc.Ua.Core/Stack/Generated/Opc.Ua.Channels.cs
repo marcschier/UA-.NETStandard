@@ -43,17 +43,17 @@ using System.Threading.Tasks;
 
 namespace Opc.Ua
 {
-    #region SessionChannel Class
+
     /// <summary>
     /// A channel object used by clients to access a UA service.
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     public partial class SessionChannel : WcfChannelBase<ISessionChannel>, ISessionChannel
-    #else
+#else
     public partial class SessionChannel : UaChannelBase<ISessionChannel>, ISessionChannel
-    #endif
+#endif
     {
         /// <summary>
         /// Initializes the object with the endpoint address.
@@ -62,8 +62,8 @@ namespace Opc.Ua
         {
         }
 
-        #if (!OPCUA_EXCLUDE_CreateSession)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_CreateSession)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the CreateSession service contract.
         /// </summary>
@@ -116,7 +116,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the CreateSession service contract.
         /// </summary>
@@ -124,12 +124,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginCreateSession(request, null, null);
+                result = Channel.BeginCreateSession(request, null, null);
             }
 
-            return this.Channel.EndCreateSession(result);
+            return Channel.EndCreateSession(result);
         }
 
         /// <summary>
@@ -137,7 +137,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginCreateSession(CreateSessionMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -152,24 +152,24 @@ namespace Opc.Ua
         /// </summary>
         public CreateSessionResponseMessage EndCreateSession(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndCreateSession(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the CreateSession service contract.
         /// </summary>
         public Task<CreateSessionResponseMessage> CreateSessionAsync(CreateSessionMessage request)
         {
-            return this.Channel.CreateSessionAsync(request);
+            return Channel.CreateSessionAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_ActivateSession)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_ActivateSession)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the ActivateSession service contract.
         /// </summary>
@@ -222,7 +222,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the ActivateSession service contract.
         /// </summary>
@@ -230,12 +230,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginActivateSession(request, null, null);
+                result = Channel.BeginActivateSession(request, null, null);
             }
 
-            return this.Channel.EndActivateSession(result);
+            return Channel.EndActivateSession(result);
         }
 
         /// <summary>
@@ -243,7 +243,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginActivateSession(ActivateSessionMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -258,24 +258,24 @@ namespace Opc.Ua
         /// </summary>
         public ActivateSessionResponseMessage EndActivateSession(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndActivateSession(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the ActivateSession service contract.
         /// </summary>
         public Task<ActivateSessionResponseMessage> ActivateSessionAsync(ActivateSessionMessage request)
         {
-            return this.Channel.ActivateSessionAsync(request);
+            return Channel.ActivateSessionAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_CloseSession)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_CloseSession)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the CloseSession service contract.
         /// </summary>
@@ -328,7 +328,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the CloseSession service contract.
         /// </summary>
@@ -336,12 +336,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginCloseSession(request, null, null);
+                result = Channel.BeginCloseSession(request, null, null);
             }
 
-            return this.Channel.EndCloseSession(result);
+            return Channel.EndCloseSession(result);
         }
 
         /// <summary>
@@ -349,7 +349,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginCloseSession(CloseSessionMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -364,24 +364,24 @@ namespace Opc.Ua
         /// </summary>
         public CloseSessionResponseMessage EndCloseSession(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndCloseSession(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the CloseSession service contract.
         /// </summary>
         public Task<CloseSessionResponseMessage> CloseSessionAsync(CloseSessionMessage request)
         {
-            return this.Channel.CloseSessionAsync(request);
+            return Channel.CloseSessionAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_Cancel)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_Cancel)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the Cancel service contract.
         /// </summary>
@@ -434,7 +434,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the Cancel service contract.
         /// </summary>
@@ -442,12 +442,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginCancel(request, null, null);
+                result = Channel.BeginCancel(request, null, null);
             }
 
-            return this.Channel.EndCancel(result);
+            return Channel.EndCancel(result);
         }
 
         /// <summary>
@@ -455,7 +455,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginCancel(CancelMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -470,24 +470,24 @@ namespace Opc.Ua
         /// </summary>
         public CancelResponseMessage EndCancel(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndCancel(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the Cancel service contract.
         /// </summary>
         public Task<CancelResponseMessage> CancelAsync(CancelMessage request)
         {
-            return this.Channel.CancelAsync(request);
+            return Channel.CancelAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_AddNodes)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_AddNodes)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the AddNodes service contract.
         /// </summary>
@@ -540,7 +540,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the AddNodes service contract.
         /// </summary>
@@ -548,12 +548,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginAddNodes(request, null, null);
+                result = Channel.BeginAddNodes(request, null, null);
             }
 
-            return this.Channel.EndAddNodes(result);
+            return Channel.EndAddNodes(result);
         }
 
         /// <summary>
@@ -561,7 +561,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginAddNodes(AddNodesMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -576,24 +576,24 @@ namespace Opc.Ua
         /// </summary>
         public AddNodesResponseMessage EndAddNodes(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndAddNodes(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the AddNodes service contract.
         /// </summary>
         public Task<AddNodesResponseMessage> AddNodesAsync(AddNodesMessage request)
         {
-            return this.Channel.AddNodesAsync(request);
+            return Channel.AddNodesAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_AddReferences)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_AddReferences)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the AddReferences service contract.
         /// </summary>
@@ -646,7 +646,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the AddReferences service contract.
         /// </summary>
@@ -654,12 +654,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginAddReferences(request, null, null);
+                result = Channel.BeginAddReferences(request, null, null);
             }
 
-            return this.Channel.EndAddReferences(result);
+            return Channel.EndAddReferences(result);
         }
 
         /// <summary>
@@ -667,7 +667,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginAddReferences(AddReferencesMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -682,24 +682,24 @@ namespace Opc.Ua
         /// </summary>
         public AddReferencesResponseMessage EndAddReferences(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndAddReferences(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the AddReferences service contract.
         /// </summary>
         public Task<AddReferencesResponseMessage> AddReferencesAsync(AddReferencesMessage request)
         {
-            return this.Channel.AddReferencesAsync(request);
+            return Channel.AddReferencesAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_DeleteNodes)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_DeleteNodes)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the DeleteNodes service contract.
         /// </summary>
@@ -752,7 +752,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the DeleteNodes service contract.
         /// </summary>
@@ -760,12 +760,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginDeleteNodes(request, null, null);
+                result = Channel.BeginDeleteNodes(request, null, null);
             }
 
-            return this.Channel.EndDeleteNodes(result);
+            return Channel.EndDeleteNodes(result);
         }
 
         /// <summary>
@@ -773,7 +773,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginDeleteNodes(DeleteNodesMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -788,24 +788,24 @@ namespace Opc.Ua
         /// </summary>
         public DeleteNodesResponseMessage EndDeleteNodes(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndDeleteNodes(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the DeleteNodes service contract.
         /// </summary>
         public Task<DeleteNodesResponseMessage> DeleteNodesAsync(DeleteNodesMessage request)
         {
-            return this.Channel.DeleteNodesAsync(request);
+            return Channel.DeleteNodesAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_DeleteReferences)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_DeleteReferences)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the DeleteReferences service contract.
         /// </summary>
@@ -858,7 +858,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the DeleteReferences service contract.
         /// </summary>
@@ -866,12 +866,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginDeleteReferences(request, null, null);
+                result = Channel.BeginDeleteReferences(request, null, null);
             }
 
-            return this.Channel.EndDeleteReferences(result);
+            return Channel.EndDeleteReferences(result);
         }
 
         /// <summary>
@@ -879,7 +879,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginDeleteReferences(DeleteReferencesMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -894,24 +894,24 @@ namespace Opc.Ua
         /// </summary>
         public DeleteReferencesResponseMessage EndDeleteReferences(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndDeleteReferences(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the DeleteReferences service contract.
         /// </summary>
         public Task<DeleteReferencesResponseMessage> DeleteReferencesAsync(DeleteReferencesMessage request)
         {
-            return this.Channel.DeleteReferencesAsync(request);
+            return Channel.DeleteReferencesAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_Browse)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_Browse)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the Browse service contract.
         /// </summary>
@@ -964,7 +964,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the Browse service contract.
         /// </summary>
@@ -972,12 +972,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginBrowse(request, null, null);
+                result = Channel.BeginBrowse(request, null, null);
             }
 
-            return this.Channel.EndBrowse(result);
+            return Channel.EndBrowse(result);
         }
 
         /// <summary>
@@ -985,7 +985,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginBrowse(BrowseMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -1000,24 +1000,24 @@ namespace Opc.Ua
         /// </summary>
         public BrowseResponseMessage EndBrowse(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndBrowse(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the Browse service contract.
         /// </summary>
         public Task<BrowseResponseMessage> BrowseAsync(BrowseMessage request)
         {
-            return this.Channel.BrowseAsync(request);
+            return Channel.BrowseAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_BrowseNext)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_BrowseNext)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the BrowseNext service contract.
         /// </summary>
@@ -1070,7 +1070,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the BrowseNext service contract.
         /// </summary>
@@ -1078,12 +1078,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginBrowseNext(request, null, null);
+                result = Channel.BeginBrowseNext(request, null, null);
             }
 
-            return this.Channel.EndBrowseNext(result);
+            return Channel.EndBrowseNext(result);
         }
 
         /// <summary>
@@ -1091,7 +1091,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginBrowseNext(BrowseNextMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -1106,24 +1106,24 @@ namespace Opc.Ua
         /// </summary>
         public BrowseNextResponseMessage EndBrowseNext(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndBrowseNext(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the BrowseNext service contract.
         /// </summary>
         public Task<BrowseNextResponseMessage> BrowseNextAsync(BrowseNextMessage request)
         {
-            return this.Channel.BrowseNextAsync(request);
+            return Channel.BrowseNextAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_TranslateBrowsePathsToNodeIds)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_TranslateBrowsePathsToNodeIds)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the TranslateBrowsePathsToNodeIds service contract.
         /// </summary>
@@ -1176,7 +1176,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the TranslateBrowsePathsToNodeIds service contract.
         /// </summary>
@@ -1184,12 +1184,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginTranslateBrowsePathsToNodeIds(request, null, null);
+                result = Channel.BeginTranslateBrowsePathsToNodeIds(request, null, null);
             }
 
-            return this.Channel.EndTranslateBrowsePathsToNodeIds(result);
+            return Channel.EndTranslateBrowsePathsToNodeIds(result);
         }
 
         /// <summary>
@@ -1197,7 +1197,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginTranslateBrowsePathsToNodeIds(TranslateBrowsePathsToNodeIdsMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -1212,24 +1212,24 @@ namespace Opc.Ua
         /// </summary>
         public TranslateBrowsePathsToNodeIdsResponseMessage EndTranslateBrowsePathsToNodeIds(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndTranslateBrowsePathsToNodeIds(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the TranslateBrowsePathsToNodeIds service contract.
         /// </summary>
         public Task<TranslateBrowsePathsToNodeIdsResponseMessage> TranslateBrowsePathsToNodeIdsAsync(TranslateBrowsePathsToNodeIdsMessage request)
         {
-            return this.Channel.TranslateBrowsePathsToNodeIdsAsync(request);
+            return Channel.TranslateBrowsePathsToNodeIdsAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_RegisterNodes)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_RegisterNodes)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the RegisterNodes service contract.
         /// </summary>
@@ -1282,7 +1282,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the RegisterNodes service contract.
         /// </summary>
@@ -1290,12 +1290,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginRegisterNodes(request, null, null);
+                result = Channel.BeginRegisterNodes(request, null, null);
             }
 
-            return this.Channel.EndRegisterNodes(result);
+            return Channel.EndRegisterNodes(result);
         }
 
         /// <summary>
@@ -1303,7 +1303,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginRegisterNodes(RegisterNodesMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -1318,24 +1318,24 @@ namespace Opc.Ua
         /// </summary>
         public RegisterNodesResponseMessage EndRegisterNodes(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndRegisterNodes(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the RegisterNodes service contract.
         /// </summary>
         public Task<RegisterNodesResponseMessage> RegisterNodesAsync(RegisterNodesMessage request)
         {
-            return this.Channel.RegisterNodesAsync(request);
+            return Channel.RegisterNodesAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_UnregisterNodes)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_UnregisterNodes)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the UnregisterNodes service contract.
         /// </summary>
@@ -1388,7 +1388,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the UnregisterNodes service contract.
         /// </summary>
@@ -1396,12 +1396,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginUnregisterNodes(request, null, null);
+                result = Channel.BeginUnregisterNodes(request, null, null);
             }
 
-            return this.Channel.EndUnregisterNodes(result);
+            return Channel.EndUnregisterNodes(result);
         }
 
         /// <summary>
@@ -1409,7 +1409,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginUnregisterNodes(UnregisterNodesMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -1424,24 +1424,24 @@ namespace Opc.Ua
         /// </summary>
         public UnregisterNodesResponseMessage EndUnregisterNodes(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndUnregisterNodes(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the UnregisterNodes service contract.
         /// </summary>
         public Task<UnregisterNodesResponseMessage> UnregisterNodesAsync(UnregisterNodesMessage request)
         {
-            return this.Channel.UnregisterNodesAsync(request);
+            return Channel.UnregisterNodesAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_QueryFirst)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_QueryFirst)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the QueryFirst service contract.
         /// </summary>
@@ -1494,7 +1494,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the QueryFirst service contract.
         /// </summary>
@@ -1502,12 +1502,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginQueryFirst(request, null, null);
+                result = Channel.BeginQueryFirst(request, null, null);
             }
 
-            return this.Channel.EndQueryFirst(result);
+            return Channel.EndQueryFirst(result);
         }
 
         /// <summary>
@@ -1515,7 +1515,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginQueryFirst(QueryFirstMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -1530,24 +1530,24 @@ namespace Opc.Ua
         /// </summary>
         public QueryFirstResponseMessage EndQueryFirst(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndQueryFirst(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the QueryFirst service contract.
         /// </summary>
         public Task<QueryFirstResponseMessage> QueryFirstAsync(QueryFirstMessage request)
         {
-            return this.Channel.QueryFirstAsync(request);
+            return Channel.QueryFirstAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_QueryNext)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_QueryNext)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the QueryNext service contract.
         /// </summary>
@@ -1600,7 +1600,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the QueryNext service contract.
         /// </summary>
@@ -1608,12 +1608,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginQueryNext(request, null, null);
+                result = Channel.BeginQueryNext(request, null, null);
             }
 
-            return this.Channel.EndQueryNext(result);
+            return Channel.EndQueryNext(result);
         }
 
         /// <summary>
@@ -1621,7 +1621,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginQueryNext(QueryNextMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -1636,24 +1636,24 @@ namespace Opc.Ua
         /// </summary>
         public QueryNextResponseMessage EndQueryNext(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndQueryNext(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the QueryNext service contract.
         /// </summary>
         public Task<QueryNextResponseMessage> QueryNextAsync(QueryNextMessage request)
         {
-            return this.Channel.QueryNextAsync(request);
+            return Channel.QueryNextAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_Read)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_Read)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the Read service contract.
         /// </summary>
@@ -1706,7 +1706,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the Read service contract.
         /// </summary>
@@ -1714,12 +1714,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginRead(request, null, null);
+                result = Channel.BeginRead(request, null, null);
             }
 
-            return this.Channel.EndRead(result);
+            return Channel.EndRead(result);
         }
 
         /// <summary>
@@ -1727,7 +1727,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginRead(ReadMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -1742,24 +1742,24 @@ namespace Opc.Ua
         /// </summary>
         public ReadResponseMessage EndRead(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndRead(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the Read service contract.
         /// </summary>
         public Task<ReadResponseMessage> ReadAsync(ReadMessage request)
         {
-            return this.Channel.ReadAsync(request);
+            return Channel.ReadAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_HistoryRead)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_HistoryRead)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the HistoryRead service contract.
         /// </summary>
@@ -1812,7 +1812,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the HistoryRead service contract.
         /// </summary>
@@ -1820,12 +1820,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginHistoryRead(request, null, null);
+                result = Channel.BeginHistoryRead(request, null, null);
             }
 
-            return this.Channel.EndHistoryRead(result);
+            return Channel.EndHistoryRead(result);
         }
 
         /// <summary>
@@ -1833,7 +1833,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginHistoryRead(HistoryReadMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -1848,24 +1848,24 @@ namespace Opc.Ua
         /// </summary>
         public HistoryReadResponseMessage EndHistoryRead(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndHistoryRead(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the HistoryRead service contract.
         /// </summary>
         public Task<HistoryReadResponseMessage> HistoryReadAsync(HistoryReadMessage request)
         {
-            return this.Channel.HistoryReadAsync(request);
+            return Channel.HistoryReadAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_Write)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_Write)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the Write service contract.
         /// </summary>
@@ -1918,7 +1918,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the Write service contract.
         /// </summary>
@@ -1926,12 +1926,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginWrite(request, null, null);
+                result = Channel.BeginWrite(request, null, null);
             }
 
-            return this.Channel.EndWrite(result);
+            return Channel.EndWrite(result);
         }
 
         /// <summary>
@@ -1939,7 +1939,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginWrite(WriteMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -1954,24 +1954,24 @@ namespace Opc.Ua
         /// </summary>
         public WriteResponseMessage EndWrite(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndWrite(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the Write service contract.
         /// </summary>
         public Task<WriteResponseMessage> WriteAsync(WriteMessage request)
         {
-            return this.Channel.WriteAsync(request);
+            return Channel.WriteAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_HistoryUpdate)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_HistoryUpdate)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the HistoryUpdate service contract.
         /// </summary>
@@ -2024,7 +2024,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the HistoryUpdate service contract.
         /// </summary>
@@ -2032,12 +2032,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginHistoryUpdate(request, null, null);
+                result = Channel.BeginHistoryUpdate(request, null, null);
             }
 
-            return this.Channel.EndHistoryUpdate(result);
+            return Channel.EndHistoryUpdate(result);
         }
 
         /// <summary>
@@ -2045,7 +2045,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginHistoryUpdate(HistoryUpdateMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -2060,24 +2060,24 @@ namespace Opc.Ua
         /// </summary>
         public HistoryUpdateResponseMessage EndHistoryUpdate(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndHistoryUpdate(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the HistoryUpdate service contract.
         /// </summary>
         public Task<HistoryUpdateResponseMessage> HistoryUpdateAsync(HistoryUpdateMessage request)
         {
-            return this.Channel.HistoryUpdateAsync(request);
+            return Channel.HistoryUpdateAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_Call)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_Call)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the Call service contract.
         /// </summary>
@@ -2130,7 +2130,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the Call service contract.
         /// </summary>
@@ -2138,12 +2138,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginCall(request, null, null);
+                result = Channel.BeginCall(request, null, null);
             }
 
-            return this.Channel.EndCall(result);
+            return Channel.EndCall(result);
         }
 
         /// <summary>
@@ -2151,7 +2151,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginCall(CallMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -2166,24 +2166,24 @@ namespace Opc.Ua
         /// </summary>
         public CallResponseMessage EndCall(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndCall(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the Call service contract.
         /// </summary>
         public Task<CallResponseMessage> CallAsync(CallMessage request)
         {
-            return this.Channel.CallAsync(request);
+            return Channel.CallAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_CreateMonitoredItems)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_CreateMonitoredItems)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the CreateMonitoredItems service contract.
         /// </summary>
@@ -2236,7 +2236,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the CreateMonitoredItems service contract.
         /// </summary>
@@ -2244,12 +2244,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginCreateMonitoredItems(request, null, null);
+                result = Channel.BeginCreateMonitoredItems(request, null, null);
             }
 
-            return this.Channel.EndCreateMonitoredItems(result);
+            return Channel.EndCreateMonitoredItems(result);
         }
 
         /// <summary>
@@ -2257,7 +2257,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginCreateMonitoredItems(CreateMonitoredItemsMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -2272,24 +2272,24 @@ namespace Opc.Ua
         /// </summary>
         public CreateMonitoredItemsResponseMessage EndCreateMonitoredItems(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndCreateMonitoredItems(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the CreateMonitoredItems service contract.
         /// </summary>
         public Task<CreateMonitoredItemsResponseMessage> CreateMonitoredItemsAsync(CreateMonitoredItemsMessage request)
         {
-            return this.Channel.CreateMonitoredItemsAsync(request);
+            return Channel.CreateMonitoredItemsAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_ModifyMonitoredItems)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_ModifyMonitoredItems)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the ModifyMonitoredItems service contract.
         /// </summary>
@@ -2342,7 +2342,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the ModifyMonitoredItems service contract.
         /// </summary>
@@ -2350,12 +2350,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginModifyMonitoredItems(request, null, null);
+                result = Channel.BeginModifyMonitoredItems(request, null, null);
             }
 
-            return this.Channel.EndModifyMonitoredItems(result);
+            return Channel.EndModifyMonitoredItems(result);
         }
 
         /// <summary>
@@ -2363,7 +2363,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginModifyMonitoredItems(ModifyMonitoredItemsMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -2378,24 +2378,24 @@ namespace Opc.Ua
         /// </summary>
         public ModifyMonitoredItemsResponseMessage EndModifyMonitoredItems(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndModifyMonitoredItems(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the ModifyMonitoredItems service contract.
         /// </summary>
         public Task<ModifyMonitoredItemsResponseMessage> ModifyMonitoredItemsAsync(ModifyMonitoredItemsMessage request)
         {
-            return this.Channel.ModifyMonitoredItemsAsync(request);
+            return Channel.ModifyMonitoredItemsAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_SetMonitoringMode)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_SetMonitoringMode)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the SetMonitoringMode service contract.
         /// </summary>
@@ -2448,7 +2448,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the SetMonitoringMode service contract.
         /// </summary>
@@ -2456,12 +2456,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginSetMonitoringMode(request, null, null);
+                result = Channel.BeginSetMonitoringMode(request, null, null);
             }
 
-            return this.Channel.EndSetMonitoringMode(result);
+            return Channel.EndSetMonitoringMode(result);
         }
 
         /// <summary>
@@ -2469,7 +2469,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginSetMonitoringMode(SetMonitoringModeMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -2484,24 +2484,24 @@ namespace Opc.Ua
         /// </summary>
         public SetMonitoringModeResponseMessage EndSetMonitoringMode(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndSetMonitoringMode(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the SetMonitoringMode service contract.
         /// </summary>
         public Task<SetMonitoringModeResponseMessage> SetMonitoringModeAsync(SetMonitoringModeMessage request)
         {
-            return this.Channel.SetMonitoringModeAsync(request);
+            return Channel.SetMonitoringModeAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_SetTriggering)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_SetTriggering)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the SetTriggering service contract.
         /// </summary>
@@ -2554,7 +2554,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the SetTriggering service contract.
         /// </summary>
@@ -2562,12 +2562,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginSetTriggering(request, null, null);
+                result = Channel.BeginSetTriggering(request, null, null);
             }
 
-            return this.Channel.EndSetTriggering(result);
+            return Channel.EndSetTriggering(result);
         }
 
         /// <summary>
@@ -2575,7 +2575,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginSetTriggering(SetTriggeringMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -2590,24 +2590,24 @@ namespace Opc.Ua
         /// </summary>
         public SetTriggeringResponseMessage EndSetTriggering(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndSetTriggering(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the SetTriggering service contract.
         /// </summary>
         public Task<SetTriggeringResponseMessage> SetTriggeringAsync(SetTriggeringMessage request)
         {
-            return this.Channel.SetTriggeringAsync(request);
+            return Channel.SetTriggeringAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_DeleteMonitoredItems)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_DeleteMonitoredItems)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the DeleteMonitoredItems service contract.
         /// </summary>
@@ -2660,7 +2660,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the DeleteMonitoredItems service contract.
         /// </summary>
@@ -2668,12 +2668,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginDeleteMonitoredItems(request, null, null);
+                result = Channel.BeginDeleteMonitoredItems(request, null, null);
             }
 
-            return this.Channel.EndDeleteMonitoredItems(result);
+            return Channel.EndDeleteMonitoredItems(result);
         }
 
         /// <summary>
@@ -2681,7 +2681,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginDeleteMonitoredItems(DeleteMonitoredItemsMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -2696,24 +2696,24 @@ namespace Opc.Ua
         /// </summary>
         public DeleteMonitoredItemsResponseMessage EndDeleteMonitoredItems(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndDeleteMonitoredItems(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the DeleteMonitoredItems service contract.
         /// </summary>
         public Task<DeleteMonitoredItemsResponseMessage> DeleteMonitoredItemsAsync(DeleteMonitoredItemsMessage request)
         {
-            return this.Channel.DeleteMonitoredItemsAsync(request);
+            return Channel.DeleteMonitoredItemsAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_CreateSubscription)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_CreateSubscription)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the CreateSubscription service contract.
         /// </summary>
@@ -2766,7 +2766,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the CreateSubscription service contract.
         /// </summary>
@@ -2774,12 +2774,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginCreateSubscription(request, null, null);
+                result = Channel.BeginCreateSubscription(request, null, null);
             }
 
-            return this.Channel.EndCreateSubscription(result);
+            return Channel.EndCreateSubscription(result);
         }
 
         /// <summary>
@@ -2787,7 +2787,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginCreateSubscription(CreateSubscriptionMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -2802,24 +2802,24 @@ namespace Opc.Ua
         /// </summary>
         public CreateSubscriptionResponseMessage EndCreateSubscription(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndCreateSubscription(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the CreateSubscription service contract.
         /// </summary>
         public Task<CreateSubscriptionResponseMessage> CreateSubscriptionAsync(CreateSubscriptionMessage request)
         {
-            return this.Channel.CreateSubscriptionAsync(request);
+            return Channel.CreateSubscriptionAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_ModifySubscription)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_ModifySubscription)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the ModifySubscription service contract.
         /// </summary>
@@ -2872,7 +2872,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the ModifySubscription service contract.
         /// </summary>
@@ -2880,12 +2880,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginModifySubscription(request, null, null);
+                result = Channel.BeginModifySubscription(request, null, null);
             }
 
-            return this.Channel.EndModifySubscription(result);
+            return Channel.EndModifySubscription(result);
         }
 
         /// <summary>
@@ -2893,7 +2893,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginModifySubscription(ModifySubscriptionMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -2908,24 +2908,24 @@ namespace Opc.Ua
         /// </summary>
         public ModifySubscriptionResponseMessage EndModifySubscription(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndModifySubscription(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the ModifySubscription service contract.
         /// </summary>
         public Task<ModifySubscriptionResponseMessage> ModifySubscriptionAsync(ModifySubscriptionMessage request)
         {
-            return this.Channel.ModifySubscriptionAsync(request);
+            return Channel.ModifySubscriptionAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_SetPublishingMode)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_SetPublishingMode)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the SetPublishingMode service contract.
         /// </summary>
@@ -2978,7 +2978,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the SetPublishingMode service contract.
         /// </summary>
@@ -2986,12 +2986,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginSetPublishingMode(request, null, null);
+                result = Channel.BeginSetPublishingMode(request, null, null);
             }
 
-            return this.Channel.EndSetPublishingMode(result);
+            return Channel.EndSetPublishingMode(result);
         }
 
         /// <summary>
@@ -2999,7 +2999,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginSetPublishingMode(SetPublishingModeMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -3014,24 +3014,24 @@ namespace Opc.Ua
         /// </summary>
         public SetPublishingModeResponseMessage EndSetPublishingMode(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndSetPublishingMode(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the SetPublishingMode service contract.
         /// </summary>
         public Task<SetPublishingModeResponseMessage> SetPublishingModeAsync(SetPublishingModeMessage request)
         {
-            return this.Channel.SetPublishingModeAsync(request);
+            return Channel.SetPublishingModeAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_Publish)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_Publish)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the Publish service contract.
         /// </summary>
@@ -3084,7 +3084,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the Publish service contract.
         /// </summary>
@@ -3092,12 +3092,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginPublish(request, null, null);
+                result = Channel.BeginPublish(request, null, null);
             }
 
-            return this.Channel.EndPublish(result);
+            return Channel.EndPublish(result);
         }
 
         /// <summary>
@@ -3105,7 +3105,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginPublish(PublishMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -3120,24 +3120,24 @@ namespace Opc.Ua
         /// </summary>
         public PublishResponseMessage EndPublish(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndPublish(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the Publish service contract.
         /// </summary>
         public Task<PublishResponseMessage> PublishAsync(PublishMessage request)
         {
-            return this.Channel.PublishAsync(request);
+            return Channel.PublishAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_Republish)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_Republish)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the Republish service contract.
         /// </summary>
@@ -3190,7 +3190,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the Republish service contract.
         /// </summary>
@@ -3198,12 +3198,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginRepublish(request, null, null);
+                result = Channel.BeginRepublish(request, null, null);
             }
 
-            return this.Channel.EndRepublish(result);
+            return Channel.EndRepublish(result);
         }
 
         /// <summary>
@@ -3211,7 +3211,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginRepublish(RepublishMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -3226,24 +3226,24 @@ namespace Opc.Ua
         /// </summary>
         public RepublishResponseMessage EndRepublish(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndRepublish(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the Republish service contract.
         /// </summary>
         public Task<RepublishResponseMessage> RepublishAsync(RepublishMessage request)
         {
-            return this.Channel.RepublishAsync(request);
+            return Channel.RepublishAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_TransferSubscriptions)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_TransferSubscriptions)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the TransferSubscriptions service contract.
         /// </summary>
@@ -3296,7 +3296,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the TransferSubscriptions service contract.
         /// </summary>
@@ -3304,12 +3304,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginTransferSubscriptions(request, null, null);
+                result = Channel.BeginTransferSubscriptions(request, null, null);
             }
 
-            return this.Channel.EndTransferSubscriptions(result);
+            return Channel.EndTransferSubscriptions(result);
         }
 
         /// <summary>
@@ -3317,7 +3317,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginTransferSubscriptions(TransferSubscriptionsMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -3332,24 +3332,24 @@ namespace Opc.Ua
         /// </summary>
         public TransferSubscriptionsResponseMessage EndTransferSubscriptions(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndTransferSubscriptions(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the TransferSubscriptions service contract.
         /// </summary>
         public Task<TransferSubscriptionsResponseMessage> TransferSubscriptionsAsync(TransferSubscriptionsMessage request)
         {
-            return this.Channel.TransferSubscriptionsAsync(request);
+            return Channel.TransferSubscriptionsAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_DeleteSubscriptions)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_DeleteSubscriptions)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the DeleteSubscriptions service contract.
         /// </summary>
@@ -3402,7 +3402,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the DeleteSubscriptions service contract.
         /// </summary>
@@ -3410,12 +3410,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginDeleteSubscriptions(request, null, null);
+                result = Channel.BeginDeleteSubscriptions(request, null, null);
             }
 
-            return this.Channel.EndDeleteSubscriptions(result);
+            return Channel.EndDeleteSubscriptions(result);
         }
 
         /// <summary>
@@ -3423,7 +3423,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginDeleteSubscriptions(DeleteSubscriptionsMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -3438,35 +3438,35 @@ namespace Opc.Ua
         /// </summary>
         public DeleteSubscriptionsResponseMessage EndDeleteSubscriptions(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndDeleteSubscriptions(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the DeleteSubscriptions service contract.
         /// </summary>
         public Task<DeleteSubscriptionsResponseMessage> DeleteSubscriptionsAsync(DeleteSubscriptionsMessage request)
         {
-            return this.Channel.DeleteSubscriptionsAsync(request);
+            return Channel.DeleteSubscriptionsAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
     }
-    #endregion
 
-    #region DiscoveryChannel Class
+
+
     /// <summary>
     /// A channel object used by clients to access a UA service.
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     public partial class DiscoveryChannel : WcfChannelBase<IDiscoveryChannel>, IDiscoveryChannel
-    #else
+#else
     public partial class DiscoveryChannel : UaChannelBase<IDiscoveryChannel>, IDiscoveryChannel
-    #endif
+#endif
     {
         /// <summary>
         /// Initializes the object with the endpoint address.
@@ -3475,8 +3475,8 @@ namespace Opc.Ua
         {
         }
 
-        #if (!OPCUA_EXCLUDE_FindServers)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_FindServers)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the FindServers service contract.
         /// </summary>
@@ -3529,7 +3529,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the FindServers service contract.
         /// </summary>
@@ -3537,12 +3537,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginFindServers(request, null, null);
+                result = Channel.BeginFindServers(request, null, null);
             }
 
-            return this.Channel.EndFindServers(result);
+            return Channel.EndFindServers(result);
         }
 
         /// <summary>
@@ -3550,7 +3550,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginFindServers(FindServersMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -3565,24 +3565,24 @@ namespace Opc.Ua
         /// </summary>
         public FindServersResponseMessage EndFindServers(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndFindServers(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the FindServers service contract.
         /// </summary>
         public Task<FindServersResponseMessage> FindServersAsync(FindServersMessage request)
         {
-            return this.Channel.FindServersAsync(request);
+            return Channel.FindServersAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_FindServersOnNetwork)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_FindServersOnNetwork)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the FindServersOnNetwork service contract.
         /// </summary>
@@ -3635,7 +3635,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the FindServersOnNetwork service contract.
         /// </summary>
@@ -3643,12 +3643,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginFindServersOnNetwork(request, null, null);
+                result = Channel.BeginFindServersOnNetwork(request, null, null);
             }
 
-            return this.Channel.EndFindServersOnNetwork(result);
+            return Channel.EndFindServersOnNetwork(result);
         }
 
         /// <summary>
@@ -3656,7 +3656,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginFindServersOnNetwork(FindServersOnNetworkMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -3671,24 +3671,24 @@ namespace Opc.Ua
         /// </summary>
         public FindServersOnNetworkResponseMessage EndFindServersOnNetwork(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndFindServersOnNetwork(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the FindServersOnNetwork service contract.
         /// </summary>
         public Task<FindServersOnNetworkResponseMessage> FindServersOnNetworkAsync(FindServersOnNetworkMessage request)
         {
-            return this.Channel.FindServersOnNetworkAsync(request);
+            return Channel.FindServersOnNetworkAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_GetEndpoints)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_GetEndpoints)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the GetEndpoints service contract.
         /// </summary>
@@ -3741,7 +3741,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the GetEndpoints service contract.
         /// </summary>
@@ -3749,12 +3749,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginGetEndpoints(request, null, null);
+                result = Channel.BeginGetEndpoints(request, null, null);
             }
 
-            return this.Channel.EndGetEndpoints(result);
+            return Channel.EndGetEndpoints(result);
         }
 
         /// <summary>
@@ -3762,7 +3762,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginGetEndpoints(GetEndpointsMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -3777,35 +3777,35 @@ namespace Opc.Ua
         /// </summary>
         public GetEndpointsResponseMessage EndGetEndpoints(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndGetEndpoints(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the GetEndpoints service contract.
         /// </summary>
         public Task<GetEndpointsResponseMessage> GetEndpointsAsync(GetEndpointsMessage request)
         {
-            return this.Channel.GetEndpointsAsync(request);
+            return Channel.GetEndpointsAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
     }
-    #endregion
 
-    #region RegistrationChannel Class
+
+
     /// <summary>
     /// A channel object used by clients to access a UA service.
     /// </summary>
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
-    #if (!NET_STANDARD)
+#if (!NET_STANDARD)
     public partial class RegistrationChannel : WcfChannelBase<IRegistrationChannel>, IRegistrationChannel
-    #else
+#else
     public partial class RegistrationChannel : UaChannelBase<IRegistrationChannel>, IRegistrationChannel
-    #endif
+#endif
     {
         /// <summary>
         /// Initializes the object with the endpoint address.
@@ -3814,8 +3814,8 @@ namespace Opc.Ua
         {
         }
 
-        #if (!OPCUA_EXCLUDE_RegisterServer)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_RegisterServer)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the RegisterServer service contract.
         /// </summary>
@@ -3868,7 +3868,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the RegisterServer service contract.
         /// </summary>
@@ -3876,12 +3876,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginRegisterServer(request, null, null);
+                result = Channel.BeginRegisterServer(request, null, null);
             }
 
-            return this.Channel.EndRegisterServer(result);
+            return Channel.EndRegisterServer(result);
         }
 
         /// <summary>
@@ -3889,7 +3889,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginRegisterServer(RegisterServerMessage request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -3904,24 +3904,24 @@ namespace Opc.Ua
         /// </summary>
         public RegisterServerResponseMessage EndRegisterServer(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndRegisterServer(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the RegisterServer service contract.
         /// </summary>
         public Task<RegisterServerResponseMessage> RegisterServerAsync(RegisterServerMessage request)
         {
-            return this.Channel.RegisterServerAsync(request);
+            return Channel.RegisterServerAsync(request);
         }
-        #endif
-        #endif
+#endif
+#endif
 
-        #if (!OPCUA_EXCLUDE_RegisterServer2)
-        #if (!NET_STANDARD)
+#if (!OPCUA_EXCLUDE_RegisterServer2)
+#if (!NET_STANDARD)
         /// <summary>
         /// The client side implementation of the RegisterServer2 service contract.
         /// </summary>
@@ -3974,7 +3974,7 @@ namespace Opc.Ua
                 throw HandleSoapFault(e);
             }
         }
-        #else  // NET_STANDARD
+#else  // NET_STANDARD
         /// <summary>
         /// The client side implementation of the RegisterServer2 service contract.
         /// </summary>
@@ -3982,12 +3982,12 @@ namespace Opc.Ua
         {
             IAsyncResult result = null;
 
-            lock (this.Channel)
+            lock (Channel)
             {
-                result = this.Channel.BeginRegisterServer2(request, null, null);
+                result = Channel.BeginRegisterServer2(request, null, null);
             }
 
-            return this.Channel.EndRegisterServer2(result);
+            return Channel.EndRegisterServer2(result);
         }
 
         /// <summary>
@@ -3995,7 +3995,7 @@ namespace Opc.Ua
         /// </summary>
         public IAsyncResult BeginRegisterServer2(RegisterServer2Message request, AsyncCallback callback, object asyncState)
         {
-            UaChannelAsyncResult asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
+            var asyncResult = new UaChannelAsyncResult(Channel, callback, asyncState);
 
             lock (asyncResult.Lock)
             {
@@ -4010,21 +4010,21 @@ namespace Opc.Ua
         /// </summary>
         public RegisterServer2ResponseMessage EndRegisterServer2(IAsyncResult result)
         {
-            UaChannelAsyncResult asyncResult = UaChannelAsyncResult.WaitForComplete(result);
+            var asyncResult = UaChannelAsyncResult.WaitForComplete(result);
             return asyncResult.Channel.EndRegisterServer2(asyncResult.InnerResult);
         }
-        #endif
+#endif
 
-        #if (NET_STANDARD_ASYNC)
+#if (NET_STANDARD_ASYNC)
         /// <summary>
         /// The async client side implementation of the RegisterServer2 service contract.
         /// </summary>
         public Task<RegisterServer2ResponseMessage> RegisterServer2Async(RegisterServer2Message request)
         {
-            return this.Channel.RegisterServer2Async(request);
+            return Channel.RegisterServer2Async(request);
         }
-        #endif
-        #endif
+#endif
+#endif
     }
-    #endregion
+
 }

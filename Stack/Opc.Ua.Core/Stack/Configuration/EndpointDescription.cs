@@ -11,7 +11,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Xml;
 
 namespace Opc.Ua
@@ -21,15 +20,15 @@ namespace Opc.Ua
     /// </summary>
     public partial class EndpointDescription
     {
-        #region Constructors
+
         /// <summary>
         /// Creates an endpoint configuration from a url.
         /// </summary>
         public EndpointDescription(string url)
         {
             Initialize();
-            
-            UriBuilder parsedUrl = new UriBuilder(url);
+
+            var parsedUrl = new UriBuilder(url);
 
             if (parsedUrl.Scheme != Utils.UriSchemeOpcTcp)
             {
@@ -41,15 +40,15 @@ namespace Opc.Ua
 
             Server.DiscoveryUrls.Add(parsedUrl.ToString());
 
-            EndpointUrl            = url;
-            Server.ApplicationUri  = url;
+            EndpointUrl = url;
+            Server.ApplicationUri = url;
             Server.ApplicationName = url;
-            SecurityMode           = MessageSecurityMode.None;
-            SecurityPolicyUri      = SecurityPolicies.None;
+            SecurityMode = MessageSecurityMode.None;
+            SecurityPolicyUri = SecurityPolicies.None;
         }
-        #endregion
-        
-        #region Public Properties
+
+
+
         /// <summary>
         /// The encodings supported by the configuration.
         /// </summary>
@@ -57,7 +56,7 @@ namespace Opc.Ua
         {
             get
             {
-                if (!String.IsNullOrEmpty(EndpointUrl) && EndpointUrl.StartsWith(Utils.UriSchemeOpcTcp))
+                if (!string.IsNullOrEmpty(EndpointUrl) && EndpointUrl.StartsWith(Utils.UriSchemeOpcTcp))
                 {
                     return BinaryEncodingSupport.Required;
                 }
@@ -71,7 +70,7 @@ namespace Opc.Ua
                         return BinaryEncodingSupport.Required;
                     }
                 }
-    
+
                 return BinaryEncodingSupport.None;
             }
         }
@@ -81,12 +80,12 @@ namespace Opc.Ua
         /// </summary>
         public Uri ProxyUrl
         {
-            get { return m_proxyUrl;  }
-            set { m_proxyUrl = value; }
+            get => m_proxyUrl;
+            set => m_proxyUrl = value;
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Finds the user token policy with the specified id.
         /// </summary>
@@ -123,7 +122,7 @@ namespace Opc.Ua
         {
             // construct issuer type.
             string issuedTokenTypeText = issuedTokenType;
-            
+
             // find matching policy.
             foreach (UserTokenPolicy policy in m_userIdentityTokens)
             {
@@ -145,10 +144,10 @@ namespace Opc.Ua
             // no policy found
             return null;
         }
-        #endregion
-        
-        #region Private Fields
+
+
+
         private Uri m_proxyUrl;
-        #endregion
+
     }
 }

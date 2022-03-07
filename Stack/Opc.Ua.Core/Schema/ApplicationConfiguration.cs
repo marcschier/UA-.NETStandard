@@ -17,14 +17,14 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Opc.Ua
 {
-    #region ApplicationConfiguration
+
     /// <summary>
     /// Stores the configurable configuration information for a UA application.
     /// </summary>
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public partial class ApplicationConfiguration
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -79,9 +79,9 @@ namespace Opc.Ua
         /// <param name="context">The context.</param>
         [OnDeserializing()]
         public void Initialize(StreamingContext context) => Initialize();
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// Gets an object used to synchronize access to the properties dictionary.
         /// </summary>
@@ -103,9 +103,9 @@ namespace Opc.Ua
         /// Used by ParseExtension if no matching XmlElement is found.
         /// </summary>
         public IList<object> ExtensionObjects => m_extensionObjects;
-        #endregion
 
-        #region Persistent Properties
+
+
         /// <summary>
         /// A descriptive name for the application (not necessarily unique).
         /// </summary>
@@ -253,7 +253,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Disabling / enabling high resolution clock 
+        /// Disabling / enabling high resolution clock
         /// </summary>
         /// <value><c>true</c> if high resolution clock is disabled; otherwise, <c>false</c>.</value>
         [DataMember(IsRequired = false, EmitDefaultValue = false, Order = 12)]
@@ -262,9 +262,9 @@ namespace Opc.Ua
             get { return m_disableHiResClock; }
             set { m_disableHiResClock = value; }
         }
-        #endregion
 
-        #region Private Fields
+
+
         private string m_applicationName;
         private string m_applicationUri;
         private string m_productUri;
@@ -286,18 +286,18 @@ namespace Opc.Ua
         private IServiceMessageContext m_messageContext;
         private CertificateValidator m_certificateValidator;
         private Dictionary<string, object> m_properties;
-        #endregion
-    }
-    #endregion
 
-    #region TransportQuotas Class
+    }
+
+
+
     /// <summary>
     /// Specifies various limits that apply to the transport or secure channel layers.
     /// </summary>
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public class TransportQuotas
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -327,9 +327,9 @@ namespace Opc.Ua
         /// <param name="context">The context.</param>
         [OnDeserializing()]
         public void Initialize(StreamingContext context) => Initialize();
-        #endregion
 
-        #region Persistent Properties
+
+
         /// <summary>
         /// The default timeout to use when sending requests (in milliseconds).
         /// </summary>
@@ -417,9 +417,9 @@ namespace Opc.Ua
             get { return m_securityTokenLifetime; }
             set { m_securityTokenLifetime = value; }
         }
-        #endregion
 
-        #region Private Fields
+
+
         private int m_operationTimeout;
         private int m_maxStringLength;
         private int m_maxByteStringLength;
@@ -428,18 +428,18 @@ namespace Opc.Ua
         private int m_maxBufferSize;
         private int m_channelLifetime;
         private int m_securityTokenLifetime;
-        #endregion
-    }
-    #endregion
 
-    #region TraceConfiguration Class
+    }
+
+
+
     /// <summary>
     /// Specifies parameters used for tracing.
     /// </summary>
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public partial class TraceConfiguration
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -463,9 +463,9 @@ namespace Opc.Ua
         /// <param name="context">The context.</param>
         [OnDeserializing()]
         public void Initialize(StreamingContext context) => Initialize();
-        #endregion
 
-        #region Persistent Properties
+
+
         /// <summary>
         /// The output file used to log the trace information.
         /// </summary>
@@ -489,7 +489,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// The masks used to select what is written to the output  
+        /// The masks used to select what is written to the output
         /// Masks supported by the trace feature:
         /// - Do not output any messages -None = 0x0;
         /// - Output error messages - Error = 0x1;
@@ -510,17 +510,17 @@ namespace Opc.Ua
             get { return m_traceMasks; }
             set { m_traceMasks = value; }
         }
-        #endregion
 
-        #region Private Fields
+
+
         private string m_outputFilePath;
         private bool m_deleteOnLoad;
         private int m_traceMasks;
-        #endregion
-    }
-    #endregion
 
-    #region TransportConfiguration Class
+    }
+
+
+
     /// <summary>
     /// Specifies the configuration information for a transport protocol
     /// </summary>
@@ -530,7 +530,7 @@ namespace Opc.Ua
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public class TransportConfiguration
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -548,9 +548,9 @@ namespace Opc.Ua
             m_uriScheme = urlScheme;
             m_typeName = type.AssemblyQualifiedName;
         }
-        #endregion
 
-        #region Persistent Properties
+
+
         /// <summary>
         /// The URL prefix used by the application (http, opc.tcp, net.tpc, etc.).
         /// </summary>
@@ -567,9 +567,9 @@ namespace Opc.Ua
         /// </summary>
         /// <value>The name of the type.</value>
         /// <remarks>
-        /// This can be any instance of the System.ServiceModel.Channels.Binding class 
+        /// This can be any instance of the System.ServiceModel.Channels.Binding class
         /// that implements these constructors:
-        /// 
+        ///
         /// XxxBinding(EndpointDescription description, EndpointConfiguration configuration);
         /// XxxBinding(IList{EndpointDescription} descriptions, EndpointConfiguration configuration)
         /// XxxBinding(EndpointConfiguration configuration)
@@ -580,16 +580,16 @@ namespace Opc.Ua
             get { return m_typeName; }
             set { m_typeName = value; }
         }
-        #endregion
 
-        #region Private Fields
+
+
         private string m_uriScheme;
         private string m_typeName;
-        #endregion
-    }
-    #endregion
 
-    #region TransportConfigurationCollection Class
+    }
+
+
+
     /// <summary>
     /// A collection of TransportConfiguration objects.
     /// </summary>
@@ -616,16 +616,16 @@ namespace Opc.Ua
         /// <param name="capacity">The capacity.</param>
         public TransportConfigurationCollection(int capacity) : base(capacity) { }
     }
-    #endregion
 
-    #region ServerSecurityPolicy Class
+
+
     /// <summary>
     /// A class that defines a group of sampling rates supported by the server.
     /// </summary>
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public class ServerSecurityPolicy
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -649,9 +649,9 @@ namespace Opc.Ua
         /// <param name="context">The context.</param>
         [OnDeserializing()]
         public void Initialize(StreamingContext context) => Initialize();
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// Calculates the security level, given the security mode and policy
         /// Invalid and none is discouraged
@@ -705,16 +705,16 @@ namespace Opc.Ua
             get { return m_securityPolicyUri; }
             set { m_securityPolicyUri = value; }
         }
-        #endregion
 
-        #region Private Members
+
+
         private MessageSecurityMode m_securityMode;
         private string m_securityPolicyUri;
-        #endregion
-    }
-    #endregion
 
-    #region ServerSecurityPolicyCollection Class
+    }
+
+
+
     /// <summary>
     /// A collection of ServerSecurityPolicy objects.
     /// </summary>
@@ -741,16 +741,16 @@ namespace Opc.Ua
         /// <param name="capacity">The capacity.</param>
         public ServerSecurityPolicyCollection(int capacity) : base(capacity) { }
     }
-    #endregion
 
-    #region SecurityConfiguration Class
+
+
     /// <summary>
     /// The security configuration for the application.
     /// </summary>
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public partial class SecurityConfiguration
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -781,9 +781,9 @@ namespace Opc.Ua
         /// </summary>
         [OnDeserializing()]
         public void Initialize(StreamingContext context) => Initialize();
-        #endregion
 
-        #region Persistent Properties
+
+
         /// <summary>
         /// The application instance certificate.
         /// </summary>
@@ -849,7 +849,7 @@ namespace Opc.Ua
         /// <summary>
         /// A store where invalid certificates can be placed for later review by the administrator.
         /// </summary>
-        /// <value> 
+        /// <value>
         /// A store where invalid certificates can be placed for later review by the administrator.
         /// </value>
         [DataMember(IsRequired = false, EmitDefaultValue = false, Order = 7)]
@@ -1050,9 +1050,9 @@ namespace Opc.Ua
             get { return m_suppressNonceValidationErrors; }
             set { m_suppressNonceValidationErrors = value; }
         }
-        #endregion
 
-        #region Private Fields
+
+
         private CertificateIdentifier m_applicationCertificate;
         private CertificateTrustList m_trustedIssuerCertificates;
         private CertificateTrustList m_trustedPeerCertificates;
@@ -1070,18 +1070,18 @@ namespace Opc.Ua
         private bool m_addAppCertToTrustedStore;
         private bool m_sendCertificateChain;
         private bool m_suppressNonceValidationErrors;
-        #endregion
-    }
-    #endregion
 
-    #region SamplingRateGroup Class
+    }
+
+
+
     /// <summary>
     /// A class that defines a group of sampling rates supported by the server.
     /// </summary>
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public class SamplingRateGroup
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -1119,9 +1119,9 @@ namespace Opc.Ua
         /// <param name="context">The context.</param>
         [OnDeserializing()]
         public void Initialize(StreamingContext context) => Initialize();
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The first sampling rate in the group (in milliseconds).
         /// </summary>
@@ -1160,17 +1160,17 @@ namespace Opc.Ua
             get { return m_count; }
             set { m_count = value; }
         }
-        #endregion
 
-        #region Private Members
+
+
         private double m_start;
         private double m_increment;
         private int m_count;
-        #endregion
-    }
-    #endregion
 
-    #region SamplingRateGroupCollection Class
+    }
+
+
+
     /// <summary>
     /// A collection of SamplingRateGroup objects.
     /// </summary>
@@ -1197,16 +1197,16 @@ namespace Opc.Ua
         /// <param name="capacity">The capacity.</param>
         public SamplingRateGroupCollection(int capacity) : base(capacity) { }
     }
-    #endregion
 
-    #region ServerBaseConfiguration Class
+
+
     /// <summary>
     /// Specifies the configuration for a server application.
     /// </summary>
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public partial class ServerBaseConfiguration
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -1282,9 +1282,9 @@ namespace Opc.Ua
             }
             m_securityPolicies = newPolicies;
         }
-        #endregion
 
-        #region Persistent Properties
+
+
         /// <summary>
         /// The base addresses for the server.
         /// </summary>
@@ -1399,27 +1399,27 @@ namespace Opc.Ua
             get { return m_maxQueuedRequestCount; }
             set { m_maxQueuedRequestCount = value; }
         }
-        #endregion
 
-        #region Private Members
+
+
         private StringCollection m_baseAddresses;
         private StringCollection m_alternateBaseAddresses;
         private ServerSecurityPolicyCollection m_securityPolicies;
         private int m_minRequestThreadCount;
         private int m_maxRequestThreadCount;
         private int m_maxQueuedRequestCount;
-        #endregion
-    }
-    #endregion
 
-    #region ServerConfiguration Class
+    }
+
+
+
     /// <summary>
     /// Specifies the configuration for a server application.
     /// </summary>
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public partial class ServerConfiguration : ServerBaseConfiguration
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -1472,9 +1472,9 @@ namespace Opc.Ua
         /// <param name="context">The context.</param>
         [OnDeserializing()]
         public new void Initialize(StreamingContext context) => Initialize();
-        #endregion
 
-        #region Persistent Properties
+
+
         /// <summary>
         /// The user tokens accepted by the server.
         /// </summary>
@@ -1800,7 +1800,7 @@ namespace Opc.Ua
 
         /// <summary>
         /// The server capabilities.
-        /// The latest set of server capabilities is listed 
+        /// The latest set of server capabilities is listed
         /// <see href="http://www.opcfoundation.org/UA/schemas/1.04/ServerCapabilities.csv">here.</see>
         /// </summary>
         /// <value>The array of server capabilites.</value>
@@ -1875,9 +1875,9 @@ namespace Opc.Ua
             get { return m_operationLimits; }
             set { m_operationLimits = value; }
         }
-        #endregion
 
-        #region Private Members
+
+
         private UserTokenPolicyCollection m_userTokenPolicies;
         private bool m_diagnosticsEnabled;
         private int m_maxSessionCount;
@@ -1911,18 +1911,18 @@ namespace Opc.Ua
         private bool m_multicastDnsEnabled;
         private ReverseConnectServerConfiguration m_reverseConnect;
         private OperationLimits m_operationLimits;
-        #endregion
-    }
-    #endregion
 
-    #region ReverseConnectServerConfiguration Class
+    }
+
+
+
     /// <summary>
     /// Stores the configuration of the reverse connections.
     /// </summary>
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public class ReverseConnectServerConfiguration
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -1946,9 +1946,9 @@ namespace Opc.Ua
             ConnectTimeout = 30000;
             RejectTimeout = 60000;
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// A collection of reverse connect clients.
         /// </summary>
@@ -1973,18 +1973,18 @@ namespace Opc.Ua
         /// </summary>
         [DataMember(Order = 40)]
         public int RejectTimeout { get; set; }
-        #endregion
-    }
-    #endregion
 
-    #region OperationLimits Class
+    }
+
+
+
     /// <summary>
     /// Stores the operation limits of a OPC UA Server.
     /// </summary>
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public class OperationLimits
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -2017,9 +2017,9 @@ namespace Opc.Ua
             MaxNodesPerNodeManagement = 0;
             MaxMonitoredItemsPerCall = 0;
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// Indicates the maximum size of the nodesToRead array when a Client calls the Read Service.
         /// </summary>
@@ -2092,18 +2092,18 @@ namespace Opc.Ua
         /// </summary>
         [DataMember(Order = 120)]
         public uint MaxMonitoredItemsPerCall { get; set; }
-        #endregion
-    }
-    #endregion
 
-    #region ReverseConnectClient Class
+    }
+
+
+
     /// <summary>
     /// Stores the configuration of the reverse connections.
     /// </summary>
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public class ReverseConnectClient
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -2125,9 +2125,9 @@ namespace Opc.Ua
         {
             Enabled = true;
         }
-        #endregion
 
-        #region Persistent Properties
+
+
         /// <summary>
         /// The endpoint Url of the reverse connect client endpoint.
         /// </summary>
@@ -2156,18 +2156,18 @@ namespace Opc.Ua
         /// </summary>
         [DataMember(Order = 40)]
         public bool Enabled { get; set; } = true;
-        #endregion
-    }
-    #endregion
 
-    #region ReverseConnectClientCollection Class
+    }
+
+
+
     /// <summary>
     /// A collection of reverse connect clients.
     /// </summary>
     [CollectionDataContract(Name = "ListOfReverseConnectClient", Namespace = Namespaces.OpcUaConfig, ItemName = "ReverseConnectClient")]
     public class ReverseConnectClientCollection : List<ReverseConnectClient>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes an empty collection.
         /// </summary>
@@ -2187,18 +2187,18 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="capacity">The capacity.</param>
         public ReverseConnectClientCollection(int capacity) : base(capacity) { }
-        #endregion
-    }
-    #endregion
 
-    #region ClientConfiguration Class
+    }
+
+
+
     /// <summary>
     /// The configuration for a client application.
     /// </summary>
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public partial class ClientConfiguration
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -2224,9 +2224,9 @@ namespace Opc.Ua
         /// <param name="context">The context.</param>
         [OnDeserializing()]
         public void Initialize(StreamingContext context) => Initialize();
-        #endregion
 
-        #region Persistent Properties
+
+
         /// <summary>
         /// The default session timeout (in milliseconds).
         /// </summary>
@@ -2315,27 +2315,27 @@ namespace Opc.Ua
             get { return m_reverseConnect; }
             set { m_reverseConnect = value; }
         }
-        #endregion
 
-        #region Private Members
+
+
         private StringCollection m_wellKnownDiscoveryUrls;
         private EndpointDescriptionCollection m_discoveryServers;
         private int m_defaultSessionTimeout;
         private string m_endpointCacheFilePath;
         private int m_minSubscriptionLifetime;
         private ReverseConnectClientConfiguration m_reverseConnect;
-        #endregion
-    }
-    #endregion
 
-    #region ReverseConnectClientConfiguration Class
+    }
+
+
+
     /// <summary>
     /// Stores the configuration of the reverse connections.
     /// </summary>
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public class ReverseConnectClientConfiguration
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -2356,9 +2356,9 @@ namespace Opc.Ua
         private void Initialize()
         {
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// A collection of reverse connect client endpoints.
         /// </summary>
@@ -2377,18 +2377,18 @@ namespace Opc.Ua
         /// </summary>
         [DataMember(Order = 30, IsRequired = false)]
         public int WaitTimeout { get; set; } = 20000;
-        #endregion
-    }
-    #endregion
 
-    #region ReverseConnectClientEndpoint Class
+    }
+
+
+
     /// <summary>
     /// Stores the configuration of the reverse connections.
     /// </summary>
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public class ReverseConnectClientEndpoint
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -2409,26 +2409,26 @@ namespace Opc.Ua
         private void Initialize()
         {
         }
-        #endregion
 
-        #region Persistent Properties
+
+
         /// <summary>
         /// The endpoint Url of a reverse connect client.
         /// </summary>
         [DataMember(Order = 1, IsRequired = false)]
         public string EndpointUrl { get; set; }
-        #endregion
-    }
-    #endregion
 
-    #region ReverseConnectClientEndpointCollection Class
+    }
+
+
+
     /// <summary>
     /// A collection of reverse connect client endpoints.
     /// </summary>
     [CollectionDataContract(Name = "ListOfReverseConnectClientEndpoint", Namespace = Namespaces.OpcUaConfig, ItemName = "ClientEndpoint")]
     public class ReverseConnectClientEndpointCollection : List<ReverseConnectClientEndpoint>
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes an empty collection.
         /// </summary>
@@ -2448,18 +2448,18 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="capacity">The capacity.</param>
         public ReverseConnectClientEndpointCollection(int capacity) : base(capacity) { }
-        #endregion
-    }
-    #endregion
 
-    #region DiscoveryServerConfiguration Class
+    }
+
+
+
     /// <summary>
     /// Specifies the configuration for a discovery server application.
     /// </summary>
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public class DiscoveryServerConfiguration : ServerBaseConfiguration
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -2483,9 +2483,9 @@ namespace Opc.Ua
         /// <param name="context">The context.</param>
         [OnDeserializing()]
         public new void Initialize(StreamingContext context) => Initialize();
-        #endregion
 
-        #region Persistent Properties
+
+
         /// <summary>
         /// The localized names for the discovery server.
         /// </summary>
@@ -2530,24 +2530,24 @@ namespace Opc.Ua
             get { return m_serverRegistrations; }
             set { m_serverRegistrations = value; }
         }
-        #endregion
 
-        #region Private Members
+
+
         private LocalizedTextCollection m_serverNames;
         private string m_discoveryServerCacheFile;
         private ServerRegistrationCollection m_serverRegistrations;
-        #endregion
-    }
-    #endregion
 
-    #region ServerRegistration Class
+    }
+
+
+
     /// <summary>
     /// Specifies the configuration for a discovery server application.
     /// </summary>
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public class ServerRegistration
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -2571,9 +2571,9 @@ namespace Opc.Ua
         /// <param name="context">The context.</param>
         [OnDeserializing()]
         public void Initialize(StreamingContext context) => Initialize();
-        #endregion
 
-        #region Persistent Properties
+
+
         /// <summary>
         /// Gets or sets the application URI of the server which the registration applies to.
         /// </summary>
@@ -2601,9 +2601,9 @@ namespace Opc.Ua
         /// or similar network infrastructure. If these paths are specified in the configuration
         /// file then the server will use the domain of the URL used by the client to determine
         /// which, if any, or the alternate addresses to use instead of the primary addresses.
-        /// 
+        ///
         /// In the ideal world the server would provide these URLs during registration but this
-        /// table allows the administrator to provide the information to the disovery server 
+        /// table allows the administrator to provide the information to the disovery server
         /// directly without requiring a patch to the server.
         /// </remarks>
         [DataMember(IsRequired = false, EmitDefaultValue = false, Order = 2)]
@@ -2624,16 +2624,16 @@ namespace Opc.Ua
                 }
             }
         }
-        #endregion
 
-        #region Private Members
+
+
         private string m_applicationUri;
         private StringCollection m_alternateDiscoveryUrls;
-        #endregion
-    }
-    #endregion
 
-    #region ServerRegistrationCollection Class
+    }
+
+
+
     /// <summary>
     /// A collection of AdditionalServerRegistrationInfo objects.
     /// </summary>
@@ -2660,16 +2660,16 @@ namespace Opc.Ua
         /// <param name="capacity">The capacity.</param>
         public ServerRegistrationCollection(int capacity) : base(capacity) { }
     }
-    #endregion
 
-    #region CertificateStoreIdentifier Class
+
+
     /// <summary>
     /// Describes a certificate store.
     /// </summary>
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public partial class CertificateStoreIdentifier
     {
-        #region Persistent Properties
+
         /// <summary>
         /// The type of certificate store.
         /// </summary>
@@ -2736,7 +2736,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// The name of the certifcate store that contains the trusted certficates. 
+        /// The name of the certifcate store that contains the trusted certficates.
         /// </summary>
         [DataMember(IsRequired = false, EmitDefaultValue = false, Order = 2)]
         [Obsolete("Use StoreType/StorePath instead")]
@@ -2747,7 +2747,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// The location of the certifcate store that contains the trusted certficates. 
+        /// The location of the certifcate store that contains the trusted certficates.
         /// </summary>
         [DataMember(IsRequired = false, EmitDefaultValue = false, Order = 3)]
         [Obsolete("Use StoreType/StorePath instead")]
@@ -2766,23 +2766,23 @@ namespace Opc.Ua
             get { return (int)m_validationOptions; }
             set { m_validationOptions = (CertificateValidationOptions)value; }
         }
-        #endregion
 
-        #region Private Fields
+
+
         private string m_storeType;
         private string m_storePath;
         private string m_storeLocation;
         private string m_storeName;
         private CertificateValidationOptions m_validationOptions;
-        #endregion
-    }
-    #endregion
 
-    #region CertificateTrustList Class
+    }
+
+
+
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public partial class CertificateTrustList : CertificateStoreIdentifier
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -2805,9 +2805,9 @@ namespace Opc.Ua
         /// </summary>
         [OnDeserializing()]
         public void Initialize(StreamingContext context) => Initialize();
-        #endregion
 
-        #region Persistent Properties
+
+
         /// <summary>
         /// The list of trusted certificates.
         /// </summary>
@@ -2832,15 +2832,15 @@ namespace Opc.Ua
                 }
             }
         }
-        #endregion
 
-        #region Private Fields
+
+
         private CertificateIdentifierCollection m_trustedCertificates;
-        #endregion
-    }
-    #endregion
 
-    #region CertificateIdentifierCollection Class
+    }
+
+
+
     [CollectionDataContract(Name = "ListOfCertificateIdentifier", Namespace = Namespaces.OpcUaConfig, ItemName = "CertificateIdentifier")]
     public partial class CertificateIdentifierCollection : List<CertificateIdentifier>
     {
@@ -2860,13 +2860,13 @@ namespace Opc.Ua
         /// </summary>
         public CertificateIdentifierCollection(int capacity) : base(capacity) { }
     }
-    #endregion
 
-    #region CertificateIdentifier Class
+
+
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public partial class CertificateIdentifier
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -2916,9 +2916,9 @@ namespace Opc.Ua
         /// </summary>
         [OnDeserializing()]
         public void Initialize(StreamingContext context) => Initialize();
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The type of certificate store.
         /// </summary>
@@ -3010,7 +3010,7 @@ namespace Opc.Ua
         /// <value>
         /// The distinguished name of an X509 certificate acording to the Abstract Syntax Notation One (ASN.1) syntax.
         /// </value>
-        /// <remarks> The subject field identifies the entity associated with the public key stored in the subject public 
+        /// <remarks> The subject field identifies the entity associated with the public key stored in the subject public
         /// key field.  The subject name MAY be carried in the subject field and/or the subjectAltName extension.
         /// Where it is non-empty, the subject field MUST contain an X.500 distinguished name (DN).
         /// Name is defined by the following ASN.1 structures:
@@ -3026,26 +3026,26 @@ namespace Opc.Ua
         ///   universalString         UniversalString (SIZE (1..MAX)),
         ///   utf8String              UTF8String (SIZE (1..MAX)),
         ///   bmpString               BMPString (SIZE (1..MAX)) }
-        ///  The Name describes a hierarchical name composed of attributes, such as country name, and 
-        ///  corresponding values, such as US.  The type of the component AttributeValue is determined by 
+        ///  The Name describes a hierarchical name composed of attributes, such as country name, and
+        ///  corresponding values, such as US.  The type of the component AttributeValue is determined by
         ///  the AttributeType; in general it will be a DirectoryString.
         /// String X.500 AttributeType:
         /// <list type="bullet">
-        /// <item>CN commonName</item> 
+        /// <item>CN commonName</item>
         /// <item>L localityName</item>
         /// <item>ST stateOrProvinceName</item>
-        /// <item>O organizationName</item> 
+        /// <item>O organizationName</item>
         /// <item>OU organizationalUnitName</item>
         /// <item>C countryName</item>
         /// <item>STREET streetAddress</item>
         /// <item>DC domainComponent</item>
         /// <item>UID userid</item>
         /// </list>
-        /// This notation is designed to be convenient for common forms of name. This section gives a few 
+        /// This notation is designed to be convenient for common forms of name. This section gives a few
         /// examples of distinguished names written using this notation. First is a name containing three relative
         /// distinguished names (RDNs):
         /// <code>CN=Steve Kille,O=Isode Limited,C=GB</code>
-        /// 
+        ///
         /// RFC 3280 Internet X.509 Public Key Infrastructure, April 2002
         /// RFC 2253 LADPv3 Distinguished Names, December 1997
         /// </remarks>
@@ -3151,9 +3151,9 @@ namespace Opc.Ua
             get { return (int)m_validationOptions; }
             set { m_validationOptions = (CertificateValidationOptions)value; }
         }
-        #endregion
 
-        #region Private Fields
+
+
         private string m_storeType;
         private string m_storePath;
         private string m_storeLocation;
@@ -3162,18 +3162,18 @@ namespace Opc.Ua
         private string m_thumbprint;
         private X509Certificate2 m_certificate;
         private CertificateValidationOptions m_validationOptions;
-        #endregion
-    }
-    #endregion
 
-    #region ConfiguredEndpointCollection Class
+    }
+
+
+
     /// <summary>
     /// Stores a list of cached enpoints.
     /// </summary>
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public partial class ConfiguredEndpointCollection
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -3198,9 +3198,9 @@ namespace Opc.Ua
             m_endpoints = new List<ConfiguredEndpoint>();
             m_defaultConfiguration = EndpointConfiguration.Create();
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// A list of known hosts that can be used for discovery.
         /// </summary>
@@ -3269,20 +3269,19 @@ namespace Opc.Ua
                 m_tcpProxyUrl = value;
             }
         }
-        #endregion
 
-        #region Private Fields
-        private string m_filepath;
+
+
         private StringCollection m_knownHosts;
         private StringCollection m_discoveryUrls;
         private EndpointConfiguration m_defaultConfiguration;
         private List<ConfiguredEndpoint> m_endpoints;
         private Uri m_tcpProxyUrl;
-        #endregion
-    }
-    #endregion
 
-    #region ConfiguredEndpoint Class
+    }
+
+
+
     /// <summary>
     /// Stores the configuration information for an endpoint.
     /// </summary>
@@ -3292,7 +3291,7 @@ namespace Opc.Ua
     [KnownType(typeof(IssuedIdentityToken))]
     public partial class ConfiguredEndpoint
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -3321,9 +3320,9 @@ namespace Opc.Ua
             m_userIdentity = null;
             m_reverseConnect = null;
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The description for the endpoint.
         /// </summary>
@@ -3437,9 +3436,9 @@ namespace Opc.Ua
             get { return m_extensions; }
             set { m_extensions = value; }
         }
-        #endregion
 
-        #region Private Fields
+
+
         private ConfiguredEndpointCollection m_collection;
         private EndpointDescription m_description;
         private EndpointConfiguration m_configuration;
@@ -3449,11 +3448,11 @@ namespace Opc.Ua
         private UserIdentityToken m_userIdentity;
         private ReverseConnectEndpoint m_reverseConnect;
         private XmlElementCollection m_extensions;
-        #endregion
-    }
-    #endregion
 
-    #region BinaryEncodingSupport Enumeration
+    }
+
+
+
     /// <summary>
     /// The type of binary encoding support allowed by a channel.
     /// </summary>
@@ -3478,16 +3477,16 @@ namespace Opc.Ua
         [EnumMember()]
         None
     }
-    #endregion
 
-    #region ReverseConnectEndpoint Class
+
+
     /// <summary>
     /// Stores the reverse connect information for an endpoint.
     /// </summary>
     [DataContract(Namespace = Namespaces.OpcUaConfig)]
     public partial class ReverseConnectEndpoint
     {
-        #region Constructors
+
         /// <summary>
         /// The default constructor.
         /// </summary>
@@ -3511,9 +3510,9 @@ namespace Opc.Ua
             m_serverUri = null;
             m_thumbprint = null;
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// Whether reverse connect is enabled for the endpoint.
         /// </summary>
@@ -3544,13 +3543,13 @@ namespace Opc.Ua
             get { return m_thumbprint; }
             set { m_thumbprint = value; }
         }
-        #endregion
 
-        #region Private Fields
+
+
         private bool m_enabled;
         private string m_serverUri;
         private string m_thumbprint;
-        #endregion
+
     }
-    #endregion
+
 }

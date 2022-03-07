@@ -23,7 +23,7 @@ namespace Opc.Ua
     /// </summary>
     public partial class RelativePath
     {
-        #region Constructors
+
         /// <summary>
         /// Creates a relative path to follow any hierarchial references to find the specified browse name.
         /// </summary>
@@ -45,24 +45,24 @@ namespace Opc.Ua
         {
             Initialize();
 
-            RelativePathElement element = new RelativePathElement();
-
-            element.ReferenceTypeId = referenceTypeId;
-            element.IsInverse = isInverse;
-            element.IncludeSubtypes = includeSubtypes;
-            element.TargetName = browseName;
+            var element = new RelativePathElement {
+                ReferenceTypeId = referenceTypeId,
+                IsInverse = isInverse,
+                IncludeSubtypes = includeSubtypes,
+                TargetName = browseName
+            };
 
             m_elements.Add(element);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// Formats the relative path as a string.
         /// </summary>
         public string Format(ITypeTable typeTree)
         {
-            RelativePathFormatter formatter = new RelativePathFormatter(this, typeTree);
+            var formatter = new RelativePathFormatter(this, typeTree);
             return formatter.ToString();
         }
 
@@ -84,22 +84,25 @@ namespace Opc.Ua
         /// </summary>
         public static RelativePath Parse(string browsePath, ITypeTable typeTree)
         {
-            if (typeTree == null) throw new ArgumentNullException(nameof(typeTree));
+            if (typeTree == null)
+            {
+                throw new ArgumentNullException(nameof(typeTree));
+            }
 
             // parse the string.
-            RelativePathFormatter formatter = RelativePathFormatter.Parse(browsePath);
+            var formatter = RelativePathFormatter.Parse(browsePath);
 
             // convert the browse names to node ids.
-            RelativePath relativePath = new RelativePath();
+            var relativePath = new RelativePath();
 
             foreach (RelativePathFormatter.Element element in formatter.Elements)
             {
-                RelativePathElement parsedElement = new RelativePathElement();
-
-                parsedElement.ReferenceTypeId = null;
-                parsedElement.IsInverse = false;
-                parsedElement.IncludeSubtypes = element.IncludeSubtypes;
-                parsedElement.TargetName = element.TargetName;
+                var parsedElement = new RelativePathElement {
+                    ReferenceTypeId = null,
+                    IsInverse = false,
+                    IncludeSubtypes = element.IncludeSubtypes,
+                    TargetName = element.TargetName
+                };
 
                 switch (element.ElementType)
                 {
@@ -154,19 +157,19 @@ namespace Opc.Ua
 
         {
             // parse the string.
-            RelativePathFormatter formatter = RelativePathFormatter.Parse(browsePath, currentTable, targetTable);
+            var formatter = RelativePathFormatter.Parse(browsePath, currentTable, targetTable);
 
             // convert the browse names to node ids.
-            RelativePath relativePath = new RelativePath();
+            var relativePath = new RelativePath();
 
             foreach (RelativePathFormatter.Element element in formatter.Elements)
             {
-                RelativePathElement parsedElement = new RelativePathElement();
-
-                parsedElement.ReferenceTypeId = null;
-                parsedElement.IsInverse = false;
-                parsedElement.IncludeSubtypes = element.IncludeSubtypes;
-                parsedElement.TargetName = element.TargetName;
+                var parsedElement = new RelativePathElement {
+                    ReferenceTypeId = null,
+                    IsInverse = false,
+                    IncludeSubtypes = element.IncludeSubtypes,
+                    TargetName = element.TargetName
+                };
 
                 switch (element.ElementType)
                 {
@@ -209,7 +212,7 @@ namespace Opc.Ua
 
             return relativePath;
         }
-        #endregion
+
     }
 
     /// <summary>
@@ -217,7 +220,7 @@ namespace Opc.Ua
     /// </summary>
     public class RelativePathFormatter : IFormattable
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object the default values.
         /// </summary>
@@ -241,9 +244,9 @@ namespace Opc.Ua
         {
             m_elements = new List<Element>();
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The elements in the relative path.
         /// </summary>
@@ -251,73 +254,6 @@ namespace Opc.Ua
         /// The elements in the relative path.
         /// </remarks>
         public List<Element> Elements => m_elements;
-
-        /// <summary>
-        /// Updates the namespace table with URI used in the relative path.
-        /// </summary>
-        /// <param name="currentTable">The current table.</param>
-        /// <param name="targetTable">The target table.</param>
-        public void UpdateNamespaceTable(NamespaceTable currentTable, NamespaceTable targetTable)
-        {
-            // build mapping table.
-            int[] mappings = new int[currentTable.Count];
-            mappings[0] = 0;
-
-            if (mappings.Length > 0)
-            {
-                mappings[1] = 1;
-            }
-
-            // ensure a placeholder for the local namespace.
-            if (targetTable.Count <= 1)
-            {
-                targetTable.Append("---");
-            }
-
-            string[] uris = new string[mappings.Length];
-
-            for (int ii = 2; ii < mappings.Length; ii++)
-            {
-                uris[ii] = currentTable.GetString((uint)ii);
-
-                if (uris[ii] != null)
-                {
-                    mappings[ii] = targetTable.GetIndex(uris[ii]);
-                }
-            }
-
-            // update each element.
-            foreach (Element element in m_elements)
-            {
-                // check reference type name.
-                QualifiedName qname = element.ReferenceTypeName;
-
-                if (qname != null && qname.NamespaceIndex > 1)
-                {
-                    if (qname.NamespaceIndex < mappings.Length)
-                    {
-                        if (mappings[qname.NamespaceIndex] == -1)
-                        {
-                            mappings[qname.NamespaceIndex] = targetTable.GetIndexOrAppend(uris[qname.NamespaceIndex]);
-                        }
-                    }
-                }
-
-                // check target name.
-                qname = element.TargetName;
-
-                if (qname != null && qname.NamespaceIndex > 1)
-                {
-                    if (qname.NamespaceIndex < mappings.Length)
-                    {
-                        if (mappings[qname.NamespaceIndex] == -1)
-                        {
-                            mappings[qname.NamespaceIndex] = targetTable.GetIndexOrAppend(uris[qname.NamespaceIndex]);
-                        }
-                    }
-                }
-            }
-        }
 
         /// <summary>
         /// Updates the path to use the indexes from the target table.
@@ -367,9 +303,9 @@ namespace Opc.Ua
                 }
             }
         }
-        #endregion
 
-        #region Overriden Members
+
+
         /// <summary>
         /// Formats the relative path as a string.
         /// </summary>
@@ -380,9 +316,9 @@ namespace Opc.Ua
         {
             return ToString(null, null);
         }
-        #endregion
 
-        #region IFormattable Members
+
+
         /// <summary>
         /// Formats the relative path as a string.
         /// </summary>
@@ -396,7 +332,7 @@ namespace Opc.Ua
         {
             if (format == null)
             {
-                StringBuilder path = new StringBuilder();
+                var path = new StringBuilder();
 
                 foreach (Element element in m_elements)
                 {
@@ -407,21 +343,6 @@ namespace Opc.Ua
             }
 
             throw new FormatException(Utils.Format("Invalid format string: '{0}'.", format));
-        }
-        #endregion
-
-        #region Static Members
-        /// <summary>
-        /// Returns true if the relative path does not specify any elements.
-        /// </summary>
-        public static bool IsEmpty(RelativePathFormatter relativePath)
-        {
-            if (relativePath != null)
-            {
-                return relativePath.Elements.Count == 0;
-            }
-
-            return true;
         }
 
         /// <summary>
@@ -452,20 +373,20 @@ namespace Opc.Ua
         /// <exception cref="ServiceResultException">Thrown if any errors occur during parsing</exception>
         public static RelativePathFormatter Parse(string textToParse)
         {
-            if (String.IsNullOrEmpty(textToParse))
+            if (string.IsNullOrEmpty(textToParse))
             {
                 return new RelativePathFormatter();
             }
 
-            RelativePathFormatter path = new RelativePathFormatter();
+            var path = new RelativePathFormatter();
 
             try
             {
-                StringReader reader = new StringReader(textToParse);
+                var reader = new StringReader(textToParse);
 
                 while (reader.Peek() != -1)
                 {
-                    Element element = Element.Parse(reader);
+                    var element = Element.Parse(reader);
                     path.m_elements.Add(element);
                 }
             }
@@ -479,23 +400,30 @@ namespace Opc.Ua
 
             return path;
         }
-        #endregion
 
-        #region Element class
+
+
         /// <summary>
         /// A element in a relative path string.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
         public class Element : IFormattable
         {
-            #region Constructors
+
             /// <summary>
             /// Initializes the object from a RelativePathElement
             /// </summary>
             public Element(RelativePathElement element, ITypeTable typeTree)
             {
-                if (element == null) throw new ArgumentNullException(nameof(element));
-                if (typeTree == null) throw new ArgumentNullException(nameof(typeTree));
+                if (element == null)
+                {
+                    throw new ArgumentNullException(nameof(element));
+                }
+
+                if (typeTree == null)
+                {
+                    throw new ArgumentNullException(nameof(typeTree));
+                }
 
                 m_referenceTypeName = null;
                 m_targetName = element.TargetName;
@@ -538,16 +466,16 @@ namespace Opc.Ua
                 m_includeSubtypes = true;
                 m_targetName = null;
             }
-            #endregion
 
-            #region Public Properties
+
+
             /// <summary>
             /// The type of element.
             /// </summary>
             public ElementType ElementType
             {
-                get { return m_elementType; }
-                set { m_elementType = value; }
+                get => m_elementType;
+                set => m_elementType = value;
             }
 
             /// <summary>
@@ -555,8 +483,8 @@ namespace Opc.Ua
             /// </summary>
             public QualifiedName ReferenceTypeName
             {
-                get { return m_referenceTypeName; }
-                set { m_referenceTypeName = value; }
+                get => m_referenceTypeName;
+                set => m_referenceTypeName = value;
             }
 
             /// <summary>
@@ -564,8 +492,8 @@ namespace Opc.Ua
             /// </summary>
             public bool IncludeSubtypes
             {
-                get { return m_includeSubtypes; }
-                set { m_includeSubtypes = value; }
+                get => m_includeSubtypes;
+                set => m_includeSubtypes = value;
             }
 
             /// <summary>
@@ -573,12 +501,12 @@ namespace Opc.Ua
             /// </summary>
             public QualifiedName TargetName
             {
-                get { return m_targetName; }
-                set { m_targetName = value; }
+                get => m_targetName;
+                set => m_targetName = value;
             }
-            #endregion
 
-            #region Overriden Members
+
+
             /// <summary>
             /// Formats the relative path element as a string.
             /// </summary>
@@ -586,9 +514,9 @@ namespace Opc.Ua
             {
                 return ToString(null, null);
             }
-            #endregion
 
-            #region IFormattable Members
+
+
             /// <summary>
             /// Formats the numeric range as a string.
             /// </summary>
@@ -599,7 +527,7 @@ namespace Opc.Ua
             {
                 if (format == null)
                 {
-                    StringBuilder path = new StringBuilder();
+                    var path = new StringBuilder();
 
                     // write the reference type component.
                     switch (m_elementType)
@@ -619,7 +547,7 @@ namespace Opc.Ua
                         case ElementType.ForwardReference:
                         case ElementType.InverseReference:
                         {
-                            if (m_referenceTypeName != null && !String.IsNullOrEmpty(m_referenceTypeName.Name))
+                            if (m_referenceTypeName != null && !string.IsNullOrEmpty(m_referenceTypeName.Name))
                             {
                                 path.Append('<');
 
@@ -647,7 +575,7 @@ namespace Opc.Ua
                     }
 
                     // write the target browse name component.
-                    if (m_targetName != null && !String.IsNullOrEmpty(m_targetName.Name))
+                    if (m_targetName != null && !string.IsNullOrEmpty(m_targetName.Name))
                     {
                         if (m_targetName.NamespaceIndex != 0)
                         {
@@ -662,16 +590,16 @@ namespace Opc.Ua
 
                 throw new FormatException(Utils.Format("Invalid format string: '{0}'.", format));
             }
-            #endregion
 
-            #region Static Methods
+
+
             /// <summary>
             /// Extracts a relative path element from a string.
             /// </summary>
             /// <param name="reader">The string read stream containing the text to convert to a RelativePathStringElement</param>
             public static Element Parse(StringReader reader)
             {
-                Element element = new Element();
+                var element = new Element();
 
                 int next = reader.Peek();
 
@@ -723,9 +651,9 @@ namespace Opc.Ua
 
                 return element;
             }
-            #endregion
 
-            #region Private Methods
+
+
             /// <summary>
             /// Extracts a browse name with an optional namespace prefix from the reader.
             /// </summary>
@@ -736,13 +664,13 @@ namespace Opc.Ua
                 ushort namespaceIndex = 0;
 
                 // extract namespace index if present.
-                StringBuilder buffer = new StringBuilder();
+                var buffer = new StringBuilder();
 
                 int last = reader.Peek();
 
-                for (int next = last; next != -1; next = reader.Peek(), last=next)
+                for (int next = last; next != -1; next = reader.Peek(), last = next)
                 {
-                    if (!Char.IsDigit((char)next))
+                    if (!char.IsDigit((char)next))
                     {
                         if (next == ':')
                         {
@@ -860,18 +788,18 @@ namespace Opc.Ua
                     path.Append(name[ii]);
                 }
             }
-            #endregion
 
-            #region Private Fields
+
+
             private ElementType m_elementType;
             private bool m_includeSubtypes;
             private QualifiedName m_referenceTypeName;
             private QualifiedName m_targetName;
-            #endregion
-        }
-        #endregion
 
-        #region ElementType enumeration
+        }
+
+
+
         /// <summary>
         /// The type of relative path element.
         /// </summary>
@@ -898,10 +826,10 @@ namespace Opc.Ua
             /// </summary>
             InverseReference = 0x04
         }
-        #endregion
 
-        #region Private Fields
-        private List<Element> m_elements;
-        #endregion
+
+
+        private readonly List<Element> m_elements;
+
     }
 }

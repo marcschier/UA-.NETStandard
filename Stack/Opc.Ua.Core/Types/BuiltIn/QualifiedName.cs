@@ -43,7 +43,7 @@ namespace Opc.Ua
     [DataContract(Namespace = Namespaces.OpcUaXsd)]
     public class QualifiedName : IFormattable, IComparable
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the object with default values.
         /// </summary>
@@ -66,7 +66,10 @@ namespace Opc.Ua
         /// <exception cref="ArgumentNullException">Thrown if the provided value is null</exception>
         public QualifiedName(QualifiedName value)
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
 
             m_name = value.m_name;
             m_namespaceIndex = value.m_namespaceIndex;
@@ -98,9 +101,9 @@ namespace Opc.Ua
             m_namespaceIndex = namespaceIndex;
             m_name = name;
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The index of the namespace that qualifies the name.
         /// </summary>
@@ -113,8 +116,8 @@ namespace Opc.Ua
         [DataMember(Name = "NamespaceIndex", Order = 1)]
         internal ushort XmlEncodedNamespaceIndex
         {
-            get { return m_namespaceIndex; }
-            set { m_namespaceIndex = value; }
+            get => m_namespaceIndex;
+            set => m_namespaceIndex = value;
         }
 
         /// <summary>
@@ -131,12 +134,12 @@ namespace Opc.Ua
         [DataMember(Name = "Name", Order = 2)]
         internal string XmlEncodedName
         {
-            get { return m_name; }
-            set { m_name = value; }
+            get => m_name;
+            set => m_name = value;
         }
-        #endregion
 
-        #region IComparable Members
+
+
         /// <summary>
         /// Compares two QualifiedNames.
         /// </summary>
@@ -158,7 +161,7 @@ namespace Opc.Ua
                 return 0;
             }
 
-            QualifiedName qname = obj as QualifiedName;
+            var qname = obj as QualifiedName;
 
             if (qname == null)
             {
@@ -172,7 +175,7 @@ namespace Opc.Ua
 
             if (m_name != null)
             {
-                return String.CompareOrdinal(m_name, qname.m_name);
+                return string.CompareOrdinal(m_name, qname.m_name);
             }
 
             return 0;
@@ -209,9 +212,9 @@ namespace Opc.Ua
 
             return true;
         }
-        #endregion
 
-        #region Overridden Methods
+
+
         /// <summary>
         /// Returns a suitable hash value for the instance.
         /// </summary>
@@ -244,7 +247,7 @@ namespace Opc.Ua
                 return true;
             }
 
-            QualifiedName qname = obj as QualifiedName;
+            var qname = obj as QualifiedName;
 
             if (qname == null)
             {
@@ -305,9 +308,9 @@ namespace Opc.Ua
         {
             return ToString(null, null);
         }
-        #endregion
 
-        #region IFormattable Members
+
+
         /// <summary>
         /// Returns the string representation of the object.
         /// </summary>
@@ -323,9 +326,9 @@ namespace Opc.Ua
             {
                 int capacity = (m_name != null) ? m_name.Length : 0;
 
-                StringBuilder builder = new StringBuilder(capacity + 10);
+                var builder = new StringBuilder(capacity + 10);
 
-                if (this.m_namespaceIndex == 0)
+                if (m_namespaceIndex == 0)
                 {
                     // prepend the namespace index if the name contains a colon.
                     if (m_name != null)
@@ -354,9 +357,9 @@ namespace Opc.Ua
 
             throw new FormatException(Utils.Format("Invalid format string: '{0}'.", format));
         }
-        #endregion
 
-        #region ICloneable Members
+
+
         /// <summary>
         /// Makes a deep copy of the object.
         /// </summary>
@@ -368,22 +371,22 @@ namespace Opc.Ua
             // this object cannot be altered after it is created so no new allocation is necessary.
             return this;
         }
-        #endregion
 
-        #region Static Methods
+
+
         /// <summary>
         /// Converts an expanded node id to a node id using a namespace table.
         /// </summary>
         public static QualifiedName Create(string name, string namespaceUri, NamespaceTable namespaceTable)
         {
             // check for null.
-            if (String.IsNullOrEmpty(name))
+            if (string.IsNullOrEmpty(name))
             {
                 return QualifiedName.Null;
             }
 
             // return a name using the default namespace.
-            if (String.IsNullOrEmpty(namespaceUri))
+            if (string.IsNullOrEmpty(namespaceUri))
             {
                 return new QualifiedName(name);
             }
@@ -414,7 +417,7 @@ namespace Opc.Ua
         /// <returns>True if the name is value.</returns>
         public static bool IsValid(QualifiedName value, NamespaceTable namespaceUris)
         {
-            if (value == null || String.IsNullOrEmpty(value.m_name))
+            if (value == null || string.IsNullOrEmpty(value.m_name))
             {
                 return false;
             }
@@ -438,7 +441,7 @@ namespace Opc.Ua
         public static QualifiedName Parse(string text)
         {
             // check for null.
-            if (String.IsNullOrEmpty(text))
+            if (string.IsNullOrEmpty(text))
             {
                 return QualifiedName.Null;
             }
@@ -457,7 +460,7 @@ namespace Opc.Ua
                     break;
                 }
 
-                if (Char.IsDigit(ch))
+                if (char.IsDigit(ch))
                 {
                     namespaceIndex *= 10;
                     namespaceIndex += (ushort)(ch - '0');
@@ -481,7 +484,7 @@ namespace Opc.Ua
         {
             if (value != null)
             {
-                if (value.m_namespaceIndex != 0 || !String.IsNullOrEmpty(value.m_name))
+                if (value.m_namespaceIndex != 0 || !string.IsNullOrEmpty(value.m_name))
                 {
                     return false;
                 }
@@ -520,15 +523,15 @@ namespace Opc.Ua
         public static QualifiedName Null => s_Null;
 
         private static readonly QualifiedName s_Null = new QualifiedName();
-        #endregion
 
-        #region Private Fields
+
+
         private ushort m_namespaceIndex;
         private string m_name;
-        #endregion
+
     }
 
-    #region QualifiedNameCollection Class
+
     /// <summary>
     /// A collection of QualifiedName objects.
     /// </summary>
@@ -601,7 +604,7 @@ namespace Opc.Ua
         /// </remarks>
         public new object MemberwiseClone()
         {
-            QualifiedNameCollection clone = new QualifiedNameCollection(this.Count);
+            var clone = new QualifiedNameCollection(Count);
 
             foreach (QualifiedName element in this)
             {
@@ -611,5 +614,5 @@ namespace Opc.Ua
             return clone;
         }
     }//class
-    #endregion
+
 }//namespace

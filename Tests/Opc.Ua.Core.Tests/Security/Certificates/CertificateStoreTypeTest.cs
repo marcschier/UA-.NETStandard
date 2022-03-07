@@ -20,7 +20,7 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
             CertificateStoreType.RegisterCertificateStoreType("testStoreType", new TestStoreType());
         }
 
-        #region Test Methods
+        
         [Test]
         public async Task CertifcateStoreTypeConfigTest()
         {
@@ -36,7 +36,7 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
             CertificateStoreIdentifier.OpenStore(TestCertStore.StoreTypePrefix + @"CurrentUser\Disallowed");
             Assert.IsTrue(instancesCreatedWhileOpeningAuthRootStore < TestCertStore.InstancesCreated);
         }
-        #endregion Test Methods
+         Test Methods
     }
 
     internal sealed class TestStoreType : ICertificateStoreType
@@ -149,10 +149,10 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
 
         public static int InstancesCreated => s_instancesCreated;
 
-        #region data members
+        
         internal const string StoreTypePrefix = "testStoreType:";
         private static int s_instancesCreated = 0;
         private readonly X509CertificateStore m_innerStore;
-        #endregion data members
+         data members
     }
 }

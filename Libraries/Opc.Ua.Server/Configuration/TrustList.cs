@@ -28,7 +28,6 @@
  * ======================================================================*/
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -41,9 +40,9 @@ namespace Opc.Ua.Server
     /// </summary>
     public class TrustList
     {
-        const int DefaultTrustListCapacity = 0x10000;
+        private const int DefaultTrustListCapacity = 0x10000;
 
-        #region Constructors
+
         /// <summary>
         /// Initialize the trustlist with default values.
         /// </summary>
@@ -64,17 +63,17 @@ namespace Opc.Ua.Server
             node.AddCertificate.OnCall = new AddCertificateMethodStateMethodCallHandler(AddCertificate);
             node.RemoveCertificate.OnCall = new RemoveCertificateMethodStateMethodCallHandler(RemoveCertificate);
         }
-        #endregion
 
-        #region Public Methods
+
+
         /// <summary>
         /// Delegate to validate the access to the trust list.
         /// </summary>
         /// <param name="context"></param>
         public delegate void SecureAccess(ISystemContext context);
-        #endregion
 
-        #region Private Methods
+
+
         private ServiceResult Open(
             ISystemContext context,
             MethodState method,
@@ -132,7 +131,7 @@ namespace Opc.Ua.Server
                 m_sessionId = context.SessionId;
                 fileHandle = ++m_fileHandle;
 
-                TrustListDataType trustList = new TrustListDataType() {
+                var trustList = new TrustListDataType() {
                     SpecifiedLists = (uint)masks
                 };
 
@@ -141,7 +140,7 @@ namespace Opc.Ua.Server
                     if ((masks & TrustListMasks.TrustedCertificates) != 0)
                     {
                         X509Certificate2Collection certificates = store.Enumerate().GetAwaiter().GetResult();
-                        foreach (var certificate in certificates)
+                        foreach (X509Certificate2 certificate in certificates)
                         {
                             trustList.TrustedCertificates.Add(certificate.RawData);
                         }
@@ -149,7 +148,7 @@ namespace Opc.Ua.Server
 
                     if ((masks & TrustListMasks.TrustedCrls) != 0)
                     {
-                        foreach (var crl in store.EnumerateCRLs().GetAwaiter().GetResult())
+                        foreach (X509CRL crl in store.EnumerateCRLs().GetAwaiter().GetResult())
                         {
                             trustList.TrustedCrls.Add(crl.RawData);
                         }
@@ -161,7 +160,7 @@ namespace Opc.Ua.Server
                     if ((masks & TrustListMasks.IssuerCertificates) != 0)
                     {
                         X509Certificate2Collection certificates = store.Enumerate().GetAwaiter().GetResult();
-                        foreach (var certificate in certificates)
+                        foreach (X509Certificate2 certificate in certificates)
                         {
                             trustList.IssuerCertificates.Add(certificate.RawData);
                         }
@@ -169,7 +168,7 @@ namespace Opc.Ua.Server
 
                     if ((masks & TrustListMasks.IssuerCrls) != 0)
                     {
-                        foreach (var crl in store.EnumerateCRLs().GetAwaiter().GetResult())
+                        foreach (X509CRL crl in store.EnumerateCRLs().GetAwaiter().GetResult())
                         {
                             trustList.IssuerCrls.Add(crl.RawData);
                         }
@@ -317,7 +316,7 @@ namespace Opc.Ua.Server
                 {
 
                     TrustListDataType trustList = DecodeTrustListData(context, m_strm);
-                    TrustListMasks masks = (TrustListMasks)trustList.SpecifiedLists;
+                    var masks = (TrustListMasks)trustList.SpecifiedLists;
 
                     X509Certificate2Collection issuerCertificates = null;
                     X509CRLCollection issuerCrls = null;
@@ -328,7 +327,7 @@ namespace Opc.Ua.Server
                     if ((masks & TrustListMasks.IssuerCertificates) != 0)
                     {
                         issuerCertificates = new X509Certificate2Collection();
-                        foreach (var cert in trustList.IssuerCertificates)
+                        foreach (byte[] cert in trustList.IssuerCertificates)
                         {
                             issuerCertificates.Add(new X509Certificate2(cert));
                         }
@@ -336,7 +335,7 @@ namespace Opc.Ua.Server
                     if ((masks & TrustListMasks.IssuerCrls) != 0)
                     {
                         issuerCrls = new X509CRLCollection();
-                        foreach (var crl in trustList.IssuerCrls)
+                        foreach (byte[] crl in trustList.IssuerCrls)
                         {
                             issuerCrls.Add(new X509CRL(crl));
                         }
@@ -344,7 +343,7 @@ namespace Opc.Ua.Server
                     if ((masks & TrustListMasks.TrustedCertificates) != 0)
                     {
                         trustedCertificates = new X509Certificate2Collection();
-                        foreach (var cert in trustList.TrustedCertificates)
+                        foreach (byte[] cert in trustList.TrustedCertificates)
                         {
                             trustedCertificates.Add(new X509Certificate2(cert));
                         }
@@ -352,7 +351,7 @@ namespace Opc.Ua.Server
                     if ((masks & TrustListMasks.TrustedCrls) != 0)
                     {
                         trustedCrls = new X509CRLCollection();
-                        foreach (var crl in trustList.TrustedCrls)
+                        foreach (byte[] crl in trustList.TrustedCrls)
                         {
                             trustedCrls.Add(new X509CRL(crl));
                         }
@@ -479,14 +478,14 @@ namespace Opc.Ua.Server
                     return StatusCodes.BadInvalidState;
                 }
 
-                if (String.IsNullOrEmpty(thumbprint))
+                if (string.IsNullOrEmpty(thumbprint))
                 {
                     return StatusCodes.BadInvalidArgument;
                 }
 
                 using (ICertificateStore store = CertificateStoreIdentifier.OpenStore(isTrustedCertificate ? m_trustedStorePath : m_issuerStorePath))
                 {
-                    var certCollection = store.FindByThumbprint(thumbprint).GetAwaiter().GetResult();
+                    X509Certificate2Collection certCollection = store.FindByThumbprint(thumbprint).GetAwaiter().GetResult();
 
                     if (certCollection.Count == 0)
                     {
@@ -495,9 +494,9 @@ namespace Opc.Ua.Server
 
                     // delete all CRLs signed by cert
                     var crlsToDelete = new X509CRLCollection();
-                    foreach (var crl in store.EnumerateCRLs().GetAwaiter().GetResult())
+                    foreach (X509CRL crl in store.EnumerateCRLs().GetAwaiter().GetResult())
                     {
-                        foreach (var cert in certCollection)
+                        foreach (X509Certificate2 cert in certCollection)
                         {
                             if (X509Utils.CompareDistinguishedName(cert.Subject, crl.Issuer) &&
                                 crl.VerifySignature(cert, false))
@@ -513,7 +512,7 @@ namespace Opc.Ua.Server
                         return StatusCodes.BadInvalidArgument;
                     }
 
-                    foreach (var crl in crlsToDelete)
+                    foreach (X509CRL crl in crlsToDelete)
                     {
                         if (!store.DeleteCRL(crl).GetAwaiter().GetResult())
                         {
@@ -539,8 +538,8 @@ namespace Opc.Ua.Server
                 ServerUris = context.ServerUris,
                 Factory = context.EncodeableFactory
             };
-            MemoryStream strm = new MemoryStream();
-            BinaryEncoder encoder = new BinaryEncoder(strm, messageContext);
+            var strm = new MemoryStream();
+            var encoder = new BinaryEncoder(strm, messageContext);
             encoder.WriteEncodeable(null, trustList, null);
             strm.Position = 0;
             return strm;
@@ -550,14 +549,14 @@ namespace Opc.Ua.Server
             ISystemContext context,
             Stream strm)
         {
-            TrustListDataType trustList = new TrustListDataType();
+            var trustList = new TrustListDataType();
             IServiceMessageContext messageContext = new ServiceMessageContext() {
                 NamespaceUris = context.NamespaceUris,
                 ServerUris = context.ServerUris,
                 Factory = context.EncodeableFactory
             };
             strm.Position = 0;
-            BinaryDecoder decoder = new BinaryDecoder(strm, messageContext);
+            var decoder = new BinaryDecoder(strm, messageContext);
             trustList.Decode(decoder);
             decoder.Close();
             return trustList;
@@ -572,8 +571,8 @@ namespace Opc.Ua.Server
             {
                 using (ICertificateStore store = CertificateStoreIdentifier.OpenStore(storePath))
                 {
-                    var storeCrls = await store.EnumerateCRLs().ConfigureAwait(false);
-                    foreach (var crl in storeCrls)
+                    X509CRLCollection storeCrls = await store.EnumerateCRLs().ConfigureAwait(false);
+                    foreach (X509CRL crl in storeCrls)
                     {
                         if (!updatedCrls.Contains(crl))
                         {
@@ -587,7 +586,7 @@ namespace Opc.Ua.Server
                             updatedCrls.Remove(crl);
                         }
                     }
-                    foreach (var crl in updatedCrls)
+                    foreach (X509CRL crl in updatedCrls)
                     {
                         await store.AddCRL(crl).ConfigureAwait(false);
                     }
@@ -609,8 +608,8 @@ namespace Opc.Ua.Server
             {
                 using (ICertificateStore store = CertificateStoreIdentifier.OpenStore(storePath))
                 {
-                    var storeCerts = await store.Enumerate().ConfigureAwait(false);
-                    foreach (var cert in storeCerts)
+                    X509Certificate2Collection storeCerts = await store.Enumerate().ConfigureAwait(false);
+                    foreach (X509Certificate2 cert in storeCerts)
                     {
                         if (!updatedCerts.Contains(cert))
                         {
@@ -624,7 +623,7 @@ namespace Opc.Ua.Server
                             updatedCerts.Remove(cert);
                         }
                     }
-                    foreach (var cert in updatedCerts)
+                    foreach (X509Certificate2 cert in updatedCerts)
                     {
                         await store.Add(cert).ConfigureAwait(false);
                     }
@@ -660,20 +659,20 @@ namespace Opc.Ua.Server
                 throw new ServiceResultException(StatusCodes.BadUserAccessDenied);
             }
         }
-        #endregion
 
-        #region Private Fields
-        private object m_lock = new object();
-        private SecureAccess m_readAccess;
-        private SecureAccess m_writeAccess;
+
+
+        private readonly object m_lock = new object();
+        private readonly SecureAccess m_readAccess;
+        private readonly SecureAccess m_writeAccess;
         private NodeId m_sessionId;
         private uint m_fileHandle;
         private readonly string m_trustedStorePath;
         private readonly string m_issuerStorePath;
-        private TrustListState m_node;
+        private readonly TrustListState m_node;
         private Stream m_strm;
         private bool m_readMode;
-        #endregion
+
 
     }
 

@@ -45,7 +45,7 @@ namespace Opc.Ua.Core.Tests.Types.UtilsTests
     [Parallelizable]
     public class UtilsTests
     {
-        #region Misc
+        
         /// <summary>
         /// Convert to and from little endian hex string.
         /// </summary>
@@ -94,9 +94,9 @@ namespace Opc.Ua.Core.Tests.Types.UtilsTests
             var hexutil = Utils.ToHexString(blob, true);
             Assert.AreEqual(hex, hexutil);
         }
-        #endregion
+        
 
-        #region RelativePath.Parse
+        
         /// <summary>
         /// Parse simple plain path string containing only numeric chars.
         /// </summary>
@@ -268,7 +268,7 @@ namespace Opc.Ua.Core.Tests.Types.UtilsTests
             }
         }
       
-        #endregion
+        
     }
 
 }

@@ -48,7 +48,7 @@ namespace Opc.Ua.Client.Tests
     {
         private readonly string SubscriptionTestXml = Path.Combine(Path.GetTempPath(), "SubscriptionTest.xml");
 
-        #region Test Setup
+        
         /// <summary>
         /// Set up a Server and a Client instance.
         /// </summary>
@@ -88,9 +88,9 @@ namespace Opc.Ua.Client.Tests
         {
             return base.TearDown();
         }
-        #endregion
+        
 
-        #region Test Methods
+        
         [Test, Order(100)]
         public void AddSubscription()
         {
@@ -664,9 +664,9 @@ namespace Opc.Ua.Client.Tests
             // cleanup
             File.Delete(filePath);
         }
-        #endregion
+        
 
-        #region Private Methods
+        
         private IList<MonitoredItem> CreateMonitoredItemTestSet(Subscription subscription, IList<NodeId> nodeIds)
         {
             var list = new List<MonitoredItem>();
@@ -679,6 +679,6 @@ namespace Opc.Ua.Client.Tests
             };
             return list;
         }
-        #endregion
+        
     }
 }

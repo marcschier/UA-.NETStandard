@@ -11,7 +11,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 
 namespace Opc.Ua
 {
@@ -20,7 +19,7 @@ namespace Opc.Ua
     /// </summary>
     public class ReferenceTypeState : BaseTypeState
     {
-        #region Constructors
+
         /// <summary>
         /// Initializes the instance with its defalt attribute values.
         /// </summary>
@@ -30,18 +29,8 @@ namespace Opc.Ua
             m_symmetric = false;
         }
 
-        /// <summary>
-        /// Constructs an instance of a node.
-        /// </summary>
-        /// <param name="parent">The parent.</param>
-        /// <returns>The new node.</returns>
-        public static NodeState Construct(NodeState parent)
-        {
-            return new ReferenceTypeState();
-        }
-        #endregion
 
-        #region Initialization
+
         /// <summary>
         /// Initializes the instance with the default values.
         /// </summary>
@@ -58,9 +47,7 @@ namespace Opc.Ua
         /// </summary>
         protected override void Initialize(ISystemContext context, NodeState source)
         {
-            ReferenceTypeState type = source as ReferenceTypeState;
-
-            if (type != null)
+            if (source is ReferenceTypeState type)
             {
                 m_inverseName = type.m_inverseName;
                 m_symmetric = type.m_symmetric;
@@ -68,18 +55,15 @@ namespace Opc.Ua
 
             base.Initialize(context, source);
         }
-        #endregion
 
-        #region Public Members
+
+
         /// <summary>
         /// The inverse name for the reference.
         /// </summary>
         public LocalizedText InverseName
         {
-            get
-            {
-                return m_inverseName;
-            }
+            get => m_inverseName;
 
             set
             {
@@ -97,10 +81,7 @@ namespace Opc.Ua
         /// </summary>
         public bool Symmetric
         {
-            get
-            {
-                return m_symmetric;
-            }
+            get => m_symmetric;
 
             set
             {
@@ -112,9 +93,9 @@ namespace Opc.Ua
                 m_symmetric = value;
             }
         }
-        #endregion
 
-        #region Serialization Functions
+
+
         /// <summary>
         /// Exports a copy of the node to a node table.
         /// </summary>
@@ -124,12 +105,11 @@ namespace Opc.Ua
         {
             base.Export(context, node);
 
-            ReferenceTypeNode referenceTypeNode = node as ReferenceTypeNode;
 
-            if (referenceTypeNode != null)
+            if (node is ReferenceTypeNode referenceTypeNode)
             {
-                referenceTypeNode.InverseName = this.InverseName;
-                referenceTypeNode.Symmetric = this.Symmetric;
+                referenceTypeNode.InverseName = InverseName;
+                referenceTypeNode.Symmetric = Symmetric;
             }
         }
 
@@ -244,9 +224,9 @@ namespace Opc.Ua
                 m_symmetric = decoder.ReadBoolean(null);
             }
         }
-        #endregion
-        
-        #region Event Callbacks
+
+
+
         /// <summary>
         /// Raised when the InverseName attribute is read.
         /// </summary>
@@ -266,9 +246,9 @@ namespace Opc.Ua
         /// Raised when the Symmetric attribute is written.
         /// </summary>
         public NodeAttributeEventHandler<bool> OnWriteSymmetric;
-        #endregion
 
-        #region Read Support Functions
+
+
         /// <summary>
         /// Reads the value for any non-value attribute.
         /// </summary>
@@ -318,9 +298,9 @@ namespace Opc.Ua
 
             return base.ReadNonValueAttribute(context, attributeId, ref value);
         }
-        #endregion
 
-        #region Write Support Functions
+
+
         /// <summary>
         /// Write the value for any non-value attribute.
         /// </summary>
@@ -335,7 +315,7 @@ namespace Opc.Ua
             {
                 case Attributes.InverseName:
                 {
-                    LocalizedText inverseName = value as LocalizedText;
+                    var inverseName = value as LocalizedText;
 
                     if (inverseName == null && value != null)
                     {
@@ -392,11 +372,11 @@ namespace Opc.Ua
 
             return base.WriteNonValueAttribute(context, attributeId, value);
         }
-        #endregion
-        
-        #region Private Fields
+
+
+
         private LocalizedText m_inverseName;
         private bool m_symmetric;
-        #endregion
+
     }
 }

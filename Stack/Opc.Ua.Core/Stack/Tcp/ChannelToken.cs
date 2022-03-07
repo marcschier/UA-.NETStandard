@@ -20,23 +20,23 @@ namespace Opc.Ua.Bindings
     /// </summary>
     public class ChannelToken
     {
-        #region Constructors
+
         /// <summary>
         /// Creates an object with default values.
         /// </summary>
         public ChannelToken()
         {
         }
-        #endregion
 
-        #region Public Properties
+
+
         /// <summary>
         /// The id assigned to the channel that the token belongs to.
         /// </summary>
         public uint ChannelId
         {
-            get { return m_channelId; }
-            set { m_channelId = value; }
+            get => m_channelId;
+            set => m_channelId = value;
         }
 
         /// <summary>
@@ -44,8 +44,8 @@ namespace Opc.Ua.Bindings
         /// </summary>
         public uint TokenId
         {
-            get { return m_tokenId; }
-            set { m_tokenId = value; }
+            get => m_tokenId;
+            set => m_tokenId = value;
         }
 
         /// <summary>
@@ -53,8 +53,8 @@ namespace Opc.Ua.Bindings
         /// </summary>
         public DateTime CreatedAt
         {
-            get { return m_createdAt; }
-            set { m_createdAt = value; }
+            get => m_createdAt;
+            set => m_createdAt = value;
         }
 
         /// <summary>
@@ -62,8 +62,8 @@ namespace Opc.Ua.Bindings
         /// </summary>
         public int Lifetime
         {
-            get { return m_lifetime; }
-            set { m_lifetime = value; }
+            get => m_lifetime;
+            set => m_lifetime = value;
         }
 
         /// <summary>
@@ -104,8 +104,8 @@ namespace Opc.Ua.Bindings
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
         public byte[] ClientNonce
         {
-            get { return m_clientNonce; }
-            set { m_clientNonce = value; }
+            get => m_clientNonce;
+            set => m_clientNonce = value;
         }
 
         /// <summary>
@@ -114,8 +114,8 @@ namespace Opc.Ua.Bindings
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
         public byte[] ServerNonce
         {
-            get { return m_serverNonce; }
-            set { m_serverNonce = value; }
+            get => m_serverNonce;
+            set => m_serverNonce = value;
         }
 
         /// <summary>
@@ -124,8 +124,8 @@ namespace Opc.Ua.Bindings
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
         public byte[] ClientSigningKey
         {
-            get { return m_clientSigningKey; }
-            set { m_clientSigningKey = value; }
+            get => m_clientSigningKey;
+            set => m_clientSigningKey = value;
         }
 
         /// <summary>
@@ -134,8 +134,8 @@ namespace Opc.Ua.Bindings
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
         public byte[] ClientEncryptingKey
         {
-            get { return m_clientEncryptingKey; }
-            set { m_clientEncryptingKey = value; }
+            get => m_clientEncryptingKey;
+            set => m_clientEncryptingKey = value;
         }
 
         /// <summary>
@@ -144,8 +144,8 @@ namespace Opc.Ua.Bindings
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
         public byte[] ClientInitializationVector
         {
-            get { return m_clientInitializationVector; }
-            set { m_clientInitializationVector = value; }
+            get => m_clientInitializationVector;
+            set => m_clientInitializationVector = value;
         }
 
         /// <summary>
@@ -154,8 +154,8 @@ namespace Opc.Ua.Bindings
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
         public byte[] ServerSigningKey
         {
-            get { return m_serverSigningKey; }
-            set { m_serverSigningKey = value; }
+            get => m_serverSigningKey;
+            set => m_serverSigningKey = value;
         }
 
         /// <summary>
@@ -164,8 +164,8 @@ namespace Opc.Ua.Bindings
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
         public byte[] ServerEncryptingKey
         {
-            get { return m_serverEncryptingKey; }
-            set { m_serverEncryptingKey = value; }
+            get => m_serverEncryptingKey;
+            set => m_serverEncryptingKey = value;
         }
 
         /// <summary>
@@ -174,8 +174,8 @@ namespace Opc.Ua.Bindings
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
         public byte[] ServerInitializationVector
         {
-            get { return m_serverInitializationVector; }
-            set { m_serverInitializationVector = value; }
+            get => m_serverInitializationVector;
+            set => m_serverInitializationVector = value;
         }
 
         /// <summary>
@@ -183,8 +183,8 @@ namespace Opc.Ua.Bindings
         /// </summary>
         public SymmetricAlgorithm ClientEncryptor
         {
-            get { return m_clientEncryptor; }
-            set { m_clientEncryptor = value; }
+            get => m_clientEncryptor;
+            set => m_clientEncryptor = value;
         }
 
         /// <summary>
@@ -192,8 +192,8 @@ namespace Opc.Ua.Bindings
         /// </summary>
         public SymmetricAlgorithm ServerEncryptor
         {
-            get { return m_serverEncryptor; }
-            set { m_serverEncryptor = value; }
+            get => m_serverEncryptor;
+            set => m_serverEncryptor = value;
         }
 
         /// <summary>
@@ -201,8 +201,8 @@ namespace Opc.Ua.Bindings
         /// </summary>
         public HMAC ClientHmac
         {
-            get { return m_clientHmac; }
-            set { m_clientHmac = value; }
+            get => m_clientHmac;
+            set => m_clientHmac = value;
         }
 
         /// <summary>
@@ -210,12 +210,12 @@ namespace Opc.Ua.Bindings
         /// </summary>
         public HMAC ServerHmac
         {
-            get { return m_serverHmac; }
-            set { m_serverHmac = value; }
+            get => m_serverHmac;
+            set => m_serverHmac = value;
         }
-        #endregion       
 
-        #region Private Fields
+
+
         private uint m_channelId;
         private uint m_tokenId;
         private DateTime m_createdAt;
@@ -232,6 +232,6 @@ namespace Opc.Ua.Bindings
         private HMAC m_serverHmac;
         private SymmetricAlgorithm m_clientEncryptor;
         private SymmetricAlgorithm m_serverEncryptor;
-        #endregion
+
     }
 }
