@@ -8,23 +8,7 @@
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <PackageId>$(PackageId).Debug</PackageId>
-  </PropertyGroup>
-  <ItemGroup>
-    <Compile Remove="Properties\**" />
-    <EmbeddedResource Remove="Properties\**" />
-    <None Remove="Properties\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="C:\git\furly\opc-connect\ua\/Licenses/OPC Foundation REDISTRIBUTABLES Agreement of Use.txt" />
-    <None Remove="C:\git\furly\opc-connect\ua\/nuget/logo.jpg" />
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Stack\Opc.Ua.Core\Opc.Ua.Core.csproj" />
   </ItemGroup>
-  <PropertyGroup Condition="'$(SignAssembly)' == 'true'">
-    <DefineConstants>$(DefineConstants);SIGNASSEMBLY</DefineConstants>
-  </PropertyGroup>
-  <Target Name="GetPackagingOutputs" />
 </Project>

@@ -9,15 +9,7 @@
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <PackageId>$(PackageId).Debug</PackageId>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(SignAssembly)' == 'true'">
-    <DefineConstants>$(DefineConstants);SIGNASSEMBLY</DefineConstants>
-  </PropertyGroup>
   <ItemGroup>
-    <None Remove="C:\git\furly\opc-connect\ua\/Licenses/OPC Foundation REDISTRIBUTABLES Agreement of Use.txt" />
-    <None Remove="C:\git\furly\opc-connect\ua\/nuget/logo.jpg" />
     <None Remove="Schema\Opc.Ua.NodeSet2.xml" />
     <None Remove="Schema\Opc.Ua.Types.bsd" />
     <None Remove="Schema\Opc.Ua.Types.xsd" />
@@ -39,10 +31,6 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\Libraries\Opc.Ua.Security.Certificates\Opc.Ua.Security.Certificates.csproj" />
   </ItemGroup>
-  <Target Name="GetPackagingOutputs" />
 </Project>
