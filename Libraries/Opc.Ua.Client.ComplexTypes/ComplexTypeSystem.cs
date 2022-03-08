@@ -2,7 +2,7 @@
  * Copyright (c) 2005-2020 The OPC Foundation, Inc. All rights reserved.
  *
  * OPC Foundation MIT License 1.00
- * 
+ *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
  * files (the "Software"), to deal in the Software without
@@ -11,7 +11,7 @@
  * copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following
  * conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
@@ -79,7 +79,7 @@ namespace Opc.Ua.Client.ComplexTypes
             m_complexTypeBuilderFactory = complexTypeBuilderFactory;
         }
 
-
+#if ZOMBIE
 
         /// <summary>
         /// Load a single custom type with subtypes.
@@ -184,6 +184,7 @@ namespace Opc.Ua.Client.ComplexTypes
                 return false;
             }
         }
+#endif
 
         /// <summary>
         /// Load all custom types from a server into the session system type factory.
@@ -229,6 +230,7 @@ namespace Opc.Ua.Client.ComplexTypes
                 return false;
             }
         }
+#if ZOMBIE
 
         /// <summary>
         /// Get the types defined in this type system.
@@ -237,6 +239,7 @@ namespace Opc.Ua.Client.ComplexTypes
         {
             return m_complexTypeBuilderFactory.GetTypes();
         }
+#endif
 
 
 
@@ -949,7 +952,7 @@ namespace Opc.Ua.Client.ComplexTypes
                         {
                             if (dataTypeNode.DataTypeDefinition != null)
                             {
-                                // 2. use DataTypeDefinition 
+                                // 2. use DataTypeDefinition
                                 newType = complexTypeBuilder.AddEnumType(enumType.BrowseName.Name, dataTypeNode.DataTypeDefinition);
                             }
                             else
@@ -1021,7 +1024,7 @@ namespace Opc.Ua.Client.ComplexTypes
                 QualifiedName name = enumTypeNode.BrowseName;
                 if (enumTypeNode.DataTypeDefinition != null)
                 {
-                    // 1. use DataTypeDefinition 
+                    // 1. use DataTypeDefinition
                     newType = complexTypeBuilder.AddEnumType(name, enumTypeNode.DataTypeDefinition);
                 }
                 else

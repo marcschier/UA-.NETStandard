@@ -2,7 +2,7 @@
  * Copyright (c) 2005-2020 The OPC Foundation, Inc. All rights reserved.
  *
  * OPC Foundation MIT License 1.00
- * 
+ *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
  * files (the "Software"), to deal in the Software without
@@ -11,7 +11,7 @@
  * copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following
  * conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
@@ -41,6 +41,7 @@ namespace Opc.Ua.Client.ComplexTypes
     /// <summary>
     /// The base class for all complex types.
     /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("Stack", "1.0.0.0")]
     public class BaseComplexType :
         IEncodeable, IFormattable,
         IComplexTypeProperties,
@@ -83,8 +84,6 @@ namespace Opc.Ua.Client.ComplexTypes
             TypeId = ExpandedNodeId.Null;
             m_context = MessageContextExtension.CurrentContext;
         }
-
-
 
         /// <summary cref="IEncodeable.TypeId" />
         public ExpandedNodeId TypeId { get; set; }
@@ -222,8 +221,6 @@ namespace Opc.Ua.Client.ComplexTypes
             throw new FormatException(Utils.Format("Invalid format string: '{0}'.", format));
         }
 
-
-
         /// <summary cref="IComplexTypeProperties.GetPropertyCount()" />
         public virtual int GetPropertyCount()
         {
@@ -267,9 +264,6 @@ namespace Opc.Ua.Client.ComplexTypes
         {
             return m_propertyList;
         }
-
-
-
 
         /// <summary>
         /// Formatting helper.

@@ -62,54 +62,6 @@ namespace Opc.Ua.Schema.Binary
         }
 
         /// <summary>
-        /// Returns the schema for the specified type (returns the entire schema if null).
-        /// </summary>
-        public string GetSchema(string typeName)
-        {
-            var settings = new XmlWriterSettings {
-                Encoding = Encoding.UTF8,
-                Indent = true,
-                IndentChars = "    "
-            };
-
-            var ostrm = new MemoryStream();
-            var writer = XmlWriter.Create(ostrm, settings);
-
-            try
-            {
-                if (typeName == null)
-                {
-                    var serializer = new XmlSerializer(typeof(TypeDictionary));
-                    serializer.Serialize(writer, Dictionary);
-                }
-                else
-                {
-                    TypeDescription description = null;
-
-                    if (!m_descriptions.TryGetValue(new XmlQualifiedName(typeName, Dictionary.TargetNamespace), out description))
-                    {
-                        var serializer = new XmlSerializer(typeof(TypeDictionary));
-                        serializer.Serialize(writer, Dictionary);
-                    }
-                    else
-                    {
-                        var serializer = new XmlSerializer(typeof(TypeDescription));
-                        serializer.Serialize(writer, description);
-                    }
-                }
-            }
-            finally
-            {
-                writer.Flush();
-                writer.Dispose();
-            }
-
-            return new UTF8Encoding().GetString(ostrm.ToArray(), 0, (int)ostrm.Length);
-        }
-
-
-
-        /// <summary>
         /// Generates the code from the contents of the address space.
         /// </summary>
         private async Task Validate()

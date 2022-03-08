@@ -348,39 +348,39 @@ namespace Opc.Ua
         /// </remarks>
         /// <example>
         /// <code lang="C#">
-        /// 
+        ///
         /// //create some variables
         /// uint id1 = 100, id2=101;
         /// NodeId node1;
-        /// 
+        ///
         /// //create our node
         /// node1 = new NodeId(id1);
-        /// 
+        ///
         /// //now to compare the node to the ids using a simple comparisson and Equals:
         /// Utils.LogInfo("Comparing NodeId to uint");
         /// Utils.LogInfo("\tComparing 100 to 100 = [equals] {0}", node1.Equals(id1));
         /// Utils.LogInfo("\tComparing 100 to 100 = [ ==   ] {0}", node1 == id1);
         /// Utils.LogInfo("\tComparing 100 to 101 = [equals] {0}", node1.Equals(id2));
         /// Utils.LogInfo("\tComparing 100 to 101 = [ ==   ] {0}", node1 == id2);
-        /// 
+        ///
         /// </code>
         /// <code lang="Visual Basic">
-        /// 
+        ///
         /// 'create some variables
         /// Dim id1 As UInt = 100
         /// Dim id2 As UInt = 102
         /// Dim node1 As NodeId
-        /// 
+        ///
         /// 'create our node
         /// node1 = new NodeId(id1)
-        /// 
+        ///
         /// 'now to compare the node to the ids using a simple comparisson and Equals:
         /// Utils.LogInfo("Comparing NodeId to uint")
         /// Utils.LogInfo( String.Format("   Comparing 100 to 100 = [equals] {0}", node1.Equals(id1)) )
         /// Utils.LogInfo( String.Format("   Comparing 100 to 100 = [  =   ] {0}", node1 = id1) )
         /// Utils.LogInfo( String.Format("   Comparing 100 to 101 = [equals] {0}", node1.Equals(id2)) )
         /// Utils.LogInfo( String.Format("   Comparing 100 to 101 = [  =   ] {0}", node1 = id2) )
-        /// 
+        ///
         /// </code>
         /// <para>
         /// This produces the following output (taken from C# example):
@@ -410,33 +410,33 @@ namespace Opc.Ua
         /// </remarks>
         /// <example>
         /// <code lang="C#">
-        /// 
+        ///
         /// //define our 2 GUID ids, and then define our node to use the first id.
         /// Guid id1 = Guid.NewGuid(), id2 = Guid.NewGuid();
         /// NodeId node1 = new NodeId(id1);
-        /// 
+        ///
         /// //now to compare the node to the guids
         /// Utils.LogInfo("\n\nComparing NodeId to GUID");
         /// Utils.LogInfo("\tComparing {0} to {0} = [equals] {2}", id1, id1, node1.Equals(id1));
         /// Utils.LogInfo("\tComparing {0} to {0} = [ ==   ] {2}", id1, id1, node1 == id1);
         /// Utils.LogInfo("\tComparing {0} to {1} = [equals] {2}", id1, id2, node1.Equals(id2));
         /// Utils.LogInfo("\tComparing {0} to {1} = [ ==   ] {2}", id1, id2, node1 == id2);
-        /// 
+        ///
         /// </code>
         /// <code lang="Visual Basic">
-        /// 
+        ///
         /// 'define our 2 GUID ids, and then define our node to use the first id.
         /// Dim id1 As Guid = Guid.NewGuid()
         /// Dim id2 As Guid = Guid.NewGuid()
         /// Dim node1 As NodeId = new NodeId(id1)
-        /// 
+        ///
         /// 'now to compare the node to the guids
         /// Utils.LogInfo("Comparing NodeId to GUID")
         /// Utils.LogInfo( String.Format( "  Comparing {0} to {0} = [equals] {2}", id1, id1, node1.Equals(id1)) );
         /// Utils.LogInfo( String.Format( "  Comparing {0} to {0} = [  =   ] {2}", id1, id1, node1 = id1) );
         /// Utils.LogInfo( String.Format( "  Comparing {0} to {0} = [equals] {2}", id1, id2, node1.Equals(id2)) );
         /// Utils.LogInfo( String.Format( "  Comparing {0} to {0} = [  =   ] {2}", id1, id2, node1 = id2) );
-        /// 
+        ///
         /// </code>
         /// <para>
         /// This produces the following output (taken from C# example):
@@ -466,42 +466,42 @@ namespace Opc.Ua
         /// </remarks>
         /// <example>
         /// <code lang="C#">
-        /// 
+        ///
         /// //define our 2 Byte[] ids, and then define our node to use the first id.
         /// byte[] id1 = new byte[] { 65, 66, 67, 68, 69 };
         /// byte[] id2 = new byte[] { 97, 98, 99, 100, 101 };
         /// NodeId node1 = new NodeId(id1);
-        /// 
-        /// //convert our bytes to string so we can display them 
+        ///
+        /// //convert our bytes to string so we can display them
         /// string id1String = System.Text.ASCIIEncoding.ASCII.GetString(id1);
         /// string id2String = System.Text.ASCIIEncoding.ASCII.GetString(id2);
-        /// 
+        ///
         /// //now to compare the node to the guids
         /// Utils.LogInfo("\n\nComparing NodeId to Byte[]");
         /// Utils.LogInfo("\tComparing {0} to {0} = [equals] {2}", id1String, id1String, node1.Equals(id1));
         /// Utils.LogInfo("\tComparing {0} to {0} = [  =   ] {2}", id1String, id1String, node1 == id1);
         /// Utils.LogInfo("\tComparing {0} to {1} = [equals] {2}", id1String, id2String, node1.Equals(id2));
         /// Utils.LogInfo("\tComparing {0} to {1} = [  =   ] {2}", id1String, id2String, node1 == id2);
-        /// 
+        ///
         /// </code>
         /// <code lang="Visual Basic">
-        /// 
+        ///
         /// 'define our 2 Byte[] ids, and then define our node to use the first id.
         /// Dim id1 As Byte() = New Byte() { 65, 66, 67, 68, 69 }
         /// Dim id2 As Byte() = New Byte() { 97, 98, 99, 100, 101 }
         /// Dim node1 As NodeId = New NodeId(id1)
-        /// 
-        /// 'convert our bytes to string so we can display them 
+        ///
+        /// 'convert our bytes to string so we can display them
         /// Dim id1String As String = System.Text.ASCIIEncoding.ASCII.GetString(id1)
         /// Dim id2String As String = System.Text.ASCIIEncoding.ASCII.GetString(id2)
-        /// 
+        ///
         /// 'now to compare the node to the guids
         /// Utils.LogInfo("Comparing NodeId to Byte()")
         /// Utils.LogInfo( String.Format("Comparing {0} to {0} = [equals] {2}", id1String, id1String, node1.Equals(id1)) )
         /// Utils.LogInfo( String.Format("Comparing {0} to {0} = [  =   ] {2}", id1String, id1String, node1 = id1) )
         /// Utils.LogInfo( String.Format("Comparing {0} to {1} = [equals] {2}", id1String, id2String, node1.Equals(id2)) )
         /// Utils.LogInfo( String.Format("Comparing {0} to {1} = [  =   ] {2}", id1String, id2String, node1 = id2) )
-        /// 
+        ///
         /// </code>
         /// <para>
         /// This produces the following output (taken from C# example):
@@ -531,34 +531,34 @@ namespace Opc.Ua
         /// </remarks>
         /// <example>
         /// <code lang="C#">
-        /// 
+        ///
         /// //define our 2 String ids, and then define our node to use the first id.
         /// String id1 = "Hello", id2 = "World";
         /// NodeId node1 = new NodeId(id1);
-        /// 
+        ///
         /// //now to compare the node to the guids
         /// Utils.LogInfo("\n\nComparing NodeId to String");
         /// Utils.LogInfo("\tComparing {0} to {1} = [equals] {2}", id1, id1, node1.Equals(id1));
         /// Utils.LogInfo("\tComparing {0} to {1} = [ ==   ] {2}", id1, id1, node1 == id1);
         /// Utils.LogInfo("\tComparing {0} to {1} = [equals] {2}", id1, id2, node1.Equals(id2));
         /// Utils.LogInfo("\tComparing {0} to {1} = [ ==   ] {2}", id1, id2, node1 == id2);
-        /// 
-        /// 
+        ///
+        ///
         /// </code>
         /// <code lang="Visual Basic">
-        /// 
+        ///
         /// 'define our 2 String ids, and then define our node to use the first id.
         /// Dim id1 As String = "Hello"
         /// Dim id2 As String = "World"
         /// Dim node1 As NodeId = New NodeId(id1)
-        /// 
+        ///
         /// 'now to compare the node to the guids
         /// Utils.LogInfo("Comparing NodeId to String");
         /// Utils.LogInfo(String.Format("Comparing {0} to {1} = [equals] {2}", id1, id1, node1.Equals(id1)));
         /// Utils.LogInfo(String.Format("Comparing {0} to {1} = [  =   ] {2}", id1, id1, node1 = id1));
         /// Utils.LogInfo(String.Format("Comparing {0} to {1} = [equals] {2}", id1, id2, node1.Equals(id2)));
         /// Utils.LogInfo(String.Format("Comparing {0} to {1} = [  =   ] {2}", id1, id2, node1 = id2));
-        /// 
+        ///
         /// </code>
         /// </example>
         /// <param name="text">The <see cref="string"/> to compare this node to.</param>
@@ -854,26 +854,11 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Updates the identifier.
-        /// </summary>
-        internal void SetIdentifier(string value, IdType idType)
-        {
-            m_identifierType = idType;
-            SetIdentifier(IdType.String, value);
-        }
-
-
-
-
-
-
-        /// <summary>
         /// Compares the current instance to the object.
         /// </summary>
         /// <remarks>
         /// Enables this object type to be compared to other types of object.
         /// </remarks>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public int CompareTo(object obj)
         {
             // check for null.
@@ -1437,118 +1422,6 @@ namespace Opc.Ua
                 // must be null.
                 return true;
             }
-        }
-
-
-
-
-
-
-        /// <summary>
-        /// Compares two node identifiers.
-        /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
-        private static int CompareIdentifiers(IdType idType1, object id1, IdType idType2, object id2)
-        {
-            if (id1 == null && id2 == null)
-            {
-                return 0;
-            }
-
-            if (idType1 != idType2)
-            {
-                return idType1.CompareTo(idType2);
-            }
-
-            if (id1 == null || id2 == null)
-            {
-                object nonNull = id1;
-
-                if (id1 == null)
-                {
-                    nonNull = id2;
-                }
-
-                switch (idType1)
-                {
-                    case IdType.Numeric:
-                    {
-                        if (nonNull is uint && (uint)nonNull == 0)
-                        {
-                            return 0;
-                        }
-
-                        break;
-                    }
-
-                    case IdType.Guid:
-                    {
-                        if (nonNull is Guid && (Guid)nonNull == Guid.Empty)
-                        {
-                            return 0;
-                        }
-
-                        break;
-                    }
-
-                    case IdType.String:
-                    {
-                        if (nonNull is string text && text.Length == 0)
-                        {
-                            return 0;
-                        }
-
-                        break;
-                    }
-
-                    case IdType.Opaque:
-                    {
-                        if (nonNull is byte[] bytes && bytes.Length == 0)
-                        {
-                            return 0;
-                        }
-
-                        break;
-                    }
-                }
-
-                return (id1 == null) ? -1 : +1;
-            }
-
-
-            if (id1 is byte[] bytes1)
-            {
-                if (!(id2 is byte[] bytes2))
-                {
-                    return +1;
-                }
-
-                if (bytes1.Length != bytes2.Length)
-                {
-                    return bytes1.Length.CompareTo(bytes2.Length);
-                }
-
-                for (int ii = 0; ii < bytes1.Length; ii++)
-                {
-                    int result = bytes1[ii].CompareTo(bytes2[ii]);
-
-                    if (result != 0)
-                    {
-                        return result;
-                    }
-                }
-
-                // both arrays are equal.
-                return 0;
-            }
-
-
-            if (id1 is IComparable comparable1)
-            {
-                return comparable1.CompareTo(id2);
-            }
-
-            return string.CompareOrdinal(id1.ToString(), id2.ToString());
         }
 
         /// <summary>

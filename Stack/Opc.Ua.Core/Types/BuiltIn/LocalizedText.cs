@@ -22,7 +22,7 @@ namespace Opc.Ua
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The LocalizedText is defined in <b>Part 3 - Address Space Model, Section 7.5</b>, titled 
+    /// The LocalizedText is defined in <b>Part 3 - Address Space Model, Section 7.5</b>, titled
     /// <b>LocalizedText</b>.
     /// <br/></para>
     /// <para>
@@ -31,13 +31,13 @@ namespace Opc.Ua
     /// <br/></para>
     /// </remarks>
     /// <example>
-    /// <para>The following example shows a very simple use of this class to localize a 
+    /// <para>The following example shows a very simple use of this class to localize a
     /// welcome message</para>
     /// <code lang="C#">
     /// LocalizedText welcomeUS = new LocalizedText( "Hi Everyone", "EN-US" );
     /// LocalizedText welcomeGB = new LocalizedText( "Hello Everyone", "EN-GB" );
     /// LocalizedText welcomeNoLocale = new LocalizedText( "Welcome" );
-    /// 
+    ///
     /// Utils.LogInfo( welcomeUS.ToString() );
     /// Utils.LogInfo( welcomeGB.ToString() );
     /// Utils.LogInfo( welcomeNoLocale.ToString() );
@@ -46,7 +46,7 @@ namespace Opc.Ua
     /// Dim welcomeUS As LocalizedText = New LocalizedText( "Hi Everyone", "EN-GB" )
     /// Dim welcomeGB As LocalizedText = New LocalizedText( "Hello Everyone", "EN-GB" )
     /// Dim welcomeNoLocale As LocalizedText = New LocalizedText( "Welcome" )
-    /// 
+    ///
     /// Utils.LogInfo( welcomeUS.ToString() )
     /// Utils.LogInfo( welcomeGB.ToString() )
     /// Utils.LogInfo( welcomeNoLocale.ToString() )
@@ -393,20 +393,6 @@ namespace Opc.Ua
         {
             // this object cannot be altered after it is created so no new allocation is necessary.
             return this;
-        }
-
-
-
-        /// <summary>
-        /// Converts a string to a localized text.
-        /// </summary>
-        /// <remarks>
-        /// Converts a string to a localized text.
-        /// </remarks>
-        /// <param name="value">The string to store as localized text</param>
-        public static LocalizedText ToLocalizedText(string value)
-        {
-            return new LocalizedText(value);
         }
 
         /// <summary>

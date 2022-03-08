@@ -86,12 +86,11 @@ namespace Opc.Ua.Client.ComplexTypes
             return StructureBaseDataType.Structure;
         }
 
-
-
         /// <summary>
         /// The default encoding Id.
         /// </summary>
         public string DefaultEncodingId { get; set; }
+
         /// <summary>
         /// The base DataType.
         /// </summary>

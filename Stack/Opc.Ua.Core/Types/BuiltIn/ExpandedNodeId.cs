@@ -97,7 +97,7 @@ namespace Opc.Ua
         /// Initializes an expanded node identifier with a node id and a namespace URI.
         /// </summary>
         /// <remarks>
-        /// Creates a new instance of the object while allowing you to specify both the 
+        /// Creates a new instance of the object while allowing you to specify both the
         /// <see cref="NodeId"/> and the Namespace URI that applies to the NodeID.
         /// </remarks>
         /// <param name="nodeId">The <see cref="NodeId"/> to wrap.</param>
@@ -121,7 +121,7 @@ namespace Opc.Ua
         /// Initializes an expanded node identifier with a node id and a namespace URI.
         /// </summary>
         /// <remarks>
-        /// Creates a new instance of the object while allowing you to specify both the 
+        /// Creates a new instance of the object while allowing you to specify both the
         /// <see cref="NodeId"/> and the Namespace URI that applies to the NodeID.
         /// </remarks>
         /// <param name="nodeId">The <see cref="NodeId"/> to wrap.</param>
@@ -572,59 +572,6 @@ namespace Opc.Ua
             NodeId.Format(buffer, identifier, identifierType, namespaceIndex);
         }
 
-
-
-        /// <summary>
-        /// Parses a expanded node id string, translated any namespace indexes and returns the result.
-        /// </summary>
-        public static ExpandedNodeId Parse(string text, NamespaceTable currentNamespaces, NamespaceTable targetNamespaces)
-        {
-            // parse the string.
-            ExpandedNodeId nodeId = Parse(text);
-
-            // lookup the namespace uri.
-            string uri = nodeId.m_namespaceUri;
-
-            if (nodeId.m_nodeId.NamespaceIndex != 0)
-            {
-                uri = currentNamespaces.GetString(nodeId.m_nodeId.NamespaceIndex);
-            }
-
-            // translate the namespace uri.
-            ushort namespaceIndex = 0;
-
-            if (!string.IsNullOrEmpty(uri))
-            {
-                int index = targetNamespaces.GetIndex(uri);
-
-                if (index == -1)
-                {
-                    throw ServiceResultException.Create(
-                        StatusCodes.BadNodeIdInvalid,
-                        "Cannot map namespace URI onto an index in the target namespace table: {0}",
-                        uri);
-                }
-
-                namespaceIndex = (ushort)index;
-            }
-
-            // check for absolute node id.
-            if (nodeId.ServerIndex != 0)
-            {
-                nodeId.m_nodeId = new NodeId(nodeId.m_nodeId.Identifier, 0);
-                nodeId.m_namespaceUri = uri;
-                return nodeId;
-            }
-
-            // local node id.
-            nodeId.m_nodeId = new NodeId(nodeId.m_nodeId.Identifier, namespaceIndex);
-            nodeId.m_namespaceUri = null;
-
-            return nodeId;
-        }
-
-
-
         /// <summary>
         /// Parses a expanded node id string and returns a node id object.
         /// </summary>
@@ -1039,34 +986,6 @@ namespace Opc.Ua
             m_serverIndex = serverIndex;
         }
 
-
-
-        /// <summary>
-        /// Parses an absolute NodeId formatted as a string and converts it a local NodeId.
-        /// </summary>
-        /// <param name="namespaceUris">The current namespace table.</param>
-        /// <param name="text">The text to parse.</param>
-        /// <returns>The local identifier.</returns>
-        /// <exception cref="ServiceResultException">Thrown if the namespace URI is not in the namespace table.</exception>
-        public static NodeId Parse(string text, NamespaceTable namespaceUris)
-        {
-            var nodeId = ExpandedNodeId.Parse(text);
-
-            if (!nodeId.IsAbsolute)
-            {
-                return nodeId.InnerNodeId;
-            }
-
-            var localId = ExpandedNodeId.ToNodeId(nodeId, namespaceUris);
-
-            if (localId == null)
-            {
-                throw ServiceResultException.Create(StatusCodes.BadNodeIdInvalid, "NamespaceUri ({0}) is not in the namespace table.", nodeId.NamespaceUri);
-            }
-
-            return localId;
-        }
-
         /// <summary>
         /// Converts an ExpandedNodeId to a NodeId.
         /// </summary>
@@ -1194,7 +1113,7 @@ namespace Opc.Ua
         /// Converts an array to a collection.
         /// </summary>
         /// <remarks>
-        /// This static method converts an array of <see cref="ExpandedNodeId"/> objects to 
+        /// This static method converts an array of <see cref="ExpandedNodeId"/> objects to
         /// an <see cref="ExpandedNodeIdCollection"/>.
         /// </remarks>
         /// <param name="values">An array of <see cref="ExpandedNodeId"/> values to return as a collection</param>

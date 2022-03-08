@@ -23,7 +23,7 @@ namespace Opc.Ua
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The QualifiedName is defined in <b>Part 3 - Address Space Model, Section 7.3</b>, titled 
+    /// The QualifiedName is defined in <b>Part 3 - Address Space Model, Section 7.3</b>, titled
     /// <b>Qualified Name</b>.
     /// <br/></para>
     /// <para>
@@ -129,7 +129,7 @@ namespace Opc.Ua
         public string Name => m_name;
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         [DataMember(Name = "Name", Order = 2)]
         internal string XmlEncodedName
@@ -410,30 +410,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Returns true if the QualifiedName is valid.
-        /// </summary>
-        /// <param name="value">The name to be validated.</param>
-        /// <param name="namespaceUris">The table namespaces known to the server.</param>
-        /// <returns>True if the name is value.</returns>
-        public static bool IsValid(QualifiedName value, NamespaceTable namespaceUris)
-        {
-            if (value == null || string.IsNullOrEmpty(value.m_name))
-            {
-                return false;
-            }
-
-            if (namespaceUris != null)
-            {
-                if (namespaceUris.GetString(value.m_namespaceIndex) == null)
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        /// <summary>
         /// Parses a string containing a QualifiedName with the syntax n:qname
         /// </summary>
         /// <param name="text">The QualifiedName value as a string.</param>
@@ -446,7 +422,7 @@ namespace Opc.Ua
                 return QualifiedName.Null;
             }
 
-            // extract local namespace index. 
+            // extract local namespace index.
             ushort namespaceIndex = 0;
             int start = -1;
 
@@ -491,18 +467,6 @@ namespace Opc.Ua
             }
 
             return true;
-        }
-
-        /// <summary>
-        /// Converts a string to a qualified name.
-        /// </summary>
-        /// <remarks>
-        /// Converts a string to a qualified name.
-        /// </remarks>
-        /// <param name="value">The string to turn into a fully qualified name</param>
-        public static QualifiedName ToQualifiedName(string value)
-        {
-            return new QualifiedName(value);
         }
 
         /// <summary>

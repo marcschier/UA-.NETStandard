@@ -656,47 +656,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts an encodeable object to an extension object.
-        /// </summary>
-        /// <remarks>
-        /// Converts an encodeable object to an extension object.
-        /// </remarks>
-        /// <param name="encodeables">An enumerable array of ExtensionObjects to convert to a collection</param>
-        public static ExtensionObjectCollection ToExtensionObjects(IEnumerable<IEncodeable> encodeables)
-        {
-            // return null if the input list is null.
-            if (encodeables == null)
-            {
-                return null;
-            }
-
-            // convert each encodeable to an extension object.
-            ExtensionObjectCollection extensibles = new ExtensionObjectCollection();
-
-            if (encodeables != null)
-            {
-                foreach (IEncodeable encodeable in encodeables)
-                {
-                    // check if already an extension object.
-
-                    if (encodeable is ExtensionObject extensible)
-                    {
-                        extensibles.Add(extensible);
-                    }
-
-                    // wrap the encodeable with an extension object and let the serializer choose the encoding.
-                    else
-                    {
-                        extensibles.Add(new ExtensionObject(encodeable));
-                    }
-                }
-            }
-
-            return extensibles;
-        }
-
-
-        /// <summary>
         /// Creates a deep copy of the collection.
         /// </summary>
         /// <remarks>

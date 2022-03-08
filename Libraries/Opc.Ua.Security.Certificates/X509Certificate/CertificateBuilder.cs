@@ -123,169 +123,6 @@ namespace Opc.Ua.Security.Certificates
         }
 
         /// <inheritdoc/>
-        public X509Certificate2 CreateForRSA(X509SignatureGenerator generator)
-        {
-            CreateDefaults();
-
-            if (m_rsaPublicKey == null && IssuerCAKeyCert == null)
-            {
-                throw new NotSupportedException("Need an issuer certificate or a public key for a signature generator.");
-            }
-
-            X500DistinguishedName issuerSubjectName = SubjectName;
-            if (IssuerCAKeyCert != null)
-            {
-                issuerSubjectName = IssuerCAKeyCert.SubjectName;
-            }
-
-            RSA rsaKeyPair = null;
-            RSA rsaPublicKey = m_rsaPublicKey;
-            if (rsaPublicKey == null)
-            {
-                rsaKeyPair = RSA.Create(m_keySize == 0 ? X509Defaults.RSAKeySize : m_keySize);
-                rsaPublicKey = rsaKeyPair;
-            }
-
-            var request = new CertificateRequest(SubjectName, rsaPublicKey, HashAlgorithmName, RSASignaturePadding.Pkcs1);
-
-            CreateX509Extensions(request, false);
-
-            X509Certificate2 signedCert = request.Create(
-                issuerSubjectName,
-                generator,
-                NotBefore,
-                NotAfter,
-                m_serialNumber.Reverse().ToArray()
-                );
-
-            return (rsaKeyPair == null) ? signedCert : signedCert.CopyWithPrivateKey(rsaKeyPair);
-        }
-
-#if ECC_SUPPORT
-        /// <inheritdoc/>
-        public X509Certificate2 CreateForECDsa()
-        {
-            if (m_ecdsaPublicKey != null && IssuerCAKeyCert == null)
-            {
-                throw new NotSupportedException("Cannot use a public key without a issuer certificate with a private key.");
-            }
-
-            if (m_ecdsaPublicKey == null && m_curve == null)
-            {
-                throw new NotSupportedException("Need a public key or a ECCurve to create the certificate.");
-            }
-
-            CreateDefaults();
-
-            ECDsa key = null;
-            ECDsa publicKey = m_ecdsaPublicKey;
-            if (publicKey == null)
-            {
-                key = ECDsa.Create((ECCurve)m_curve);
-                publicKey = key;
-            }
-
-            var request = new CertificateRequest(SubjectName, publicKey, HashAlgorithmName);
-
-            CreateX509Extensions(request, true);
-
-            byte[] serialNumber = m_serialNumber.Reverse().ToArray();
-            if (IssuerCAKeyCert != null)
-            {
-                using (ECDsa issuerKey = IssuerCAKeyCert.GetECDsaPrivateKey())
-                {
-                    return request.Create(
-                        IssuerCAKeyCert.SubjectName,
-                        X509SignatureGenerator.CreateForECDsa(issuerKey),
-                        NotBefore,
-                        NotAfter,
-                        serialNumber
-                        );
-                }
-            }
-            else
-            {
-                return request.Create(
-                    SubjectName,
-                    X509SignatureGenerator.CreateForECDsa(key),
-                    NotBefore,
-                    NotAfter,
-                    serialNumber
-                    )
-                    .CopyWithPrivateKey(key);
-            }
-        }
-
-        /// <inheritdoc/>
-        public X509Certificate2 CreateForECDsa(X509SignatureGenerator generator)
-        {
-            if (IssuerCAKeyCert == null)
-            {
-                throw new NotSupportedException("X509 Signature generator requires an issuer certificate.");
-            }
-
-            if (m_ecdsaPublicKey == null && m_curve == null)
-            {
-                throw new NotSupportedException("Need a public key or a ECCurve to create the certificate.");
-            }
-
-            CreateDefaults();
-
-            ECDsa key = null;
-            ECDsa publicKey = m_ecdsaPublicKey;
-            if (publicKey == null)
-            {
-                key = ECDsa.Create((ECCurve)m_curve);
-                publicKey = key;
-            }
-
-            var request = new CertificateRequest(SubjectName, publicKey, HashAlgorithmName);
-
-            CreateX509Extensions(request, true);
-
-            X509Certificate2 signedCert = request.Create(
-                IssuerCAKeyCert.SubjectName,
-                generator,
-                NotBefore,
-                NotAfter,
-                m_serialNumber.Reverse().ToArray()
-                );
-
-            // return a X509Certificate2
-            return (key == null) ? signedCert : signedCert.CopyWithPrivateKey(key);
-        }
-
-        /// <inheritdoc/>
-        public ICertificateBuilderCreateForECDsaAny SetECDsaPublicKey(byte[] publicKey)
-        {
-            if (publicKey == null)
-            {
-                throw new ArgumentNullException(nameof(publicKey));
-            }
-#if NET472_OR_GREATER
-            throw new NotSupportedException("Import a ECDsaPublicKey is not supported on this platform.");
-#else
-            int bytes = 0;
-            try
-            {
-                m_ecdsaPublicKey = ECDsa.Create();
-                m_ecdsaPublicKey.ImportSubjectPublicKeyInfo(publicKey, out bytes);
-            }
-            catch (Exception e)
-            {
-                throw new ArgumentException("Failed to decode the public key.", e);
-            }
-
-            if (publicKey.Length != bytes)
-            {
-                throw new ArgumentException("Decoded the public key but extra bytes were found.");
-            }
-            return this;
-#endif
-        }
-#endif
-
-        /// <inheritdoc/>
         public ICertificateBuilderCreateForRSAAny SetRSAPublicKey(byte[] publicKey)
         {
             if (publicKey == null)
@@ -313,6 +150,7 @@ namespace Opc.Ua.Security.Certificates
             return this;
 #endif
         }
+#endif
 
 
 
@@ -432,4 +270,3 @@ namespace Opc.Ua.Security.Certificates
 
     }
 }
-#endif

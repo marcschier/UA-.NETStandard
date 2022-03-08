@@ -1529,7 +1529,7 @@ namespace Opc.Ua
 
 
         /// <summary>
-        /// Reads and returns an array of elements of the specified length and builtInType 
+        /// Reads and returns an array of elements of the specified length and builtInType
         /// </summary>
         private Array ReadArrayElements(int length, BuiltInType builtInType)
         {

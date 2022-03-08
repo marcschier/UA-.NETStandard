@@ -792,9 +792,4 @@ namespace Opc.Ua.Bindings
         /// </summary>
         Faulted
     }
-
-    /// <summary>
-    /// Used to report changes to the channel state.
-    /// </summary>
-    public delegate void TcpChannelStateEventHandler(UaSCUaBinaryChannel channel, TcpChannelState state, ServiceResult error);
 }

@@ -1748,19 +1748,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a Guid value.
-        /// </summary>
-        /// <remarks>
-        /// Initializes the object with a <see cref="Guid"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="Guid"/> value to set this Variant to</param>
-        public void Set(Guid value)
-        {
-            m_value = new Uuid(value);
-            m_typeInfo = TypeInfo.Scalars.Guid;
-        }
-
-        /// <summary>
         /// Initializes the object with a Uuid value.
         /// </summary>
         /// <remarks>
@@ -1889,6 +1876,7 @@ namespace Opc.Ua
             m_value = value;
             m_typeInfo = TypeInfo.Scalars.DataValue;
         }
+#if ZOMBIE
 
         /// <summary>
         /// Initializes the object with a bool array value.
@@ -1902,6 +1890,8 @@ namespace Opc.Ua
             m_value = value;
             m_typeInfo = TypeInfo.Arrays.Boolean;
         }
+#endif
+#if ZOMBIE
 
         /// <summary>
         /// Initializes the object with a sbyte array value.
@@ -1915,6 +1905,8 @@ namespace Opc.Ua
             m_value = value;
             m_typeInfo = TypeInfo.Arrays.SByte;
         }
+#endif
+#if ZOMBIE
 
         /// <summary>
         /// Initializes the object with a short array value.
@@ -1928,6 +1920,8 @@ namespace Opc.Ua
             m_value = value;
             m_typeInfo = TypeInfo.Arrays.Int16;
         }
+#endif
+#if ZOMBIE
 
         /// <summary>
         /// Initializes the object with a ushort array value.
@@ -1941,6 +1935,8 @@ namespace Opc.Ua
             m_value = value;
             m_typeInfo = TypeInfo.Arrays.UInt16;
         }
+#endif
+#if ZOMBIE
 
         /// <summary>
         /// Initializes the object with an int array value.
@@ -1954,6 +1950,8 @@ namespace Opc.Ua
             m_value = value;
             m_typeInfo = TypeInfo.Arrays.Int32;
         }
+#endif
+#if ZOMBIE
 
         /// <summary>
         /// Initializes the object with a uint array value.
@@ -1967,6 +1965,8 @@ namespace Opc.Ua
             m_value = value;
             m_typeInfo = TypeInfo.Arrays.UInt32;
         }
+#endif
+#if ZOMBIE
 
         /// <summary>
         /// Initializes the object with a long array value.
@@ -1980,6 +1980,8 @@ namespace Opc.Ua
             m_value = value;
             m_typeInfo = TypeInfo.Arrays.Int64;
         }
+#endif
+#if ZOMBIE
 
         /// <summary>
         /// Initializes the object with a ulong array value.
@@ -1993,6 +1995,8 @@ namespace Opc.Ua
             m_value = value;
             m_typeInfo = TypeInfo.Arrays.UInt64;
         }
+#endif
+#if ZOMBIE
 
         /// <summary>
         /// Initializes the object with a float array value.
@@ -2006,6 +2010,8 @@ namespace Opc.Ua
             m_value = value;
             m_typeInfo = TypeInfo.Arrays.Float;
         }
+#endif
+#if ZOMBIE
 
         /// <summary>
         /// Initializes the object with a double array value.
@@ -2019,6 +2025,8 @@ namespace Opc.Ua
             m_value = value;
             m_typeInfo = TypeInfo.Arrays.Double;
         }
+#endif
+#if ZOMBIE
 
         /// <summary>
         /// Initializes the object with a string array value.
@@ -2032,6 +2040,8 @@ namespace Opc.Ua
             m_value = value;
             m_typeInfo = TypeInfo.Arrays.String;
         }
+#endif
+#if ZOMBIE
 
         /// <summary>
         /// Initializes the object with a DateTime array value.
@@ -2045,6 +2055,7 @@ namespace Opc.Ua
             m_value = value;
             m_typeInfo = TypeInfo.Arrays.DateTime;
         }
+#endif
 
         /// <summary>
         /// Initializes the object with a Guid array value.
@@ -2070,149 +2081,6 @@ namespace Opc.Ua
             }
 
             m_typeInfo = TypeInfo.Arrays.Guid;
-        }
-
-        /// <summary>
-        /// Initializes the object with a Uuid array value.
-        /// </summary>
-        /// <remarks>
-        /// Initializes the object with a <see cref="Uuid"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="Uuid"/>-array value to set this Variant to</param>
-        public void Set(Uuid[] value)
-        {
-            m_value = value;
-            m_typeInfo = TypeInfo.Arrays.Guid;
-        }
-
-        /// <summary>
-        /// Initializes the object with a byte[] array value.
-        /// </summary>
-        /// <remarks>
-        /// Initializes the object with a 2-d <see cref="byte"/>-array value.
-        /// </remarks>
-        /// <param name="value">The 2-d <see cref="byte"/>-array value to set this Variant to</param>
-        public void Set(byte[][] value)
-        {
-            m_value = value;
-            m_typeInfo = TypeInfo.Arrays.ByteString;
-        }
-
-        /// <summary>
-        /// Initializes the object with a XmlElement array value.
-        /// </summary>
-        /// <remarks>
-        /// Initializes the object with a <see cref="XmlElement"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="XmlElement"/>-array value to set this Variant to</param>
-        public void Set(XmlElement[] value)
-        {
-            m_value = value;
-            m_typeInfo = TypeInfo.Arrays.XmlElement;
-        }
-
-        /// <summary>
-        /// Initializes the object with a NodeId array value.
-        /// </summary>
-        /// <remarks>
-        /// Initializes the object with a <see cref="NodeId"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="NodeId"/>-array value to set this Variant to</param>
-        public void Set(NodeId[] value)
-        {
-            m_value = value;
-            m_typeInfo = TypeInfo.Arrays.NodeId;
-        }
-
-        /// <summary>
-        /// Initializes the object with a ExpandedNodeId array value.
-        /// </summary>
-        /// <remarks>
-        /// Initializes the object with a <see cref="ExpandedNodeId"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="ExpandedNodeId"/>-array value to set this Variant to</param>
-        public void Set(ExpandedNodeId[] value)
-        {
-            m_value = value;
-            m_typeInfo = TypeInfo.Arrays.ExpandedNodeId;
-        }
-
-        /// <summary>
-        /// Initializes the object with a StatusCode array value.
-        /// </summary>
-        /// <remarks>
-        /// Initializes the object with a <see cref="StatusCode"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="StatusCode"/>-array value to set this Variant to</param>
-        public void Set(StatusCode[] value)
-        {
-            m_value = value;
-            m_typeInfo = TypeInfo.Arrays.StatusCode;
-        }
-
-        /// <summary>
-        /// Initializes the object with a QualifiedName array value.
-        /// </summary>
-        /// <remarks>
-        /// Initializes the object with a <see cref="QualifiedName"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="QualifiedName"/>-array value to set this Variant to</param>
-        public void Set(QualifiedName[] value)
-        {
-            m_value = value;
-            m_typeInfo = TypeInfo.Arrays.QualifiedName;
-        }
-
-        /// <summary>
-        /// Initializes the object with a LocalizedText array value.
-        /// </summary>
-        /// <remarks>
-        /// Initializes the object with a <see cref="LocalizedText"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="LocalizedText"/>-array value to set this Variant to</param>
-        public void Set(LocalizedText[] value)
-        {
-            m_value = value;
-            m_typeInfo = TypeInfo.Arrays.LocalizedText;
-        }
-
-        /// <summary>
-        /// Initializes the object with a ExtensionObject array value.
-        /// </summary>
-        /// <remarks>
-        /// Initializes the object with a <see cref="ExtensionObject"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="ExtensionObject"/>-array value to set this Variant to</param>
-        public void Set(ExtensionObject[] value)
-        {
-            m_value = value;
-            m_typeInfo = TypeInfo.Arrays.ExtensionObject;
-        }
-
-        /// <summary>
-        /// Initializes the object with a DataValue array value.
-        /// </summary>
-        /// <remarks>
-        /// Initializes the object with a <see cref="DataValue"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="DataValue"/>-array value to set this Variant to</param>
-        public void Set(DataValue[] value)
-        {
-            m_value = value;
-            m_typeInfo = TypeInfo.Arrays.DataValue;
-        }
-
-        /// <summary>
-        /// Initializes the object with a Variant array value.
-        /// </summary>
-        /// <remarks>
-        /// Initializes the object with a <see cref="Variant"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="Variant"/>-array value to set this Variant to</param>
-        public void Set(Variant[] value)
-        {
-            m_value = value;
-            m_typeInfo = TypeInfo.Arrays.Variant;
         }
 
         /// <summary>

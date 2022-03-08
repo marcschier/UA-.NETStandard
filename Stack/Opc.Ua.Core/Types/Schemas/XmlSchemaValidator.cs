@@ -88,55 +88,6 @@ namespace Opc.Ua.Schema.Xml
         }
 
         /// <summary>
-        /// Returns the schema for the specified type (returns the entire schema if null).
-        /// </summary>
-        public string GetSchema(string typeName)
-        {
-            var settings = new XmlWriterSettings {
-                Encoding = Encoding.UTF8,
-                Indent = true,
-                IndentChars = "    "
-            };
-
-            var ostrm = new MemoryStream();
-            var writer = XmlWriter.Create(ostrm, settings);
-
-            try
-            {
-                if (typeName == null || m_schema.Elements.Values.Count == 0)
-                {
-                    m_schema.Write(writer);
-                }
-                else
-                {
-                    foreach (XmlSchemaObject current in m_schema.Elements.Values)
-                    {
-                        if (current is XmlSchemaElement element)
-                        {
-                            if (element.Name == typeName)
-                            {
-                                var schema = new XmlSchema();
-                                schema.Items.Add(element.ElementSchemaType);
-                                schema.Items.Add(element);
-                                schema.Write(writer);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            finally
-            {
-                writer.Flush();
-                writer.Dispose();
-            }
-
-            return new UTF8Encoding().GetString(ostrm.ToArray());
-        }
-
-
-
-        /// <summary>
         /// Handles a validation error.
         /// </summary>
         private static void OnValidate(object sender, ValidationEventArgs args)
