@@ -244,6 +244,7 @@ namespace Opc.Ua.Client.ComplexTypes.Tests
         /// retrieve the node id of the test data dictionary without relying on
         /// hard coded identifiers
         /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
         public async Task<NodeId> GetTestDataDictionaryNodeIdAsync(CancellationToken ct = default)
         {
             var browseDescription = new BrowseDescription

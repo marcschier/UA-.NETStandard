@@ -446,10 +446,7 @@ namespace Opc.Ua.PubSub.Transport
         public void GetPublisherEndpointsCallback(
             GetPublisherEndpointsEventHandler getPubliherEndpoints)
         {
-            if (m_udpDiscoveryPublisher != null)
-            {
-                m_udpDiscoveryPublisher.GetPublisherEndpoints = getPubliherEndpoints;
-            }
+            m_udpDiscoveryPublisher?.GetPublisherEndpoints = getPubliherEndpoints;
         }
 
         /// <summary>
@@ -458,10 +455,7 @@ namespace Opc.Ua.PubSub.Transport
         public void GetDataSetWriterConfigurationCallback(
             GetDataSetWriterIdsEventHandler getDataSetWriterIds)
         {
-            if (m_udpDiscoveryPublisher != null)
-            {
-                m_udpDiscoveryPublisher.GetDataSetWriterIds = getDataSetWriterIds;
-            }
+            m_udpDiscoveryPublisher?.GetDataSetWriterIds = getDataSetWriterIds;
         }
 
         /// <summary>

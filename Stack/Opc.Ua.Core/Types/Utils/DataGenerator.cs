@@ -55,7 +55,7 @@ namespace Opc.Ua.Test
         /// <summary>
         /// Default random source.
         /// </summary>
-        public static RandomSource Default { get; } = new ();
+        public static RandomSource Default { get; } = new();
 
         /// <summary>
         /// Initializes the source with a time dependent seed.

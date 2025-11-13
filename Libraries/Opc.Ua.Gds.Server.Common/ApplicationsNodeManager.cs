@@ -1777,10 +1777,7 @@ namespace Opc.Ua.Gds.Server
             }
 
             // put root into operation cache.
-            if (cache != null)
-            {
-                cache[handle.NodeId] = target;
-            }
+            cache?[handle.NodeId] = target;
 
             handle.Node = target;
             handle.Validated = true;
@@ -1869,16 +1866,13 @@ namespace Opc.Ua.Gds.Server
                     "Use ApplicationCertificateType, HttpsCertificateType or UserCredentialCertificateType");
             }
 
-            if (certificateGroup.DefaultTrustList != null)
-            {
-                certificateGroup.DefaultTrustList.Handle = new TrustList(
+            certificateGroup.DefaultTrustList?.Handle = new TrustList(
                     certificateGroup.DefaultTrustList,
                     new CertificateStoreIdentifier(certificateGroup.Configuration.TrustedListPath),
                     new CertificateStoreIdentifier(certificateGroup.Configuration.IssuerListPath),
                     new TrustList.SecureAccess(HasTrustListAccess),
                     new TrustList.SecureAccess(HasTrustListAccess),
                     Server.Telemetry);
-            }
         }
 
         private void HasTrustListAccess(

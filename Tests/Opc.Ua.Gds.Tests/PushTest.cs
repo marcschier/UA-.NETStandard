@@ -1306,7 +1306,7 @@ namespace Opc.Ua.Gds.Tests
             X509CRL caCrl = await CertificateGroup
                 .RevokeCertificateAsync(certificateStoreIdentifier, m_caCert, null, m_telemetry)
                 .ConfigureAwait(false);
-            Assert.That(caCrl, Is.Not.Null);
+            NUnit.Framework.Assert.That(caCrl, Is.Not.Null);
         }
 
         private static bool EraseStore(CertificateStoreIdentifier storeIdentifier, ITelemetryContext telemetry)

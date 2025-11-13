@@ -113,6 +113,7 @@ namespace Opc.Ua.Client.Tests
         /// <summary>
         /// Load the default client configuration.
         /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
         public async Task LoadClientConfigurationAsync(
             string pkiRoot = null,
             string clientName = "TestClient")
@@ -466,8 +467,7 @@ namespace Opc.Ua.Client.Tests
                     ShouldListenTo = (source) => source.Name == expectedName,
 
                     // Sample all data and recorded activities
-                    Sample = (ref ActivityCreationOptions<ActivityContext> _) =>
-                        ActivitySamplingResult.AllDataAndRecorded,
+                    Sample = (ref _) => ActivitySamplingResult.AllDataAndRecorded,
                     // Do not log during benchmarks
                     ActivityStarted = _ => { },
                     ActivityStopped = _ => { }
@@ -481,8 +481,7 @@ namespace Opc.Ua.Client.Tests
                     ShouldListenTo = (source) => source.Name == expectedName,
 
                     // Sample all data and recorded activities
-                    Sample = (ref ActivityCreationOptions<ActivityContext> _) =>
-                        ActivitySamplingResult.AllDataAndRecorded,
+                    Sample = (ref  _) => ActivitySamplingResult.AllDataAndRecorded,
                     ActivityStarted = activity =>
                         m_logger.LogInformation(
                             "Client Started: {OperationName,-15} - TraceId: {TraceId,-32} SpanId: {SpanId,-16}",

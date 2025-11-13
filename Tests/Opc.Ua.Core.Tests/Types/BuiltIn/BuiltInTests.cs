@@ -686,7 +686,7 @@ namespace Opc.Ua.Core.Tests.Types.BuiltIn
             }
 
             TestContext.Out.WriteLine("Distinct NodeIds:");
-            List<NodeId> distinctNodeIds = nodeIds.Distinct().ToList();
+            List<NodeId> distinctNodeIds = [.. nodeIds.Distinct()];
             foreach (NodeId nodeId in distinctNodeIds)
             {
                 TestContext.Out.WriteLine($"NodeId={nodeId}, HashCode={nodeId.GetHashCode():x8}");

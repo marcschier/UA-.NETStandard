@@ -14,7 +14,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
-using Opc.Ua.Types;
 
 namespace Opc.Ua
 {

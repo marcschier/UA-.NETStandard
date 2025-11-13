@@ -574,10 +574,7 @@ namespace Opc.Ua.Client
             int nodeClassMask,
             CancellationToken ct = default)
         {
-            if (requestHeader != null)
-            {
-                requestHeader.RequestHandle = 0;
-            }
+            requestHeader?.RequestHandle = 0;
 
             var result = new List<ReferenceDescriptionCollection>(nodeIds.Count);
             (
@@ -625,10 +622,7 @@ namespace Opc.Ua.Client
             }
             while (nextContinuationPoints.Count > 0)
             {
-                if (requestHeader != null)
-                {
-                    requestHeader.RequestHandle = 0;
-                }
+                requestHeader?.RequestHandle = 0;
                 (
                     _,
                     ByteStringCollection revisedContinuationPoints,

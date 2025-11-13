@@ -259,7 +259,7 @@ namespace Opc.Ua.Bindings
             m_host = new HostBuilder()
                 .ConfigureWebHostDefaults(ConfigureWebHost)
                 .Build();
-            m_host.StartAsync(CancellationToken.None).GetAwaiter().GetResult();     
+            m_host.StartAsync(CancellationToken.None).GetAwaiter().GetResult();
 #else
             var hostBuilder = new WebHostBuilder();
             ConfigureWebHost(hostBuilder);

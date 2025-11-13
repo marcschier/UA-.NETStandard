@@ -400,7 +400,7 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="obj">The object to compare to this instance of object</param>
         /// <returns>
-        /// true if the specified <see cref="System.Object"/> is equal to the current embedded object; otherwise, false.
+        /// true if the specified <see cref="object"/> is equal to the current embedded object; otherwise, false.
         /// </returns>
         public override bool Equals(object obj)
         {

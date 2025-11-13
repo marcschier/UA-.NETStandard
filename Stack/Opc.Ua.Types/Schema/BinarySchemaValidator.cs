@@ -19,7 +19,6 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using System.Diagnostics.CodeAnalysis;
-using Opc.Ua.Types;
 
 namespace Opc.Ua.Schema.Binary
 {

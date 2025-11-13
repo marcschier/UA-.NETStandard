@@ -23,15 +23,9 @@ namespace Opc.Ua
         {
             base.OnAfterCreate(context, node);
 
-            if (Acknowledge != null)
-            {
-                Acknowledge.OnCall = OnAcknowledgeCalled;
-            }
+            Acknowledge?.OnCall = OnAcknowledgeCalled;
 
-            if (Confirm != null)
-            {
-                Confirm.OnCall = OnConfirmCalled;
-            }
+            Confirm?.OnCall = OnConfirmCalled;
         }
 
         /// <summary>
@@ -258,10 +252,7 @@ namespace Opc.Ua
             AckedState.Value = new LocalizedText(state);
             AckedState.Id.Value = true;
 
-            if (AckedState.TransitionTime != null)
-            {
-                AckedState.TransitionTime.Value = DateTime.UtcNow;
-            }
+            AckedState.TransitionTime?.Value = DateTime.UtcNow;
 
             UpdateEffectiveState(context);
         }
@@ -280,10 +271,7 @@ namespace Opc.Ua
             AckedState.Value = new LocalizedText(state);
             AckedState.Id.Value = false;
 
-            if (AckedState.TransitionTime != null)
-            {
-                AckedState.TransitionTime.Value = DateTime.UtcNow;
-            }
+            AckedState.TransitionTime?.Value = DateTime.UtcNow;
 
             UpdateEffectiveState(context);
         }
@@ -427,10 +415,7 @@ namespace Opc.Ua
                 ConfirmedState.Value = new LocalizedText(state);
                 ConfirmedState.Id.Value = true;
 
-                if (ConfirmedState.TransitionTime != null)
-                {
-                    ConfirmedState.TransitionTime.Value = DateTime.UtcNow;
-                }
+                ConfirmedState.TransitionTime?.Value = DateTime.UtcNow;
 
                 UpdateEffectiveState(context);
             }
@@ -452,10 +437,7 @@ namespace Opc.Ua
                 ConfirmedState.Value = new LocalizedText(state);
                 ConfirmedState.Id.Value = false;
 
-                if (ConfirmedState.TransitionTime != null)
-                {
-                    ConfirmedState.TransitionTime.Value = DateTime.UtcNow;
-                }
+                ConfirmedState.TransitionTime?.Value = DateTime.UtcNow;
 
                 UpdateEffectiveState(context);
             }

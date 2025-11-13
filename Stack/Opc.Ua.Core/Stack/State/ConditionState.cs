@@ -25,20 +25,11 @@ namespace Opc.Ua
         {
             base.OnAfterCreate(context, node);
 
-            if (Enable != null)
-            {
-                Enable.OnCallMethod = OnEnableCalled;
-            }
+            Enable?.OnCallMethod = OnEnableCalled;
 
-            if (Disable != null)
-            {
-                Disable.OnCallMethod = OnDisableCalled;
-            }
+            Disable?.OnCallMethod = OnDisableCalled;
 
-            if (AddComment != null)
-            {
-                AddComment.OnCall = OnAddCommentCalled;
-            }
+            AddComment?.OnCall = OnAddCommentCalled;
         }
 
         /// <inheritdoc/>
@@ -75,10 +66,7 @@ namespace Opc.Ua
             LocalizedText displayName,
             DateTime transitionTime)
         {
-            if (EnabledState.EffectiveDisplayName != null)
-            {
-                EnabledState.EffectiveDisplayName.Value = displayName;
-            }
+            EnabledState.EffectiveDisplayName?.Value = displayName;
 
             if (EnabledState.EffectiveTransitionTime != null)
             {
@@ -122,10 +110,7 @@ namespace Opc.Ua
             LastSeverity.Value = Severity.Value;
             Severity.Value = (ushort)severity;
 
-            if (LastSeverity.SourceTimestamp != null)
-            {
-                LastSeverity.SourceTimestamp.Value = DateTime.UtcNow;
-            }
+            LastSeverity.SourceTimestamp?.Value = DateTime.UtcNow;
         }
 
         /// <summary>
@@ -144,10 +129,7 @@ namespace Opc.Ua
                 Comment.Value = comment;
                 Comment.SourceTimestamp.Value = DateTime.UtcNow;
 
-                if (ClientUserId != null)
-                {
-                    ClientUserId.Value = clientUserId;
-                }
+                ClientUserId?.Value = clientUserId;
             }
         }
 
@@ -713,10 +695,7 @@ namespace Opc.Ua
             EnabledState.Value = new LocalizedText(state);
             EnabledState.Id.Value = true;
 
-            if (EnabledState.TransitionTime != null)
-            {
-                EnabledState.TransitionTime.Value = DateTime.UtcNow;
-            }
+            EnabledState.TransitionTime?.Value = DateTime.UtcNow;
 
             UpdateEffectiveState(context);
         }
@@ -736,10 +715,7 @@ namespace Opc.Ua
             EnabledState.Value = new LocalizedText(state);
             EnabledState.Id.Value = false;
 
-            if (EnabledState.TransitionTime != null)
-            {
-                EnabledState.TransitionTime.Value = DateTime.UtcNow;
-            }
+            EnabledState.TransitionTime?.Value = DateTime.UtcNow;
 
             UpdateEffectiveState(context);
         }

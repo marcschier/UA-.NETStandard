@@ -67,16 +67,10 @@ namespace Opc.Ua
         {
             if (disposing)
             {
-                if (m_unshelveTimer != null)
-                {
-                    m_unshelveTimer.Dispose();
-                    m_unshelveTimer = null;
-                }
-                if (m_updateUnshelveTimer != null)
-                {
-                    m_updateUnshelveTimer.Dispose();
-                    m_updateUnshelveTimer = null;
-                }
+                m_unshelveTimer?.Dispose();
+                m_unshelveTimer = null;
+                m_updateUnshelveTimer?.Dispose();
+                m_updateUnshelveTimer = null;
             }
 
             base.Dispose(disposing);
@@ -99,10 +93,7 @@ namespace Opc.Ua
             LocalizedText displayName,
             DateTime transitionTime)
         {
-            if (ActiveState.EffectiveDisplayName != null)
-            {
-                ActiveState.EffectiveDisplayName.Value = displayName;
-            }
+            ActiveState.EffectiveDisplayName?.Value = displayName;
 
             if (ActiveState.EffectiveTransitionTime != null)
             {
@@ -155,10 +146,7 @@ namespace Opc.Ua
             ActiveState.Value = new LocalizedText(state);
             ActiveState.Id.Value = active;
 
-            if (ActiveState.TransitionTime != null)
-            {
-                ActiveState.TransitionTime.Value = DateTime.UtcNow;
-            }
+            ActiveState.TransitionTime?.Value = DateTime.UtcNow;
 
             UpdateEffectiveState(context);
         }
@@ -203,10 +191,7 @@ namespace Opc.Ua
             SuppressedState.Value = new LocalizedText(state);
             SuppressedState.Id.Value = suppressed;
 
-            if (SuppressedState.TransitionTime != null)
-            {
-                SuppressedState.TransitionTime.Value = DateTime.UtcNow;
-            }
+            SuppressedState.TransitionTime?.Value = DateTime.UtcNow;
 
             UpdateEffectiveState(context);
         }
@@ -229,17 +214,11 @@ namespace Opc.Ua
                 return;
             }
 
-            if (m_unshelveTimer != null)
-            {
-                m_unshelveTimer.Dispose();
-                m_unshelveTimer = null;
-            }
+            m_unshelveTimer?.Dispose();
+            m_unshelveTimer = null;
 
-            if (m_updateUnshelveTimer != null)
-            {
-                m_updateUnshelveTimer.Dispose();
-                m_updateUnshelveTimer = null;
-            }
+            m_updateUnshelveTimer?.Dispose();
+            m_updateUnshelveTimer = null;
 
             UnshelveTime = DateTime.MinValue;
 

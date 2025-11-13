@@ -270,10 +270,7 @@ namespace Opc.Ua
                 variable.Value = null;
                 variable.Id.Value = null;
 
-                if (variable.Number != null)
-                {
-                    variable.Number.Value = 0;
-                }
+                variable.Number?.Value = 0;
 
                 return;
             }
@@ -294,10 +291,7 @@ namespace Opc.Ua
                     variable.Value = state.Name;
                     variable.Id.Value = new NodeId(state.Id, ElementNamespaceIndex);
 
-                    if (variable.Number != null)
-                    {
-                        variable.Number.Value = state.Number;
-                    }
+                    variable.Number?.Value = state.Number;
 
                     return;
                 }
@@ -322,15 +316,9 @@ namespace Opc.Ua
                 variable.Value = null;
                 variable.Id.Value = null;
 
-                if (variable.TransitionTime != null)
-                {
-                    variable.TransitionTime.Value = DateTime.MinValue;
-                }
+                variable.TransitionTime?.Value = DateTime.MinValue;
 
-                if (variable.Number != null)
-                {
-                    variable.Number.Value = 0;
-                }
+                variable.Number?.Value = 0;
 
                 return;
             }
@@ -351,15 +339,9 @@ namespace Opc.Ua
                     variable.Value = transition.Name;
                     variable.Id.Value = new NodeId(transition.Id, ElementNamespaceIndex);
 
-                    if (variable.TransitionTime != null)
-                    {
-                        variable.TransitionTime.Value = DateTime.UtcNow;
-                    }
+                    variable.TransitionTime?.Value = DateTime.UtcNow;
 
-                    if (variable.Number != null)
-                    {
-                        variable.Number.Value = transition.Number;
-                    }
+                    variable.Number?.Value = transition.Number;
 
                     return;
                 }

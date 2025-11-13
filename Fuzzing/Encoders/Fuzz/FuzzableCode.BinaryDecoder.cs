@@ -191,7 +191,7 @@ namespace Opc.Ua.Fuzzing
         /// The idempotent fuzz target core for the BinaryEncoder.
         /// </summary>
         /// <param name="serialized">The idempotent UA binary encoded data.</param>
-        /// <exception cref="Exception"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
         internal static void FuzzBinaryEncoderIndempotentCore(
             byte[] serialized,
             IEncodeable encodeable)

@@ -148,11 +148,8 @@ namespace Opc.Ua.Client
             {
                 lock (m_lock)
                 {
-                    if (m_reconnectTimer != null)
-                    {
-                        m_reconnectTimer.Dispose();
-                        m_reconnectTimer = null;
-                    }
+                    m_reconnectTimer?.Dispose();
+                    m_reconnectTimer = null;
                     m_state = ReconnectState.Disposed;
                 }
             }
@@ -289,9 +286,8 @@ namespace Opc.Ua.Client
             // The factors result in a jitter of 10%.
             const int jitterResolution = 1000;
             const int jitterFactor = 10;
-            int jitter =
-                reconnectPeriod *
-                 UnsecureRandom.Shared.Next(-jitterResolution, jitterResolution) /
+            int jitter = reconnectPeriod *
+                UnsecureRandom.Shared.Next(-jitterResolution, jitterResolution) /
                 (jitterResolution * jitterFactor);
             return reconnectPeriod + jitter;
         }
@@ -343,7 +339,6 @@ namespace Opc.Ua.Client
                 }
 
                 bool keepaliveRecovered = false;
-
 
                 // preserve legacy behavior if reconnectAbort is not set
                 if (m_reconnectAbort &&

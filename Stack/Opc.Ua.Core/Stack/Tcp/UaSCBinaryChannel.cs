@@ -209,17 +209,11 @@ namespace Opc.Ua.Bindings
             if (disposing)
             {
                 DiscardTokens();
-                if (m_localNonce != null)
-                {
-                    m_localNonce.Dispose();
-                    m_localNonce = null;
-                }
+                m_localNonce?.Dispose();
+                m_localNonce = null;
 
-                if (m_remoteNonce != null)
-                {
-                    m_remoteNonce.Dispose();
-                    m_remoteNonce = null;
-                }
+                m_remoteNonce?.Dispose();
+                m_remoteNonce = null;
             }
         }
 
@@ -601,7 +595,7 @@ namespace Opc.Ua.Bindings
                     ex,
                     StatusCodes.BadTcpInternalError,
                     "Unexpected error during write operation.");
-               
+
                 HandleWriteComplete(null, state, args.BytesTransferred, error);
                 args.Dispose();
             }

@@ -1735,7 +1735,7 @@ namespace Opc.Ua.Client.Tests
             var activityListener = new ActivityListener
             {
                 ShouldListenTo = _ => true,
-                Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded
+                Sample = (ref _) => ActivitySamplingResult.AllDataAndRecorded
             };
 
             ActivitySource.AddActivityListener(activityListener);
@@ -1855,7 +1855,7 @@ namespace Opc.Ua.Client.Tests
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ||
                 (securityPolicy != SecurityPolicies.ECC_brainpoolP256r1 &&
-                 securityPolicy != SecurityPolicies.ECC_brainpoolP384r1))
+                    securityPolicy != SecurityPolicies.ECC_brainpoolP384r1))
             {
                 var userIdentity = new UserIdentity("user1", "password"u8);
 
@@ -1904,7 +1904,7 @@ namespace Opc.Ua.Client.Tests
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ||
                 (securityPolicy != SecurityPolicies.ECC_brainpoolP256r1 &&
-                 securityPolicy != SecurityPolicies.ECC_brainpoolP384r1))
+                    securityPolicy != SecurityPolicies.ECC_brainpoolP384r1))
             {
                 const string identityToken = "fakeTokenString";
 

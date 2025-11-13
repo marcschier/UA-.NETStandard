@@ -163,10 +163,7 @@ namespace Opc.Ua.Server
                     MethodIds.Server_GetMonitoredItems,
                     typeof(GetMonitoredItemsMethodState));
 
-                if (getMonitoredItems != null)
-                {
-                    getMonitoredItems.OnCallMethod = OnGetMonitoredItems;
-                }
+                getMonitoredItems?.OnCallMethod = OnGetMonitoredItems;
 
                 // set ArrayDimensions for GetMonitoredItems.OutputArguments.Value.
                 var getMonitoredItemsOutputArguments = (PropertyState)FindPredefinedNode(
@@ -196,10 +193,7 @@ namespace Opc.Ua.Server
                         MethodIds.Server_SetSubscriptionDurable,
                         typeof(SetSubscriptionDurableMethodState));
 
-                    if (setSubscriptionDurable != null)
-                    {
-                        setSubscriptionDurable.OnCall = OnSetSubscriptionDurable;
-                    }
+                    setSubscriptionDurable?.OnCall = OnSetSubscriptionDurable;
                 }
                 else
                 {
@@ -227,10 +221,7 @@ namespace Opc.Ua.Server
                     MethodIds.Server_ResendData,
                     typeof(ResendDataMethodState));
 
-                if (resendData != null)
-                {
-                    resendData.OnCallMethod = OnResendData;
-                }
+                resendData?.OnCallMethod = OnResendData;
             }
         }
 
@@ -630,11 +621,8 @@ namespace Opc.Ua.Server
                 if (!enabled)
                 {
                     // stop scans.
-                    if (m_diagnosticsScanTimer != null)
-                    {
-                        m_diagnosticsScanTimer.Dispose();
-                        m_diagnosticsScanTimer = null;
-                    }
+                    m_diagnosticsScanTimer?.Dispose();
+                    m_diagnosticsScanTimer = null;
 
                     if (m_sessions != null)
                     {

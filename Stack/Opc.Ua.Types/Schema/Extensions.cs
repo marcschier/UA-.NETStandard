@@ -31,7 +31,6 @@ using System;
 using System.IO;
 using System.Xml;
 using Opc.Ua.Schema.Model;
-using Opc.Ua.Types;
 
 namespace Opc.Ua.Schema
 {

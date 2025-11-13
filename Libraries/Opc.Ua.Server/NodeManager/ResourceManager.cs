@@ -115,7 +115,7 @@ namespace Opc.Ua.Server
                 {
                     TranslationInfo info = result.LocalizedText.TranslationInfo;
 
-                    if (info != null && info.Args != null && info.Args.Length > 0)
+                    if (info.Args != null && info.Args.Length > 0)
                     {
                         args = info.Args;
                     }

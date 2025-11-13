@@ -2660,7 +2660,7 @@ namespace Opc.Ua
                 throw new ArgumentNullException(nameof(stream));
             }
 
-            if (stream.CanSeek != true || stream.CanRead != true)
+            if (!stream.CanSeek || !stream.CanRead)
             {
                 throw new ArgumentException("Stream must be seekable and readable.");
             }

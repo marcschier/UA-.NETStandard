@@ -1445,10 +1445,7 @@ namespace Opc.Ua.Server
             // set semantics changed bit.
             if (m_semanticsChanged)
             {
-                if (value != null)
-                {
-                    value.StatusCode = value.StatusCode.SetSemanticsChanged(true);
-                }
+                value?.StatusCode = value.StatusCode.SetSemanticsChanged(true);
 
                 if (error != null)
                 {
@@ -1466,10 +1463,7 @@ namespace Opc.Ua.Server
             // set structure changed bit.
             if (m_structureChanged)
             {
-                if (value != null)
-                {
-                    value.StatusCode = value.StatusCode.SetStructureChanged(true);
-                }
+                value?.StatusCode = value.StatusCode.SetStructureChanged(true);
 
                 if (error != null)
                 {

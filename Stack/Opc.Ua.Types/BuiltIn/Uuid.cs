@@ -13,7 +13,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using Opc.Ua.Types;
 
 namespace Opc.Ua
 {
@@ -180,7 +179,6 @@ namespace Opc.Ua
         {
             return a.CompareTo(b) > 0;
         }
-
 
         /// <summary>
         /// Returns true if the object a is less or equal to object b.

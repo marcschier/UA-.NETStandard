@@ -25,10 +25,7 @@ namespace Opc.Ua
         {
             base.OnAfterCreate(context, node);
 
-            if (Respond != null)
-            {
-                Respond.OnCall = OnRespondCalled;
-            }
+            Respond?.OnCall = OnRespondCalled;
         }
 
         /// <summary>
@@ -45,10 +42,7 @@ namespace Opc.Ua
             DialogState.Value = new LocalizedText(state);
             DialogState.Id.Value = true;
 
-            if (DialogState.TransitionTime != null)
-            {
-                DialogState.TransitionTime.Value = DateTime.UtcNow;
-            }
+            DialogState.TransitionTime?.Value = DateTime.UtcNow;
 
             UpdateEffectiveState(context);
         }
@@ -70,10 +64,7 @@ namespace Opc.Ua
             DialogState.Value = new LocalizedText(state);
             DialogState.Id.Value = false;
 
-            if (DialogState.TransitionTime != null)
-            {
-                DialogState.TransitionTime.Value = DateTime.UtcNow;
-            }
+            DialogState.TransitionTime?.Value = DateTime.UtcNow;
 
             UpdateEffectiveState(context);
         }

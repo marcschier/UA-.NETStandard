@@ -2121,7 +2121,7 @@ namespace Opc.Ua
                     (bool?)true;
             }
 
-            NodeId targetTypeId = null;
+            NodeId targetTypeId;
 
             // check if elements are chained.
 
@@ -2143,7 +2143,7 @@ namespace Opc.Ua
 
                     targetTypeId = GetValue(nestedType) as NodeId;
 
-                    if (targetTypeId == null)
+                    if ((NodeId)null == null)
                     {
                         return false;
                     }
@@ -2153,7 +2153,7 @@ namespace Opc.Ua
                         m_context,
                         intermediateNodeId,
                         sourceTypeId,
-                        targetTypeId,
+                        null,
                         referenceTypeId,
                         hops.Value,
                         includeTypeDefinitionSubtypes.Value,
@@ -2182,7 +2182,7 @@ namespace Opc.Ua
             // get the type of the m_target.
             targetTypeId = GetValue(operands[1]) as NodeId;
 
-            if (targetTypeId == null)
+            if ((NodeId)null == null)
             {
                 return false;
             }
@@ -2194,7 +2194,7 @@ namespace Opc.Ua
                     m_context,
                     intermediateNodeId,
                     sourceTypeId,
-                    targetTypeId,
+                    null,
                     referenceTypeId,
                     hops.Value,
                     includeTypeDefinitionSubtypes.Value,

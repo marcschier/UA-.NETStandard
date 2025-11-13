@@ -45,7 +45,7 @@ namespace Opc.Ua.Export
         {
             var validationErrors = new List<string>();
             errors = validationErrors;
-            var success = true;
+            bool success = true;
             try
             {
                 using Stream schemaContent = Assembly
@@ -77,7 +77,7 @@ namespace Opc.Ua.Export
                 }
                 return success;
             }
-            catch (System.Xml.Schema.XmlSchemaValidationException xve)
+            catch (XmlSchemaValidationException xve)
             {
                 validationErrors.Add(CoreUtils.Format(
                     "XmlSchemaValidationException: {0} at line {1} char: {2}",

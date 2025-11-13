@@ -1506,11 +1506,8 @@ namespace Opc.Ua.Gds.Client
             await m_lock.WaitAsync(ct).ConfigureAwait(false);
             try
             {
-                if (Session != null)
-                {
-                    Session.Dispose();
-                    Session = null;
-                }
+                Session?.Dispose();
+                Session = null;
 
                 Session = await m_sessionFactory.CreateAsync(
                     Configuration,

@@ -298,10 +298,7 @@ namespace Opc.Ua
                 var configuration = serializer.ReadObject(stream) as ApplicationConfiguration;
                 configuration.Initialize(telemetry);
 
-                if (configuration != null)
-                {
-                    configuration.SourceFilePath = file.FullName;
-                }
+                configuration?.SourceFilePath = file.FullName;
 
                 return configuration;
             }
@@ -432,10 +429,7 @@ namespace Opc.Ua
                     message.ToString());
             }
 
-            if (configuration != null)
-            {
-                configuration.SourceFilePath = file.FullName;
-            }
+            configuration?.SourceFilePath = file.FullName;
 
             return configuration;
         }
@@ -546,12 +540,12 @@ namespace Opc.Ua
                     sectionName + ".Config.xml",
                     checkCurrentDirectory: true,
                     createAlways: false);
-                return absolutePath ?? sectionName + ".Config.xml";
+                return absolutePath ?? $"{sectionName}.Config.xml";
             }
             catch (Exception e)
             {
                 logger.LogError(e, "Could not get file path from app config - returning: {SectionName}.Config.xml", sectionName);
-                return sectionName + ".Config.xml";
+                return $"{sectionName}.Config.xml";
             }
         }
 

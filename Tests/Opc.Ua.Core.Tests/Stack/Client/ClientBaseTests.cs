@@ -586,7 +586,7 @@ namespace Opc.Ua.Core.Tests.Stack.Client
                 m_listener = new ActivityListener
                 {
                     ShouldListenTo = _ => true,
-                    Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded,
+                    Sample = (ref _) => ActivitySamplingResult.AllDataAndRecorded,
                     ActivityStarted = activity => CurrentActivity = activity,
                     ActivityStopped = activity =>
                     {

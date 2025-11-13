@@ -1126,6 +1126,7 @@ namespace Opc.Ua
         {
             return CompareTo(obj) == 0;
         }
+
         /// <inheritdoc/>
         public override int GetHashCode()
         {

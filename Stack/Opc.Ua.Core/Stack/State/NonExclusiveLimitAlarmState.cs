@@ -117,10 +117,7 @@ namespace Opc.Ua
             limit.Value = new LocalizedText(state);
             limit.Id.Value = active;
 
-            if (limit.TransitionTime != null)
-            {
-                limit.TransitionTime.Value = DateTime.UtcNow;
-            }
+            limit.TransitionTime?.Value = DateTime.UtcNow;
         }
     }
 }

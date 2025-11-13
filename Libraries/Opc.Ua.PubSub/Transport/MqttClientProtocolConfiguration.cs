@@ -516,7 +516,7 @@ namespace Opc.Ua.PubSub.Transport
                     .Value.Value
                 is string sUserName)
             {
-                foreach (char c in sUserName.ToCharArray())
+                foreach (char c in sUserName)
                 {
                     UserName.AppendChar(c);
                 }
@@ -529,7 +529,7 @@ namespace Opc.Ua.PubSub.Transport
                     .Value.Value
                 is string sPassword)
             {
-                foreach (char c in sPassword.ToCharArray())
+                foreach (char c in sPassword)
                 {
                     Password.AppendChar(c);
                 }

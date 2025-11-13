@@ -182,10 +182,7 @@ namespace Opc.Ua
             set
             {
                 ITransportChannel? channel = NullableTransportChannel;
-                if (channel != null)
-                {
-                    channel.OperationTimeout = value;
-                }
+                channel?.OperationTimeout = value;
             }
         }
 

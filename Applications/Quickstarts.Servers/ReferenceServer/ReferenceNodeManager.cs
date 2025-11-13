@@ -1812,10 +1812,7 @@ namespace Quickstarts.ReferenceServer
                             }
 
                             //set default value for Definition property
-                            if (item.Definition != null)
-                            {
-                                item.Definition.Value = string.Empty;
-                            }
+                            item.Definition?.Value = string.Empty;
                         }
                     }
 

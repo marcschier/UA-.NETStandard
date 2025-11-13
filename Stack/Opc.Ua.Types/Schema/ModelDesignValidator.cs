@@ -51,7 +51,7 @@ namespace Opc.Ua.Schema.Model
         /// </summary>
         public ModelCompilerValidator(
             uint startId,
-            IList<string> exclusions,
+            IReadOnlyList<string> exclusions,
             IFileSystem fileSystem,
             ITelemetryContext telemetry)
         {
@@ -1152,7 +1152,7 @@ namespace Opc.Ua.Schema.Model
         /// Validate model designs
         /// </summary>
         /// <exception cref="ArgumentException"></exception>
-        public void Validate(IList<string> designFilePaths, string identifierFilePath, bool generateIds)
+        public void Validate(IReadOnlyList<string> designFilePaths, string identifierFilePath, bool generateIds)
         {
             if (designFilePaths == null || designFilePaths.Count == 0)
             {
@@ -1171,7 +1171,7 @@ namespace Opc.Ua.Schema.Model
         /// <summary>
         /// Validate core model
         /// </summary>
-        public void ValidateCoreModel(IList<string> designFilePaths, string identifierFilePath, bool generateIds)
+        public void ValidateCoreModel(IReadOnlyList<string> designFilePaths, string identifierFilePath, bool generateIds)
         {
             string inputPath = designFilePaths[0];
 
@@ -1354,7 +1354,7 @@ namespace Opc.Ua.Schema.Model
             namespaces.Add(target);
         }
 
-        private List<Namespace> GetNamespaceList(IList<string> designFilePaths)
+        private List<Namespace> GetNamespaceList(IReadOnlyList<string> designFilePaths)
         {
             var namespaces = new List<Namespace>();
 
@@ -1446,7 +1446,7 @@ namespace Opc.Ua.Schema.Model
         /// <param name="designFilePaths"></param>
         /// <param name="identifierFilePath"></param>
         /// <param name="generateIds"></param>
-        public void ValidateModel(IList<string> designFilePaths, string identifierFilePath, bool generateIds)
+        public void ValidateModel(IReadOnlyList<string> designFilePaths, string identifierFilePath, bool generateIds)
         {
             string inputPath = designFilePaths[0];
 
@@ -7338,7 +7338,7 @@ namespace Opc.Ua.Schema.Model
         private readonly IFileSystem m_fileSystem;
         private readonly ServiceMessageContext m_context;
         private readonly uint m_startId;
-        private readonly IList<string> m_exclusions;
+        private readonly IReadOnlyList<string> m_exclusions;
         private Dictionary<XmlQualifiedName, string> m_browseNames = [];
         private readonly Dictionary<XmlQualifiedName, NodeId> m_symbolicIdToNodeId = [];
     }

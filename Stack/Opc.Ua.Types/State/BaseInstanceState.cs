@@ -269,10 +269,7 @@ namespace Opc.Ua
             {
                 variable = children[ii] as BaseVariableState;
 
-                if (variable != null)
-                {
-                    variable.MinimumSamplingInterval = minimumSamplingInterval;
-                }
+                variable?.MinimumSamplingInterval = minimumSamplingInterval;
 
                 children[ii].SetMinimumSamplingInterval(context, minimumSamplingInterval);
             }

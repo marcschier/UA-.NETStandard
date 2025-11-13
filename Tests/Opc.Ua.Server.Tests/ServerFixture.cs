@@ -242,6 +242,7 @@ namespace Opc.Ua.Server.Tests
         /// <summary>
         /// Create the configuration and start the server.
         /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
         private async Task InternalStartServerAsync(int port)
         {
             Config.ServerConfiguration.BaseAddresses
@@ -283,8 +284,7 @@ namespace Opc.Ua.Server.Tests
                 ActivityListener = new ActivityListener
                 {
                     ShouldListenTo = (source) => source.Name == m_telemetry.GetActivitySource().Name,
-                    Sample = (ref ActivityCreationOptions<ActivityContext> _) =>
-                        ActivitySamplingResult.AllDataAndRecorded,
+                    Sample = (ref _) => ActivitySamplingResult.AllDataAndRecorded,
                     ActivityStarted = _ => { },
                     ActivityStopped = _ => { }
                 };
@@ -295,8 +295,7 @@ namespace Opc.Ua.Server.Tests
                 ActivityListener = new ActivityListener
                 {
                     ShouldListenTo = (source) => source.Name == m_telemetry.GetActivitySource().Name,
-                    Sample = (ref ActivityCreationOptions<ActivityContext> _) =>
-                        ActivitySamplingResult.AllDataAndRecorded,
+                    Sample = (ref _) => ActivitySamplingResult.AllDataAndRecorded,
                     ActivityStarted = activity =>
                         m_logger.LogInformation(
                             "Server Started: {OperationName,-15} - TraceId: {TraceId,-32} SpanId: {SpanId,-16} ParentId: {ParentId,-32}",
