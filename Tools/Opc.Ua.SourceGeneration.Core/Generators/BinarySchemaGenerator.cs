@@ -47,25 +47,43 @@ namespace Opc.Ua.SourceGeneration
         /// Generates the code from the contents of the address space.
         /// </summary>
         public BinarySchemaGenerator(
-            string inputPath,
+            IFileSystem fileSystem,
+            string typeDictionary,
             string outputDirectory,
             Dictionary<string, string> knownFiles,
-            string resourcePath,
             IReadOnlyList<string> exclusions)
-        :
-            base(inputPath, outputDirectory, knownFiles, exclusions)
+            : base(
+                  fileSystem,
+                  typeDictionary,
+                  outputDirectory,
+                  knownFiles,
+                  exclusions)
         {
         }
 
         /// <summary>
         /// Generates the datatype files.
         /// </summary>
-        public virtual void Generate(string fileName, bool exportAll, string targetNamespace)
+        public string Generate(
+            string namespacePrefix,
+            string targetNamespace,
+            bool exportAll = true)
         {
             TargetNamespace = targetNamespace;
             m_exportAll = exportAll;
 
-            WriteTemplate_BinarySchema(fileName);
+            string schemaFile = Path.Combine(OutputDirectory, CoreUtils.Format(
+                "{0}.Types.bsd",
+                namespacePrefix));
+
+            WriteTemplate_BinarySchema(schemaFile);
+
+            // Validate generated file
+            var validator = new Schema.Binary.BinarySchemaValidator(
+                FileSystem,
+                KnownFiles);
+            validator.Validate(schemaFile);
+            return schemaFile;
         }
 
         /// <summary>
@@ -73,65 +91,51 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         private void WriteTemplate_BinarySchema(string fileName)
         {
-            var writer = new StreamWriter(CoreUtils.Format(@"{0}\{1}.bsd", OutputDirectory, fileName), false);
+            using TextWriter writer = FileSystem.CreateTextWriter(fileName);
+            var template = new Template(writer, SchemaTemplateStrings.Stack_BinarySchema_File_xml);
 
-            try
+            template.Replacements.Add(Tokens.DictionaryUri, TargetNamespace);
+
+            var buffer = new StringBuilder();
+            buffer.AppendFormat(CultureInfo.InvariantCulture, "xmlns=\"{0}\"", NamespaceUris[0]);
+            if (!m_exportAll)
             {
-                var template = new Template(writer, TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_BinarySchema_File_xml);
-
-                template.Replacements.Add("_BuildDate_", CoreUtils.Format("{0:yyyy-MM-dd}", DateTime.UtcNow));
-                template.Replacements.Add("_Version_", CoreUtils.Format(
-                    "{0}.{1}",
-                    CoreUtils.GetAssemblySoftwareVersion(),
-                    CoreUtils.GetAssemblyBuildNumber()));
-                template.Replacements.Add("_DictionaryUri_", TargetNamespace);
-
-                var buffer = new StringBuilder();
-
-                buffer.AppendFormat(CultureInfo.InvariantCulture, "xmlns=\"{0}\"", NamespaceUris[0]);
-
-                if (!m_exportAll)
+                for (int ii = 1; ii < NamespaceUris.Count; ii++)
                 {
-                    for (int ii = 1; ii < NamespaceUris.Count; ii++)
-                    {
-                        buffer.Append(template.NewLine)
-                            .Append("  ")
-                            .AppendFormat(CultureInfo.InvariantCulture, "xmlns:s{0}=\"{1}\"", ii - 1, NamespaceUris[ii]);
-                    }
+                    buffer.Append(Environment.NewLine)
+                        .Append("  ")
+                        .AppendFormat(
+                        CultureInfo.InvariantCulture,
+                        "xmlns:s{0}=\"{1}\"",
+                        ii - 1,
+                        NamespaceUris[ii]);
                 }
-
-                template.Replacements.Add("xmlns:s0=\"ListOfNamespaces\"", buffer.ToString());
-
-                if (!m_exportAll)
-                {
-                    for (int ii = 1; ii < NamespaceUris.Count; ii++)
-                    {
-                        ((List<string>)[Namespaces.OpcUaBuiltInTypes]).Add(NamespaceUris[ii]);
-                    }
-                }
-
-                AddTemplate(
-                    template,
-                    "<!-- Imports -->",
-                    null,
-                    (List<string>)[Namespaces.OpcUaBuiltInTypes],
-                    new LoadTemplateEventHandler(LoadTemplate_Imports),
-                    null);
-
-                AddTemplate(
-                    template,
-                    "<!-- ListOfTypes -->",
-                    TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_BinarySchema_OpaqueType_xml,
-                    GetListOfTypes(m_exportAll),
-                    new LoadTemplateEventHandler(LoadTemplate_DataType),
-                    new WriteTemplateEventHandler(WriteTemplate_DataType));
-
-                template.WriteTemplate(null);
             }
-            finally
+
+            template.Replacements.Add(Tokens.XmlnsS0ListOfNamespaces, buffer.ToString());
+            if (!m_exportAll)
             {
-                writer.Close();
+                for (int ii = 1; ii < NamespaceUris.Count; ii++)
+                {
+                    ((List<string>)[Namespaces.OpcUaBuiltInTypes]).Add(NamespaceUris[ii]);
+                }
             }
+
+            template.AddTemplate(
+                Tokens.Imports,
+                null,
+                (List<string>)[Namespaces.OpcUaBuiltInTypes],
+                LoadTemplate_Imports,
+                null);
+
+            template.AddTemplate(
+                Tokens.ListOfTypes,
+                SchemaTemplateStrings.Stack_BinarySchema_OpaqueType_xml,
+                GetListOfTypes(m_exportAll),
+                LoadTemplate_DataType,
+                WriteTemplate_DataType);
+
+            template.WriteTemplate(null);
         }
 
         /// <summary>
@@ -181,7 +185,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            return TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_BinarySchema_BuiltInTypes_bsd;
+            return SchemaTemplateStrings.Stack_BinarySchema_BuiltInTypes_bsd;
         }
 
         /// <summary>
@@ -205,17 +209,17 @@ namespace Opc.Ua.SourceGeneration
                     return null;
                 }
 
-                return TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_BinarySchema_ComplexType_xml;
+                return SchemaTemplateStrings.Stack_BinarySchema_ComplexType_xml;
             }
 
             if (typeof(EnumeratedType).IsInstanceOfType(context.Target))
             {
-                return TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_BinarySchema_EnumeratedType_xml;
+                return SchemaTemplateStrings.Stack_BinarySchema_EnumeratedType_xml;
             }
 
             if (typeof(ServiceType).IsInstanceOfType(context.Target))
             {
-                return TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_BinarySchema_ServiceType_xml;
+                return SchemaTemplateStrings.Stack_BinarySchema_ServiceType_xml;
             }
 
             // do not publish unrecognized sub-types.
@@ -232,20 +236,19 @@ namespace Opc.Ua.SourceGeneration
                 return false;
             }
 
-            template.AddReplacement("_TypeName_", datatype.QName.Name);
-            CreateDescription(template, "_Description_", datatype.Documentation);
+            template.AddReplacement(Tokens.TypeName, datatype.QName.Name);
+            CreateDescription(template, Tokens.Description, datatype.Documentation);
 
             if (datatype is ComplexType complexType)
             {
                 List<FieldType> fields = [];
                 GetFields(complexType, fields);
 
-                AddTemplate(
-                    template,
-                    "<!-- ListOfFields -->",
-                    TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_BinarySchema_Field_xml,
+                template.AddTemplate(
+                    Tokens.ListOfFields,
+                    string.Empty,
                     fields,
-                    new LoadTemplateEventHandler(LoadTemplate_Field),
+                    LoadTemplate_Field,
                     null);
             }
 
@@ -300,34 +303,31 @@ namespace Opc.Ua.SourceGeneration
                     });
                 }
 
-                template.AddReplacement("_LengthInBits_", lengthInBits);
-                template.AddReplacement("_IsOptionSet_", isOptionSet ? " IsOptionSet=\"true\"" : string.Empty);
+                template.AddReplacement(Tokens.LengthInBits, lengthInBits);
+                template.AddReplacement(Tokens.IsOptionSet, isOptionSet ? " IsOptionSet=\"true\"" : string.Empty);
 
-                AddTemplate(
-                    template,
-                    "<!-- ListOfValues -->",
-                    TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_BinarySchema_EnumeratedValue_xml,
+                template.AddTemplate(
+                    Tokens.ListOfValues,
+                    string.Empty,
                     values,
-                    new LoadTemplateEventHandler(LoadTemplate_EnumeratedValue),
+                    LoadTemplate_EnumeratedValue,
                     null);
             }
 
             if (datatype is ServiceType serviceType)
             {
-                AddTemplate(
-                    template,
-                    "<!-- ListOfRequestParameters -->",
-                    TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_BinarySchema_Field_xml,
+                template.AddTemplate(
+                    Tokens.ListOfRequestParameters,
+                    string.Empty,
                     serviceType.Request,
-                    new LoadTemplateEventHandler(LoadTemplate_Field),
+                    LoadTemplate_Field,
                     null);
 
-                AddTemplate(
-                    template,
-                    "<!-- ListOfResponseParameters -->",
-                    TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_BinarySchema_Field_xml,
+                template.AddTemplate(
+                    Tokens.ListOfResponseParameters,
+                    string.Empty,
                     serviceType.Response,
-                    new LoadTemplateEventHandler(LoadTemplate_Field),
+                    LoadTemplate_Field,
                     null);
             }
 

@@ -722,6 +722,7 @@ namespace Opc.Ua
         /// <summary>
         /// Returns the service contract to use.
         /// </summary>
+        [Obsolete("WCF not supported in this version.")]
         protected virtual Type GetServiceContract()
         {
             return null;

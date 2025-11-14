@@ -12,13 +12,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using System.Diagnostics.CodeAnalysis;
+using Opc.Ua.Schema.Types;
 
 namespace Opc.Ua.Schema.Binary
 {
@@ -28,29 +30,32 @@ namespace Opc.Ua.Schema.Binary
     public class BinarySchemaValidator : SchemaValidator
     {
         /// <summary>
-        /// Intializes the object with default values.
+        /// Well known binary schema files to namespace mappings.
         /// </summary>
-        public BinarySchemaValidator()
-        {
-            SetResourcePaths(WellKnownDictionaries);
-        }
+        public static readonly IReadOnlyDictionary<string, string> WellKnown =
+            new Dictionary<string, string>
+            {
+                [Namespaces.OpcUa] = "Opc.Ua.Types.bsd"
+            };
 
         /// <summary>
         /// Intializes the object with a file table.
         /// </summary>
-        public BinarySchemaValidator(IDictionary<string, string> fileTable)
-            : base(fileTable)
+        public BinarySchemaValidator(
+            IFileSystem fileSystem = null,
+            IDictionary<string, string> knownFiles = null)
+            : base(fileSystem, knownFiles, StandardTypeImports)
         {
-            SetResourcePaths(WellKnownDictionaries);
+            AddWellKnownFiles(WellKnown);
         }
 
         /// <summary>
         /// Intializes the object with a import table.
         /// </summary>
-        public BinarySchemaValidator(IDictionary<string, byte[]> importTable)
-            : base(importTable)
+        public BinarySchemaValidator(IReadOnlyDictionary<string, byte[]> importTable)
+            : base(null, null, AndStandardTypeImports(importTable))
         {
-            SetResourcePaths(WellKnownDictionaries);
+            AddWellKnownFiles(WellKnown);
         }
 
         /// <summary>
@@ -74,7 +79,7 @@ namespace Opc.Ua.Schema.Binary
         public void Validate(Stream stream)
         {
             // read and parse the file.
-            Dictionary = (TypeDictionary)LoadInput(typeof(TypeDictionary), stream);
+            Dictionary = LoadInput<TypeDictionary>(stream);
             Validate();
         }
 
@@ -84,7 +89,7 @@ namespace Opc.Ua.Schema.Binary
         public void Validate(string inputPath)
         {
             // read and parse the file.
-            Dictionary = (TypeDictionary)LoadInput(typeof(TypeDictionary), inputPath);
+            Dictionary = LoadInput<TypeDictionary>(inputPath);
             Validate();
         }
 
@@ -147,8 +152,8 @@ namespace Opc.Ua.Schema.Binary
             else
             {
                 // always import builtin types, unless wellknown library
-                if (!WellKnownDictionaries.Any(n =>
-                        string.Equals(n[0], Dictionary.TargetNamespace, StringComparison.Ordinal)))
+                if (!WellKnown.Any(n =>
+                        string.Equals(n.Key, Dictionary.TargetNamespace, StringComparison.Ordinal)))
                 {
                     var directive = new ImportDirective { Namespace = Namespaces.OpcUa };
                     Import(directive);
@@ -195,10 +200,7 @@ namespace Opc.Ua.Schema.Binary
                 return;
             }
 
-            var dictionary = (TypeDictionary)Load(
-                typeof(TypeDictionary),
-                directive.Namespace,
-                directive.Location);
+            TypeDictionary dictionary = Load<TypeDictionary>(directive.Location, directive.Namespace);
 
             // verify namespace.
             if (!string.IsNullOrEmpty(dictionary.TargetNamespace) &&
@@ -546,14 +548,56 @@ namespace Opc.Ua.Schema.Binary
         }
 
         /// <summary>
-        /// Well known embedded binary schemas.
+        /// Adds the standard type imports to the externally provided import table.
         /// </summary>
-        protected static readonly string[][] WellKnownDictionaries =
-        [
-            [Namespaces.OpcBinarySchema, "Opc.Ua.Schema.StandardTypes.bsd"],
-            [Namespaces.OpcUaBuiltInTypes, "Opc.Ua.Schema.BuiltInTypes.bsd"],
-            [Namespaces.OpcUa, "Opc.Ua.Schema.Opc.Ua.Types.bsd"]
-        ];
+        /// <param name="importTable"></param>
+        /// <returns></returns>
+        private static IReadOnlyDictionary<string, byte[]> AndStandardTypeImports(
+            IReadOnlyDictionary<string, byte[]> importTable)
+        {
+            if (importTable == null)
+            {
+                return StandardTypeImports;
+            }
+            var clone = importTable.ToDictionary(k => k.Key, k => k.Value);
+            foreach (KeyValuePair<string, byte[]> kv in StandardTypeImports)
+            {
+                clone.TryAdd(kv.Key, kv.Value);
+            }
+            return clone;
+        }
+
+        /// <summary>
+        /// Get the built-in types bsd as an import table. Since this never changes
+        /// it will be more stable than using the named file in the source generator.
+        /// </summary>
+        private static IReadOnlyDictionary<string, byte[]> StandardTypeImports
+        {
+            get
+            {
+                if (field == null)
+                {
+                    var dictionary = new Dictionary<string, byte[]>();
+                    Assembly resourceAssembly = typeof(TypeDictionaryValidator).Assembly;
+                    using (Stream stream = resourceAssembly.GetManifestResourceStream(
+                        "Opc.Ua.Schema.BuiltInTypes.bsd"))
+                    using (var ms = new MemoryStream())
+                    {
+                        stream.CopyTo(ms);
+                        dictionary[Namespaces.OpcUaBuiltInTypes] = ms.ToArray();
+                    }
+                    using (Stream stream = resourceAssembly.GetManifestResourceStream(
+                      "Opc.Ua.Schema.StandardTypes.bsd"))
+                    using (var ms = new MemoryStream())
+                    {
+                        stream.CopyTo(ms);
+                        dictionary[Namespaces.OpcBinarySchema] = ms.ToArray();
+                    }
+                    field = dictionary;
+                }
+                return field;
+            }
+        }
 
         private Dictionary<XmlQualifiedName, TypeDescription> m_descriptions;
         private List<TypeDescription> m_validatedDescriptions;

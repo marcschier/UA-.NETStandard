@@ -1,0 +1,148 @@
+/* ========================================================================
+ * Copyright (c) 2005-2024 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
+using System.Collections.Generic;
+using Opc.Ua.Types;
+
+namespace Opc.Ua.SourceGeneration
+{
+    /// <summary>
+    /// Source Generation API
+    /// </summary>
+    public static class Generators
+    {
+        internal const string StackNamespacePrefix = "Opc.Ua";
+
+        /// <summary>
+        /// Generate the .net stack code
+        /// </summary>
+        /// <param name="fileSystem">The root file system to use</param>
+        /// <param name="outputDir">The output folder in it</param>
+        /// <param name="exclusions">Optional exclusions</param>
+        /// <param name="telemetry">A telemetry context for logging</param>
+        public static void GenerateStack(
+            IFileSystem fileSystem,
+            string outputDir,
+            IReadOnlyList<string> exclusions,
+            ITelemetryContext telemetry)
+        {
+            // Combine with embedded resources in this assembly.
+            fileSystem = typeof(Generators).Assembly
+                .AsFileSystem("Opc.Ua.SourceGeneration.Design")
+                .WithFallback(fileSystem);
+
+            // Generate standard types
+            var generator = new ModelGenerator(
+                fileSystem,
+                telemetry);
+            generator.ValidateAndUpdateIds(
+                [
+                    BuiltInDesignFiles.StandardTypesXml,
+                    BuiltInDesignFiles.UACoreServicesXml
+                ],
+                BuiltInDesignFiles.StandardTypesCsv,
+                0,
+                false,
+                exclusions,
+                "1.05.06", // <--- Read from version file
+                "2025-11-08", // <--- Read from version file
+                false,
+                false);
+
+            // Generate schemas
+            var typeDictionaries = new Dictionary<string, string>();
+            var xmlSchema = new XmlSchemaGenerator(
+                fileSystem,
+                BuiltInDesignFiles.UACoreServicesXml,
+                outputDir,
+                typeDictionaries,
+                exclusions);
+            string xmlSchemaFile = xmlSchema.Generate(
+                StackNamespacePrefix);
+
+            typeDictionaries = [];
+            var binarySchema = new BinarySchemaGenerator(
+                fileSystem,
+                BuiltInDesignFiles.UACoreServicesXml,
+                outputDir,
+                typeDictionaries,
+                exclusions);
+            string binarySchemaFile = binarySchema.Generate(
+                StackNamespacePrefix,
+                Namespaces.OpcUa);
+
+            var binarySchemaResource = new ResourceGenerator(
+                fileSystem,
+                outputDir);
+            binarySchemaResource.EmbeddAsText(
+                StackNamespacePrefix,
+                "XmlSchemas",
+                binarySchemaFile,
+                xmlSchemaFile);
+
+            // Create constants
+            var nodeDictionaries = new Dictionary<string, string>();
+            var attributes = new ConstantsGenerator(
+                fileSystem,
+                BuiltInDesignFiles.UAAttributesXml,
+                outputDir,
+                nodeDictionaries,
+                exclusions);
+            attributes.Generate(
+                StackNamespacePrefix,
+                "Attributes",
+                BuiltInDesignFiles.AttributesCsv);
+            var statusCodes = new ConstantsGenerator(
+                fileSystem,
+                BuiltInDesignFiles.UAStatusCodesXml,
+                outputDir,
+                nodeDictionaries,
+                exclusions);
+            statusCodes.Generate(
+                StackNamespacePrefix,
+                "StatusCodes",
+                BuiltInDesignFiles.StatusCodesCsv);
+
+            var core = new StackGenerator(
+                fileSystem,
+                BuiltInDesignFiles.UACoreServicesXml,
+                outputDir,
+                nodeDictionaries,
+                exclusions);
+            core.Generate(
+                StackNamespacePrefix,
+                "Core",
+                true);
+
+            generator.GenerateFiles(
+                outputDir,
+                exclusions);
+        }
+    }
+}

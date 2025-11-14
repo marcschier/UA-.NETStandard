@@ -27,40 +27,43 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using Opc.Ua.Schema.Types;
-using Opc.Ua.Types;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
+using Microsoft.Extensions.Logging;
+using Opc.Ua.Export;
+using Opc.Ua.Schema.Types;
+using Opc.Ua.Types;
 
 namespace Opc.Ua.Schema.Model
 {
     /// <summary>
     /// Generates files used to describe data types.
     /// </summary>
-    public class ModelCompilerValidator : SchemaValidator
+    public class ModelDesignValidator : SchemaValidator
     {
         /// <summary>
         /// Intializes the object with default values.
         /// </summary>
-        public ModelCompilerValidator(
+        public ModelDesignValidator(
+            IFileSystem fileSystem,
             uint startId,
             IReadOnlyList<string> exclusions,
-            IFileSystem fileSystem,
-            ITelemetryContext telemetry)
+            ITelemetryContext telemetry,
+            SpecificationVersion standardVersion)
+            : base(fileSystem, null, null)
         {
-            m_fileSystem = fileSystem;
             m_telemetry = telemetry;
+            m_logger = telemetry.CreateLogger<ModelDesignValidator>();
             m_context = new ServiceMessageContext(telemetry);
             m_startId = startId;
             m_exclusions = exclusions;
             MaxRecursionDepth = 100;
+            m_standardVersion = standardVersion;
         }
 
         /// <summary>
@@ -89,21 +92,6 @@ namespace Opc.Ua.Schema.Model
         public Dictionary<string, AccessRestrictions?> DefaultAccessRestrictions { get; set; } = [];
 
         /// <summary>
-        /// The location of the embedded model resources.
-        /// </summary>
-        public string EmbeddedModelPath { get; set; } = "Opc.Ua.Schema";
-
-        /// <summary>
-        /// The location of the embedded CSVs.
-        /// </summary>
-        public string EmbeddedCsvPath { get; set; } = "Opc.Ua.Schema";
-
-        /// <summary>
-        /// Get the assembly with the embedded resources
-        /// </summary>
-        public Assembly EmbeddedResourceAssembly { get; set; } = Assembly.GetExecutingAssembly();
-
-        /// <summary>
         /// Use the true type instead of ExtensionObject when subtypes are allowed.
         /// </summary>
         public bool UseAllowSubtypes { get; set; }
@@ -127,30 +115,6 @@ namespace Opc.Ua.Schema.Model
         /// ModelPublicationDate
         /// </summary>
         public string ModelPublicationDate { get; set; }
-
-        /// <summary>
-        /// Register callback
-        /// </summary>
-        public event Func<LogMessageEventArgs, Task> LogMessage;
-
-        /// <summary>
-        /// Get the embedded model version of the standard
-        /// </summary>
-        private StandardVersion EmbeddedModelVersion
-        {
-            get
-            {
-                if (EmbeddedModelPath.EndsWith("v103", StringComparison.OrdinalIgnoreCase))
-                {
-                    return StandardVersion.V103;
-                }
-                if (EmbeddedModelPath.EndsWith("v104", StringComparison.OrdinalIgnoreCase))
-                {
-                    return StandardVersion.V104;
-                }
-                return StandardVersion.V105;
-            }
-        }
 
         /// <summary>
         /// Finds the data type with the specified name.
@@ -197,14 +161,8 @@ namespace Opc.Ua.Schema.Model
                 node.Hierarchy = BuildInstanceHierarchy2(model, node, 0);
             }
 
-            Stream stream = Assembly
-                .GetExecutingAssembly()
-                .GetManifestResourceStream($"{EmbeddedCsvPath}.StandardTypes.csv");
-
-            using (stream)
-            {
-                LoadIdentifiersFromStream2(model, stream);
-            }
+            using Stream stream = OpenRead("StandardTypes.csv");
+            LoadIdentifiersFromStream2(model, stream);
 
             // flag built-in types as declarations.
             foreach (NodeDesign node in model.Items)
@@ -225,8 +183,7 @@ namespace Opc.Ua.Schema.Model
         /// <returns></returns>
         public ModelDesign LoadModelDesign(string designFilePath, string identifierFilePath, bool generateIds)
         {
-            using Stream stream = m_fileSystem.OpenRead(designFilePath);
-            var model = (ModelDesign)LoadFile(typeof(ModelDesign), stream);
+            ModelDesign model = Load<ModelDesign>(designFilePath);
             model.SourceFilePath = designFilePath;
             model.IsSourceNodeSet = false;
 
@@ -237,7 +194,7 @@ namespace Opc.Ua.Schema.Model
 
             if (!model.TargetPublicationDateSpecified || model.TargetPublicationDate == DateTime.MinValue)
             {
-                model.TargetPublicationDate = m_fileSystem.GetLastWriteTime(designFilePath);
+                model.TargetPublicationDate = FileSystem.GetLastWriteTime(designFilePath);
                 model.TargetPublicationDateSpecified = true;
             }
 
@@ -271,7 +228,7 @@ namespace Opc.Ua.Schema.Model
                 // assign unique ids.
                 if (generateIds)
                 {
-                    m_fileSystem.Delete(identifierFilePath);
+                    FileSystem.Delete(identifierFilePath);
                 }
 
                 LoadIdentifiersFromFile2(model, identifierFilePath);
@@ -280,12 +237,12 @@ namespace Opc.Ua.Schema.Model
             {
                 string path = Path.Combine(Path.GetDirectoryName(designFilePath), Path.GetFileNameWithoutExtension(designFilePath) + ".csv");
 
-                if (!m_fileSystem.Exists(path))
+                if (!FileSystem.Exists(path))
                 {
                     path = Path.Combine(Path.GetDirectoryName(designFilePath), "..\\CSVs", Path.GetFileNameWithoutExtension(designFilePath) + ".csv");
                 }
 
-                if (m_fileSystem.Exists(path))
+                if (FileSystem.Exists(path))
                 {
                     LoadIdentifiersFromFile2(model, path);
                 }
@@ -425,16 +382,10 @@ namespace Opc.Ua.Schema.Model
             }
         }
 
-        private ModelDesign ImportTypeDictionary(string filePath, string resourcePath)
-        {
-            using Stream stream = m_fileSystem.OpenRead(filePath);
-            return ImportTypeDictionary(stream);
-        }
-
         private ModelDesign ImportTypeDictionary(Stream stream)
         {
             var knownFiles = new Dictionary<string, string>();
-            var validator = new TypeDictionaryValidator(knownFiles);
+            var validator = new TypeDictionaryValidator(FileSystem, knownFiles);
             validator.Validate(stream);
 
             string namespaceUri = validator.Dictionary.TargetNamespace;
@@ -475,7 +426,7 @@ namespace Opc.Ua.Schema.Model
                     design.PartNo = 4;
                 }
 
-                Log("Imported {1}: {0}", design.SymbolicId.Name, design.GetType().Name);
+                m_logger.LogInformation("Imported {Type}: {Name}", design.GetType().Name, design.SymbolicId.Name);
 
                 if (dataType is TypeDeclaration simpleType)
                 {
@@ -597,18 +548,13 @@ namespace Opc.Ua.Schema.Model
             var nodes = new List<NodeDesign>();
 
             // load the design files.
-            var builtin = (ModelDesign)LoadResource(
-                typeof(ModelDesign),
-                $"{EmbeddedModelPath}.BuiltInTypes.xml",
-                EmbeddedResourceAssembly);
+            ModelDesign builtin = Load<ModelDesign>("BuiltInTypes.xml");
 
             nodes.AddRange(builtin.Items);
 
             ModelDesign datatypes = null;
 
-            Stream stream = EmbeddedResourceAssembly
-                .GetManifestResourceStream(
-                $"{EmbeddedModelPath}.UA Core Services.xml");
+            Stream stream = OpenRead("UA Core Services.xml");
 
             using (stream)
             {
@@ -619,10 +565,7 @@ namespace Opc.Ua.Schema.Model
                 nodes.AddRange(datatypes.Items);
             }
 
-            var standard = (ModelDesign)LoadResource(
-                typeof(ModelDesign),
-                $"{EmbeddedModelPath}.StandardTypes.xml",
-                EmbeddedResourceAssembly);
+            ModelDesign standard = Load<ModelDesign>("StandardTypes.xml");
 
             nodes.AddRange(standard.Items);
 
@@ -748,7 +691,7 @@ namespace Opc.Ua.Schema.Model
                     EncodingType.Xml,
                     nodes);
 
-                if (EmbeddedModelVersion != StandardVersion.V103 &&
+                if (m_standardVersion != SpecificationVersion.V103 &&
                     m_defaultNamespace == Namespaces.OpcUa)
                 {
                     AddDataTypeDictionary(
@@ -767,7 +710,6 @@ namespace Opc.Ua.Schema.Model
                 }
             }
 
-            AddTypesFolder(dictionary, dictionary.TargetNamespaceInfo, nodes);
             dictionary.Items = [.. nodes];
 
             // validate node in target dictionary.
@@ -946,55 +888,40 @@ namespace Opc.Ua.Schema.Model
             dictionary.TargetNamespaceInfo = targetNamespace;
         }
 
-        private static void OutputError(string message)
-        {
-            if (message != null)
-            {
-                ConsoleColor original = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(message);
-                Console.ForegroundColor = original;
-            }
-        }
-
-        private void Log(string format, params object[] args)
-        {
-            if (LogMessage != null && format != null)
-            {
-                // LogMessage(new LogMessageEventArgs(CoreUtils.Format(CultureInfo.InvariantCulture, format, args), 0));
-            }
-        }
-
-        private void Error(string message)
-        {
-            if (LogMessage != null && message != null)
-            {
-                // LogMessage(new LogMessageEventArgs(message, 1));
-            }
-        }
-
         private ModelDesign LoadCoreDesignFile(ModelDesign dictionary, string designFilePath)
         {
-            Log("Loading DesignFile: {0}", designFilePath);
-
             ModelDesign model = null;
-
-            try
+            bool loadAsTypeDictionary = designFilePath == "UA Core Services.xml";
+            if (!loadAsTypeDictionary)
             {
-                using Stream stream = m_fileSystem.OpenRead(designFilePath);
-                model = (ModelDesign)LoadInput(typeof(ModelDesign), stream);
-
-                model.Items ??= [];
+                m_logger.LogInformation("Loading DesignFile: {File}", designFilePath);
+                try
+                {
+                    using Stream stream = OpenRead(designFilePath);
+                    model = LoadInput<ModelDesign>(stream);
+                    model.Items ??= [];
+                }
+                catch (Exception e)
+                {
+                    m_logger.LogDebug(e,
+                        "Error loading model {File}, trying as type dictionary",
+                        designFilePath);
+                    loadAsTypeDictionary = true;
+                }
             }
-            catch (Exception e)
+            if (loadAsTypeDictionary)
             {
                 try
                 {
-                    model = ImportTypeDictionary(designFilePath, EmbeddedModelPath);
+                    using Stream stream = OpenRead(designFilePath);
+                    model = ImportTypeDictionary(stream);
                 }
-                catch (Exception e2)
+                catch (Exception e)
                 {
-                    throw new AggregateException("Error parsing file " + designFilePath, e, e2);
+                    m_logger.LogError(e,
+                        "Error parsing type dictionary {File}",
+                        designFilePath);
+                    throw new InvalidDataException("Error parsing file " + designFilePath, e);
                 }
             }
 
@@ -1017,12 +944,15 @@ namespace Opc.Ua.Schema.Model
 
             foreach (NodeDesign node in model.Items)
             {
-                if (!node.Description?.DoNotIgnore == null)
+                if (node.Description == null)
+                {
+                    continue;
+                }
+                if (!node.Description.DoNotIgnore)
                 {
                     node.Description = null;
                 }
             }
-
             return model;
         }
 
@@ -1083,7 +1013,7 @@ namespace Opc.Ua.Schema.Model
 
         private ModelDesign LoadDesignFile(List<Namespace> namespaces, string designFilePath, string identifierFilePath, bool generateIds)
         {
-            Log("Loading DesignFile: {0}", designFilePath);
+            m_logger.LogInformation("Loading DesignFile: {File}", designFilePath);
 
             ModelDesign model;
 
@@ -1092,7 +1022,7 @@ namespace Opc.Ua.Schema.Model
             string prefix = fields.Length > 1 ? fields[1] : null;
             string name = fields.Length > 2 ? fields[2] : null;
 
-            if (NodeSetToModelDesign.IsNodeSet(m_fileSystem, fileToLoad))
+            if (NodeSetToModelDesign.IsNodeSet(FileSystem, fileToLoad))
             {
                 var settings = new NodeSetReaderSettings
                 {
@@ -1107,7 +1037,7 @@ namespace Opc.Ua.Schema.Model
 
                 IndexNodesByNodeId(settings.NamespaceUris, m_nodes.Values, settings.NodesById, null);
 
-                var reader = new NodeSetToModelDesign(settings, fileToLoad, m_fileSystem);
+                var reader = new NodeSetToModelDesign(settings, fileToLoad, FileSystem);
                 model = reader.Import(prefix, name);
                 model.SourceFilePath = fileToLoad;
                 model.IsSourceNodeSet = true;
@@ -1124,7 +1054,7 @@ namespace Opc.Ua.Schema.Model
                             instance.StringId == null &&
                             instance.ModellingRule == ModellingRule.Mandatory)
                         {
-                            Error($"{ii.Key} missing NodeId for Mandatory child in NodeSet.");
+                            m_logger.LogError("{Value} missing NodeId for Mandatory child in NodeSet.", ii.Key);
                         }
                     }
                 }
@@ -1187,56 +1117,52 @@ namespace Opc.Ua.Schema.Model
             };
 
             // load the design files.
-            Log("Loading StandardTypes...");
-            var dictionary = (ModelDesign)LoadResource(
-                typeof(ModelDesign),
-                $"{EmbeddedModelPath}.BuiltInTypes.xml",
-                EmbeddedResourceAssembly);
-
-            dictionary.Items ??= [];
+            m_logger.LogInformation("Loading StandardTypes...");
+            ModelDesign model = Load<ModelDesign>("BuiltInTypes.xml");
+            model.Items ??= [];
 
             for (int ii = 0; ii < designFilePaths.Count; ii++)
             {
-                dictionary = LoadCoreDesignFile(dictionary, designFilePaths[ii]);
+                model = LoadCoreDesignFile(model, designFilePaths[ii]);
             }
 
             // set a default xml namespace.
-            if (string.IsNullOrEmpty(dictionary.TargetXmlNamespace))
+            if (string.IsNullOrEmpty(model.TargetXmlNamespace))
             {
-                dictionary.TargetXmlNamespace = dictionary.TargetNamespace;
+                model.TargetXmlNamespace = model.TargetNamespace;
 
                 if (!string.IsNullOrEmpty(ModelVersion))
                 {
-                    dictionary.TargetVersion = ModelVersion;
+                    model.TargetVersion = ModelVersion;
                 }
 
                 if (!string.IsNullOrEmpty(ModelPublicationDate))
                 {
                     var dt = DateTime.Parse(ModelPublicationDate, CultureInfo.InvariantCulture, DateTimeStyles.None);
-                    dictionary.TargetPublicationDate = new DateTime(dt.Year, dt.Month, dt.Day, 0, 0, 0, DateTimeKind.Utc);
-                    dictionary.TargetPublicationDateSpecified = true;
+                    model.TargetPublicationDate = new DateTime(dt.Year, dt.Month, dt.Day, 0, 0, 0, DateTimeKind.Utc);
+                    model.TargetPublicationDateSpecified = true;
                 }
             }
 
             // mark the target namespace as found.
-            DesignFilePaths[dictionary.TargetNamespace] = inputPath;
+            DesignFilePaths[model.TargetNamespace] = inputPath;
 
             // load any included design files.
-            if (dictionary.Namespaces != null)
+            if (model.Namespaces != null)
             {
-                dictionary.Dependencies = [];
+                model.Dependencies = [];
 
-                for (int ii = 0; ii < dictionary.Namespaces.Length; ii++)
+                for (int ii = 0; ii < model.Namespaces.Length; ii++)
                 {
-                    Namespace ns = dictionary.Namespaces[ii];
+                    Namespace ns = model.Namespaces[ii];
 
-                    if (ns.Value != dictionary.TargetNamespace)
+                    if (ns.Value != model.TargetNamespace)
                     {
                         DateTime? pd = ns.PublicationDate != null ?
                             DateTime.Parse(ns.PublicationDate, CultureInfo.InvariantCulture, DateTimeStyles.None) :
                             null;
 
-                        dictionary.Dependencies[ns.Value] = new Export.ModelTableEntry
+                        model.Dependencies[ns.Value] = new ModelTableEntry
                         {
                             ModelUri = ns.Value,
                             XmlSchemaUri = ns.XmlNamespace,
@@ -1250,7 +1176,7 @@ namespace Opc.Ua.Schema.Model
                     // override the publication date.
                     if (ns.PublicationDate != null || ns.Version != null)
                     {
-                        if (dictionary.Dependencies.TryGetValue(ns.Value, out Export.ModelTableEntry modelInfo))
+                        if (model.Dependencies.TryGetValue(ns.Value, out ModelTableEntry modelInfo))
                         {
                             if (!string.IsNullOrWhiteSpace(ns.Version))
                             {
@@ -1277,8 +1203,8 @@ namespace Opc.Ua.Schema.Model
                 }
             }
 
-            // save the dictionary in a member variable during processing.
-            Dictionary = dictionary;
+            // save the model in a member variable during processing.
+            Dictionary = model;
 
             // build table of namespaces.
             UpdateNamespaceTables(Dictionary);
@@ -1289,19 +1215,19 @@ namespace Opc.Ua.Schema.Model
 
             foreach (NodeDesign node in Dictionary.Items)
             {
-                if (Import(dictionary, node, null))
+                if (Import(Dictionary, node, null))
                 {
                     nodes.Add(node);
                 }
             }
 
-            Dictionary.Items = [.. nodes];
-
-            if (Dictionary.Items == null || Dictionary.Items.Length == 0)
+            if (nodes.Count == 0)
             {
-                Console.WriteLine("Nothing to do because design file has no entries.");
+                m_logger.LogWarning("Nothing to do because design files have no entries.");
                 return;
             }
+
+            Dictionary.Items = [.. nodes];
 
             // do additional fix up after import.
             ValidateDictionary(Dictionary);
@@ -1309,13 +1235,13 @@ namespace Opc.Ua.Schema.Model
             // validate node in target dictionary.
             foreach (NodeDesign node in Dictionary.Items)
             {
-                node.Hierarchy = BuildInstanceHierarchy2(dictionary, node, 0);
+                node.Hierarchy = BuildInstanceHierarchy2(Dictionary, node, 0);
             }
 
             // assign unique ids.
             if (generateIds)
             {
-                m_fileSystem.Delete(identifierFilePath);
+                FileSystem.Delete(identifierFilePath);
             }
 
             LoadIdentifiersFromFile2(Dictionary, identifierFilePath);
@@ -1368,15 +1294,14 @@ namespace Opc.Ua.Schema.Model
 
                 List<Namespace> fileNamespaces = null;
 
-                if (NodeSetToModelDesign.IsNodeSet(m_fileSystem, fileToLoad))
+                if (NodeSetToModelDesign.IsNodeSet(FileSystem, fileToLoad))
                 {
-                    fileNamespaces = NodeSetToModelDesign.LoadNamespaces(m_fileSystem, fileToLoad);
+                    fileNamespaces = NodeSetToModelDesign.LoadNamespaces(FileSystem, fileToLoad);
                     fileNamespaces[^1].FilePath = path;
                 }
                 else
                 {
-                    using Stream stream = m_fileSystem.OpenRead(fileToLoad);
-                    var design = (ModelDesign)LoadFile(typeof(ModelDesign), stream);
+                    ModelDesign design = Load<ModelDesign>(fileToLoad);
 
                     foreach (Namespace ns in design.Namespaces)
                     {
@@ -1458,7 +1383,6 @@ namespace Opc.Ua.Schema.Model
             m_browseNames = [];
             DesignFilePaths = [];
 
-            Log("Loading BuiltInTypes...");
             LoadBuiltInModel();
 
             DesignFilePaths[m_defaultNamespace] = string.Empty;
@@ -1499,8 +1423,12 @@ namespace Opc.Ua.Schema.Model
 
                 if (!string.IsNullOrEmpty(ModelPublicationDate))
                 {
-                    var dt = DateTime.Parse(ModelPublicationDate, CultureInfo.InvariantCulture, DateTimeStyles.None);
-                    targetModel.TargetPublicationDate = new DateTime(dt.Year, dt.Month, dt.Day, 0, 0, 0, DateTimeKind.Utc);
+                    var dt = DateTime.Parse(
+                        ModelPublicationDate,
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.None);
+                    targetModel.TargetPublicationDate =
+                        new DateTime(dt.Year, dt.Month, dt.Day, 0, 0, 0, DateTimeKind.Utc);
                     targetModel.TargetPublicationDateSpecified = true;
                 }
             }
@@ -1533,7 +1461,7 @@ namespace Opc.Ua.Schema.Model
                             DateTime.Parse(ns.PublicationDate, CultureInfo.InvariantCulture, DateTimeStyles.None) :
                             null;
 
-                        targetModel.Dependencies[ns.Value] = new Export.ModelTableEntry
+                        targetModel.Dependencies[ns.Value] = new ModelTableEntry
                         {
                             ModelUri = ns.Value,
                             XmlSchemaUri = ns.XmlNamespace,
@@ -1547,7 +1475,7 @@ namespace Opc.Ua.Schema.Model
                     // override the publication date.
                     if (ns.PublicationDate != null || ns.Version != null)
                     {
-                        if (targetModel.Dependencies.TryGetValue(ns.Value, out Export.ModelTableEntry modelInfo))
+                        if (targetModel.Dependencies.TryGetValue(ns.Value, out ModelTableEntry modelInfo))
                         {
                             if (!string.IsNullOrWhiteSpace(ns.Version))
                             {
@@ -1557,7 +1485,9 @@ namespace Opc.Ua.Schema.Model
 
                             if (!string.IsNullOrWhiteSpace(ns.PublicationDate))
                             {
-                                modelInfo.PublicationDate = XmlConvert.ToDateTime(ns.PublicationDate, XmlDateTimeSerializationMode.Utc);
+                                modelInfo.PublicationDate = XmlConvert.ToDateTime(
+                                    ns.PublicationDate,
+                                    XmlDateTimeSerializationMode.Utc);
                             }
                         }
                     }
@@ -1583,7 +1513,7 @@ namespace Opc.Ua.Schema.Model
 
             if (Dictionary.Items == null || Dictionary.Items.Length == 0)
             {
-                Console.WriteLine("Nothing to do because design file has no entries.");
+                m_logger.LogWarning("Nothing to do because design file has no entries.");
                 return;
             }
 
@@ -1865,61 +1795,6 @@ namespace Opc.Ua.Schema.Model
             };
         }
 
-        private static void AddTypesFolder(
-            ModelDesign nodes,
-            Namespace ns,
-            IList<NodeDesign> nodesToAdd)
-        {
-            /*
-            foreach (NodeDesign node in nodes.Items)
-            {
-                ObjectDesign folder = null;
-
-                if (node is ObjectTypeDesign)
-                {
-                    folder = FindTypeFolder(ns, node, NodeClass.ObjectType, node.PartNo, nodesToAdd);
-                }
-
-                if (node is VariableTypeDesign)
-                {
-                    folder = FindTypeFolder(ns, node, NodeClass.VariableType, node.PartNo, nodesToAdd);
-                }
-
-                if (node is DataTypeDesign)
-                {
-                    folder = FindTypeFolder(ns, node, NodeClass.DataType, node.PartNo, nodesToAdd);
-                }
-
-                if (node is ReferenceTypeDesign)
-                {
-                    folder = FindTypeFolder(ns, node, NodeClass.ReferenceType, node.PartNo, nodesToAdd);
-                }
-
-                if (folder != null)
-                {
-                    List<Reference> references = new List<Reference>();
-
-                    if (node.References != null)
-                    {
-                        references.AddRange(node.References);
-                    }
-
-                    Reference reference = new Reference();
-
-                    reference.ReferenceType = new XmlQualifiedName("Organizes", DefaultNamespace);
-                    reference.IsInverse = true;
-                    reference.IsOneWay = false;
-                    reference.TargetId = folder.SymbolicId;
-
-                    references.Add(reference);
-
-                    node.References = references.ToArray();
-                    node.HasReferences = true;
-                }
-            }
-            */
-        }
-
         private void AddDataTypeDictionary(
             ModelDesign nodes,
             Namespace ns,
@@ -1976,7 +1851,7 @@ namespace Opc.Ua.Schema.Model
                 dictionary.Historizing = false;
                 dictionary.HistorizingSpecified = true;
 
-                if (EmbeddedModelVersion != StandardVersion.V103)
+                if (m_standardVersion != SpecificationVersion.V103)
                 {
                     dictionary.ReleaseStatus = ReleaseStatus.Deprecated;
                 }
@@ -1988,18 +1863,24 @@ namespace Opc.Ua.Schema.Model
 
                 var reference = new Reference
                 {
-                    ReferenceType = new XmlQualifiedName("HasComponent", m_defaultNamespace),
+                    ReferenceType = new XmlQualifiedName(
+                        "HasComponent",
+                        m_defaultNamespace),
                     IsInverse = true,
                     IsOneWay = false
                 };
 
                 if (isXml)
                 {
-                    reference.TargetId = new XmlQualifiedName("XmlSchema_TypeSystem", m_defaultNamespace);
+                    reference.TargetId = new XmlQualifiedName(
+                        "XmlSchema_TypeSystem",
+                        m_defaultNamespace);
                 }
                 else
                 {
-                    reference.TargetId = new XmlQualifiedName("OPCBinarySchema_TypeSystem", m_defaultNamespace);
+                    reference.TargetId = new XmlQualifiedName(
+                        "OPCBinarySchema_TypeSystem",
+                        m_defaultNamespace);
                 }
 
                 dictionary.References = [reference];
@@ -2013,7 +1894,7 @@ namespace Opc.Ua.Schema.Model
                     namespaceUri,
                     descriptions);
 
-                if (EmbeddedModelVersion != StandardVersion.V103)
+                if (m_standardVersion != SpecificationVersion.V103)
                 {
                     AddProperty(
                         dictionary,
@@ -2043,7 +1924,7 @@ namespace Opc.Ua.Schema.Model
                 };
 
                 m_nodes[dictionary.SymbolicId] = dictionary;
-                Log("Added {1}: {0}", dictionary.SymbolicId.Name, dictionary.GetType().Name);
+                m_logger.LogDebug("Added {Type}: {Name}", dictionary.GetType().Name, dictionary.SymbolicId.Name);
                 nodesToAdd.Add(dictionary);
             }
         }
@@ -2063,7 +1944,9 @@ namespace Opc.Ua.Schema.Model
                 ReferenceType = new XmlQualifiedName("HasProperty", m_defaultNamespace),
                 ModellingRule = ModellingRule.Mandatory,
                 ModellingRuleSpecified = true,
-                SymbolicId = new XmlQualifiedName(NodeDesign.CreateSymbolicId(parent.SymbolicId.Name, propertyName.Name), parent.SymbolicId.Namespace),
+                SymbolicId = new XmlQualifiedName(
+                    NodeDesign.CreateSymbolicId(parent.SymbolicId.Name, propertyName.Name),
+                    parent.SymbolicId.Namespace),
                 SymbolicName = propertyName,
                 BrowseName = propertyName.Name
             };
@@ -2095,8 +1978,8 @@ namespace Opc.Ua.Schema.Model
             property.Category = parent.Category;
             property.ReleaseStatus = parent.ReleaseStatus;
 
-            if (EmbeddedModelVersion != StandardVersion.V104 &&
-                EmbeddedModelVersion != StandardVersion.V103 &&
+            if (m_standardVersion != SpecificationVersion.V104 &&
+                m_standardVersion != SpecificationVersion.V103 &&
                 arrayDimensions != null)
             {
                 property.ArrayDimensions = string.Empty;
@@ -2114,7 +1997,7 @@ namespace Opc.Ua.Schema.Model
             children.Add(property);
 
             m_nodes[property.SymbolicId] = property;
-            Log("Added {1}: {0}", property.SymbolicId.Name, property.GetType().Name);
+            m_logger.LogDebug("Added {Type}: {Name}", property.GetType().Name, property.SymbolicId.Name);
         }
 
         private void AddDataTypeDescription(
@@ -2181,7 +2064,7 @@ namespace Opc.Ua.Schema.Model
                     description.DecodedValue = CoreUtils.Format("{0}", dataType.SymbolicName.Name);
                 }
 
-                if (description.ReleaseStatus == ReleaseStatus.Released && EmbeddedModelVersion != StandardVersion.V103)
+                if (description.ReleaseStatus == ReleaseStatus.Released && m_standardVersion != SpecificationVersion.V103)
                 {
                     description.ReleaseStatus = ReleaseStatus.Deprecated;
                 }
@@ -2192,7 +2075,7 @@ namespace Opc.Ua.Schema.Model
                 }
 
                 m_nodes[description.SymbolicId] = description;
-                Log("Added {1}: {0}", description.SymbolicId.Name, description.GetType().Name);
+                m_logger.LogDebug("Added {Type}: {Name}", description.GetType().Name, description.SymbolicId.Name);
             }
 
             if (dataType.BasicDataType == BasicDataType.UserDefined && !dataType.NoEncodings)
@@ -2289,7 +2172,7 @@ namespace Opc.Ua.Schema.Model
 
             m_nodes[encoding.SymbolicId] = encoding;
             nodesToAdd.Add(encoding);
-            Log("Added {1}: {0}", encoding.SymbolicId.Name, encoding.GetType().Name);
+            m_logger.LogDebug("Added {Type}: {Name}", encoding.GetType().Name, encoding.SymbolicId.Name);
         }
 
         /// <summary>
@@ -2353,7 +2236,7 @@ namespace Opc.Ua.Schema.Model
                     {
                         string name = line[..index].Trim();
                         string id = line[(index + 1)..].Trim();
-                        Log("Loaded ID: {0}={1}", name, id);
+                        m_logger.LogDebug("Loaded ID: {Name}={Id}", name, id);
 
                         if (id.StartsWith('"'))
                         {
@@ -2366,7 +2249,7 @@ namespace Opc.Ua.Schema.Model
                     }
                     catch (Exception ex)
                     {
-                        Log(ex.Message);
+                        m_logger.LogWarning(ex, "Error loading ID");
                     }
                 }
             }
@@ -2457,7 +2340,7 @@ namespace Opc.Ua.Schema.Model
                 node.StringId = id as string;
             }
 
-            Log("Assigned ID: {0}={1}", node.SymbolicId.Name, id);
+            m_logger.LogDebug("Assigned ID: {Name}={Id}", node.SymbolicId.Name, id);
             return id;
         }
 
@@ -2559,7 +2442,7 @@ namespace Opc.Ua.Schema.Model
                             current.Instance.StringId = id as string;
                         }
 
-                        Log("Assigned ID: {0}={1}", current.Instance.SymbolicId.Name, id);
+                        m_logger.LogDebug("Assigned ID: {Name}={Id}", current.Instance.SymbolicId.Name, id);
                         continue;
                     }
 
@@ -2617,30 +2500,13 @@ namespace Opc.Ua.Schema.Model
         /// <exception cref="FileNotFoundException"></exception>
         private void LoadIdentifiersFromFile2(ModelDesign dictionary, string filePath)
         {
-            if (string.IsNullOrEmpty(filePath) || !m_fileSystem.Exists(filePath))
+            if (string.IsNullOrEmpty(filePath) || !FileSystem.Exists(filePath))
             {
                 throw new FileNotFoundException("The identifier file does not exist.", filePath);
             }
 
-            IDictionary<object, IdInfo> uniqueIdentifiers;
-
-            using (Stream istrm = m_fileSystem.OpenRead(filePath))
-            {
-                uniqueIdentifiers = LoadIdentifiersFromStream2(dictionary, istrm);
-            }
-
-            using TextWriter writer = m_fileSystem.CreateTextWriter(filePath);
-            foreach (KeyValuePair<object, IdInfo> id in uniqueIdentifiers)
-            {
-                if (id.Key is string)
-                {
-                    writer.WriteLine("{0},\"{1}\",{2}", id.Value.SymbolicId, id.Key, id.Value.NodeClass);
-                }
-                else if (id.Key is uint number && number < 1000000)
-                {
-                    writer.WriteLine("{0},{1},{2}", id.Value.SymbolicId, id.Key, id.Value.NodeClass);
-                }
-            }
+            using Stream istrm = FileSystem.OpenRead(filePath);
+            IDictionary<object, IdInfo> uniqueIdentifiers = LoadIdentifiersFromStream2(dictionary, istrm);
         }
 
         /// <summary>
@@ -2676,7 +2542,7 @@ namespace Opc.Ua.Schema.Model
             {
                 ImportType(typeDesign);
 
-                if (node.SymbolicId.Namespace == "http://opcfoundation.org/UA/")
+                if (node.SymbolicId.Namespace == Namespaces.OpcUa)
                 {
                     node.Description = null;
                 }
@@ -2686,14 +2552,14 @@ namespace Opc.Ua.Schema.Model
             {
                 ImportInstance(instanceDesign);
 
-                if (parent != null && parent.SymbolicId.Namespace == "http://opcfoundation.org/UA/")
+                if (parent != null && parent.SymbolicId.Namespace == Namespaces.OpcUa)
                 {
                     node.Description = null;
                 }
             }
 
             m_nodes.Add(node.SymbolicId, node);
-            Log("Imported {1}: {0}", node.SymbolicId.Name, node.GetType().Name);
+            m_logger.LogInformation("Imported {Type}: {Name}", node.GetType().Name, node.SymbolicId.Name);
 
             // import children.
             if (node.Children != null && node.Children.Items != null)
@@ -2770,23 +2636,23 @@ namespace Opc.Ua.Schema.Model
             // use the name to assign a browse name.
             if (string.IsNullOrEmpty(node.BrowseName))
             {
-                if (!m_browseNames.TryGetValue(node.SymbolicName, out _))
+                if (!m_browseNames.TryGetValue(node.SymbolicName, out string browseName))
                 {
-                    m_browseNames[node.SymbolicName] = node.SymbolicName.Name;
+                    m_browseNames[node.SymbolicName] = browseName = node.SymbolicName.Name;
                 }
 
-                node.BrowseName = null;
+                node.BrowseName = browseName;
             }
-            else if (!m_browseNames.TryGetValue(node.SymbolicName, out _))
+            else if (!m_browseNames.TryGetValue(node.SymbolicName, out string browseName))
             {
                 m_browseNames[node.SymbolicName] = node.BrowseName;
             }
-            else if (node.BrowseName != null)
+            else if (node.BrowseName != browseName)
             {
                 throw Exception(
                     "The SymbolicName {0} has a BrowseName {1} but expected {2}.",
                     node.SymbolicName.Name,
-                    null,
+                    browseName,
                     node.BrowseName);
             }
         }
@@ -2908,7 +2774,7 @@ namespace Opc.Ua.Schema.Model
             }
 
             // add a decription.
-            if (node.Description?.Value != null && node.SymbolicId.Namespace != "http://opcfoundation.org/UA/")
+            if (node.Description?.Value != null && node.SymbolicId.Namespace != Namespaces.OpcUa)
             {
                 node.Description.Value = node.Description.Value.Trim();
 
@@ -3160,7 +3026,7 @@ namespace Opc.Ua.Schema.Model
 
                 // add to table.
                 m_nodes.Add(encoding.SymbolicId, encoding);
-                Log("Imported {1}: {0}", encoding.SymbolicId.Name, encoding.GetType().Name);
+                m_logger.LogInformation("Imported {Type}: {Name}", encoding.GetType().Name, encoding.SymbolicId.Name);
 
                 if (encoding.NumericIdSpecified)
                 {
@@ -3700,9 +3566,9 @@ namespace Opc.Ua.Schema.Model
 
             // assign missing fields for objects.
 
-            if (instance is ObjectDesign objectd && !objectd.SupportsEventsSpecified)
+            if (instance is ObjectDesign objectDesign && !objectDesign.SupportsEventsSpecified)
             {
-                objectd.SupportsEvents = false;
+                objectDesign.SupportsEvents = false;
             }
 
             // assign missing fields for variables.
@@ -3812,7 +3678,7 @@ namespace Opc.Ua.Schema.Model
                 "VariableType");
 
             m_nodes.Add(property.SymbolicId, property);
-            Log("Imported {1}: {0}", property.SymbolicId.Name, property.GetType().Name);
+            m_logger.LogInformation("Imported {Type}: {Name}", property.GetType().Name, property.SymbolicId.Name);
 
             return property;
         }
@@ -3924,7 +3790,11 @@ namespace Opc.Ua.Schema.Model
                 throw Exception("The TargetId for a reference is not valid: {0}.", source.SymbolicId.Name);
             }
 
-            Log("Import Reference: {0} => {1} => {2}", reference.SourceNode.SymbolicName.Name, reference.ReferenceType.Name, reference.TargetId.Name);
+            m_logger.LogInformation(
+                "Import Reference: {Source} => {Reference} => {Target}",
+                reference.SourceNode.SymbolicName.Name,
+                reference.ReferenceType.Name,
+                reference.TargetId.Name);
         }
 
         /// <summary>
@@ -3968,7 +3838,9 @@ namespace Opc.Ua.Schema.Model
                     }
                     catch (Exception e)
                     {
-                        OutputError($"Ignoring InvalidReference {node.SymbolicId.Name} => {reference.TargetId.Name}. [{e.Message}]");
+                        m_logger.LogWarning(e, "Ignoring InvalidReference {Name} => {Target}",
+                            node.SymbolicId.Name,
+                            reference.TargetId.Name);
                     }
                 }
 
@@ -4148,7 +4020,7 @@ namespace Opc.Ua.Schema.Model
                             dataType,
                             new XmlQualifiedName("DefaultBinary", m_defaultNamespace));
 
-                        if (EmbeddedModelVersion != StandardVersion.V103)
+                        if (m_standardVersion != SpecificationVersion.V103)
                         {
                             EncodingDesign jsonEncoding = CreateEncoding(
                                 dataType,
@@ -4213,7 +4085,7 @@ namespace Opc.Ua.Schema.Model
 
                 if (referenceType == null)
                 {
-                    Log("Reference type not found");
+                    m_logger.LogWarning("Reference type {Name} not found", instance.ReferenceType);
                 }
             }
 
@@ -4449,7 +4321,7 @@ namespace Opc.Ua.Schema.Model
 
             if (referenceType == null)
             {
-                Log("Reference type not found");
+                m_logger.LogWarning("Reference type {Name} not found", reference.ReferenceType);
             }
 
             reference.TargetNode = FindNode(
@@ -4544,7 +4416,7 @@ namespace Opc.Ua.Schema.Model
             }
 
             m_nodes.Add(encoding.SymbolicId, encoding);
-            Log("Created {1}: {0}", encoding.SymbolicId.Name, encoding.GetType().Name);
+            m_logger.LogDebug("Created {Type}: {Name}", encoding.GetType().Name, encoding.SymbolicId.Name);
 
             return encoding;
         }
@@ -5109,7 +4981,7 @@ namespace Opc.Ua.Schema.Model
 
         private TypeDesign MergeTypeHierarchy(TypeDesign type)
         {
-            Log("Merging Type: {0}", type.SymbolicId.Name);
+            m_logger.LogDebug("Merging Type: {Name}", type.SymbolicId.Name);
 
             TypeDesign mergedType;
             if (type.BaseTypeNode == null)
@@ -5170,7 +5042,8 @@ namespace Opc.Ua.Schema.Model
                 mergedType.DecodedValue = variableType.DecodedValue;
             }
 
-            if (variableType.DataType != null && variableType.DataType != new XmlQualifiedName("BaseDataType", m_defaultNamespace))
+            if (variableType.DataType != null &&
+                variableType.DataType != new XmlQualifiedName("BaseDataType", m_defaultNamespace))
             {
                 mergedType.DataType = variableType.DataType;
                 mergedType.DataTypeNode = variableType.DataTypeNode;
@@ -5217,7 +5090,7 @@ namespace Opc.Ua.Schema.Model
 
         private NodeDesign CreateMergedInstance(XmlQualifiedName rootId, string relativePath, NodeDesign source)
         {
-            Log("Merging Instance: {0} {1} {2}", rootId.Name, relativePath, source.SymbolicId.Name);
+            m_logger.LogDebug("Merging Instance: {Root} {Path} {Source}", rootId.Name, relativePath, source.SymbolicId.Name);
 
             var type = source as TypeDesign;
 
@@ -5285,7 +5158,7 @@ namespace Opc.Ua.Schema.Model
             mergedInstance.ReleaseStatus = source.ReleaseStatus;
             mergedInstance.DesignToolOnly = source is InstanceDesign dto && dto.DesignToolOnly;
 
-            Log("Created Merged Instance: {0}", mergedInstance.SymbolicId.Name);
+            m_logger.LogDebug("Created Merged Instance: {Name}", mergedInstance.SymbolicId.Name);
             return mergedInstance;
         }
 
@@ -5350,7 +5223,10 @@ namespace Opc.Ua.Schema.Model
 
         private void UpdateMergedInstance(InstanceDesign mergedInstance, NodeDesign source)
         {
-            Log("Updated Merged Instance: {0} {1}", mergedInstance.SymbolicId.Name, source.SymbolicId.Name);
+            m_logger.LogDebug(
+                "Updated Merged Instance: {Instance} {Source}",
+                mergedInstance.SymbolicId.Name,
+                source.SymbolicId.Name);
 
             if (source.DisplayName != null && !source.DisplayName.IsAutogenerated)
             {
@@ -5657,7 +5533,10 @@ namespace Opc.Ua.Schema.Model
 
                         if (!inPath)
                         {
-                            Log("OveridingInstance: {0} : {1}", instance.SymbolicId.Name, overriddenInstance.SymbolicId.Name);
+                            m_logger.LogInformation(
+                                "OverridingInstance: {Instance} : {Overridden}",
+                                instance.SymbolicId.Name,
+                                overriddenInstance.SymbolicId.Name);
                             instance.OveriddenNode = overriddenInstance;
                         }
                     }
@@ -5674,7 +5553,7 @@ namespace Opc.Ua.Schema.Model
                             propertyName.Name);
                     }
 
-                    Log("IndexingInstance: {0} : {1}", browsePath, instance.SymbolicId.Name);
+                    m_logger.LogDebug("IndexingInstance: {Path} : {Instance}", browsePath, instance.SymbolicId.Name);
                     nodes[browsePath] = instance;
                 }
             }
@@ -5782,7 +5661,7 @@ namespace Opc.Ua.Schema.Model
             bool inherited,
             int depth)
         {
-            Log("BuildHierarchy for Type: {0} : {1}", type.SymbolicId.Name, basePath);
+            m_logger.LogDebug("BuildHierarchy for Type: {Type} : {Path}", type.SymbolicId.Name, basePath);
 
             if (depth > MaxRecursionDepth)
             {
@@ -5827,7 +5706,8 @@ namespace Opc.Ua.Schema.Model
 
                             //if (instance.SymbolicId.Namespace != DefaultNamespace)
                             //{
-                            //    System.Console.WriteLine("TypeDesign Placeholder: " + reference.SourcePath + "=>" + reference.TargetId);
+                            //    m_logger.LogDebug("TypeDesign Placeholder: {Source} => {Target}",
+                            //        reference.SourcePath, reference.TargetId);
                             //}
 
                             continue;
@@ -5859,7 +5739,7 @@ namespace Opc.Ua.Schema.Model
             bool inherited,
             int depth)
         {
-            Log("BuildHierarchy for Instance: {0} : {1}", parent.SymbolicId.Name, basePath);
+            m_logger.LogDebug("BuildHierarchy for Instance: {Name} : {Path}", parent.SymbolicId.Name, basePath);
 
             if (depth > MaxRecursionDepth)
             {
@@ -5917,7 +5797,6 @@ namespace Opc.Ua.Schema.Model
                             reference.IsInverse = false;
                             reference.TargetId = instance.SymbolicId;
 
-                            //if (instance.SymbolicId.Namespace != DefaultNamespace) System.Console.WriteLine("TypeDesign Placeholder: " + reference.SourcePath + "=>" + reference.TargetId);
                             continue;
                         }
                     }
@@ -5944,19 +5823,22 @@ namespace Opc.Ua.Schema.Model
                         }
                     }
 
-                    if (instance.ModellingRule is ModellingRule.OptionalPlaceholder or ModellingRule.MandatoryPlaceholder)
+                    if (instance.ModellingRule
+                        is ModellingRule.OptionalPlaceholder
+                        or ModellingRule.MandatoryPlaceholder && depth > 3)
                     {
-                        //if (instance.SymbolicId.Namespace != DefaultNamespace) System.Console.WriteLine("InstanceDesign isTypeDefinition Placeholder: " + instance.SymbolicName);
-
-                        if (depth > 3)
-                        {
-                            continue;
-                        }
+                        continue;
                     }
 
                     nodes.Add(child);
 
-                    BuildInstanceHierarchy2(instance, browsePath, nodes, references, inherited, depth + 1);
+                    BuildInstanceHierarchy2(
+                        instance,
+                        browsePath,
+                        nodes,
+                        references,
+                        inherited,
+                        depth + 1);
                 }
             }
         }
@@ -5975,13 +5857,15 @@ namespace Opc.Ua.Schema.Model
 
             for (int ii = 0; ii < source.References.Length; ii++)
             {
-                if (source.References[ii].ReferenceType == new XmlQualifiedName("HasModelParent", m_defaultNamespace))
+                if (source.References[ii].ReferenceType ==
+                    new XmlQualifiedName("HasModelParent", m_defaultNamespace))
                 {
                     continue;
                 }
 
                 // suppress inhierited non-hierarchial references.
-                if (inherited && m_nodes.TryGetValue(source.References[ii].ReferenceType, out NodeDesign target))
+                if (inherited &&
+                    m_nodes.TryGetValue(source.References[ii].ReferenceType, out NodeDesign target))
                 {
                     var referenceType = target as ReferenceTypeDesign;
 
@@ -5989,7 +5873,8 @@ namespace Opc.Ua.Schema.Model
 
                     while (referenceType != null)
                     {
-                        if (referenceType.SymbolicName == new XmlQualifiedName("NonHierarchicalReferences", m_defaultNamespace))
+                        if (referenceType.SymbolicName ==
+                            new XmlQualifiedName("NonHierarchicalReferences", m_defaultNamespace))
                         {
                             found = true;
                             break;
@@ -6006,7 +5891,8 @@ namespace Opc.Ua.Schema.Model
 
                 if (suppressInverseHierarchicalAtTypeLevel &&
                     source.References[ii].IsInverse &&
-                    source.References[ii].ReferenceType == new XmlQualifiedName("Organizes", m_defaultNamespace))
+                    source.References[ii].ReferenceType ==
+                        new XmlQualifiedName("Organizes", m_defaultNamespace))
                 {
                     continue;
                 }
@@ -6018,7 +5904,8 @@ namespace Opc.Ua.Schema.Model
 
                 references.Add(reference);
 
-                Log("Translated Reference: {0} => {1} => {2}",
+                m_logger.LogDebug(
+                    "Translated Reference: {Source} => {Reference} => {Target}",
                     string.IsNullOrEmpty(reference.SourcePath) ? source.SymbolicId.Name : reference.SourcePath,
                     reference.ReferenceType.Name,
                     reference.TargetId != null ? reference.TargetId.Name : reference.TargetPath);
@@ -6177,9 +6064,7 @@ namespace Opc.Ua.Schema.Model
 
         private Hierarchy BuildInstanceHierarchy2(ModelDesign dictionary, NodeDesign root, int depth)
         {
-            // Log("Building InstanceHierarchy: {0}", root.SymbolicId.Name);
-            // if (root.SymbolicId.Namespace != DefaultNamespace) System.Console.WriteLine("Building InstanceHierarchy: {0}", root.SymbolicId.Name);
-
+            m_logger.LogInformation("Building InstanceHierarchy for {Name}", root.SymbolicId.Name);
             if (depth > MaxRecursionDepth)
             {
                 throw new InvalidOperationException($"{root.SymbolicId.Name} max recursion exceeded. Check model.");
@@ -6318,10 +6203,14 @@ namespace Opc.Ua.Schema.Model
 
             if (root.RolePermissions == null || root.RolePermissions.Count == 0)
             {
-                root.RolePermissions = ImportRolePermissions(design.DefaultRolePermissions, Dictionary.NamespaceUris);
+                root.RolePermissions = ImportRolePermissions(
+                    design.DefaultRolePermissions,
+                    Dictionary.NamespaceUris);
             }
 
-            root.AccessRestrictions ??= ImportAccessRestrictions(design.DefaultAccessRestrictions, design.DefaultAccessRestrictionsSpecified);
+            root.AccessRestrictions ??= ImportAccessRestrictions(
+                design.DefaultAccessRestrictions,
+                design.DefaultAccessRestrictionsSpecified);
 
             var context = new SystemContext(m_telemetry)
             {
@@ -6453,7 +6342,7 @@ namespace Opc.Ua.Schema.Model
             bool isTypeDefinition,
             NamespaceTable namespaceUris)
         {
-            Log("Creating NodeState: {0}", root.SymbolicId.Name);
+            m_logger.LogDebug("Creating NodeState: {Name}", root.SymbolicId.Name);
 
             NodeState state = null;
 
@@ -6576,7 +6465,7 @@ namespace Opc.Ua.Schema.Model
                     if (!target.Instance.NumericIdSpecified || target.Instance.NumericId == 0)
                     {
                         // throw new InvalidDataException($"{parent}: {target.Instance.SymbolicId.Name} needs to explicitly specified.");
-                        // Console.WriteLine($"{parent.SymbolicName}: {target.Instance.SymbolicId.Name} needs to explicitly specified.");
+                        // m_logger.LogWarning($"{parent.SymbolicName}: {target.Instance.SymbolicId.Name} needs to explicitly specified.");
                         target.Instance.StringId = target.Instance.SymbolicId.Name;
                         targetId = ConstructNodeId(target.Instance, namespaceUris);
                     }
@@ -6605,7 +6494,7 @@ namespace Opc.Ua.Schema.Model
                 {
                     source.Instance.StringId = source.Instance.SymbolicId.Name;
                     sourceId = ConstructNodeId(source.Instance, namespaceUris);
-                    //Console.WriteLine($"{parent.SymbolicName}: {source.Instance.SymbolicId.Name} needs to explicitly specified.");
+                    //m_logger.LogWarning$"{parent.SymbolicName}: {source.Instance.SymbolicId.Name} needs to explicitly specified.");
                     //continue;
                     //throw new InvalidDataException($"{parent}: {source.Instance.SymbolicId.Name} needs to explicitly specified.");
                 }
@@ -6646,7 +6535,14 @@ namespace Opc.Ua.Schema.Model
                 }
 
                 // get the parent path.
-                if (childPath.Length > current.Instance.SymbolicName.Name.Length)
+                if (childPath.Length <= current.Instance.SymbolicName.Name.Length)
+                {
+                    if (!string.IsNullOrEmpty(basePath))
+                    {
+                        continue;
+                    }
+                }
+                else
                 {
                     string parentPath = current.RelativePath[..(childPath.Length - current.Instance.SymbolicName.Name.Length - 1)];
 
@@ -6654,10 +6550,6 @@ namespace Opc.Ua.Schema.Model
                     {
                         continue;
                     }
-                }
-                else if (string.IsNullOrEmpty(basePath))
-                {
-                    continue;
                 }
 
                 if (!string.IsNullOrEmpty(basePath))
@@ -6676,8 +6568,8 @@ namespace Opc.Ua.Schema.Model
                         continue;
                     }
 
-                    if (instance.ModellingRule != ModellingRule.Mandatory &&
-                        !current.ExplicitlyDefined &&
+                    if (!current.ExplicitlyDefined &&
+                        instance.ModellingRule != ModellingRule.Mandatory &&
                         instance.ModellingRule != ModellingRule.None &&
                         instance.ModellingRule != ModellingRule.ExposesItsArray &&
                         instance.ModellingRule != ModellingRule.OptionalPlaceholder &&
@@ -6687,7 +6579,10 @@ namespace Opc.Ua.Schema.Model
                     }
                 }
 
-                if (isTypeDefinition && !current.ExplicitlyDefined && current.Inherited && current.AdHocInstance)
+                if (isTypeDefinition &&
+                    !current.ExplicitlyDefined &&
+                    current.Inherited &&
+                    current.AdHocInstance)
                 {
                     // this assumes that ad-hoc instances are not more than one level deep.
                     // i.e. a type defines folder and adds a few instances but does not defined subfolders.
@@ -7308,65 +7203,18 @@ namespace Opc.Ua.Schema.Model
             return state;
         }
 
-        /// <summary>
-        /// Core version
-        /// </summary>
-        internal enum StandardVersion
-        {
-            /// <summary>
-            /// Version 1.04
-            /// </summary>
-            V104 = 104,
-
-            /// <summary>
-            /// Version 1.05
-            /// </summary>
-            V105,
-
-            /// <summary>
-            /// Version 1.03
-            /// </summary>
-            V103
-        }
-
+        private readonly SpecificationVersion m_standardVersion;
         private readonly ITelemetryContext m_telemetry;
+        private readonly ILogger m_logger;
         private Dictionary<XmlQualifiedName, NodeDesign> m_nodes;
         private Dictionary<string, string[]> m_namespaceTables;
         private Dictionary<NodeId, NodeDesign> m_nodesByNodeId;
         private Dictionary<uint, NodeDesign> m_identifiers;
         private readonly string m_defaultNamespace = Namespaces.OpcUa;
-        private readonly IFileSystem m_fileSystem;
         private readonly ServiceMessageContext m_context;
         private readonly uint m_startId;
         private readonly IReadOnlyList<string> m_exclusions;
         private Dictionary<XmlQualifiedName, string> m_browseNames = [];
         private readonly Dictionary<XmlQualifiedName, NodeId> m_symbolicIdToNodeId = [];
-    }
-
-    /// <summary>
-    /// Log message event arguments
-    /// </summary>
-    public class LogMessageEventArgs
-    {
-        /// <summary>
-        /// Create event args
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="severity"></param>
-        public LogMessageEventArgs(string message, int severity)
-        {
-            Message = message;
-            Severity = severity;
-        }
-
-        /// <summary>
-        /// Message text
-        /// </summary>
-        public string Message { get; }
-
-        /// <summary>
-        /// Severity
-        /// </summary>
-        public int Severity { get; }
     }
 }

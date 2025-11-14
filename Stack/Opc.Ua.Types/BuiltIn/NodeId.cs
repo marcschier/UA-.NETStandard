@@ -1248,7 +1248,7 @@ namespace Opc.Ua
 
             ushort namespaceIndex = NamespaceIndex;
             IdType idType = IdType;
-            object id = null;
+            object id;
 
             // check for expanded node ids.
             var nodeId = obj as NodeId;

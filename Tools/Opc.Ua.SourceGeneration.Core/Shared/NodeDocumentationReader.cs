@@ -39,6 +39,51 @@ using System.Linq;
 
 namespace Opc.Ua.SourceGeneration
 {
+    /// <summary>
+    /// Read node documentation files
+    /// </summary>
+    internal class NodeDocumentationReader
+    {
+        public NodeDocumentationReader(IFileSystem fileSystem)
+        {
+            m_fileSystem = fileSystem ?? LocalFileSystem.Instance;
+        }
+
+        /// <summary>
+        /// Get the node documentation records from the specified files.
+        /// </summary>
+        /// <param name="filepaths"></param>
+        /// <returns></returns>
+        public IList<NodeDocumentationRow> Load(params string[] filepaths)
+        {
+            List<NodeDocumentationRow> records = [];
+            foreach (string filepath in filepaths)
+            {
+                Append(filepath, records);
+            }
+            return records;
+        }
+
+        private void Append(string filepath, List<NodeDocumentationRow> results)
+        {
+            using TextReader istrm = m_fileSystem.CreateTextReader(filepath);
+            var configuration = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                MissingFieldFound = (args) => { }
+            };
+
+            using var csv = new CsvReader(istrm, configuration);
+            csv.Context.RegisterClassMap<NodeDocumentationMap>();
+            foreach (NodeDocumentationRow ii in csv.GetRecords<NodeDocumentationRow>().ToList())
+            {
+                ii.Link = ii.Link.Trim();
+                results.Add(ii);
+            }
+        }
+
+        private readonly IFileSystem m_fileSystem;
+    }
+
     internal sealed class NodeDocumentationRow
     {
         [Name("Id")]
@@ -110,38 +155,6 @@ namespace Opc.Ua.SourceGeneration
             Map(m => m.Name).Name("Name");
             Map(m => m.Link).Name("Link");
             Map(m => m.ConformanceUnits).Name("ConformanceUnits").TypeConverter<ArrayConverter<NodeDocumentationRow>>();
-        }
-    }
-
-    internal static class NodeDocumentationReader
-    {
-        private static void Append(string filepath, List<NodeDocumentationRow> results)
-        {
-            using var istrm = new StreamReader(filepath);
-            var configuration = new CsvConfiguration(CultureInfo.InvariantCulture)
-            {
-                MissingFieldFound = (args) => { }
-            };
-
-            using var csv = new CsvReader(istrm, configuration);
-            csv.Context.RegisterClassMap<NodeDocumentationMap>();
-            foreach (NodeDocumentationRow ii in csv.GetRecords<NodeDocumentationRow>().ToList())
-            {
-                ii.Link = ii.Link.Trim();
-                results.Add(ii);
-            }
-        }
-
-        public static IList<NodeDocumentationRow> Load(params string[] filepaths)
-        {
-            List<NodeDocumentationRow> records = [];
-
-            foreach (string filepath in filepaths)
-            {
-                Append(filepath, records);
-            }
-
-            return records;
         }
     }
 }

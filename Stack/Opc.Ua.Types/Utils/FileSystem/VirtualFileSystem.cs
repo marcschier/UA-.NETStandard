@@ -249,7 +249,7 @@ namespace Opc.Ua
 
                     File = MemoryMappedFile.CreateNew(
                         GetMapName(),
-                        1 * 1024 * 1204,
+                        16 * 1024 * 1204,
                         MemoryMappedFileAccess.ReadWrite,
                         MemoryMappedFileOptions.DelayAllocatePages,
                         HandleInheritability.None);

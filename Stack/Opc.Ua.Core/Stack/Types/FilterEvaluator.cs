@@ -2142,8 +2142,7 @@ namespace Opc.Ua
                         chainedElement.FilterOperands[0]) as FilterOperand;
 
                     targetTypeId = GetValue(nestedType) as NodeId;
-
-                    if ((NodeId)null == null)
+                    if (NodeId.IsNull(targetTypeId))
                     {
                         return false;
                     }

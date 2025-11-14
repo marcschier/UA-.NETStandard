@@ -63,7 +63,7 @@ namespace Opc.Ua.SourceGeneration
             // collect datatypes with the specified type.
             var datatypes = new List<DataType>();
 
-            foreach (TypeDictionary dictionary in validator.LoadedFiles.Values.Cast<TypeDictionary>())
+            foreach (TypeDictionary dictionary in validator.LoadedTypeDictionaries)
             {
                 if (dictionary.TargetNamespace != Namespaces.OpcUaBuiltInTypes)
                 {
@@ -702,6 +702,51 @@ namespace Opc.Ua.SourceGeneration
                 return true;
             }
 
+            return false;
+        }
+
+        public static bool IsPartOfOpcUaTypesLibrary(this DataTypeDesign dataType)
+        {
+            if (dataType != null &&
+                dataType.SymbolicId.Namespace == Namespaces.OpcUa)
+            {
+                switch (dataType.NumericId)
+                {
+                    case DataTypes.AccessRestrictionType:
+                    case DataTypes.ReferenceDescription:
+                    case DataTypes.AttributeWriteMask:
+                    case DataTypes.Argument:
+                    case DataTypes.IdType:
+                    case DataTypes.RolePermissionType:
+                    case DataTypes.PermissionType:
+                    case DataTypes.ViewDescription:
+                    case DataTypes.BrowseDescription:
+                    case DataTypes.StructureDefinition:
+                    case DataTypes.StructureType:
+                    case DataTypes.StructureField:
+                    case DataTypes.InstanceNode:
+                    case DataTypes.ReferenceTypeNode:
+                    case DataTypes.ReferenceNode:
+                    case DataTypes.DataTypeDefinition:
+                    case DataTypes.EnumDefinition:
+                    case DataTypes.EnumField:
+                    case DataTypes.EnumValueType:
+                    case DataTypes.RelativePath:
+                    case DataTypes.BrowseDirection:
+                    case DataTypes.RelativePathElement:
+                    case DataTypes.NodeClass:
+                    case DataTypes.Node:
+                    case DataTypes.ViewNode:
+                    case DataTypes.ObjectNode:
+                    case DataTypes.MethodNode:
+                    case DataTypes.TypeNode:
+                    case DataTypes.ObjectTypeNode:
+                    case DataTypes.DataTypeNode:
+                    case DataTypes.VariableTypeNode:
+                    case DataTypes.VariableNode:
+                        return true;
+                }
+            }
             return false;
         }
     }

@@ -1080,13 +1080,7 @@ namespace Opc.Ua.Client
                 return;
             }
 
-            var predefinedNodes = new NodeStateCollection();
-            Assembly assembly = typeof(ReadRequest).GetTypeInfo().Assembly;
-            predefinedNodes.LoadFromBinaryResource(
-                context,
-                "Opc.Ua.Stack.Generated.Opc.Ua.PredefinedNodes.uanodes",
-                assembly,
-                true);
+            NodeStateCollection predefinedNodes = PredefinedNodes.Load(context);
 
             m_cacheLock.EnterWriteLock();
             try

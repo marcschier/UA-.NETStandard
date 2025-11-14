@@ -27,13 +27,13 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Xml;
 using Opc.Ua.Schema.Types;
-using System.Globalization;
-using System;
-using System.IO;
-using System.Collections.Generic;
 
 namespace Opc.Ua.SourceGeneration
 {
@@ -46,18 +46,22 @@ namespace Opc.Ua.SourceGeneration
         /// Generates the code from the contents of the address space.
         /// </summary>
         public ConstantsGenerator(
-            string inputPath,
+            IFileSystem fileSystem,
+            string typeDictionary,
             string outputDirectory,
             Dictionary<string, string> knownFiles,
             IReadOnlyList<string> exclusions)
         {
             // load and validate type dictionary.
-            Validator = new TypeDictionaryValidator(knownFiles);
-            Validator.Validate(inputPath);
+            Validator = new TypeDictionaryValidator(
+                fileSystem,
+                knownFiles);
+            Validator.Validate(typeDictionary);
 
             // save output directory.
             OutputDirectory = outputDirectory;
             Exclusions = exclusions;
+            m_fileSystem = fileSystem;
         }
 
         /// <summary>
@@ -86,20 +90,11 @@ namespace Opc.Ua.SourceGeneration
         public virtual void Generate(
             string namespacePrefix,
             string className,
-            string identifierFilePath,
-            bool renumberAll)
+            string identifiersFile)
         {
             List<DataType> datatypes = GetDataTypeList();
 
-            if (!string.IsNullOrEmpty(identifierFilePath))
-            {
-                if (renumberAll)
-                {
-                    File.Delete(identifierFilePath);
-                }
-
-                LoadIdentifiersFromFile(identifierFilePath, datatypes);
-            }
+            LoadIdentifiers(identifiersFile, datatypes);
 
             WriteTemplate_Constants(namespacePrefix, className, datatypes);
         }
@@ -136,54 +131,41 @@ namespace Opc.Ua.SourceGeneration
                 }
             }
 
-            string fileName = CoreUtils.Format(@"{0}\{1}.{2}.cs", OutputDirectory, namespacePrefix, className);
+            string fileName = Path.Combine(OutputDirectory,
+                CoreUtils.Format("{0}.{1}.g.cs", namespacePrefix, className));
+            using TextWriter writer = m_fileSystem.CreateTextWriter(fileName);
+            string templatePath = CodeTemplateStrings.Constants_File_cs;
 
-            if (!Directory.Exists(Path.GetDirectoryName(fileName)))
+            if (className == "Identifiers")
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(fileName));
+                templatePath = CodeTemplateStrings.Constants_DataTypes_cs;
             }
 
-            var writer = new StreamWriter(fileName, false);
+            var template = new Template(writer, templatePath);
 
-            try
-            {
-                string templatePath = TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_Constants_File_cs;
+            template.AddReplacement(Tokens.Date, DateTime.Now);
+            template.AddReplacement(Tokens.Prefix, namespacePrefix);
+            template.AddReplacement(Tokens.ClassName, className);
+            template.AddReplacement(Tokens.FileName, namespacePrefix + '_' + className);
 
-                if (className == "Identifiers")
-                {
-                    templatePath = TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_Constants_DataTypes_cs;
-                }
+            template.AddTemplate(
+                Tokens.ListOfIdentifiers,
+                CodeTemplateStrings.Constants_Constant_cs,
+                datatypes,
+                LoadTemplate_Constant,
+                WriteTemplate_Constant);
 
-                var template = new Template(writer, templatePath);
+            template.AddTemplate(
+                Tokens.ListOfEncodings,
+                CodeTemplateStrings.Constants_Constant_cs,
+                datatypes,
+                LoadTemplate_Constant,
+                WriteTemplate_Constant);
 
-                template.AddReplacement("_Date_", DateTime.Now);
-                template.AddReplacement("_Prefix_", namespacePrefix);
-                template.AddReplacement("_ClassName_", className);
-                template.AddReplacement("_FileName_", namespacePrefix + '_' + className);
+            template.AddReplacement(Tokens.StatusCodeHelpers, string.Empty);
 
-                template.AddTemplate(
-                    "// ListOfIdentifiers",
-                    TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_Constants_Constant_cs,
-                    datatypes,
-                    new LoadTemplateEventHandler(LoadTemplate_Constant),
-                    new WriteTemplateEventHandler(WriteTemplate_Constant));
-
-                template.AddTemplate(
-                    "// ListOfEncodings",
-                    TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_Constants_Constant_cs,
-                    datatypes,
-                    new LoadTemplateEventHandler(LoadTemplate_Constant),
-                    new WriteTemplateEventHandler(WriteTemplate_Constant));
-
-                template.AddReplacement("// StatusCodeHelpers", string.Empty);
-
-                var context = new Context();
-                template.WriteTemplate(context);
-            }
-            finally
-            {
-                writer.Close();
-            }
+            var context = new Context();
+            template.WriteTemplate(context);
         }
 
         /// <summary>
@@ -196,11 +178,12 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            if (context.Token == "// ListOfEncodings")
+            if (context.Token == Tokens.ListOfEncodings)
             {
                 if (datatype is ComplexType)
                 {
-                    return TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_Constants_Encodings_cs;
+                    // Add encodings during load phase.
+                    return string.Empty;
                 }
 
                 return null;
@@ -225,9 +208,9 @@ namespace Opc.Ua.SourceGeneration
             {
                 if (!string.IsNullOrEmpty(constant.Value))
                 {
-                    template.AddReplacement("_IdType_", "string");
-                    template.AddReplacement("_Identifier_", CoreUtils.Format("\"{0}\"", constant.Value));
-                    template.AddReplacement("_ClassName_", "_" + m_className);
+                    template.AddReplacement(Tokens.IdType, "string");
+                    template.AddReplacement(Tokens.Identifier, CoreUtils.Format("\"{0}\"", constant.Value));
+                    template.AddReplacement(Tokens.ClassName, "_" + m_className);
                 }
                 else
                 {
@@ -248,15 +231,15 @@ namespace Opc.Ua.SourceGeneration
                                 break;
                         }
 
-                        template.AddReplacement("_IdType_", "uint");
-                        template.AddReplacement("_Identifier_", CoreUtils.Format("0x{0:X8}", id));
-                        template.AddReplacement("_ClassName_", string.Empty);
+                        template.AddReplacement(Tokens.IdType, "uint");
+                        template.AddReplacement(Tokens.Identifier, CoreUtils.Format("0x{0:X8}", id));
+                        template.AddReplacement(Tokens.ClassName, string.Empty);
                     }
                     else
                     {
-                        template.AddReplacement("_IdType_", "uint");
-                        template.AddReplacement("_Identifier_", constant.Identifier);
-                        template.AddReplacement("_ClassName_", "_" + m_className);
+                        template.AddReplacement(Tokens.IdType, "uint");
+                        template.AddReplacement(Tokens.Identifier, constant.Identifier);
+                        template.AddReplacement(Tokens.ClassName, "_" + m_className);
                     }
                 }
             }
@@ -281,12 +264,12 @@ namespace Opc.Ua.SourceGeneration
             }
             else
             {
-                template.AddReplacement("_IdType_", "uint");
-                template.AddReplacement("_Identifier_", datatype.Identifier);
-                template.AddReplacement("_ClassName_", "Id");
+                template.AddReplacement(Tokens.IdType, "uint");
+                template.AddReplacement(Tokens.Identifier, datatype.Identifier);
+                template.AddReplacement(Tokens.ClassName, "Id");
             }
 
-            template.AddReplacement("_SymbolicId_", symbolicId);
+            template.AddReplacement(Tokens.SymbolicId, symbolicId);
 
             string description = datatype.Documentation.GetDescription();
 
@@ -295,12 +278,12 @@ namespace Opc.Ua.SourceGeneration
                 description = CoreUtils.Format("The identifier for the {0} datatype.", symbolicId);
             }
 
-            template.AddReplacement("_Description_", description);
+            template.AddReplacement(Tokens.Description, description);
 
             if (context.Target is ComplexType complexType)
             {
-                template.AddReplacement("_XmlEncodingId_", complexType.XmlEncodingId);
-                template.AddReplacement("_BinaryEncodingId_", complexType.BinaryEncodingId);
+                template.AddReplacement(Tokens.XmlEncodingId, complexType.XmlEncodingId);
+                template.AddReplacement(Tokens.BinaryEncodingId, complexType.BinaryEncodingId);
             }
 
             return template.WriteTemplate(context);
@@ -335,7 +318,9 @@ namespace Opc.Ua.SourceGeneration
                         Name = CoreUtils.Format("{0}Request", serviceType.Name),
                         Field = serviceType.Request
                     };
-                    requestType.QName = new XmlQualifiedName(requestType.Name, serviceType.QName.Namespace);
+                    requestType.QName = new XmlQualifiedName(
+                        requestType.Name,
+                        serviceType.QName.Namespace);
 
                     datatypes.Add(requestType);
                 }
@@ -347,7 +332,9 @@ namespace Opc.Ua.SourceGeneration
                         Name = CoreUtils.Format("{0}Response", serviceType.Name),
                         Field = serviceType.Response
                     };
-                    responseType.QName = new XmlQualifiedName(responseType.Name, serviceType.QName.Namespace);
+                    responseType.QName = new XmlQualifiedName(
+                        responseType.Name,
+                        serviceType.QName.Namespace);
 
                     datatypes.Add(responseType);
                 }
@@ -360,66 +347,61 @@ namespace Opc.Ua.SourceGeneration
         /// Loads the identifiers from a CSV file.
         /// </summary>
         /// <exception cref="InvalidOperationException"></exception>
-        private static void LoadIdentifiersFromFile(string filePath, List<DataType> datatypes)
+        private void LoadIdentifiers(string identifiersFile, List<DataType> datatypes)
         {
             Dictionary<string, int> identifiers = [];
             SortedDictionary<int, string> assignedIdentifiers = [];
 
             int maxId = 1;
 
-            if (File.Exists(filePath))
+            using TextReader reader = m_fileSystem.CreateTextReader(identifiersFile);
+            while (true)
             {
-                var reader = new StreamReader(filePath);
+                string line = reader.ReadLine();
+                if (line == null)
+                {
+                    break;
+                }
+
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    continue;
+                }
+
+                int index = line.IndexOf(',', StringComparison.Ordinal);
+
+                if (index == -1)
+                {
+                    continue;
+                }
+
+                // remove the node class if it is present.
+                int lastIndex = line.LastIndexOf(',');
+
+                if (lastIndex != -1 && index != lastIndex)
+                {
+                    line = line[..lastIndex];
+                }
 
                 try
                 {
-                    while (!reader.EndOfStream)
+                    string name = line[..index].Trim();
+
+                    int uid = Convert.ToInt32(
+                        line[(index + 1)..].Trim(),
+                        CultureInfo.InvariantCulture);
+
+                    if (maxId <= uid)
                     {
-                        string line = reader.ReadLine();
-
-                        if (string.IsNullOrEmpty(line))
-                        {
-                            continue;
-                        }
-
-                        int index = line.IndexOf(',', StringComparison.Ordinal);
-
-                        if (index == -1)
-                        {
-                            continue;
-                        }
-
-                        // remove the node class if it is present.
-                        int lastIndex = line.LastIndexOf(',');
-
-                        if (lastIndex != -1 && index != lastIndex)
-                        {
-                            line = line[..lastIndex];
-                        }
-
-                        try
-                        {
-                            string name = line[..index].Trim();
-
-                            int uid = Convert.ToInt32(line[(index + 1)..].Trim(), CultureInfo.InvariantCulture);
-
-                            if (maxId <= uid)
-                            {
-                                maxId = uid + 1;
-                            }
-
-                            identifiers[name] = uid;
-                            assignedIdentifiers[uid] = name;
-                        }
-                        catch (Exception)
-                        {
-                            continue;
-                        }
+                        maxId = uid + 1;
                     }
+
+                    identifiers[name] = uid;
+                    assignedIdentifiers[uid] = name;
                 }
-                finally
+                catch (Exception)
                 {
-                    reader.Close();
+                    continue;
                 }
             }
 
@@ -523,30 +505,9 @@ namespace Opc.Ua.SourceGeneration
 
                 throw new InvalidOperationException(buffer.ToString());
             }
-
-            // update the CSV file.
-            var writer = new StreamWriter(filePath, false);
-
-            try
-            {
-                foreach (KeyValuePair<int, string> ii in assignedIdentifiers)
-                {
-                    if (uniqueIdentifiers.ContainsKey(ii.Key))
-                    {
-                        writer.WriteLine("{0},{1}", ii.Value, ii.Key);
-                    }
-                    else
-                    {
-                        writer.WriteLine("{0},{1},Unassigned", ii.Value, ii.Key);
-                    }
-                }
-            }
-            finally
-            {
-                writer.Close();
-            }
         }
 
         private string m_className;
+        private readonly IFileSystem m_fileSystem;
     }
 }

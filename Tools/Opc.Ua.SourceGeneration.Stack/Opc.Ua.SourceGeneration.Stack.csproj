@@ -5,7 +5,6 @@
     <AssemblyName>$(AssemblyPrefix).SourceGeneration.Stack</AssemblyName>
     <RootNamespace>Opc.Ua.SourceGeneration</RootNamespace>
     <Description>OPC UA source generation Library</Description>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <!-- Package as source generator -->
   <PropertyGroup>
@@ -17,54 +16,40 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <NoPackageAnalysis>true</NoPackageAnalysis>
   </PropertyGroup>
-  <!-- Package as source generator -->
   <PropertyGroup>
-    <IsPackable>true</IsPackable>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <NoPackageAnalysis>true</NoPackageAnalysis>
-    <PackageId>OPCFoundation.Opc.Ua.SourceGeneration.Stack</PackageId>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <AssemblySearchPath_UseOutDir>true</AssemblySearchPath_UseOutDir>
+    <SgfAddModuleInitializerAttribute>false</SgfAddModuleInitializerAttribute>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Update="NETStandard.Library" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
+    <CompilerVisibleProperty Include="SgfAddModuleInitializerAttribute" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Opc.Ua.SourceGeneration.Stack.Tests"/>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <PackageReference Include="SourceGenerator.Foundations" >
+      <!-- Make private asset because assembly name comparer symbol conflict in test -->
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <OutputItemType>Analzyer</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Opc.Ua.SourceGeneration.Core\Opc.Ua.SourceGeneration.Core.csproj" PrivateAssets="all" />
+    <PackageReference Update="NETStandard.Library" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
-    <!-- Take private dependencies on everything required by the packages referenced (PrivateAssets=all)
-         Consumers of this generator will not reference it.
-         Set GeneratePathProperty=true so we can reference the binaries via the PKGXXXX property -->
-    <PackageReference Include="CsvHelper" PrivateAssets="all" GeneratePathProperty="true" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" PrivateAssets="all" GeneratePathProperty="true" />
-    <PackageReference Include="Microsoft.Bcl.HashCode" PrivateAssets="all" GeneratePathProperty="true" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" PrivateAssets="all" GeneratePathProperty="true" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" PrivateAssets="all" GeneratePathProperty="true" />
-    <PackageReference Include="System.Memory" GeneratePathProperty="true" />
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" GeneratePathProperty="true" />
-    <PackageReference Include="System.Buffers" GeneratePathProperty="true" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" GeneratePathProperty="true" />
-
-    <!-- Package the generator in the analyzer directory of the nuget package -->
-    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(OutputPath)\Opc.Ua.SourceGeneration.Core.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-
-    <None Include="$(PkgOPCFoundation_NetStandard_Opc_Ua_Types)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(PkgCsvHelper)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(PkgSystem_Memory)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(PkgSystem_Diagnostics_DiagnosticSource)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(PkgSystem_Buffers)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(PkgSystem_Runtime_CompilerServices_Unsafe)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(PkgMicrosoft_Bcl_AsyncInterfaces)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(PkgMicrosoft_Bcl_HashCode)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(PkgMicrosoft_Extensions_Logging_Abstractions)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(PkgMicrosoft_Extensions_DependencyInjection_Abstractions)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <ProjectReference Include="..\Opc.Ua.SourceGeneration.Core\Opc.Ua.SourceGeneration.Core.csproj">
+      <PrivateAssets>all</PrivateAssets>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="OPCFoundation.Opc.Ua.SourceGeneration.Stack.props" Visible="false" Pack="true" PackagePath="build" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Opc.Ua.SourceGeneration\SourceGeneratorTelemetry.cs" />
+    <Compile Include="..\Opc.Ua.SourceGeneration\CompilationOptions.cs" />
+    <Compile Include="..\Opc.Ua.SourceGeneration\Extensions.cs" />
   </ItemGroup>
 </Project>

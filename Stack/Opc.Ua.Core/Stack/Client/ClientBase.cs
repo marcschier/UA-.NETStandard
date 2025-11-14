@@ -157,6 +157,7 @@ namespace Opc.Ua
         /// Note: deprecated, only to fulfill a few references
         /// in the generated code.
         /// </summary>
+        [Obsolete("Use ITransportChannel instead.")]
         internal IChannelBase? InnerChannel
         {
             get

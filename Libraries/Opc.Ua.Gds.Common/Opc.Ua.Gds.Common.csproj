@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>$(AssemblyPrefix).Gds.Common</AssemblyName>
+    <TargetFrameworks>$(LibTargetFrameworks)</TargetFrameworks>
+    <PackageId>$(PackagePrefix).Opc.Ua.Gds.Common</PackageId>
+    <RootNamespace>Opc.Ua.Gds</RootNamespace>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <Description>OPC UA GDS Class Library</Description>
+    <IsPackable>true</IsPackable>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageLicenseFile></PackageLicenseFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Opc.Ua.Gds.Tests" />
+  </ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <PackageId>$(PackageId).Debug</PackageId>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Stack\Opc.Ua.Core\Opc.Ua.Core.csproj" />
+  </ItemGroup>
+</Project>

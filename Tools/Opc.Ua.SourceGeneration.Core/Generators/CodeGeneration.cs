@@ -46,7 +46,9 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Returns the default value for a field.
         /// </summary>
-        /// <exception cref="ArgumentNullException"><paramref name="validator"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="validator"/> is <c>null</c>.
+        /// </exception>
         public static string GetDotNetDefaultValue(
             this TypeDictionaryValidator validator,
             FieldType fieldType)

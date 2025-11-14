@@ -19,14 +19,6 @@
     <PackageId>$(PackageId).Debug</PackageId>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="Schema\Opc.Ua.NodeSet2.xml.zip" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Stack\Generated\Opc.Ua.PredefinedNodes.uanodes" />
-    <EmbeddedResource Include="Types\Utils\LocalizedData.txt" />
-    <EmbeddedResource Include="Schema\ServerCapabilities.csv" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="Microsoft.Extensions.Logging" />
   </ItemGroup>
@@ -36,6 +28,34 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\Opc.Ua.Security.Certificates\Opc.Ua.Security.Certificates.csproj" />
     <ProjectReference Include="..\Opc.Ua.Types\Opc.Ua.Types.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Schema\Opc.Ua.NodeSet2.xml.zip" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Design\*" />
+    <Compile Remove="Stack\Generated\Opc.Ua.Channels.cs" />
+    <Compile Remove="Stack\Generated\Opc.Ua.Classes.cs" />
+    <Compile Remove="Stack\Generated\Opc.Ua.Client.cs" />
+    <Compile Remove="Stack\Generated\Opc.Ua.Constants.cs" />
+    <Compile Remove="Stack\Generated\Opc.Ua.DataTypes.cs" />
+    <Compile Remove="Stack\Generated\Opc.Ua.Endpoints.cs" />
+    <Compile Remove="Stack\Generated\Opc.Ua.Gds.Constants.cs" />
+    <Compile Remove="Stack\Generated\Opc.Ua.Gds.DataTypes.cs" />
+    <Compile Remove="Stack\Generated\Opc.Ua.Interfaces.cs" />
+    <Compile Remove="Stack\Generated\Opc.Ua.Messages.cs" />
+    <Compile Remove="Stack\Generated\Opc.Ua.ServerBase.cs" />
+    <Compile Remove="Types\Generated\Opc.Ua.Attributes.cs" />
+    <Compile Remove="Types\Generated\Opc.Ua.StatusCodes.cs" />
+    <EmbeddedResource Include="Stack\Generated\Opc.Ua.PredefinedNodes.uanodes" />
+    <EmbeddedResource Include="Types\Utils\LocalizedData.txt" />
+  </ItemGroup>
+  <!-- Stack source generation -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\Tools\Opc.Ua.SourceGeneration.Stack\Opc.Ua.SourceGeneration.Stack.csproj">
+	  <OutputItemType>Analyzer</OutputItemType>
+	  <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+	</ProjectReference>
   </ItemGroup>
   <Target Name="GetPackagingOutputs" />
   <!-- Produces a zipped version of the Nodeset 2 to reduce assembly size! -->
@@ -49,6 +69,9 @@
   <!-- Embed the zipped Nodeset2 file -->
   <ItemGroup>
     <EmbeddedResource Include="$(ZipNodeSet2XML)" Link="$(NodeSet2XML).zip" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Types\Generated\" />
   </ItemGroup>
   <!-- Zip the NodeSet2 file -->
   <Target Name="ZipNodeSet2" BeforeTargets="PrepareForBuild" Inputs="$(NodeSet2XML)" Outputs="$(ZipNodeSet2XML)">

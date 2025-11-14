@@ -77,32 +77,4 @@ namespace Opc.Ua
             };
         }
     }
-
-    /// <summary>
-    /// A channel object used by clients to access a UA registration service.
-    /// </summary>
-    [Obsolete("Use RegistrationClient.CreateAsync instead to create a registrations client.")]
-    public partial class RegistrationChannel
-    {
-        /// <summary>
-        /// Creates a new transport channel that supports registration
-        /// </summary>
-        [Obsolete("Use ClientChannelFactory.CreateChannelAsync instead.")]
-        public static ITransportChannel Create(
-            ApplicationConfiguration configuration,
-            EndpointDescription description,
-            EndpointConfiguration endpointConfiguration,
-            X509Certificate2 clientCertificate,
-            IServiceMessageContext messageContext)
-        {
-            return ClientChannelManager.CreateUaBinaryChannelAsync(
-                configuration,
-                description,
-                endpointConfiguration,
-                clientCertificate,
-                null,
-                messageContext,
-                null).AsTask().GetAwaiter().GetResult();
-        }
-    }
 }

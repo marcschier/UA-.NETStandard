@@ -481,7 +481,7 @@ namespace Opc.Ua.Client.Tests
                     ShouldListenTo = (source) => source.Name == expectedName,
 
                     // Sample all data and recorded activities
-                    Sample = (ref  _) => ActivitySamplingResult.AllDataAndRecorded,
+                    Sample = (ref _) => ActivitySamplingResult.AllDataAndRecorded,
                     ActivityStarted = activity =>
                         m_logger.LogInformation(
                             "Client Started: {OperationName,-15} - TraceId: {TraceId,-32} SpanId: {SpanId,-16}",

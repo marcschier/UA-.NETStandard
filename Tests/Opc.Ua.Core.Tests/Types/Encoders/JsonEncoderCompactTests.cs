@@ -29,6 +29,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using BenchmarkDotNet.Attributes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

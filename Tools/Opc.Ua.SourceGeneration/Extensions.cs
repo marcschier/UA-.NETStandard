@@ -72,7 +72,7 @@ namespace Opc.Ua.SourceGeneration
         {
             string prefix = buildProperty ? "build_property" : "build_metadata.AdditionalFiles";
             if (options.TryGetValue(
-                $"{prefix}.{ModelSourceGenerator.Name}{propertyName}".ToLowerInvariant(),
+                $"{prefix}.{SourceGenerator.Name}{propertyName}".ToLowerInvariant(),
                 out string value))
             {
                 return converter(value);

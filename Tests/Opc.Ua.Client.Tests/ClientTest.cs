@@ -277,9 +277,7 @@ namespace Opc.Ua.Client.Tests
                 await client.GetEndpointsAsync(null).ConfigureAwait(false);
             Assert.NotNull(endpoints);
 
-            // cast Innerchannel to ISessionChannel
             ITransportChannel channel = client.TransportChannel;
-
             var sessionClient = new SessionClient(channel, telemetry)
             {
                 ReturnDiagnostics = DiagnosticsMasks.SymbolicIdAndText

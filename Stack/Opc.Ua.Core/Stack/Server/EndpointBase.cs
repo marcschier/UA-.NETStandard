@@ -1042,7 +1042,7 @@ namespace Opc.Ua
                         else
                         {
                             // call the service even when there is no trace information
-                            m_response = await m_service.InvokeAsync(Request,SecureChannelContext, cancellationToken)
+                            m_response = await m_service.InvokeAsync(Request, SecureChannelContext, cancellationToken)
                                 .ConfigureAwait(false);
                         }
                     }

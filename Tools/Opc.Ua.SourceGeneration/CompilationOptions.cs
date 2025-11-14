@@ -46,7 +46,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         /// <param name="c"></param>
         /// <returns></returns>
-        internal static object From(Compilation c)
+        internal static CompilationOptions From(Compilation c)
         {
             return new CompilationOptions(
                 c is CSharpCompilation cs ? cs.LanguageVersion : LanguageVersion.CSharp1,

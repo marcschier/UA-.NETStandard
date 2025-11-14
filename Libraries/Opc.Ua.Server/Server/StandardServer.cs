@@ -341,9 +341,7 @@ namespace Opc.Ua.Server
             CancellationToken ct)
         {
             NodeId sessionId = 0;
-            NodeId authenticationToken = null;
             double revisedSessionTimeout = 0;
-            byte[] serverNonce = null;
             byte[] serverCertificate = null;
             EndpointDescriptionCollection serverEndpoints = null;
             SignedSoftwareCertificateCollection serverSoftwareCertificates = null;
@@ -463,8 +461,8 @@ namespace Opc.Ua.Server
 
                 session = result.Session;
                 sessionId = result.SessionId;
-                authenticationToken = result.AuthenticationToken;
-                serverNonce = result.ServerNonce;
+                NodeId authenticationToken = result.AuthenticationToken;
+                byte[] serverNonce = result.ServerNonce;
                 revisedSessionTimeout = result.RevisedSessionTimeout;
 
                 if (endpointUrl != null)
@@ -719,7 +717,6 @@ namespace Opc.Ua.Server
             SignatureData userTokenSignature,
             CancellationToken ct)
         {
-            byte[] serverNonce = null;
             StatusCodeCollection results = null;
             DiagnosticInfoCollection diagnosticInfos = null;
 
@@ -787,6 +784,7 @@ namespace Opc.Ua.Server
                 // check if certificates meet the server's requirements.
                 ValidateSoftwareCertificates(softwareCertificates);
 
+                byte[] serverNonce;
                 // activate the session.
                 (bool identityChanged, serverNonce) = await ServerInternal.SessionManager.ActivateSessionAsync(
                         context,
@@ -2300,7 +2298,7 @@ namespace Opc.Ua.Server
             CallMethodRequestCollection methodsToCall,
             CancellationToken ct)
         {
-            OperationContext context = ValidateRequest(secureChannelContext,requestHeader, RequestType.Call);
+            OperationContext context = ValidateRequest(secureChannelContext, requestHeader, RequestType.Call);
 
             try
             {
@@ -2745,8 +2743,8 @@ namespace Opc.Ua.Server
         /// <summary>
         /// Verifies that the request header is valid.
         /// </summary>
-        /// <param name="requestHeader">The request header.</param>
         /// <param name="secureChannelContext">The secure channel context.</param>
+        /// <param name="requestHeader">The request header.</param>
         /// <param name="requestType">Type of the request.</param>
         /// <exception cref="ServiceResultException"></exception>
         protected virtual OperationContext ValidateRequest(
@@ -3098,14 +3096,6 @@ namespace Opc.Ua.Server
         public override ServiceHost CreateServiceHost(ServerBase server, params Uri[] addresses)
         {
             return new ServiceHost(this, typeof(SessionEndpoint), addresses);
-        }
-
-        /// <summary>
-        /// Returns the service contract to use.
-        /// </summary>
-        protected override Type GetServiceContract()
-        {
-            return typeof(ISessionEndpoint);
         }
 
         /// <summary>

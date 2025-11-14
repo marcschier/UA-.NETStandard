@@ -138,7 +138,7 @@ namespace Opc.Ua.Client.ComplexTypes
         internal void Validate(
             byte[] dictionary,
             ILogger logger,
-            IDictionary<string, byte[]> imports = null,
+            IReadOnlyDictionary<string, byte[]> imports = null,
             bool throwOnError = false)
         {
             var istrm = new MemoryStream(dictionary);

@@ -29,89 +29,61 @@
 
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
+using IncrementalGeneratorAttribute = SGF.IncrementalGeneratorAttribute;
+using IncrementalGeneratorInitializationContext = SGF.SgfInitializationContext;
+using IIncrementalGenerator = SGF.IncrementalGenerator;
 
 namespace Opc.Ua.SourceGeneration
 {
     /// <summary>
     /// Generates server and client models using the model generator library
     /// </summary>
-    [Generator]
+    [IncrementalGenerator]
     public class ModelSourceGenerator : IIncrementalGenerator
     {
-        internal const string Name = "ModelCompiler";
+        /// <inheritdoc/>
+        public ModelSourceGenerator()
+            : base(SourceGenerator.Name)
+        {
+        }
 
-#pragma warning disable RS1007 // Provide localizable arguments to diagnostic descriptor constructor
-        internal static readonly DiagnosticDescriptor GenericError = new(
-            id: "MODELGEN001",
-            title: "Error",
-            messageFormat: "Error during model generation '{0}'",
-            category: Name,
-            DiagnosticSeverity.Error,
-            isEnabledByDefault: true,
-            helpLinkUri: "www.opcfoundation.org",
-            customTags: ["opcua"]);
-#pragma warning restore RS1007 // Provide localizable arguments to diagnostic descriptor constructor
-
-#pragma warning disable RS1007 // Provide localizable arguments to diagnostic descriptor constructor
-        internal static readonly DiagnosticDescriptor GenericWarning = new(
-            id: "MODELGEN002",
-            title: "Warning",
-            messageFormat: "Warning during model generation '{0}'",
-            category: Name,
-            DiagnosticSeverity.Warning,
-            isEnabledByDefault: true,
-            helpLinkUri: "www.opcfoundation.org",
-            customTags: ["opcua"]);
-#pragma warning restore RS1007 // Provide localizable arguments to diagnostic descriptor constructor
-
-#pragma warning disable RS1007 // Provide localizable arguments to diagnostic descriptor constructor
-        internal static readonly DiagnosticDescriptor Exception = new(
-            id: "MODELGEN003",
-            title: "Exception",
-            messageFormat: "Exception during model generation '{0}': {1}",
-            category: Name,
-            DiagnosticSeverity.Error,
-            isEnabledByDefault: true,
-            helpLinkUri: "www.opcfoundation.org",
-            customTags: ["opcua"]);
-#pragma warning restore RS1007 // Provide localizable arguments to diagnostic descriptor constructor
-
-        /// <summary>
-        /// Initialize the generator
-        /// </summary>
-        /// <param name="context"></param>
-        public void Initialize(IncrementalGeneratorInitializationContext context)
+        /// <inheritdoc/>
+        public override void OnInitialize(IncrementalGeneratorInitializationContext context)
         {
 #if DEBUGX
-            if (!System.Diagnostics.Debugger.IsAttached)
-            {
-                System.Diagnostics.Debugger.Launch();
-            }
+            AttachDebugger();
 #endif
-            IncrementalValueProvider<ImmutableArray<(AdditionalText Left, NodesetOptions)>> inputFiles = context.AdditionalTextsProvider
-                .Where(f => f.IsDesignOrNodeset2File())
-                .Combine(context.AnalyzerConfigOptionsProvider)
-                .Select((pair, _) => (
-                    pair.Left,
-                    NodesetOptions.From(pair.Right.GetOptions(pair.Left))))
-                .Collect();
-            IncrementalValueProvider<ImmutableArray<AdditionalText>> identiferFile = context.AdditionalTextsProvider
-                .Where(f => f.IsIdentifierFile())
-                .Collect();
-            IncrementalValueProvider<ModelCompilationOptions> options = context.AnalyzerConfigOptionsProvider
-                .Select((p, _) => ModelCompilationOptions.FromProvider(p));
-            IncrementalValueProvider<object> settings = context.CompilationProvider
-                .Select((c, _) => CompilationOptions.From(c));
+            IncrementalValueProvider<ImmutableArray<(AdditionalText Left, NodesetOptions)>> inputFiles =
+                context.AdditionalTextsProvider
+                    .Where(f => f.IsDesignOrNodeset2File())
+                    .Combine(context.AnalyzerConfigOptionsProvider)
+                    .Select((pair, _) => (
+                        pair.Left,
+                        NodesetOptions.From(pair.Right.GetOptions(pair.Left))))
+                    .Collect();
+            IncrementalValueProvider<ImmutableArray<AdditionalText>> identiferFile =
+                context.AdditionalTextsProvider
+                    .Where(f => f.IsIdentifierFile())
+                    .Collect();
+            IncrementalValueProvider<ModelCompilationOptions> options =
+                context.AnalyzerConfigOptionsProvider
+                    .Select((p, _) => ModelCompilationOptions.FromProvider(p));
+            IncrementalValueProvider<CompilationOptions> settings =
+                context.CompilationProvider
+                    .Select((c, _) => CompilationOptions.From(c));
 
             context.RegisterImplementationSourceOutput(
                 inputFiles
                     .Combine(identiferFile)
-                    .Combine(options),
+                    .Combine(options)
+                    .Combine(settings),
                 (context, combination) => new ModelCompilation(
                     context,
-                    combination.Left.Left,
+                    combination.Left.Left.Left,
+                    combination.Left.Left.Right,
                     combination.Left.Right,
-                    combination.Right).RunAsync().GetAwaiter().GetResult());
+                    combination.Right,
+                    Logger).Run());
         }
     }
 }

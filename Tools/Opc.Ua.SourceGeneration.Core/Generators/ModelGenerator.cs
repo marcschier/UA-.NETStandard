@@ -27,18 +27,16 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using Opc.Ua.Export;
-using Opc.Ua.Schema.Model;
-using Opc.Ua.Types;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
+using Opc.Ua.Export;
+using Opc.Ua.Schema.Model;
+using Opc.Ua.Types;
 
 namespace Opc.Ua.SourceGeneration
 {
@@ -57,27 +55,10 @@ namespace Opc.Ua.SourceGeneration
             m_fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
         }
 
-        private readonly IServiceMessageContext m_context;
-        private readonly ITelemetryContext m_telemetry;
-        private ModelCompilerValidator m_validator;
-        private ModelDesign m_model;
-        private IReadOnlyList<string> m_exclusions;
-        private readonly IFileSystem m_fileSystem;
-
         /// <summary>
         /// Whether the XML version of the initialization strings.
         /// </summary>
         public bool UseXmlInitializers { get; private set; }
-
-        /// <summary>
-        /// Whether to include the display names.
-        /// </summary>
-        public bool IncludeDisplayNames { get; private set; }
-
-        /// <summary>
-        /// Subscribe to log messages.
-        /// </summary>
-        public event Func<LogMessageEventArgs, Task> LogMessage;
 
         /// <summary>
         /// Available nodesets
@@ -91,56 +72,43 @@ namespace Opc.Ua.SourceGeneration
             IReadOnlyList<string> designFilePaths,
             string identifierFilePath,
             uint startId,
-            string specificationVersion,
             bool useAllowSubtypes,
             IReadOnlyList<string> exclusions,
             string modelVersion,
             string modelPublicationDate,
             bool releaseCandidate,
-            bool extractIdentifiers)
+            bool extractIdentifiers,
+            bool useXmlInitializers = false)
         {
-            m_validator = new ModelCompilerValidator(startId, exclusions, m_fileSystem, m_telemetry);
-            m_validator.LogMessage += LogMessage;
+            UseXmlInitializers = useXmlInitializers;
+            m_exclusions = exclusions;
 
-            m_validator.EmbeddedCsvPath = "ModelCompiler.CSVs";
-            m_validator.EmbeddedModelPath = "TemplateStrings.ModelCompiler.Design.v104";
-            m_validator.EmbeddedResourceAssembly = Assembly.GetExecutingAssembly();
-
-            if (!string.IsNullOrEmpty(specificationVersion))
+            m_validator = new ModelDesignValidator(
+                m_fileSystem,
+                startId,
+                exclusions,
+                m_telemetry,
+                SpecificationVersion.V105)
             {
-                m_validator.EmbeddedModelPath = $"ModelCompiler.Design.{specificationVersion}";
+                UseAllowSubtypes = useAllowSubtypes,
+                ReleaseCandidate = releaseCandidate,
+                ModelVersion = modelVersion,
+                ModelPublicationDate = modelPublicationDate
+            };
 
-                if (specificationVersion == "v103")
-                {
-                    m_validator.EmbeddedCsvPath = "ModelCompiler.Design";
-                }
-            }
-
-            m_validator.UseAllowSubtypes = useAllowSubtypes;
-            m_validator.ReleaseCandidate = releaseCandidate;
-            m_validator.ModelVersion = modelVersion;
-            m_validator.ModelPublicationDate = modelPublicationDate;
             m_validator.Validate(designFilePaths, identifierFilePath, false);
             m_model = m_validator.Dictionary;
         }
 
         /// <summary>
-        /// Generates a single file containing all of the classes.
+        /// Generates all files
         /// </summary>
-        public virtual async Task GenerateMultipleFilesAsync(
-            string filePath,
-            bool useXmlInitializers,
-            IReadOnlyList<string> excludedCategories,
-            bool includeDisplayNames,
-            bool minimal = false)
+        public void GenerateFiles(string filePath, IReadOnlyList<string> excludedCategories)
         {
-            UseXmlInitializers = useXmlInitializers;
             m_exclusions = excludedCategories;
-            IncludeDisplayNames = includeDisplayNames;
 
             // write type and object definitions.
             List<NodeDesign> nodes = GetNodeList();
-
             if (nodes.Count == 0)
             {
                 return;
@@ -151,49 +119,57 @@ namespace Opc.Ua.SourceGeneration
             WriteTemplate_NonDataTypesSingleFile(filePath, nodes);
             WriteTemplate_XmlSchema(filePath, nodes);
             WriteTemplate_BinarySchema(filePath, nodes);
-
-            await WriteTemplate_XmlExport(filePath, minimal).ConfigureAwait(false);
+            WriteTemplate_XmlExport(filePath);
         }
 
-        private static void IndexDocumentation(SystemContext context, IEnumerable<NodeState> source, Dictionary<NodeId, NodeState> map)
+        private static void IndexDocumentation(
+            SystemContext context,
+            IEnumerable<NodeState> source,
+            Dictionary<NodeId, NodeState> map)
         {
-            foreach (NodeState ii in source)
+            foreach (NodeState node in source)
             {
-                if (!NodeId.IsNull(ii.NodeId))
+                if (!NodeId.IsNull(node.NodeId))
                 {
-                    if (!string.IsNullOrEmpty(ii.NodeSetDocumentation) || ii.Categories?.Count > 0)
+                    if (!string.IsNullOrEmpty(node.NodeSetDocumentation) ||
+                        node.Categories?.Count > 0)
                     {
-                        map[ii.NodeId] = ii;
+                        map[node.NodeId] = node;
                     }
                 }
 
                 List<BaseInstanceState> children = [];
-                ii.GetChildren(context, children);
+                node.GetChildren(context, children);
                 IndexDocumentation(context, children, map);
             }
         }
 
-        private static void UpdateDocumentation(SystemContext context, Dictionary<NodeId, NodeState> original, IEnumerable<NodeState> updated)
+        private static void UpdateDocumentation(
+            SystemContext context,
+            Dictionary<NodeId, NodeState> original,
+            IEnumerable<NodeState> updated)
         {
-            foreach (NodeState ii in updated)
+            foreach (NodeState node in updated)
             {
-                if (original.TryGetValue(ii.NodeId, out NodeState existingNode))
+                if (original.TryGetValue(node.NodeId, out NodeState existingNode))
                 {
-                    ii.NodeSetDocumentation =
+                    node.NodeSetDocumentation =
                             !string.IsNullOrWhiteSpace(existingNode.NodeSetDocumentation)
                             ? existingNode.NodeSetDocumentation
                             : null;
-
-                    ii.Categories = existingNode.Categories;
+                    node.Categories = existingNode.Categories;
                 }
 
                 List<BaseInstanceState> children = [];
-                ii.GetChildren(context, children);
+                node.GetChildren(context, children);
                 UpdateDocumentation(context, original, children);
             }
         }
 
-        private static ushort CollectNodes(SystemContext context, Dictionary<NodeId, NodeState> index, NodeState node)
+        private static ushort CollectNodes(
+            SystemContext context,
+            Dictionary<NodeId, NodeState> index,
+            NodeState node)
         {
             index[node.NodeId] = node;
 
@@ -208,7 +184,9 @@ namespace Opc.Ua.SourceGeneration
             return node.NodeId.NamespaceIndex;
         }
 
-        private static void RemoveChildrenWithNoNodeId(SystemContext context, NodeState parent)
+        private static void RemoveChildrenWithNoNodeId(
+            SystemContext context,
+            NodeState parent)
         {
             List<BaseInstanceState> children = [];
             parent.GetChildren(context, children);
@@ -227,28 +205,12 @@ namespace Opc.Ua.SourceGeneration
         }
 
         /// <summary>
-        /// Generate initialization file in xml format
-        /// </summary>
-        private void GeneratePredefinedNodesXml(string filePath, SystemContext context, NodeStateCollection collection)
-        {
-            string outputFile = Path.Combine(filePath, m_model.TargetNamespaceInfo.Prefix + ".PredefinedNodes.xml");
-
-            using (Stream ostrm = m_fileSystem.OpenWrite(outputFile))
-            {
-                collection.SaveAsXml(context, ostrm);
-            }
-
-            // load from xml.
-            NodeStateCollection collection2 = [];
-
-            using Stream istrm = m_fileSystem.OpenRead(outputFile);
-            collection2.LoadFromXml(context, istrm, true);
-        }
-
-        /// <summary>
         /// Generate initialization file as source code
         /// </summary>
-        private void GeneratePredefinedNodesSource(string filePath, SystemContext context, NodeStateCollection collection)
+        private void GeneratePredefinedNodesSource(
+            string filePath,
+            SystemContext context,
+            NodeStateCollection collection)
         {
             // save as base64 string.
             string initializationString;
@@ -268,72 +230,45 @@ namespace Opc.Ua.SourceGeneration
                 initializationString = Encoding.UTF8.GetString(ostrm.ToArray());
             }
 
-            TextWriter writer = m_fileSystem.CreateTextWriter(
-                Path.Combine(filePath, m_model.TargetNamespaceInfo.Prefix + ".PredefinedNodes.cs"));
+            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
+                filePath,
+                m_model.TargetNamespaceInfo.Prefix + ".PredefinedNodes.g.cs"));
+            var template = new Template(writer, CodeTemplateStrings.PredefinedNodesFile_cs);
 
-            try
+            template.AddTemplate(
+                Tokens.ListOfImports,
+                null,
+                m_model.Namespaces,
+                LoadTemplate_NamespaceImports,
+                null);
+
+            template.AddReplacement(Tokens.Namespace,
+                m_model.Namespaces.GetNamespacePrefix(m_model.TargetNamespace));
+            template.AddReplacement(Tokens.Encoding,
+                UseXmlInitializers ? "Xml" : "Binary");
+            template.AddReplacement(Tokens.Decode,
+                UseXmlInitializers ? "Encoding.UTF8.GetBytes" : "Convert.FromBase64String");
+
+            template.AddTemplate(
+                Tokens.InitializationString,
+                null,
+                new object[] { initializationString },
+                LoadTemplate_InitializationString,
+                null);
+            string LoadTemplate_InitializationString(Template template, Context context)
             {
-                var template = new Template(
-                    writer,
-                    TemplateStrings.ModelCompiler_Templates_Version2_PredefinedNodesFile_cs);
-
-                template.AddTemplate(
-                    "// ListOfImports",
-                    null,
-                    m_model.Namespaces,
-                    new LoadTemplateEventHandler(LoadTemplate_NamespaceImports),
-                    null);
-
-                template.AddReplacement("_Namespace_",
-                    m_model.Namespaces.GetNamespacePrefix(m_model.TargetNamespace));
-                template.AddReplacement("_Encoding_",
-                    UseXmlInitializers ? "Xml" : "Binary");
-                template.AddReplacement("_Decode_",
-                    UseXmlInitializers ? "Encoding.UTF8.GetBytes" : "Convert.FromBase64String");
-
-                template.AddTemplate(
-                    "// InitializationString",
-                    null,
-                    new object[] { initializationString },
-                    new LoadTemplateEventHandler(LoadTemplate_InitializationString),
-                    null);
-                string LoadTemplate_InitializationString(Template template, Context context)
-                {
-                    WriteInitializationString(template, context, context.Target as string);
-                    return null;
-                }
-
-                var templateContext = new Context();
-                template.WriteTemplate(templateContext);
-            }
-            finally
-            {
-                writer.Close();
-            }
-        }
-
-        /// <summary>
-        /// Generate nodeset xml file
-        /// </summary>
-        private void GenerateNodesetXml(string filePath, SystemContext context, NodeStateCollection collection)
-        {
-            // save as nodeset.
-            string outputFile = Path.Combine(filePath, m_model.TargetNamespaceInfo.Prefix + ".NodeSet.xml");
-
-            using (Stream ostrm = m_fileSystem.OpenWrite(outputFile))
-            {
-                collection.SaveAsNodeSet(context, ostrm);
+                WriteInitializationString(template, context, context.Target as string);
+                return null;
             }
 
-            // load as node set.
-            using Stream istrm = m_fileSystem.OpenRead(outputFile);
-            var nodeSet = NodeSet.Read(istrm);
+            var templateContext = new Context();
+            template.WriteTemplate(templateContext);
         }
 
         /// <summary>
         /// Writes the schema information to a static XML export file.
         /// </summary>
-        private Task WriteTemplate_XmlExport(string filePath, bool minimal)
+        private void WriteTemplate_XmlExport(string filePath)
         {
             var context = new SystemContext(m_telemetry)
             {
@@ -357,12 +292,15 @@ namespace Opc.Ua.SourceGeneration
 
                 bool isInAddressSpace = !m_model.Items[ii].NotInAddressSpace;
 
-                if (m_model.Items[ii] is InstanceDesign design2 && design2.TypeDefinition != null && design2.TypeDefinition.Name == "DataTypeEncodingType")
+                if (m_model.Items[ii] is InstanceDesign design2 &&
+                    design2.TypeDefinition != null &&
+                    design2.TypeDefinition.Name == "DataTypeEncodingType")
                 {
                     isInAddressSpace = design2.Parent == null || !design2.Parent.NotInAddressSpace;
                 }
 
-                if (m_model.Items[ii] is MethodDesign design3 && design3.SymbolicName.Name.EndsWith("MethodType", StringComparison.Ordinal))
+                if (m_model.Items[ii] is MethodDesign design3 &&
+                    design3.SymbolicName.Name.EndsWith("MethodType", StringComparison.Ordinal))
                 {
                     continue;
                 }
@@ -440,7 +378,10 @@ namespace Opc.Ua.SourceGeneration
                             {
                                 if (m_fileSystem.Exists(file))
                                 {
-                                    variable.Value = File.ReadAllBytes(file);
+                                    using Stream stream = m_fileSystem.OpenRead(file);
+                                    using var ms = new MemoryStream();
+                                    stream.CopyTo(ms);
+                                    variable.Value = ms.ToArray();
                                 }
                                 else
                                 {
@@ -479,28 +420,24 @@ namespace Opc.Ua.SourceGeneration
                     namespaceIndex = CollectNodes(context, index, ii);
                 }
 
-                foreach (NodeDocumentationRow row in NodeDocumentationReader.Load(documentationFile))
+                var reader = new NodeDocumentationReader(m_fileSystem);
+                foreach (NodeDocumentationRow row in reader.Load(documentationFile))
                 {
                     var nodeId = new NodeId(row.Id, namespaceIndex);
 
                     if (index.TryGetValue(nodeId, out NodeState target))
                     {
-                        target.NodeSetDocumentation = !string.IsNullOrEmpty(row.Link) ? row.Link : null;
+                        target.NodeSetDocumentation =
+                            !string.IsNullOrEmpty(row.Link) ? row.Link : null;
                         target.Categories = [.. row.ConformanceUnits];
                     }
                 }
             }
 
-            if (!minimal)
-            {
-                // save the xml.
-                GeneratePredefinedNodesXml(filePath, context, collection);
-
-                GenerateNodesetXml(filePath, context, collection);
-            }
-
             // save as nodeset.
-            string originalFile = Path.Combine(filePath, m_model.TargetNamespaceInfo.Prefix + ".NodeSet2.xml");
+            string originalFile = Path.Combine(
+                filePath,
+                m_model.TargetNamespaceInfo.Prefix + ".NodeSet2.xml");
             if (m_model.TargetNamespace == Namespaces.OpcUa)
             {
                 originalFile = CoreUtils.Format("{0}{1}{2}.NodeSet2.Services.xml",
@@ -539,71 +476,78 @@ namespace Opc.Ua.SourceGeneration
                 }
             }
 
-            // Generate predefined nodes as source code (.cs)
-            GeneratePredefinedNodesSource(filePath, context, collection);
+            // Generate nodeset2.xml files as source code (.g.cs)
+            var nodesetGenerator = new Nodeset2Generator(
+                m_model,
+                [.. m_validator.Nodes],
+                m_fileSystem,
+                m_telemetry);
+            nodesetGenerator.GenerateNodeset2Xml(
+                filePath,
+                context,
+                collection,
+                collectionWithServices);
 
-            return Task.CompletedTask;
+            // Generate predefined nodes as source code (.g.cs)
+            GeneratePredefinedNodesSource(filePath, context, collection);
         }
 
         private void WriteTemplate_XmlSchema(string filePath, List<NodeDesign> nodes)
         {
-            TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(filePath, m_model.TargetNamespaceInfo.Prefix + ".Types.xsd"));
+            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
+                filePath,
+                m_model.TargetNamespaceInfo.Prefix + ".Types.xsd"));
             WriteTemplate_XmlSchema(writer, nodes);
         }
 
         private void WriteTemplate_XmlSchema(TextWriter writer, List<NodeDesign> nodes)
         {
-            try
+            var template = new Template(writer, SchemaTemplateStrings.XmlSchema_File_xml);
+
+            if (!string.IsNullOrEmpty(m_model.TargetNamespaceInfo.XmlNamespace))
             {
-                var template = new Template(writer, TemplateStrings.ModelCompiler_Templates_XmlSchema_File_xml);
-
-                if (!string.IsNullOrEmpty(m_model.TargetNamespaceInfo.XmlNamespace))
-                {
-                    template.AddReplacement("_Namespace_", m_model.TargetNamespaceInfo.XmlNamespace);
-                }
-                else
-                {
-                    template.AddReplacement("_Namespace_", m_model.TargetNamespaceInfo.Value);
-                }
-
-                template.AddReplacement(
-                    "<tns:Model />",
-                    $"<ua:Model ModelUri=\"{m_model.TargetNamespaceInfo.Value}\" Version=\"{m_model.TargetVersion}\" PublicationDate=\"{XmlConvert.ToString(m_model.TargetPublicationDate, XmlDateTimeSerializationMode.Utc)}\" />");
-
-                template.AddTemplate(
-                    "xmlns:s0=\"ListOfNamespaces\"",
-                    null,
-                    m_model.Namespaces,
-                    new LoadTemplateEventHandler(LoadTemplate_XmlNamespaceImports),
-                    null);
-
-                template.AddTemplate(
-                    "<!-- Imports -->",
-                    null,
-                    m_model.Namespaces,
-                    new LoadTemplateEventHandler(LoadTemplate_XmlNamespaceImports),
-                    null);
-
-                template.AddTemplate(
-                    "<!-- BuiltInTypes -->",
-                    TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_BuiltInTypes_xsd,
-                    new ModelDesign[] { m_model },
-                    new LoadTemplateEventHandler(LoadTemplate_XmlType),
-                    new WriteTemplateEventHandler(WriteTemplate_XmlType));
-
-                template.AddTemplate(
-                    "<!-- ListOfTypes -->",
-                    null,
-                    nodes,
-                    new LoadTemplateEventHandler(LoadTemplate_XmlType),
-                    new WriteTemplateEventHandler(WriteTemplate_XmlType));
-
-                template.WriteTemplate(null);
+                template.AddReplacement(Tokens.Namespace, m_model.TargetNamespaceInfo.XmlNamespace);
             }
-            finally
+            else
             {
-                writer.Close();
+                template.AddReplacement(Tokens.Namespace, m_model.TargetNamespaceInfo.Value);
             }
+
+            template.AddReplacement(Tokens.TargetVersion, m_model.TargetVersion);
+            template.AddReplacement(Tokens.ModelUri, m_model.TargetNamespaceInfo.Value);
+            template.AddReplacement(Tokens.TargetPublicationDate, XmlConvert.ToString(
+                m_model.TargetPublicationDate,
+                XmlDateTimeSerializationMode.Utc));
+
+            template.AddTemplate(
+                Tokens.XmlnsS0ListOfNamespaces,
+                null,
+                m_model.Namespaces,
+                LoadTemplate_XmlNamespaceImports,
+                null);
+
+            template.AddTemplate(
+                Tokens.Imports,
+                null,
+                m_model.Namespaces,
+                LoadTemplate_XmlNamespaceImports,
+                null);
+
+            template.AddTemplate(
+                Tokens.BuiltInTypes,
+                SchemaTemplateStrings.Stack_XmlSchema_BuiltInTypes_xsd,
+                new ModelDesign[] { m_model },
+                LoadTemplate_XmlType,
+                WriteTemplate_XmlType);
+
+            template.AddTemplate(
+                Tokens.ListOfTypes,
+                null,
+                nodes,
+                LoadTemplate_XmlType,
+                WriteTemplate_XmlType);
+
+            template.WriteTemplate(null);
         }
 
         private string LoadTemplate_XmlNamespaceImports(Template template, Context context)
@@ -639,7 +583,7 @@ namespace Opc.Ua.SourceGeneration
             }
 
             template.WriteNextLine(context.Prefix);
-            template.Write("<xs:import namespace=\"{0}\" />", uri);
+            template.Write("""<xs:import namespace="{0}" />""", uri);
 
             return null;
         }
@@ -688,28 +632,28 @@ namespace Opc.Ua.SourceGeneration
 
                 if (baseType?.SymbolicId == new XmlQualifiedName("OptionSet", Namespaces.OpcUa))
                 {
-                    return TemplateStrings.ModelCompiler_Templates_XmlSchema_DerivedType_xml;
+                    return SchemaTemplateStrings.XmlSchema_DerivedType_xml;
                 }
 
-                return TemplateStrings.ModelCompiler_Templates_XmlSchema_EnumeratedType_xml;
+                return SchemaTemplateStrings.XmlSchema_EnumeratedType_xml;
             }
             else if (basicType == BasicDataType.UserDefined)
             {
                 if (dataType.BaseTypeNode.SymbolicName.Name == "Union")
                 {
-                    return TemplateStrings.ModelCompiler_Templates_XmlSchema_Union_xml;
+                    return SchemaTemplateStrings.XmlSchema_Union_xml;
                 }
                 else if (dataType.BaseTypeNode.SymbolicName.Name == "Structure")
                 {
-                    return TemplateStrings.ModelCompiler_Templates_XmlSchema_ComplexType_xml;
+                    return SchemaTemplateStrings.XmlSchema_ComplexType_xml;
                 }
                 else
                 {
-                    return TemplateStrings.ModelCompiler_Templates_XmlSchema_DerivedType_xml;
+                    return SchemaTemplateStrings.XmlSchema_DerivedType_xml;
                 }
             }
 
-            return TemplateStrings.ModelCompiler_Templates_XmlSchema_SimpleType_xml;
+            return SchemaTemplateStrings.XmlSchema_SimpleType_xml;
         }
 
         private bool WriteTemplate_XmlType(Template template, Context context)
@@ -738,43 +682,46 @@ namespace Opc.Ua.SourceGeneration
 
             if (baseType != null)
             {
-                template.AddReplacement("_BaseType_", baseType.GetXmlDataType(
+                template.AddReplacement(Tokens.BaseType, baseType.GetXmlDataType(
                     ValueRank.Scalar,
                     m_model.TargetNamespace,
                     m_model.Namespaces));
             }
 
-            template.AddReplacement("_TypeName_", dataType.SymbolicName.Name);
+            template.AddReplacement(Tokens.TypeName, dataType.SymbolicName.Name);
 
             if (dataType.BasicDataType == BasicDataType.Enumeration && dataType.IsOptionSet)
             {
-                template.AddReplacement("<xs:restriction base=\"xs:string\">", CoreUtils.Format(
-                    "<xs:restriction base=\"{0}\">",
+                template.AddReplacement(Tokens.XsRestrictionBaseType,
                     baseType.GetXmlDataType(
                         ValueRank.Scalar,
                         m_model.TargetNamespace,
-                        m_model.Namespaces)));
+                        m_model.Namespaces));
+            }
+            else
+            {
+                template.AddReplacement(Tokens.XsRestrictionBaseType, "xs:string");
             }
 
             template.AddTemplate(
-                "<!-- Documentation -->",
-                TemplateStrings.ModelCompiler_Templates_XmlSchema_Documentation_xml,
+                Tokens.Documentation,
+                SchemaTemplateStrings.XmlSchema_Documentation_xml,
                 new DataTypeDesign[] { dataType },
-                new LoadTemplateEventHandler(LoadTemplate_XmlDocumentation),
-                new WriteTemplateEventHandler(WriteTemplate_XmlDocumentation));
+                LoadTemplate_XmlDocumentation,
+                WriteTemplate_XmlDocumentation);
 
             template.AddTemplate(
-                "<!-- CollectionType -->",
-                TemplateStrings.ModelCompiler_Templates_XmlSchema_CollectionType_xml,
+                Tokens.CollectionType,
+                SchemaTemplateStrings.XmlSchema_CollectionType_xml,
                 new DataTypeDesign[] { dataType },
-                new LoadTemplateEventHandler(LoadTemplate_XmlCollectionType),
-                new WriteTemplateEventHandler(WriteTemplate_XmlCollectionType));
+                LoadTemplate_XmlCollectionType,
+                WriteTemplate_XmlCollectionType);
 
             template.AddTemplate(
-                "<!-- ListOfFields -->",
+                Tokens.ListOfFields,
                 null,
                 dataType.Fields,
-                new LoadTemplateEventHandler(LoadTemplate_XmlTypeFields),
+                LoadTemplate_XmlTypeFields,
                 null);
 
             return template.WriteTemplate(context);
@@ -805,11 +752,11 @@ namespace Opc.Ua.SourceGeneration
 
                 if (field.IdentifierInName)
                 {
-                    template.Write("<xs:enumeration value=\"{0}\" />", field.Name);
+                    template.Write("""<xs:enumeration value="{0}" />""", field.Name);
                     return null;
                 }
 
-                template.Write("<xs:enumeration value=\"{0}_{1}\" />", field.Name, field.Identifier);
+                template.Write("""<xs:enumeration value="{0}_{1}" />""", field.Name, field.Identifier);
                 return null;
             }
 
@@ -818,13 +765,13 @@ namespace Opc.Ua.SourceGeneration
             if (basicType == BasicDataType.XmlElement && field.ValueRank == ValueRank.Scalar)
             {
                 template.WriteNextLine(context.Prefix);
-                template.Write("<xs:element name=\"{0}\" minOccurs=\"0\" nillable=\"true\">", field.Name);
+                template.Write("""<xs:element name="{0}" minOccurs="0" nillable="true">""", field.Name);
                 template.WriteNextLine(context.Prefix);
                 template.Write("  <xs:complexType>");
                 template.WriteNextLine(context.Prefix);
                 template.Write("    <xs:sequence>");
                 template.WriteNextLine(context.Prefix);
-                template.Write("      <xs:any minOccurs=\"0\" processContents=\"lax\" />");
+                template.Write("""      <xs:any minOccurs="0" processContents="lax" />""");
                 template.WriteNextLine(context.Prefix);
                 template.Write("    </xs:sequence>");
                 template.WriteNextLine(context.Prefix);
@@ -848,7 +795,10 @@ namespace Opc.Ua.SourceGeneration
                     fieldDataType = "ua:ListOfExtensionObject";
                 }
 
-                template.Write("<xs:element name=\"{0}\" type=\"{1}\" minOccurs=\"0\" nillable=\"true\" />", field.Name, fieldDataType);
+                template.Write(
+                    """<xs:element name="{0}" type="{1}" minOccurs="0" nillable="true" />""",
+                    field.Name,
+                    fieldDataType);
             }
             else
             {
@@ -864,7 +814,7 @@ namespace Opc.Ua.SourceGeneration
                     case BasicDataType.Structure:
                     case BasicDataType.DataValue:
                         template.Write(
-                                "<xs:element name=\"{0}\" type=\"{1}\" minOccurs=\"0\" nillable=\"true\" />",
+                                """<xs:element name="{0}" type="{1}" minOccurs="0" nillable="true" />""",
                                 field.Name,
                                 field.DataTypeNode.GetXmlDataType(
                                     field.ValueRank,
@@ -874,7 +824,7 @@ namespace Opc.Ua.SourceGeneration
                     case BasicDataType.Guid:
                     case BasicDataType.StatusCode:
                         template.Write(
-                                "<xs:element name=\"{0}\" type=\"{1}\" minOccurs=\"0\" />",
+                                """<xs:element name="{0}" type="{1}" minOccurs="0" />""",
                                 field.Name,
                                 field.DataTypeNode.GetXmlDataType(
                                     field.ValueRank,
@@ -893,12 +843,12 @@ namespace Opc.Ua.SourceGeneration
                         }
 
                         template.Write(
-                            "<xs:element name=\"{0}\" type=\"{1}\" minOccurs=\"0\" nillable=\"true\" />",
+                            """<xs:element name="{0}" type="{1}" minOccurs="0" nillable="true" />""",
                             field.Name,
                             fieldDataType);
                         break;
                     default:
-                        template.Write("<xs:element name=\"{0}\" type=\"{1}\" minOccurs=\"0\" />",
+                        template.Write("""<xs:element name="{0}" type="{1}" minOccurs="0" />""",
                                 field.Name,
                                 field.DataTypeNode.GetXmlDataType(
     field.ValueRank,
@@ -933,7 +883,7 @@ namespace Opc.Ua.SourceGeneration
                 return false;
             }
 
-            template.AddReplacement("_Description_", dataType.Description.Value);
+            template.AddReplacement(Tokens.Description, dataType.Description.Value);
 
             return template.WriteTemplate(context);
         }
@@ -961,62 +911,56 @@ namespace Opc.Ua.SourceGeneration
             }
 
             template.WriteLine(string.Empty);
-            template.AddReplacement("_TypeName_", dataType.SymbolicName.Name);
-            template.AddReplacement("_Nillable_", !dataType.BasicDataType.IsNullable() ? string.Empty : "nillable=\"true\" ");
+            template.AddReplacement(Tokens.TypeName, dataType.SymbolicName.Name);
+            template.AddReplacement(
+                Tokens.Nillable,
+                !dataType.BasicDataType.IsNullable() ? string.Empty : """nillable="true" """);
 
             return template.WriteTemplate(context);
         }
 
         private void WriteTemplate_BinarySchema(string filePath, List<NodeDesign> nodes)
         {
-            TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(filePath, m_model.TargetNamespaceInfo.Prefix + ".Types.bsd"));
+            using TextWriter writer = m_fileSystem.CreateTextWriter(
+                Path.Combine(filePath, m_model.TargetNamespaceInfo.Prefix + ".Types.bsd"));
             WriteTemplate_BinarySchema(writer, nodes);
         }
 
         private void WriteTemplate_BinarySchema(TextWriter writer, List<NodeDesign> nodes)
         {
-            try
-            {
-                var template = new Template(writer, TemplateStrings.ModelCompiler_Templates_BinarySchema_File_xml);
+            var template = new Template(writer, SchemaTemplateStrings.BinarySchema_File_xml);
 
-                template.AddReplacement("_DictionaryUri_", m_model.TargetNamespace);
-                template.Replacements.Add("_BuildDate_", CoreUtils.Format("{0:yyyy-MM-dd}", DateTime.UtcNow));
-                template.Replacements.Add("_Version_", CoreUtils.Format("{0}.{1}", CoreUtils.GetAssemblySoftwareVersion(), CoreUtils.GetAssemblyBuildNumber()));
+            template.AddReplacement(Tokens.DictionaryUri, m_model.TargetNamespace);
 
-                template.AddTemplate(
-                    "xmlns:s0=\"ListOfNamespaces\"",
-                    null,
-                    m_model.Namespaces,
-                    new LoadTemplateEventHandler(LoadTemplate_BinaryNamespaceImports),
-                    null);
+            template.AddTemplate(
+                Tokens.XmlnsS0ListOfNamespaces,
+                null,
+                m_model.Namespaces,
+                LoadTemplate_BinaryNamespaceImports,
+                null);
 
-                template.AddTemplate(
-                    "<!-- Imports -->",
-                    null,
-                    m_model.Namespaces,
-                    new LoadTemplateEventHandler(LoadTemplate_BinaryNamespaceImports),
-                    null);
+            template.AddTemplate(
+                Tokens.Imports,
+                null,
+                m_model.Namespaces,
+                LoadTemplate_BinaryNamespaceImports,
+                null);
 
-                template.AddTemplate(
-                    "<!-- BuiltInTypes -->",
-                    TemplateStrings.ModelCompiler_Templates_BinarySchema_BuiltInTypes_bsd,
-                    new ModelDesign[] { m_model },
-                    new LoadTemplateEventHandler(LoadTemplate_BinaryType),
-                    new WriteTemplateEventHandler(WriteTemplate_BinaryType));
+            template.AddTemplate(
+                Tokens.BuiltInTypes,
+                SchemaTemplateStrings.BinarySchema_BuiltInTypes_bsd,
+                new ModelDesign[] { m_model },
+                LoadTemplate_BinaryType,
+                WriteTemplate_BinaryType);
 
-                template.AddTemplate(
-                    "<!-- ListOfTypes -->",
-                    null,
-                    nodes,
-                    new LoadTemplateEventHandler(LoadTemplate_BinaryType),
-                    new WriteTemplateEventHandler(WriteTemplate_BinaryType));
+            template.AddTemplate(
+                Tokens.ListOfTypes,
+                null,
+                nodes,
+                LoadTemplate_BinaryType,
+                WriteTemplate_BinaryType);
 
-                template.WriteTemplate(null);
-            }
-            finally
-            {
-                writer.Close();
-            }
+            template.WriteTemplate(null);
         }
 
         private string LoadTemplate_BinaryNamespaceImports(Template template, Context context)
@@ -1039,13 +983,18 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 template.WriteNextLine(context.Prefix);
-                template.Write("xmlns:{0}=\"{1}\"", m_model.Namespaces.GetXmlNamespacePrefix(ns.Value), ns.Value);
+                template.Write(
+                    """
+                    xmlns:{0}="{1}"
+                    """,
+                    m_model.Namespaces.GetXmlNamespacePrefix(ns.Value),
+                    ns.Value);
                 return null;
             }
 
             template.WriteNextLine(context.Prefix);
             template.Write(
-                "<opc:Import Namespace=\"{0}\" Location=\"{1}.BinarySchema.bsd\"/>",
+                """<opc:Import Namespace="{0}" Location="{1}.BinarySchema.bsd"/>""",
                 ns.Value,
                 m_model.Namespaces.GetNamespacePrefix(ns.Value));
 
@@ -1100,14 +1049,14 @@ namespace Opc.Ua.SourceGeneration
 
             if (basicType == BasicDataType.Enumeration)
             {
-                return TemplateStrings.ModelCompiler_Templates_BinarySchema_EnumeratedType_xml;
+                return SchemaTemplateStrings.BinarySchema_EnumeratedType_xml;
             }
             else if (basicType == BasicDataType.UserDefined)
             {
-                return TemplateStrings.ModelCompiler_Templates_BinarySchema_ComplexType_xml;
+                return SchemaTemplateStrings.BinarySchema_ComplexType_xml;
             }
 
-            return TemplateStrings.ModelCompiler_Templates_BinarySchema_OpaqueType_xml;
+            return SchemaTemplateStrings.BinarySchema_OpaqueType_xml;
         }
 
         private bool WriteTemplate_BinaryType(Template template, Context context)
@@ -1133,11 +1082,11 @@ namespace Opc.Ua.SourceGeneration
                 template.WriteNextLine(string.Empty);
             }
 
-            template.AddReplacement("_TypeName_", dataType.SymbolicName.Name);
+            template.AddReplacement(Tokens.TypeName, dataType.SymbolicName.Name);
 
             if (dataType.BasicDataType == BasicDataType.UserDefined)
             {
-                template.AddReplacement("_BaseType_",
+                template.AddReplacement(Tokens.BaseType,
                     (dataType.BaseTypeNode as DataTypeDesign).GetBinaryDataType(
                         m_model.TargetNamespace,
                         m_model.Namespaces));
@@ -1146,7 +1095,9 @@ namespace Opc.Ua.SourceGeneration
             List<Parameter> fields = [];
             var parents = new Stack<DataTypeDesign>();
 
-            for (DataTypeDesign parent = dataType; parent != null; parent = parent.BaseTypeNode as DataTypeDesign)
+            for (DataTypeDesign parent = dataType;
+                parent != null;
+                parent = parent.BaseTypeNode as DataTypeDesign)
             {
                 if (parent.Fields != null)
                 {
@@ -1233,22 +1184,24 @@ namespace Opc.Ua.SourceGeneration
                     });
                 }
 
-                template.AddReplacement("_LengthInBits_", lengthInBits);
-                template.AddReplacement("_IsOptionSet_", isOptionSet ? " IsOptionSet=\"true\"" : string.Empty);
+                template.AddReplacement(Tokens.LengthInBits, lengthInBits);
+                template.AddReplacement(
+                    Tokens.IsOptionSet,
+                    isOptionSet ? " IsOptionSet=\"true\"" : string.Empty);
             }
 
             template.AddTemplate(
-                "<!-- Documentation -->",
+                Tokens.Documentation,
                 null,
                 new DataTypeDesign[] { dataType },
-                new LoadTemplateEventHandler(LoadTemplate_BinaryDocumentation),
+                LoadTemplate_BinaryDocumentation,
                 null);
 
             template.AddTemplate(
-                "<!-- ListOfFields -->",
+                Tokens.ListOfFields,
                 null,
                 fields,
-                new LoadTemplateEventHandler(LoadTemplate_BinaryTypeFields),
+                LoadTemplate_BinaryTypeFields,
                 null);
 
             return template.WriteTemplate(context);
@@ -1268,7 +1221,9 @@ namespace Opc.Ua.SourceGeneration
 
             BasicDataType basicType = dataType.BasicDataType;
 
-            string fieldDataType = field.DataTypeNode.GetBinaryDataType(m_model.TargetNamespace, m_model.Namespaces);
+            string fieldDataType = field.DataTypeNode.GetBinaryDataType(
+                m_model.TargetNamespace,
+                m_model.Namespaces);
 
             if (field.AllowSubTypes)
             {
@@ -1278,16 +1233,24 @@ namespace Opc.Ua.SourceGeneration
             if (basicType == BasicDataType.Enumeration)
             {
                 template.WriteNextLine(context.Prefix);
-                template.Write("<opc:EnumeratedValue Name=\"{0}\" Value=\"{1}\" />", field.Name, field.Identifier);
+                template.Write(
+                    """<opc:EnumeratedValue Name="{0}" Value="{1}" />""",
+                    field.Name,
+                    field.Identifier);
                 return null;
             }
 
             if (field.ValueRank != ValueRank.Scalar)
             {
                 template.WriteNextLine(context.Prefix);
-                template.Write("<opc:Field Name=\"NoOf{0}\" TypeName=\"opc:Int32\" />", field.Name);
+                template.Write(
+                    """<opc:Field Name="NoOf{0}" TypeName="opc:Int32" />""",
+                    field.Name);
                 template.WriteNextLine(context.Prefix);
-                template.Write("<opc:Field Name=\"{0}\" TypeName=\"{1}\" LengthField=\"NoOf{0}\" />", field.Name, fieldDataType);
+                template.Write(
+                    """<opc:Field Name="{0}" TypeName="{1}" LengthField="NoOf{0}" />""",
+                    field.Name,
+                    fieldDataType);
                 return null;
             }
 
@@ -1296,14 +1259,14 @@ namespace Opc.Ua.SourceGeneration
             if (field.IsInherited)
             {
                 template.Write(
-                    "<opc:Field Name=\"{0}\" TypeName=\"{1}\" SourceType=\"{2}\" />",
+                    """<opc:Field Name="{0}" TypeName="{1}" SourceType="{2}" />""",
                     field.Name,
                     fieldDataType,
                     (field.Parent as DataTypeDesign).GetBinaryDataType(m_model.TargetNamespace, m_model.Namespaces));
             }
             else
             {
-                template.Write("<opc:Field Name=\"{0}\" TypeName=\"{1}\" />", field.Name, fieldDataType);
+                template.Write("""<opc:Field Name="{0}" TypeName="{1}" />""", field.Name, fieldDataType);
             }
 
             return null;
@@ -1329,200 +1292,195 @@ namespace Opc.Ua.SourceGeneration
 
         private void WriteTemplate_ConstantsSingleFile(string filePath, List<NodeDesign> nodes)
         {
-            TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(filePath, m_model.TargetNamespaceInfo.Prefix + ".Constants.cs"));
+            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
+                filePath,
+                m_model.TargetNamespaceInfo.Prefix + ".Constants.g.cs"));
+            var template = new Template(writer, CodeTemplateStrings.ConstantsFile_cs);
 
-            try
+            template.AddReplacement(
+                Tokens.Namespace,
+                m_model.Namespaces.GetNamespacePrefix(m_model.TargetNamespace));
+            template.AddReplacement(
+                Tokens.NamespaceUri,
+                m_model.Namespaces.GetConstantSymbolForNamespace(m_model.TargetNamespace));
+
+            template.AddTemplate(
+                Tokens.ListOfImports,
+                null,
+                m_model.Namespaces,
+                LoadTemplate_NamespaceImports,
+                null);
+
+            List<string> namespaces = [];
+
+            for (int ii = 0; ii < m_model.Namespaces.Length; ii++)
             {
-                var template = new Template(writer, TemplateStrings.ModelCompiler_Templates_Version2_ConstantsFile_cs);
+                namespaces.Add(m_model.Namespaces[ii].Value);
 
-                template.AddReplacement("_Namespace_", m_model.Namespaces.GetNamespacePrefix(m_model.TargetNamespace));
-                template.AddReplacement("_NamespaceUri_", m_model.Namespaces.GetConstantSymbolForNamespace(m_model.TargetNamespace));
-
-                template.AddTemplate(
-                    "// ListOfImports",
-                    null,
-                    m_model.Namespaces,
-                    new LoadTemplateEventHandler(LoadTemplate_NamespaceImports),
-                    null);
-
-                List<string> namespaces = [];
-
-                for (int ii = 0; ii < m_model.Namespaces.Length; ii++)
+                if (!string.IsNullOrEmpty(m_model.Namespaces[ii].XmlNamespace))
                 {
-                    namespaces.Add(m_model.Namespaces[ii].Value);
-
-                    if (!string.IsNullOrEmpty(m_model.Namespaces[ii].XmlNamespace))
-                    {
-                        namespaces.Add(m_model.Namespaces[ii].XmlNamespace);
-                    }
+                    namespaces.Add(m_model.Namespaces[ii].XmlNamespace);
                 }
-
-                template.AddTemplate(
-                    "// ListOfNamespaceUris",
-                    TemplateStrings.ModelCompiler_Templates_Version2_NamespaceUri_cs,
-                    namespaces,
-                    null,
-                    new WriteTemplateEventHandler(WriteTemplate_CodeNamespaceUri));
-
-                SortedDictionary<string, string> browseNames = GetBrowseNames(nodes);
-
-                template.AddTemplate(
-                    "// ListOfBrowseNames",
-                    TemplateStrings.ModelCompiler_Templates_Version2_BrowseName_cs,
-                    browseNames,
-                    new LoadTemplateEventHandler(LoadTemplate_BrowseNames),
-                    new WriteTemplateEventHandler(WriteTemplate_BrowseNames));
-
-                SortedDictionary<string, List<NodeDesign>> identifiers = GetIdentifiers();
-
-                template.AddTemplate(
-                    "// ListOfIdentifiers",
-                    TemplateStrings.ModelCompiler_Templates_Version2_IdClass_cs,
-                    identifiers,
-                    new LoadTemplateEventHandler(LoadTemplate_IdClass),
-                    new WriteTemplateEventHandler(WriteTemplate_IdClass));
-
-                template.AddTemplate(
-                    "// ListOfNodeIds",
-                    TemplateStrings.ModelCompiler_Templates_Version2_NodeIdClass_cs,
-                    identifiers,
-                    new LoadTemplateEventHandler(LoadTemplate_IdClass),
-                    new WriteTemplateEventHandler(WriteTemplate_IdClass));
-
-                var context = new Context
-                {
-                    Target = nodes
-                };
-                template.WriteTemplate(context);
             }
-            finally
+
+            template.AddTemplate(
+                Tokens.ListOfNamespaceUris,
+                CodeTemplateStrings.NamespaceUri_cs,
+                namespaces,
+                null,
+                WriteTemplate_CodeNamespaceUri);
+
+            SortedDictionary<string, string> browseNames = GetBrowseNames(nodes);
+
+            template.AddTemplate(
+                Tokens.ListOfBrowseNames,
+                CodeTemplateStrings.BrowseName_cs,
+                browseNames,
+                LoadTemplate_BrowseNames,
+                WriteTemplate_BrowseNames);
+
+            SortedDictionary<string, List<NodeDesign>> identifiers = GetIdentifiers();
+
+            template.AddTemplate(
+                Tokens.ListOfIdentifiers,
+                CodeTemplateStrings.IdClass_cs,
+                identifiers,
+                LoadTemplate_IdClass,
+                WriteTemplate_IdClass);
+
+            template.AddTemplate(
+                Tokens.ListOfNodeIds,
+                CodeTemplateStrings.NodeIdClass_cs,
+                identifiers,
+                LoadTemplate_IdClass,
+                WriteTemplate_NodeIdClass);
+
+            var context = new Context
             {
-                writer.Close();
-            }
+                Target = nodes
+            };
+            template.WriteTemplate(context);
         }
 
         private void WriteTemplate_DataTypesSingleFile(string filePath, List<NodeDesign> nodes)
         {
-            TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(filePath, m_model.TargetNamespaceInfo.Prefix + ".DataTypes.cs"));
+            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
+                filePath,
+                m_model.TargetNamespaceInfo.Prefix + ".DataTypes.g.cs"));
+            var template = new Template(writer, CodeTemplateStrings.TypesFile_cs);
 
-            try
+            template.AddReplacement(
+                Tokens.Namespace,
+                m_model.Namespaces.GetNamespacePrefix(m_model.TargetNamespace));
+            template.AddReplacement(
+                Tokens.NamespaceUri,
+                m_model.Namespaces.GetConstantSymbolForNamespace(m_model.TargetNamespace));
+
+            template.AddTemplate(
+                Tokens.ListOfImports,
+                null,
+                m_model.Namespaces,
+                LoadTemplate_NamespaceImports,
+                null);
+
+            List<string> namespaces = [];
+
+            for (int ii = 0; ii < m_model.Namespaces.Length; ii++)
             {
-                var template = new Template(writer, TemplateStrings.ModelCompiler_Templates_Version2_TypesFile_cs);
+                namespaces.Add(m_model.Namespaces[ii].Value);
 
-                template.AddReplacement("_Namespace_", m_model.Namespaces.GetNamespacePrefix(m_model.TargetNamespace));
-                template.AddReplacement("_NamespaceUri_", m_model.Namespaces.GetConstantSymbolForNamespace(m_model.TargetNamespace));
-
-                template.AddTemplate(
-                    "// ListOfImports",
-                    null,
-                    m_model.Namespaces,
-                    new LoadTemplateEventHandler(LoadTemplate_NamespaceImports),
-                    null);
-
-                List<string> namespaces = [];
-
-                for (int ii = 0; ii < m_model.Namespaces.Length; ii++)
+                if (!string.IsNullOrEmpty(m_model.Namespaces[ii].XmlNamespace))
                 {
-                    namespaces.Add(m_model.Namespaces[ii].Value);
-
-                    if (!string.IsNullOrEmpty(m_model.Namespaces[ii].XmlNamespace))
-                    {
-                        namespaces.Add(m_model.Namespaces[ii].XmlNamespace);
-                    }
+                    namespaces.Add(m_model.Namespaces[ii].XmlNamespace);
                 }
-
-                List<DataTypeDesign> datatypes = [];
-
-                for (int ii = 0; ii < nodes.Count; ii++)
-                {
-                    if (nodes[ii] is DataTypeDesign dataTypeDesign)
-                    {
-                        datatypes.Add(dataTypeDesign);
-                    }
-                }
-
-                template.AddTemplate(
-                    "// ListOfTypes",
-                    TemplateStrings.ModelCompiler_Templates_Version2_Type_cs,
-                    datatypes,
-                    new LoadTemplateEventHandler(LoadTemplate_ListOfTypes),
-                    new WriteTemplateEventHandler(WriteTemplate_ListOfTypes));
-
-                var context = new Context
-                {
-                    Target = nodes
-                };
-                template.WriteTemplate(context);
             }
-            finally
+
+            List<DataTypeDesign> datatypes = [];
+
+            for (int ii = 0; ii < nodes.Count; ii++)
             {
-                writer.Close();
+                if (nodes[ii] is DataTypeDesign dataTypeDesign &&
+                    !dataTypeDesign.IsPartOfOpcUaTypesLibrary())
+                {
+                    datatypes.Add(dataTypeDesign);
+                }
             }
+
+            template.AddTemplate(
+                Tokens.ListOfTypes,
+                string.Empty,
+                datatypes,
+                LoadTemplate_ListOfTypes,
+                WriteTemplate_ListOfTypes);
+
+            var context = new Context
+            {
+                Target = nodes
+            };
+            template.WriteTemplate(context);
         }
 
         private void WriteTemplate_NonDataTypesSingleFile(string filePath, List<NodeDesign> nodes)
         {
-            TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(filePath, m_model.TargetNamespaceInfo.Prefix + ".Classes.cs"));
+            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
+                filePath,
+                m_model.TargetNamespaceInfo.Prefix + ".Classes.g.cs"));
+            var template = new Template(writer, CodeTemplateStrings.TypesFile_cs);
 
-            try
+            template.AddReplacement(
+                Tokens.Namespace,
+                m_model.Namespaces.GetNamespacePrefix(m_model.TargetNamespace));
+            template.AddReplacement(
+                Tokens.NamespaceUri,
+                m_model.Namespaces.GetConstantSymbolForNamespace(m_model.TargetNamespace));
+
+            template.AddTemplate(
+                Tokens.ListOfImports,
+                null,
+                m_model.Namespaces,
+                LoadTemplate_NamespaceImports,
+                null);
+
+            List<string> namespaces = [];
+
+            for (int ii = 0; ii < m_model.Namespaces.Length; ii++)
             {
-                var template = new Template(writer, TemplateStrings.ModelCompiler_Templates_Version2_TypesFile_cs);
+                namespaces.Add(m_model.Namespaces[ii].Value);
 
-                template.AddReplacement("_Namespace_", m_model.Namespaces.GetNamespacePrefix(m_model.TargetNamespace));
-                template.AddReplacement("_NamespaceUri_", m_model.Namespaces.GetConstantSymbolForNamespace(m_model.TargetNamespace));
-
-                template.AddTemplate(
-                    "// ListOfImports",
-                    null,
-                    m_model.Namespaces,
-                    new LoadTemplateEventHandler(LoadTemplate_NamespaceImports),
-                    null);
-
-                List<string> namespaces = [];
-
-                for (int ii = 0; ii < m_model.Namespaces.Length; ii++)
+                if (!string.IsNullOrEmpty(m_model.Namespaces[ii].XmlNamespace))
                 {
-                    namespaces.Add(m_model.Namespaces[ii].Value);
-
-                    if (!string.IsNullOrEmpty(m_model.Namespaces[ii].XmlNamespace))
-                    {
-                        namespaces.Add(m_model.Namespaces[ii].XmlNamespace);
-                    }
+                    namespaces.Add(m_model.Namespaces[ii].XmlNamespace);
                 }
-
-                List<NodeDesign> nonDataTypes = [];
-
-                for (int ii = 0; ii < nodes.Count; ii++)
-                {
-                    if (nodes[ii] is not DataTypeDesign)
-                    {
-                        if (nodes[ii] is MethodDesign &&
-                            !nodes[ii].SymbolicName.Name.EndsWith("MethodType", StringComparison.Ordinal))
-                        {
-                            continue;
-                        }
-
-                        nonDataTypes.Add(nodes[ii]);
-                    }
-                }
-
-                template.AddTemplate(
-                    "// ListOfTypes",
-                    TemplateStrings.ModelCompiler_Templates_Version2_Type_cs,
-                    nonDataTypes,
-                    new LoadTemplateEventHandler(LoadTemplate_ListOfTypes),
-                    new WriteTemplateEventHandler(WriteTemplate_ListOfTypes));
-
-                var context = new Context
-                {
-                    Target = nodes
-                };
-                template.WriteTemplate(context);
             }
-            finally
+
+            List<NodeDesign> nonDataTypes = [];
+
+            for (int ii = 0; ii < nodes.Count; ii++)
             {
-                writer.Close();
+                if (nodes[ii] is not DataTypeDesign)
+                {
+                    if (nodes[ii] is MethodDesign &&
+                        !nodes[ii].SymbolicName.Name.EndsWith("MethodType", StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    nonDataTypes.Add(nodes[ii]);
+                }
             }
+
+            template.AddTemplate(
+                Tokens.ListOfTypes,
+                string.Empty,
+                nonDataTypes,
+                LoadTemplate_ListOfTypes,
+                WriteTemplate_ListOfTypes);
+
+            var context = new Context
+            {
+                Target = nodes
+            };
+            template.WriteTemplate(context);
         }
 
         private string LoadTemplate_IdClass(Template template, Context context)
@@ -1548,29 +1506,46 @@ namespace Opc.Ua.SourceGeneration
                 return false;
             }
 
-            template.AddReplacement("_NodeClass_", nodes.Key);
-            template.AddReplacement("_NamespacePrefix_", m_model.Namespaces.GetNamespacePrefix(m_model.TargetNamespace));
-
-            string templatePath = TemplateStrings.ModelCompiler_Templates_Version2_IdDeclaration_cs;
-
-            if (context.TemplateString.EndsWith("NodeIdClass_cs", StringComparison.Ordinal))
-            {
-                if (m_model.TargetNamespace != Namespaces.OpcUa)
-                {
-                    templatePath = TemplateStrings.ModelCompiler_Templates_Version2_NodeIdDeclarationAbsolute_cs;
-                }
-                else
-                {
-                    templatePath = TemplateStrings.ModelCompiler_Templates_Version2_NodeIdDeclaration_cs;
-                }
-            }
+            template.AddReplacement(Tokens.NodeClass, nodes.Key);
+            template.AddReplacement(
+                Tokens.NamespacePrefix,
+                m_model.Namespaces.GetNamespacePrefix(m_model.TargetNamespace));
+            template.AddReplacement(Tokens.Namespace, m_model.TargetNamespace);
 
             template.AddTemplate(
-                "// ListOfIdentifiers",
+                Tokens.ListOfIdentifiers,
+                CodeTemplateStrings.IdDeclaration_cs,
+                nodes.Value,
+                null,
+                WriteTemplate_IdDeclaration);
+
+            return template.WriteTemplate(context);
+        }
+
+        private bool WriteTemplate_NodeIdClass(Template template, Context context)
+        {
+            if (context.Target is not KeyValuePair<string, List<NodeDesign>> nodes ||
+                nodes.Value == null)
+            {
+                return false;
+            }
+
+            template.AddReplacement(Tokens.NodeClass, nodes.Key);
+            template.AddReplacement(
+                Tokens.NamespacePrefix,
+                m_model.Namespaces.GetNamespacePrefix(m_model.TargetNamespace));
+            template.AddReplacement(Tokens.Namespace, m_model.TargetNamespace);
+
+            string templatePath = m_model.TargetNamespace != Namespaces.OpcUa ?
+                CodeTemplateStrings.NodeIdDeclarationAbsolute_cs :
+                CodeTemplateStrings.NodeIdDeclaration_cs;
+
+            template.AddTemplate(
+                Tokens.ListOfIdentifiers,
                 templatePath,
                 nodes.Value,
                 null,
-                new WriteTemplateEventHandler(WriteTemplate_IdDeclaration));
+                WriteTemplate_IdDeclaration);
 
             return template.WriteTemplate(context);
         }
@@ -1595,12 +1570,16 @@ namespace Opc.Ua.SourceGeneration
                 idType = "string";
             }
 
-            template.AddReplacement("_NodeClass_", node.GetNodeClassString());
-            template.AddReplacement("_SymbolicName_", node.SymbolicId.Name);
-            template.AddReplacement("_Identifier_", id);
-            template.AddReplacement("_NamespaceUri_", m_model.Namespaces.GetConstantSymbolForNamespace(node.SymbolicId.Namespace));
-            template.AddReplacement("_NamespacePrefix_", m_model.Namespaces.GetNamespacePrefix(node.SymbolicId.Namespace));
-            template.AddReplacement("_IdType_", idType);
+            template.AddReplacement(Tokens.NodeClass, node.GetNodeClassString());
+            template.AddReplacement(Tokens.SymbolicName, node.SymbolicId.Name);
+            template.AddReplacement(Tokens.Identifier, id);
+            template.AddReplacement(
+                Tokens.NamespaceUri,
+                m_model.Namespaces.GetConstantSymbolForNamespace(node.SymbolicId.Namespace));
+            template.AddReplacement(
+                Tokens.NamespacePrefix,
+                m_model.Namespaces.GetNamespacePrefix(node.SymbolicId.Namespace));
+            template.AddReplacement(Tokens.IdType, idType);
 
             return template.WriteTemplate(context);
         }
@@ -1624,8 +1603,8 @@ namespace Opc.Ua.SourceGeneration
                 return false;
             }
 
-            template.AddReplacement("_SymbolicName_", browseName.Key);
-            template.AddReplacement("_BrowseName_", browseName.Value);
+            template.AddReplacement(Tokens.SymbolicName, browseName.Key);
+            template.AddReplacement(Tokens.BrowseName, browseName.Value);
 
             return template.WriteTemplate(context);
         }
@@ -1646,16 +1625,16 @@ namespace Opc.Ua.SourceGeneration
                     continue;
                 }
 
-                template.AddReplacement("_NamespaceUri_", uri);
-                template.AddReplacement("_CodeName_", ns.Prefix);
+                template.AddReplacement(Tokens.NamespaceUri, uri);
+                template.AddReplacement(Tokens.CodeName, ns.Prefix);
 
                 if (uri != ns.XmlNamespace)
                 {
-                    template.AddReplacement("_Name_", ns.Name);
+                    template.AddReplacement(Tokens.Name, ns.Name);
                 }
                 else
                 {
-                    template.AddReplacement("_Name_", ns.Name + "Xsd");
+                    template.AddReplacement(Tokens.Name, ns.Name + "Xsd");
                 }
             }
 
@@ -1700,38 +1679,38 @@ namespace Opc.Ua.SourceGeneration
                     case BasicDataType.UserDefined:
                         if (datatype.IsUnion)
                         {
-                            return TemplateStrings.ModelCompiler_Templates_Version2_DataTypes_Union_cs;
+                            return CodeTemplateStrings.DataTypes_Union_cs;
                         }
 
                         if (datatype.HasFields && datatype.Fields.Any(x => x.IsOptional))
                         {
                             if (datatype.GetBaseClassName(m_model.Namespaces) != "IEncodeable")
                             {
-                                return TemplateStrings.ModelCompiler_Templates_Version2_DataTypes_DerivedClassWithOptionalFields_cs;
+                                return CodeTemplateStrings.DataTypes_DerivedClassWithOptionalFields_cs;
                             }
 
-                            return TemplateStrings.ModelCompiler_Templates_Version2_DataTypes_ClassWithOptionalFields_cs;
+                            return CodeTemplateStrings.DataTypes_ClassWithOptionalFields_cs;
                         }
 
                         if (datatype.GetBaseClassName(m_model.Namespaces) == "IEncodeable")
                         {
-                            return TemplateStrings.ModelCompiler_Templates_Version2_DataTypes_Class_cs;
+                            return CodeTemplateStrings.DataTypes_Class_cs;
                         }
 
-                        return TemplateStrings.ModelCompiler_Templates_Version2_DataTypes_DerivedClass_cs;
+                        return CodeTemplateStrings.DataTypes_DerivedClass_cs;
                     case BasicDataType.Enumeration:
                         var baseType = datatype.BaseTypeNode as DataTypeDesign;
 
                         if (baseType?.SymbolicId == new XmlQualifiedName("OptionSet", Namespaces.OpcUa))
                         {
-                            return TemplateStrings.ModelCompiler_Templates_Version2_DataTypes_DerivedClass_cs;
+                            return CodeTemplateStrings.DataTypes_DerivedClass_cs;
                         }
 
-                        return TemplateStrings.ModelCompiler_Templates_Version2_DataTypes_Enumeration_cs;
+                        return CodeTemplateStrings.DataTypes_Enumeration_cs;
                     default:
                         if (datatype.IsOptionSet)
                         {
-                            return TemplateStrings.ModelCompiler_Templates_Version2_DataTypes_Enumeration_cs;
+                            return CodeTemplateStrings.DataTypes_Enumeration_cs;
                         }
 
                         return null;
@@ -1746,17 +1725,17 @@ namespace Opc.Ua.SourceGeneration
 
             if (context.Target is ObjectTypeDesign objectType)
             {
-                return TemplateStrings.ModelCompiler_Templates_Version2_ObjectType_cs;
+                return CodeTemplateStrings.ObjectType_cs;
             }
 
             if (context.Target is VariableTypeDesign variableType)
             {
-                return TemplateStrings.ModelCompiler_Templates_Version2_VariableType_cs;
+                return CodeTemplateStrings.VariableType_cs;
             }
 
             if (context.Target is MethodDesign method && method.HasArguments)
             {
-                return TemplateStrings.ModelCompiler_Templates_Version2_MethodType_cs;
+                return CodeTemplateStrings.MethodType_cs;
             }
 
             return null;
@@ -1773,94 +1752,120 @@ namespace Opc.Ua.SourceGeneration
 
             Array children = GetFields(node);
 
-            template.AddReplacement("_NodeClass_", node.GetNodeClassString());
-            template.AddReplacement("_Description_", node.Description != null ? node.Description.Value : string.Empty);
+            template.AddReplacement(Tokens.NodeClass, node.GetNodeClassString());
+            template.AddReplacement(
+                Tokens.Description,
+                node.Description != null ? node.Description.Value : string.Empty);
 
-            template.AddReplacement("_TypeName_", node.SymbolicName.Name);
-            template.AddReplacement("_NamespaceUri_", m_model.Namespaces.GetConstantSymbolForNamespace(node.SymbolicName.Namespace));
-            template.AddReplacement("_NamespacePrefix_", m_model.Namespaces.GetNamespacePrefix(node.SymbolicId.Namespace));
-            template.AddReplacement("_XmlNamespaceUri_", m_model.Namespaces.GetConstantForXmlNamespace(node.SymbolicId.Namespace));
+            template.AddReplacement(Tokens.TypeName, node.SymbolicName.Name);
+            template.AddReplacement(
+                Tokens.NamespaceUri,
+                m_model.Namespaces.GetConstantSymbolForNamespace(node.SymbolicName.Namespace));
+            template.AddReplacement(
+                Tokens.NamespacePrefix,
+                m_model.Namespaces.GetNamespacePrefix(node.SymbolicId.Namespace));
+            template.AddReplacement(
+                Tokens.XmlNamespaceUri,
+                m_model.Namespaces.GetConstantForXmlNamespace(node.SymbolicId.Namespace));
 
-            template.AddReplacement("_BrowseName_", node.SymbolicName.Name);
-            template.AddReplacement("_BrowseNameNamespacePrefix_", m_model.Namespaces.GetNamespacePrefix(node.SymbolicName.Namespace));
-            template.AddReplacement("_BrowseNameNamespaceUri_", m_model.Namespaces.GetConstantSymbolForNamespace(node.SymbolicName.Namespace));
+            template.AddReplacement(
+                Tokens.BrowseName,
+                node.SymbolicName.Name);
+            template.AddReplacement(
+                Tokens.BrowseNameNamespacePrefix,
+                m_model.Namespaces.GetNamespacePrefix(node.SymbolicName.Namespace));
+            template.AddReplacement(
+                Tokens.BrowseNameNamespaceUri,
+                m_model.Namespaces.GetConstantSymbolForNamespace(node.SymbolicName.Namespace));
 
             var type = context.Target as TypeDesign;
 
             if (type != null)
             {
-                template.AddReplacement("_ClassName_", type.ClassName);
-                template.AddReplacement("_BaseType_", type.GetBaseClassName(m_model.Namespaces));
-                template.AddReplacement("_BaseTypeNamespacePrefix_", m_model.Namespaces.GetNamespacePrefix(type.BaseTypeNode.SymbolicId.Namespace));
-                template.AddReplacement("_BaseTypeNamespaceUri_", m_model.Namespaces.GetConstantSymbolForNamespace(type.BaseTypeNode.SymbolicId.Namespace));
-                template.AddReplacement("_BaseClassName_", type.BaseTypeNode.FixClassName());
+                template.AddReplacement(
+                    Tokens.ClassName,
+                    type.ClassName);
+                template.AddReplacement(
+                    Tokens.BaseType,
+                    type.GetBaseClassName(m_model.Namespaces));
+                template.AddReplacement(
+                    Tokens.BaseTypeNamespacePrefix,
+                    m_model.Namespaces.GetNamespacePrefix(type.BaseTypeNode.SymbolicId.Namespace));
+                template.AddReplacement(
+                    Tokens.BaseTypeNamespaceUri,
+                    m_model.Namespaces.GetConstantSymbolForNamespace(type.BaseTypeNode.SymbolicId.Namespace));
+                template.AddReplacement(
+                    Tokens.BaseClassName,
+                    type.BaseTypeNode.FixClassName());
             }
 
             if (context.Target is MethodDesign method)
             {
-                template.AddReplacement("_ClassName_", method.GetClassName(m_model.TargetNamespace, m_model.Namespaces));
+                template.AddReplacement(
+                    Tokens.ClassName,
+                    method.GetClassName(m_model.TargetNamespace, m_model.Namespaces));
 
                 template.AddTemplate(
-                    "// ListOfInputArguments",
+                    Tokens.ListOfInputArguments,
                     null,
                     method.InputArguments,
-                    new LoadTemplateEventHandler(LoadTemplate_ListOfInputArguments),
+                    LoadTemplate_ListOfInputArguments,
                     null);
 
                 template.AddTemplate(
-                    "_ISystemContext context_);",
+                    Tokens.OnCallDeclaration,
                     null,
                     new MethodDesign[] { method },
-                    new LoadTemplateEventHandler(LoadTemplate_OnCallDeclaration),
+                    LoadTemplate_OnCallDeclaration,
                     null);
 
                 template.AddTemplate(
-                    "_ISystemContext context_, CancellationToken cancellationToken);",
+                    Tokens.OnCallAsyncDeclaration,
                     null,
                     new MethodDesign[] { method },
-                    new LoadTemplateEventHandler(LoadTemplate_OnCallAsyncDeclaration),
+                    LoadTemplate_OnCallAsyncDeclaration,
                     null);
 
                 template.AddTemplate(
-                    "_result = OnCall(_context);",
+                    Tokens.OnCallImplementation,
                     null,
                     new MethodDesign[] { method },
-                    new LoadTemplateEventHandler(LoadTemplate_OnCallImplementation),
+                    LoadTemplate_OnCallImplementation,
                     null);
 
                 template.AddTemplate(
-                    "_result = await OnCallAsync(_context);",
+                    Tokens.OnCallAsyncImplementation,
                     null,
                     new MethodDesign[] { method },
-                    new LoadTemplateEventHandler(LoadTemplate_OnCallAsyncImplementation),
+                    LoadTemplate_OnCallAsyncImplementation,
                     null);
 
                 template.AddTemplate(
-                    "// ListOfOutputDeclarations",
+                    Tokens.ListOfOutputDeclarations,
                     null,
                     method.OutputArguments,
-                    new LoadTemplateEventHandler(LoadTemplate_ListOfOutputDeclarations),
+                    LoadTemplate_ListOfOutputDeclarations,
                     null);
 
                 template.AddTemplate(
-                    "// ListOfOutputArgumentsFromResult",
+                    Tokens.ListOfOutputArgumentsFromResult,
                     null,
                     method.OutputArguments,
-                    new LoadTemplateEventHandler(LoadTemplate_ListOfOutputArgumentsFromResult),
+                    LoadTemplate_ListOfOutputArgumentsFromResult,
                     null);
 
                 template.AddTemplate(
-                    "// ListOfOutputArguments",
+                    Tokens.ListOfOutputArguments,
                     null,
                     method.OutputArguments,
-                    new LoadTemplateEventHandler(LoadTemplate_ListOfOutputArguments),
+                    LoadTemplate_ListOfOutputArguments,
                     null);
 
                 template.AddTemplate(
-                    "// ListOfResultProperties",
+                    Tokens.ListOfResultProperties,
                     null,
                     method.OutputArguments,
-                    new LoadTemplateEventHandler(LoadTemplate_ListOfResultProperties),
+                    LoadTemplate_ListOfResultProperties,
                     null);
             }
 
@@ -1899,17 +1904,18 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 // too much autogenerated code is broken.
-                // template.AddReplacement("_IsAbstract_", (dataType.IsAbstract) ? "abstract " : "");
-                template.AddReplacement("_IsAbstract_", dataType.IsAbstract ? string.Empty : string.Empty);
+                // template.AddReplacement(Tokens.IsAbstract, (dataType.IsAbstract) ? "abstract " : "");
+                template.AddReplacement(Tokens.IsAbstract, dataType.IsAbstract ? string.Empty : string.Empty);
 
                 if (!dataType.IsOptionSet)
                 {
-                    template.AddReplacement("[Flags]", string.Empty);
-                    template.AddReplacement(" : _BasicType_", string.Empty);
+                    template.AddReplacement(Tokens.Flags, string.Empty);
+                    template.AddReplacement(Tokens.BasicType, string.Empty);
                 }
                 else
                 {
-                    template.AddReplacement("_BasicType_", dataType.BaseType.Name);
+                    template.AddReplacement(Tokens.Flags, "[Flags]");
+                    template.AddReplacement(Tokens.BasicType, CoreUtils.Format(" : {0}", dataType.BaseType.Name));
 
                     var baseType = dataType.BaseTypeNode as DataTypeDesign;
 
@@ -1942,76 +1948,91 @@ namespace Opc.Ua.SourceGeneration
                     children = clone.ToArray();
                 }
 
-                if (dataType.IsStructure)
+                Dictionary<string, string> encodings = new()
                 {
-                    foreach (string ii in new string[] { "Binary", "Xml", "Json" })
+                    { Tokens.BinaryEncodingId,
+                        CoreUtils.Format("{0}_Encoding_DefaultBinary", node.SymbolicName.Name) },
+                    { Tokens.XmlEncodingId,
+                        CoreUtils.Format("{0}_Encoding_DefaultXml", node.SymbolicName.Name) },
+                    { Tokens.JsonEncodingId,
+                        CoreUtils.Format("{0}_Encoding_DefaultJson", node.SymbolicName.Name) }
+                };
+                foreach (KeyValuePair<string, string> kv in encodings)
+                {
+                    bool isEncodingPartOfModel = m_model.Items.Any(x =>
+                        x.SymbolicId.Name == kv.Value &&
+                        x.SymbolicId.Namespace == node.SymbolicName.Namespace);
+                    if (!isEncodingPartOfModel)
                     {
-                        bool encoding = m_model.Items.Any(x =>
-                            x.SymbolicId.Name == $"{node.SymbolicName.Name}_Encoding_Default{ii}" &&
-                            x.SymbolicId.Namespace == node.SymbolicName.Namespace);
-
-                        if (!encoding)
-                        {
-                            template.AddReplacement($"ObjectIds._BrowseName__Encoding_Default{ii}", "NodeId.Null");
-                        }
+                        template.AddReplacement(
+                            kv.Key,
+                            "NodeId.Null");
+                    }
+                    else
+                    {
+                        template.AddReplacement(
+                            kv.Key,
+                            CoreUtils.Format("ObjectIds.{0}", kv.Value));
                     }
                 }
 
                 template.AddTemplate(
-                    "// ListOfSwitchFields",
+                    Tokens.ListOfSwitchFields,
                     null,
                     children,
-                    new LoadTemplateEventHandler(LoadTemplate_ListOfSwitchFields),
+                    LoadTemplate_ListOfSwitchFields,
                     null);
 
                 template.AddTemplate(
-                    "// ListOfEncodingMaskFields",
+                    Tokens.ListOfEncodingMaskFields,
                     null,
                     completeListOfFields?.ToArray() ?? children,
-                    new LoadTemplateEventHandler(LoadTemplate_ListOfEncodingMaskFields),
+                    LoadTemplate_ListOfEncodingMaskFields,
                     null);
 
                 template.AddTemplate(
-                    "// ListOfEncodedFields",
+                    Tokens.ListOfEncodedFields,
                     null,
                     children,
-                    new LoadTemplateEventHandler(LoadTemplate_ListOfEncodedFields),
+                    LoadTemplate_ListOfEncodedFields,
                     null);
 
                 template.AddTemplate(
-                    "// ListOfDecodedFields",
+                    Tokens.ListOfDecodedFields,
                     null,
                     children,
-                    new LoadTemplateEventHandler(LoadTemplate_ListOfDecodedFields),
+                    LoadTemplate_ListOfDecodedFields,
                     null);
 
                 template.AddTemplate(
-                    "// ListOfComparedFields",
+                    Tokens.ListOfComparedFields,
                     null,
                     children,
-                    new LoadTemplateEventHandler(LoadTemplate_ListOfComparedFields),
+                    LoadTemplate_ListOfComparedFields,
                     null);
 
                 template.AddTemplate(
-                    "// ListOfClonedFields",
+                    Tokens.ListOfClonedFields,
                     null,
                     children,
-                    new LoadTemplateEventHandler(LoadTemplate_ListOfClonedFields),
+                    LoadTemplate_ListOfClonedFields,
                     null);
 
                 template.AddTemplate(
-                    "// CollectionClass",
-                    TemplateStrings.ModelCompiler_Templates_Version2_DataTypes_CollectionClass_cs,
+                    Tokens.CollectionClass,
+                    CodeTemplateStrings.DataTypes_CollectionClass_cs,
                     new DataTypeDesign[] { dataType },
-                    new LoadTemplateEventHandler(LoadTemplate_CollectionClass),
-                    new WriteTemplateEventHandler(WriteTemplate_CollectionClass));
+                    LoadTemplate_CollectionClass,
+                    WriteTemplate_CollectionClass);
             }
 
             if (context.Target is ObjectTypeDesign objectType)
             {
-                template.AddReplacement("<BaseT>", string.Empty);
-                template.AddReplacement("_IsAbstract_", CodeGeneration.GetBooleanString(objectType.IsAbstract));
-                template.AddReplacement("_EventNotifier_", CodeGeneration.GetEventNotifierString(objectType.SupportsEvents));
+                template.AddReplacement(Tokens.BaseT, string.Empty);
+                template.AddReplacement(Tokens.IsAbstract,
+                    CodeGeneration.GetBooleanString(objectType.IsAbstract));
+                template.AddReplacement(Tokens.EventNotifier,
+                    CodeGeneration.GetEventNotifierString(objectType.SupportsEvents));
             }
 
             if (context.Target is VariableTypeDesign variableType)
@@ -2026,7 +2047,7 @@ namespace Opc.Ua.SourceGeneration
 
                 if (!variableType.DataTypeNode.IsRequiredParameterInTemplates(variableType.ValueRank))
                 {
-                    template.AddReplacement("<BaseT>", string.Empty);
+                    template.AddReplacement(Tokens.BaseT, string.Empty);
                 }
                 else
                 {
@@ -2037,7 +2058,7 @@ namespace Opc.Ua.SourceGeneration
                         parameter = "<Variant>";
                     }
 
-                    template.AddReplacement("<BaseT>", GetTemplateParameter(variableType));
+                    template.AddReplacement(Tokens.BaseT, GetTemplateParameter(variableType));
                 }
 
                 // hack to keep the default value as Scalar after code was fixed to correctly set it to Any.
@@ -2046,7 +2067,9 @@ namespace Opc.Ua.SourceGeneration
 
                 if (variableType.ValueRank == ValueRank.ScalarOrArray)
                 {
-                    for (TypeDesign baseType = variableType.BaseTypeNode; baseType != null; baseType = baseType.BaseTypeNode)
+                    for (TypeDesign baseType = variableType.BaseTypeNode;
+                        baseType != null;
+                        baseType = baseType.BaseTypeNode)
                     {
                         if (baseType.SymbolicId == new XmlQualifiedName("DataItemType", Namespaces.OpcUa))
                         {
@@ -2055,113 +2078,126 @@ namespace Opc.Ua.SourceGeneration
                     }
                 }
 
-                template.AddReplacement("_DefaultValue_", variableType.DataTypeNode.GetDefaultDotNetValue(
-                    variableType.ValueRank,
-                    variableType.DefaultValue,
-                    variableType.DecodedValue,
-                    false,
-                    m_model.TargetNamespace,
-                    m_model.Namespaces,
-                    m_context));
-                template.AddReplacement("_ValueRank_", valueRank);
-                template.AddReplacement("_ArrayDimensions_",
+                template.AddReplacement(Tokens.DefaultValue,
+                    variableType.DataTypeNode.GetDefaultDotNetValue(
+                        variableType.ValueRank,
+                        variableType.DefaultValue,
+                        variableType.DecodedValue,
+                        false,
+                        m_model.TargetNamespace,
+                        m_model.Namespaces,
+                        m_context));
+                template.AddReplacement(Tokens.ValueRank, valueRank);
+                template.AddReplacement(
+                    Tokens.ArrayDimensions,
                     variableType.ValueRank.GetArrayDimensionsString(variableType.ArrayDimensions));
-                template.AddReplacement("_IsAbstract_", CodeGeneration.GetBooleanString(variableType.IsAbstract));
-                template.AddReplacement("_AccessLevel_", variableType.AccessLevel.GetAccessLevelString());
-                template.AddReplacement("_MinimumSamplingInterval_",
+                template.AddReplacement(
+                    Tokens.IsAbstract,
+                    CodeGeneration.GetBooleanString(variableType.IsAbstract));
+                template.AddReplacement(
+                    Tokens.AccessLevel,
+                    variableType.AccessLevel.GetAccessLevelString());
+                template.AddReplacement(
+                    Tokens.MinimumSamplingInterval,
                     CodeGeneration.GetMinimumSamplingIntervalString(variableType.MinimumSamplingInterval));
-                template.AddReplacement("_Historizing_", CodeGeneration.GetBooleanString(variableType.Historizing));
+                template.AddReplacement(
+                    Tokens.Historizing,
+                    CodeGeneration.GetBooleanString(variableType.Historizing));
 
-                template.AddReplacement("_DataType_", variableType.DataTypeNode.SymbolicName.Name);
-                template.AddReplacement("_DataTypeNamespacePrefix_",
+                template.AddReplacement(
+                    Tokens.DataType,
+                    variableType.DataTypeNode.SymbolicName.Name);
+                template.AddReplacement(
+                    Tokens.DataTypeNamespacePrefix,
                     m_model.Namespaces.GetNamespacePrefix(variableType.DataTypeNode.SymbolicId.Namespace));
-                template.AddReplacement("_DataTypeNamespaceUri_",
+                template.AddReplacement(
+                    Tokens.DataTypeNamespaceUri,
                     m_model.Namespaces.GetConstantSymbolForNamespace(variableType.DataTypeNode.SymbolicId.Namespace));
 
                 template.AddTemplate(
-                    "// TypedVariableType",
-                    TemplateStrings.ModelCompiler_Templates_Version2_TypedVariableType_cs,
-                    new VariableTypeDesign[] { variableType },
-                    new LoadTemplateEventHandler(LoadTemplate_TypedVariableType),
-                    new WriteTemplateEventHandler(WriteTemplate_TypedVariableType));
+                        Tokens.TypedVariableType,
+                        CodeTemplateStrings.TypedVariableType_cs,
+                        new VariableTypeDesign[] { variableType },
+                        LoadTemplate_TypedVariableType,
+                        WriteTemplate_TypedVariableType);
 
                 template.AddTemplate(
-                    "// VariableTypeValue",
-                    TemplateStrings.ModelCompiler_Templates_Version2_VariableTypeValue_cs,
+                    Tokens.VariableTypeValue,
+                    CodeTemplateStrings.VariableTypeValue_cs,
                     new VariableTypeDesign[] { variableType },
-                    new LoadTemplateEventHandler(LoadTemplate_VariableTypeValue),
-                    new WriteTemplateEventHandler(WriteTemplate_VariableTypeValue));
+                    LoadTemplate_VariableTypeValue,
+                    WriteTemplate_VariableTypeValue);
             }
 
             template.AddTemplate(
-                "// InitializationStringForType",
+                Tokens.InitializationStringForType,
                 null,
                 new NodeDesign[] { node },
-                new LoadTemplateEventHandler(LoadTemplate_InitializationString),
+                LoadTemplate_InitializationString,
                 null);
 
             template.AddTemplate(
-                "// InitializeOptionalChildren",
-                TemplateStrings.ModelCompiler_Templates_Version2_InitializeOptionalChild_cs,
+                Tokens.InitializeOptionalChildren,
+                CodeTemplateStrings.InitializeOptionalChild_cs,
                 children,
-                new LoadTemplateEventHandler(LoadTemplate_InitializeOptionalChildren),
-                new WriteTemplateEventHandler(WriteTemplate_InitializeOptionalChildren));
+                LoadTemplate_InitializeOptionalChildren,
+                WriteTemplate_InitializeOptionalChildren);
 
             template.AddTemplate(
-                "// InitializationString",
+                Tokens.InitializationString,
                 null,
                 new NodeDesign[] { node },
-                new LoadTemplateEventHandler(LoadTemplate_InitializationString),
+                LoadTemplate_InitializationString,
                 null);
 
             template.AddTemplate(
-                "// ListOfFieldsForType",
+                Tokens.ListOfFieldsForType,
                 null,
                 children,
-                new LoadTemplateEventHandler(LoadTemplate_ListOfFieldsForType),
+                LoadTemplate_ListOfFieldsForType,
                 null);
 
             template.AddTemplate(
-                "// ListOfFieldInitializers",
+                Tokens.ListOfFieldInitializers,
                 null,
                 children,
-                new LoadTemplateEventHandler(LoadTemplate_ListOfFieldInitializers),
+                LoadTemplate_ListOfFieldInitializers,
                 null);
 
             template.AddTemplate(
-                "// ListOfFields",
+                Tokens.ListOfFields,
                 null,
                 children,
-                new LoadTemplateEventHandler(LoadTemplate_ListOfFieldsForType),
+                LoadTemplate_ListOfFieldsForType,
                 null);
 
             template.AddTemplate(
-                "// ListOfPropertiesForType",
-                TemplateStrings.ModelCompiler_Templates_Version2_Property_cs,
+                Tokens.ListOfPropertiesForType,
+                CodeTemplateStrings.Property_cs,
                 children,
-                new LoadTemplateEventHandler(LoadTemplate_ListOfPropertiesForType),
-                new WriteTemplateEventHandler(WriteTemplate_ListOfPropertiesForType));
+                LoadTemplate_ListOfPropertiesForType,
+                WriteTemplate_ListOfPropertiesForType);
 
             template.AddTemplate(
-                "// ListOfProperties",
-                TemplateStrings.ModelCompiler_Templates_Version2_Property_cs,
+                Tokens.ListOfProperties,
+                CodeTemplateStrings.Property_cs,
                 children,
-                new LoadTemplateEventHandler(LoadTemplate_ListOfPropertiesForType),
-                new WriteTemplateEventHandler(WriteTemplate_ListOfPropertiesForType));
+                LoadTemplate_ListOfPropertiesForType,
+                WriteTemplate_ListOfPropertiesForType);
 
             template.AddTemplate(
-                "// FindChildMethodsForType",
-                TemplateStrings.ModelCompiler_Templates_Version2_FindChildMethods_cs,
+                Tokens.FindChildMethodsForType,
+                CodeTemplateStrings.FindChildMethods_cs,
                 new NodeDesign[] { type },
-                new LoadTemplateEventHandler(LoadTemplate_FindChildMethods),
-                new WriteTemplateEventHandler(WriteTemplate_FindChildMethods));
+                LoadTemplate_FindChildMethods,
+                WriteTemplate_FindChildMethods);
 
             template.AddTemplate(
-                "// FindChildMethods",
-                TemplateStrings.ModelCompiler_Templates_Version2_FindChildMethods_cs,
+                Tokens.FindChildMethods,
+                CodeTemplateStrings.FindChildMethods_cs,
                 new NodeDesign[] { type },
-                new LoadTemplateEventHandler(LoadTemplate_FindChildMethods),
-                new WriteTemplateEventHandler(WriteTemplate_FindChildMethods));
+                LoadTemplate_FindChildMethods,
+                WriteTemplate_FindChildMethods);
 
             return template.WriteTemplate(context);
         }
@@ -2194,7 +2230,9 @@ namespace Opc.Ua.SourceGeneration
                             }
 
                             template.WriteNextLine(context.Prefix);
-                            template.Write("private const string {0}_InitializationString =", current.Instance.SymbolicName.Name);
+                            template.Write(
+                                "private const string {0}_InitializationString =",
+                                current.Instance.SymbolicName.Name);
                             string childXml = ConstructInitializer(current.Instance, false);
                             WriteInitializationString(template, context, childXml);
                             template.Write(";");
@@ -2247,10 +2285,10 @@ namespace Opc.Ua.SourceGeneration
 
             template.WriteLine(string.Empty);
 
-            template.AddReplacement("_NodeClass_", type.GetNodeClassString());
-            template.AddReplacement("_ClassName_", type.ClassName);
-            template.AddReplacement("_TypeName_", type.SymbolicName.Name);
-            template.AddReplacement("_BrowseName_", type.SymbolicName.Name);
+            template.AddReplacement(Tokens.NodeClass, type.GetNodeClassString());
+            template.AddReplacement(Tokens.ClassName, type.ClassName);
+            template.AddReplacement(Tokens.TypeName, type.SymbolicName.Name);
+            template.AddReplacement(Tokens.BrowseName, type.SymbolicName.Name);
 
             return template.WriteTemplate(context);
         }
@@ -2290,32 +2328,32 @@ namespace Opc.Ua.SourceGeneration
 
             template.WriteLine(string.Empty);
 
-            template.AddReplacement("_ClassName_", type.ClassName);
-            template.AddReplacement("_DataType_", type.DataTypeNode.GetDotNetTypeName(
+            template.AddReplacement(Tokens.ClassName, type.ClassName);
+            template.AddReplacement(Tokens.DataType, type.DataTypeNode.GetDotNetTypeName(
                 ValueRank.Scalar,
                 m_model.TargetNamespace,
                 m_model.Namespaces));
 
             template.AddTemplate(
-                "// ListOfChildInitializers",
+                Tokens.ListOfChildInitializers,
                 null,
                 fields,
-                new LoadTemplateEventHandler(WriteTemplate_VariableTypeValueInitializers),
+                WriteTemplate_VariableTypeValueInitializers,
                 null);
 
             template.AddTemplate(
-                "// ListOfUpdateChildrenChangeMasks",
+                Tokens.ListOfUpdateChildrenChangeMasks,
                 null,
                 fields,
-                new LoadTemplateEventHandler(WriteTemplate_VariableTypeValueUpdateChildrenChangeMasks),
+                WriteTemplate_VariableTypeValueUpdateChildrenChangeMasks,
                 null);
 
             template.AddTemplate(
-                "// ListOfChildMethods",
-                TemplateStrings.ModelCompiler_Templates_Version2_VariableTypeValueField_cs,
+                Tokens.ListOfChildMethods,
+                CodeTemplateStrings.VariableTypeValueField_cs,
                 fields,
                 null,
-                new WriteTemplateEventHandler(WriteTemplate_VariableTypeValueField));
+                WriteTemplate_VariableTypeValueField);
 
             return template.WriteTemplate(context);
         }
@@ -2393,10 +2431,10 @@ namespace Opc.Ua.SourceGeneration
                 return false;
             }
 
-            template.AddReplacement("_ChildName_", field.Key);
-            // template.AddReplacement("_ChildPath_", field.Value.Key.Replace('_', '.'));
-            template.AddReplacement("_ChildPath_", field.Key);
-            template.AddReplacement("_ChildDataType_", field.Value.DataTypeNode.GetDotNetTypeName(
+            template.AddReplacement(Tokens.ChildName, field.Key);
+            // template.AddReplacement(Tokens.ChildPath, field.Value.Key.Replace('_', '.'));
+            template.AddReplacement(Tokens.ChildPath, field.Key);
+            template.AddReplacement(Tokens.ChildDataType, field.Value.DataTypeNode.GetDotNetTypeName(
                 field.Value.ValueRank,
                 m_model.TargetNamespace,
                 m_model.Namespaces));
@@ -2427,8 +2465,8 @@ namespace Opc.Ua.SourceGeneration
             }
 
             template.WriteLine(string.Empty);
-            template.AddReplacement("_XmlNamespaceUri_", m_model.Namespaces.GetConstantForXmlNamespace(dataType.SymbolicId.Namespace));
-            template.AddReplacement("_BrowseName_", dataType.SymbolicName.Name);
+            template.AddReplacement(Tokens.XmlNamespaceUri, m_model.Namespaces.GetConstantForXmlNamespace(dataType.SymbolicId.Namespace));
+            template.AddReplacement(Tokens.BrowseName, dataType.SymbolicName.Name);
 
             return template.WriteTemplate(context);
         }
@@ -2556,7 +2594,7 @@ namespace Opc.Ua.SourceGeneration
 
             if (isUnion)
             {
-                template.Write($"case {dataType.ClassName}Fields.{field.Name}: {{ ");
+                template.Write($$"""case {{dataType.ClassName}}Fields.{{field.Name}}: { """);
             }
 
             if (field.IsOptional)
@@ -2610,8 +2648,11 @@ namespace Opc.Ua.SourceGeneration
                             ValueRank.Scalar,
                             m_model.TargetNamespace,
                             m_model.Namespaces);
-                        template.Write($"encoder.WriteEnumeratedArray({fieldName}, {field.Name}.ToArray(), typeof({elementName}));");
-
+                        template.Write(
+                            "encoder.WriteEnumeratedArray({0}, {1}.ToArray(), typeof({2}));",
+                            fieldName,
+                            field.Name,
+                            elementName);
                         if (isUnion)
                         {
                             template.Write(" break; }");
@@ -2626,7 +2667,10 @@ namespace Opc.Ua.SourceGeneration
                     {
                         if (field.ValueRank == ValueRank.Array)
                         {
-                            template.Write($"encoder.WriteExtensionObjectArray({fieldName}, ExtensionObjectCollection.ToExtensionObjects({field.Name}));");
+                            template.Write(
+                                "encoder.WriteExtensionObjectArray({0}, ExtensionObjectCollection.ToExtensionObjects({1}));",
+                                fieldName,
+                                field.Name);
 
                             if (isUnion)
                             {
@@ -2638,7 +2682,10 @@ namespace Opc.Ua.SourceGeneration
 
                         if (field.ValueRank == ValueRank.Scalar)
                         {
-                            template.Write($"encoder.WriteExtensionObject({fieldName}, new ExtensionObject({field.Name}));");
+                            template.Write(
+                                "encoder.WriteExtensionObject({0}, new ExtensionObject({1}));",
+                                fieldName,
+                                field.Name);
 
                             if (isUnion)
                             {
@@ -2648,7 +2695,7 @@ namespace Opc.Ua.SourceGeneration
                             return context.TemplateString;
                         }
 
-                        template.Write($"encoder.WriteVariant({fieldName}, {field.Name});");
+                        template.Write("encoder.WriteVariant({0}, {1});", fieldName, field.Name);
 
                         if (isUnion)
                         {
@@ -2666,7 +2713,10 @@ namespace Opc.Ua.SourceGeneration
 
                     if (field.ValueRank == ValueRank.Array)
                     {
-                        template.Write($"encoder.WriteEncodeableArray({fieldName}, {field.Name}.ToArray(), typeof({elementName}));");
+                        template.Write("encoder.WriteEncodeableArray({0}, {1}.ToArray(), typeof({2}));",
+                            fieldName,
+                            field.Name,
+                            elementName);
 
                         if (isUnion)
                         {
@@ -2720,7 +2770,7 @@ namespace Opc.Ua.SourceGeneration
 
             if (isUnion)
             {
-                template.Write($"case {dataType.ClassName}Fields.{field.Name}: {{ ");
+                template.Write($$"""case {{dataType.ClassName}}Fields.{{field.Name}}: { """);
             }
 
             if (field.IsOptional)
@@ -2875,7 +2925,7 @@ namespace Opc.Ua.SourceGeneration
 
             if (dataType.IsUnion)
             {
-                template.Write($"case {dataType.ClassName}Fields.{field.Name}: {{ ");
+                template.Write($$"""case {{dataType.ClassName}}Fields.{{field.Name}}: { """);
             }
 
             if (field.IsOptional)
@@ -2906,7 +2956,7 @@ namespace Opc.Ua.SourceGeneration
 
             if (dataType.IsUnion)
             {
-                template.Write($"case {dataType.ClassName}Fields.{field.Name}: {{ ");
+                template.Write($$"""case {{dataType.ClassName}}Fields.{{field.Name}}: { """);
             }
 
             if (field.IsOptional)
@@ -3315,7 +3365,7 @@ namespace Opc.Ua.SourceGeneration
                 template.WriteNextLine(string.Empty);
             }
 
-            template.AddReplacement("_ChildName_", instance.SymbolicName.Name);
+            template.AddReplacement(Tokens.ChildName, instance.SymbolicName.Name);
 
             return template.WriteTemplate(context);
         }
@@ -3330,26 +3380,31 @@ namespace Opc.Ua.SourceGeneration
 
                     if (dataType.BasicDataType != BasicDataType.Enumeration)
                     {
-                        if (field.DataTypeNode.BasicDataType == BasicDataType.UserDefined || field.ValueRank == ValueRank.Array)
+                        if (field.DataTypeNode.BasicDataType == BasicDataType.UserDefined ||
+                            field.ValueRank == ValueRank.Array)
                         {
-                            if (field.AllowSubTypes || (field.ValueRank != ValueRank.Array && field.ValueRank != ValueRank.Scalar))
+                            if (field.AllowSubTypes ||
+                                (field.ValueRank != ValueRank.Array && field.ValueRank != ValueRank.Scalar))
                             {
-                                return TemplateStrings.ModelCompiler_Templates_Version2_DataTypes_Property_cs;
+                                return CodeTemplateStrings.DataTypes_Property_cs;
                             }
 
-                            return TemplateStrings.ModelCompiler_Templates_Version2_DataTypes_ArrayProperty_cs;
+                            return CodeTemplateStrings.DataTypes_ArrayProperty_cs;
                         }
 
-                        return TemplateStrings.ModelCompiler_Templates_Version2_DataTypes_Property_cs;
+                        return CodeTemplateStrings.DataTypes_Property_cs;
                     }
 
-                    return TemplateStrings.ModelCompiler_Templates_Version2_DataTypes_EnumerationValue_cs;
+                    return CodeTemplateStrings.DataTypes_EnumerationValue_cs;
                 }
 
-                return null;
+                return null; // Do not emit
             }
 
-            if (instance.ModellingRule is ModellingRule.ExposesItsArray or ModellingRule.MandatoryPlaceholder or ModellingRule.OptionalPlaceholder)
+            if (instance.ModellingRule
+                is ModellingRule.ExposesItsArray
+                or ModellingRule.MandatoryPlaceholder
+                or ModellingRule.OptionalPlaceholder)
             {
                 return null;
             }
@@ -3361,7 +3416,9 @@ namespace Opc.Ua.SourceGeneration
                     return null;
                 }
 
-                if (instance is MethodDesign method && method.ModellingRule != ModellingRule.Mandatory && method.ModellingRule != ModellingRule.Optional)
+                if (instance is MethodDesign method &&
+                    method.ModellingRule != ModellingRule.Mandatory &&
+                    method.ModellingRule != ModellingRule.Optional)
                 {
                     return null;
                 }
@@ -3373,8 +3430,7 @@ namespace Opc.Ua.SourceGeneration
                 {
                     return null;
                 }
-
-                return TemplateStrings.ModelCompiler_Templates_Version2_PropertyOverride_cs;
+                return CodeTemplateStrings.PropertyOverride_cs;
             }
 
             if (instance.IsBuiltInProperty())
@@ -3424,18 +3480,20 @@ namespace Opc.Ua.SourceGeneration
 
                 const bool emitDefaultValue = true;
 
-                template.AddReplacement("_Description_", field.Description != null ? field.Description.Value : string.Empty);
-                template.AddReplacement("_BrowseName_", field.Name);
-                template.AddReplacement("_EnumerationName_", field.EnsureUniqueEnumName());
-                template.AddReplacement("_TypeName_", field.DataTypeNode.GetDotNetTypeName(
+                template.AddReplacement(
+                    Tokens.Description,
+                    field.Description != null ? field.Description.Value : string.Empty);
+                template.AddReplacement(Tokens.BrowseName, field.Name);
+                template.AddReplacement(Tokens.EnumerationName, field.EnsureUniqueEnumName());
+                template.AddReplacement(Tokens.TypeName, field.DataTypeNode.GetDotNetTypeName(
                     field.ValueRank,
                     m_model.TargetNamespace,
                     m_model.Namespaces));
-                template.AddReplacement("_FieldName_", field.GetChildFieldName());
-                template.AddReplacement("_IsRequired_", valueType ? "true" : "false");
-                template.AddReplacement(", EmitDefaultValue = _EmitDefaultValue_", emitDefaultValue ? string.Empty : ", EmitDefaultValue = false");
-                template.AddReplacement("_FieldIndex_", CoreUtils.Format("{0}", context.Index + 1));
-                template.AddReplacement("_DefaultValue_", field.DataTypeNode.GetDefaultDotNetValue(
+                template.AddReplacement(Tokens.FieldName, field.GetChildFieldName());
+                template.AddReplacement(Tokens.IsRequired, valueType ? "true" : "false");
+                template.AddReplacement(Tokens.EmitDefaultValue, emitDefaultValue ? "true" : "false");
+                template.AddReplacement(Tokens.FieldIndex, CoreUtils.Format("{0}", context.Index + 1));
+                template.AddReplacement(Tokens.DefaultValue, field.DataTypeNode.GetDefaultDotNetValue(
                     field.ValueRank,
                     null,
                     null,
@@ -3443,30 +3501,39 @@ namespace Opc.Ua.SourceGeneration
                     m_model.TargetNamespace,
                     m_model.Namespaces,
                     m_context));
-                template.AddReplacement("_Identifier_", field.Identifier.ToString(CultureInfo.InvariantCulture));
+                template.AddReplacement(Tokens.Identifier, field.Identifier.ToString(CultureInfo.InvariantCulture));
 
                 if (field.IdentifierInName)
                 {
-                    template.AddReplacement("_XmlIdentifier_", field.Name);
+                    template.AddReplacement(Tokens.XmlIdentifier, field.Name);
                 }
                 else
                 {
-                    template.AddReplacement("_XmlIdentifier_", CoreUtils.Format("{0}_{1}", field.Name, field.Identifier));
+                    template.AddReplacement(Tokens.XmlIdentifier,
+                        CoreUtils.Format("{0}_{1}", field.Name, field.Identifier));
                 }
 
-                if (field.Name == "NodeId" && context.Container is DataTypeDesign dt && dt.BaseTypeNode.SymbolicName.Name == BrowseNames.HistoryUpdateDetails)
+                if (field.Name == "NodeId" &&
+                    context.Container is DataTypeDesign dt &&
+                    dt.BaseTypeNode.SymbolicName.Name == BrowseNames.HistoryUpdateDetails)
                 {
-                    template.AddReplacement("public", "public override");
+                    template.AddReplacement(Tokens.PropertyAccessor, "public override");
+                }
+                else
+                {
+                    template.AddReplacement(Tokens.PropertyAccessor, "public");
                 }
 
                 return template.WriteTemplate(context);
             }
 
+            template.AddReplacement(Tokens.PropertyAccessor, "public new");
             if (!instance.IsOverridden())
             {
-                if (!s_builtInPropertyNames.Contains(instance.SymbolicName.Name) || (instance is VariableDesign && instance.SymbolicName.Name == "Value"))
+                if (!s_builtInPropertyNames.Contains(instance.SymbolicName.Name) ||
+                    (instance is VariableDesign && instance.SymbolicName.Name == "Value"))
                 {
-                    template.AddReplacement("public new", "public");
+                    template.AddReplacement(Tokens.PropertyAccessor, "public");
                 }
             }
             else
@@ -3474,10 +3541,10 @@ namespace Opc.Ua.SourceGeneration
                 instance = instance.GetMergedInstance();
             }
 
-            template.AddReplacement("_Description_", instance.Description != null ? instance.Description.Value : string.Empty);
-            template.AddReplacement("_ClassName_", instance.GetClassName(m_model.TargetNamespace, m_model.Namespaces));
-            template.AddReplacement("_ChildName_", instance.SymbolicName.Name);
-            template.AddReplacement("_FieldName_", instance.GetChildFieldName());
+            template.AddReplacement(Tokens.Description, instance.Description != null ? instance.Description.Value : string.Empty);
+            template.AddReplacement(Tokens.ClassName, instance.GetClassName(m_model.TargetNamespace, m_model.Namespaces));
+            template.AddReplacement(Tokens.ChildName, instance.SymbolicName.Name);
+            template.AddReplacement(Tokens.FieldName, instance.GetChildFieldName());
 
             return template.WriteTemplate(context);
         }
@@ -3573,11 +3640,11 @@ namespace Opc.Ua.SourceGeneration
             }
 
             template.AddTemplate(
-                "// ListOfFindChildCase",
-                TemplateStrings.ModelCompiler_Templates_Version2_FindChildCase_cs,
+                Tokens.ListOfFindChildCase,
+                CodeTemplateStrings.FindChildCase_cs,
                 childrenToUse,
-                new LoadTemplateEventHandler(LoadTemplate_ListOfFindChildCase),
-                new WriteTemplateEventHandler(WriteTemplate_ListOfFindChildCase));
+                LoadTemplate_ListOfFindChildCase,
+                WriteTemplate_ListOfFindChildCase);
 
             childrenToUse = [];
 
@@ -3605,18 +3672,18 @@ namespace Opc.Ua.SourceGeneration
             }
 
             template.AddTemplate(
-                "// ListOfFindChildren",
-                TemplateStrings.ModelCompiler_Templates_Version2_FindChildren_cs,
+                Tokens.ListOfFindChildren,
+                CodeTemplateStrings.FindChildren_cs,
                 childrenToUse,
-                new LoadTemplateEventHandler(LoadTemplate_ListOfFindChildCase),
-                new WriteTemplateEventHandler(WriteTemplate_ListOfFindChildCase));
+                LoadTemplate_ListOfFindChildCase,
+                WriteTemplate_ListOfFindChildCase);
 
             template.AddTemplate(
-                "// ListOfRemoveChild",
-                TemplateStrings.ModelCompiler_Templates_Version2_RemoveChild_cs,
+                Tokens.ListOfRemoveChild,
+                CodeTemplateStrings.RemoveChild_cs,
                 childrenToUse,
                 (template, context) => context.Target is InstanceDesign ? context.TemplateString : null,
-                new WriteTemplateEventHandler(WriteTemplate_ListOfRemoveChild));
+                WriteTemplate_ListOfRemoveChild);
 
             return template.WriteTemplate(context);
         }
@@ -3640,17 +3707,17 @@ namespace Opc.Ua.SourceGeneration
 
             if (instance.Parent is TypeDesign type)
             {
-                template.AddReplacement("_TypeName_", type.SymbolicName.Name);
+                template.AddReplacement(Tokens.TypeName, type.SymbolicName.Name);
             }
 
-            template.AddReplacement("_ClassName_", instance.GetClassName(m_model.TargetNamespace, m_model.Namespaces));
-            template.AddReplacement("_ChildName_", instance.SymbolicName.Name);
-            template.AddReplacement("_FieldName_", instance.GetChildFieldName());
-            template.AddReplacement("_NodeClass_", instance.GetNodeClassString());
+            template.AddReplacement(Tokens.ClassName, instance.GetClassName(m_model.TargetNamespace, m_model.Namespaces));
+            template.AddReplacement(Tokens.ChildName, instance.SymbolicName.Name);
+            template.AddReplacement(Tokens.FieldName, instance.GetChildFieldName());
+            template.AddReplacement(Tokens.NodeClass, instance.GetNodeClassString());
 
-            template.AddReplacement("_BrowseName_", instance.SymbolicName.Name);
-            template.AddReplacement("_BrowseNameNamespacePrefix_", m_model.Namespaces.GetNamespacePrefix(instance.SymbolicName.Namespace));
-            template.AddReplacement("_BrowseNameNamespaceUri_", m_model.Namespaces.GetConstantSymbolForNamespace(instance.SymbolicName.Namespace));
+            template.AddReplacement(Tokens.BrowseName, instance.SymbolicName.Name);
+            template.AddReplacement(Tokens.BrowseNameNamespacePrefix, m_model.Namespaces.GetNamespacePrefix(instance.SymbolicName.Namespace));
+            template.AddReplacement(Tokens.BrowseNameNamespaceUri, m_model.Namespaces.GetConstantSymbolForNamespace(instance.SymbolicName.Namespace));
 
             return template.WriteTemplate(context);
         }
@@ -3664,17 +3731,17 @@ namespace Opc.Ua.SourceGeneration
 
             if (instance.Parent is TypeDesign type)
             {
-                template.AddReplacement("_TypeName_", type.SymbolicName.Name);
+                template.AddReplacement(Tokens.TypeName, type.SymbolicName.Name);
             }
 
-            template.AddReplacement("_ClassName_", instance.GetClassName(m_model.TargetNamespace, m_model.Namespaces));
-            template.AddReplacement("_ChildName_", instance.SymbolicName.Name);
-            template.AddReplacement("_FieldName_", instance.GetChildFieldName());
-            template.AddReplacement("_NodeClass_", instance.GetNodeClassString());
+            template.AddReplacement(Tokens.ClassName, instance.GetClassName(m_model.TargetNamespace, m_model.Namespaces));
+            template.AddReplacement(Tokens.ChildName, instance.SymbolicName.Name);
+            template.AddReplacement(Tokens.FieldName, instance.GetChildFieldName());
+            template.AddReplacement(Tokens.NodeClass, instance.GetNodeClassString());
 
-            template.AddReplacement("_BrowseName_", instance.SymbolicName.Name);
-            template.AddReplacement("_BrowseNameNamespacePrefix_", m_model.Namespaces.GetNamespacePrefix(instance.SymbolicName.Namespace));
-            template.AddReplacement("_BrowseNameNamespaceUri_", m_model.Namespaces.GetConstantSymbolForNamespace(instance.SymbolicName.Namespace));
+            template.AddReplacement(Tokens.BrowseName, instance.SymbolicName.Name);
+            template.AddReplacement(Tokens.BrowseNameNamespacePrefix, m_model.Namespaces.GetNamespacePrefix(instance.SymbolicName.Namespace));
+            template.AddReplacement(Tokens.BrowseNameNamespaceUri, m_model.Namespaces.GetConstantSymbolForNamespace(instance.SymbolicName.Namespace));
 
             return template.WriteTemplate(context);
         }
@@ -3706,25 +3773,27 @@ namespace Opc.Ua.SourceGeneration
                 return "<T>";
             }
 
+            string scalarName;
             switch (basicType)
             {
                 case BasicDataType.UserDefined:
                     string ns = m_model.Namespaces.GetNamespacePrefix(variableType.DataTypeNode.SymbolicId.Namespace);
-                    _ = ns + "." + variableType.DataTypeNode.FixClassName();
+                    scalarName = ns + "." + variableType.DataTypeNode.FixClassName();
                     break;
                 case BasicDataType.Structure:
+                    scalarName = "ExtensionObject";
                     break;
                 default:
-                    _ = variableType.DataTypeNode.GetDotNetTypeName(m_model.TargetNamespace, m_model.Namespaces);
+                    scalarName = variableType.DataTypeNode.GetDotNetTypeName(m_model.TargetNamespace, m_model.Namespaces);
                     break;
             }
 
             if (variableType.ValueRank != ValueRank.Scalar)
             {
-                return variableType.ValueRank == ValueRank.Array ? $"<{(string)null}[]>" : "<Variant>";
+                return variableType.ValueRank == ValueRank.Array ? $"<{scalarName}[]>" : "<Variant>";
             }
 
-            return $"<{(string)null}>";
+            return $"<{scalarName}>";
         }
 
         /// <summary>
@@ -4268,32 +4337,32 @@ namespace Opc.Ua.SourceGeneration
                 WriteInitializationStringLine(template, context, line);
                 first = false;
             }
-        }
 
-        private static void WriteInitializationStringLine(Template template, Context context, string line)
-        {
-            template.WriteNextLine(context.Prefix);
-            template.Write(template.Indent);
-            template.Write("   \"");
-
-            for (int ii = 0; ii < line.Length; ii++)
+            static void WriteInitializationStringLine(Template template, Context context, string line)
             {
-                if (line[ii] == '"')
+                template.WriteNextLine(context.Prefix);
+                template.Write(template.Indent);
+                template.Write("   \"");
+
+                for (int ii = 0; ii < line.Length; ii++)
                 {
-                    template.Write("\\\"");
-                    continue;
+                    if (line[ii] == '"')
+                    {
+                        template.Write("\\\"");
+                        continue;
+                    }
+
+                    if (line[ii] == '\\')
+                    {
+                        template.Write("""\\""");
+                        continue;
+                    }
+
+                    template.Write(line[ii]);
                 }
 
-                if (line[ii] == '\\')
-                {
-                    template.Write("\\\\");
-                    continue;
-                }
-
-                template.Write(line[ii]);
+                template.Write("\"");
             }
-
-            template.Write("\"");
         }
 
         private static readonly string[] s_builtInPropertyNames =
@@ -4304,5 +4373,12 @@ namespace Opc.Ua.SourceGeneration
             "Specification",
             "Update"
         ];
+
+        private readonly IServiceMessageContext m_context;
+        private readonly ITelemetryContext m_telemetry;
+        private ModelDesignValidator m_validator;
+        private ModelDesign m_model;
+        private IReadOnlyList<string> m_exclusions;
+        private readonly IFileSystem m_fileSystem;
     }
 }

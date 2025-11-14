@@ -11,6 +11,11 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Design\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
     <InternalsVisibleTo Include="Opc.Ua.SourceGeneration.Core.Tests" />
   </ItemGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">

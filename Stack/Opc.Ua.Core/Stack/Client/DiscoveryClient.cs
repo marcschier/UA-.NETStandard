@@ -481,7 +481,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Creates a new transport channel that supports the ISessionChannel service contract.
+        /// Creates a new transport channel
         /// </summary>
         /// <param name="discoveryUrl">The discovery url.</param>
         /// <param name="endpointConfiguration">The configuration to use with the endpoint.</param>
@@ -550,7 +550,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Creates a new transport channel that supports the IDiscoveryChannel service contract.
+        /// Creates a new transport channel.
         /// </summary>
         internal static ValueTask<ITransportChannel> CreateChannelAsync(
             ApplicationConfiguration configuration,
@@ -625,68 +625,6 @@ namespace Opc.Ua
                 }
             }
             return endpoints;
-        }
-    }
-
-    /// <summary>
-    /// A channel object used by clients to access a UA discovery service.
-    /// </summary>
-    [Obsolete("Use DiscoveryClient.CreateAsync instead to create a discovery client.")]
-    public partial class DiscoveryChannel
-    {
-        /// <summary>
-        /// Creates a new transport channel for discovery
-        /// </summary>
-        [Obsolete("Use DiscoveryClient.CreateAsync instead to create a discovery client.")]
-        public static ITransportChannel Create(
-            Uri discoveryUrl,
-            EndpointConfiguration endpointConfiguration,
-            IServiceMessageContext messageContext,
-            X509Certificate2 clientCertificate = null)
-        {
-            return DiscoveryClient.CreateChannelAsync(
-                discoveryUrl,
-                endpointConfiguration,
-                messageContext,
-                clientCertificate).AsTask().GetAwaiter().GetResult();
-        }
-
-        /// <summary>
-        /// Creates a new transport channel for discovery
-        /// </summary>
-        [Obsolete("Use CreateAsync instead.")]
-        public static ITransportChannel Create(
-            ApplicationConfiguration configuration,
-            ITransportWaitingConnection connection,
-            EndpointConfiguration endpointConfiguration,
-            IServiceMessageContext messageContext,
-            X509Certificate2 clientCertificate = null)
-        {
-            return DiscoveryClient.CreateChannelAsync(
-                configuration,
-                connection,
-                endpointConfiguration,
-                messageContext,
-                clientCertificate).AsTask().GetAwaiter().GetResult();
-        }
-
-        /// <summary>
-        /// Creates a new transport channel for discovery
-        /// </summary>
-        [Obsolete("Use CreateAsync instead.")]
-        public static ITransportChannel Create(
-            ApplicationConfiguration configuration,
-            Uri discoveryUrl,
-            EndpointConfiguration endpointConfiguration,
-            IServiceMessageContext messageContext,
-            X509Certificate2 clientCertificate = null)
-        {
-            return DiscoveryClient.CreateChannelAsync(
-                configuration,
-                discoveryUrl,
-                endpointConfiguration,
-                messageContext,
-                clientCertificate).AsTask().GetAwaiter().GetResult();
         }
     }
 }

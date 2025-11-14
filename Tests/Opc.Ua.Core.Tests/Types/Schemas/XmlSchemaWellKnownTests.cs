@@ -29,6 +29,7 @@
 
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Reflection;
 using System.Xml;
 using Microsoft.Extensions.Logging;
@@ -50,7 +51,8 @@ namespace Opc.Ua.Core.Tests.Types.Schemas
     public class XmlSchemaWellKnownTests : XmlSchemaValidator
     {
         [DatapointSource]
-        public string[][] WellKnownSchemaData => WellKnownDictionaries;
+        public string[][] WellKnownSchemaData =>
+            [.. WellKnown.Select(kv => new[] { kv.Key, kv.Value })];
 
         /// <summary>
         /// Load well known resource type dictionaries.
@@ -59,8 +61,7 @@ namespace Opc.Ua.Core.Tests.Types.Schemas
         public void LoadResources(string[] schemaData)
         {
             NUnit.Framework.Assert.That(schemaData.Length == 2);
-            Assembly assembly = typeof(XmlSchemaValidator).GetTypeInfo().Assembly;
-            using Stream stream = assembly.GetManifestResourceStream(schemaData[1]);
+            using Stream stream = OpenRead(schemaData[1]);
             Assert.IsNotNull(stream);
         }
 
@@ -73,8 +74,7 @@ namespace Opc.Ua.Core.Tests.Types.Schemas
             ITelemetryContext telemetry = NUnitTelemetryContext.Create();
             ILogger logger = telemetry.CreateLogger<XmlSchemaWellKnownTests>();
 
-            Assembly assembly = typeof(XmlSchemaValidator).GetTypeInfo().Assembly;
-            using Stream stream = assembly.GetManifestResourceStream(schemaData[1]);
+            using Stream stream = OpenRead(schemaData[1]);
             Assert.IsNotNull(stream);
             var schema = new XmlSchemaValidator();
             Assert.IsNotNull(schema);

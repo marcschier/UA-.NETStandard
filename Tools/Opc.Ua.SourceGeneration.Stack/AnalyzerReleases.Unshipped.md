@@ -4,6 +4,6 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-MODELGEN001 | ModelCompiler | Error | ModelCompiler
-MODELGEN002 | ModelCompiler | Warning | ModelCompiler
-MODELGEN003 | ModelCompiler | Error | ModelCompiler
+STACKGEN001 | StackSourceGenerator | Error | StackSourceGenerator
+STACKGEN002 | StackSourceGenerator | Warning | StackSourceGenerator
+STACKGEN003 | StackSourceGenerator | Error | StackSourceGenerator

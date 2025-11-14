@@ -27,14 +27,14 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Xml;
 using Opc.Ua.Schema.Types;
 using Opc.Ua.Types;
-using System.Globalization;
-using System.Collections.Generic;
-using System.IO;
-using System;
 
 namespace Opc.Ua.SourceGeneration
 {
@@ -47,290 +47,106 @@ namespace Opc.Ua.SourceGeneration
         /// Generates the code from the contents of the address space.
         /// </summary>
         public XmlSchemaGenerator(
-            string inputPath,
+            IFileSystem fileSystem,
+            string typeDictionary,
             string outputDirectory,
             Dictionary<string, string>
             knownFiles,
-            string resourcePath,
             IReadOnlyList<string> exclusions)
-        :
-            base(inputPath, outputDirectory, knownFiles, exclusions)
+            : base(
+                  fileSystem,
+                  typeDictionary,
+                  outputDirectory,
+                  knownFiles,
+                  exclusions)
         {
         }
 
         /// <summary>
-        /// Generates the datatype files.
+        /// Generates the schema file
         /// </summary>
-        public virtual void Generate(
-            string fileName,
+        public string Generate(
             string namespacePrefix,
-            string dictionaryName,
-            bool exportAll)
+            bool exportAll = true)
         {
-            TargetNamespace = XmlSchemas.Types;
+            TargetNamespace = XmlSchemaNamespace.Types;
             m_exportAll = exportAll;
 
-            WriteTemplate_XmlSchema(fileName, dictionaryName);
+            string schemaFile = Path.Combine(OutputDirectory, CoreUtils.Format(
+                "{0}.Types.xsd",
+                namespacePrefix));
 
-            // only write WSDL is services exist.
-            foreach (DataType datatype in Dictionary.Items)
-            {
-                if (datatype is ServiceType)
-                {
-                    WriteTemplate_ServicesWsdl(fileName, namespacePrefix);
-                    WriteTemplate_EndpointWsdl(fileName, namespacePrefix);
-                    break;
-                }
-            }
+            WriteTemplate_XmlSchema(schemaFile);
+
+            // Validate generated file
+            var validator = new Schema.Xml.XmlSchemaValidator2(
+                FileSystem,
+                KnownFiles);
+            validator.Validate(schemaFile);
+            return schemaFile;
         }
 
         /// <summary>
         /// Writes the address space declaration file.
         /// </summary>
-        private void WriteTemplate_EndpointWsdl(string fileName, string namespacePrefix)
+        private void WriteTemplate_XmlSchema(string fileName)
         {
-            var writer = new StreamWriter(CoreUtils.Format(
-                @"{0}\{1}.Endpoints.wsdl",
-                OutputDirectory,
-                namespacePrefix,
-                fileName), false);
-            try
+            using TextWriter writer = FileSystem.CreateTextWriter(fileName);
+            var template = new Template(writer, SchemaTemplateStrings.Stack_XmlSchema_File_xml);
+
+            template.Replacements.Add(Tokens.Namespace, TargetNamespace);
+
+            var buffer = new StringBuilder();
+            buffer.AppendFormat(
+                CultureInfo.InvariantCulture,
+                """
+                xmlns:tns="{0}"
+                """,
+                TargetNamespace);
+
+            if (!m_exportAll)
             {
-                var template = new Template(
-                    writer,
-                    TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_Endpoint_wsdl);
-
-                template.Replacements.Add("_BuildDate_", CoreUtils.Format("{0:yyyy-MM-dd}", DateTime.UtcNow));
-                template.Replacements.Add("_Version_", CoreUtils.Format(
-                    "{0}.{1}",
-                    CoreUtils.GetAssemblySoftwareVersion(),
-                    CoreUtils.GetAssemblyBuildNumber()));
-                template.Replacements.Add("_Namespace_", TargetNamespace);
-                template.Replacements.Add("_NamespacePrefix_", fileName);
-                template.Replacements.Add("_EndpointsNamespace_", XmlSchemas.Endpoints);
-                template.Replacements.Add("_ServicesNamespace_", XmlSchemas.Services);
-                template.Replacements.Add("_TypesNamespace_", XmlSchemas.Types);
-
-                AddTemplate(
-                     template,
-                     "<!-- Session Binding List -->",
-                     TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_Binding_wsdl,
-                     GetListOfServices(InterfaceType.Session),
-                     null,
-                     new WriteTemplateEventHandler(WriteTemplate_Message));
-
-                AddTemplate(
-                     template,
-                     "<!-- Discovery Binding List -->",
-                     TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_Binding_wsdl,
-                     GetListOfServices(InterfaceType.Discovery),
-                     null,
-                     new WriteTemplateEventHandler(WriteTemplate_Message));
-
-                AddTemplate(
-                     template,
-                     "<!-- Registration Binding List -->",
-                     TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_Binding_wsdl,
-                     GetListOfServices(InterfaceType.Registration),
-                     null,
-                     new WriteTemplateEventHandler(WriteTemplate_Message));
-
-                template.WriteTemplate(null);
-            }
-            finally
-            {
-                writer.Close();
-            }
-        }
-
-        /// <summary>
-        /// Writes the address space declaration file.
-        /// </summary>
-        private void WriteTemplate_ServicesWsdl(string fileName, string namespacePrefix)
-        {
-            var writer = new StreamWriter(CoreUtils.Format(
-                @"{0}\{1}.Services.wsdl",
-                OutputDirectory,
-                namespacePrefix,
-                fileName), false);
-
-            try
-            {
-                var template = new Template(
-                    writer,
-                    TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_Services_wsdl);
-
-                template.Replacements.Add("_BuildDate_", CoreUtils.Format(
-                    "{0:yyyy-MM-dd}",
-                    DateTime.UtcNow));
-                template.Replacements.Add("_Version_", CoreUtils.Format(
-                    "{0}.{1}",
-                    CoreUtils.GetAssemblySoftwareVersion(),
-                    CoreUtils.GetAssemblyBuildNumber()));
-                template.Replacements.Add("_Namespace_", TargetNamespace);
-                template.Replacements.Add("_NamespacePrefix_", fileName);
-                template.Replacements.Add("_ServicesNamespace_", XmlSchemas.Services);
-                template.Replacements.Add("_TypesNamespace_", XmlSchemas.Types);
-
-                AddTemplate(
-                     template,
-                     "<!-- Message List -->",
-                     TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_Message_wsdl,
-                     GetListOfTypes(typeof(ServiceType), m_exportAll, true),
-                     null,
-                     new WriteTemplateEventHandler(WriteTemplate_Message));
-
-                AddTemplate(
-                     template,
-                     "<!-- Session Operation List -->",
-                     TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_PortType_wsdl,
-                     GetListOfServices(InterfaceType.Session),
-                     null,
-                     new WriteTemplateEventHandler(WriteTemplate_Message));
-
-                AddTemplate(
-                     template,
-                     "<!-- Discovery Operation List -->",
-                     TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_PortType_wsdl,
-                     GetListOfServices(InterfaceType.Discovery),
-                     null,
-                     new WriteTemplateEventHandler(WriteTemplate_Message));
-
-                AddTemplate(
-                     template,
-                     "<!-- Registration Operation List -->",
-                     TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_PortType_wsdl,
-                     GetListOfServices(InterfaceType.Registration),
-                     null,
-                     new WriteTemplateEventHandler(WriteTemplate_Message));
-
-                template.WriteTemplate(null);
-            }
-            finally
-            {
-                writer.Close();
-            }
-        }
-
-        /// <summary>
-        /// Returns a list of services filter by their interface type.
-        /// </summary>
-        private List<ServiceType> GetListOfServices(InterfaceType interfaceType)
-        {
-            List<DataType> datatypes = [.. GetListOfTypes(typeof(ServiceType), m_exportAll, true)];
-
-            List<ServiceType> services = [];
-
-            for (int ii = 0; ii < datatypes.Count; ii++)
-            {
-                if (datatypes[ii] is ServiceType serviceType &&
-                    serviceType.InterfaceType == interfaceType)
+                for (int ii = 1; ii < NamespaceUris.Count; ii++)
                 {
-                    services.Add(serviceType);
+                    buffer.Append(Environment.NewLine)
+                        .Append("  ")
+                        .AppendFormat(
+                        CultureInfo.InvariantCulture,
+                        """
+                        xmlns:s{0}="{1}"
+                        """,
+                        ii - 1,
+                        NamespaceUris[ii]);
                 }
             }
 
-            return services;
-        }
+            template.Replacements.Add(Tokens.XmlnsS0ListOfNamespaces, buffer.ToString());
 
-        /// <summary>
-        /// Writes an array declaration to the stream.
-        /// </summary>
-        private bool WriteTemplate_Message(Template template, Context context)
-        {
-            if (context.Target is not ServiceType datatype)
+            List<string> imports = [Namespaces.OpcUaBuiltInTypes];
+
+            if (!m_exportAll)
             {
-                return false;
-            }
-
-            template.AddReplacement("_Namespace_", TargetNamespace);
-            template.AddReplacement("_ServicesNamespace_", XmlSchemas.Services);
-            template.AddReplacement("_TypesNamespace_", XmlSchemas.Types);
-            template.AddReplacement("_NAME_", datatype.QName.Name);
-
-            return template.WriteTemplate(context);
-        }
-
-        /// <summary>
-        /// Writes the address space declaration file.
-        /// </summary>
-        private void WriteTemplate_XmlSchema(string fileName, string dictionaryName)
-        {
-            var writer = new StreamWriter(CoreUtils.Format(
-                @"{0}\{1}.Types.xsd",
-                OutputDirectory,
-                fileName,
-                dictionaryName), false);
-
-            try
-            {
-                var template = new Template(
-                    writer,
-                    TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_File_xml);
-
-                template.Replacements.Add("_BuildDate_", CoreUtils.Format(
-                    "{0:yyyy-MM-dd}",
-                    DateTime.UtcNow));
-                template.Replacements.Add("_Version_", CoreUtils.Format(
-                    "{0}.{1}",
-                    CoreUtils.GetAssemblySoftwareVersion(),
-                    CoreUtils.GetAssemblyBuildNumber()));
-                template.Replacements.Add("_Namespace_", TargetNamespace);
-
-                var buffer = new StringBuilder();
-                buffer.AppendFormat(
-                    CultureInfo.InvariantCulture,
-                    "xmlns:tns=\"{0}\"",
-                    TargetNamespace);
-
-                if (!m_exportAll)
+                for (int ii = 1; ii < NamespaceUris.Count; ii++)
                 {
-                    for (int ii = 1; ii < NamespaceUris.Count; ii++)
-                    {
-                        buffer.Append(template.NewLine)
-                            .Append("  ")
-                            .AppendFormat(
-                            CultureInfo.InvariantCulture,
-                            "xmlns:s{0}=\"{1}\"",
-                            ii - 1,
-                            NamespaceUris[ii]);
-                    }
+                    imports.Add(NamespaceUris[ii]);
                 }
-
-                template.Replacements.Add("xmlns:s0=\"ListOfNamespaces\"", buffer.ToString());
-
-                List<string> imports = [Namespaces.OpcUaBuiltInTypes];
-
-                if (!m_exportAll)
-                {
-                    for (int ii = 1; ii < NamespaceUris.Count; ii++)
-                    {
-                        imports.Add(NamespaceUris[ii]);
-                    }
-                }
-
-                AddTemplate(
-                    template,
-                    "<!-- Imports -->",
-                    null,
-                    imports,
-                    new LoadTemplateEventHandler(LoadTemplate_Imports),
-                    null);
-
-                AddTemplate(
-                     template,
-                     "<!-- ListOfTypes -->",
-                     TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_OpaqueType_xml,
-                     GetListOfTypes(m_exportAll),
-                     new LoadTemplateEventHandler(LoadTemplate_DataType),
-                     new WriteTemplateEventHandler(WriteTemplate_DataType));
-
-                template.WriteTemplate(null);
             }
-            finally
-            {
-                writer.Close();
-            }
+
+            template.AddTemplate(
+                Tokens.Imports,
+                null,
+                imports,
+                LoadTemplate_Imports,
+                null);
+
+            template.AddTemplate(
+                 Tokens.ListOfTypes,
+                 string.Empty,
+                 GetListOfTypes(m_exportAll),
+                 LoadTemplate_DataType,
+                 WriteTemplate_DataType);
+
+            template.WriteTemplate(null);
         }
 
         /// <summary>
@@ -351,7 +167,7 @@ namespace Opc.Ua.SourceGeneration
             }
 
             return CoreUtils.Format(
-                "<xs:import namespace=\"{0}\" schemaLocation=\"{1}.xsd\" />",
+                """<xs:import namespace="{0}" schemaLocation="{1}.xsd" />""",
                 uri,
                 location);
         }
@@ -374,7 +190,7 @@ namespace Opc.Ua.SourceGeneration
                 if (namespaceUri == Namespaces.OpcUaBuiltInTypes)
                 {
                     template.Write(
-                        "<xs:import namespace=\"{0}\" schemaLocation=\"BuiltInTypes.xsd\" />",
+                        """<xs:import namespace="{0}" schemaLocation="BuiltInTypes.xsd" />""",
                         Namespaces.OpcUaBuiltInTypes);
                 }
                 else
@@ -385,7 +201,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            return TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_BuiltInTypes_xsd;
+            return SchemaTemplateStrings.Stack_XmlSchema_BuiltInTypes_xsd;
         }
 
         /// <summary>
@@ -403,20 +219,20 @@ namespace Opc.Ua.SourceGeneration
             {
                 if (!((ComplexType)context.Target).BaseType.IsNull())
                 {
-                    return TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_DerivedType_xml;
+                    return SchemaTemplateStrings.Stack_XmlSchema_DerivedType_xml;
                 }
 
-                return TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_ComplexType_xml;
+                return SchemaTemplateStrings.Stack_XmlSchema_ComplexType_xml;
             }
 
             if (typeof(EnumeratedType).IsInstanceOfType(context.Target))
             {
-                return TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_EnumeratedType_xml;
+                return SchemaTemplateStrings.Stack_XmlSchema_EnumeratedType_xml;
             }
 
             if (typeof(ServiceType).IsInstanceOfType(context.Target))
             {
-                return TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_ServiceType_xml;
+                return SchemaTemplateStrings.Stack_XmlSchema_ServiceType_xml;
             }
 
             // do not publish unrecognized sub-types.
@@ -434,16 +250,15 @@ namespace Opc.Ua.SourceGeneration
                 return false;
             }
 
-            template.AddReplacement("_TypeName_", datatype.QName.Name);
-            CreateDescription(template, "_Description_", datatype.Documentation);
+            template.AddReplacement(Tokens.TypeName, datatype.QName.Name);
+            CreateDescription(template, Tokens.Description, datatype.Documentation);
 
-            AddTemplate(
-                template,
-                "<!-- ArrayDeclaration -->",
-                TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_Array_xml,
+            template.AddTemplate(
+                Tokens.ArrayDeclaration,
+                SchemaTemplateStrings.Stack_XmlSchema_Array_xml,
                 new DataType[] { datatype },
                 null,
-                new WriteTemplateEventHandler(WriteTemplate_Array));
+                WriteTemplate_Array);
 
             if (datatype is ComplexType complexType)
             {
@@ -455,7 +270,7 @@ namespace Opc.Ua.SourceGeneration
                             complexType.BaseType,
                             complexType.QName));
 
-                    template.AddReplacement("_BaseType_", GetXmlSchemaTypeName(basetype.QName, -1));
+                    template.AddReplacement(Tokens.BaseType, GetXmlSchemaTypeName(basetype.QName, -1));
                 }
 
                 List<FieldType> fields = [];
@@ -468,12 +283,11 @@ namespace Opc.Ua.SourceGeneration
                     }
                 }
 
-                AddTemplate(
-                    template,
-                    "<!-- ListOfFields -->",
-                    TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_Field_xml,
+                template.AddTemplate(
+                    Tokens.ListOfFields,
+                    string.Empty,
                     fields,
-                    new LoadTemplateEventHandler(LoadTemplate_Field),
+                    LoadTemplate_Field,
                     null);
             }
 
@@ -489,31 +303,28 @@ namespace Opc.Ua.SourceGeneration
                     }
                 }
 
-                AddTemplate(
-                    template,
-                    "<!-- ListOfValues -->",
-                    TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_EnumeratedValue_xml,
+                template.AddTemplate(
+                    Tokens.ListOfValues,
+                    string.Empty,
                     values,
-                    new LoadTemplateEventHandler(LoadTemplate_EnumeratedValue),
+                    LoadTemplate_EnumeratedValue,
                     null);
             }
 
             if (datatype is ServiceType serviceType)
             {
-                AddTemplate(
-                    template,
-                    "<!-- ListOfRequestParameters -->",
-                    TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_Field_xml,
+                template.AddTemplate(
+                    Tokens.ListOfRequestParameters,
+                    string.Empty,
                     serviceType.Request,
-                    new LoadTemplateEventHandler(LoadTemplate_Field),
+                    LoadTemplate_Field,
                     null);
 
-                AddTemplate(
-                    template,
-                    "<!-- ListOfResponseParameters -->",
-                    TemplateStrings.ModelCompiler_StackGenerator_DataTypes_Templates_XmlSchema_Field_xml,
+                template.AddTemplate(
+                    Tokens.ListOfResponseParameters,
+                    string.Empty,
                     serviceType.Response,
-                    new LoadTemplateEventHandler(LoadTemplate_Field),
+                    LoadTemplate_Field,
                     null);
             }
 
@@ -536,7 +347,7 @@ namespace Opc.Ua.SourceGeneration
             }
 
             template.WriteLine(string.Empty);
-            template.AddReplacement("_TypeName_", datatype.QName.Name);
+            template.AddReplacement(Tokens.TypeName, datatype.QName.Name);
 
             return template.WriteTemplate(context);
         }
@@ -561,14 +372,16 @@ namespace Opc.Ua.SourceGeneration
 
             template.WriteLine(string.Empty);
             template.Write(context.Prefix);
-            template.Write("<xs:element name=\"{0}\"", fieldType.Name);
+            template.Write("""
+                <xs:element name="{0}"
+                """, fieldType.Name);
 
             if (datatype.Name == "XmlElement" && fieldType.ValueRank < 0)
             {
                 template.WriteLine(">");
                 template.WriteLine("{0}  <xs:complexType>", context.Prefix);
                 template.WriteLine("{0}    <xs:sequence>", context.Prefix);
-                template.WriteLine("{0}      <xs:any minOccurs=\"0\" processContents=\"lax\" />", context.Prefix);
+                template.WriteLine("""{0}      <xs:any minOccurs="0" processContents="lax" />""", context.Prefix);
                 template.WriteLine("{0}    </xs:sequence>", context.Prefix);
                 template.WriteLine("{0}  </xs:complexType>", context.Prefix);
 
@@ -576,11 +389,15 @@ namespace Opc.Ua.SourceGeneration
             }
             else
             {
-                template.Write(" type=\"{0}\" minOccurs=\"0\"", GetXmlSchemaTypeName(datatype.QName, fieldType.ValueRank));
+                template.Write("""
+                     type="{0}" minOccurs="0"
+                    """, GetXmlSchemaTypeName(datatype.QName, fieldType.ValueRank));
 
                 if (datatype.Name is "String" or "ByteString")
                 {
-                    template.Write(" nillable=\"true\"");
+                    template.Write("""
+                         nillable="true"
+                        """);
                 }
 
                 template.Write(" />");
@@ -601,7 +418,7 @@ namespace Opc.Ua.SourceGeneration
 
             template.WriteLine(string.Empty);
             template.Write(context.Prefix);
-            template.Write("<xs:enumeration value=\"{0}_{1}\" />", valueType.Name, valueType.Value);
+            template.Write("""<xs:enumeration value="{0}_{1}" />""", valueType.Name, valueType.Value);
 
             /*
             if (valueType.Value != 1)

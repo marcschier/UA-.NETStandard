@@ -27,6 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using Opc.Ua.Schema.Binary;
@@ -45,7 +46,8 @@ namespace Opc.Ua.Core.Tests.Types.Schemas
     public class BinarySchemaWellKnownTests : BinarySchemaValidator
     {
         [DatapointSource]
-        public string[][] WellKnownSchemaData = WellKnownDictionaries;
+        public string[][] WellKnownSchemaData =
+            [.. WellKnown.Select(kv => new[] { kv.Key, kv.Value })];
 
         /// <summary>
         /// Load well known resource type dictionaries.
@@ -54,8 +56,7 @@ namespace Opc.Ua.Core.Tests.Types.Schemas
         public void LoadResources(string[] schemaData)
         {
             NUnit.Framework.Assert.That(schemaData.Length == 2);
-            Assembly assembly = typeof(BinarySchemaValidator).GetTypeInfo().Assembly;
-            object resource = LoadResource(typeof(TypeDictionary), schemaData[1], assembly);
+            object resource = Load<TypeDictionary>(schemaData[1]);
             Assert.IsNotNull(resource);
             Assert.AreEqual(resource.GetType(), typeof(TypeDictionary));
         }
@@ -66,8 +67,7 @@ namespace Opc.Ua.Core.Tests.Types.Schemas
         [Theory]
         public void ValidateResources(string[] schemaData)
         {
-            Assembly assembly = typeof(BinarySchemaValidator).GetTypeInfo().Assembly;
-            System.IO.Stream stream = assembly.GetManifestResourceStream(schemaData[1]);
+            System.IO.Stream stream = OpenRead(schemaData[1]);
             Assert.IsNotNull(stream);
             var schema = new BinarySchemaValidator();
             Assert.IsNotNull(schema);

@@ -27,14 +27,14 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using Microsoft.CodeAnalysis;
-using Opc.Ua.Schema.Model;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using ILogger = SGF.Diagnostics.ILogger;
+using SourceProductionContext = SGF.SgfSourceProductionContext;
 
 namespace Opc.Ua.SourceGeneration
 {
@@ -48,11 +48,6 @@ namespace Opc.Ua.SourceGeneration
     /// </summary>
     internal sealed class ModelCompilation
     {
-        private readonly SourceProductionContext m_context;
-        private readonly ImmutableArray<(AdditionalText, NodesetOptions)> m_input;
-        private readonly ImmutableArray<AdditionalText> m_identifierFiles;
-        private readonly ModelCompilationOptions m_options;
-
         /// <summary>
         /// Create compilation
         /// </summary>
@@ -60,24 +55,27 @@ namespace Opc.Ua.SourceGeneration
             SourceProductionContext context,
             ImmutableArray<(AdditionalText, NodesetOptions)> inputFiles,
             ImmutableArray<AdditionalText> identifierFiles,
-            ModelCompilationOptions options)
+            ModelCompilationOptions options,
+            CompilationOptions compilationOptions,
+            ILogger logger)
         {
             m_context = context;
             m_input = inputFiles;
             m_identifierFiles = identifierFiles;
             m_options = options;
+            m_compilationOptions = compilationOptions;
+            m_telemetry = SourceGeneratorTelemetry.Create(logger, m_context);
         }
 
         /// <summary>
         /// Perform the compilation
         /// </summary>
-        public async Task RunAsync()
+        public void Run()
         {
             using var fileSystem = new VirtualFileSystem();
             try
             {
-                ModelGenerator generator = new(fileSystem, null);
-                generator.LogMessage += Report;
+                var generator = new ModelGenerator(fileSystem, m_telemetry);
 
                 string identiferFile = m_identifierFiles.Select(i => i.Path).FirstOrDefault();
                 if (m_input.Length == 0)
@@ -111,24 +109,18 @@ namespace Opc.Ua.SourceGeneration
                             designFilesForModel,
                             null,
                             0,
-                            "v105",
                             true,
                             [.. exclusions],
                             null,
                             null,
                             true,
                             false);
-
-                        await generator.GenerateMultipleFilesAsync(
+                        generator.GenerateFiles(
                             string.Empty,
-                            false,
-                            [.. exclusions],
-                            false,
-                            minimal: true).ConfigureAwait(false);
+                            [.. exclusions]);
 
                         // Reset generator to clear state.
-                        generator = new(fileSystem, null);
-                        generator.LogMessage += Report;
+                        generator = new(fileSystem, m_telemetry);
                     }
                 }
 
@@ -143,7 +135,6 @@ namespace Opc.Ua.SourceGeneration
                         designFiles,
                         null, // identifierFile,
                         m_options.StartId,
-                        m_options.Version,
                         m_options.UseAllowSubtypes,
                         m_options.Exclude,
                         m_options.ModelVersion,
@@ -151,12 +142,9 @@ namespace Opc.Ua.SourceGeneration
                         m_options.ReleaseCandidate,
                         false);
 
-                    await generator.GenerateMultipleFilesAsync(
+                    generator.GenerateFiles(
                         string.Empty,
-                        false,
-                        m_options.Exclude,
-                        false,
-                        minimal: false).ConfigureAwait(false);
+                        m_options.Exclude);
                 }
 
                 // Collect all generated cs files and produce them into the compilation
@@ -171,21 +159,18 @@ namespace Opc.Ua.SourceGeneration
             {
                 m_context.ReportDiagnostic(
                     Diagnostic.Create(
-                        ModelSourceGenerator.Exception,
+                        SourceGenerator.Exception,
                         Location.None,
                         ex.Message,
                         ex.StackTrace));
-                return;
-            }
-
-            Task Report(LogMessageEventArgs e)
-            {
-                m_context.ReportDiagnostic(
-                    Diagnostic.Create(e.Severity > 0 ?
-                        ModelSourceGenerator.GenericError :
-                        ModelSourceGenerator.GenericWarning, Location.None, e.Message));
-                return Task.CompletedTask;
             }
         }
+
+        private readonly SourceProductionContext m_context;
+        private readonly ImmutableArray<(AdditionalText, NodesetOptions)> m_input;
+        private readonly ImmutableArray<AdditionalText> m_identifierFiles;
+        private readonly ModelCompilationOptions m_options;
+        private readonly CompilationOptions m_compilationOptions;
+        private readonly SourceGeneratorTelemetry m_telemetry;
     }
 }

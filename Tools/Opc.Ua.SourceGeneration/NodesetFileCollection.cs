@@ -37,6 +37,7 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using SourceProductionContext = SGF.SgfSourceProductionContext;
 
 namespace Opc.Ua.SourceGeneration
 {
@@ -89,7 +90,7 @@ namespace Opc.Ua.SourceGeneration
                     catch (Exception e)
                     {
                         context.ReportDiagnostic(
-                            Diagnostic.Create(ModelSourceGenerator.GenericError,
+                            Diagnostic.Create(SourceGenerator.GenericError,
                             Location.None,
                             $"NodeSet could not be loaded ({file.Path}): {e.Message}"));
                         return;
@@ -100,7 +101,7 @@ namespace Opc.Ua.SourceGeneration
                         string.IsNullOrEmpty(nodeset.Models[0].ModelUri))
                     {
                         context.ReportDiagnostic(
-                           Diagnostic.Create(ModelSourceGenerator.GenericError,
+                           Diagnostic.Create(SourceGenerator.GenericError,
                            Location.None,
                            $"NodeSet is missing model definition ({file.Path})."));
                         continue;
@@ -110,7 +111,7 @@ namespace Opc.Ua.SourceGeneration
                     if (!Uri.IsWellFormedUriString(model.ModelUri, UriKind.Absolute))
                     {
                         context.ReportDiagnostic(
-                           Diagnostic.Create(ModelSourceGenerator.GenericError,
+                           Diagnostic.Create(SourceGenerator.GenericError,
                            Location.None,
                            $"NodeSet ModelURI is not valid ({model.ModelUri})."));
                         continue;
@@ -154,7 +155,7 @@ namespace Opc.Ua.SourceGeneration
                 catch (Exception ex)
                 {
                     context.ReportDiagnostic(
-                        Diagnostic.Create(ModelSourceGenerator.Exception,
+                        Diagnostic.Create(SourceGenerator.Exception,
                         Location.None,
                         $"Could not parse NodeSet ({file.Path}): {ex.Message}.",
                         ex));
@@ -212,7 +213,7 @@ namespace Opc.Ua.SourceGeneration
                 if (!m_nodesets.TryGetValue(ns, out NodesetFile nodeset))
                 {
                     m_context.ReportDiagnostic(
-                        Diagnostic.Create(ModelSourceGenerator.GenericError,
+                        Diagnostic.Create(SourceGenerator.GenericError,
                         Location.None,
                         $"NodeSet ({target.Info.ModelUri}) dependency is missing ({ns})."));
                     return false;

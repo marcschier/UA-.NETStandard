@@ -30,7 +30,6 @@
 using Opc.Ua.Schema.Types;
 using Opc.Ua.Types;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Xml;
@@ -45,16 +44,22 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Loads and validates the type dictionary.
         /// </summary>
-        protected SchemaGenerator(
-            string inputPath,
+        internal SchemaGenerator(
+            IFileSystem fileSystem,
+            string typeDictionary,
             string outputDirectory,
             Dictionary<string, string> knownFiles,
             IReadOnlyList<string> exclusions)
         {
             // load and validate type dictionary.
-            Validator = new TypeDictionaryValidator(knownFiles);
-            Validator.Validate(inputPath);
+            Validator = new TypeDictionaryValidator(
+                fileSystem,
+                knownFiles);
+            Validator.Validate(typeDictionary);
+
             Exclusions = exclusions;
+            FileSystem = fileSystem ?? LocalFileSystem.Instance;
+            KnownFiles = knownFiles ?? [];
 
             // save output directory.
             OutputDirectory = outputDirectory;
@@ -64,34 +69,44 @@ namespace Opc.Ua.SourceGeneration
         }
 
         /// <summary>
+        /// File system used
+        /// </summary>
+        protected IFileSystem FileSystem { get; }
+
+        /// <summary>
+        /// Known files for namespaces tables
+        /// </summary>
+        internal Dictionary<string, string> KnownFiles { get; }
+
+        /// <summary>
         /// Excluded fields and types.
         /// </summary>
-        protected IReadOnlyList<string> Exclusions { get; set; }
+        internal IReadOnlyList<string> Exclusions { get; set; }
 
         /// <summary>
         /// The validator used to verify the type dictionary.
         /// </summary>
-        protected TypeDictionaryValidator Validator { get; }
+        internal TypeDictionaryValidator Validator { get; }
 
         /// <summary>
         /// The dictionary being processed.
         /// </summary>
-        protected TypeDictionary Dictionary => Validator.Dictionary;
+        internal TypeDictionary Dictionary => Validator.Dictionary;
 
         /// <summary>
         /// The namespace uris referenced by types in the dictionary.
         /// </summary>
-        protected IList<string> NamespaceUris => m_namespaceUris;
+        internal IList<string> NamespaceUris => m_namespaceUris;
 
         /// <summary>
         /// The directory used to place any output files.
         /// </summary>
-        protected string OutputDirectory { get; }
+        internal string OutputDirectory { get; }
 
         /// <summary>
         /// The current target namespace.
         /// </summary>
-        protected string TargetNamespace
+        internal string TargetNamespace
         {
             get
             {
@@ -123,7 +138,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Returns the datatypes in the dictionary.
         /// </summary>
-        protected List<DataType> GetListOfTypes(bool exportAll)
+        internal List<DataType> GetListOfTypes(bool exportAll)
         {
             return [.. GetListOfTypes(null, exportAll, false)];
         }
@@ -131,7 +146,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Returns the datatypes in the dictionary.
         /// </summary>
-        protected IReadOnlyList<DataType> GetListOfTypes(Type type, bool exportAll, bool exportApi)
+        internal IReadOnlyList<DataType> GetListOfTypes(Type type, bool exportAll, bool exportApi)
         {
             return Validator.GetDataTypeList(type, null, null, exportAll, exportApi);
         }
@@ -139,128 +154,15 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Returns a name qualified with a namespace prefix.
         /// </summary>
-        protected string GetPrefixedName(XmlQualifiedName qname)
+        internal string GetPrefixedName(XmlQualifiedName qname)
         {
             return qname.GetPrefixedName(m_namespaceUris);
         }
 
         /// <summary>
-        /// Checks for a null qualified name.
-        /// </summary>
-        protected bool IsNull(XmlQualifiedName qname)
-        {
-            if (qname == null)
-            {
-                return true;
-            }
-
-            if (string.IsNullOrEmpty(qname.Name))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Initializes a template to use for substitution.
-        /// </summary>
-        protected void AddTemplate(
-            Template template,
-            string replacement,
-            string templateString,
-            IEnumerable targets,
-            LoadTemplateEventHandler onLoad,
-            WriteTemplateEventHandler onWrite)
-        {
-            template.Replacements.Add(replacement, null);
-
-            // create a collection of targets.
-            ArrayList targetList = [];
-
-            if (targets != null)
-            {
-                foreach (object target in targets)
-                {
-                    targetList.Add(target);
-                }
-            }
-
-            var definition = new TemplateDefinition
-            {
-                TemplateString = templateString,
-                Targets = targetList
-            };
-
-            if (onLoad != null)
-            {
-                definition.OnTemplateLoad += onLoad;
-            }
-
-            if (onWrite != null)
-            {
-                definition.OnTemplateWrite += onWrite;
-            }
-
-            template.Templates.Add(replacement, definition);
-        }
-
-        /// <summary>
-        /// Returns the display name for a browse name.
-        /// </summary>
-        protected string GetDisplayName(XmlQualifiedName browseName)
-        {
-            if (browseName.IsNull())
-            {
-                return null;
-            }
-
-            var buffer = new StringBuilder();
-
-            for (int ii = 0; ii < browseName.Name.Length - 1; ii++)
-            {
-                buffer.Append(browseName.Name[ii]);
-
-                if (char.IsLower(browseName.Name[ii]) && char.IsUpper(browseName.Name[ii + 1]))
-                {
-                    buffer.Append(' ');
-                }
-            }
-
-            buffer.Append(browseName.Name[^1]);
-
-            return buffer.ToString();
-        }
-
-        /// <summary>
-        /// Creates a description from a documentation element.
-        /// </summary>
-        protected string GetDescription(Documentation documentation)
-        {
-            if (documentation == null || documentation.Text == null)
-            {
-                return null;
-            }
-
-            var buffer = new StringBuilder();
-
-            for (int ii = 0; ii < documentation.Text.Length; ii++)
-            {
-                if (buffer.Length > 0)
-                {
-                    buffer.Append(' ');
-                }
-
-                buffer.Append(documentation.Text[ii]);
-            }
-
-            return buffer.ToString();
-        }
-
-        /// <summary>
         /// Creates a description from the documentation element.
         /// </summary>
-        protected void CreateDescription(
+        internal static void CreateDescription(
             Template template,
             string token,
             Documentation documentation)
@@ -286,7 +188,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Fetches all of the fields for a complex type by following the base type.
         /// </summary>
-        protected void GetFields(ComplexType complexType, List<FieldType> fields)
+        internal void GetFields(ComplexType complexType, List<FieldType> fields)
         {
             if (!complexType.BaseType.IsNull() &&
                 Validator.ResolveType(complexType.BaseType) is ComplexType baseType)

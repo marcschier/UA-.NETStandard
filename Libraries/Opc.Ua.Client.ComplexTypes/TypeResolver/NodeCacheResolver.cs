@@ -644,7 +644,7 @@ namespace Opc.Ua.Client.ComplexTypes
             NodeId dictionaryId,
             string name,
             byte[] schema = null,
-            IDictionary<string, byte[]> imports = null,
+            IReadOnlyDictionary<string, byte[]> imports = null,
             CancellationToken ct = default)
         {
             if (dictionaryId == null)
