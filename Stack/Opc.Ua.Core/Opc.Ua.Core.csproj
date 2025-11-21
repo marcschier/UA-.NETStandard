@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <DefineConstants>$(DefineConstants);OPCUA_EXCLUDE_FindServersOnNetwork_ASYNC; OPCUA_EXCLUDE_Cancel_ASYNC; OPCUA_EXCLUDE_AddNodes_ASYNC; OPCUA_EXCLUDE_AddReferences_ASYNC; OPCUA_EXCLUDE_DeleteNodes_ASYNC; OPCUA_EXCLUDE_DeleteReferences_ASYNC; OPCUA_EXCLUDE_RegisterNodes_ASYNC; OPCUA_EXCLUDE_UnregisterNodes_ASYNC; OPCUA_EXCLUDE_QueryFirst_ASYNC; OPCUA_EXCLUDE_QueryNext_ASYNC; OPCUA_EXCLUDE_CreateMonitoredItems_ASYNC; OPCUA_EXCLUDE_ModifyMonitoredItems_ASYNC; OPCUA_EXCLUDE_SetMonitoringMode_ASYNC; OPCUA_EXCLUDE_SetTriggering_ASYNC; OPCUA_EXCLUDE_DeleteMonitoredItems_ASYNC; OPCUA_EXCLUDE_CreateSubscription_ASYNC; OPCUA_EXCLUDE_ModifySubscription_ASYNC; OPCUA_EXCLUDE_SetPublishingMode_ASYNC; OPCUA_EXCLUDE_Republish_ASYNC; OPCUA_EXCLUDE_TransferSubscriptions_ASYNC; OPCUA_EXCLUDE_DeleteSubscriptions_ASYNC; OPCUA_EXCLUDE_RegisterServer_ASYNC; OPCUA_EXCLUDE_RegisterServer2_ASYNC</DefineConstants>
     <TargetFrameworks>$(LibCoreTargetFrameworks)</TargetFrameworks>
     <AssemblyName>$(AssemblyPrefix).Core</AssemblyName>
     <PackageId>$(PackagePrefix).Opc.Ua.Core</PackageId>
@@ -32,20 +31,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Design\*" />
-    <Compile Remove="Stack\Generated\Opc.Ua.Channels.cs" />
-    <Compile Remove="Stack\Generated\Opc.Ua.Classes.cs" />
-    <Compile Remove="Stack\Generated\Opc.Ua.Client.cs" />
-    <Compile Remove="Stack\Generated\Opc.Ua.Constants.cs" />
-    <Compile Remove="Stack\Generated\Opc.Ua.DataTypes.cs" />
-    <Compile Remove="Stack\Generated\Opc.Ua.Endpoints.cs" />
-    <Compile Remove="Stack\Generated\Opc.Ua.Gds.Constants.cs" />
-    <Compile Remove="Stack\Generated\Opc.Ua.Gds.DataTypes.cs" />
-    <Compile Remove="Stack\Generated\Opc.Ua.Interfaces.cs" />
-    <Compile Remove="Stack\Generated\Opc.Ua.Messages.cs" />
-    <Compile Remove="Stack\Generated\Opc.Ua.ServerBase.cs" />
-    <Compile Remove="Types\Generated\Opc.Ua.Attributes.cs" />
-    <Compile Remove="Types\Generated\Opc.Ua.StatusCodes.cs" />
-    <EmbeddedResource Include="Stack\Generated\Opc.Ua.PredefinedNodes.uanodes" />
     <EmbeddedResource Include="Types\Utils\LocalizedData.txt" />
   </ItemGroup>
   <!-- Stack source generation -->
@@ -67,9 +52,6 @@
   <!-- Embed the zipped Nodeset2 file -->
   <ItemGroup>
     <EmbeddedResource Include="$(ZipNodeSet2XML)" Link="$(NodeSet2XML).zip" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Types\Generated\" />
   </ItemGroup>
   <!-- Zip the NodeSet2 file -->
   <Target Name="ZipNodeSet2" BeforeTargets="PrepareForBuild" Inputs="$(NodeSet2XML)" Outputs="$(ZipNodeSet2XML)">

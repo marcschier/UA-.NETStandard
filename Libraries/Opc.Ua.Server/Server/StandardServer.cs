@@ -999,25 +999,27 @@ namespace Opc.Ua.Server
         /// <param name="secureChannelContext">The secure channel context.</param>
         /// <param name="requestHeader">The request header.</param>
         /// <param name="requestHandle">The request handle assigned to the request.</param>
-        /// <param name="cancelCount">The number of cancelled requests.</param>
+        /// <param name="ct">The cancellation token.</param>
         /// <returns>
-        /// Returns a <see cref="ResponseHeader"/> object
+        /// Returns a <see cref="CancelResponse"/> object
         /// </returns>
-        public override ResponseHeader Cancel(
+        public override Task<CancelResponse> CancelAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             uint requestHandle,
-            out uint cancelCount)
+            CancellationToken ct)
         {
-            cancelCount = 0;
-
             OperationContext context = ValidateRequest(secureChannelContext, requestHeader, RequestType.Cancel);
 
             try
             {
-                m_serverInternal.RequestManager.CancelRequests(requestHandle, out cancelCount);
+                m_serverInternal.RequestManager.CancelRequests(requestHandle, out uint cancelCount);
 
-                return CreateResponse(requestHeader, context.StringTable);
+                return Task.FromResult(new CancelResponse
+                {
+                    ResponseHeader = CreateResponse(requestHeader, context.StringTable),
+                    CancelCount = cancelCount
+                });
             }
             catch (ServiceResultException e)
             {
@@ -1149,18 +1151,16 @@ namespace Opc.Ua.Server
         /// <param name="secureChannelContext">The secure channel context.</param>
         /// <param name="requestHeader">The request header.</param>
         /// <param name="nodesToRegister">The list of NodeIds to register.</param>
-        /// <param name="registeredNodeIds">The list of NodeIds identifying the registered nodes. </param>
+        /// <param name="ct">The cancellation token.</param>
         /// <returns>
-        /// Returns a <see cref="ResponseHeader"/> object
+        /// Returns a <see cref="RegisterNodesResponse"/> object
         /// </returns>
-        public override ResponseHeader RegisterNodes(
+        public override Task<RegisterNodesResponse> RegisterNodesAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             NodeIdCollection nodesToRegister,
-            out NodeIdCollection registeredNodeIds)
+            CancellationToken ct)
         {
-            registeredNodeIds = null;
-
             OperationContext context = ValidateRequest(secureChannelContext, requestHeader, RequestType.RegisterNodes);
 
             try
@@ -1168,9 +1168,13 @@ namespace Opc.Ua.Server
                 ValidateOperationLimits(nodesToRegister, OperationLimits.MaxNodesPerRegisterNodes);
 
                 m_serverInternal.NodeManager
-                    .RegisterNodes(context, nodesToRegister, out registeredNodeIds);
+                    .RegisterNodes(context, nodesToRegister, out NodeIdCollection registeredNodeIds);
 
-                return CreateResponse(requestHeader, context.StringTable);
+                return Task.FromResult(new RegisterNodesResponse
+                {
+                    ResponseHeader = CreateResponse(requestHeader, context.StringTable),
+                    RegisteredNodeIds = registeredNodeIds
+                });
             }
             catch (ServiceResultException e)
             {
@@ -1198,13 +1202,15 @@ namespace Opc.Ua.Server
         /// <param name="secureChannelContext">The secure channel context.</param>
         /// <param name="requestHeader">The request header.</param>
         /// <param name="nodesToUnregister">The list of NodeIds to unregister</param>
+        /// <param name="ct">The cancellation token.</param>
         /// <returns>
-        /// Returns a <see cref="ResponseHeader"/> object
+        /// Returns a <see cref="UnregisterNodesResponse"/> object
         /// </returns>
-        public override ResponseHeader UnregisterNodes(
+        public override Task<UnregisterNodesResponse> UnregisterNodesAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
-            NodeIdCollection nodesToUnregister)
+            NodeIdCollection nodesToUnregister,
+            CancellationToken ct)
         {
             OperationContext context = ValidateRequest(secureChannelContext, requestHeader, RequestType.UnregisterNodes);
 
@@ -1216,7 +1222,10 @@ namespace Opc.Ua.Server
 
                 m_serverInternal.NodeManager.UnregisterNodes(context, nodesToUnregister);
 
-                return CreateResponse(requestHeader, context.StringTable);
+                return Task.FromResult(new UnregisterNodesResponse
+                {
+                    ResponseHeader = CreateResponse(requestHeader, context.StringTable)
+                });
             }
             catch (ServiceResultException e)
             {
@@ -1527,14 +1536,11 @@ namespace Opc.Ua.Server
         /// <param name="maxNotificationsPerPublish">The maximum number of notifications that the Client wishes to receive in a single Publish response.</param>
         /// <param name="publishingEnabled">If set to <c>true</c> publishing is enabled for the Subscription.</param>
         /// <param name="priority">The relative priority of the Subscription.</param>
-        /// <param name="subscriptionId">The Server-assigned identifier for the Subscription.</param>
-        /// <param name="revisedPublishingInterval">The actual publishing interval that the Server will use.</param>
-        /// <param name="revisedLifetimeCount">The revised lifetime count.</param>
-        /// <param name="revisedMaxKeepAliveCount">The revised max keep alive count.</param>
+        /// <param name="ct">The cancellation token.</param>
         /// <returns>
-        /// Returns a <see cref="ResponseHeader"/> object
+        /// Returns a <see cref="CreateSubscriptionResponse"/> object
         /// </returns>
-        public override ResponseHeader CreateSubscription(
+        public override Task<CreateSubscriptionResponse> CreateSubscriptionAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             double requestedPublishingInterval,
@@ -1543,10 +1549,7 @@ namespace Opc.Ua.Server
             uint maxNotificationsPerPublish,
             bool publishingEnabled,
             byte priority,
-            out uint subscriptionId,
-            out double revisedPublishingInterval,
-            out uint revisedLifetimeCount,
-            out uint revisedMaxKeepAliveCount)
+            CancellationToken ct)
         {
             OperationContext context = ValidateRequest(
                 secureChannelContext,
@@ -1563,12 +1566,19 @@ namespace Opc.Ua.Server
                     maxNotificationsPerPublish,
                     publishingEnabled,
                     priority,
-                    out subscriptionId,
-                    out revisedPublishingInterval,
-                    out revisedLifetimeCount,
-                    out revisedMaxKeepAliveCount);
+                    out uint subscriptionId,
+                    out double revisedPublishingInterval,
+                    out uint revisedLifetimeCount,
+                    out uint revisedMaxKeepAliveCount);
 
-                return CreateResponse(requestHeader, context.StringTable);
+                return Task.FromResult(new CreateSubscriptionResponse
+                {
+                    ResponseHeader = CreateResponse(requestHeader, context.StringTable),
+                    SubscriptionId = subscriptionId,
+                    RevisedPublishingInterval = revisedPublishingInterval,
+                    RevisedLifetimeCount = revisedLifetimeCount,
+                    RevisedMaxKeepAliveCount = revisedMaxKeepAliveCount
+                });
             }
             catch (ServiceResultException e)
             {
@@ -1597,19 +1607,14 @@ namespace Opc.Ua.Server
         /// <param name="requestHeader">The request header.</param>
         /// <param name="subscriptionIds">The list of Subscriptions to transfer.</param>
         /// <param name="sendInitialValues">If the initial values should be sent.</param>
-        /// <param name="results">The list of result StatusCodes for the Subscriptions to transfer.</param>
-        /// <param name="diagnosticInfos">The diagnostic information for the results.</param>
-        public override ResponseHeader TransferSubscriptions(
+        /// <param name="ct">The cancellation token.</param>
+        public override Task<TransferSubscriptionsResponse> TransferSubscriptionsAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             UInt32Collection subscriptionIds,
             bool sendInitialValues,
-            out TransferResultCollection results,
-            out DiagnosticInfoCollection diagnosticInfos)
+            CancellationToken ct)
         {
-            results = null;
-            diagnosticInfos = null;
-
             OperationContext context = ValidateRequest(
                 secureChannelContext,
                 requestHeader,
@@ -1623,10 +1628,15 @@ namespace Opc.Ua.Server
                     context,
                     subscriptionIds,
                     sendInitialValues,
-                    out results,
-                    out diagnosticInfos);
+                    out TransferResultCollection results,
+                    out DiagnosticInfoCollection diagnosticInfos);
 
-                return CreateResponse(requestHeader, context.StringTable);
+                return Task.FromResult(new TransferSubscriptionsResponse
+                {
+                    ResponseHeader = CreateResponse(requestHeader, context.StringTable),
+                    Results = results,
+                    DiagnosticInfos = diagnosticInfos
+                });
             }
             catch (ServiceResultException e)
             {
@@ -1654,17 +1664,15 @@ namespace Opc.Ua.Server
         /// <param name="secureChannelContext">The secure channel context.</param>
         /// <param name="requestHeader">The request header.</param>
         /// <param name="subscriptionIds">The list of Subscriptions to delete.</param>
-        /// <param name="results">The list of result StatusCodes for the Subscriptions to delete.</param>
-        /// <param name="diagnosticInfos">The diagnostic information for the results.</param>
+        /// <param name="ct">The cancellation token.</param>
         /// <returns>
-        /// Returns a <see cref="ResponseHeader"/> object
+        /// Returns a <see cref="DeleteSubscriptionsResponse"/> object
         /// </returns>
-        public override ResponseHeader DeleteSubscriptions(
+        public override Task<DeleteSubscriptionsResponse> DeleteSubscriptionsAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             UInt32Collection subscriptionIds,
-            out StatusCodeCollection results,
-            out DiagnosticInfoCollection diagnosticInfos)
+            CancellationToken ct)
         {
             OperationContext context = ValidateRequest(
                 secureChannelContext,
@@ -1678,10 +1686,15 @@ namespace Opc.Ua.Server
                 ServerInternal.SubscriptionManager.DeleteSubscriptions(
                     context,
                     subscriptionIds,
-                    out results,
-                    out diagnosticInfos);
+                    out StatusCodeCollection results,
+                    out DiagnosticInfoCollection diagnosticInfos);
 
-                return CreateResponse(requestHeader, context.StringTable);
+                return Task.FromResult(new DeleteSubscriptionsResponse
+                {
+                    ResponseHeader = CreateResponse(requestHeader, context.StringTable),
+                    Results = results,
+                    DiagnosticInfos = diagnosticInfos
+                });
             }
             catch (ServiceResultException e)
             {
@@ -1787,27 +1800,31 @@ namespace Opc.Ua.Server
         /// <param name="requestHeader">The request header.</param>
         /// <param name="subscriptionId">The subscription id.</param>
         /// <param name="retransmitSequenceNumber">The sequence number of a specific NotificationMessage to be republished.</param>
-        /// <param name="notificationMessage">The requested NotificationMessage.</param>
+        /// <param name="ct">The cancellation token.</param>
         /// <returns>
-        /// Returns a <see cref="ResponseHeader"/> object
+        /// Returns a <see cref="RepublishResponse"/> object
         /// </returns>
-        public override ResponseHeader Republish(
+        public override Task<RepublishResponse> RepublishAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             uint subscriptionId,
             uint retransmitSequenceNumber,
-            out NotificationMessage notificationMessage)
+            CancellationToken ct)
         {
             OperationContext context = ValidateRequest(secureChannelContext, requestHeader, RequestType.Republish);
 
             try
             {
-                notificationMessage = ServerInternal.SubscriptionManager.Republish(
+                NotificationMessage notificationMessage = ServerInternal.SubscriptionManager.Republish(
                     context,
                     subscriptionId,
                     retransmitSequenceNumber);
 
-                return CreateResponse(requestHeader, context.StringTable);
+                return Task.FromResult(new RepublishResponse
+                {
+                    ResponseHeader = CreateResponse(requestHeader, context.StringTable),
+                    NotificationMessage = notificationMessage
+                });
             }
             catch (ServiceResultException e)
             {
@@ -1840,13 +1857,11 @@ namespace Opc.Ua.Server
         /// <param name="requestedMaxKeepAliveCount">The requested max keep alive count.</param>
         /// <param name="maxNotificationsPerPublish">The maximum number of notifications that the Client wishes to receive in a single Publish response.</param>
         /// <param name="priority">The relative priority of the Subscription.</param>
-        /// <param name="revisedPublishingInterval">The revised publishing interval.</param>
-        /// <param name="revisedLifetimeCount">The revised lifetime count.</param>
-        /// <param name="revisedMaxKeepAliveCount">The revised max keep alive count.</param>
+        /// <param name="ct">The cancellation token.</param>
         /// <returns>
-        /// Returns a <see cref="ResponseHeader"/> object
+        /// Returns a <see cref="ModifySubscriptionResponse"/> object
         /// </returns>
-        public override ResponseHeader ModifySubscription(
+        public override Task<ModifySubscriptionResponse> ModifySubscriptionAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             uint subscriptionId,
@@ -1855,9 +1870,7 @@ namespace Opc.Ua.Server
             uint requestedMaxKeepAliveCount,
             uint maxNotificationsPerPublish,
             byte priority,
-            out double revisedPublishingInterval,
-            out uint revisedLifetimeCount,
-            out uint revisedMaxKeepAliveCount)
+            CancellationToken ct)
         {
             OperationContext context = ValidateRequest(
                 secureChannelContext,
@@ -1874,11 +1887,17 @@ namespace Opc.Ua.Server
                     requestedMaxKeepAliveCount,
                     maxNotificationsPerPublish,
                     priority,
-                    out revisedPublishingInterval,
-                    out revisedLifetimeCount,
-                    out revisedMaxKeepAliveCount);
+                    out double revisedPublishingInterval,
+                    out uint revisedLifetimeCount,
+                    out uint revisedMaxKeepAliveCount);
 
-                return CreateResponse(requestHeader, context.StringTable);
+                return Task.FromResult(new ModifySubscriptionResponse
+                {
+                    RevisedPublishingInterval = revisedPublishingInterval,
+                    RevisedLifetimeCount = revisedLifetimeCount,
+                    RevisedMaxKeepAliveCount = revisedMaxKeepAliveCount,
+                    ResponseHeader = CreateResponse(requestHeader, context.StringTable)
+                });
             }
             catch (ServiceResultException e)
             {
@@ -1907,18 +1926,16 @@ namespace Opc.Ua.Server
         /// <param name="requestHeader">The request header.</param>
         /// <param name="publishingEnabled">If set to <c>true</c> publishing of NotificationMessages is enabled for the Subscription.</param>
         /// <param name="subscriptionIds">The list of subscription ids.</param>
-        /// <param name="results">The list of StatusCodes for the Subscriptions to enable/disable.</param>
-        /// <param name="diagnosticInfos">The diagnostic information for the results.</param>
+        /// <param name="ct">The cancellation token.</param>
         /// <returns>
-        /// Returns a <see cref="ResponseHeader"/> object
+        /// Returns a <see cref="SetPublishingModeResponse"/> object
         /// </returns>
-        public override ResponseHeader SetPublishingMode(
+        public override Task<SetPublishingModeResponse> SetPublishingModeAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             bool publishingEnabled,
             UInt32Collection subscriptionIds,
-            out StatusCodeCollection results,
-            out DiagnosticInfoCollection diagnosticInfos)
+            CancellationToken ct)
         {
             OperationContext context = ValidateRequest(
                 secureChannelContext,
@@ -1933,10 +1950,15 @@ namespace Opc.Ua.Server
                     context,
                     publishingEnabled,
                     subscriptionIds,
-                    out results,
-                    out diagnosticInfos);
+                    out StatusCodeCollection results,
+                    out DiagnosticInfoCollection diagnosticInfos);
 
-                return CreateResponse(requestHeader, context.StringTable);
+                return Task.FromResult(new SetPublishingModeResponse
+                {
+                    Results = results,
+                    DiagnosticInfos = diagnosticInfos,
+                    ResponseHeader = CreateResponse(requestHeader, context.StringTable)
+                });
             }
             catch (ServiceResultException e)
             {
@@ -1967,30 +1989,19 @@ namespace Opc.Ua.Server
         /// <param name="triggeringItemId">The id for the MonitoredItem used as the triggering item.</param>
         /// <param name="linksToAdd">The list of ids of the items to report that are to be added as triggering links.</param>
         /// <param name="linksToRemove">The list of ids of the items to report for the triggering links to be deleted.</param>
-        /// <param name="addResults">The list of StatusCodes for the items to add.</param>
-        /// <param name="addDiagnosticInfos">The list of diagnostic information for the links to add.</param>
-        /// <param name="removeResults">The list of StatusCodes for the items to delete.</param>
-        /// <param name="removeDiagnosticInfos">The list of diagnostic information for the links to delete.</param>
+        /// <param name="ct">The cancellation token.</param>
         /// <returns>
-        /// Returns a <see cref="ResponseHeader"/> object
+        /// Returns a <see cref="SetTriggeringResponse"/> object
         /// </returns>
-        public override ResponseHeader SetTriggering(
+        public override Task<SetTriggeringResponse> SetTriggeringAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             uint subscriptionId,
             uint triggeringItemId,
             UInt32Collection linksToAdd,
             UInt32Collection linksToRemove,
-            out StatusCodeCollection addResults,
-            out DiagnosticInfoCollection addDiagnosticInfos,
-            out StatusCodeCollection removeResults,
-            out DiagnosticInfoCollection removeDiagnosticInfos)
+            CancellationToken ct)
         {
-            addResults = null;
-            addDiagnosticInfos = null;
-            removeResults = null;
-            removeDiagnosticInfos = null;
-
             OperationContext context = ValidateRequest(secureChannelContext, requestHeader, RequestType.SetTriggering);
 
             try
@@ -2014,12 +2025,19 @@ namespace Opc.Ua.Server
                     triggeringItemId,
                     linksToAdd,
                     linksToRemove,
-                    out addResults,
-                    out addDiagnosticInfos,
-                    out removeResults,
-                    out removeDiagnosticInfos);
+                    out StatusCodeCollection addResults,
+                    out DiagnosticInfoCollection addDiagnosticInfos,
+                    out StatusCodeCollection removeResults,
+                    out DiagnosticInfoCollection removeDiagnosticInfos);
 
-                return CreateResponse(requestHeader, context.StringTable);
+                return Task.FromResult(new SetTriggeringResponse
+                {
+                    AddResults = addResults,
+                    AddDiagnosticInfos = addDiagnosticInfos,
+                    RemoveResults = removeResults,
+                    RemoveDiagnosticInfos = removeDiagnosticInfos,
+                    ResponseHeader = CreateResponse(requestHeader, context.StringTable)
+                });
             }
             catch (ServiceResultException e)
             {
@@ -2049,19 +2067,17 @@ namespace Opc.Ua.Server
         /// <param name="subscriptionId">The subscription id that will report notifications.</param>
         /// <param name="timestampsToReturn">The type of timestamps to be returned for the MonitoredItems.</param>
         /// <param name="itemsToCreate">The list of MonitoredItems to be created and assigned to the specified subscription</param>
-        /// <param name="results">The list of results for the MonitoredItems to create.</param>
-        /// <param name="diagnosticInfos">The diagnostic information for the results.</param>
+        /// <param name="ct">The cancellation token.</param>
         /// <returns>
-        /// Returns a <see cref="ResponseHeader"/> object
+        /// Returns a <see cref="CreateMonitoredItemsResponse"/> object
         /// </returns>
-        public override ResponseHeader CreateMonitoredItems(
+        public override Task<CreateMonitoredItemsResponse> CreateMonitoredItemsAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             uint subscriptionId,
             TimestampsToReturn timestampsToReturn,
             MonitoredItemCreateRequestCollection itemsToCreate,
-            out MonitoredItemCreateResultCollection results,
-            out DiagnosticInfoCollection diagnosticInfos)
+            CancellationToken ct)
         {
             OperationContext context = ValidateRequest(
                 secureChannelContext,
@@ -2077,10 +2093,15 @@ namespace Opc.Ua.Server
                     subscriptionId,
                     timestampsToReturn,
                     itemsToCreate,
-                    out results,
-                    out diagnosticInfos);
+                    out MonitoredItemCreateResultCollection results,
+                    out DiagnosticInfoCollection diagnosticInfos);
 
-                return CreateResponse(requestHeader, context.StringTable);
+                return Task.FromResult(new CreateMonitoredItemsResponse
+                {
+                    Results = results,
+                    DiagnosticInfos = diagnosticInfos,
+                    ResponseHeader = CreateResponse(requestHeader, context.StringTable)
+                });
             }
             catch (ServiceResultException e)
             {
@@ -2110,19 +2131,17 @@ namespace Opc.Ua.Server
         /// <param name="subscriptionId">The subscription id.</param>
         /// <param name="timestampsToReturn">The type of timestamps to be returned for the MonitoredItems.</param>
         /// <param name="itemsToModify">The list of MonitoredItems to modify.</param>
-        /// <param name="results">The list of results for the MonitoredItems to modify.</param>
-        /// <param name="diagnosticInfos">The diagnostic information for the results.</param>
+        /// <param name="ct">The cancellation token.</param>
         /// <returns>
-        /// Returns a <see cref="ResponseHeader"/> object
+        /// Returns a <see cref="ModifyMonitoredItemsResponse"/> object
         /// </returns>
-        public override ResponseHeader ModifyMonitoredItems(
+        public override Task<ModifyMonitoredItemsResponse> ModifyMonitoredItemsAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             uint subscriptionId,
             TimestampsToReturn timestampsToReturn,
             MonitoredItemModifyRequestCollection itemsToModify,
-            out MonitoredItemModifyResultCollection results,
-            out DiagnosticInfoCollection diagnosticInfos)
+            CancellationToken ct)
         {
             OperationContext context = ValidateRequest(
                 secureChannelContext,
@@ -2138,10 +2157,15 @@ namespace Opc.Ua.Server
                     subscriptionId,
                     timestampsToReturn,
                     itemsToModify,
-                    out results,
-                    out diagnosticInfos);
+                    out MonitoredItemModifyResultCollection results,
+                    out DiagnosticInfoCollection diagnosticInfos);
 
-                return CreateResponse(requestHeader, context.StringTable);
+                return Task.FromResult(new ModifyMonitoredItemsResponse
+                {
+                    Results = results,
+                    DiagnosticInfos = diagnosticInfos,
+                    ResponseHeader = CreateResponse(requestHeader, context.StringTable)
+                });
             }
             catch (ServiceResultException e)
             {
@@ -2170,18 +2194,16 @@ namespace Opc.Ua.Server
         /// <param name="requestHeader">The request header.</param>
         /// <param name="subscriptionId">The subscription id.</param>
         /// <param name="monitoredItemIds">The list of MonitoredItems to delete.</param>
-        /// <param name="results">The list of results for the MonitoredItems to delete.</param>
-        /// <param name="diagnosticInfos">The diagnostic information for the results.</param>
+        /// <param name="ct">The cancellation token.</param>
         /// <returns>
-        /// Returns a <see cref="ResponseHeader"/> object
+        /// Returns a <see cref="DeleteMonitoredItemsResponse"/> object
         /// </returns>
-        public override ResponseHeader DeleteMonitoredItems(
+        public override Task<DeleteMonitoredItemsResponse> DeleteMonitoredItemsAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             uint subscriptionId,
             UInt32Collection monitoredItemIds,
-            out StatusCodeCollection results,
-            out DiagnosticInfoCollection diagnosticInfos)
+            CancellationToken ct)
         {
             OperationContext context = ValidateRequest(
                 secureChannelContext,
@@ -2196,10 +2218,15 @@ namespace Opc.Ua.Server
                     context,
                     subscriptionId,
                     monitoredItemIds,
-                    out results,
-                    out diagnosticInfos);
+                    out StatusCodeCollection results,
+                    out DiagnosticInfoCollection diagnosticInfos);
 
-                return CreateResponse(requestHeader, context.StringTable);
+                return Task.FromResult(new DeleteMonitoredItemsResponse
+                {
+                    Results = results,
+                    DiagnosticInfos = diagnosticInfos,
+                    ResponseHeader = CreateResponse(requestHeader, context.StringTable)
+                });
             }
             catch (ServiceResultException e)
             {
@@ -2229,19 +2256,17 @@ namespace Opc.Ua.Server
         /// <param name="subscriptionId">The subscription id.</param>
         /// <param name="monitoringMode">The monitoring mode to be set for the MonitoredItems.</param>
         /// <param name="monitoredItemIds">The list of MonitoredItems to modify.</param>
-        /// <param name="results">The list of results for the MonitoredItems to modify.</param>
-        /// <param name="diagnosticInfos">The diagnostic information for the results.</param>
+        /// <param name="ct">The cancellation token.</param>
         /// <returns>
-        /// Returns a <see cref="ResponseHeader"/> object
+        /// Returns a <see cref="SetMonitoringModeResponse"/>
         /// </returns>
-        public override ResponseHeader SetMonitoringMode(
+        public override async Task<SetMonitoringModeResponse> SetMonitoringModeAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             uint subscriptionId,
             MonitoringMode monitoringMode,
             UInt32Collection monitoredItemIds,
-            out StatusCodeCollection results,
-            out DiagnosticInfoCollection diagnosticInfos)
+            CancellationToken ct)
         {
             OperationContext context = ValidateRequest(
                 secureChannelContext,
@@ -2252,15 +2277,21 @@ namespace Opc.Ua.Server
             {
                 ValidateOperationLimits(monitoredItemIds, OperationLimits.MaxMonitoredItemsPerCall);
 
-                ServerInternal.SubscriptionManager.SetMonitoringMode(
+                (StatusCodeCollection results, DiagnosticInfoCollection diagnosticInfos) =
+                    await ServerInternal.SubscriptionManager.SetMonitoringModeAsync(
                     context,
                     subscriptionId,
                     monitoringMode,
                     monitoredItemIds,
-                    out results,
-                    out diagnosticInfos);
+                    ct)
+                    .ConfigureAwait(false);
 
-                return CreateResponse(requestHeader, context.StringTable);
+                return new SetMonitoringModeResponse
+                {
+                    Results = results,
+                    DiagnosticInfos = diagnosticInfos,
+                    ResponseHeader = CreateResponse(requestHeader, context.StringTable)
+                };
             }
             catch (ServiceResultException e)
             {
@@ -3216,7 +3247,8 @@ namespace Opc.Ua.Server
                 ISubscriptionManager subscriptionManager = CreateSubscriptionManager(
                     m_serverInternal,
                     configuration);
-                subscriptionManager.Startup();
+                await subscriptionManager.StartupAsync(cancellationToken)
+                    .ConfigureAwait(false);
 
                 // add the session manager to the datastore.
                 m_serverInternal.SetSessionManager(sessionManager, subscriptionManager);
@@ -3368,9 +3400,9 @@ namespace Opc.Ua.Server
                     {
                         m_serverInternal.SessionManager.SessionChannelKeepAlive
                             -= SessionChannelKeepAliveEvent;
-                        m_serverInternal.SubscriptionManager.Shutdown();
+                        await m_serverInternal.SubscriptionManager.ShutdownAsync(cancellationToken).ConfigureAwait(false);
                         m_serverInternal.SessionManager.Shutdown();
-                        await m_serverInternal.NodeManager.ShutdownAsync().ConfigureAwait(false);
+                        await m_serverInternal.NodeManager.ShutdownAsync(cancellationToken).ConfigureAwait(false);
                     }
                 }
                 finally
