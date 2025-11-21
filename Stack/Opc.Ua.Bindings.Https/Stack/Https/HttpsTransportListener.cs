@@ -579,7 +579,7 @@ namespace Opc.Ua.Bindings
 
             try
             {
-                m_quotas.CertificateValidator.Validate(clientCertificate);
+                m_quotas.CertificateValidator.ValidateAsync(clientCertificate, default).GetAwaiter().GetResult();
             }
             catch (Exception)
             {

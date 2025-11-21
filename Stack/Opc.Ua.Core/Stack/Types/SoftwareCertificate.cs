@@ -41,7 +41,7 @@ namespace Opc.Ua
             try
             {
                 certificate = CertificateFactory.Create(signedCertificate);
-                validator.Validate(certificate);
+                validator.ValidateAsync(certificate, default).GetAwaiter().GetResult();
             }
             catch (Exception e)
             {

@@ -411,7 +411,7 @@ namespace Opc.Ua.Server
                                         clientDescription.ApplicationUri);
                                 }
 
-                                CertificateValidator.Validate(clientCertificateChain);
+                                await CertificateValidator.ValidateAsync(clientCertificateChain, ct).ConfigureAwait(false);
                             }
                         }
                     }
