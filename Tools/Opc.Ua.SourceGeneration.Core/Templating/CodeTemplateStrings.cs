@@ -2128,8 +2128,8 @@ namespace Opc.Ua.SourceGeneration
                 /// <summary>
                 /// Intializes the object with a channel and a message context.
                 /// </summary>
-                public {{Tokens.ServiceSet}}Client(ITransportChannel channel)
-                    : base(channel)
+                public {{Tokens.ServiceSet}}Client(ITransportChannel channel, ITelemetryContext telemetry)
+                    : base(channel, telemetry)
                 {
                 }
 
@@ -2340,95 +2340,6 @@ namespace Opc.Ua.SourceGeneration
             /// </summary>
             public partial class {{Tokens.Name}}Response : IServiceResponse
             {
-            }
-
-            /// <summary>
-            /// The message contract for the {{Tokens.Name}} service.
-            /// </summary>
-            [System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
-            [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
-            public class {{Tokens.Name}}Message : IServiceMessage
-            {
-                /// <summary>
-                /// The body of the message.
-                /// </summary>
-                public {{Tokens.Name}}Request {{Tokens.Name}}Request;
-
-                /// <summary>
-                /// Initializes an empty message.
-                /// </summary>
-                public {{Tokens.Name}}Message()
-                {
-                }
-
-                /// <summary>
-                /// Initializes the message with the body.
-                /// </summary>
-                public {{Tokens.Name}}Message({{Tokens.Name}}Request {{Tokens.Name}}Request)
-                {
-                    this.{{Tokens.Name}}Request = {{Tokens.Name}}Request;
-                }
-
-                /// <inheritdoc/>
-                public IServiceRequest GetRequest()
-                {
-                    return {{Tokens.Name}}Request;
-                }
-
-                /// <inheritdoc/>
-                public object CreateResponse(IServiceResponse response)
-                {
-                    {{Tokens.Name}}Response body = response as {{Tokens.Name}}Response;
-
-                    if (body == null)
-                    {
-                        body = new {{Tokens.Name}}Response();
-                        body.ResponseHeader = ((ServiceFault)response).ResponseHeader;
-                    }
-
-                    return new {{Tokens.Name}}ResponseMessage(body);
-                }
-            }
-
-            /// <summary>
-            /// The message contract for the {{Tokens.Name}} service response.
-            /// </summary>
-            [System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
-            [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
-            public class {{Tokens.Name}}ResponseMessage
-            {
-                /// <summary>
-                /// The body of the message.
-                /// </summary>
-                public {{Tokens.Name}}Response {{Tokens.Name}}Response;
-
-                /// <summary>
-                /// Initializes an empty message.
-                /// </summary>
-                public {{Tokens.Name}}ResponseMessage()
-                {
-                }
-
-                /// <summary>
-                /// Initializes the message with the body.
-                /// </summary>
-                public {{Tokens.Name}}ResponseMessage({{Tokens.Name}}Response {{Tokens.Name}}Response)
-                {
-                    this.{{Tokens.Name}}Response = {{Tokens.Name}}Response;
-                }
-
-                /// <summary>
-                /// Initializes the message with a service fault.
-                /// </summary>
-                public {{Tokens.Name}}ResponseMessage(ServiceFault ServiceFault)
-                {
-                    this.{{Tokens.Name}}Response = new {{Tokens.Name}}Response();
-
-                    if (ServiceFault != null)
-                    {
-                        this.{{Tokens.Name}}Response.ResponseHeader = ServiceFault.ResponseHeader;
-                    }
-                }
             }
             #endif // !OPCUA_EXCLUDE_{{Tokens.Name}}
             """;

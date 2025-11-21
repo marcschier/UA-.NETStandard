@@ -30,15 +30,6 @@ namespace Opc.Ua.Schema.Binary
     public class BinarySchemaValidator : SchemaValidator
     {
         /// <summary>
-        /// Well known binary schema files to namespace mappings.
-        /// </summary>
-        public static readonly IReadOnlyDictionary<string, string> WellKnown =
-            new Dictionary<string, string>
-            {
-                [Namespaces.OpcUa] = "Opc.Ua.Types.bsd"
-            };
-
-        /// <summary>
         /// Intializes the object with a file table.
         /// </summary>
         public BinarySchemaValidator(
@@ -46,7 +37,6 @@ namespace Opc.Ua.Schema.Binary
             IDictionary<string, string> knownFiles = null)
             : base(fileSystem, knownFiles, StandardTypeImports)
         {
-            AddWellKnownFiles(WellKnown);
         }
 
         /// <summary>
@@ -55,7 +45,6 @@ namespace Opc.Ua.Schema.Binary
         public BinarySchemaValidator(IReadOnlyDictionary<string, byte[]> importTable)
             : base(null, null, AndStandardTypeImports(importTable))
         {
-            AddWellKnownFiles(WellKnown);
         }
 
         /// <summary>
@@ -146,18 +135,13 @@ namespace Opc.Ua.Schema.Binary
             {
                 foreach (ImportDirective directive in Dictionary.Import)
                 {
-                    Import(directive);
+                    Import(directive.Location, directive.Namespace);
                 }
             }
-            else
+            else if (Dictionary.TargetNamespace != Namespaces.OpcUa)
             {
-                // always import builtin types, unless wellknown library
-                if (!WellKnown.Any(n =>
-                        string.Equals(n.Key, Dictionary.TargetNamespace, StringComparison.Ordinal)))
-                {
-                    var directive = new ImportDirective { Namespace = Namespaces.OpcUa };
-                    Import(directive);
-                }
+                // Import built-in types if no imports are specified and not built in.
+                Import(null, Namespaces.OpcUa);
             }
 
             // import types from imported dictionaries.
@@ -192,24 +176,24 @@ namespace Opc.Ua.Schema.Binary
         /// <summary>
         /// Imports a dictionary identified by an import directive.
         /// </summary>
-        private void Import(ImportDirective directive)
+        private void Import(string location, string namespaceUri)
         {
             // check if already loaded.
-            if (LoadedFiles.ContainsKey(directive.Namespace))
+            if (LoadedFiles.ContainsKey(namespaceUri))
             {
                 return;
             }
 
-            TypeDictionary dictionary = Load<TypeDictionary>(directive.Location, directive.Namespace);
+            TypeDictionary dictionary = Load<TypeDictionary>(location, namespaceUri);
 
             // verify namespace.
             if (!string.IsNullOrEmpty(dictionary.TargetNamespace) &&
-                directive.Namespace != dictionary.TargetNamespace)
+                namespaceUri != dictionary.TargetNamespace)
             {
                 throw Exception(
                     "Imported dictionary '{0}' does not match uri specified: '{1}'.",
                     dictionary.TargetNamespace,
-                    directive.Namespace);
+                    namespaceUri);
             }
 
             // save file.
@@ -220,7 +204,8 @@ namespace Opc.Ua.Schema.Binary
             {
                 for (int ii = 0; ii < dictionary.Import.Length; ii++)
                 {
-                    Import(dictionary.Import[ii]);
+                    ImportDirective directive = dictionary.Import[ii];
+                    Import(directive.Location, directive.Namespace);
                 }
             }
 

@@ -1615,6 +1615,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
 """;
 
             var context = new ServiceMessageContext(telemetry);
+            context.Factory.AddEncodeableTypes(typeof(Gds.ApplicationRecordDataType).Assembly);
             context.NamespaceUris.Append("urn:localhost:server");
             context.NamespaceUris.Append(Gds.Namespaces.OpcUaGds);
 
@@ -1736,6 +1737,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
 """;
 
             var context = new ServiceMessageContext(telemetry);
+            context.Factory.AddEncodeableTypes(typeof(Gds.ApplicationRecordDataType).Assembly);
             context.NamespaceUris.Append("urn:localhost:server");
             context.NamespaceUris.Append(Gds.Namespaces.OpcUaGds);
 
@@ -1858,6 +1860,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
 """;
 
             var context = new ServiceMessageContext(telemetry);
+            context.Factory.AddEncodeableTypes(typeof(Gds.ApplicationRecordDataType).Assembly);
             context.NamespaceUris.Append("urn:localhost:server");
             context.NamespaceUris.Append(Gds.Namespaces.OpcUaGds);
 

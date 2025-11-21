@@ -13,14 +13,14 @@
 namespace Opc.Ua
 {
     /// <summary>
-    /// An interface to a service request.
+    /// An interface to a service response.
     /// </summary>
-    public interface IServiceRequest : IEncodeable
+    public interface IServiceResponse : IEncodeable
     {
         /// <summary>
-        /// The header for the request.
+        /// The header for the response.
         /// </summary>
-        /// <value>The request header.</value>
-        RequestHeader RequestHeader { get; set; }
+        /// <value>The response header.</value>
+        ResponseHeader ResponseHeader { get; }
     }
 }

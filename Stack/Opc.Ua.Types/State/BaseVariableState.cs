@@ -197,16 +197,16 @@ namespace Opc.Ua
                 return default(T);
             }
 
-            if (typeof(T).IsInstanceOfType(value))
+            if (value is T typedValue)
             {
-                return value;
+                return typedValue;
             }
 
             if (value is ExtensionObject extension)
             {
-                if (typeof(T).IsInstanceOfType(extension.Body))
+                if (extension.Body is T typedBody)
                 {
-                    return extension.Body;
+                    return typedBody;
                 }
 
                 if (typeof(IEncodeable).GetTypeInfo().IsAssignableFrom(typeof(T).GetTypeInfo()))
@@ -462,22 +462,29 @@ namespace Opc.Ua
         /// <exception cref="ServiceResultException"> if it is impossible to cast the value or the value is null and <see cref="IsValueType"/> for the type <typeparamref name="T"/> returns true. </exception>
         public static T CheckTypeBeforeCast<T>(object value, bool throwOnError)
         {
-            if ((value == null && typeof(T).GetTypeInfo().IsValueType) ||
-                (value != null && !typeof(T).IsInstanceOfType(value)))
+            if (value is T typedValue)
             {
-                if (throwOnError)
-                {
-                    throw ServiceResultException.Create(
-                        StatusCodes.BadTypeMismatch,
-                        "Cannot convert '{0}' to a {1}.",
-                        value,
-                        typeof(T).Name);
-                }
-
-                return default;
+                // Can convert
+                return typedValue;
             }
-
-            return (T)value;
+            else if (value == null)
+            {
+                if (!typeof(T).GetTypeInfo().IsValueType)
+                {
+                    // Return null because reference is null
+                    return default;
+                }
+            }
+            // Otherwise check if we need to throw and throw or return default
+            if (throwOnError)
+            {
+                throw ServiceResultException.Create(
+                    StatusCodes.BadTypeMismatch,
+                    "Cannot convert '{0}' to a {1}.",
+                    value,
+                    typeof(T).Name);
+            }
+            return default;
         }
 
         /// <inheritdoc/>

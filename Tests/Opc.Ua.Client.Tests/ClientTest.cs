@@ -285,8 +285,6 @@ namespace Opc.Ua.Client.Tests
 
             var request = new ReadRequest { RequestHeader = null };
 
-            var readMessage = new ReadMessage { ReadRequest = request };
-
             var readValueId = new ReadValueId
             {
                 NodeId = new NodeId(Guid.NewGuid()),

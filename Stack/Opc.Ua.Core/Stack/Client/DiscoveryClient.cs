@@ -24,15 +24,6 @@ namespace Opc.Ua
     public partial class DiscoveryClient
     {
         /// <summary>
-        /// Intializes the object with a channel and a message context.
-        /// </summary>
-        public DiscoveryClient(ITransportChannel channel, ITelemetryContext telemetry)
-            : this(channel)
-        {
-            m_logger = telemetry.CreateLogger<DiscoveryClient>();
-        }
-
-        /// <summary>
         /// Creates a binding for to use for discovering servers.
         /// </summary>
         /// <param name="discoveryUrl">The discovery URL.</param>

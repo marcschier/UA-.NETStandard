@@ -4973,6 +4973,7 @@ namespace Opc.Ua.Client
         private Subscription? m_defaultSubscription;
         private readonly EndpointDescriptionCollection? m_discoveryServerEndpoints;
         private readonly StringCollection? m_discoveryProfileUris;
+        private new readonly ILogger m_logger;
 
         private sealed class AsyncRequestState : IDisposable
         {

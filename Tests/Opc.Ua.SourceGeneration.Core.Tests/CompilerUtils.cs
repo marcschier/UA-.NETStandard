@@ -245,7 +245,6 @@ namespace Opc.Ua.SourceGeneration
                 {
                     RequestHeader RequestHeader { get; set; }
                 }
-                public interface IServiceMessage {}
                 public interface IServiceResponse
                 {
                     ResponseHeader ResponseHeader { get;}

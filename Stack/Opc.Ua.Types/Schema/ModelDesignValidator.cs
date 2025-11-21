@@ -4331,7 +4331,11 @@ namespace Opc.Ua.Schema.Model
                 "TargetId");
         }
 
-        private NodeDesign FindNode(XmlQualifiedName symbolicId, Type requiredType, string sourceName, string referenceName)
+        private NodeDesign FindNode(
+            XmlQualifiedName symbolicId,
+            Type requiredType,
+            string sourceName,
+            string referenceName)
         {
             if (IsNull(symbolicId))
             {

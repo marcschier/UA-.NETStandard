@@ -27,17 +27,6 @@ namespace Opc.Ua.Schema.Xml
     public class XmlSchemaValidator : SchemaValidator
     {
         /// <summary>
-        /// Well known xml schema files to namespace mappings.
-        /// </summary>
-        public static readonly IReadOnlyDictionary<string, string> WellKnown =
-            new Dictionary<string, string>
-            {
-                // [Namespaces.OpcUaBuiltInTypes] = "BuiltInTypes.xsd",
-                // [Namespaces.OpcUaXsd] = "Opc.Ua.Types.xsd",
-                [Namespaces.OpcUa] = "Opc.Ua.Types.xsd"
-            };
-
-        /// <summary>
         /// Intializes the object with default values.
         /// </summary>
         public XmlSchemaValidator(
@@ -45,7 +34,6 @@ namespace Opc.Ua.Schema.Xml
             IDictionary<string, string> knownFiles = null)
             : base(fileSystem, knownFiles, null)
         {
-            AddWellKnownFiles(WellKnown);
         }
 
         /// <summary>
@@ -54,7 +42,6 @@ namespace Opc.Ua.Schema.Xml
         public XmlSchemaValidator(IReadOnlyDictionary<string, byte[]> importTable)
             : base(null, null, importTable)
         {
-            AddWellKnownFiles(WellKnown);
         }
 
         /// <summary>

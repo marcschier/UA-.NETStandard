@@ -649,9 +649,9 @@ namespace Opc.Ua
             {
                 IEncodeable element = ToEncodeable(extensions.GetValue(ii) as ExtensionObject);
 
-                if (typeof(T).IsInstanceOfType(element))
+                if (element is T typedElement)
                 {
-                    list.Add((T)element);
+                    list.Add(typedElement);
                 }
                 else
                 {

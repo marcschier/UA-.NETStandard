@@ -32,8 +32,12 @@ namespace Opc.Ua
         /// Intializes the object with a channel and a message context.
         /// </summary>
         /// <param name="channel">The channel.</param>
-        public ClientBase(ITransportChannel channel)
+        /// <param name="telemetry"></param>
+        public ClientBase(ITransportChannel channel, ITelemetryContext telemetry)
         {
+            m_logger = telemetry.CreateLogger<ClientBase>();
+            m_meter = telemetry.CreateMeter();
+
             if (channel == null)
             {
                 throw new ArgumentNullException(nameof(channel));
@@ -65,7 +69,6 @@ namespace Opc.Ua
 
                 Utils.SilentDispose(m_meter);
                 m_instruments.Clear();
-                m_meter = null;
 
                 Disposed = true;
             }
@@ -717,18 +720,11 @@ namespace Opc.Ua
                     }));
         }
 
-#pragma warning disable IDE1006 // Naming Styles
         /// <summary>
-        /// Logger to be used by the client inheritance chain
+        /// Logger for client inheritence chain
         /// </summary>
-        protected ILogger m_logger { get; set; } = LoggerUtils.Null.Logger;
-
-        /// <summary>
-        /// Meter to be used by the client inheritance chain
-        /// </summary>
-        protected Meter? m_meter { get; set; }
-#pragma warning restore IDE1006 // Naming Styles
-
+        protected readonly ILogger m_logger;
+        private readonly Meter m_meter;
         private ITransportChannel? m_channel;
         private readonly ConcurrentDictionary<string, Instrument<double>> m_instruments = [];
         private int m_nextRequestHandle;

@@ -1068,22 +1068,22 @@ namespace Opc.Ua.SourceGeneration
         private string LoadTemplate_Class(Template template, Context context)
         {
             // do not publish type declarations as classes.
-            if (typeof(TypeDeclaration).IsInstanceOfType(context.Target))
+            if (context.Target is TypeDeclaration)
             {
                 return null;
             }
 
-            if (typeof(ComplexType).IsInstanceOfType(context.Target))
+            if (context.Target is ComplexType)
             {
                 return CodeTemplateStrings.Classes_Class_cs;
             }
 
-            if (typeof(EnumeratedType).IsInstanceOfType(context.Target))
+            if (context.Target is EnumeratedType)
             {
                 return CodeTemplateStrings.Classes_Enumeration_cs;
             }
 
-            if (typeof(ServiceType).IsInstanceOfType(context.Target))
+            if (context.Target is ServiceType)
             {
                 return CodeTemplateStrings.Classes_Service_cs;
             }

@@ -138,13 +138,18 @@ namespace Opc.Ua.Client.ComplexTypes
         internal void Validate(
             byte[] dictionary,
             ILogger logger,
-            IReadOnlyDictionary<string, byte[]> imports = null,
+            Dictionary<string, byte[]> imports = null,
             bool throwOnError = false)
         {
             var istrm = new MemoryStream(dictionary);
 
             if (TypeSystemId == Objects.XmlSchema_TypeSystem)
             {
+                imports ??= new Dictionary<string, byte[]>();
+                if (!imports.ContainsKey(Namespaces.OpcUa))
+                {
+                    imports.Add(Namespaces.OpcUa, XmlSchemas.TypesXsd.ToArray());
+                }
                 var validator = new Schema.Xml.XmlSchemaValidator(imports);
 
                 try
@@ -161,6 +166,11 @@ namespace Opc.Ua.Client.ComplexTypes
 
             if (TypeSystemId == Objects.OPCBinarySchema_TypeSystem)
             {
+                imports ??= new Dictionary<string, byte[]>();
+                if (!imports.ContainsKey(Namespaces.OpcUa))
+                {
+                    imports.Add(Namespaces.OpcUa, XmlSchemas.TypesBsd.ToArray());
+                }
                 var validator = new Schema.Binary.BinarySchemaValidator(imports);
                 try
                 {

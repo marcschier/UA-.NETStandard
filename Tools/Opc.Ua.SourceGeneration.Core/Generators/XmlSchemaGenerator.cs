@@ -210,14 +210,14 @@ namespace Opc.Ua.SourceGeneration
         private string LoadTemplate_DataType(Template template, Context context)
         {
             // do not publish type declarations in OPC BinarySchema files.
-            if (typeof(TypeDeclaration).IsInstanceOfType(context.Target))
+            if (context.Target is TypeDeclaration)
             {
                 return null;
             }
 
-            if (typeof(ComplexType).IsInstanceOfType(context.Target))
+            if (context.Target is ComplexType complexType)
             {
-                if (!((ComplexType)context.Target).BaseType.IsNull())
+                if (!complexType.BaseType.IsNull())
                 {
                     return SchemaTemplateStrings.Stack_XmlSchema_DerivedType_xml;
                 }
@@ -225,12 +225,12 @@ namespace Opc.Ua.SourceGeneration
                 return SchemaTemplateStrings.Stack_XmlSchema_ComplexType_xml;
             }
 
-            if (typeof(EnumeratedType).IsInstanceOfType(context.Target))
+            if (context.Target is EnumeratedType enumeratedType)
             {
                 return SchemaTemplateStrings.Stack_XmlSchema_EnumeratedType_xml;
             }
 
-            if (typeof(ServiceType).IsInstanceOfType(context.Target))
+            if (context.Target is ServiceType serviceType)
             {
                 return SchemaTemplateStrings.Stack_XmlSchema_ServiceType_xml;
             }
