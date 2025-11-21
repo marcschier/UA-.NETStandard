@@ -305,7 +305,7 @@ namespace Opc.Ua.SourceGeneration
                 public interface IClientBase {}
                 public class ClientBase : IClientBase
                 {
-                    public ClientBase(ITransportChannel channel) { }
+                    public ClientBase(ITransportChannel channel, ITelemetryContext telemetry) { }
                     public ITransportChannel TransportChannel => null;
                     protected static void ValidateResponse(ResponseHeader header) {}
                     protected virtual void UpdateRequestHeader(

@@ -85,10 +85,9 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 // Load all available nodeset files from the input.
-                var nodesets = new NodesetFileCollection(
-                    m_input,
-                    m_context,
-                    fileSystem);
+                var nodesets = m_input.ToNodeSetFileCollection(
+                    fileSystem,
+                    m_telemetry);
                 if (nodesets.Files.Count > 0)
                 {
                     generator.AvailableNodeSets = nodesets.Files;
@@ -96,7 +95,7 @@ namespace Opc.Ua.SourceGeneration
                     {
                         List<string> designFilesForModel = nodesets.GetDesignFileListForModel(
                             modelUri,
-                            out NodesetFileCollection.NodesetFile nodeset);
+                            out NodesetFile nodeset);
                         if (designFilesForModel == null || nodeset.Info.Ignore)
                         {
                             continue;

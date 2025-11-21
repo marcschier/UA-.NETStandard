@@ -29,6 +29,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -37,6 +38,41 @@ namespace Opc.Ua.SourceGeneration
 {
     internal static class Extensions
     {
+        /// <summary>
+        /// Get options from file options
+        /// </summary>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        public static NodesetOptions ToNodeSetOptions(this AnalyzerConfigOptions options)
+        {
+            if (options == null)
+            {
+                return null;
+            }
+            return new NodesetOptions
+            {
+                Ignore = options.GetBool(nameof(NodesetOptions.Ignore), false),
+                Prefix = options.GetString(nameof(NodesetOptions.Prefix), false),
+                Version = options.GetString(nameof(NodesetOptions.Version), false),
+                Name = options.GetString(nameof(NodesetOptions.Name), false),
+                ModelUri = options.GetString(nameof(NodesetOptions.ModelUri), false)
+            };
+        }
+
+        /// <summary>
+        /// Create collection
+        /// </summary>
+        public static NodesetFileCollection ToNodeSetFileCollection(
+            this ImmutableArray<(AdditionalText, NodesetOptions)> nodeset2Files,
+            IFileSystem fileSystem,
+            ITelemetryContext telemetry)
+        {
+            return new NodesetFileCollection(
+                [.. nodeset2Files.Select(f => (f.Item1.Path, f.Item2))],
+                fileSystem,
+                telemetry.CreateLogger<NodesetFileCollection>());
+        }
+
         /// <summary>
         /// Design files end in xml but are not nodeset2.xml files.
         /// </summary>
@@ -55,6 +91,9 @@ namespace Opc.Ua.SourceGeneration
             return text.HasFileExtension("csv");
         }
 
+        /// <summary>
+        /// Has file extension check
+        /// </summary>
         public static bool HasFileExtension(this AdditionalText text, string extension)
         {
             return text.Path.EndsWith("." + extension, StringComparison.OrdinalIgnoreCase);

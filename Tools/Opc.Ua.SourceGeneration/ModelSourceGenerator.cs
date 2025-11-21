@@ -59,7 +59,7 @@ namespace Opc.Ua.SourceGeneration
                     .Combine(context.AnalyzerConfigOptionsProvider)
                     .Select((pair, _) => (
                         pair.Left,
-                        NodesetOptions.From(pair.Right.GetOptions(pair.Left))))
+                        pair.Right.GetOptions(pair.Left).ToNodeSetOptions()))
                     .Collect();
             IncrementalValueProvider<ImmutableArray<AdditionalText>> identiferFile =
                 context.AdditionalTextsProvider

@@ -27,7 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.Logging;
 using Opc.Ua.Export;
 using Opc.Ua.Schema.Model;
 using Opc.Ua.Types;
@@ -37,14 +37,70 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using SourceProductionContext = SGF.SgfSourceProductionContext;
 
 namespace Opc.Ua.SourceGeneration
 {
     /// <summary>
+    /// Nodeset information
+    /// </summary>
+    public sealed record class NodesetOptions
+    {
+        /// <summary>
+        /// Model uri
+        /// </summary>
+        public string ModelUri { get; set; }
+
+        /// <summary>
+        /// Name
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Prefix to use
+        /// </summary>
+        public string Prefix { get; set; }
+
+        /// <summary>
+        /// Should be ignored
+        /// </summary>
+        public bool Ignore { get; set; }
+
+        /// <summary>
+        /// Version
+        /// </summary>
+        public string Version { get; set; }
+    }
+
+    /// <summary>
+    /// An entry in the collection
+    /// </summary>
+    public sealed class NodesetFile
+    {
+        /// <summary>
+        /// Nodeset information
+        /// </summary>
+        public NodesetOptions Info { get; set; }
+
+        /// <summary>
+        /// File name
+        /// </summary>
+        public string FileName { get; set; }
+
+        /// <summary>
+        /// The nodeset parsed
+        /// </summary>
+        public UANodeSet NodeSet { get; set; }
+
+        /// <summary>
+        /// Previous versions
+        /// </summary>
+        public List<NodesetFile> PreviousVersions { get; set; }
+    }
+
+    /// <summary>
     /// Nodeset compiler
     /// </summary>
-    internal sealed class NodesetFileCollection
+    public sealed class NodesetFileCollection
     {
         /// <summary>
         /// The files in the collection
@@ -64,21 +120,21 @@ namespace Opc.Ua.SourceGeneration
         /// Create collection
         /// </summary>
         public NodesetFileCollection(
-            ImmutableArray<(AdditionalText, NodesetOptions)> nodeset2Files,
-            SourceProductionContext context,
-            IFileSystem fileSystem)
+            ImmutableArray<(string, NodesetOptions)> nodeset2Files,
+            IFileSystem fileSystem,
+            ILogger logger)
         {
-            m_context = context;
-            foreach ((AdditionalText file, NodesetOptions options) in nodeset2Files)
+            m_logger = logger;
+            foreach ((string file, NodesetOptions options) in nodeset2Files)
             {
                 try
                 {
-                    if (!NodeSetToModelDesign.IsNodeSet(fileSystem, file.Path))
+                    if (!NodeSetToModelDesign.IsNodeSet(fileSystem, file))
                     {
                         continue;
                     }
 
-                    using Stream istrm = fileSystem.OpenRead(file.Path);
+                    using Stream istrm = fileSystem.OpenRead(file);
                     SystemContext systemContext = new(null);
                     var nodeset = UANodeSet.Read(istrm);
                     var collection = new NodeStateCollection();
@@ -89,10 +145,7 @@ namespace Opc.Ua.SourceGeneration
                     }
                     catch (Exception e)
                     {
-                        context.ReportDiagnostic(
-                            Diagnostic.Create(SourceGenerator.GenericError,
-                            Location.None,
-                            $"NodeSet could not be loaded ({file.Path}): {e.Message}"));
+                        logger.LogError(e, "NodeSet could not be loaded ({File})", file);
                         return;
                     }
 
@@ -100,27 +153,22 @@ namespace Opc.Ua.SourceGeneration
                         nodeset.Models.Length == 0 ||
                         string.IsNullOrEmpty(nodeset.Models[0].ModelUri))
                     {
-                        context.ReportDiagnostic(
-                           Diagnostic.Create(SourceGenerator.GenericError,
-                           Location.None,
-                           $"NodeSet is missing model definition ({file.Path})."));
+                        logger.LogError("NodeSet is missing model definition ({File}).", file);
                         continue;
                     }
 
                     ModelTableEntry model = nodeset.Models[0];
                     if (!Uri.IsWellFormedUriString(model.ModelUri, UriKind.Absolute))
                     {
-                        context.ReportDiagnostic(
-                           Diagnostic.Create(SourceGenerator.GenericError,
-                           Location.None,
-                           $"NodeSet ModelURI is not valid ({model.ModelUri})."));
+                        logger.LogError(
+                           "NodeSet ModelURI is not valid ({ModelUri}).", model.ModelUri);
                         continue;
                     }
 
                     string name = GetNameFromUri(model.ModelUri); // Get a sane name and prefix
                     var info = new NodesetFile
                     {
-                        FileName = file.Path,
+                        FileName = file,
                         NodeSet = nodeset,
                         Info = new NodesetOptions // Set reasonable defaults if not provided
                         {
@@ -154,11 +202,7 @@ namespace Opc.Ua.SourceGeneration
                 }
                 catch (Exception ex)
                 {
-                    context.ReportDiagnostic(
-                        Diagnostic.Create(SourceGenerator.Exception,
-                        Location.None,
-                        $"Could not parse NodeSet ({file.Path}): {ex.Message}.",
-                        ex));
+                    logger.LogCritical(ex, "Could not parse NodeSet ({File}).", file);
                 }
             }
         }
@@ -212,20 +256,22 @@ namespace Opc.Ua.SourceGeneration
 
                 if (!m_nodesets.TryGetValue(ns, out NodesetFile nodeset))
                 {
-                    m_context.ReportDiagnostic(
-                        Diagnostic.Create(SourceGenerator.GenericError,
-                        Location.None,
-                        $"NodeSet ({target.Info.ModelUri}) dependency is missing ({ns})."));
+                    m_logger.LogError(
+                        "NodeSet ({ModelUri}) dependency is missing ({Namespace}).",
+                        target.Info.ModelUri,
+                        ns);
                     return false;
                 }
 
                 // favour the version in the same directory as the target.
                 if (nodeset.PreviousVersions != null &&
-                    Path.GetDirectoryName(nodeset.FileName) != Path.GetDirectoryName(target.FileName))
+                    Path.GetDirectoryName(nodeset.FileName) !=
+                        Path.GetDirectoryName(target.FileName))
                 {
                     foreach (NodesetFile ii in nodeset.PreviousVersions)
                     {
-                        if (Path.GetDirectoryName(ii.FileName) == Path.GetDirectoryName(target.FileName))
+                        if (Path.GetDirectoryName(ii.FileName) ==
+                                Path.GetDirectoryName(target.FileName))
                         {
                             nodeset = ii;
                             break;
@@ -258,7 +304,7 @@ namespace Opc.Ua.SourceGeneration
             }
 
             path = path.Trim('/')
-                .Replace("/", string.Empty)
+                .Replace("/", string.Empty, StringComparison.Ordinal)
                 .Replace('-', '_')
                 .Replace('+', '_');
 
@@ -275,18 +321,7 @@ namespace Opc.Ua.SourceGeneration
             return path;
         }
 
-        /// <summary>
-        /// An entry in the collection
-        /// </summary>
-        internal sealed class NodesetFile
-        {
-            public NodesetOptions Info { get; set; }
-            public string FileName { get; set; }
-            public UANodeSet NodeSet { get; set; }
-            public List<NodesetFile> PreviousVersions { get; set; }
-        }
-
+        private readonly ILogger m_logger;
         private readonly Dictionary<string, NodesetFile> m_nodesets = [];
-        private readonly SourceProductionContext m_context;
     }
 }
