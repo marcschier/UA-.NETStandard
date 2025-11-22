@@ -43,7 +43,7 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Model generator
     /// </summary>
-    public class ModelGenerator
+    internal class ModelGenerator
     {
         /// <summary>
         /// Loads the model design from the specified file and validates it.

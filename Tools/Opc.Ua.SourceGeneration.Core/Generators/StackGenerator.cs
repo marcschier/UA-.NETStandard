@@ -40,7 +40,7 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Generates code based on a UA Type Dictionary.
     /// </summary>
-    public class StackGenerator
+    internal class StackGenerator
     {
         // Constructors
         /// <summary>

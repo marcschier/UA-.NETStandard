@@ -44,7 +44,7 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Generates a nodeset2 xml file and related files
     /// </summary>
-    public class Nodeset2Generator
+    internal class Nodeset2Generator
     {
         /// <summary>
         /// Create generator
@@ -65,16 +65,14 @@ namespace Opc.Ua.SourceGeneration
         /// Generate nodeset 2 xml file. The file output will be validated by default.
         /// Disable validation if needed.
         /// </summary>
-        public void GenerateNodeset2Xml(
+        public IReadOnlyList<Resource> GenerateNodeset2Xml(
             string filePath,
             SystemContext context,
             NodeStateCollection collection,
             NodeStateCollection collectionWithServices,
             bool validateOutput = true)
         {
-            string outputFile = Path.Combine(filePath, CoreUtils.Format(
-                "{0}.NodeSet2.xml",
-                m_model.TargetNamespaceInfo.Prefix));
+            var resources = new List<Resource>();
 
             string identifiersFilePath = Path.Combine(filePath, CoreUtils.Format(
                 "{0}.NodeIds.csv",
@@ -86,6 +84,9 @@ namespace Opc.Ua.SourceGeneration
                 m_model.TargetNamespaceInfo.Prefix));
             WritePermissions(context, identifiersFilePath, collection);
 
+            string outputFile = Path.Combine(filePath, CoreUtils.Format(
+                "{0}.NodeSet2.xml",
+                m_model.TargetNamespaceInfo.Prefix));
             using (Stream ostrm = m_fileSystem.OpenWrite(outputFile))
             {
                 var model = new ModelTableEntry
@@ -139,29 +140,29 @@ namespace Opc.Ua.SourceGeneration
                     WritePermissions(context, identifiersFilePath, collectionWithServices);
                 }
             }
+            resources.Add(outputFile.AsTextFileResource());
 
-            if (!validateOutput)
+            if (validateOutput)
             {
-                return;
-            }
-
-            // Validate
-            using (Stream istrm = m_fileSystem.OpenRead(outputFile))
-            {
-                UANodeSet.Validate(istrm, out IReadOnlyList<string> errors);
-                foreach (string error in errors)
+                // Validate
+                using (Stream istrm = m_fileSystem.OpenRead(outputFile))
                 {
-                    m_logger.LogError("Nodeset2 Validation Error: {Error}", error);
+                    UANodeSet.Validate(istrm, out IReadOnlyList<string> errors);
+                    foreach (string error in errors)
+                    {
+                        m_logger.LogError("Nodeset2 Validation Error: {Error}", error);
+                    }
+                }
+
+                // load as node set.
+                using (Stream istrm = m_fileSystem.OpenRead(outputFile))
+                {
+                    var nodeSet = UANodeSet.Read(istrm);
+                    var collection2 = new NodeStateCollection();
+                    nodeSet.Import(context, collection2);
                 }
             }
-
-            // load as node set.
-            using (Stream istrm = m_fileSystem.OpenRead(outputFile))
-            {
-                var nodeSet = UANodeSet.Read(istrm);
-                var collection2 = new NodeStateCollection();
-                nodeSet.Import(context, collection2);
-            }
+            return resources;
         }
 
         private void WritePermissions(

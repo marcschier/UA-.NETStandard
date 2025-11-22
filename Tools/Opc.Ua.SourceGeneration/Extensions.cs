@@ -43,19 +43,19 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static NodesetOptions ToNodeSetOptions(this AnalyzerConfigOptions options)
+        public static NodesetFileOptions ToNodeSetOptions(this AnalyzerConfigOptions options)
         {
             if (options == null)
             {
                 return null;
             }
-            return new NodesetOptions
+            return new NodesetFileOptions
             {
-                Ignore = options.GetBool(nameof(NodesetOptions.Ignore), false),
-                Prefix = options.GetString(nameof(NodesetOptions.Prefix), false),
-                Version = options.GetString(nameof(NodesetOptions.Version), false),
-                Name = options.GetString(nameof(NodesetOptions.Name), false),
-                ModelUri = options.GetString(nameof(NodesetOptions.ModelUri), false)
+                Ignore = options.GetBool(nameof(NodesetFileOptions.Ignore), false),
+                Prefix = options.GetString(nameof(NodesetFileOptions.Prefix), false),
+                Version = options.GetString(nameof(NodesetFileOptions.Version), false),
+                Name = options.GetString(nameof(NodesetFileOptions.Name), false),
+                ModelUri = options.GetString(nameof(NodesetFileOptions.ModelUri), false)
             };
         }
 
@@ -63,7 +63,7 @@ namespace Opc.Ua.SourceGeneration
         /// Create collection
         /// </summary>
         public static NodesetFileCollection ToNodeSetFileCollection(
-            this ImmutableArray<(AdditionalText, NodesetOptions)> nodeset2Files,
+            this ImmutableArray<(AdditionalText, NodesetFileOptions)> nodeset2Files,
             IFileSystem fileSystem,
             ITelemetryContext telemetry)
         {

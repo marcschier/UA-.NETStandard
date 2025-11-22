@@ -40,6 +40,89 @@ namespace Opc.Ua.SourceGeneration
         internal const string StackNamespacePrefix = "Opc.Ua";
 
         /// <summary>
+        /// Generate code from design files
+        /// </summary>
+        /// <param name="designFiles"></param>
+        /// <param name="fileSystem"></param>
+        /// <param name="exclusions"></param>
+        /// <param name="telemetry"></param>
+        /// <param name="useAllowSubtypes"></param>
+        public static void GenerateCode(
+            this DesignFileCollection designFiles,
+            IFileSystem fileSystem,
+            string[] exclusions,
+            ITelemetryContext telemetry,
+            bool useAllowSubtypes = false)
+        {
+            if (designFiles.DesignFiles.Count == 0)
+            {
+                return;
+            }
+            var generator = new ModelGenerator(fileSystem, telemetry);
+            // The rest of the input is processed as design files
+            generator.ValidateAndUpdateIds(
+                designFiles.DesignFiles,
+                null, // identifierFile,
+                designFiles.Options.StartId,
+                useAllowSubtypes,
+                exclusions,
+                designFiles.Options.ModelVersion,
+                designFiles.Options.ModelPublicationDate,
+                designFiles.Options.ReleaseCandidate,
+                false);
+
+            generator.GenerateFiles(
+                string.Empty,
+                exclusions);
+        }
+
+        /// <summary>
+        /// Generate from nodesets
+        /// </summary>
+        /// <param name="nodesets"></param>
+        /// <param name="fileSystem"></param>
+        /// <param name="exclusions"></param>
+        /// <param name="telemetry"></param>
+        public static void GenerateCode(
+            this NodesetFileCollection nodesets,
+            IFileSystem fileSystem,
+            string[] exclusions,
+            ITelemetryContext telemetry)
+        {
+            if (nodesets.Files.Count == 0)
+            {
+                return;
+            }
+            foreach (string modelUri in nodesets.ModelUris)
+            {
+                var generator = new ModelGenerator(fileSystem, telemetry)
+                {
+                    AvailableNodeSets = nodesets.Files
+                };
+                List<string> designFilesForModel = nodesets.GetDesignFileListForModel(
+                    modelUri,
+                    out NodesetFile nodeset);
+                if (designFilesForModel == null || nodeset.Info.Ignore)
+                {
+                    continue;
+                }
+                generator.ValidateAndUpdateIds(
+                    designFilesForModel,
+                    null,
+                    0,
+                    true,
+                    exclusions,
+                    null,
+                    null,
+                    true,
+                    false);
+                generator.GenerateFiles(
+                    string.Empty,
+                    exclusions);
+            }
+        }
+
+        /// <summary>
         /// Generate the .net stack code
         /// </summary>
         /// <param name="fileSystem">The root file system to use</param>
@@ -97,14 +180,15 @@ namespace Opc.Ua.SourceGeneration
                 StackNamespacePrefix,
                 Namespaces.OpcUa);
 
-            var binarySchemaResource = new ResourceGenerator(
+            // Embed schemas
+            var schemaResources = new ResourceGenerator(
                 fileSystem,
                 outputDir);
-            binarySchemaResource.EmbeddAsText(
+            schemaResources.Embed(
                 StackNamespacePrefix,
                 "XmlSchemas",
-                binarySchemaFile,
-                xmlSchemaFile);
+                binarySchemaFile.AsTextFileResource(StackNamespacePrefix),
+                xmlSchemaFile.AsTextFileResource(StackNamespacePrefix));
 
             // Create constants
             var nodeDictionaries = new Dictionary<string, string>();

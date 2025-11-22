@@ -28,18 +28,15 @@
  * ======================================================================*/
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using Opc.Ua.Schema.Model;
 
 namespace Opc.Ua.SourceGeneration
 {
     /// <summary>
     /// Generates embedded resources as code
     /// </summary>
-    public class ResourceGenerator
+    internal class ResourceGenerator
     {
         /// <summary>
         /// Create code generator
@@ -51,42 +48,9 @@ namespace Opc.Ua.SourceGeneration
         }
 
         /// <summary>
-        /// Generate binary resource
+        /// Embed resources as code into the compilation
         /// </summary>
-        public string EmbeddAsBinary(string namespacePrefix, string name, params string[] fileNames)
-        {
-            string outputFile = Path.Combine(m_outputFolder, CoreUtils.Format(
-                "{0}.{1}.g.cs",
-                namespacePrefix,
-                name));
-
-            using TextWriter writer = m_fileSystem.CreateTextWriter(outputFile);
-            string templateContent = CodeTemplateStrings.Resources_File_cs;
-            var template = new Template(writer, templateContent);
-
-            template.AddReplacement(Tokens.Date, DateTime.Now);
-            template.AddReplacement(Tokens.Namespace, namespacePrefix);
-            template.AddReplacement(Tokens.ClassName, "BinaryResources");
-
-            template.AddTemplate(
-                Tokens.ListOfResourceDeclarations,
-                CodeTemplateStrings.ResourceDeclaration_cs,
-                fileNames,
-                null,
-                (template, context) => WriteTemplate_ResourceDeclaration(
-                    template,
-                    context,
-                    namespacePrefix,
-                    false));
-
-            template.WriteTemplate(null);
-            return outputFile;
-        }
-
-        /// <summary>
-        /// Generate code from Text
-        /// </summary>
-        public string EmbeddAsText(string namespacePrefix, string name, params string[] fileNames)
+        public string Embed(string namespacePrefix, string name, params Resource[] resources)
         {
             string outputFile = Path.Combine(m_outputFolder, CoreUtils.Format(
                 "{0}.{1}.g.cs",
@@ -105,13 +69,9 @@ namespace Opc.Ua.SourceGeneration
             template.AddTemplate(
                 Tokens.ListOfResourceDeclarations,
                 CodeTemplateStrings.ResourceDeclaration_cs,
-                fileNames,
+                resources,
                 null,
-                (template, context) => WriteTemplate_ResourceDeclaration(
-                    template,
-                    context,
-                    namespacePrefix,
-                    true));
+                WriteTemplate_ResourceDeclaration);
 
             template.WriteTemplate(null);
             return outputFile;
@@ -119,30 +79,19 @@ namespace Opc.Ua.SourceGeneration
 
         private bool WriteTemplate_ResourceDeclaration(
             Template template,
-            Context context,
-            string namespacePrefix,
-            bool isTextResource)
+            Context context)
         {
             object[] target = [context.Target];
-            if (context.Target is string fileName)
-            {
-                template.AddReplacement(Tokens.ResourceName, GetResourceName(fileName, namespacePrefix));
-            }
-            else if (context.Target is Tuple<string, Stream> tuple)
-            {
-                template.AddReplacement(Tokens.ResourceName, tuple.Item1);
-                target = [tuple.Item2];
-            }
-            else
+            if (context.Target is not Resource resource)
             {
                 return false;
             }
-
+            template.AddReplacement(Tokens.ResourceName, resource.ResourceName);
             template.AddTemplate(
                 Tokens.Resource,
                 string.Empty,
                 target,
-                isTextResource ?
+                resource.IsText ?
                     LoadTemplate_TextResource :
                     LoadTemplate_BinaryResource,
                 null);
@@ -154,20 +103,21 @@ namespace Opc.Ua.SourceGeneration
         {
             bool leaveOpen = false;
             Stream reader;
-            if (context.Target is string fileName)
+            switch (context.Target)
             {
-                reader = m_fileSystem.OpenRead(fileName);
+                case BinaryFileResource fileResource:
+                    reader = m_fileSystem.OpenRead(fileResource.FileName);
+                    break;
+                case StreamResource stream:
+                    reader = stream.Stream;
+                    leaveOpen = true;
+                    break;
+                case BinaryResource binary:
+                    reader = new MemoryStream(binary.Data);
+                    break;
+                default:
+                    return null;
             }
-            else if (context.Target is Stream stream)
-            {
-                reader = stream;
-                leaveOpen = true;
-            }
-            else
-            {
-                return null;
-            }
-
             try
             {
                 template.WriteNextLine(context.Prefix);
@@ -210,17 +160,25 @@ namespace Opc.Ua.SourceGeneration
         private string LoadTemplate_TextResource(Template template, Context context)
         {
             TextReader reader;
-            if (context.Target is string fileName)
+            switch (context.Target)
             {
-                reader = m_fileSystem.CreateTextReader(fileName);
-            }
-            else if (context.Target is Stream stream)
-            {
-                reader = new StreamReader(stream, Encoding.UTF8, true, 8 * 1024, true);
-            }
-            else
-            {
-                return null;
+                case TextResource text:
+                    reader = new StringReader(text.Text);
+                    break;
+                case TextFileResource textFile:
+                    reader = m_fileSystem.CreateTextReader(textFile.FileName);
+                    break;
+                case StreamResource stream:
+                    reader = new StreamReader(stream.Stream, Encoding.UTF8, true, 8 * 1024, true);
+                    break;
+                case TextReaderResource textReader:
+                    reader = textReader.Reader;
+                    break;
+                case BinaryResource binary:
+                    reader = new StreamReader(new MemoryStream(binary.Data), Encoding.UTF8);
+                    break;
+                default:
+                    return null;
             }
             try
             {
@@ -250,22 +208,31 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
+        private readonly IFileSystem m_fileSystem;
+        private readonly string m_outputFolder;
+    }
+
+    /// <summary>
+    /// An embeddeable resource
+    /// </summary>
+    internal abstract record class Resource(string ResourceName, bool IsText)
+    {
         /// <summary>
         /// Make a resource name out of the input file name
         /// </summary>
         /// <param name="inputFile"></param>
         /// <param name="namespacePrefix"></param>
         /// <returns></returns>
-        private static string GetResourceName(string inputFile, string namespacePrefix)
+        public static string GetNameForFile(string inputFile, string namespacePrefix)
         {
             inputFile = Path.GetFileName(inputFile);
             if (inputFile.StartsWith(namespacePrefix, StringComparison.Ordinal))
             {
                 inputFile = inputFile[namespacePrefix.Length..];
             }
-            var parts = inputFile.Split('.');
+            string[] parts = inputFile.Split('.');
             var buffer = new StringBuilder();
-            foreach (var part in parts)
+            foreach (string part in parts)
             {
                 if (string.IsNullOrEmpty(part))
                 {
@@ -277,8 +244,47 @@ namespace Opc.Ua.SourceGeneration
             }
             return buffer.ToString();
         }
+    }
 
-        private readonly IFileSystem m_fileSystem;
-        private readonly string m_outputFolder;
+    internal record class StreamResource(string ResourceName, Stream Stream, bool IsText = false)
+        : Resource(ResourceName, IsText);
+
+    internal record class BinaryResource(string ResourceName, byte[] Data, bool IsText = false)
+        : Resource(ResourceName, IsText);
+
+    internal record class TextReaderResource(string ResourceName, TextReader Reader)
+        : Resource(ResourceName, true);
+
+    internal record class TextResource(string ResourceName, string Text)
+        : Resource(ResourceName, true);
+
+    internal record class TextFileResource(string ResourceName, string FileName)
+        : Resource(ResourceName, true);
+
+    internal record class BinaryFileResource(string ResourceName, string FileName)
+        : Resource(ResourceName, false);
+
+    /// <summary>
+    /// Extensions
+    /// </summary>
+    internal static class ResourceExtensions
+    {
+        public static TextFileResource AsTextFileResource(
+            this string fileName,
+            string namespaceUri = null)
+        {
+            return new TextFileResource(
+                Resource.GetNameForFile(fileName, namespaceUri),
+                namespaceUri);
+        }
+
+        public static BinaryFileResource ToBinaryFileResource(
+            this string fileName,
+            string namespaceUri = null)
+        {
+            return new BinaryFileResource(
+                Resource.GetNameForFile(fileName, namespaceUri),
+                fileName);
+        }
     }
 }

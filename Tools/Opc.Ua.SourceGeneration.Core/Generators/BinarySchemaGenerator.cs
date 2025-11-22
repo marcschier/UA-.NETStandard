@@ -41,7 +41,7 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Generates files used to describe data types.
     /// </summary>
-    public class BinarySchemaGenerator : SchemaGenerator
+    internal class BinarySchemaGenerator : SchemaGenerator
     {
         /// <summary>
         /// Generates the code from the contents of the address space.

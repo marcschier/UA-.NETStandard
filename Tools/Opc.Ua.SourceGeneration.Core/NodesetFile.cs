@@ -41,37 +41,6 @@ using System.Linq;
 namespace Opc.Ua.SourceGeneration
 {
     /// <summary>
-    /// Nodeset information
-    /// </summary>
-    public sealed record class NodesetOptions
-    {
-        /// <summary>
-        /// Model uri
-        /// </summary>
-        public string ModelUri { get; set; }
-
-        /// <summary>
-        /// Name
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// Prefix to use
-        /// </summary>
-        public string Prefix { get; set; }
-
-        /// <summary>
-        /// Should be ignored
-        /// </summary>
-        public bool Ignore { get; set; }
-
-        /// <summary>
-        /// Version
-        /// </summary>
-        public string Version { get; set; }
-    }
-
-    /// <summary>
     /// An entry in the collection
     /// </summary>
     public sealed class NodesetFile
@@ -79,22 +48,53 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Nodeset information
         /// </summary>
-        public NodesetOptions Info { get; set; }
+        public NodesetFileOptions Info { get; init; }
 
         /// <summary>
         /// File name
         /// </summary>
-        public string FileName { get; set; }
+        public string FileName { get; init; }
 
         /// <summary>
         /// The nodeset parsed
         /// </summary>
-        public UANodeSet NodeSet { get; set; }
+        public UANodeSet NodeSet { get; init; }
 
         /// <summary>
         /// Previous versions
         /// </summary>
-        public List<NodesetFile> PreviousVersions { get; set; }
+        internal List<NodesetFile> PreviousVersions { get; set; }
+    }
+
+    /// <summary>
+    /// Nodeset information
+    /// </summary>
+    public sealed record class NodesetFileOptions
+    {
+        /// <summary>
+        /// Model uri
+        /// </summary>
+        public string ModelUri { get; init; }
+
+        /// <summary>
+        /// Name
+        /// </summary>
+        public string Name { get; init; }
+
+        /// <summary>
+        /// Prefix to use
+        /// </summary>
+        public string Prefix { get; init; }
+
+        /// <summary>
+        /// Should be ignored
+        /// </summary>
+        public bool Ignore { get; init; }
+
+        /// <summary>
+        /// Version
+        /// </summary>
+        public string Version { get; init; }
     }
 
     /// <summary>
@@ -120,12 +120,12 @@ namespace Opc.Ua.SourceGeneration
         /// Create collection
         /// </summary>
         public NodesetFileCollection(
-            ImmutableArray<(string, NodesetOptions)> nodeset2Files,
+            ImmutableArray<(string, NodesetFileOptions)> nodeset2Files,
             IFileSystem fileSystem,
             ILogger logger)
         {
             m_logger = logger;
-            foreach ((string file, NodesetOptions options) in nodeset2Files)
+            foreach ((string file, NodesetFileOptions options) in nodeset2Files)
             {
                 try
                 {
@@ -170,7 +170,7 @@ namespace Opc.Ua.SourceGeneration
                     {
                         FileName = file,
                         NodeSet = nodeset,
-                        Info = new NodesetOptions // Set reasonable defaults if not provided
+                        Info = new NodesetFileOptions // Set reasonable defaults if not provided
                         {
                             ModelUri = !string.IsNullOrEmpty(options.ModelUri) ?
                                 options.ModelUri : model.ModelUri,

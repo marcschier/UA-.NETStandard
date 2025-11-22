@@ -33,6 +33,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using ILogger = SGF.Diagnostics.ILogger;
 using SourceProductionContext = SGF.SgfSourceProductionContext;
 
@@ -53,7 +54,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public ModelCompilation(
             SourceProductionContext context,
-            ImmutableArray<(AdditionalText, NodesetOptions)> inputFiles,
+            ImmutableArray<(AdditionalText, NodesetFileOptions)> inputFiles,
             ImmutableArray<AdditionalText> identifierFiles,
             ModelCompilationOptions options,
             CompilationOptions compilationOptions,
@@ -70,81 +71,45 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Perform the compilation
         /// </summary>
-        public void Run()
+        public void Emit()
         {
+            if (!CheckCompilationOptions())
+            {
+                return;
+            }
             using var fileSystem = new VirtualFileSystem();
             try
             {
-                var generator = new ModelGenerator(fileSystem, m_telemetry);
-
-                string identiferFile = m_identifierFiles.Select(i => i.Path).FirstOrDefault();
+                string identiferFile = m_identifierFiles
+                    .Select(i => i.Path)
+                    .FirstOrDefault();
                 if (m_input.Length == 0)
                 {
                     // Nothing to do
                     return;
                 }
 
-                // Load all available nodeset files from the input.
-                var nodesets = m_input.ToNodeSetFileCollection(
+                // Load all available nodeset files from the input
+                NodesetFileCollection nodesets = m_input.ToNodeSetFileCollection(
                     fileSystem,
                     m_telemetry);
-                if (nodesets.Files.Count > 0)
+
+                // Generate code for all nodesets
+                string[] exclusions = [.. m_options.Exclude.Append("Draft").Distinct()];
+                nodesets.GenerateCode(fileSystem, exclusions, m_telemetry);
+
+                // Process any remaining design files
+                new DesignFileCollection
                 {
-                    generator.AvailableNodeSets = nodesets.Files;
-                    foreach (string modelUri in nodesets.ModelUris)
-                    {
-                        List<string> designFilesForModel = nodesets.GetDesignFileListForModel(
-                            modelUri,
-                            out NodesetFile nodeset);
-                        if (designFilesForModel == null || nodeset.Info.Ignore)
-                        {
-                            continue;
-                        }
-                        var exclusions = new HashSet<string>(m_options.Exclude)
-                        {
-                            "Draft"
-                        };
-                        generator.ValidateAndUpdateIds(
-                            designFilesForModel,
-                            null,
-                            0,
-                            true,
-                            [.. exclusions],
-                            null,
-                            null,
-                            true,
-                            false);
-                        generator.GenerateFiles(
-                            string.Empty,
-                            [.. exclusions]);
-
-                        // Reset generator to clear state.
-                        generator = new(fileSystem, m_telemetry);
-                    }
-                }
-
-                var designFiles = m_input
-                    .Where(f => !nodesets.Files.ContainsValue(f.Item1.Path))
-                    .Select(f => f.Item1.Path)
-                    .ToList();
-                if (designFiles.Count > 0)
-                {
-                    // The rest of the input is processed as design files
-                    generator.ValidateAndUpdateIds(
-                        designFiles,
-                        null, // identifierFile,
-                        m_options.StartId,
-                        m_options.UseAllowSubtypes,
-                        m_options.Exclude,
-                        m_options.ModelVersion,
-                        m_options.ModelPublicationDate,
-                        m_options.ReleaseCandidate,
-                        false);
-
-                    generator.GenerateFiles(
-                        string.Empty,
-                        m_options.Exclude);
-                }
+                    DesignFiles = [.. m_input
+                        .Where(f => !nodesets.Files.ContainsValue(f.Item1.Path))
+                        .Select(f => f.Item1.Path)],
+                    Options = m_options.Options
+                }.GenerateCode(
+                    fileSystem,
+                    exclusions,
+                    m_telemetry,
+                    m_options.UseAllowSubtypes);
 
                 // Collect all generated cs files and produce them into the compilation
                 foreach (string file in fileSystem.CreatedFiles
@@ -165,8 +130,26 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
+        /// <summary>
+        /// Tests the compilation options are valid
+        /// </summary>
+        /// <returns></returns>
+        private bool CheckCompilationOptions()
+        {
+            if (m_compilationOptions.LanguageVersion < LanguageVersion.CSharp7)
+            {
+                m_context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        SourceGenerator.GenericError,
+                        Location.None,
+                        "Opc UA stack is too old. Minimum required language version is CSharp 7."));
+                return false;
+            }
+            return true;
+        }
+
         private readonly SourceProductionContext m_context;
-        private readonly ImmutableArray<(AdditionalText, NodesetOptions)> m_input;
+        private readonly ImmutableArray<(AdditionalText, NodesetFileOptions)> m_input;
         private readonly ImmutableArray<AdditionalText> m_identifierFiles;
         private readonly ModelCompilationOptions m_options;
         private readonly CompilationOptions m_compilationOptions;

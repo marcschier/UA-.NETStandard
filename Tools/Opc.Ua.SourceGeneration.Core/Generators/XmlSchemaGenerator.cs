@@ -41,7 +41,7 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Generates an XML Schema based on a UA Type Dictionary.
     /// </summary>
-    public class XmlSchemaGenerator : SchemaGenerator
+    internal class XmlSchemaGenerator : SchemaGenerator
     {
         /// <summary>
         /// Generates the code from the contents of the address space.

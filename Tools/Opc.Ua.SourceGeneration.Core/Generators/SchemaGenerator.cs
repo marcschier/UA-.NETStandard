@@ -39,7 +39,7 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Generates a schema based on a UA Type Dictionary.
     /// </summary>
-    public class SchemaGenerator
+    internal class SchemaGenerator
     {
         /// <summary>
         /// Loads and validates the type dictionary.

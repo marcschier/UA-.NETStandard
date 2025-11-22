@@ -40,7 +40,7 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Generates code based on a UA Type Dictionary.
     /// </summary>
-    public class ConstantsGenerator
+    internal class ConstantsGenerator
     {
         /// <summary>
         /// Generates the code from the contents of the address space.

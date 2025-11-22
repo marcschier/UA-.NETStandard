@@ -27,6 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using System;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.Diagnostics;
 
@@ -38,50 +39,39 @@ namespace Opc.Ua.SourceGeneration
     internal sealed record class ModelCompilationOptions
     {
         /// <summary>
-        /// -version [v104, v105]
+        /// Model options
         /// </summary>
-        public string Version { get; set; }
+        public DesignFileOptions Options { get; set; }
+
         /// <summary>
         /// -useAllowSubtypes
         /// </summary>
         public bool UseAllowSubtypes { get; set; }
-        /// <summary>
-        /// -id [start id]
-        /// </summary>
-        public uint StartId { get; set; }
+
         /// <summary>
         /// -exclude [id;id;id]
         /// </summary>
         public IReadOnlyList<string> Exclude { get; set; }
-        /// <summary>
-        /// -mv [model version]
-        /// </summary>
-        public string ModelVersion { get; set; }
-        /// <summary>
-        /// -pd [publication date]
-        /// </summary>
-        public string ModelPublicationDate { get; set; }
-        /// <summary>
-        /// -rc
-        /// </summary>
-        public bool ReleaseCandidate { get; set; }
 
         /// <summary>
         /// Get options from options provider
         /// </summary>
         /// <param name="provider"></param>
         /// <returns></returns>
-        public static ModelCompilationOptions FromProvider(AnalyzerConfigOptionsProvider provider)
+        public static ModelCompilationOptions From(AnalyzerConfigOptionsProvider provider)
         {
             return new ModelCompilationOptions
             {
-                Version = provider.GlobalOptions.GetString(nameof(Version)) ?? "v105",
-                Exclude = provider.GlobalOptions.GetStrings(nameof(Exclude)),
-                UseAllowSubtypes = provider.GlobalOptions.GetBool(nameof(UseAllowSubtypes)),
-                StartId = (uint)provider.GlobalOptions.GetInteger(nameof(StartId)),
-                ModelVersion = provider.GlobalOptions.GetString(nameof(ModelVersion)),
-                ModelPublicationDate = provider.GlobalOptions.GetString(nameof(ModelPublicationDate)),
-                ReleaseCandidate = provider.GlobalOptions.GetBool(nameof(ReleaseCandidate))
+                Options = new DesignFileOptions
+                {
+                    Version = provider.GlobalOptions.GetString(nameof(DesignFileOptions.Version)) ?? "v105",
+                    StartId = (uint)provider.GlobalOptions.GetInteger(nameof(DesignFileOptions.StartId)),
+                    ModelVersion = provider.GlobalOptions.GetString(nameof(DesignFileOptions.ModelVersion)),
+                    ModelPublicationDate = provider.GlobalOptions.GetString(nameof(DesignFileOptions.ModelPublicationDate)),
+                    ReleaseCandidate = provider.GlobalOptions.GetBool(nameof(DesignFileOptions.ReleaseCandidate))
+                },
+                Exclude = provider.GlobalOptions.GetStrings(nameof(ModelCompilationOptions.Exclude)),
+                UseAllowSubtypes = provider.GlobalOptions.GetBool(nameof(ModelCompilationOptions.UseAllowSubtypes)),
             };
         }
     }

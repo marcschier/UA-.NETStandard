@@ -60,7 +60,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Generate all stack files
         /// </summary>
-        public void Run()
+        public void Emit()
         {
             if (!CheckCompilationOptions())
             {

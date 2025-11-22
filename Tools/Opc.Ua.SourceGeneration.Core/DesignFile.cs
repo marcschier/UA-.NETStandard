@@ -27,51 +27,54 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using System.Collections.Generic;
+
 namespace Opc.Ua.SourceGeneration
 {
     /// <summary>
-    /// Contains the current context to use for serialization.
+    /// Model options
     /// </summary>
-    internal sealed class Context
+    public sealed record class DesignFileOptions
     {
         /// <summary>
-        /// The template string being processed.
+        /// -version [v104, v105]
         /// </summary>
-        public string TemplateString { get; set; }
+        public string Version { get; init; }
 
         /// <summary>
-        /// The container for the object being processed.
+        /// -id [start id]
         /// </summary>
-        public object Container { get; set; }
+        public uint StartId { get; init; }
 
         /// <summary>
-        /// The current object being processed.
+        /// -mv [model version]
         /// </summary>
-        public object Target { get; set; }
+        public string ModelVersion { get; init; }
 
         /// <summary>
-        /// The prefix to prepend to every line of output.
+        /// -pd [publication date]
         /// </summary>
-        public string Prefix { get; set; } = string.Empty;
+        public string ModelPublicationDate { get; init; }
 
         /// <summary>
-        /// The token current being processed.
+        /// -rc
         /// </summary>
-        public string Token { get; set; } = string.Empty;
+        public bool ReleaseCandidate { get; init; }
+    }
 
+    /// <summary>
+    /// Collection of design files and options
+    /// </summary>
+    public sealed record class DesignFileCollection
+    {
         /// <summary>
-        /// The index of the current target within the list being processed.
+        /// Design file location
         /// </summary>
-        public int Index { get; set; } = -1;
+        public IReadOnlyList<string> DesignFiles { get; init; }
 
         /// <summary>
-        /// Whether the current target being processed is the first in the list.
-        /// </summary>>
-        public bool FirstInList { get; set; } = true;
-
-        /// <summary>
-        /// Whether a blank line seperates entries in the list.
-        /// </summary>>
-        public bool BlankLine { get; set; } = true;
+        /// Design file options
+        /// </summary>
+        public DesignFileOptions Options { get; init; }
     }
 }

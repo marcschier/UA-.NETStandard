@@ -53,7 +53,7 @@ namespace Opc.Ua.SourceGeneration
 #if DEBUGX
             AttachDebugger();
 #endif
-            IncrementalValueProvider<ImmutableArray<(AdditionalText Left, NodesetOptions)>> inputFiles =
+            IncrementalValueProvider<ImmutableArray<(AdditionalText Left, NodesetFileOptions)>> inputFiles =
                 context.AdditionalTextsProvider
                     .Where(f => f.IsDesignOrNodeset2File())
                     .Combine(context.AnalyzerConfigOptionsProvider)
@@ -67,7 +67,7 @@ namespace Opc.Ua.SourceGeneration
                     .Collect();
             IncrementalValueProvider<ModelCompilationOptions> options =
                 context.AnalyzerConfigOptionsProvider
-                    .Select((p, _) => ModelCompilationOptions.FromProvider(p));
+                    .Select((p, _) => ModelCompilationOptions.From(p));
             IncrementalValueProvider<CompilationOptions> settings =
                 context.CompilationProvider
                     .Select((c, _) => CompilationOptions.From(c));
@@ -83,7 +83,7 @@ namespace Opc.Ua.SourceGeneration
                     combination.Left.Left.Right,
                     combination.Left.Right,
                     combination.Right,
-                    Logger).Run());
+                    Logger).Emit());
         }
     }
 }
