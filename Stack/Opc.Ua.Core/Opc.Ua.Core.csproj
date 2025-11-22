@@ -30,7 +30,6 @@
     <None Remove="Schema\Opc.Ua.NodeSet2.xml.zip" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Design\*" />
     <EmbeddedResource Include="Types\Utils\LocalizedData.txt" />
   </ItemGroup>
   <!-- Stack source generation -->
