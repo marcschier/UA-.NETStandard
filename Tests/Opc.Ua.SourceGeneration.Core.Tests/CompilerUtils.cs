@@ -280,7 +280,7 @@ namespace Opc.Ua.SourceGeneration
                     protected EndpointBase(IServiceHostBase host) {}
                     protected EndpointBase(ServerBase serverBase) {}
                     protected IServerBase? ServerForContext => throw new NotSupportedException();
-                    protected ServiceResult ServerError { get; set; }
+                    protected ServiceResult? ServerError { get; set; }
                     protected virtual void OnRequestReceived(IServiceRequest request) {}
                     protected virtual void OnResponseSent(IServiceResponse response) {}
                     protected Dictionary<ExpandedNodeId, ServiceDefinition> SupportedServices { get; set; }

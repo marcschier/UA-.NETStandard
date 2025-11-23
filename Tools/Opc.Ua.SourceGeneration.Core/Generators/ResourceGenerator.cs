@@ -349,7 +349,7 @@ namespace Opc.Ua.SourceGeneration
         /// Otherwise it will be base64 encoded and must be decoded
         /// at runtime.
         /// </summary>
-        private const int kBase64Threshold = 512;
+        private const int kBase64Threshold = 1024;
         private const int kReadBufferSize = 16 * 1024;
         private readonly IFileSystem m_fileSystem;
         private readonly string m_outputFolder;
