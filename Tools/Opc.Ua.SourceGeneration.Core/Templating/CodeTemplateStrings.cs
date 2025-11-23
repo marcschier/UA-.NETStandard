@@ -139,7 +139,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// ModelGenerator.cs line#278
         /// </summary>
-        public static string PredefinedNodesFile_cs =>
+        public static string Helpers_File_cs =>
             $$"""
             {{Tokens.Header}}
 
@@ -150,28 +150,41 @@ namespace Opc.Ua.SourceGeneration
 
             #pragma warning disable 1591
 
-            namespace {{Tokens.Namespace}}
+            namespace {{Tokens.NamespacePrefix}}
             {
                 [System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
                 [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
                 public static partial class PredefinedNodes
                 {
-                    private const string kInitializationString =
-                    {{Tokens.InitializationString}}
-                        ;
-
                     /// <summary>
-                    /// Loads the predefined nodes for the {{Tokens.Namespace}} namespace.
+                    /// Loads the predefined nodes for the {{Tokens.NamespacePrefix}} namespace.
                     /// </summary>
                     public static NodeStateCollection Load(ISystemContext context)
                     {
-                        byte[] initializationBuffer = {{Tokens.Decode}}(kInitializationString);
-                        using (MemoryStream stream = new MemoryStream(initializationBuffer))
+                        using (MemoryStream stream = new MemoryStream(Initializers.PredefinedNodes.ToArray()))
                         {
                             NodeStateCollection predefinedNodes = new NodeStateCollection();
                             predefinedNodes.LoadFrom{{Tokens.Encoding}}(context, stream, true);
                             return predefinedNodes;
                         }
+                    }
+                }
+
+                [System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
+                [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
+                public static partial class {{Tokens.Namespace}}Extensions
+                {
+                    /// <summary>
+                    /// Adds the predefined nodes for the {{Tokens.NamespacePrefix}} namespace
+                    /// to the node state collection.
+                    /// </summary>
+                    public static NodeStateCollection Add{{Tokens.Namespace}}(
+                        this NodeStateCollection collection,
+                        ISystemContext context)
+                    {
+                        NodeStateCollection predefinedNodes = PredefinedNodes.Load(context);
+                        collection.AddRange(predefinedNodes);
+                        return collection;
                     }
                 }
             }
@@ -1923,38 +1936,6 @@ namespace Opc.Ua.SourceGeneration
             /// <summary>
             /// Invokes the {{Tokens.Name}} service.
             /// </summary>
-            #if !OPCUA_EXCLUDE_{{Tokens.Name}}_ASYNC
-            [Obsolete("Sync methods are deprecated in this version. Use {{Tokens.Name}}Async instead.")]
-            #endif // !OPCUA_EXCLUDE_{{Tokens.Name}}_ASYNC
-            public IServiceResponse {{Tokens.Name}}(IServiceRequest incoming, SecureChannelContext secureChannelContext)
-            {
-                {{Tokens.Name}}Response response = null;
-
-                try
-                {
-                    OnRequestReceived(incoming);
-
-                    {{Tokens.Name}}Request request = ({{Tokens.Name}}Request)incoming;
-
-                    {{Tokens.DeclareResponseParameters}}
-
-                    response = new {{Tokens.Name}}Response();
-
-                    {{Tokens.InvokeService}}
-                    {{Tokens.SetResponseParameters}}
-                }
-                finally
-                {
-                    OnResponseSent(response);
-                }
-
-                return response;
-            }
-
-            #if !OPCUA_EXCLUDE_{{Tokens.Name}}_ASYNC
-            /// <summary>
-            /// Invokes the {{Tokens.Name}} service.
-            /// </summary>
             public async Task<IServiceResponse> {{Tokens.Name}}Async(
                 IServiceRequest incoming,
                 SecureChannelContext secureChannelContext,
@@ -1977,7 +1958,6 @@ namespace Opc.Ua.SourceGeneration
 
                 return response;
             }
-            #endif // !OPCUA_EXCLUDE_{{Tokens.Name}}_ASYNC
             #endif // !OPCUA_EXCLUDE_{{Tokens.Name}}
             """;
 
@@ -2030,19 +2010,9 @@ namespace Opc.Ua.SourceGeneration
             $$"""
             #if !OPCUA_EXCLUDE_{{Tokens.Name}}
             /// <summary>
-            /// Invokes the {{Tokens.Name}} service.
-            /// </summary>
-            #if !OPCUA_EXCLUDE_{{Tokens.Name}}_ASYNC
-            [Obsolete("Sync methods are deprecated in this version. Use {{Tokens.Name}}Async instead.")]
-            #endif // !OPCUA_EXCLUDE_{{Tokens.Name}}_ASYNC
-            {{Tokens.ServerInterface}}
-
-            #if !OPCUA_EXCLUDE_{{Tokens.Name}}_ASYNC
-            /// <summary>
             /// Invokes the {{Tokens.Name}} service using async Task based request.
             /// </summary>
             {{Tokens.ServerInterfaceAsync}}
-            #endif // !OPCUA_EXCLUDE_{{Tokens.Name}}_ASYNC
             #endif // !OPCUA_EXCLUDE_{{Tokens.Name}}
             """;
 
@@ -2052,24 +2022,6 @@ namespace Opc.Ua.SourceGeneration
         public static string ServerApi_Method_cs =>
             $$"""
             #if !OPCUA_EXCLUDE_{{Tokens.Name}}
-            /// <summary>
-            /// Invokes the {{Tokens.Name}} service.
-            /// </summary>
-            #if !OPCUA_EXCLUDE_{{Tokens.Name}}_ASYNC
-            [Obsolete("Sync methods are deprecated in this version. Use {{Tokens.Name}}Async instead.")]
-            #endif // !OPCUA_EXCLUDE_{{Tokens.Name}}_ASYNC
-            {{Tokens.ServerStub}}
-            {
-                {{Tokens.ResponseParameters}}
-
-                ValidateRequest(requestHeader);
-
-                // Insert implementation.
-
-                return CreateResponse(requestHeader, StatusCodes.BadServiceUnsupported);
-            }
-
-            #if !OPCUA_EXCLUDE_{{Tokens.Name}}_ASYNC
             /// <summary>
             /// Invokes the {{Tokens.Name}} service using async Task based request.
             /// </summary>
@@ -2082,7 +2034,6 @@ namespace Opc.Ua.SourceGeneration
 
                 throw new ServiceResultException(StatusCodes.BadServiceUnsupported);
             }
-            #endif // !OPCUA_EXCLUDE_{{Tokens.Name}}_ASYNC
             #endif // !OPCUA_EXCLUDE_{{Tokens.Name}}
             """;
 

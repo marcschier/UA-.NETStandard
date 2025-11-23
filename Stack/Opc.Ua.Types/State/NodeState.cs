@@ -141,6 +141,28 @@ namespace Opc.Ua
         }
 
         /// <summary>
+        /// Initializes the instance with the XML or binary (array of bytes) representation contained in the string.
+        /// </summary>
+        /// <param name="context">The object that describes how access the system containing the data.</param>
+        /// <param name="initializationString">The initialization string that is used to initializes the node.</param>
+        /// <param name="encoding">The initialization string is a utf8 xml string or binary</param>
+        public virtual void Initialize(ISystemContext context, ReadOnlySpan<byte> initializationString, EncodingType encoding)
+        {
+            using var istrm = new MemoryStream(initializationString.ToArray());
+            switch (encoding)
+            {
+                case EncodingType.Xml:
+                    LoadFromXml(context, istrm);
+                    break;
+                case EncodingType.Binary:
+                    LoadAsBinary(context, istrm);
+                    break;
+                default:
+                    throw new NotSupportedException("Json encoding is not yet supported");
+            }
+        }
+
+        /// <summary>
         /// Initializes the instance with the default values.
         /// </summary>
         /// <param name="context">The object that describes how access the system containing the data.</param>

@@ -31,6 +31,7 @@
 
 using System.IO;
 using System.Reflection;
+using System.Text;
 
 namespace Opc.Ua
 {
@@ -44,7 +45,7 @@ namespace Opc.Ua
         /// </summary>
         public static TextWriter CreateTextWriter(this IFileSystem fileSystem, string path)
         {
-            return new StreamWriter(fileSystem.OpenWrite(path));
+            return new StreamWriter(fileSystem.OpenWrite(path), Encoding.UTF8, 16 * 1024);
         }
 
         /// <summary>
@@ -52,7 +53,7 @@ namespace Opc.Ua
         /// </summary>
         public static TextReader CreateTextReader(this IFileSystem fileSystem, string path)
         {
-            return new StreamReader(fileSystem.OpenRead(path));
+            return new StreamReader(fileSystem.OpenRead(path), Encoding.UTF8, true, 16 * 1024);
         }
 
         /// <summary>

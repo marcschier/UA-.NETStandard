@@ -34,7 +34,6 @@ namespace Opc.Ua.SourceGeneration
         public static string AccessLevel => "_AccessLevel_";
         public static string ArrayDeclaration => "<!-- ArrayDeclaration -->";
         public static string ArrayDimensions => "_ArrayDimensions_";
-        public static string AsyncEndpointOperationList => "// _ASYNCENDPOINTOPERATIONLIST_";
         public static string BaseClassName => "_BaseClassName_";
         public static string BaseType => "_BaseType_";
         public static string BaseTypeNamespacePrefix => "_BaseTypeNamespacePrefix_";
@@ -61,7 +60,6 @@ namespace Opc.Ua.SourceGeneration
         public static string DecodeList => "// _DECODELIST_";
         public static string DefaultList => "// _DEFAULTLIST_";
         public static string DefaultValue => "_DefaultValue_";
-        public static string DeclareResponseParameters => "// DeclareResponseParameters";
         public static string Description => "_Description_";
         public static string DictionaryUri => "_DictionaryUri_";
         public static string Documentation => "<!-- Documentation -->";
@@ -86,7 +84,6 @@ namespace Opc.Ua.SourceGeneration
         public static string InitializationStringForType => "// InitializationStringForType";
         public static string InitializeOptionalChildren => "// InitializeOptionalChildren";
         public static string InternalName => "_INTERNALNAME_";
-        public static string InvokeService => "InvokeService();";
         public static string InvokeServiceAsync => "InvokeServiceAsync();";
         public static string IsAbstract => "_IsAbstract_";
         public static string IsEqualList => "// _ISEQUALLIST_";
@@ -148,8 +145,6 @@ namespace Opc.Ua.SourceGeneration
         public static string ServerStubs => "// _ServerStubs_";
         public static string ServiceSet => "_ServiceSet_";
         public static string ServiceSets => "// _SERVICESETS_";
-        public static string SetResponseParameters => "// SetResponseParameters";
-        public static string StatusCodeHelpers => "// StatusCodeHelpers";
         public static string SymbolicId => "_SymbolicId_";
         public static string SymbolicName => "_SymbolicName_";
         public static string Type => "_TYPE_";
@@ -181,9 +176,7 @@ namespace Opc.Ua.SourceGeneration
         public static string XsRestrictionBaseType => "_XsRestrictionBaseType_";
         public static string PropertyAccessor => "_PropertyAccessor_";
         public static string JsonEncodingId => "_JsonEncodingId_";
-        public static string ServerInterface => "void Interface();";
         public static string ServerInterfaceAsync => "void InterfaceAsync();";
-        public static string ServerStub => "void Stub()";
         public static string ServerStubAsync => "void StubAsync()";
         public static string Header => "// _HEADER_";
         public static string ResourceName => "_ResourceName_";

@@ -27,6 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -88,7 +89,7 @@ namespace Opc.Ua.SourceGeneration
             Assert.That(errors, Is.EqualTo(0));
             TestContext.Out.WriteLine($"Generate run produced {warnings} warnings");
 
-            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(11));
+            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(12));
             Assert.That(generatorResult.Exception, Is.Null);
         }
     }

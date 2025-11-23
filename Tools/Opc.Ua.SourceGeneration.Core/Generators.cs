@@ -166,7 +166,7 @@ namespace Opc.Ua.SourceGeneration
                 outputDir,
                 typeDictionaries,
                 exclusions);
-            string xmlSchemaFile = xmlSchema.Generate(
+            TextFileResource xmlSchemaResource = xmlSchema.Emit(
                 StackNamespacePrefix);
 
             typeDictionaries = [];
@@ -176,7 +176,7 @@ namespace Opc.Ua.SourceGeneration
                 outputDir,
                 typeDictionaries,
                 exclusions);
-            string binarySchemaFile = binarySchema.Generate(
+            TextFileResource binarySchemaResource = binarySchema.Emit(
                 StackNamespacePrefix,
                 Namespaces.OpcUa);
 
@@ -187,8 +187,8 @@ namespace Opc.Ua.SourceGeneration
             schemaResources.Embed(
                 StackNamespacePrefix,
                 "XmlSchemas",
-                binarySchemaFile.AsTextFileResource(StackNamespacePrefix),
-                xmlSchemaFile.AsTextFileResource(StackNamespacePrefix));
+                binarySchemaResource,
+                xmlSchemaResource);
 
             // Create constants
             var nodeDictionaries = new Dictionary<string, string>();

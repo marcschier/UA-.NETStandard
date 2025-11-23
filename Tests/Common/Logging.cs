@@ -114,7 +114,7 @@ namespace Opc.Ua.Tests
                 }
 
                 /// <inheritdoc/>
-                public LogLevel MinimumLogLevel { get; set; } = LogLevel.Debug;
+                public LogLevel MinimumLogLevel { get; set; } = LogLevel.Information;
 
                 /// <inheritdoc/>
                 public IDisposable BeginScope<TState>(TState state)

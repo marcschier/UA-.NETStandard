@@ -162,8 +162,6 @@ namespace Opc.Ua.SourceGeneration
                 LoadTemplate_Constant,
                 WriteTemplate_Constant);
 
-            template.AddReplacement(Tokens.StatusCodeHelpers, string.Empty);
-
             var context = new Context();
             template.WriteTemplate(context);
         }

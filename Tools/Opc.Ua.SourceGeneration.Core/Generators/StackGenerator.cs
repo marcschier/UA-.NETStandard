@@ -200,97 +200,13 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(Tokens.Name, serviceType.Name);
 
             template.AddTemplate(
-                Tokens.DeclareResponseParameters,
-                null,
-                new ServiceType[] { serviceType },
-                LoadTemplate_InitializeResponseParameters,
-                null);
-
-            template.AddTemplate(
-                Tokens.InvokeService,
-                null,
-                new ServiceType[] { serviceType },
-                LoadTemplate_InvokeServiceSyncParameters,
-                null);
-
-            template.AddTemplate(
                 Tokens.InvokeServiceAsync,
                 null,
                 new ServiceType[] { serviceType },
                 LoadTemplate_InvokeServiceAsyncParameters,
                 null);
 
-            template.AddTemplate(
-                Tokens.SetResponseParameters,
-                null,
-                new ServiceType[] { serviceType },
-                LoadTemplate_ResponseParameters,
-                null);
-
             return template.WriteTemplate(context);
-        }
-
-        /// <summary>
-        /// Writes a synchronous method declaration.
-        /// </summary>
-        private string LoadTemplate_InvokeServiceSyncParameters(Template template, Context context)
-        {
-            if (context.Target is not ServiceType serviceType)
-            {
-                return null;
-            }
-
-            // write method declaration.
-            template.WriteLine(string.Empty);
-            template.Write(context.Prefix);
-            template.Write("response.{0} = ServerInstance.{1}(", serviceType.Response[0].Name, serviceType.Name);
-
-            template.WriteLine(string.Empty);
-            template.Write(context.Prefix);
-            template.Write("   secureChannelContext");
-
-            if (serviceType.Request != null || serviceType.Request.Length > 0)
-            {
-                bool first = false;
-
-                foreach (FieldType field in serviceType.Request)
-                {
-                    if (first)
-                    {
-                        first = false;
-                        template.WriteLine(string.Empty);
-                    }
-                    else
-                    {
-                        template.WriteLine(",");
-                    }
-
-                    template.Write(context.Prefix);
-                    template.Write("   request.{0}", field.Name);
-                }
-            }
-
-            if (serviceType.Response != null || serviceType.Response.Length > 0)
-            {
-                bool first = true;
-
-                foreach (FieldType field in serviceType.Response)
-                {
-                    if (first)
-                    {
-                        first = false;
-                        continue;
-                    }
-
-                    template.WriteLine(",");
-                    template.Write(context.Prefix);
-                    template.Write("   out {0}", field.Name.ToLowerCamelCase());
-                }
-            }
-
-            template.WriteLine(");");
-
-            return null;
         }
 
         /// <summary>
@@ -352,7 +268,7 @@ namespace Opc.Ua.SourceGeneration
             // write method declaration.
             template.WriteLine(string.Empty);
             template.Write(context.Prefix);
-            template.Write("#if (!OPCUA_EXCLUDE_{0} && !OPCUA_EXCLUDE_{0}_ASYNC)", serviceType.Name);
+            template.Write("#if !OPCUA_EXCLUDE_{0}", serviceType.Name);
 
             template.WriteLine(string.Empty);
             template.Write(context.Prefix);
@@ -362,17 +278,7 @@ namespace Opc.Ua.SourceGeneration
 
             template.WriteLine(string.Empty);
             template.Write(context.Prefix);
-            template.Write("#elif (!OPCUA_EXCLUDE_{0})", serviceType.Name);
-
-            template.WriteLine(string.Empty);
-            template.Write(context.Prefix);
-            template.Write(
-                "SupportedServices.Add(DataTypeIds.{0}Request, new ServiceDefinition(typeof({0}Request), new InvokeServiceEventHandler({0})));",
-                serviceType.Name);
-
-            template.WriteLine(string.Empty);
-            template.Write(context.Prefix);
-            template.Write("#endif");
+            template.Write("#endif // !OPCUA_EXCLUDE_{0}");
 
             return null;
         }
@@ -456,13 +362,6 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(Tokens.Name, serviceType.Name);
 
             template.AddTemplate(
-                Tokens.ServerInterface,
-                null,
-                new ServiceType[] { serviceType },
-                LoadTemplate_SyncParameters,
-                null);
-
-            template.AddTemplate(
                 Tokens.ServerInterfaceAsync,
                 null,
                 new ServiceType[] { serviceType },
@@ -486,79 +385,13 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(Tokens.Namespace, m_namespaceConstant);
 
             template.AddTemplate(
-                Tokens.ServerStub,
-                null,
-                new ServiceType[] { serviceType },
-                LoadTemplate_SyncParameters,
-                null);
-
-            template.AddTemplate(
                 Tokens.ServerStubAsync,
                 null,
                 new ServiceType[] { serviceType },
                 LoadTemplate_AsyncParameters,
                 null);
 
-            template.AddTemplate(
-                Tokens.ResponseParameters,
-                null,
-                new ServiceType[] { serviceType },
-                LoadTemplate_InitializeResponseParameters,
-                null);
-
             return template.WriteTemplate(context);
-        }
-
-        /// <summary>
-        /// Copies the response paramaters into the request object.
-        /// </summary>
-        private string LoadTemplate_InitializeResponseParameters(Template template, Context context)
-        {
-            if (context.Target is not ServiceType serviceType)
-            {
-                return null;
-            }
-
-            // calculate maximum parameter length.
-            if (serviceType.Response != null)
-            {
-                bool first = true;
-
-                foreach (FieldType field in serviceType.Response)
-                {
-                    if (first)
-                    {
-                        first = false;
-                        continue;
-                    }
-
-                    template.WriteLine(string.Empty);
-                    template.Write(context.Prefix);
-
-                    if (context.Token.Contains("Declare", StringComparison.Ordinal))
-                    {
-                        template.Write(
-                            "{1} {0} = ",
-                            field.Name.ToLowerCamelCase(),
-                            Validator.GetDotNetTypeName(field.DataType, field.ValueRank));
-                    }
-                    else
-                    {
-                        template.Write("{0} = ", field.Name.ToLowerCamelCase());
-                    }
-
-                    if (Validator.IsDotNetReferenceType(field))
-                    {
-                        template.Write("null;");
-                    }
-                    else
-                    {
-                        template.Write("{0};", Validator.GetDotNetDefaultValue(field));
-                    }
-                }
-            }
-
-            return null;
         }
 
         /// <summary>

@@ -280,15 +280,12 @@ namespace Opc.Ua.SourceGeneration
                     protected Dictionary<ExpandedNodeId, ServiceDefinition> SupportedServices { get; set; }
                     protected class ServiceDefinition
                     {
-                        public ServiceDefinition(Type requestType, InvokeServiceEventHandler invokeMethod) {}
                         public ServiceDefinition(Type requestType, InvokeServiceAsyncEventHandler asyncInvokeMethod) {}
                     }
                     protected delegate Task<IServiceResponse> InvokeServiceAsyncEventHandler(
                         IServiceRequest request,
                         SecureChannelContext secureChannelContext,
                         CancellationToken cancellationToken = default);
-                    protected delegate IServiceResponse InvokeServiceEventHandler(
-                        IServiceRequest request, SecureChannelContext secureChannelContext);
                 }
                 public class ServerBase : IServerBase
                 {

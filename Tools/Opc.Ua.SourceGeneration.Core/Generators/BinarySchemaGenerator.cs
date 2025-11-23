@@ -64,7 +64,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Generates the datatype files.
         /// </summary>
-        public string Generate(
+        public TextFileResource Emit(
             string namespacePrefix,
             string targetNamespace,
             bool exportAll = true)
@@ -83,7 +83,7 @@ namespace Opc.Ua.SourceGeneration
                 FileSystem,
                 KnownFiles);
             validator.Validate(schemaFile);
-            return schemaFile;
+            return schemaFile.AsTextFileResource(namespacePrefix);
         }
 
         /// <summary>

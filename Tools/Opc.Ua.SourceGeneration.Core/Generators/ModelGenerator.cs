@@ -114,168 +114,34 @@ namespace Opc.Ua.SourceGeneration
                 return;
             }
 
-            WriteTemplate_ConstantsSingleFile(filePath, nodes);
-            WriteTemplate_DataTypesSingleFile(filePath, nodes);
-            WriteTemplate_NonDataTypesSingleFile(filePath, nodes);
-            WriteTemplate_XmlSchema(filePath, nodes);
-            WriteTemplate_BinarySchema(filePath, nodes);
-            WriteTemplate_XmlExport(filePath);
-        }
-
-        private static void IndexDocumentation(
-            SystemContext context,
-            IEnumerable<NodeState> source,
-            Dictionary<NodeId, NodeState> map)
-        {
-            foreach (NodeState node in source)
-            {
-                if (!NodeId.IsNull(node.NodeId))
-                {
-                    if (!string.IsNullOrEmpty(node.NodeSetDocumentation) ||
-                        node.Categories?.Count > 0)
-                    {
-                        map[node.NodeId] = node;
-                    }
-                }
-
-                List<BaseInstanceState> children = [];
-                node.GetChildren(context, children);
-                IndexDocumentation(context, children, map);
-            }
-        }
-
-        private static void UpdateDocumentation(
-            SystemContext context,
-            Dictionary<NodeId, NodeState> original,
-            IEnumerable<NodeState> updated)
-        {
-            foreach (NodeState node in updated)
-            {
-                if (original.TryGetValue(node.NodeId, out NodeState existingNode))
-                {
-                    node.NodeSetDocumentation =
-                            !string.IsNullOrWhiteSpace(existingNode.NodeSetDocumentation)
-                            ? existingNode.NodeSetDocumentation
-                            : null;
-                    node.Categories = existingNode.Categories;
-                }
-
-                List<BaseInstanceState> children = [];
-                node.GetChildren(context, children);
-                UpdateDocumentation(context, original, children);
-            }
-        }
-
-        private static ushort CollectNodes(
-            SystemContext context,
-            Dictionary<NodeId, NodeState> index,
-            NodeState node)
-        {
-            index[node.NodeId] = node;
-
-            List<BaseInstanceState> children = [];
-            node.GetChildren(context, children);
-
-            foreach (BaseInstanceState child in children)
-            {
-                CollectNodes(context, index, child);
-            }
-
-            return node.NodeId.NamespaceIndex;
-        }
-
-        private static void RemoveChildrenWithNoNodeId(
-            SystemContext context,
-            NodeState parent)
-        {
-            List<BaseInstanceState> children = [];
-            parent.GetChildren(context, children);
-
-            foreach (BaseInstanceState child in children)
-            {
-                if (child.NodeId.IdType == IdType.Numeric &&
-                    (uint)child.NodeId.Identifier == 0)
-                {
-                    parent.RemoveChild(child);
-                    continue;
-                }
-
-                RemoveChildrenWithNoNodeId(context, child);
-            }
-        }
-
-        /// <summary>
-        /// Generate initialization file as source code
-        /// </summary>
-        private void GeneratePredefinedNodesSource(
-            string filePath,
-            SystemContext context,
-            NodeStateCollection collection)
-        {
-            // save as base64 string.
-            string initializationString;
-
-            if (!UseXmlInitializers)
-            {
-                using var ostrm = new MemoryStream();
-                collection.SaveAsBinary(context, ostrm);
-                ostrm.Close();
-                initializationString = Convert.ToBase64String(ostrm.ToArray());
-            }
-            else
-            {
-                using var ostrm = new MemoryStream();
-                collection.SaveAsXml(context, ostrm);
-                ostrm.Close();
-                initializationString = Encoding.UTF8.GetString(ostrm.ToArray());
-            }
-
-            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
-                filePath,
-                m_model.TargetNamespaceInfo.Prefix + ".PredefinedNodes.g.cs"));
-            var template = new Template(writer, CodeTemplateStrings.PredefinedNodesFile_cs);
-
-            template.AddTemplate(
-                Tokens.ListOfImports,
-                null,
-                m_model.Namespaces,
-                LoadTemplate_NamespaceImports,
-                null);
-
-            template.AddReplacement(Tokens.Namespace,
-                m_model.Namespaces.GetNamespacePrefix(m_model.TargetNamespace));
-            template.AddReplacement(Tokens.Encoding,
-                UseXmlInitializers ? "Xml" : "Binary");
-            template.AddReplacement(Tokens.Decode,
-                UseXmlInitializers ? "Encoding.UTF8.GetBytes" : "Convert.FromBase64String");
-
-            template.AddTemplate(
-                Tokens.InitializationString,
-                null,
-                new object[] { initializationString },
-                LoadTemplate_InitializationString,
-                null);
-            string LoadTemplate_InitializationString(Template template, Context context)
-            {
-                WriteInitializationString(template, context, context.Target as string);
-                return null;
-            }
-
-            var templateContext = new Context();
-            template.WriteTemplate(templateContext);
-        }
-
-        /// <summary>
-        /// Writes the schema information to a static XML export file.
-        /// </summary>
-        private void WriteTemplate_XmlExport(string filePath)
-        {
             var context = new SystemContext(m_telemetry)
             {
                 NamespaceUris = m_model.NamespaceUris,
                 ServerUris = new StringTable()
             };
 
+            GenerateConstants(filePath, nodes);
+            GenerateDataTypes(filePath, nodes);
+            GenerateNonDataTypes(filePath, nodes);
+            GenerateXmlSchema(filePath, nodes);
+            GenerateBinarySchema(filePath, nodes);
+
+            NodeStateCollection nodeStates = GenerateNodeSet(filePath, context);
+
+            // Embed initializers and add helpers as source code (.g.cs)
+            EmbedInitializers(filePath, context, nodeStates);
+
+            GenerateHelpers(filePath);
+        }
+
+        /// <summary>
+        /// Writes the nodesets
+        /// </summary>
+        private NodeStateCollection GenerateNodeSet(
+            string filePath,
+            SystemContext context,
+            bool embedNodeSet = false)
+        {
             // collect the nodes to write.
             NodeStateCollection collection = [];
             NodeStateCollection collectionWithServices = [];
@@ -482,22 +348,284 @@ namespace Opc.Ua.SourceGeneration
                 [.. m_validator.Nodes],
                 m_fileSystem,
                 m_telemetry);
-            nodesetGenerator.GenerateNodeset2Xml(
+            IReadOnlyList<Resource> resources = nodesetGenerator.Emit(
                 filePath,
                 context,
                 collection,
                 collectionWithServices);
 
-            // Generate predefined nodes as source code (.g.cs)
-            GeneratePredefinedNodesSource(filePath, context, collection);
+            if (embedNodeSet)
+            {
+                // Pack as resources
+                var resourceGenerator = new ResourceGenerator(m_fileSystem, filePath);
+                resourceGenerator.Embed(
+                    m_model.TargetNamespaceInfo.Prefix,
+                    "NodeSet2",
+                    [.. resources]);
+            }
+            return collection;
         }
 
-        private void WriteTemplate_XmlSchema(string filePath, List<NodeDesign> nodes)
+        private void GenerateConstants(string filePath, List<NodeDesign> nodes)
+        {
+            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
+                filePath,
+                m_model.TargetNamespaceInfo.Prefix + ".Constants.g.cs"));
+            var template = new Template(writer, CodeTemplateStrings.ConstantsFile_cs);
+
+            template.AddReplacement(
+                Tokens.Namespace,
+                m_model.Namespaces.GetNamespacePrefix(m_model.TargetNamespace));
+            template.AddReplacement(
+                Tokens.NamespaceUri,
+                m_model.Namespaces.GetConstantSymbolForNamespace(m_model.TargetNamespace));
+
+            template.AddTemplate(
+                Tokens.ListOfImports,
+                null,
+                m_model.Namespaces,
+                LoadTemplate_NamespaceImports,
+                null);
+
+            List<string> namespaces = [];
+
+            for (int ii = 0; ii < m_model.Namespaces.Length; ii++)
+            {
+                namespaces.Add(m_model.Namespaces[ii].Value);
+
+                if (!string.IsNullOrEmpty(m_model.Namespaces[ii].XmlNamespace))
+                {
+                    namespaces.Add(m_model.Namespaces[ii].XmlNamespace);
+                }
+            }
+
+            template.AddTemplate(
+                Tokens.ListOfNamespaceUris,
+                CodeTemplateStrings.NamespaceUri_cs,
+                namespaces,
+                null,
+                WriteTemplate_CodeNamespaceUri);
+
+            SortedDictionary<string, string> browseNames = GetBrowseNames(nodes);
+
+            template.AddTemplate(
+                Tokens.ListOfBrowseNames,
+                CodeTemplateStrings.BrowseName_cs,
+                browseNames,
+                LoadTemplate_BrowseNames,
+                WriteTemplate_BrowseNames);
+
+            SortedDictionary<string, List<NodeDesign>> identifiers = GetIdentifiers();
+
+            template.AddTemplate(
+                Tokens.ListOfIdentifiers,
+                CodeTemplateStrings.IdClass_cs,
+                identifiers,
+                LoadTemplate_IdClass,
+                WriteTemplate_IdClass);
+
+            template.AddTemplate(
+                Tokens.ListOfNodeIds,
+                CodeTemplateStrings.NodeIdClass_cs,
+                identifiers,
+                LoadTemplate_IdClass,
+                WriteTemplate_NodeIdClass);
+
+            var context = new Context
+            {
+                Target = nodes
+            };
+            template.WriteTemplate(context);
+        }
+
+        private void GenerateDataTypes(string filePath, List<NodeDesign> nodes)
+        {
+            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
+                filePath,
+                m_model.TargetNamespaceInfo.Prefix + ".DataTypes.g.cs"));
+            var template = new Template(writer, CodeTemplateStrings.TypesFile_cs);
+
+            template.AddReplacement(
+                Tokens.Namespace,
+                m_model.Namespaces.GetNamespacePrefix(m_model.TargetNamespace));
+            template.AddReplacement(
+                Tokens.NamespaceUri,
+                m_model.Namespaces.GetConstantSymbolForNamespace(m_model.TargetNamespace));
+
+            template.AddTemplate(
+                Tokens.ListOfImports,
+                null,
+                m_model.Namespaces,
+                LoadTemplate_NamespaceImports,
+                null);
+
+            List<string> namespaces = [];
+
+            for (int ii = 0; ii < m_model.Namespaces.Length; ii++)
+            {
+                namespaces.Add(m_model.Namespaces[ii].Value);
+
+                if (!string.IsNullOrEmpty(m_model.Namespaces[ii].XmlNamespace))
+                {
+                    namespaces.Add(m_model.Namespaces[ii].XmlNamespace);
+                }
+            }
+
+            List<DataTypeDesign> datatypes = [];
+
+            for (int ii = 0; ii < nodes.Count; ii++)
+            {
+                if (nodes[ii] is DataTypeDesign dataTypeDesign &&
+                    !dataTypeDesign.IsPartOfOpcUaTypesLibrary())
+                {
+                    datatypes.Add(dataTypeDesign);
+                }
+            }
+
+            template.AddTemplate(
+                Tokens.ListOfTypes,
+                string.Empty,
+                datatypes,
+                LoadTemplate_ListOfTypes,
+                WriteTemplate_ListOfTypes);
+
+            var context = new Context
+            {
+                Target = nodes
+            };
+            template.WriteTemplate(context);
+        }
+
+        private void GenerateNonDataTypes(string filePath, List<NodeDesign> nodes)
+        {
+            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
+                filePath,
+                m_model.TargetNamespaceInfo.Prefix + ".Classes.g.cs"));
+            var template = new Template(writer, CodeTemplateStrings.TypesFile_cs);
+
+            template.AddReplacement(
+                Tokens.Namespace,
+                m_model.Namespaces.GetNamespacePrefix(m_model.TargetNamespace));
+            template.AddReplacement(
+                Tokens.NamespaceUri,
+                m_model.Namespaces.GetConstantSymbolForNamespace(m_model.TargetNamespace));
+
+            template.AddTemplate(
+                Tokens.ListOfImports,
+                null,
+                m_model.Namespaces,
+                LoadTemplate_NamespaceImports,
+                null);
+
+            List<string> namespaces = [];
+
+            for (int ii = 0; ii < m_model.Namespaces.Length; ii++)
+            {
+                namespaces.Add(m_model.Namespaces[ii].Value);
+
+                if (!string.IsNullOrEmpty(m_model.Namespaces[ii].XmlNamespace))
+                {
+                    namespaces.Add(m_model.Namespaces[ii].XmlNamespace);
+                }
+            }
+
+            List<NodeDesign> nonDataTypes = [];
+
+            for (int ii = 0; ii < nodes.Count; ii++)
+            {
+                if (nodes[ii] is not DataTypeDesign)
+                {
+                    if (nodes[ii] is MethodDesign &&
+                        !nodes[ii].SymbolicName.Name.EndsWith("MethodType", StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    nonDataTypes.Add(nodes[ii]);
+                }
+            }
+
+            template.AddTemplate(
+                Tokens.ListOfTypes,
+                string.Empty,
+                nonDataTypes,
+                LoadTemplate_ListOfTypes,
+                WriteTemplate_ListOfTypes);
+
+            var context = new Context
+            {
+                Target = nodes
+            };
+            template.WriteTemplate(context);
+        }
+
+        private void GenerateXmlSchema(string filePath, List<NodeDesign> nodes)
         {
             using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
                 filePath,
                 m_model.TargetNamespaceInfo.Prefix + ".Types.xsd"));
             WriteTemplate_XmlSchema(writer, nodes);
+        }
+
+        private void GenerateBinarySchema(string filePath, List<NodeDesign> nodes)
+        {
+            using TextWriter writer = m_fileSystem.CreateTextWriter(
+                Path.Combine(filePath, m_model.TargetNamespaceInfo.Prefix + ".Types.bsd"));
+            WriteTemplate_BinarySchema(writer, nodes);
+        }
+
+        /// <summary>
+        /// Generate helpers
+        /// </summary>
+        /// <param name="filePath"></param>
+        private void GenerateHelpers(string filePath)
+        {
+            string nsPrefix = m_model.TargetNamespaceInfo.Prefix;
+            // Add helpers
+            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
+                filePath,
+                nsPrefix + ".Helpers.g.cs"));
+            var template = new Template(writer, CodeTemplateStrings.Helpers_File_cs);
+
+            template.AddTemplate(
+                Tokens.ListOfImports,
+                null,
+                m_model.Namespaces,
+                LoadTemplate_NamespaceImports,
+                null);
+
+            template.AddReplacement(Tokens.NamespacePrefix, nsPrefix);
+            template.AddReplacement(Tokens.Namespace,
+                nsPrefix.Replace(".", string.Empty, StringComparison.Ordinal));
+            template.AddReplacement(Tokens.Encoding, UseXmlInitializers ? "Xml" : "Binary");
+
+            template.WriteTemplate(null);
+        }
+
+        /// <summary>
+        /// Embed all initializers as source code
+        /// </summary>
+        private void EmbedInitializers(
+            string filePath,
+            SystemContext context,
+            NodeStateCollection collection)
+        {
+            var initializers = new ResourceGenerator(m_fileSystem, filePath);
+            using var ostrm = new MemoryStream();
+            if (!UseXmlInitializers)
+            {
+                collection.SaveAsBinary(context, ostrm);
+            }
+            else
+            {
+                collection.SaveAsXml(context, ostrm, true);
+            }
+            var predefinedNodesInitializer =
+                new StreamResource("PredefinedNodes", ostrm, UseXmlInitializers);
+            initializers.Embed(
+                m_model.TargetNamespaceInfo.Prefix,
+                "Initializers",
+                [.. m_initializers.Values, predefinedNodesInitializer]);
         }
 
         private void WriteTemplate_XmlSchema(TextWriter writer, List<NodeDesign> nodes)
@@ -919,13 +1047,6 @@ namespace Opc.Ua.SourceGeneration
             return template.WriteTemplate(context);
         }
 
-        private void WriteTemplate_BinarySchema(string filePath, List<NodeDesign> nodes)
-        {
-            using TextWriter writer = m_fileSystem.CreateTextWriter(
-                Path.Combine(filePath, m_model.TargetNamespaceInfo.Prefix + ".Types.bsd"));
-            WriteTemplate_BinarySchema(writer, nodes);
-        }
-
         private void WriteTemplate_BinarySchema(TextWriter writer, List<NodeDesign> nodes)
         {
             var template = new Template(writer, SchemaTemplateStrings.BinarySchema_File_xml);
@@ -1288,199 +1409,6 @@ namespace Opc.Ua.SourceGeneration
             template.Write("<opc:Documentation>{0}</opc:Documentation>", dataType.Description.Value);
 
             return context.TemplateString;
-        }
-
-        private void WriteTemplate_ConstantsSingleFile(string filePath, List<NodeDesign> nodes)
-        {
-            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
-                filePath,
-                m_model.TargetNamespaceInfo.Prefix + ".Constants.g.cs"));
-            var template = new Template(writer, CodeTemplateStrings.ConstantsFile_cs);
-
-            template.AddReplacement(
-                Tokens.Namespace,
-                m_model.Namespaces.GetNamespacePrefix(m_model.TargetNamespace));
-            template.AddReplacement(
-                Tokens.NamespaceUri,
-                m_model.Namespaces.GetConstantSymbolForNamespace(m_model.TargetNamespace));
-
-            template.AddTemplate(
-                Tokens.ListOfImports,
-                null,
-                m_model.Namespaces,
-                LoadTemplate_NamespaceImports,
-                null);
-
-            List<string> namespaces = [];
-
-            for (int ii = 0; ii < m_model.Namespaces.Length; ii++)
-            {
-                namespaces.Add(m_model.Namespaces[ii].Value);
-
-                if (!string.IsNullOrEmpty(m_model.Namespaces[ii].XmlNamespace))
-                {
-                    namespaces.Add(m_model.Namespaces[ii].XmlNamespace);
-                }
-            }
-
-            template.AddTemplate(
-                Tokens.ListOfNamespaceUris,
-                CodeTemplateStrings.NamespaceUri_cs,
-                namespaces,
-                null,
-                WriteTemplate_CodeNamespaceUri);
-
-            SortedDictionary<string, string> browseNames = GetBrowseNames(nodes);
-
-            template.AddTemplate(
-                Tokens.ListOfBrowseNames,
-                CodeTemplateStrings.BrowseName_cs,
-                browseNames,
-                LoadTemplate_BrowseNames,
-                WriteTemplate_BrowseNames);
-
-            SortedDictionary<string, List<NodeDesign>> identifiers = GetIdentifiers();
-
-            template.AddTemplate(
-                Tokens.ListOfIdentifiers,
-                CodeTemplateStrings.IdClass_cs,
-                identifiers,
-                LoadTemplate_IdClass,
-                WriteTemplate_IdClass);
-
-            template.AddTemplate(
-                Tokens.ListOfNodeIds,
-                CodeTemplateStrings.NodeIdClass_cs,
-                identifiers,
-                LoadTemplate_IdClass,
-                WriteTemplate_NodeIdClass);
-
-            var context = new Context
-            {
-                Target = nodes
-            };
-            template.WriteTemplate(context);
-        }
-
-        private void WriteTemplate_DataTypesSingleFile(string filePath, List<NodeDesign> nodes)
-        {
-            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
-                filePath,
-                m_model.TargetNamespaceInfo.Prefix + ".DataTypes.g.cs"));
-            var template = new Template(writer, CodeTemplateStrings.TypesFile_cs);
-
-            template.AddReplacement(
-                Tokens.Namespace,
-                m_model.Namespaces.GetNamespacePrefix(m_model.TargetNamespace));
-            template.AddReplacement(
-                Tokens.NamespaceUri,
-                m_model.Namespaces.GetConstantSymbolForNamespace(m_model.TargetNamespace));
-
-            template.AddTemplate(
-                Tokens.ListOfImports,
-                null,
-                m_model.Namespaces,
-                LoadTemplate_NamespaceImports,
-                null);
-
-            List<string> namespaces = [];
-
-            for (int ii = 0; ii < m_model.Namespaces.Length; ii++)
-            {
-                namespaces.Add(m_model.Namespaces[ii].Value);
-
-                if (!string.IsNullOrEmpty(m_model.Namespaces[ii].XmlNamespace))
-                {
-                    namespaces.Add(m_model.Namespaces[ii].XmlNamespace);
-                }
-            }
-
-            List<DataTypeDesign> datatypes = [];
-
-            for (int ii = 0; ii < nodes.Count; ii++)
-            {
-                if (nodes[ii] is DataTypeDesign dataTypeDesign &&
-                    !dataTypeDesign.IsPartOfOpcUaTypesLibrary())
-                {
-                    datatypes.Add(dataTypeDesign);
-                }
-            }
-
-            template.AddTemplate(
-                Tokens.ListOfTypes,
-                string.Empty,
-                datatypes,
-                LoadTemplate_ListOfTypes,
-                WriteTemplate_ListOfTypes);
-
-            var context = new Context
-            {
-                Target = nodes
-            };
-            template.WriteTemplate(context);
-        }
-
-        private void WriteTemplate_NonDataTypesSingleFile(string filePath, List<NodeDesign> nodes)
-        {
-            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
-                filePath,
-                m_model.TargetNamespaceInfo.Prefix + ".Classes.g.cs"));
-            var template = new Template(writer, CodeTemplateStrings.TypesFile_cs);
-
-            template.AddReplacement(
-                Tokens.Namespace,
-                m_model.Namespaces.GetNamespacePrefix(m_model.TargetNamespace));
-            template.AddReplacement(
-                Tokens.NamespaceUri,
-                m_model.Namespaces.GetConstantSymbolForNamespace(m_model.TargetNamespace));
-
-            template.AddTemplate(
-                Tokens.ListOfImports,
-                null,
-                m_model.Namespaces,
-                LoadTemplate_NamespaceImports,
-                null);
-
-            List<string> namespaces = [];
-
-            for (int ii = 0; ii < m_model.Namespaces.Length; ii++)
-            {
-                namespaces.Add(m_model.Namespaces[ii].Value);
-
-                if (!string.IsNullOrEmpty(m_model.Namespaces[ii].XmlNamespace))
-                {
-                    namespaces.Add(m_model.Namespaces[ii].XmlNamespace);
-                }
-            }
-
-            List<NodeDesign> nonDataTypes = [];
-
-            for (int ii = 0; ii < nodes.Count; ii++)
-            {
-                if (nodes[ii] is not DataTypeDesign)
-                {
-                    if (nodes[ii] is MethodDesign &&
-                        !nodes[ii].SymbolicName.Name.EndsWith("MethodType", StringComparison.Ordinal))
-                    {
-                        continue;
-                    }
-
-                    nonDataTypes.Add(nodes[ii]);
-                }
-            }
-
-            template.AddTemplate(
-                Tokens.ListOfTypes,
-                string.Empty,
-                nonDataTypes,
-                LoadTemplate_ListOfTypes,
-                WriteTemplate_ListOfTypes);
-
-            var context = new Context
-            {
-                Target = nodes
-            };
-            template.WriteTemplate(context);
         }
 
         private string LoadTemplate_IdClass(Template template, Context context)
@@ -2130,7 +2058,7 @@ namespace Opc.Ua.SourceGeneration
             }
 
             template.AddTemplate(
-                Tokens.InitializationStringForType,
+                Tokens.InitializationStringForType, // TODO: Do we need this - it is not referenced in any template?
                 null,
                 new NodeDesign[] { node },
                 LoadTemplate_InitializationString,
@@ -2151,10 +2079,10 @@ namespace Opc.Ua.SourceGeneration
                 null);
 
             template.AddTemplate(
-                Tokens.ListOfFieldsForType,
+                Tokens.ListOfFieldsForType, // TODO: Do we need this - it is not referenced in any template?
                 null,
                 children,
-                LoadTemplate_ListOfFieldsForType,
+                LoadTemplate_ListOfFields,
                 null);
 
             template.AddTemplate(
@@ -2168,25 +2096,25 @@ namespace Opc.Ua.SourceGeneration
                 Tokens.ListOfFields,
                 null,
                 children,
-                LoadTemplate_ListOfFieldsForType,
+                LoadTemplate_ListOfFields,
                 null);
 
             template.AddTemplate(
-                Tokens.ListOfPropertiesForType,
+                Tokens.ListOfPropertiesForType, // TODO: Do we need this - it is not referenced in any template?
                 CodeTemplateStrings.Property_cs,
                 children,
-                LoadTemplate_ListOfPropertiesForType,
-                WriteTemplate_ListOfPropertiesForType);
+                LoadTemplate_ListOfProperties,
+                WriteTemplate_ListOfProperties);
 
             template.AddTemplate(
                 Tokens.ListOfProperties,
                 CodeTemplateStrings.Property_cs,
                 children,
-                LoadTemplate_ListOfPropertiesForType,
-                WriteTemplate_ListOfPropertiesForType);
+                LoadTemplate_ListOfProperties,
+                WriteTemplate_ListOfProperties);
 
             template.AddTemplate(
-                Tokens.FindChildMethodsForType,
+                Tokens.FindChildMethodsForType, // TODO: Do we need this - it is not referenced in any template?
                 CodeTemplateStrings.FindChildMethods_cs,
                 new NodeDesign[] { type },
                 LoadTemplate_FindChildMethods,
@@ -2205,10 +2133,16 @@ namespace Opc.Ua.SourceGeneration
         private string LoadTemplate_InitializationString(Template template, Context context)
         {
             string xml = null;
+            // string resourceName = null;
 
             if (context.Target is TypeDesign type)
             {
-                xml = ConstructInitializer(type, !context.Token.EndsWith("ForType", StringComparison.Ordinal));
+                bool forInstance = !context.Token.EndsWith("ForType", StringComparison.Ordinal);
+                // resourceName = AddInitializer(CoreUtils.Format(
+                //     "{0}",
+                //     type.SymbolicName.Name), type, forInstance);
+
+                xml = ConstructInitializer(type, forInstance);
 
                 // output initializers for optional components.
                 if (type.Children != null && type.Children.Items != null)
@@ -2229,6 +2163,11 @@ namespace Opc.Ua.SourceGeneration
                                 continue;
                             }
 
+                            // AddInitializer(CoreUtils.Format(
+                            //     "{0}{1}",
+                            //     type.SymbolicName.Name,
+                            //     current.Instance.SymbolicName.Name), current.Instance, false);
+
                             template.WriteNextLine(context.Prefix);
                             template.Write(
                                 "private const string {0}_InitializationString =",
@@ -2243,8 +2182,12 @@ namespace Opc.Ua.SourceGeneration
                 }
             }
 
-            if (context.Target is MethodDesign method)
+            else if (context.Target is MethodDesign method)
             {
+                // resourceName = AddInitializer(CoreUtils.Format(
+                //     "{0}",
+                //     method.SymbolicName.Name), method, false);
+
                 xml = ConstructInitializer(method, false);
             }
 
@@ -2471,7 +2414,7 @@ namespace Opc.Ua.SourceGeneration
             return template.WriteTemplate(context);
         }
 
-        private string LoadTemplate_ListOfFieldsForType(Template template, Context context)
+        private string LoadTemplate_ListOfFields(Template template, Context context)
         {
             if (context.Target is not InstanceDesign instance)
             {
@@ -2503,7 +2446,8 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            if (!context.Token.EndsWith("ForType", StringComparison.Ordinal))
+            bool forInstance = !context.Token.EndsWith("ForType", StringComparison.Ordinal);
+            if (forInstance)
             {
                 if (instance.ModellingRule == ModellingRule.None)
                 {
@@ -3370,7 +3314,7 @@ namespace Opc.Ua.SourceGeneration
             return template.WriteTemplate(context);
         }
 
-        private string LoadTemplate_ListOfPropertiesForType(Template template, Context context)
+        private string LoadTemplate_ListOfProperties(Template template, Context context)
         {
             if (context.Target is not InstanceDesign instance)
             {
@@ -3409,7 +3353,8 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            if (!context.Token.EndsWith("ForType", StringComparison.Ordinal))
+            bool forInstance = !context.Token.EndsWith("ForType", StringComparison.Ordinal);
+            if (forInstance)
             {
                 if (instance.ModellingRule == ModellingRule.None)
                 {
@@ -3441,7 +3386,7 @@ namespace Opc.Ua.SourceGeneration
             return context.TemplateString;
         }
 
-        private bool WriteTemplate_ListOfPropertiesForType(Template template, Context context)
+        private bool WriteTemplate_ListOfProperties(Template template, Context context)
         {
             if (context.Target is not InstanceDesign instance)
             {
@@ -3570,6 +3515,7 @@ namespace Opc.Ua.SourceGeneration
 
             int count = 0;
 
+            bool forInstance = !context.Token.EndsWith("ForType", StringComparison.Ordinal);
             for (int ii = 0; ii < children.Length; ii++)
             {
                 var instance = (InstanceDesign)children.GetValue(ii);
@@ -3581,7 +3527,7 @@ namespace Opc.Ua.SourceGeneration
                     continue;
                 }
 
-                if (!context.Token.EndsWith("ForType", StringComparison.Ordinal) &&
+                if (forInstance &&
                     instance.ModellingRule is ModellingRule.None or
                         ModellingRule.OptionalPlaceholder or
                         ModellingRule.MandatoryPlaceholder)
@@ -3616,11 +3562,12 @@ namespace Opc.Ua.SourceGeneration
 
             List<InstanceDesign> childrenToUse = [];
 
+            bool forInstance = !context.Token.EndsWith("ForType", StringComparison.Ordinal);
             for (int ii = 0; ii < children.Length; ii++)
             {
                 var instance = (InstanceDesign)children.GetValue(ii);
 
-                if (context.Token.EndsWith("ForType", StringComparison.Ordinal))
+                if (!forInstance)
                 {
                     childrenToUse.Add(instance);
                     continue;
@@ -3662,7 +3609,7 @@ namespace Opc.Ua.SourceGeneration
                     continue;
                 }
 
-                if (context.Token.EndsWith("ForType", StringComparison.Ordinal))
+                if (!forInstance)
                 {
                     childrenToUse.Add(instance);
                     continue;
@@ -3744,6 +3691,88 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(Tokens.BrowseNameNamespaceUri, m_model.Namespaces.GetConstantSymbolForNamespace(instance.SymbolicName.Namespace));
 
             return template.WriteTemplate(context);
+        }
+
+        private static void IndexDocumentation(
+            SystemContext context,
+            IEnumerable<NodeState> source,
+            Dictionary<NodeId, NodeState> map)
+        {
+            foreach (NodeState node in source)
+            {
+                if (!NodeId.IsNull(node.NodeId))
+                {
+                    if (!string.IsNullOrEmpty(node.NodeSetDocumentation) ||
+                        node.Categories?.Count > 0)
+                    {
+                        map[node.NodeId] = node;
+                    }
+                }
+
+                List<BaseInstanceState> children = [];
+                node.GetChildren(context, children);
+                IndexDocumentation(context, children, map);
+            }
+        }
+
+        private static void UpdateDocumentation(
+            SystemContext context,
+            Dictionary<NodeId, NodeState> original,
+            IEnumerable<NodeState> updated)
+        {
+            foreach (NodeState node in updated)
+            {
+                if (original.TryGetValue(node.NodeId, out NodeState existingNode))
+                {
+                    node.NodeSetDocumentation =
+                            !string.IsNullOrWhiteSpace(existingNode.NodeSetDocumentation)
+                            ? existingNode.NodeSetDocumentation
+                            : null;
+                    node.Categories = existingNode.Categories;
+                }
+
+                List<BaseInstanceState> children = [];
+                node.GetChildren(context, children);
+                UpdateDocumentation(context, original, children);
+            }
+        }
+
+        private static ushort CollectNodes(
+            SystemContext context,
+            Dictionary<NodeId, NodeState> index,
+            NodeState node)
+        {
+            index[node.NodeId] = node;
+
+            List<BaseInstanceState> children = [];
+            node.GetChildren(context, children);
+
+            foreach (BaseInstanceState child in children)
+            {
+                CollectNodes(context, index, child);
+            }
+
+            return node.NodeId.NamespaceIndex;
+        }
+
+        private static void RemoveChildrenWithNoNodeId(
+            SystemContext context,
+            NodeState parent)
+        {
+            List<BaseInstanceState> children = [];
+            parent.GetChildren(context, children);
+
+            foreach (BaseInstanceState child in children)
+            {
+                if (child.NodeId.IdType == IdType.Numeric &&
+                    (uint)child.NodeId.Identifier == 0)
+                {
+                    parent.RemoveChild(child);
+                    continue;
+                }
+
+                RemoveChildrenWithNoNodeId(context, child);
+            }
         }
 
         /// <summary>
@@ -3850,7 +3879,9 @@ namespace Opc.Ua.SourceGeneration
             return [.. selectedChildren];
         }
 
-        private static void CollectMatchingFields(VariableTypeDesign variableType, Dictionary<string, Parameter> fields)
+        private static void CollectMatchingFields(
+            VariableTypeDesign variableType,
+            Dictionary<string, Parameter> fields)
         {
             CollectFields(variableType.DataTypeNode, variableType.ValueRank, string.Empty, fields);
 
@@ -3865,7 +3896,11 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
-        private static void CollectFields(DataTypeDesign dataType, ValueRank valueRank, string basePath, Dictionary<string, Parameter> fields)
+        private static void CollectFields(
+            DataTypeDesign dataType,
+            ValueRank valueRank,
+            string basePath,
+            Dictionary<string, Parameter> fields)
         {
             if (dataType.BasicDataType != BasicDataType.UserDefined || valueRank != ValueRank.Scalar)
             {
@@ -3893,7 +3928,9 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
-        private void GetBrowseNames(NodeDesign node, SortedDictionary<string, string> browseNames)
+        private void GetBrowseNames(
+            NodeDesign node,
+            SortedDictionary<string, string> browseNames)
         {
             if (IsExcluded(node))
             {
@@ -4243,6 +4280,52 @@ namespace Opc.Ua.SourceGeneration
         }
 
         /// <summary>
+        /// Adds the initializer for node
+        /// </summary>
+        internal string AddInitializer(string name, NodeDesign node, bool forInstance)
+        {
+            var context = new SystemContext(m_telemetry)
+            {
+                NamespaceUris = m_model.NamespaceUris
+            };
+
+            NodeState state = node.State;
+
+            if (forInstance)
+            {
+                state = node.InstanceState;
+            }
+
+            if (state == null)
+            {
+                return null;
+            }
+
+            List<BaseInstanceState> list = [];
+            state.GetChildren(context, list);
+
+            using var ostrm = new MemoryStream();
+            if (UseXmlInitializers)
+            {
+                state.SaveAsXml(context, ostrm);
+            }
+            else
+            {
+                state.SaveAsBinary(context, ostrm);
+            }
+
+            if (!m_initializers.TryAdd(name, new BinaryResource(
+                name,
+                ostrm.ToArray(),
+                UseXmlInitializers)))
+            {
+                // TODO: If generate a unique name?
+                throw new InvalidOperationException($"Duplicate resource name {name}");
+            }
+            return name;
+        }
+
+        /// <summary>
         /// Constructs the initializer for a object type.
         /// </summary>
         private string ConstructInitializer(NodeDesign node, bool forInstance)
@@ -4374,6 +4457,7 @@ namespace Opc.Ua.SourceGeneration
             "Update"
         ];
 
+        private readonly Dictionary<string, Resource> m_initializers = [];
         private readonly IServiceMessageContext m_context;
         private readonly ITelemetryContext m_telemetry;
         private ModelDesignValidator m_validator;

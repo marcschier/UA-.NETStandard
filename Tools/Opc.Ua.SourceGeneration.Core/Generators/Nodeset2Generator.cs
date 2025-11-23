@@ -65,7 +65,7 @@ namespace Opc.Ua.SourceGeneration
         /// Generate nodeset 2 xml file. The file output will be validated by default.
         /// Disable validation if needed.
         /// </summary>
-        public IReadOnlyList<Resource> GenerateNodeset2Xml(
+        public IReadOnlyList<Resource> Emit(
             string filePath,
             SystemContext context,
             NodeStateCollection collection,
@@ -73,16 +73,17 @@ namespace Opc.Ua.SourceGeneration
             bool validateOutput = true)
         {
             var resources = new List<Resource>();
-
             string identifiersFilePath = Path.Combine(filePath, CoreUtils.Format(
                 "{0}.NodeIds.csv",
                 m_model.TargetNamespaceInfo.Prefix));
             WriteIdentifiers(context, identifiersFilePath, collection);
+            resources.Add(identifiersFilePath.AsTextFileResource());
 
             identifiersFilePath = Path.Combine(filePath, CoreUtils.Format(
                 "{0}.NodeIds.permissions.csv",
                 m_model.TargetNamespaceInfo.Prefix));
             WritePermissions(context, identifiersFilePath, collection);
+            resources.Add(identifiersFilePath.AsTextFileResource());
 
             string outputFile = Path.Combine(filePath, CoreUtils.Format(
                 "{0}.NodeSet2.xml",
@@ -117,7 +118,6 @@ namespace Opc.Ua.SourceGeneration
                     string nodeSetFilePath = Path.Combine(filePath, CoreUtils.Format(
                         "{0}.NodeSet2.Services.xml",
                         m_model.TargetNamespaceInfo.Prefix));
-
                     using (Stream ostrm2 = m_fileSystem.OpenWrite(nodeSetFilePath))
                     {
                         collectionWithServices.SaveAsNodeSet2(
@@ -128,20 +128,22 @@ namespace Opc.Ua.SourceGeneration
                                 m_model.TargetPublicationDate : DateTime.MinValue,
                             true);
                     }
+                    resources.Add(nodeSetFilePath.AsTextFileResource());
 
                     identifiersFilePath = Path.Combine(filePath, CoreUtils.Format(
                         "{0}.NodeIds.Services.csv",
                         m_model.TargetNamespaceInfo.Prefix));
                     WriteIdentifiers(context, identifiersFilePath, collectionWithServices);
+                    resources.Add(identifiersFilePath.AsTextFileResource());
 
                     identifiersFilePath = Path.Combine(filePath, CoreUtils.Format(
                         "{0}.NodeIds.Services.permissions.csv",
                         m_model.TargetNamespaceInfo.Prefix));
                     WritePermissions(context, identifiersFilePath, collectionWithServices);
+                    resources.Add(identifiersFilePath.AsTextFileResource());
                 }
             }
             resources.Add(outputFile.AsTextFileResource());
-
             if (validateOutput)
             {
                 // Validate
