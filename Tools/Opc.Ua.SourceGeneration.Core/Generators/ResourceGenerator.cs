@@ -29,6 +29,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Opc.Ua.SourceGeneration
@@ -52,6 +53,11 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public string Embed(string namespacePrefix, string name, params Resource[] resources)
         {
+            if (resources.Select(r => r.ResourceName).Distinct().Count() != resources.Length)
+            {
+                throw new ArgumentException("Resource names must be unique");
+            }
+
             string outputFile = Path.Combine(m_outputFolder, CoreUtils.Format(
                 "{0}.{1}.g.cs",
                 namespacePrefix,
@@ -226,7 +232,8 @@ namespace Opc.Ua.SourceGeneration
         public static string GetNameForFile(string inputFile, string namespacePrefix)
         {
             inputFile = Path.GetFileName(inputFile);
-            if (inputFile.StartsWith(namespacePrefix, StringComparison.Ordinal))
+            if (namespacePrefix != null &&
+                inputFile.StartsWith(namespacePrefix, StringComparison.Ordinal))
             {
                 inputFile = inputFile[namespacePrefix.Length..];
             }
@@ -275,7 +282,7 @@ namespace Opc.Ua.SourceGeneration
         {
             return new TextFileResource(
                 Resource.GetNameForFile(fileName, namespaceUri),
-                namespaceUri);
+                fileName);
         }
 
         public static BinaryFileResource ToBinaryFileResource(
