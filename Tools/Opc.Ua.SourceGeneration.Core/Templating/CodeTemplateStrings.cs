@@ -68,10 +68,13 @@ namespace Opc.Ua.SourceGeneration
              * The complete license agreement can be found here:
              * http://opcfoundation.org/License/MIT/1.00/
              * ======================================================================*/
+
+            #nullable enable annotations
+            #nullable disable warnings
             """;
 
         /// <summary>
-        /// ConstantsGenerator.cs line#154
+        /// ConstantsGenerator.cs 
         /// </summary>
         public static string Constants_File_cs =>
             $$"""
@@ -92,7 +95,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ConstantsGenerator.cs line#158
+        /// ConstantsGenerator.cs 
         /// </summary>
         public static string Constants_Constant_cs =>
             $$"""
@@ -103,7 +106,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ConstantsGenerator.cs line#198
+        /// ConstantsGenerator.cs 
         /// </summary>
         public static string Constants_DataTypes_cs =>
             $$"""
@@ -137,7 +140,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#278
+        /// ModelGenerator.cs 
         /// </summary>
         public static string Helpers_File_cs =>
             $$"""
@@ -191,7 +194,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#1337
+        /// ModelGenerator.cs 
         /// </summary>
         public static string ConstantsFile_cs =>
             $$"""
@@ -225,7 +228,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#1363
+        /// ModelGenerator.cs 
         /// </summary>
         public static string NamespaceUri_cs =>
             $$"""
@@ -236,7 +239,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#1372
+        /// ModelGenerator.cs 
         /// </summary>
         public static string BrowseName_cs =>
             $$"""
@@ -244,7 +247,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#1381
+        /// ModelGenerator.cs 
         /// </summary>
         public static string IdClass_cs =>
             $$"""
@@ -261,7 +264,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#1388
+        /// ModelGenerator.cs 
         /// </summary>
         public static string NodeIdClass_cs =>
             $$"""
@@ -278,8 +281,8 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#1411
-        /// ModelGenerator.cs line#1470
+        /// ModelGenerator.cs 
+        /// ModelGenerator.cs 
         /// </summary>
         public static string TypesFile_cs =>
             $$"""
@@ -303,7 +306,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#1555
+        /// ModelGenerator.cs 
         /// </summary>
         public static string IdDeclaration_cs =>
             $$"""
@@ -311,7 +314,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#1561
+        /// ModelGenerator.cs 
         /// </summary>
         public static string NodeIdDeclarationAbsolute_cs =>
             $$"""
@@ -320,7 +323,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#1565
+        /// ModelGenerator.cs 
         /// </summary>
         public static string NodeIdDeclaration_cs =>
             $$"""
@@ -329,11 +332,10 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#1708
+        /// ModelGenerator.cs 
         /// </summary>
         public static string DataTypes_Union_cs =>
             $$"""
-            #if !OPCUA_EXCLUDE_{{Tokens.BrowseName}}
             /// <summary>
             /// The field bitmask for the {{Tokens.ClassName}} class.
             /// </summary>
@@ -415,7 +417,9 @@ namespace Opc.Ua.SourceGeneration
                 {
                     decoder.PushNamespace({{Tokens.XmlNamespaceUri}});
 
-                    SwitchField = ({{Tokens.ClassName}}Fields)decoder.ReadSwitchField(m_FieldNames, out var fieldName);
+                    SwitchField = ({{Tokens.ClassName}}Fields)decoder.ReadSwitchField(
+                        m_FieldNames,
+                        out var fieldName);
 
                     switch (SwitchField)
                     {
@@ -429,12 +433,12 @@ namespace Opc.Ua.SourceGeneration
                 /// <inheritdoc/>
                 public virtual bool IsEqual(IEncodeable encodeable)
                 {
-                    if (Object.ReferenceEquals(this, encodeable))
+                    if (object.ReferenceEquals(this, encodeable))
                     {
                         return true;
                     }
 
-                    {{Tokens.BrowseName}} value = encodeable as {{Tokens.BrowseName}};
+                    {{Tokens.BrowseName}}? value = encodeable as {{Tokens.BrowseName}};
 
                     if (value == null)
                     {
@@ -480,15 +484,13 @@ namespace Opc.Ua.SourceGeneration
                     Enum.GetNames(typeof({{Tokens.ClassName}}Fields)).Where(x => x != nameof({{Tokens.ClassName}}Fields.None)).ToArray();
             }
             {{Tokens.CollectionClass}}
-            #endif // !OPCUA_EXCLUDE_{{Tokens.BrowseName}}
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#1715
+        /// ModelGenerator.cs 
         /// </summary>
         public static string DataTypes_DerivedClassWithOptionalFields_cs =>
             $$"""
-            #if !OPCUA_EXCLUDE_{{Tokens.BrowseName}}
             /// <summary>
             /// The field bitmask for the {{Tokens.ClassName}} class.
             /// </summary>
@@ -571,12 +573,12 @@ namespace Opc.Ua.SourceGeneration
                 /// <inheritdoc/>
                 public override bool IsEqual(IEncodeable encodeable)
                 {
-                    if (Object.ReferenceEquals(this, encodeable))
+                    if (object.ReferenceEquals(this, encodeable))
                     {
                         return true;
                     }
 
-                    {{Tokens.BrowseName}} value = encodeable as {{Tokens.BrowseName}};
+                    {{Tokens.BrowseName}}? value = encodeable as {{Tokens.BrowseName}};
 
                     if (value == null)
                     {
@@ -610,15 +612,13 @@ namespace Opc.Ua.SourceGeneration
                     Enum.GetNames(typeof({{Tokens.ClassName}}Fields)).Where(x => x != nameof({{Tokens.ClassName}}Fields.None)).ToArray();
             }
             {{Tokens.CollectionClass}}
-            #endif // !OPCUA_EXCLUDE_{{Tokens.BrowseName}}
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#1718
+        /// ModelGenerator.cs 
         /// </summary>
         public static string DataTypes_ClassWithOptionalFields_cs =>
             $$"""
-            #if !OPCUA_EXCLUDE_{{Tokens.BrowseName}}
             /// <summary>
             /// The field bitmask for the {{Tokens.ClassName}} class.
             /// </summary>
@@ -707,12 +707,12 @@ namespace Opc.Ua.SourceGeneration
                 /// <inheritdoc/>
                 public virtual bool IsEqual(IEncodeable encodeable)
                 {
-                    if (Object.ReferenceEquals(this, encodeable))
+                    if (object.ReferenceEquals(this, encodeable))
                     {
                         return true;
                     }
 
-                    {{Tokens.BrowseName}} value = encodeable as {{Tokens.BrowseName}};
+                    {{Tokens.BrowseName}}? value = encodeable as {{Tokens.BrowseName}};
 
                     if (value == null)
                     {
@@ -750,15 +750,13 @@ namespace Opc.Ua.SourceGeneration
                 typeof({{Tokens.ClassName}}Fields)).Where(x => x != nameof({{Tokens.ClassName}}Fields.None)).ToArray();
             }
             {{Tokens.CollectionClass}}
-            #endif // !OPCUA_EXCLUDE_{{Tokens.BrowseName}}
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#1723
+        /// ModelGenerator.cs 
         /// </summary>
         public static string DataTypes_Class_cs =>
             $$"""
-            #if !OPCUA_EXCLUDE_{{Tokens.BrowseName}}
             /// <summary>
             /// The {{Tokens.BrowseName}} DataType.
             /// </summary>
@@ -827,12 +825,12 @@ namespace Opc.Ua.SourceGeneration
                 /// <inheritdoc/>
                 public virtual bool IsEqual(IEncodeable encodeable)
                 {
-                    if (Object.ReferenceEquals(this, encodeable))
+                    if (object.ReferenceEquals(this, encodeable))
                     {
                         return true;
                     }
 
-                    {{Tokens.BrowseName}} value = encodeable as {{Tokens.BrowseName}};
+                    {{Tokens.BrowseName}}? value = encodeable as {{Tokens.BrowseName}};
 
                     if (value == null)
                     {
@@ -863,16 +861,14 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.ListOfFields}}
             }
             {{Tokens.CollectionClass}}
-            #endif // !OPCUA_EXCLUDE_{{Tokens.BrowseName}}
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#1726
-        /// ModelGenerator.cs line#1732
+        /// ModelGenerator.cs 
+        /// ModelGenerator.cs 
         /// </summary>
         public static string DataTypes_DerivedClass_cs =>
             $$"""
-            #if !OPCUA_EXCLUDE_{{Tokens.BrowseName}}
             /// <summary>
             /// The {{Tokens.BrowseName}} DataType.
             /// </summary>
@@ -945,12 +941,12 @@ namespace Opc.Ua.SourceGeneration
                 /// <inheritdoc/>
                 public override bool IsEqual(IEncodeable encodeable)
                 {
-                    if (Object.ReferenceEquals(this, encodeable))
+                    if (object.ReferenceEquals(this, encodeable))
                     {
                         return true;
                     }
 
-                    {{Tokens.BrowseName}} value = encodeable as {{Tokens.BrowseName}};
+                    {{Tokens.BrowseName}}? value = encodeable as {{Tokens.BrowseName}};
 
                     if (value == null)
                     {
@@ -981,16 +977,13 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.ListOfFields}}
             }
             {{Tokens.CollectionClass}}
-            #endif // !OPCUA_EXCLUDE_{{Tokens.BrowseName}}
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#1735
-        /// ModelGenerator.cs line#1739
+        /// ModelGenerator.cs 
         /// </summary>
         public static string DataTypes_Enumeration_cs =>
             $$"""
-            #if !OPCUA_EXCLUDE_{{Tokens.BrowseName}}
             /// <summary>
             /// The {{Tokens.BrowseName}} DataType.
             /// </summary>
@@ -1001,15 +994,13 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.ListOfProperties}}
             }
             {{Tokens.CollectionClass}}
-            #endif // !OPCUA_EXCLUDE_{{Tokens.BrowseName}}
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#1754
+        /// ModelGenerator.cs 
         /// </summary>
         public static string ObjectType_cs =>
             $$"""
-            #if !OPCUA_EXCLUDE_{{Tokens.ClassName}}State
             /// <summary>
             /// The {{Tokens.ClassName}} ObjectType state.
             /// </summary>
@@ -1020,7 +1011,8 @@ namespace Opc.Ua.SourceGeneration
                 /// <summary>
                 /// Initializes a new instance of the <see cref="{{Tokens.ClassName}}State"/> class.
                 /// </summary>
-                public {{Tokens.ClassName}}State(NodeState parent) : base(parent)
+                public {{Tokens.ClassName}}State(NodeState? parent)
+                    : base(parent)
                 {
                 }
 
@@ -1033,12 +1025,11 @@ namespace Opc.Ua.SourceGeneration
                         namespaceUris);
                 }
 
-            #if !OPCUA_EXCLUDE_InitializationStrings
                 /// <inheritdoc/>
                 protected override void Initialize(ISystemContext context)
                 {
                     base.Initialize(context);
-                    Initialize(context, InitializationString);
+                    Initialize(context, InitializationString, EncodingType.{{Tokens.Encoding}});
                     InitializeOptionalChildren(context);
                 }
 
@@ -1057,7 +1048,6 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 {{Tokens.InitializationString}}
-            #endif // !OPCUA_EXCLUDE_InitializationStrings
 
                 {{Tokens.ListOfProperties}}
 
@@ -1065,15 +1055,13 @@ namespace Opc.Ua.SourceGeneration
 
                 {{Tokens.ListOfFields}}
             }
-            #endif // !OPCUA_EXCLUDE_{{Tokens.ClassName}}State
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#1759
+        /// ModelGenerator.cs 
         /// </summary>
         public static string VariableType_cs =>
             $$"""
-            #if !OPCUA_EXCLUDE_{{Tokens.ClassName}}State
             /// <summary>
             /// The {{Tokens.ClassName}} VariableType state.
             /// </summary>
@@ -1084,7 +1072,7 @@ namespace Opc.Ua.SourceGeneration
                 /// <summary>
                 /// Initializes a new instance of the <see cref="{{Tokens.ClassName}}State"/> class.
                 /// </summary>
-                public {{Tokens.ClassName}}State(NodeState parent) : base(parent)
+                public {{Tokens.ClassName}}State(NodeState? parent) : base(parent)
                 {
                 }
 
@@ -1112,12 +1100,11 @@ namespace Opc.Ua.SourceGeneration
                     return {{Tokens.ValueRank}};
                 }
 
-            #if !OPCUA_EXCLUDE_InitializationStrings
                 /// <inheritdoc/>
                 protected override void Initialize(ISystemContext context)
                 {
                     base.Initialize(context);
-                    Initialize(context, InitializationString);
+                    Initialize(context, InitializationString, EncodingType.{{Tokens.Encoding}});
                     InitializeOptionalChildren(context);
                 }
 
@@ -1136,7 +1123,6 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 {{Tokens.InitializationString}}
-            #endif // !OPCUA_EXCLUDE_InitializationStrings
 
                 {{Tokens.ListOfProperties}}
 
@@ -1146,15 +1132,13 @@ namespace Opc.Ua.SourceGeneration
             }
             {{Tokens.TypedVariableType}}
             {{Tokens.VariableTypeValue}}
-            #endif // !OPCUA_EXCLUDE_{{Tokens.ClassName}}State
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#1764
+        /// ModelGenerator.cs 
         /// </summary>
         public static string MethodType_cs =>
             $$"""
-            #if !OPCUA_EXCLUDE_{{Tokens.ClassName}}
             /// <summary>
             /// The {{Tokens.ClassName}} MethodType.
             /// </summary>
@@ -1165,7 +1149,8 @@ namespace Opc.Ua.SourceGeneration
                 /// <summary>
                 /// Initializes a new instance of the <see cref="{{Tokens.ClassName}}"/> class.
                 /// </summary>
-                public {{Tokens.ClassName}}(NodeState parent) : base(parent)
+                public {{Tokens.ClassName}}(NodeState? parent)
+                    : base(parent)
                 {
                 }
 
@@ -1175,12 +1160,11 @@ namespace Opc.Ua.SourceGeneration
                     return new {{Tokens.ClassName}}(parent);
                 }
 
-            #if !OPCUA_EXCLUDE_InitializationStrings
                 /// <inheritdoc/>
                 protected override void Initialize(ISystemContext context)
                 {
                     base.Initialize(context);
-                    Initialize(context, InitializationString);
+                    Initialize(context, InitializationString, EncodingType.{{Tokens.Encoding}});
                     InitializeOptionalChildren(context);
                 }
 
@@ -1192,18 +1176,17 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 {{Tokens.InitializationString}}
-            #endif // !OPCUA_EXCLUDE_InitializationStrings
 
                 /// <inheritdoc/>
-                public {{Tokens.ClassName}}MethodCallHandler OnCall;
+                public {{Tokens.ClassName}}MethodCallHandler? OnCall;
 
                 /// <inheritdoc/>
-                public {{Tokens.ClassName}}MethodAsyncCallHandler OnCallAsync;
+                public {{Tokens.ClassName}}MethodAsyncCallHandler? OnCallAsync;
 
                 {{Tokens.ListOfProperties}}
 
                 /// <inheritdoc/>
-                protected override ServiceResult Call(
+                protected override ServiceResult? Call(
                     ISystemContext _context,
                     NodeId _objectId,
                     IList<object> _inputArguments,
@@ -1228,7 +1211,7 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 /// <inheritdoc/>
-                protected override async ValueTask<ServiceResult> CallAsync(
+                protected override async ValueTask<ServiceResult?> CallAsync(
                     ISystemContext _context,
                     NodeId _objectId,
                     IList<object> _inputArguments,
@@ -1253,7 +1236,7 @@ namespace Opc.Ua.SourceGeneration
                     }
                     {{Tokens.ListOfOutputArgumentsFromResult}}
 
-                    return _result.ServiceResult;
+                    return _result?.ServiceResult;
                 }
 
                 {{Tokens.FindChildMethods}}
@@ -1281,11 +1264,10 @@ namespace Opc.Ua.SourceGeneration
             /// </summary>
             public delegate ValueTask<{{Tokens.ClassName}}Result> {{Tokens.ClassName}}MethodAsyncCallHandler(
                 {{Tokens.OnCallAsyncDeclaration}}
-            #endif // !OPCUA_EXCLUDE_{{Tokens.ClassName}}
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#2006
+        /// ModelGenerator.cs 
         /// </summary>
         public static string DataTypes_CollectionClass_cs =>
             $$"""
@@ -1294,40 +1276,63 @@ namespace Opc.Ua.SourceGeneration
             /// </summary>
             [System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
             [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
-            [CollectionDataContract(Name = "ListOf{{Tokens.BrowseName}}", Namespace = {{Tokens.XmlNamespaceUri}}, ItemName = "{{Tokens.BrowseName}}")]
-            public partial class {{Tokens.BrowseName}}Collection : List<{{Tokens.BrowseName}}>, ICloneable
+            [CollectionDataContract(
+                Name = "ListOf{{Tokens.BrowseName}}",
+                Namespace = {{Tokens.XmlNamespaceUri}},
+                ItemName = "{{Tokens.BrowseName}}")]
+            public partial class {{Tokens.BrowseName}}Collection : List<{{Tokens.BrowseName}}?>, ICloneable
             {
                 /// <inheritdoc/>
-                public {{Tokens.BrowseName}}Collection() {}
+                public {{Tokens.BrowseName}}Collection()
+                {
+                }
 
                 /// <inheritdoc/>
-                public {{Tokens.BrowseName}}Collection(int capacity) : base(capacity) {}
+                public {{Tokens.BrowseName}}Collection(int capacity)
+                    : base(capacity)
+                {
+                }
 
                 /// <inheritdoc/>
-                public {{Tokens.BrowseName}}Collection(IEnumerable<{{Tokens.BrowseName}}> collection) : base(collection) {}
+                public {{Tokens.BrowseName}}Collection(IEnumerable<{{Tokens.BrowseName}}?> collection)
+                    : base(collection)
+                {
+                }
 
                 /// <inheritdoc/>
-                public static implicit operator {{Tokens.BrowseName}}Collection({{Tokens.BrowseName}}[] values)
+                public static implicit operator {{Tokens.BrowseName}}Collection({{Tokens.BrowseName}}?[]? values)
+                {
+                    return To{{Tokens.BrowseName}}Collection(values);
+                }
+            
+                /// <inheritdoc/>
+                public static {{Tokens.BrowseName}}Collection To{{Tokens.BrowseName}}Collection({{Tokens.BrowseName}}?[]? values)
                 {
                     if (values != null)
                     {
                         return new {{Tokens.BrowseName}}Collection(values);
                     }
-
+            
                     return new {{Tokens.BrowseName}}Collection();
                 }
-
+                        
                 /// <inheritdoc/>
-                public static explicit operator {{Tokens.BrowseName}}[]({{Tokens.BrowseName}}Collection values)
+                public static explicit operator {{Tokens.BrowseName}}?[]?({{Tokens.BrowseName}}Collection? values)
+                {
+                    return From{{Tokens.BrowseName}}Collection(values);
+                }
+            
+                /// <inheritdoc/>
+                public static {{Tokens.BrowseName}}?[]? From{{Tokens.BrowseName}}Collection({{Tokens.BrowseName}}Collection? values)
                 {
                     if (values != null)
                     {
                         return values.ToArray();
                     }
-
+            
                     return null;
                 }
-
+            
                 /// <inheritdoc/>
                 public object Clone()
                 {
@@ -1337,7 +1342,8 @@ namespace Opc.Ua.SourceGeneration
                 /// <inheritdoc/>
                 public new object MemberwiseClone()
                 {
-                    {{Tokens.BrowseName}}Collection clone = new {{Tokens.BrowseName}}Collection(this.Count);
+                    {{Tokens.BrowseName}}Collection clone =
+                        new {{Tokens.BrowseName}}Collection(this.Count);
 
                     for (int ii = 0; ii < this.Count; ii++)
                     {
@@ -1350,7 +1356,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#2085
+        /// ModelGenerator.cs 
         /// </summary>
         public static string TypedVariableType_cs =>
             $$"""
@@ -1364,7 +1370,8 @@ namespace Opc.Ua.SourceGeneration
                 /// <summary>
                 /// Initializes a new instance of the <see cref="{{Tokens.ClassName}}State{T}"/> class.
                 /// </summary>
-                public {{Tokens.ClassName}}State(NodeState parent) : base(parent)
+                public {{Tokens.ClassName}}State(NodeState? parent)
+                    : base(parent)
                 {
                     Value = default(T);
                 }
@@ -1389,20 +1396,14 @@ namespace Opc.Ua.SourceGeneration
                 /// <inheritdoc/>
                 public new T Value
                 {
-                    get
-                    {
-                        return CheckTypeBeforeCast<T>(((BaseVariableState)this).Value, true);
-                    }
-                    set
-                    {
-                        ((BaseVariableState)this).Value = value;
-                    }
+                    get => CheckTypeBeforeCast<T>(((BaseVariableState)this).Value, true);
+                    set => ((BaseVariableState)this).Value = value;
                 }
             }
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#2092
+        /// ModelGenerator.cs 
         /// </summary>
         public static string VariableTypeValue_cs =>
             $$"""
@@ -1416,7 +1417,11 @@ namespace Opc.Ua.SourceGeneration
                 /// <summary>
                 /// Initializes a new instance of the <see cref="{{Tokens.ClassName}}Value"/> class.
                 /// </summary>
-                public {{Tokens.ClassName}}Value({{Tokens.ClassName}}State variable, {{Tokens.DataType}} value, object dataLock) : base(dataLock)
+                public {{Tokens.ClassName}}Value(
+                    {{Tokens.ClassName}}State variable,
+                    {{Tokens.DataType}}? value,
+                    object dataLock)
+                    : base(dataLock)
                 {
                     m_value = value;
 
@@ -1431,18 +1436,15 @@ namespace Opc.Ua.SourceGeneration
                 /// <summary>
                 /// Gets the variable associated with the value.
                 /// </summary>
-                public {{Tokens.ClassName}}State Variable
-                {
-                    get { return m_variable; }
-                }
+                public {{Tokens.ClassName}}State Variable => m_variable; 
 
                 /// <summary>
                 /// Gets or sets the value.
                 /// </summary>
                 public {{Tokens.DataType}} Value
                 {
-                    get { return m_value; }
-                    set { m_value = value; }
+                    get => m_value; 
+                    set => m_value = value;
                 }
 
                 /// <summary>
@@ -1498,13 +1500,13 @@ namespace Opc.Ua.SourceGeneration
                     NodeState node,
                     NumericRange indexRange,
                     QualifiedName dataEncoding,
-                    ref object value,
+                    ref object? value,
                     ref StatusCode statusCode,
                     ref DateTime timestamp)
                 {
                     lock (Lock)
                     {
-                        {{Tokens.DataType}} newValue;
+                        {{Tokens.DataType}}? newValue;
                         if (value is ExtensionObject extensionObject)
                         {
                             newValue = ({{Tokens.DataType}})extensionObject.Body;
@@ -1564,25 +1566,28 @@ namespace Opc.Ua.SourceGeneration
 
                 {{Tokens.ListOfChildMethods}}
 
-                private {{Tokens.DataType}} m_value;
+                private {{Tokens.DataType}}? m_value;
                 private {{Tokens.ClassName}}State m_variable;
             }
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#2107
+        /// ModelGenerator.cs 
         /// </summary>
         public static string InitializeOptionalChild_cs =>
             $$"""
             if ({{Tokens.ChildName}} != null)
             {
-                {{Tokens.ChildName}}.Initialize(context, {{Tokens.ChildName}}_InitializationString);
+                {{Tokens.ChildName}}.Initialize(
+                    context,
+                    {{Tokens.ChildName}}_InitializationString,
+                    EncodingType.{{Tokens.Encoding}});
             }
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#2142
-        /// ModelGenerator.cs line#2149
+        /// ModelGenerator.cs 
+        /// ModelGenerator.cs 
         /// </summary>
         public static string Property_cs =>
             $$"""
@@ -1602,8 +1607,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#2156
-        /// ModelGenerator.cs line#2163
+        /// ModelGenerator.cs 
         /// </summary>
         public static string FindChildMethods_cs =>
             $$"""
@@ -1654,7 +1658,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#2317
+        /// ModelGenerator.cs 
         /// </summary>
         public static string VariableTypeValueField_cs =>
             $$"""
@@ -1666,7 +1670,7 @@ namespace Opc.Ua.SourceGeneration
                 NodeState node,
                 NumericRange indexRange,
                 QualifiedName dataEncoding,
-                ref object value,
+                ref object? value,
                 ref StatusCode statusCode,
                 ref DateTime timestamp)
             {
@@ -1727,8 +1731,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#3339
-        /// ModelGenerator.cs line#3345
+        /// ModelGenerator.cs 
         /// </summary>
         public static string DataTypes_Property_cs =>
             $$"""
@@ -1742,13 +1745,13 @@ namespace Opc.Ua.SourceGeneration
                 Order = {{Tokens.FieldIndex}})]
             {{Tokens.PropertyAccessor}} {{Tokens.TypeName}} {{Tokens.BrowseName}}
             {
-                get { return {{Tokens.FieldName}};  }
-                set { {{Tokens.FieldName}} = value; }
+                get => {{Tokens.FieldName}};
+                set => {{Tokens.FieldName}} = value;
             }
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#3342
+        /// ModelGenerator.cs 
         /// </summary>
         public static string DataTypes_ArrayProperty_cs =>
             $$"""
@@ -1768,7 +1771,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#3348
+        /// ModelGenerator.cs 
         /// </summary>
         public static string DataTypes_EnumerationValue_cs =>
             $$"""
@@ -1780,7 +1783,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#3379
+        /// ModelGenerator.cs 
         /// </summary>
         public static string PropertyOverride_cs =>
             $$"""
@@ -1795,7 +1798,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#3579
+        /// ModelGenerator.cs 
         /// </summary>
         public static string FindChildCase_cs =>
             $$"""
@@ -1822,7 +1825,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#3611
+        /// ModelGenerator.cs 
         /// </summary>
         public static string FindChildren_cs =>
             $$"""
@@ -1833,7 +1836,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#3618
+        /// ModelGenerator.cs 
         /// </summary>
         public static string RemoveChild_cs =>
             $$"""
@@ -1845,7 +1848,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs line#138
+        /// StackGenerator.cs 
         /// </summary>
         public static string Endpoints_File_cs =>
             $$"""
@@ -1862,7 +1865,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs line#147
+        /// StackGenerator.cs 
         /// </summary>
         public static string Endpoints_ServiceSet_cs =>
             $$"""
@@ -1902,7 +1905,7 @@ namespace Opc.Ua.SourceGeneration
                 /// <summary>
                 /// The UA server instance that the endpoint is connected to.
                 /// </summary>
-                protected I{{Tokens.ServiceSet}}Server ServerInstance
+                protected I{{Tokens.ServiceSet}}Server? ServerInstance
                 {
                     get
                     {
@@ -1928,11 +1931,10 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs line#193
+        /// StackGenerator.cs 
         /// </summary>
         public static string Endpoints_Method_cs =>
             $$"""
-            #if !OPCUA_EXCLUDE_{{Tokens.Name}}
             /// <summary>
             /// Invokes the {{Tokens.Name}} service.
             /// </summary>
@@ -1941,7 +1943,7 @@ namespace Opc.Ua.SourceGeneration
                 SecureChannelContext secureChannelContext,
                 CancellationToken cancellationToken = default)
             {
-                {{Tokens.Name}}Response response = null;
+                {{Tokens.Name}}Response? response = null;
 
                 try
                 {
@@ -1958,11 +1960,10 @@ namespace Opc.Ua.SourceGeneration
 
                 return response;
             }
-            #endif // !OPCUA_EXCLUDE_{{Tokens.Name}}
             """;
 
         /// <summary>
-        /// StackGenerator.cs line#405
+        /// StackGenerator.cs 
         /// </summary>
         public static string ServerApi_File_cs =>
             $$"""
@@ -1979,7 +1980,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs line#413
+        /// StackGenerator.cs 
         /// </summary>
         public static string ServerApi_ServiceSet_cs =>
             $$"""
@@ -1993,35 +1994,40 @@ namespace Opc.Ua.SourceGeneration
             }
 
             /// <summary>
-            /// A basic implementation of the UA server.
+            /// A basic implementation of the {{Tokens.ServiceSet}} server.
             /// </summary>
             [System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
             [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
             public partial class {{Tokens.ServiceSet}}ServerBase : ServerBase, I{{Tokens.ServiceSet}}Server
             {
+                /// <summary>
+                /// Create the {{Tokens.ServiceSet}} server.
+                /// </summary>
+                public {{Tokens.ServiceSet}}ServerBase(ITelemetryContext telemetry)
+                    : base(telemetry)
+                {
+                }
+
                 {{Tokens.ServerStubs}}
             }
             """;
 
         /// <summary>
-        /// StackGenerator.cs line#447
+        /// StackGenerator.cs 
         /// </summary>
         public static string ServerApi_InterfaceMethod_cs =>
             $$"""
-            #if !OPCUA_EXCLUDE_{{Tokens.Name}}
             /// <summary>
             /// Invokes the {{Tokens.Name}} service using async Task based request.
             /// </summary>
             {{Tokens.ServerInterfaceAsync}}
-            #endif // !OPCUA_EXCLUDE_{{Tokens.Name}}
             """;
 
         /// <summary>
-        /// StackGenerator.cs line#454
+        /// StackGenerator.cs 
         /// </summary>
         public static string ServerApi_Method_cs =>
             $$"""
-            #if !OPCUA_EXCLUDE_{{Tokens.Name}}
             /// <summary>
             /// Invokes the {{Tokens.Name}} service using async Task based request.
             /// </summary>
@@ -2034,11 +2040,10 @@ namespace Opc.Ua.SourceGeneration
 
                 throw new ServiceResultException(StatusCodes.BadServiceUnsupported);
             }
-            #endif // !OPCUA_EXCLUDE_{{Tokens.Name}}
             """;
 
         /// <summary>
-        /// StackGenerator.cs line#591
+        /// StackGenerator.cs 
         /// </summary>
         public static string ClientApi_File_cs =>
             $$"""
@@ -2056,7 +2061,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs line#599
+        /// StackGenerator.cs 
         /// </summary>
         public static string ClientApi_ServiceSet_cs =>
             $$"""
@@ -2089,11 +2094,10 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs line#634
+        /// StackGenerator.cs 
         /// </summary>
         public static string ClientApi_Interface_cs =>
             $$"""
-            #if !OPCUA_EXCLUDE_{{Tokens.Name}}
             /// <summary>
             /// Invokes the {{Tokens.Name}} service using async Task based request.
             /// </summary>
@@ -2116,15 +2120,13 @@ namespace Opc.Ua.SourceGeneration
             /// </summary>
             [Obsolete("Begin/End methods are deprecated in this version. Use {{Tokens.Name}}Async instead.")]
             void EndAsyncCall();
-            #endif // !OPCUA_EXCLUDE_{{Tokens.Name}}
             """;
 
         /// <summary>
-        /// StackGenerator.cs line#641
+        /// StackGenerator.cs 
         /// </summary>
         public static string ClientApi_Method_cs =>
             $$"""
-            #if !OPCUA_EXCLUDE_{{Tokens.Name}}
             /// <summary>
             /// Invokes the {{Tokens.Name}} service.
             /// </summary>
@@ -2139,7 +2141,7 @@ namespace Opc.Ua.SourceGeneration
 
                 try
                 {
-                    IServiceResponse genericResponse = await TransportChannel.SendRequestAsync(request, ct).ConfigureAwait(false);
+                    IServiceResponse? genericResponse = await TransportChannel.SendRequestAsync(request, ct).ConfigureAwait(false);
 
                     if (genericResponse == null)
                     {
@@ -2164,7 +2166,7 @@ namespace Opc.Ua.SourceGeneration
             void SyncCall()
             {
                 {{Tokens.Name}}Request request = new {{Tokens.Name}}Request();
-                {{Tokens.Name}}Response response = null;
+                {{Tokens.Name}}Response? response = null;
 
                 {{Tokens.RequestParameters}}
 
@@ -2172,7 +2174,7 @@ namespace Opc.Ua.SourceGeneration
 
                 try
                 {
-                    IServiceResponse genericResponse = TransportChannel.SendRequest(request);
+                    IServiceResponse? genericResponse = TransportChannel.SendRequest(request);
 
                     if (genericResponse == null)
                     {
@@ -2217,7 +2219,7 @@ namespace Opc.Ua.SourceGeneration
 
                 try
                 {
-                    IServiceResponse genericResponse = TransportChannel.EndSendRequest(result);
+                    IServiceResponse? genericResponse = TransportChannel.EndSendRequest(result);
 
                     if (genericResponse == null)
                     {
@@ -2236,11 +2238,10 @@ namespace Opc.Ua.SourceGeneration
 
                 return response.ResponseHeader;
             }
-            #endif // !OPCUA_EXCLUDE_{{Tokens.Name}}
             """;
 
         /// <summary>
-        /// StackGenerator.cs line#1247
+        /// StackGenerator.cs 
         /// </summary>
         public static string Classes_File_cs =>
             $$"""
@@ -2255,11 +2256,10 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs line#1286
+        /// StackGenerator.cs 
         /// </summary>
         public static string Classes_Enumeration_cs =>
             $$"""
-            #if !OPCUA_EXCLUDE_{{Tokens.Name}}
             /// <summary>
             /// The {{Tokens.Name}} enumeration.
             /// </summary>
@@ -2270,15 +2270,13 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.ValueList}}
             }
             {{Tokens.EnumCollectionClass}}
-            #endif // !OPCUA_EXCLUDE_{{Tokens.Name}}
             """;
 
         /// <summary>
-        /// StackGenerator.cs line#1291
+        /// StackGenerator.cs 
         /// </summary>
         public static string Classes_Service_cs =>
             $$"""
-            #if !OPCUA_EXCLUDE_{{Tokens.Name}}
             /// <summary>
             /// The request message for the {{Tokens.Name}} service.
             /// </summary>
@@ -2292,11 +2290,10 @@ namespace Opc.Ua.SourceGeneration
             public partial class {{Tokens.Name}}Response : IServiceResponse
             {
             }
-            #endif // !OPCUA_EXCLUDE_{{Tokens.Name}}
             """;
 
         /// <summary>
-        /// StackGenerator.cs line#1317
+        /// StackGenerator.cs 
         /// </summary>
         public static string Classes_ClassCollection_cs =>
             $$"""
@@ -2304,43 +2301,46 @@ namespace Opc.Ua.SourceGeneration
             /// <summary>
             /// A collection of {{Tokens.Name}} objects.
             /// </summary>
-            {{Tokens.XmlArrayType}}
             [System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
             [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
-            public partial class {{Tokens.Name}}Collection : List<{{Tokens.Name}}>, ICloneable
+            {{Tokens.XmlArrayType}}
+            public partial class {{Tokens.Name}}Collection : List<{{Tokens.Name}}?>, ICloneable
             {
                 /// <summary>
                 /// Initializes the collection with default values.
                 /// </summary>
-                public {{Tokens.Name}}Collection() {}
+                public {{Tokens.Name}}Collection()
+                {
+                }
 
                 /// <summary>
                 /// Initializes the collection with an initial capacity.
                 /// </summary>
-                public {{Tokens.Name}}Collection(int capacity) : base(capacity) {}
+                public {{Tokens.Name}}Collection(int capacity)
+                    : base(capacity)
+                {
+                }
 
                 /// <summary>
                 /// Initializes the collection with another collection.
                 /// </summary>
-                public {{Tokens.Name}}Collection(IEnumerable<{{Tokens.Name}}> collection) : base(collection) {}
-
-                /// <summary>
-                /// Converts an array to a collection.
-                /// </summary>
-                public static implicit operator {{Tokens.Name}}Collection({{Tokens.Name}}[] values)
+                public {{Tokens.Name}}Collection(IEnumerable<{{Tokens.Name}}?> collection)
+                    : base(collection)
                 {
-                    if (values != null)
-                    {
-                        return new {{Tokens.Name}}Collection(values);
-                    }
-
-                    return new {{Tokens.Name}}Collection();
                 }
 
                 /// <summary>
                 /// Converts an array to a collection.
                 /// </summary>
-                public static {{Tokens.Name}}Collection To{{Tokens.Name}}Collection({{Tokens.Name}}[] values)
+                public static implicit operator {{Tokens.Name}}Collection({{Tokens.Name}}?[]? values)
+                {
+                    return To{{Tokens.Name}}Collection(values);
+                }
+
+                /// <summary>
+                /// Converts an array to a collection.
+                /// </summary>
+                public static {{Tokens.Name}}Collection To{{Tokens.Name}}Collection({{Tokens.Name}}?[]? values)
                 {
                     if (values != null)
                     {
@@ -2353,20 +2353,15 @@ namespace Opc.Ua.SourceGeneration
                 /// <summary>
                 /// Converts a collection to an array.
                 /// </summary>
-                public static explicit operator {{Tokens.Name}}[]({{Tokens.Name}}Collection values)
+                public static explicit operator {{Tokens.Name}}?[]?({{Tokens.Name}}Collection? values)
                 {
-                    if (values != null)
-                    {
-                        return values.ToArray();
-                    }
-
-                    return null;
+                    return From{{Tokens.Name}}Collection(values);
                 }
 
                 /// <summary>
                 /// Converts a collection to an array.
                 /// </summary>
-                public static {{Tokens.Name}}[] From{{Tokens.Name}}Collection({{Tokens.Name}}Collection values)
+                public static {{Tokens.Name}}?[]? From{{Tokens.Name}}Collection({{Tokens.Name}}Collection? values)
                 {
                     if (values != null)
                     {
@@ -2399,7 +2394,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs line#1324
+        /// StackGenerator.cs 
         /// </summary>
         public static string Classes_EnumerationCollection_cs =>
             $$"""
@@ -2413,35 +2408,38 @@ namespace Opc.Ua.SourceGeneration
                 /// <summary>
                 /// Initializes the collection with default values.
                 /// </summary>
-                public {{Tokens.Name}}Collection() {}
+                public {{Tokens.Name}}Collection()
+                {
+                }
 
                 /// <summary>
                 /// Initializes the collection with an initial capacity.
                 /// </summary>
-                public {{Tokens.Name}}Collection(int capacity) : base(capacity) {}
+                public {{Tokens.Name}}Collection(int capacity)
+                    : base(capacity)
+                {
+                }
 
                 /// <summary>
                 /// Initializes the collection with another collection.
                 /// </summary>
-                public {{Tokens.Name}}Collection(IEnumerable<{{Tokens.Name}}> collection) : base(collection) {}
-
-                /// <summary>
-                /// Converts an array to a collection.
-                /// </summary>
-                public static implicit operator {{Tokens.Name}}Collection({{Tokens.Name}}[] values)
+                public {{Tokens.Name}}Collection(IEnumerable<{{Tokens.Name}}> collection)
+                    : base(collection)
                 {
-                    if (values != null)
-                    {
-                        return new {{Tokens.Name}}Collection(values);
-                    }
-
-                    return new {{Tokens.Name}}Collection();
                 }
 
                 /// <summary>
                 /// Converts an array to a collection.
                 /// </summary>
-                public static {{Tokens.Name}}Collection To{{Tokens.Name}}Collection({{Tokens.Name}}[] values)
+                public static implicit operator {{Tokens.Name}}Collection({{Tokens.Name}}[]? values)
+                {
+                    return To{{Tokens.Name}}Collection(values);
+                }
+
+                /// <summary>
+                /// Converts an array to a collection.
+                /// </summary>
+                public static {{Tokens.Name}}Collection To{{Tokens.Name}}Collection({{Tokens.Name}}[]? values)
                 {
                     if (values != null)
                     {
@@ -2454,20 +2452,15 @@ namespace Opc.Ua.SourceGeneration
                 /// <summary>
                 /// Converts a collection to an array.
                 /// </summary>
-                public static explicit operator {{Tokens.Name}}[]({{Tokens.Name}}Collection values)
+                public static explicit operator {{Tokens.Name}}[]?({{Tokens.Name}}Collection? values)
                 {
-                    if (values != null)
-                    {
-                        return values.ToArray();
-                    }
-
-                    return null;
+                    return From{{Tokens.Name}}Collection(values);
                 }
 
                 /// <summary>
                 /// Converts a collection to an array.
                 /// </summary>
-                public static {{Tokens.Name}}[] From{{Tokens.Name}}Collection({{Tokens.Name}}Collection values)
+                public static {{Tokens.Name}}[]? From{{Tokens.Name}}Collection({{Tokens.Name}}Collection? values)
                 {
                     if (values != null)
                     {
@@ -2488,8 +2481,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs line#1376
-        /// StackGenerator.cs line#1529
+        /// StackGenerator.cs 
         /// </summary>
         public static string Classes_Property_cs =>
             $$"""
@@ -2505,7 +2497,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs line#1445
+        /// StackGenerator.cs 
         /// </summary>
         public static string Classes_EnumerationValue_cs =>
             $$"""
@@ -2517,13 +2509,12 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs line#1281
-        /// StackGenerator.cs line#1464
-        /// StackGenerator.cs line#1480
+        /// StackGenerator.cs 
+        /// StackGenerator.cs 
+        /// StackGenerator.cs 
         /// </summary>
         public static string Classes_Class_cs =>
             $$"""
-            #if !OPCUA_EXCLUDE_{{Tokens.Name}}
             /// <summary>
             /// The {{Tokens.Name}} class.
             /// </summary>
@@ -2594,12 +2585,12 @@ namespace Opc.Ua.SourceGeneration
                 /// <inheritdoc/>
                 public override bool IsEqual(IEncodeable encodeable)
                 {
-                    if (Object.ReferenceEquals(this, encodeable))
+                    if (object.ReferenceEquals(this, encodeable))
                     {
                         return true;
                     }
 
-                    {{Tokens.Name}} value = encodeable as {{Tokens.Name}};
+                    {{Tokens.Name}}? value = encodeable as {{Tokens.Name}};
 
                     if (value == null)
                     {
@@ -2630,12 +2621,10 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.MemberList}}
             }
             {{Tokens.CollectionClass}}
-            #endif // !OPCUA_EXCLUDE_{{Tokens.Name}}
             """;
 
         /// <summary>
-        /// StackGenerator.cs line#1521
-        /// StackGenerator.cs line#1526
+        /// StackGenerator.cs
         /// </summary>
         public static string Classes_PropertyArray_cs =>
             $$"""
@@ -2684,6 +2673,5 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.Resource}}
                 ;
             """;
-
     }
 }

@@ -268,7 +268,6 @@ namespace Opc.Ua.SourceGeneration
             // write method declaration.
             template.WriteLine(string.Empty);
             template.Write(context.Prefix);
-            template.Write("#if !OPCUA_EXCLUDE_{0}", serviceType.Name);
 
             template.WriteLine(string.Empty);
             template.Write(context.Prefix);
@@ -278,7 +277,6 @@ namespace Opc.Ua.SourceGeneration
 
             template.WriteLine(string.Empty);
             template.Write(context.Prefix);
-            template.Write("#endif // !OPCUA_EXCLUDE_{0}");
 
             return null;
         }
@@ -1179,7 +1177,10 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(Tokens.ExternalName, field.Name);
             template.AddReplacement(
                 Tokens.Type,
-                Validator.GetDotNetTypeName(field.DataType, field.ValueRank));
+                Validator.GetDotNetTypeName(
+                    field.DataType,
+                    field.ValueRank,
+                    nullable: true));
 
             return template.WriteTemplate(context);
         }
@@ -1218,7 +1219,8 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         private bool WriteTemplate_Collection(Template template, Context context)
         {
-            if (context.Target is not DataType datatype || !datatype.AllowArrays)
+            if (context.Target is not DataType datatype ||
+                !datatype.AllowArrays)
             {
                 return false;
             }
@@ -1291,7 +1293,10 @@ namespace Opc.Ua.SourceGeneration
             template.Write(
                 "private {1} m_{0};",
                 field.Name.ToLowerCamelCase(),
-                Validator.GetDotNetTypeName(field.DataType, field.ValueRank));
+                Validator.GetDotNetTypeName(
+                    field.DataType,
+                    field.ValueRank,
+                    nullable: true));
 
             return null;
         }
@@ -1440,7 +1445,10 @@ namespace Opc.Ua.SourceGeneration
             template.Write(
                 "clone.m_{0} = ({1})CoreUtils.Clone(this.m_{0});",
                 field.Name.ToLowerCamelCase(),
-                Validator.GetDotNetTypeName(field.DataType, field.ValueRank));
+                Validator.GetDotNetTypeName(
+                    field.DataType,
+                    field.ValueRank,
+                    nullable: true));
 
             return null;
         }
@@ -1471,7 +1479,10 @@ namespace Opc.Ua.SourceGeneration
 
                     DataType datatype = Validator.ResolveType(field.DataType);
 
-                    string typeName = Validator.GetDotNetTypeName(datatype.QName, field.ValueRank);
+                    string typeName = Validator.GetDotNetTypeName(
+                        datatype.QName,
+                        field.ValueRank,
+                        nullable: true);
 
                     // prefix out parameters.
                     if (output)
@@ -1533,11 +1544,15 @@ namespace Opc.Ua.SourceGeneration
 
             if (serviceType.Response != null && serviceType.Response.Length > 0)
             {
-                DataType datatype = Validator.ResolveType(serviceType.Response[0].DataType);
+                DataType datatype = Validator.ResolveType(
+                    serviceType.Response[0].DataType);
 
                 if (datatype != null)
                 {
-                    returnType = Validator.GetDotNetTypeName(datatype.QName, serviceType.Response[0].ValueRank);
+                    returnType = Validator.GetDotNetTypeName(
+                        datatype.QName,
+                        serviceType.Response[0].ValueRank,
+                        nullable: true);
                 }
             }
 

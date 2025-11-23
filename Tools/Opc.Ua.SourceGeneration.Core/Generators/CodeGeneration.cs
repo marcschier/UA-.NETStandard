@@ -83,7 +83,10 @@ namespace Opc.Ua.SourceGeneration
 
             if (datatype is EnumeratedType enumeratedType)
             {
-                return CoreUtils.Format("{0}.{1}", datatype.Name, enumeratedType.Value[0].Name);
+                return CoreUtils.Format(
+                    "{0}.{1}",
+                    datatype.Name,
+                    enumeratedType.Value[0].Name);
             }
 
             if (datatype.QName.Namespace != Namespaces.OpcUaBuiltInTypes)
@@ -133,11 +136,13 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Returns a name qualified with a namespace prefix.
         /// </summary>
-        /// <exception cref="ArgumentNullException"><paramref name="validator"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="validator"/> is <c>null</c>.</exception>
         public static string GetDotNetTypeName(
             this TypeDictionaryValidator validator,
             XmlQualifiedName qname,
-            int valueRank)
+            int valueRank,
+            bool nullable = false)
         {
             if (validator == null)
             {
@@ -150,14 +155,17 @@ namespace Opc.Ua.SourceGeneration
             }
 
             DataType datatype = validator.ResolveType(qname);
+            if (datatype is EnumeratedType)
+            {
+                nullable = false;
+            }
 
-            if (datatype != null)
+            if (datatype != null && !datatype.QName.IsNull())
             {
                 qname = datatype.QName;
             }
 
-            string type = qname.Name;
-
+            string typeName = qname.Name;
             if (qname.Namespace == Namespaces.OpcUaBuiltInTypes)
             {
                 // translate built-in types to .NET types.
@@ -166,69 +174,53 @@ namespace Opc.Ua.SourceGeneration
                     switch (qname.Name)
                     {
                         case "Boolean":
-                            type = "bool";
-                            break;
+                            return "bool";
                         case "SByte":
-                            type = "sbyte";
-                            break;
+                            return "sbyte";
                         case "Byte":
-                            type = "byte";
-                            break;
+                            return "byte";
                         case "Int16":
-                            type = "short";
-                            break;
+                            return "short";
                         case "UInt16":
-                            type = "ushort";
-                            break;
+                            return "ushort";
                         case "Int32":
-                            type = "int";
-                            break;
+                            return "int";
                         case "UInt32":
-                            type = "uint";
-                            break;
+                            return "uint";
                         case "Int64":
-                            type = "long";
-                            break;
+                            return "long";
                         case "UInt64":
-                            type = "ulong";
-                            break;
+                            return "ulong";
                         case "Float":
-                            type = "float";
-                            break;
+                            return "float";
                         case "Double":
-                            type = "double";
-                            break;
+                            return "double";
                         case "String":
-                            type = "string";
-                            break;
+                            return !nullable ? "string" : "string?";
                         case "DateTime":
-                            type = "DateTime";
-                            break;
+                            return "DateTime";
                         case "Guid":
-                            type = "Uuid";
-                            break;
+                            return "Uuid";
                         case "ByteString":
-                            type = "byte[]";
-                            break;
+                            return !nullable ? "byte[]" : "byte[]?";
                     }
                 }
-                else
+                switch (qname.Name)
                 {
-                    switch (qname.Name)
-                    {
-                        case "Guid":
-                            type = "Uuid";
-                            break;
-                    }
+                    case "Guid":
+                        typeName = "Uuid";
+                        break;
                 }
             }
-
             if (valueRank >= 0)
             {
-                return CoreUtils.Format("{0}Collection", type);
+                // Leave collections always non nullable even though they can
+                // serialized as null value.  But properties are always init
+                // as collection never null
+                return CoreUtils.Format("{0}Collection", typeName);
             }
-
-            return type;
+            return !nullable ?
+                typeName : CoreUtils.Format("{0}?", typeName);
         }
 
         /// <summary>
@@ -272,7 +264,8 @@ namespace Opc.Ua.SourceGeneration
 
             var variableType = instance.TypeDefinitionNode as VariableTypeDesign;
 
-            // check if the variable type restricted the datatype to eliminate the need for a template parameter.
+            // check if the variable type restricted the datatype to eliminate the
+            // need for a template parameter.
             if (variableType.DataTypeNode.IsRequiredParameterInTemplates(variableType.ValueRank))
             {
                 return CoreUtils.Format("{0}State", FixClassName(variableType));
@@ -300,7 +293,8 @@ namespace Opc.Ua.SourceGeneration
                     scalarName = GetDotNetTypeName(
                         variable.DataTypeNode,
                         targetNamespace,
-                        namespaces);
+                        namespaces,
+                        nullable: false);
                     break;
             }
 
@@ -727,10 +721,16 @@ namespace Opc.Ua.SourceGeneration
                 {
                     return "null";
                 }
-                return CoreUtils.Format("new {0}()", GetDotNetTypeName(dataType, valueRank, targetNamespace, namespaces));
+                return CoreUtils.Format("new {0}()", GetDotNetTypeName(
+                    dataType,
+                    valueRank,
+                    targetNamespace,
+                    namespaces,
+                    nullable: false));
             }
 
-            if (dataType.BasicDataType == BasicDataType.BaseDataType || valueRank != ValueRank.Scalar)
+            if (dataType.BasicDataType == BasicDataType.BaseDataType ||
+                valueRank != ValueRank.Scalar)
             {
                 if (useVariantForObject)
                 {
@@ -918,9 +918,13 @@ namespace Opc.Ua.SourceGeneration
                     {
                         return CoreUtils.Format(
                             "new {0}()",
-                            GetDotNetTypeName(dataType, ValueRank.Scalar, targetNamespace, namespaces));
+                            GetDotNetTypeName(
+                                dataType,
+                                ValueRank.Scalar,
+                                targetNamespace,
+                                namespaces,
+                                nullable: false));
                     }
-
                     return "null";
                 default:
                     return "null";
@@ -934,9 +938,14 @@ namespace Opc.Ua.SourceGeneration
             this DataTypeDesign datatype,
             ValueRank valueRank,
             string targetNamespace,
-            Namespace[] namespaces)
+            Namespace[] namespaces,
+            bool isOptional)
         {
-            string typeName = GetDotNetTypeName(datatype, targetNamespace, namespaces);
+            string typeName = GetDotNetTypeName(
+                datatype,
+                targetNamespace,
+                namespaces,
+                nullable: isOptional);
 
             if (typeName == "Guid")
             {
@@ -970,7 +979,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static bool IsNullable(this BasicDataType type)
+        public static bool IsXmlNillable(this BasicDataType type)
         {
             switch (type)
             {
@@ -999,7 +1008,8 @@ namespace Opc.Ua.SourceGeneration
         public static string GetDotNetTypeName(
             this DataTypeDesign datatype,
             string targetNamespace,
-            Namespace[] namespaces)
+            Namespace[] namespaces,
+            bool nullable = false)
         {
             switch (datatype.BasicDataType)
             {
@@ -1026,13 +1036,13 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.Double:
                     return "double";
                 case BasicDataType.String:
-                    return "string";
+                    return !nullable ? "string" : "string?";
                 case BasicDataType.DateTime:
                     return "DateTime";
                 case BasicDataType.Guid:
                     return "Guid";
                 case BasicDataType.ByteString:
-                    return "byte[]";
+                    return !nullable ? "byte[]" : "byte[]?";
                 case BasicDataType.XmlElement:
                     return "XmlElement";
                 case BasicDataType.NodeId:
@@ -1042,43 +1052,52 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.StatusCode:
                     return "StatusCode";
                 case BasicDataType.DiagnosticInfo:
-                    return "DiagnosticInfo";
+                    return !nullable ? "DiagnosticInfo" : "DiagnosticInfo?";
                 case BasicDataType.QualifiedName:
                     return "QualifiedName";
                 case BasicDataType.LocalizedText:
                     return "LocalizedText";
                 case BasicDataType.DataValue:
                     return "DataValue";
-                case BasicDataType.Number:
-                case BasicDataType.Integer:
-                case BasicDataType.UInteger:
-                case BasicDataType.BaseDataType:
-                    return "object";
                 case BasicDataType.Structure:
                     return "ExtensionObject";
                 case BasicDataType.Enumeration:
-                    if (datatype.SymbolicId == new XmlQualifiedName("Enumeration", Namespaces.OpcUa))
+                    if (datatype.SymbolicId ==
+                        new XmlQualifiedName("Enumeration", Namespaces.OpcUa))
                     {
                         return "int";
                     }
 
                     if (datatype.IsOptionSet)
                     {
-                        return GetDotNetTypeName((DataTypeDesign)datatype.BaseTypeNode, targetNamespace, namespaces);
+                        return GetDotNetTypeName(
+                            (DataTypeDesign)datatype.BaseTypeNode,
+                            targetNamespace,
+                            namespaces,
+                            nullable); // Should it always be non nullable?
                     }
 
                     return datatype.SymbolicName.Name;
                 case BasicDataType.UserDefined:
+                    string typeName;
                     if (datatype.SymbolicId.Namespace != targetNamespace)
                     {
-                        Namespace ns = namespaces.FirstOrDefault(x => x.Value == datatype.SymbolicId.Namespace);
-                        return $"{ns.Prefix}.{datatype.SymbolicName.Name}";
+                        Namespace ns = namespaces
+                            .FirstOrDefault(x => x.Value == datatype.SymbolicId.Namespace);
+                        typeName = $"{ns.Prefix}.{datatype.SymbolicName.Name}";
                     }
-
-                    return datatype.SymbolicName.Name;
+                    else
+                    {
+                        typeName = datatype.SymbolicName.Name;
+                    }
+                    if (datatype.IsEnumeration) 
+                    {
+                        return typeName;
+                    }
+                    return !nullable ? typeName : typeName + "?";
             }
 
-            return "object";
+            return !nullable ? "object" : "object?";
         }
 
         /// <summary>
@@ -1088,23 +1107,30 @@ namespace Opc.Ua.SourceGeneration
             this DataTypeDesign datatype,
             ValueRank valueRank,
             string targetNamespace,
-            Namespace[] namespaces)
+            Namespace[] namespaces,
+            bool nullable = false)
         {
             if (valueRank == ValueRank.Scalar)
             {
-                string typeName = GetDotNetTypeName(datatype, targetNamespace, namespaces);
+                string typeName = GetDotNetTypeName(
+                    datatype,
+                    targetNamespace,
+                    namespaces,
+                    nullable);
 
                 if (typeName == "Guid")
                 {
                     return "Uuid";
                 }
 
-                if (typeName == "object")
+                if (typeName == "object" ||
+                    typeName == "object?")
                 {
                     return "Variant";
                 }
 
-                if (typeName == "IEncodeable")
+                if (typeName == "IEncodeable" ||
+                    typeName == "IEncodeable?")
                 {
                     return "ExtensionObject";
                 }
@@ -1114,78 +1140,98 @@ namespace Opc.Ua.SourceGeneration
 
             if (valueRank == ValueRank.Array)
             {
-                switch (datatype.BasicDataType)
+                var typeName = GetCollectionTypeName();
+                if (typeName != null)
                 {
-                    case BasicDataType.Boolean:
-                        return "BooleanCollection";
-                    case BasicDataType.SByte:
-                        return "SByteCollection";
-                    case BasicDataType.Byte:
-                        return "ByteCollection";
-                    case BasicDataType.Int16:
-                        return "Int16Collection";
-                    case BasicDataType.UInt16:
-                        return "UInt16Collection";
-                    case BasicDataType.Int32:
-                        return "Int32Collection";
-                    case BasicDataType.UInt32:
-                        return "UInt32Collection";
-                    case BasicDataType.Int64:
-                        return "Int64Collection";
-                    case BasicDataType.UInt64:
-                        return "UInt64Collection";
-                    case BasicDataType.Float:
-                        return "FloatCollection";
-                    case BasicDataType.Double:
-                        return "DoubleCollection";
-                    case BasicDataType.String:
-                        return "StringCollection";
-                    case BasicDataType.DateTime:
-                        return "DateTimeCollection";
-                    case BasicDataType.Guid:
-                        return "UuidCollection";
-                    case BasicDataType.ByteString:
-                        return "ByteStringCollection";
-                    case BasicDataType.XmlElement:
-                        return "XmlElementCollection";
-                    case BasicDataType.NodeId:
-                        return "NodeIdCollection";
-                    case BasicDataType.ExpandedNodeId:
-                        return "ExpandedNodeIdCollection";
-                    case BasicDataType.StatusCode:
-                        return "StatusCodeCollection";
-                    case BasicDataType.DiagnosticInfo:
-                        return "DiagnosticInfoCollection";
-                    case BasicDataType.QualifiedName:
-                        return "QualifiedNameCollection";
-                    case BasicDataType.LocalizedText:
-                        return "LocalizedTextCollection";
-                    case BasicDataType.DataValue:
-                        return "DataValueCollection";
-                    case BasicDataType.Number:
-                    case BasicDataType.Integer:
-                    case BasicDataType.UInteger:
-                    case BasicDataType.BaseDataType:
-                        return "VariantCollection";
-                    case BasicDataType.Structure:
-                        return "ExtensionObjectCollection";
-                    case BasicDataType.Enumeration:
-                        if (datatype.SymbolicId == new XmlQualifiedName("Enumeration", Namespaces.OpcUa))
-                        {
+                    // Leave collections always non nullable even though they can
+                    // serialized as null value.  But properties are always init
+                    // as collection never null
+                    // return !!nullable ? typeName : typeName + "?";
+                    return typeName;
+                }
+
+                string GetCollectionTypeName()
+                {
+                    switch (datatype.BasicDataType)
+                    {
+                        case BasicDataType.Boolean:
+                            return "BooleanCollection";
+                        case BasicDataType.SByte:
+                            return "SByteCollection";
+                        case BasicDataType.Byte:
+                            return "ByteCollection";
+                        case BasicDataType.Int16:
+                            return "Int16Collection";
+                        case BasicDataType.UInt16:
+                            return "UInt16Collection";
+                        case BasicDataType.Int32:
                             return "Int32Collection";
-                        }
+                        case BasicDataType.UInt32:
+                            return "UInt32Collection";
+                        case BasicDataType.Int64:
+                            return "Int64Collection";
+                        case BasicDataType.UInt64:
+                            return "UInt64Collection";
+                        case BasicDataType.Float:
+                            return "FloatCollection";
+                        case BasicDataType.Double:
+                            return "DoubleCollection";
+                        case BasicDataType.String:
+                            return "StringCollection";
+                        case BasicDataType.DateTime:
+                            return "DateTimeCollection";
+                        case BasicDataType.Guid:
+                            return "UuidCollection";
+                        case BasicDataType.ByteString:
+                            return "ByteStringCollection";
+                        case BasicDataType.XmlElement:
+                            return "XmlElementCollection";
+                        case BasicDataType.NodeId:
+                            return "NodeIdCollection";
+                        case BasicDataType.ExpandedNodeId:
+                            return "ExpandedNodeIdCollection";
+                        case BasicDataType.StatusCode:
+                            return "StatusCodeCollection";
+                        case BasicDataType.DiagnosticInfo:
+                            return "DiagnosticInfoCollection";
+                        case BasicDataType.QualifiedName:
+                            return "QualifiedNameCollection";
+                        case BasicDataType.LocalizedText:
+                            return "LocalizedTextCollection";
+                        case BasicDataType.DataValue:
+                            return "DataValueCollection";
+                        case BasicDataType.Number:
+                        case BasicDataType.Integer:
+                        case BasicDataType.UInteger:
+                        case BasicDataType.BaseDataType:
+                            return "VariantCollection";
+                        case BasicDataType.Structure:
+                            return "ExtensionObjectCollection";
+                        case BasicDataType.Enumeration:
+                            if (datatype.SymbolicId ==
+                                new XmlQualifiedName("Enumeration", Namespaces.OpcUa))
+                            {
+                                return "Int32Collection";
+                            }
 
-                        if (datatype.IsOptionSet || datatype.BaseType != new XmlQualifiedName("Enumeration", Namespaces.OpcUa))
-                        {
-                            return GetDotNetTypeName((DataTypeDesign)datatype.BaseTypeNode, valueRank, targetNamespace, namespaces);
-                        }
-
-                        return datatype.SymbolicName.Name + "Collection";
-                    case BasicDataType.UserDefined:
-                        return datatype.SymbolicName.Name + "Collection";
+                            if (datatype.IsOptionSet ||
+                                datatype.BaseType !=
+                                    new XmlQualifiedName("Enumeration", Namespaces.OpcUa))
+                            {
+                                return GetDotNetTypeName(
+                                    (DataTypeDesign)datatype.BaseTypeNode,
+                                    valueRank,
+                                    targetNamespace,
+                                    namespaces,
+                                    nullable: false);
+                            }
+                            return datatype.SymbolicName.Name + "Collection";
+                        case BasicDataType.UserDefined:
+                            return datatype.SymbolicName.Name + "Collection";
+                    }
+                    return null; // Default to variant
                 }
             }
-
             return "Variant";
         }
 

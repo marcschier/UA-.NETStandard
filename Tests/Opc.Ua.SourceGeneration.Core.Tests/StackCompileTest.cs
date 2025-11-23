@@ -27,7 +27,6 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -35,6 +34,7 @@ using System.Text;
 using System.Xml.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Opc.Ua.Tests;
 
@@ -58,7 +58,7 @@ namespace Opc.Ua.SourceGeneration
             // Generate
             var sw = Stopwatch.StartNew();
             using var fileSystem = new VirtualFileSystem();
-            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create(logLevel: LogLevel.Error);
             Generators.GenerateStack(fileSystem, string.Empty, [], telemetry);
             var generatedText = fileSystem.CreatedFiles
                 .Where(c => Path.GetExtension(c) == ".cs")

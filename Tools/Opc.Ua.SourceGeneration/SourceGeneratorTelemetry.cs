@@ -146,10 +146,6 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 string message = formatter(state, exception);
-                m_logger.Log(GetLogLevel(logLevel), exception, message);
-
-                Debug.WriteLine(message);
-
                 if (SourceGenerator.TryGetDiagnostic(
                     logLevel,
                     eventId,
@@ -157,7 +153,16 @@ namespace Opc.Ua.SourceGeneration
                 {
                     m_context.ReportDiagnostic(
                         Diagnostic.Create(descriptor, Location.None, message));
+                    return;
                 }
+
+                message = $"[{m_categoryName}] {message}";
+                m_logger.Log(
+                    GetLogLevel(logLevel),
+                    exception,
+                    message);
+
+                Debug.WriteLine(message);
             }
 
             /// <inheritdoc/>

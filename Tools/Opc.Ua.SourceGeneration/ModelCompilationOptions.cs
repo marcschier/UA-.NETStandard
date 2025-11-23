@@ -27,7 +27,6 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.Diagnostics;
 
@@ -64,14 +63,19 @@ namespace Opc.Ua.SourceGeneration
             {
                 Options = new DesignFileOptions
                 {
-                    Version = provider.GlobalOptions.GetString(nameof(DesignFileOptions.Version)) ?? "v105",
-                    StartId = (uint)provider.GlobalOptions.GetInteger(nameof(DesignFileOptions.StartId)),
-                    ModelVersion = provider.GlobalOptions.GetString(nameof(DesignFileOptions.ModelVersion)),
-                    ModelPublicationDate = provider.GlobalOptions.GetString(nameof(DesignFileOptions.ModelPublicationDate)),
-                    ReleaseCandidate = provider.GlobalOptions.GetBool(nameof(DesignFileOptions.ReleaseCandidate))
+                    Version = provider.GlobalOptions.GetString(
+                        nameof(DesignFileOptions.Version)) ?? "v105",
+                    StartId = (uint)provider.GlobalOptions.GetInteger(
+                        nameof(DesignFileOptions.StartId)),
+                    ModelVersion = provider.GlobalOptions.GetString(
+                        nameof(DesignFileOptions.ModelVersion)),
+                    ModelPublicationDate = provider.GlobalOptions.GetString(
+                        nameof(DesignFileOptions.ModelPublicationDate)),
+                    ReleaseCandidate = provider.GlobalOptions.GetBool(
+                        nameof(DesignFileOptions.ReleaseCandidate))
                 },
-                Exclude = provider.GlobalOptions.GetStrings(nameof(ModelCompilationOptions.Exclude)),
-                UseAllowSubtypes = provider.GlobalOptions.GetBool(nameof(ModelCompilationOptions.UseAllowSubtypes)),
+                Exclude = provider.GlobalOptions.GetStrings(nameof(Exclude)),
+                UseAllowSubtypes = provider.GlobalOptions.GetBool(nameof(UseAllowSubtypes))
             };
         }
     }

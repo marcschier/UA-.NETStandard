@@ -67,7 +67,8 @@ namespace Opc.Ua.SourceGeneration
         public TextFileResource Emit(
             string namespacePrefix,
             string targetNamespace,
-            bool exportAll = true)
+            bool exportAll = true,
+            bool validateOutput = true)
         {
             TargetNamespace = targetNamespace;
             m_exportAll = exportAll;
@@ -78,16 +79,19 @@ namespace Opc.Ua.SourceGeneration
 
             WriteTemplate_BinarySchema(schemaFile);
 
-            // Validate generated file
-            var validator = new Schema.Binary.BinarySchemaValidator(
-                FileSystem,
-                KnownFiles);
-            validator.Validate(schemaFile);
+            if (validateOutput)
+            {
+                // Validate generated file
+                var validator = new Schema.Binary.BinarySchemaValidator(
+                    FileSystem,
+                    KnownFiles);
+                validator.Validate(schemaFile);
+            }
             return schemaFile.AsTextFileResource(namespacePrefix);
         }
 
         /// <summary>
-        /// Writes the address space declaration file.
+        /// Writes schema file.
         /// </summary>
         private void WriteTemplate_BinarySchema(string fileName)
         {
@@ -97,7 +101,12 @@ namespace Opc.Ua.SourceGeneration
             template.Replacements.Add(Tokens.DictionaryUri, TargetNamespace);
 
             var buffer = new StringBuilder();
-            buffer.AppendFormat(CultureInfo.InvariantCulture, "xmlns=\"{0}\"", NamespaceUris[0]);
+            buffer.AppendFormat(
+                CultureInfo.InvariantCulture,
+                """
+                xmlns="{0}"
+                """,
+                NamespaceUris[0]);
             if (!m_exportAll)
             {
                 for (int ii = 1; ii < NamespaceUris.Count; ii++)
@@ -106,25 +115,28 @@ namespace Opc.Ua.SourceGeneration
                         .Append("  ")
                         .AppendFormat(
                         CultureInfo.InvariantCulture,
-                        "xmlns:s{0}=\"{1}\"",
+                        """
+                        xmlns:s{0}="{1}"
+                        """,
                         ii - 1,
                         NamespaceUris[ii]);
                 }
             }
 
             template.Replacements.Add(Tokens.XmlnsS0ListOfNamespaces, buffer.ToString());
+            List<string> imports = [Namespaces.OpcUaBuiltInTypes];
             if (!m_exportAll)
             {
                 for (int ii = 1; ii < NamespaceUris.Count; ii++)
                 {
-                    ((List<string>)[Namespaces.OpcUaBuiltInTypes]).Add(NamespaceUris[ii]);
+                    imports.Add(NamespaceUris[ii]);
                 }
             }
 
             template.AddTemplate(
                 Tokens.Imports,
                 null,
-                (List<string>)[Namespaces.OpcUaBuiltInTypes],
+                imports,
                 LoadTemplate_Imports,
                 null);
 

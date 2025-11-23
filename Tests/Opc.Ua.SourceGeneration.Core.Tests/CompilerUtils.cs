@@ -102,6 +102,7 @@ namespace Opc.Ua.SourceGeneration
                     MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location),
 #if NETFRAMEWORK
                     MetadataReference.CreateFromFile(typeof(DataContractAttribute).GetTypeInfo().Assembly.Location),
+                    MetadataReference.CreateFromFile(typeof(ReadOnlySpan<>).GetTypeInfo().Assembly.Location),
                     MetadataReference.CreateFromFile(typeof(List<>).GetTypeInfo().Assembly.Location),
                     MetadataReference.CreateFromFile(typeof(ValueTask<>).GetTypeInfo().Assembly.Location)
 #else
@@ -231,6 +232,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public const string OpcUaCoreStubs =
             """
+            #nullable enable
             using System;
             using System.Threading.Tasks;
             using System.Threading;
@@ -243,11 +245,11 @@ namespace Opc.Ua.SourceGeneration
                 }
                 public interface IServiceRequest
                 {
-                    RequestHeader RequestHeader { get; set; }
+                    RequestHeader? RequestHeader { get; set; }
                 }
                 public interface IServiceResponse
                 {
-                    ResponseHeader ResponseHeader { get;}
+                    ResponseHeader? ResponseHeader { get;}
                 }
                 public class SecureChannelContext {}
                 public interface ITransportChannel
@@ -255,12 +257,15 @@ namespace Opc.Ua.SourceGeneration
                     ValueTask<IServiceResponse> SendRequestAsync(
                         IServiceRequest request,
                         CancellationToken ct = default);
+                    [Obsolete("Use SendRequestAsync instead")]
                     IServiceResponse SendRequest(
                         IServiceRequest request);
-                    IAsyncResult BeginSendRequest(
+                    [Obsolete("Use SendRequestAsync instead")]
+                        IAsyncResult BeginSendRequest(
                         IServiceRequest request,
                         AsyncCallback callback,
                         object callbackData);
+                    [Obsolete("Use SendRequestAsync instead")]
                     IServiceResponse EndSendRequest(
                         IAsyncResult result);
                 }
@@ -270,10 +275,11 @@ namespace Opc.Ua.SourceGeneration
                 public enum RequestEncoding { Binary, Xml }
                 public class EndpointBase
                 {
+                    [Obsolete("No WCF support")]
                     protected EndpointBase() {}
                     protected EndpointBase(IServiceHostBase host) {}
                     protected EndpointBase(ServerBase serverBase) {}
-                    protected IServerBase ServerForContext => null;
+                    protected IServerBase? ServerForContext => throw new NotSupportedException();
                     protected ServiceResult ServerError { get; set; }
                     protected virtual void OnRequestReceived(IServiceRequest request) {}
                     protected virtual void OnResponseSent(IServiceResponse response) {}
@@ -289,11 +295,12 @@ namespace Opc.Ua.SourceGeneration
                 }
                 public class ServerBase : IServerBase
                 {
+                    public ServerBase(ITelemetryContext telemetry) {}
                     public ServiceResult ServerError { get; protected set; }
-                    protected virtual void ValidateRequest(RequestHeader requestHeader) {}
+                    protected virtual void ValidateRequest(RequestHeader? requestHeader) {}
                     protected virtual ResponseHeader CreateResponse(
-                        RequestHeader requestHeader,
-                        uint statusCode) => null;
+                        RequestHeader requestHeader, uint statusCode)
+                        => throw new NotSupportedException();
                 }
                 public partial class HistoryUpdateDetails
                 {
@@ -303,8 +310,10 @@ namespace Opc.Ua.SourceGeneration
                 public class ClientBase : IClientBase
                 {
                     public ClientBase(ITransportChannel channel, ITelemetryContext telemetry) { }
-                    public ITransportChannel TransportChannel => null;
-                    protected static void ValidateResponse(ResponseHeader header) {}
+                    public ITransportChannel TransportChannel => throw new NotSupportedException();
+
+                    protected static void ValidateResponse(
+                        [System.Diagnostics.CodeAnalysis.NotNull] ResponseHeader? header) {}
                     protected virtual void UpdateRequestHeader(
                         IServiceRequest request, bool useDefaults, string serviceName) {}
                     protected virtual void RequestCompleted(
@@ -313,7 +322,7 @@ namespace Opc.Ua.SourceGeneration
                 }
                 public class FolderState : BaseObjectState
                 {
-                    public FolderState(NodeState parent) : base(parent) { }
+                    public FolderState(NodeState? parent) : base(parent) { }
                 }
             }
             """;

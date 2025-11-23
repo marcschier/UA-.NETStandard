@@ -28,10 +28,8 @@
  * ======================================================================*/
 
 using System;
-using System.Buffers.Text;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 
 namespace Opc.Ua.SourceGeneration
@@ -248,7 +246,10 @@ namespace Opc.Ua.SourceGeneration
             template.Write("\"\"\"u8");
         }
 
-        private void WriteAsBase64StringLiteral(Template template, Context context, string base64)
+        private void WriteAsBase64StringLiteral(
+            Template template,
+            Context context,
+            string base64)
         {
             template.WriteNextLine(context.Prefix);
             template.Write("Convert.FromBase64String(");
@@ -270,6 +271,7 @@ namespace Opc.Ua.SourceGeneration
                     WriteChunk(template, context, base64.Substring(ii, 80));
                 }
             }
+            template.Write(")");
 
             static void WriteChunk(Template template, Context context, string line)
             {
@@ -342,12 +344,13 @@ namespace Opc.Ua.SourceGeneration
         }
 
         /// <summary>
-        /// This is the max size of the stream that will be inlined. The compiler
-        /// is too slow to inline larger byte arrays.
-        /// Otherwise it will be base64 encoded and must be decoded at runtime.
+        /// This is the max size of the stream that will be inlined.
+        /// The compiler is too slow to inline larger byte arrays.
+        /// Otherwise it will be base64 encoded and must be decoded
+        /// at runtime.
         /// </summary>
-        private const int kBase64Threshold = 256;
-        private const int kReadBufferSize = 8 * 1024;
+        private const int kBase64Threshold = 512;
+        private const int kReadBufferSize = 16 * 1024;
         private readonly IFileSystem m_fileSystem;
         private readonly string m_outputFolder;
     }

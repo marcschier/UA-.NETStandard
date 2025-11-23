@@ -67,7 +67,8 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public TextFileResource Emit(
             string namespacePrefix,
-            bool exportAll = true)
+            bool exportAll = true,
+            bool validateOutput = true)
         {
             TargetNamespace = XmlSchemaNamespace.Types;
             m_exportAll = exportAll;
@@ -78,16 +79,19 @@ namespace Opc.Ua.SourceGeneration
 
             WriteTemplate_XmlSchema(schemaFile);
 
-            // Validate generated file
-            var validator = new Schema.Xml.XmlSchemaValidator2(
-                FileSystem,
-                KnownFiles);
-            validator.Validate(schemaFile);
+            if (validateOutput)
+            {
+                // Validate generated file
+                var validator = new Schema.Xml.XmlSchemaValidator2(
+                    FileSystem,
+                    KnownFiles);
+                validator.Validate(schemaFile);
+            }
             return schemaFile.AsTextFileResource(namespacePrefix);
         }
 
         /// <summary>
-        /// Writes the address space declaration file.
+        /// Writes schema file.
         /// </summary>
         private void WriteTemplate_XmlSchema(string fileName)
         {
@@ -121,9 +125,7 @@ namespace Opc.Ua.SourceGeneration
             }
 
             template.Replacements.Add(Tokens.XmlnsS0ListOfNamespaces, buffer.ToString());
-
             List<string> imports = [Namespaces.OpcUaBuiltInTypes];
-
             if (!m_exportAll)
             {
                 for (int ii = 1; ii < NamespaceUris.Count; ii++)

@@ -32,7 +32,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Xml;
 using Opc.Ua.Export;
 using Opc.Ua.Schema.Model;
@@ -563,14 +562,15 @@ namespace Opc.Ua.SourceGeneration
         {
             using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
                 filePath,
-                m_model.TargetNamespaceInfo.Prefix + ".Types.xsd"));
+                CoreUtils.Format("{0}.Types.xsd", m_model.TargetNamespaceInfo.Prefix)));
             WriteTemplate_XmlSchema(writer, nodes);
         }
 
         private void GenerateBinarySchema(string filePath, List<NodeDesign> nodes)
         {
-            using TextWriter writer = m_fileSystem.CreateTextWriter(
-                Path.Combine(filePath, m_model.TargetNamespaceInfo.Prefix + ".Types.bsd"));
+            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
+                filePath,
+                CoreUtils.Format("{0}.Types.bsd", m_model.TargetNamespaceInfo.Prefix)));
             WriteTemplate_BinarySchema(writer, nodes);
         }
 
@@ -1042,7 +1042,8 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(Tokens.TypeName, dataType.SymbolicName.Name);
             template.AddReplacement(
                 Tokens.Nillable,
-                !dataType.BasicDataType.IsNullable() ? string.Empty : """nillable="true" """);
+                !dataType.BasicDataType.IsXmlNillable() ?
+                    string.Empty : """nillable="true" """);
 
             return template.WriteTemplate(context);
         }
@@ -1684,7 +1685,7 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(
                 Tokens.Description,
                 node.Description != null ? node.Description.Value : string.Empty);
-
+            template.AddReplacement(Tokens.Encoding, UseXmlInitializers ? "Xml" : "Binary");
             template.AddReplacement(Tokens.TypeName, node.SymbolicName.Name);
             template.AddReplacement(
                 Tokens.NamespaceUri,
@@ -2132,17 +2133,13 @@ namespace Opc.Ua.SourceGeneration
 
         private string LoadTemplate_InitializationString(Template template, Context context)
         {
-            string xml = null;
-            // string resourceName = null;
-
+            string resourceName = null;
             if (context.Target is TypeDesign type)
             {
                 bool forInstance = !context.Token.EndsWith("ForType", StringComparison.Ordinal);
-                // resourceName = AddInitializer(CoreUtils.Format(
-                //     "{0}",
-                //     type.SymbolicName.Name), type, forInstance);
-
-                xml = ConstructInitializer(type, forInstance);
+                resourceName = AddInitializer(CoreUtils.Format(
+                   "{0}",
+                    type.SymbolicName.Name), type, forInstance);
 
                 // output initializers for optional components.
                 if (type.Children != null && type.Children.Items != null)
@@ -2163,18 +2160,22 @@ namespace Opc.Ua.SourceGeneration
                                 continue;
                             }
 
-                            // AddInitializer(CoreUtils.Format(
-                            //     "{0}{1}",
-                            //     type.SymbolicName.Name,
-                            //     current.Instance.SymbolicName.Name), current.Instance, false);
+                            string childResourceName = AddInitializer(CoreUtils.Format(
+                                 "{0}{1}",
+                                 type.SymbolicName.Name,
+                                 current.Instance.SymbolicName.Name), current.Instance, false);
+
+                            if (childResourceName == null)
+                            {
+                                // Should not happen
+                                continue;
+                            }
 
                             template.WriteNextLine(context.Prefix);
                             template.Write(
-                                "private const string {0}_InitializationString =",
-                                current.Instance.SymbolicName.Name);
-                            string childXml = ConstructInitializer(current.Instance, false);
-                            WriteInitializationString(template, context, childXml);
-                            template.Write(";");
+                                "private static ReadOnlySpan<byte> {0}_InitializationString => Initializers.{1};",
+                                current.Instance.SymbolicName.Name,
+                                childResourceName);
                             template.WriteNextLine(string.Empty);
                             break;
                         }
@@ -2184,21 +2185,19 @@ namespace Opc.Ua.SourceGeneration
 
             else if (context.Target is MethodDesign method)
             {
-                // resourceName = AddInitializer(CoreUtils.Format(
-                //     "{0}",
-                //     method.SymbolicName.Name), method, false);
-
-                xml = ConstructInitializer(method, false);
+                resourceName = AddInitializer(CoreUtils.Format(
+                    "{0}",
+                    method.SymbolicName.Name), method, false);
             }
 
-            if (xml == null)
+            if (resourceName == null)
             {
                 return null;
             }
 
             template.WriteNextLine(context.Prefix);
-            template.Write("private const string InitializationString =");
-            WriteInitializationString(template, context, xml);
+            template.Write("private static ReadOnlySpan<byte> InitializationString => Initializers.");
+            template.Write(resourceName);
             template.Write(";");
 
             return context.TemplateString;
@@ -2275,7 +2274,8 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(Tokens.DataType, type.DataTypeNode.GetDotNetTypeName(
                 ValueRank.Scalar,
                 m_model.TargetNamespace,
-                m_model.Namespaces));
+                m_model.Namespaces,
+                nullable: false));
 
             template.AddTemplate(
                 Tokens.ListOfChildInitializers,
@@ -2377,10 +2377,12 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(Tokens.ChildName, field.Key);
             // template.AddReplacement(Tokens.ChildPath, field.Value.Key.Replace('_', '.'));
             template.AddReplacement(Tokens.ChildPath, field.Key);
-            template.AddReplacement(Tokens.ChildDataType, field.Value.DataTypeNode.GetDotNetTypeName(
-                field.Value.ValueRank,
-                m_model.TargetNamespace,
-                m_model.Namespaces));
+            template.AddReplacement(Tokens.ChildDataType,
+                field.Value.DataTypeNode.GetDotNetTypeName(
+                    field.Value.ValueRank,
+                    m_model.TargetNamespace,
+                    m_model.Namespaces,
+                    nullable: false));
 
             return template.WriteTemplate(context);
         }
@@ -2427,7 +2429,8 @@ namespace Opc.Ua.SourceGeneration
                 template.Write("private {0} {1};", field.DataTypeNode.GetDotNetTypeName(
                     field.ValueRank,
                     m_model.TargetNamespace,
-                    m_model.Namespaces),
+                    m_model.Namespaces,
+                    nullable: true),
                     field.GetChildFieldName());
 
                 return context.TemplateString;
@@ -2570,13 +2573,15 @@ namespace Opc.Ua.SourceGeneration
 
                     if (field.DataTypeNode.IsOptionSet)
                     {
-                        if (field.DataTypeNode.BaseTypeNode.SymbolicId == new XmlQualifiedName("OptionSet", Namespaces.OpcUa))
+                        if (field.DataTypeNode.BaseTypeNode.SymbolicId ==
+                            new XmlQualifiedName("OptionSet", Namespaces.OpcUa))
                         {
                             functionName = "Encodeable";
                             elementName = field.DataTypeNode.GetDotNetTypeName(
                                 ValueRank.Scalar,
                                 m_model.TargetNamespace,
-                                m_model.Namespaces);
+                                m_model.Namespaces,
+                                nullable: false);
                             break;
                         }
 
@@ -2591,7 +2596,8 @@ namespace Opc.Ua.SourceGeneration
                         elementName = field.DataTypeNode.GetDotNetTypeName(
                             ValueRank.Scalar,
                             m_model.TargetNamespace,
-                            m_model.Namespaces);
+                            m_model.Namespaces,
+                            nullable: false);
                         template.Write(
                             "encoder.WriteEnumeratedArray({0}, {1}.ToArray(), typeof({2}));",
                             fieldName,
@@ -2653,7 +2659,8 @@ namespace Opc.Ua.SourceGeneration
                     elementName = field.DataTypeNode.GetDotNetTypeName(
                         ValueRank.Scalar,
                         m_model.TargetNamespace,
-                        m_model.Namespaces);
+                        m_model.Namespaces,
+                        nullable: false);
 
                     if (field.ValueRank == ValueRank.Array)
                     {
@@ -2719,7 +2726,8 @@ namespace Opc.Ua.SourceGeneration
 
             if (field.IsOptional)
             {
-                template.Write($"if ((EncodingMask & (uint){dataType.ClassName}Fields.{field.Name}) != 0) ");
+                template.Write(
+                    $"if ((EncodingMask & (uint){dataType.ClassName}Fields.{field.Name}) != 0) ");
             }
 
             string functionName = field.DataTypeNode.BasicDataType.ToString();
@@ -2739,7 +2747,8 @@ namespace Opc.Ua.SourceGeneration
                     functionName = "ExtensionObject";
                     break;
                 case BasicDataType.Enumeration:
-                    if (field.DataType == new XmlQualifiedName("Enumeration", Namespaces.OpcUa))
+                    if (field.DataType ==
+                        new XmlQualifiedName("Enumeration", Namespaces.OpcUa))
                     {
                         functionName = "Int32";
                         break;
@@ -2747,13 +2756,15 @@ namespace Opc.Ua.SourceGeneration
 
                     if (field.DataTypeNode.IsOptionSet)
                     {
-                        if (field.DataTypeNode.BaseTypeNode.SymbolicId == new XmlQualifiedName("OptionSet", Namespaces.OpcUa))
+                        if (field.DataTypeNode.BaseTypeNode.SymbolicId ==
+                            new XmlQualifiedName("OptionSet", Namespaces.OpcUa))
                         {
                             functionName = "Encodeable";
                             elementName = field.DataTypeNode.GetDotNetTypeName(
                                 ValueRank.Scalar,
                                 m_model.TargetNamespace,
-                                m_model.Namespaces);
+                                m_model.Namespaces,
+                                nullable: false);
                             break;
                         }
 
@@ -2765,7 +2776,8 @@ namespace Opc.Ua.SourceGeneration
                     elementName = field.DataTypeNode.GetDotNetTypeName(
                         ValueRank.Scalar,
                         m_model.TargetNamespace,
-                        m_model.Namespaces);
+                        m_model.Namespaces,
+                        nullable: false);
                     break;
                 case BasicDataType.UserDefined:
                     if (field.AllowSubTypes)
@@ -2774,7 +2786,8 @@ namespace Opc.Ua.SourceGeneration
                         elementName = field.DataTypeNode.GetDotNetTypeName(
                             ValueRank.Scalar,
                             m_model.TargetNamespace,
-                            m_model.Namespaces);
+                            m_model.Namespaces,
+                            nullable: false);
 
                         if (field.ValueRank == ValueRank.Array)
                         {
@@ -2814,7 +2827,8 @@ namespace Opc.Ua.SourceGeneration
                     elementName = field.DataTypeNode.GetDotNetTypeName(
                         ValueRank.Scalar,
                         m_model.TargetNamespace,
-                        m_model.Namespaces);
+                        m_model.Namespaces,
+                        nullable: false);
                     break;
             }
 
@@ -2913,7 +2927,8 @@ namespace Opc.Ua.SourceGeneration
                 field.DataTypeNode.GetDotNetTypeName(
                     field.ValueRank,
                     m_model.TargetNamespace,
-                    m_model.Namespaces));
+                    m_model.Namespaces,
+                    nullable: true));
 
             if (dataType.IsUnion)
             {
@@ -2951,7 +2966,8 @@ namespace Opc.Ua.SourceGeneration
                         field.DataTypeNode.GetMethodArgumentDotNetType(
                             ValueRank.Scalar,
                             m_model.TargetNamespace,
-                            m_model.Namespaces) +
+                            m_model.Namespaces,
+                            false) +
                         "));";
                 }
             }
@@ -2962,7 +2978,8 @@ namespace Opc.Ua.SourceGeneration
                 field.DataTypeNode.GetMethodArgumentDotNetType(
                     field.ValueRank,
                     m_model.TargetNamespace,
-                    m_model.Namespaces),
+                    m_model.Namespaces,
+                    false),
                 context.Index);
 
             return context.TemplateString;
@@ -2988,7 +3005,8 @@ namespace Opc.Ua.SourceGeneration
                 field.DataTypeNode.GetMethodArgumentDotNetType(
                     field.ValueRank,
                     m_model.TargetNamespace,
-                    m_model.Namespaces),
+                    m_model.Namespaces,
+                    field.IsOptional),
                 context.Index);
 
             return context.TemplateString;
@@ -3044,7 +3062,8 @@ namespace Opc.Ua.SourceGeneration
                         argument.DataTypeNode.GetMethodArgumentDotNetType(
                             argument.ValueRank,
                             m_model.TargetNamespace,
-                            m_model.Namespaces));
+                            m_model.Namespaces,
+                            argument.IsOptional));
                 }
             }
 
@@ -3060,7 +3079,8 @@ namespace Opc.Ua.SourceGeneration
                         argument.DataTypeNode.GetMethodArgumentDotNetType(
                             argument.ValueRank,
                             m_model.TargetNamespace,
-                            m_model.Namespaces));
+                            m_model.Namespaces,
+                            argument.IsOptional));
                 }
             }
 
@@ -3097,7 +3117,8 @@ namespace Opc.Ua.SourceGeneration
                         argument.DataTypeNode.GetMethodArgumentDotNetType(
                             argument.ValueRank,
                             m_model.TargetNamespace,
-                            m_model.Namespaces));
+                            m_model.Namespaces,
+                            argument.IsOptional));
                 }
             }
 
@@ -3168,7 +3189,8 @@ namespace Opc.Ua.SourceGeneration
                field.DataTypeNode.GetMethodArgumentDotNetType(
                    field.ValueRank,
                    m_model.TargetNamespace,
-                   m_model.Namespaces),
+                   m_model.Namespaces,
+                   field.IsOptional),
                fieldName.Substring(2, 1).ToUpperInvariant());
 
             return context.TemplateString;
@@ -3309,6 +3331,7 @@ namespace Opc.Ua.SourceGeneration
                 template.WriteNextLine(string.Empty);
             }
 
+            template.AddReplacement(Tokens.Encoding, UseXmlInitializers ? "Xml" : "Binary");
             template.AddReplacement(Tokens.ChildName, instance.SymbolicName.Name);
 
             return template.WriteTemplate(context);
@@ -3433,7 +3456,8 @@ namespace Opc.Ua.SourceGeneration
                 template.AddReplacement(Tokens.TypeName, field.DataTypeNode.GetDotNetTypeName(
                     field.ValueRank,
                     m_model.TargetNamespace,
-                    m_model.Namespaces));
+                    m_model.Namespaces,
+                    nullable: false));
                 template.AddReplacement(Tokens.FieldName, field.GetChildFieldName());
                 template.AddReplacement(Tokens.IsRequired, valueType ? "true" : "false");
                 template.AddReplacement(Tokens.EmitDefaultValue, emitDefaultValue ? "true" : "false");
@@ -3813,7 +3837,10 @@ namespace Opc.Ua.SourceGeneration
                     scalarName = "ExtensionObject";
                     break;
                 default:
-                    scalarName = variableType.DataTypeNode.GetDotNetTypeName(m_model.TargetNamespace, m_model.Namespaces);
+                    scalarName = variableType.DataTypeNode.GetDotNetTypeName(
+                        m_model.TargetNamespace,
+                        m_model.Namespaces,
+                        nullable: false);
                     break;
             }
 
@@ -4282,6 +4309,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Adds the initializer for node
         /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
         internal string AddInitializer(string name, NodeDesign node, bool forInstance)
         {
             var context = new SystemContext(m_telemetry)
@@ -4323,129 +4351,6 @@ namespace Opc.Ua.SourceGeneration
                 throw new InvalidOperationException($"Duplicate resource name {name}");
             }
             return name;
-        }
-
-        /// <summary>
-        /// Constructs the initializer for a object type.
-        /// </summary>
-        private string ConstructInitializer(NodeDesign node, bool forInstance)
-        {
-            var context = new SystemContext(m_telemetry)
-            {
-                NamespaceUris = m_model.NamespaceUris
-            };
-
-            NodeState state = node.State;
-
-            if (forInstance)
-            {
-                state = node.InstanceState;
-            }
-
-            if (state == null)
-            {
-                return null;
-            }
-
-            List<BaseInstanceState> list = [];
-            state.GetChildren(context, list);
-
-            if (UseXmlInitializers)
-            {
-                using var ostrm = new MemoryStream();
-                state.SaveAsXml(context, ostrm);
-                return new UTF8Encoding().GetString(ostrm.ToArray());
-            }
-            else
-            {
-                using var ostrm = new MemoryStream();
-                state.SaveAsBinary(context, ostrm);
-                ostrm.Close();
-                return Convert.ToBase64String(ostrm.ToArray());
-            }
-        }
-
-        private void WriteInitializationString(Template template, Context context, string xml)
-        {
-            if (xml == null)
-            {
-                WriteInitializationStringLine(template, context, string.Empty);
-                return;
-            }
-
-            if (!UseXmlInitializers)
-            {
-                for (int ii = 0; ii < xml.Length; ii += 80)
-                {
-                    if (ii > 0)
-                    {
-                        template.Write(" +");
-                    }
-
-                    if (ii + 80 >= xml.Length)
-                    {
-                        WriteInitializationStringLine(template, context, xml[ii..]);
-                    }
-                    else
-                    {
-                        WriteInitializationStringLine(template, context, xml.Substring(ii, 80));
-                    }
-                }
-
-                return;
-            }
-
-            bool first = true;
-
-            using var reader = new StringReader(xml);
-            for (string line = reader.ReadLine(); line != null; line = reader.ReadLine())
-            {
-                line = line.Trim();
-
-                if (string.IsNullOrEmpty(line))
-                {
-                    continue;
-                }
-
-                if (line.StartsWith("<?xml", StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                if (!first)
-                {
-                    template.Write(" +");
-                }
-
-                WriteInitializationStringLine(template, context, line);
-                first = false;
-            }
-
-            static void WriteInitializationStringLine(Template template, Context context, string line)
-            {
-                template.WriteNextLine(context.Prefix);
-                template.Write(template.Indent);
-                template.Write("   \"");
-
-                for (int ii = 0; ii < line.Length; ii++)
-                {
-                    if (line[ii] == '"')
-                    {
-                        template.Write("\\\"");
-                        continue;
-                    }
-
-                    if (line[ii] == '\\')
-                    {
-                        template.Write("""\\""");
-                        continue;
-                    }
-
-                    template.Write(line[ii]);
-                }
-
-                template.Write("\"");
-            }
         }
 
         private static readonly string[] s_builtInPropertyNames =
