@@ -68,8 +68,8 @@ namespace Opc.Ua.SourceGeneration
                 Assembly.GetExecutingAssembly().GetName().Name);
             Replacements.Add(Tokens.Version, CoreUtils.Format(
                 "{0}.{1}",
-                CoreUtils.GetAssemblySoftwareVersion(),
-                CoreUtils.GetAssemblyBuildNumber()));
+                s_softwareVersion,
+                s_buildVersion));
         }
 
         /// <summary>
@@ -461,6 +461,8 @@ namespace Opc.Ua.SourceGeneration
             return true;
         }
 
+        private static readonly string s_softwareVersion = CoreUtils.GetAssemblySoftwareVersion();
+        private static readonly string s_buildVersion = CoreUtils.GetAssemblyBuildNumber();
         private readonly StringReader m_reader;
         private readonly TextWriter m_writer;
         private bool m_written;

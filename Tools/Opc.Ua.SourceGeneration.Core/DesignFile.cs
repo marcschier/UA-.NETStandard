@@ -59,7 +59,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// -rc
         /// </summary>
-        public bool ReleaseCandidate { get; init; }
+        public bool ReleaseCandidate { get; init; } = true;
     }
 
     /// <summary>

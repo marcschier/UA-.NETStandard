@@ -313,7 +313,7 @@ namespace Opc.Ua.SourceGeneration
                     public ITransportChannel TransportChannel => throw new NotSupportedException();
 
                     protected static void ValidateResponse(
-                        [System.Diagnostics.CodeAnalysis.NotNull] ResponseHeader? header) {}
+                        ResponseHeader? header) {}
                     protected virtual void UpdateRequestHeader(
                         IServiceRequest request, bool useDefaults, string serviceName) {}
                     protected virtual void RequestCompleted(

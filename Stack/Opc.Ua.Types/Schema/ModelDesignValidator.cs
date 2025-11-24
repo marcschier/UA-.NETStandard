@@ -2313,29 +2313,12 @@ namespace Opc.Ua.Schema.Model
             return identifiers;
         }
 
-        private uint FindUnusedId(HashSet<uint> identifiers, string ns, bool isImplicitlyDefined)
-        {
-            uint id = ns == Namespaces.OpcUa ? 15000 : m_startId;
-
-            if (isImplicitlyDefined)
-            {
-                id = 1000000;
-            }
-
-            while (identifiers.Contains(++id))
-            {
-            }
-
-            identifiers.Add(id);
-            return id;
-        }
-
         private object AssignIdToNode(
             NodeDesign node,
             Dictionary<string, object> identifiers,
             SortedDictionary<object, IdInfo> uniqueIdentifiers,
             Dictionary<string, object> duplicateIdentifiers,
-            HashSet<uint> assignedIds,
+            IdAllocator assignedIds,
             bool isImplicitlyDefined)
         {
             // assign identifier if one has not already been assigned.
@@ -2348,14 +2331,14 @@ namespace Opc.Ua.Schema.Model
                 }
                 else
                 {
-                    id = FindUnusedId(assignedIds, node.SymbolicId.Namespace, isImplicitlyDefined);
+                    id = assignedIds.FindUnusedId(node.SymbolicId.Namespace, isImplicitlyDefined);
                 }
 
                 identifiers.Add(node.SymbolicId.Name, id);
             }
             else if (isImplicitlyDefined)
             {
-                id = FindUnusedId(assignedIds, node.SymbolicId.Namespace, isImplicitlyDefined);
+                id = assignedIds.FindUnusedId(node.SymbolicId.Namespace, isImplicitlyDefined);
                 identifiers[node.SymbolicId.Name] = id;
             }
 
@@ -2443,7 +2426,7 @@ namespace Opc.Ua.Schema.Model
             Dictionary<string, object> identifiers = ParseFile(istrm);
             var uniqueIdentifiers = new SortedDictionary<object, IdInfo>(uniqueIdentifiersComparer);
             var duplicateIdentifiers = new Dictionary<string, object>();
-            var assignedIds = new HashSet<uint>();
+            var assignedIds = new IdAllocator();
 
             foreach (object existingId in identifiers.Values)
             {
@@ -7261,6 +7244,67 @@ namespace Opc.Ua.Schema.Model
             }
 
             return state;
+        }
+
+        /// <summary>
+        /// Allocates identifiers
+        /// </summary>
+        private sealed class IdAllocator
+        {
+            /// <summary>
+            /// Allocate identifiers
+            /// </summary>
+            /// <param name="startId"></param>
+            public IdAllocator(uint startId = 15000)
+            {
+                m_lastId = startId;
+                m_lastBuiltInId = 15000;
+                m_lastImplicitlyDefined = 1000000;
+            }
+
+            /// <summary>
+            /// Find unused identifier
+            /// </summary>
+            public uint FindUnusedId(string ns, bool isImplicitlyDefined = false)
+            {
+                if (ns == Namespaces.OpcUa)
+                {
+                    return FindUnusedId(ref m_lastBuiltInId);
+                }
+                else if (isImplicitlyDefined)
+                {
+                    return FindUnusedId(ref m_lastImplicitlyDefined);
+                }
+                return FindUnusedId(ref m_lastId);
+            }
+
+            /// <summary>
+            /// Add identifier
+            /// </summary>
+            public void Add(uint value)
+            {
+                m_identifiers.Add(value);
+            }
+
+            /// <summary>
+            /// Find an unused identifier
+            /// </summary>
+            private uint FindUnusedId(ref uint lastId)
+            {
+                uint id = lastId;
+                while (m_identifiers.Contains(id))
+                {
+                    id++;
+                }
+                lastId = id;
+                m_identifiers.Add(id);
+                return id;
+            }
+
+            private uint m_lastId;
+            private uint m_lastBuiltInId;
+            private uint m_lastImplicitlyDefined;
+            private readonly HashSet<uint> m_identifiers = [];
         }
 
         private readonly SpecificationVersion m_standardVersion;

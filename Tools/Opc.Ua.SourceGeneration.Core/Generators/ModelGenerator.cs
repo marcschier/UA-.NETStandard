@@ -42,7 +42,7 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Model generator
     /// </summary>
-    internal class ModelGenerator
+    internal sealed class ModelGenerator
     {
         /// <summary>
         /// Loads the model design from the specified file and validates it.
@@ -67,32 +67,29 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Generates the source code files.
         /// </summary>
-        public virtual void ValidateAndUpdateIds(
+        public void ValidateAndUpdateIds(
             IReadOnlyList<string> designFilePaths,
             string identifierFilePath,
-            uint startId,
-            bool useAllowSubtypes,
             IReadOnlyList<string> exclusions,
-            string modelVersion,
-            string modelPublicationDate,
-            bool releaseCandidate,
-            bool extractIdentifiers,
+            DesignFileOptions options = null,
+            bool useAllowSubtypes = true,
             bool useXmlInitializers = false)
         {
             UseXmlInitializers = useXmlInitializers;
             m_exclusions = exclusions;
+            options ??= new DesignFileOptions();
 
             m_validator = new ModelDesignValidator(
                 m_fileSystem,
-                startId,
+                options.StartId,
                 exclusions,
                 m_telemetry,
                 SpecificationVersion.V105)
             {
                 UseAllowSubtypes = useAllowSubtypes,
-                ReleaseCandidate = releaseCandidate,
-                ModelVersion = modelVersion,
-                ModelPublicationDate = modelPublicationDate
+                ReleaseCandidate = options.ReleaseCandidate,
+                ModelVersion = options.ModelVersion,
+                ModelPublicationDate = options.ModelPublicationDate
             };
 
             m_validator.Validate(designFilePaths, identifierFilePath, false);
@@ -102,10 +99,8 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Generates all files
         /// </summary>
-        public void GenerateFiles(string filePath, IReadOnlyList<string> excludedCategories)
+        public void Emit(string filePath)
         {
-            m_exclusions = excludedCategories;
-
             // write type and object definitions.
             List<NodeDesign> nodes = GetNodeList();
             if (nodes.Count == 0)
@@ -341,20 +336,20 @@ namespace Opc.Ua.SourceGeneration
                 }
             }
 
-            // Generate nodeset2.xml files as source code (.g.cs)
-            var nodesetGenerator = new Nodeset2Generator(
-                m_model,
-                [.. m_validator.Nodes],
-                m_fileSystem,
-                m_telemetry);
-            IReadOnlyList<Resource> resources = nodesetGenerator.Emit(
-                filePath,
-                context,
-                collection,
-                collectionWithServices);
-
             if (embedNodeSet)
             {
+                // Generate nodeset2.xml files as source code (.g.cs)
+                var nodesetGenerator = new Nodeset2Generator(
+                    m_model,
+                    [.. m_validator.Nodes],
+                    m_fileSystem,
+                    m_telemetry);
+                IReadOnlyList<Resource> resources = nodesetGenerator.Emit(
+                    filePath,
+                    context,
+                    collection,
+                    collectionWithServices);
+
                 // Pack as resources
                 var resourceGenerator = new ResourceGenerator(m_fileSystem, filePath);
                 resourceGenerator.Embed(

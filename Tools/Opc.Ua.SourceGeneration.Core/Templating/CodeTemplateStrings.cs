@@ -74,7 +74,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ConstantsGenerator.cs 
+        /// ConstantsGenerator.cs
         /// </summary>
         public static string Constants_File_cs =>
             $$"""
@@ -95,7 +95,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ConstantsGenerator.cs 
+        /// ConstantsGenerator.cs
         /// </summary>
         public static string Constants_Constant_cs =>
             $$"""
@@ -106,7 +106,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ConstantsGenerator.cs 
+        /// ConstantsGenerator.cs
         /// </summary>
         public static string Constants_DataTypes_cs =>
             $$"""
@@ -140,7 +140,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string Helpers_File_cs =>
             $$"""
@@ -194,7 +194,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string ConstantsFile_cs =>
             $$"""
@@ -228,7 +228,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string NamespaceUri_cs =>
             $$"""
@@ -239,7 +239,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string BrowseName_cs =>
             $$"""
@@ -247,7 +247,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string IdClass_cs =>
             $$"""
@@ -264,7 +264,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string NodeIdClass_cs =>
             $$"""
@@ -281,8 +281,8 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
+        /// ModelGenerator.cs
         /// </summary>
         public static string TypesFile_cs =>
             $$"""
@@ -306,7 +306,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string IdDeclaration_cs =>
             $$"""
@@ -314,7 +314,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string NodeIdDeclarationAbsolute_cs =>
             $$"""
@@ -323,7 +323,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string NodeIdDeclaration_cs =>
             $$"""
@@ -332,7 +332,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string DataTypes_Union_cs =>
             $$"""
@@ -487,7 +487,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string DataTypes_DerivedClassWithOptionalFields_cs =>
             $$"""
@@ -615,7 +615,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string DataTypes_ClassWithOptionalFields_cs =>
             $$"""
@@ -753,7 +753,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string DataTypes_Class_cs =>
             $$"""
@@ -864,8 +864,8 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
+        /// ModelGenerator.cs
         /// </summary>
         public static string DataTypes_DerivedClass_cs =>
             $$"""
@@ -980,7 +980,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string DataTypes_Enumeration_cs =>
             $$"""
@@ -997,7 +997,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string ObjectType_cs =>
             $$"""
@@ -1058,7 +1058,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string VariableType_cs =>
             $$"""
@@ -1135,7 +1135,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string MethodType_cs =>
             $$"""
@@ -1267,7 +1267,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string DataTypes_CollectionClass_cs =>
             $$"""
@@ -1304,7 +1304,7 @@ namespace Opc.Ua.SourceGeneration
                 {
                     return To{{Tokens.BrowseName}}Collection(values);
                 }
-            
+
                 /// <inheritdoc/>
                 public static {{Tokens.BrowseName}}Collection To{{Tokens.BrowseName}}Collection({{Tokens.BrowseName}}?[]? values)
                 {
@@ -1312,16 +1312,16 @@ namespace Opc.Ua.SourceGeneration
                     {
                         return new {{Tokens.BrowseName}}Collection(values);
                     }
-            
+
                     return new {{Tokens.BrowseName}}Collection();
                 }
-                        
+
                 /// <inheritdoc/>
                 public static explicit operator {{Tokens.BrowseName}}?[]?({{Tokens.BrowseName}}Collection? values)
                 {
                     return From{{Tokens.BrowseName}}Collection(values);
                 }
-            
+
                 /// <inheritdoc/>
                 public static {{Tokens.BrowseName}}?[]? From{{Tokens.BrowseName}}Collection({{Tokens.BrowseName}}Collection? values)
                 {
@@ -1329,10 +1329,10 @@ namespace Opc.Ua.SourceGeneration
                     {
                         return values.ToArray();
                     }
-            
+
                     return null;
                 }
-            
+
                 /// <inheritdoc/>
                 public object Clone()
                 {
@@ -1356,7 +1356,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string TypedVariableType_cs =>
             $$"""
@@ -1403,7 +1403,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string VariableTypeValue_cs =>
             $$"""
@@ -1436,14 +1436,14 @@ namespace Opc.Ua.SourceGeneration
                 /// <summary>
                 /// Gets the variable associated with the value.
                 /// </summary>
-                public {{Tokens.ClassName}}State Variable => m_variable; 
+                public {{Tokens.ClassName}}State Variable => m_variable;
 
                 /// <summary>
                 /// Gets or sets the value.
                 /// </summary>
                 public {{Tokens.DataType}} Value
                 {
-                    get => m_value; 
+                    get => m_value;
                     set => m_value = value;
                 }
 
@@ -1572,7 +1572,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string InitializeOptionalChild_cs =>
             $$"""
@@ -1586,8 +1586,8 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
+        /// ModelGenerator.cs
         /// </summary>
         public static string Property_cs =>
             $$"""
@@ -1607,7 +1607,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string FindChildMethods_cs =>
             $$"""
@@ -1658,7 +1658,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string VariableTypeValueField_cs =>
             $$"""
@@ -1731,7 +1731,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string DataTypes_Property_cs =>
             $$"""
@@ -1751,7 +1751,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string DataTypes_ArrayProperty_cs =>
             $$"""
@@ -1771,7 +1771,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string DataTypes_EnumerationValue_cs =>
             $$"""
@@ -1783,7 +1783,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string PropertyOverride_cs =>
             $$"""
@@ -1798,7 +1798,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string FindChildCase_cs =>
             $$"""
@@ -1825,7 +1825,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string FindChildren_cs =>
             $$"""
@@ -1836,7 +1836,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs 
+        /// ModelGenerator.cs
         /// </summary>
         public static string RemoveChild_cs =>
             $$"""
@@ -1848,7 +1848,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs 
+        /// StackGenerator.cs
         /// </summary>
         public static string Endpoints_File_cs =>
             $$"""
@@ -1865,7 +1865,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs 
+        /// StackGenerator.cs
         /// </summary>
         public static string Endpoints_ServiceSet_cs =>
             $$"""
@@ -1931,7 +1931,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs 
+        /// StackGenerator.cs
         /// </summary>
         public static string Endpoints_Method_cs =>
             $$"""
@@ -1963,7 +1963,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs 
+        /// StackGenerator.cs
         /// </summary>
         public static string ServerApi_File_cs =>
             $$"""
@@ -1980,7 +1980,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs 
+        /// StackGenerator.cs
         /// </summary>
         public static string ServerApi_ServiceSet_cs =>
             $$"""
@@ -2013,7 +2013,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs 
+        /// StackGenerator.cs
         /// </summary>
         public static string ServerApi_InterfaceMethod_cs =>
             $$"""
@@ -2024,7 +2024,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs 
+        /// StackGenerator.cs
         /// </summary>
         public static string ServerApi_Method_cs =>
             $$"""
@@ -2043,7 +2043,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs 
+        /// StackGenerator.cs
         /// </summary>
         public static string ClientApi_File_cs =>
             $$"""
@@ -2061,7 +2061,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs 
+        /// StackGenerator.cs
         /// </summary>
         public static string ClientApi_ServiceSet_cs =>
             $$"""
@@ -2094,7 +2094,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs 
+        /// StackGenerator.cs
         /// </summary>
         public static string ClientApi_Interface_cs =>
             $$"""
@@ -2123,7 +2123,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs 
+        /// StackGenerator.cs
         /// </summary>
         public static string ClientApi_Method_cs =>
             $$"""
@@ -2241,7 +2241,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs 
+        /// StackGenerator.cs
         /// </summary>
         public static string Classes_File_cs =>
             $$"""
@@ -2256,7 +2256,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs 
+        /// StackGenerator.cs
         /// </summary>
         public static string Classes_Enumeration_cs =>
             $$"""
@@ -2273,7 +2273,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs 
+        /// StackGenerator.cs
         /// </summary>
         public static string Classes_Service_cs =>
             $$"""
@@ -2293,7 +2293,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs 
+        /// StackGenerator.cs
         /// </summary>
         public static string Classes_ClassCollection_cs =>
             $$"""
@@ -2394,7 +2394,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs 
+        /// StackGenerator.cs
         /// </summary>
         public static string Classes_EnumerationCollection_cs =>
             $$"""
@@ -2481,7 +2481,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs 
+        /// StackGenerator.cs
         /// </summary>
         public static string Classes_Property_cs =>
             $$"""
@@ -2497,7 +2497,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs 
+        /// StackGenerator.cs
         /// </summary>
         public static string Classes_EnumerationValue_cs =>
             $$"""
@@ -2509,9 +2509,9 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// StackGenerator.cs 
-        /// StackGenerator.cs 
-        /// StackGenerator.cs 
+        /// StackGenerator.cs
+        /// StackGenerator.cs
+        /// StackGenerator.cs
         /// </summary>
         public static string Classes_Class_cs =>
             $$"""
@@ -2672,6 +2672,14 @@ namespace Opc.Ua.SourceGeneration
             public static ReadOnlySpan<byte> {{Tokens.ResourceName}} =>
                 {{Tokens.Resource}}
                 ;
+            """;
+
+        /// <summary>
+        /// ResourceGenerator.cs
+        /// </summary>
+        public static string ResourceConstant_cs =>
+            $$"""
+            public const string {{Tokens.ResourceName}} = {{Tokens.Resource}};
             """;
     }
 }

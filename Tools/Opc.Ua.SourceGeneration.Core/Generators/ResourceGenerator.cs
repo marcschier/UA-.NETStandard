@@ -30,14 +30,15 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 
 namespace Opc.Ua.SourceGeneration
 {
     /// <summary>
-    /// Generates embedded resources as code
+    /// Generates embedded resources or string constants as code
     /// </summary>
-    internal class ResourceGenerator
+    internal sealed class ResourceGenerator
     {
         /// <summary>
         /// Create code generator
@@ -76,11 +77,20 @@ namespace Opc.Ua.SourceGeneration
                 Tokens.ListOfResourceDeclarations,
                 CodeTemplateStrings.ResourceDeclaration_cs,
                 resources,
-                null,
+                LoadTemplate_ResourceDeclaration,
                 WriteTemplate_ResourceDeclaration);
 
             template.WriteTemplate(null);
             return outputFile;
+        }
+
+        private string LoadTemplate_ResourceDeclaration(Template template, Context context)
+        {
+            if (context.Target is StringResource str && str.AsUtf16)
+            {
+                return CodeTemplateStrings.ResourceConstant_cs;
+            }
+            return CodeTemplateStrings.ResourceDeclaration_cs;
         }
 
         private bool WriteTemplate_ResourceDeclaration(
@@ -100,9 +110,34 @@ namespace Opc.Ua.SourceGeneration
                 resource.IsText ?
                     LoadTemplate_TextResource :
                     LoadTemplate_BinaryResource,
-                null);
+                WriteTemplate_Resource);
 
             return template.WriteTemplate(context);
+        }
+
+        private bool WriteTemplate_Resource(Template template, Context context)
+        {
+            if (context.Target is StringResource str && str.AsUtf16)
+            {
+                switch (str)
+                {
+                    case TextResource textResource:
+                        template.AddReplacement(
+                            Tokens.Resource,
+                            textResource.Text);
+                        return template.WriteTemplate(context);
+                    case TextReaderResource textReaderResource:
+                        template.AddReplacement(
+                            Tokens.Resource,
+                            textReaderResource.Reader.ReadToEnd());
+                        return template.WriteTemplate(context);
+                    default:
+                        // SHould not be here
+                        return false;
+                }
+            }
+            // Already written
+            return true;
         }
 
         private string LoadTemplate_BinaryResource(Template template, Context context)
@@ -253,9 +288,6 @@ namespace Opc.Ua.SourceGeneration
         {
             template.WriteNextLine(context.Prefix);
             template.Write("Convert.FromBase64String(");
-            template.WriteNextLine(context.Prefix);
-            template.Write(template.Indent);
-
             for (int ii = 0; ii < base64.Length; ii += 80)
             {
                 if (ii > 0)
@@ -301,27 +333,26 @@ namespace Opc.Ua.SourceGeneration
             template.WriteNextLine(context.Prefix);
             template.Write("{");
             template.WriteNextLine(context.Prefix);
-            template.Write(template.Indent);
-            template.Write(template.Indent);
+            template.Write("    ");
             bool first = true;
-            int column = -1;
+            int column = 0;
 
             int b = reader.ReadByte();
             while (b != -1)
             {
-                if (!first)
+                // line break after x entries
+                if (column++ >= 12)
+                {
+                    template.Write(",");
+                    template.WriteNextLine(context.Prefix);
+                    template.Write("    ");
+                    column = 1;
+                }
+                else if (!first)
                 {
                     template.Write(", ");
                 }
                 first = false;
-                // line break after x entries
-                if (++column == 12)
-                {
-                    template.WriteNextLine(context.Prefix);
-                    template.Write(template.Indent);
-                    template.Write(template.Indent);
-                    column = 0;
-                }
                 template.Write("0x{0:X2}", (byte)b);
                 b = reader.ReadByte();
             }
@@ -390,23 +421,47 @@ namespace Opc.Ua.SourceGeneration
         }
     }
 
-    internal record class StreamResource(string ResourceName, Stream Stream, bool IsText = false)
+    internal sealed record class StreamResource(string ResourceName, Stream Stream, bool IsText = false)
         : Resource(ResourceName, IsText);
 
-    internal record class BinaryResource(string ResourceName, byte[] Data, bool IsText = false)
+    internal sealed record class BinaryResource(string ResourceName, byte[] Data, bool IsText = false)
         : Resource(ResourceName, IsText);
 
-    internal record class TextReaderResource(string ResourceName, TextReader Reader)
+    internal abstract record class StringResource(string ResourceName, bool AsUtf16)
         : Resource(ResourceName, true);
 
-    internal record class TextResource(string ResourceName, string Text)
+    internal sealed record class TextReaderResource(string ResourceName, TextReader Reader, bool AsUtf16 = false)
+        : StringResource(ResourceName, AsUtf16);
+
+    internal record class TextResource(string ResourceName, string Text, bool AsUtf16 = false)
+        : StringResource(ResourceName, AsUtf16);
+
+    internal sealed record class TextFileResource(string ResourceName, string FileName)
         : Resource(ResourceName, true);
 
-    internal record class TextFileResource(string ResourceName, string FileName)
-        : Resource(ResourceName, true);
-
-    internal record class BinaryFileResource(string ResourceName, string FileName)
+    internal sealed record class BinaryFileResource(string ResourceName, string FileName)
         : Resource(ResourceName, false);
+
+    internal sealed record class StringConstant(string Text)
+        : TextResource(GetName(Text), Text, true)
+    {
+        private static string GetName(string text)
+        {
+            var buffer = new StringBuilder();
+            foreach (char ch in text)
+            {
+                if (char.IsLetterOrDigit(ch))
+                {
+                    buffer.Append(ch);
+                }
+                else
+                {
+                    buffer.Append('_');
+                }
+            }
+            return buffer.ToString();
+        }
+    }
 
     /// <summary>
     /// Extensions

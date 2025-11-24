@@ -63,17 +63,11 @@ namespace Opc.Ua.SourceGeneration
             generator.ValidateAndUpdateIds(
                 designFiles.DesignFiles,
                 null, // identifierFile,
-                designFiles.Options.StartId,
-                useAllowSubtypes,
                 exclusions,
-                designFiles.Options.ModelVersion,
-                designFiles.Options.ModelPublicationDate,
-                designFiles.Options.ReleaseCandidate,
-                false);
+                designFiles.Options,
+                useAllowSubtypes);
 
-            generator.GenerateFiles(
-                string.Empty,
-                exclusions);
+            generator.Emit(string.Empty);
         }
 
         /// <summary>
@@ -109,16 +103,8 @@ namespace Opc.Ua.SourceGeneration
                 generator.ValidateAndUpdateIds(
                     designFilesForModel,
                     null,
-                    0,
-                    true,
-                    exclusions,
-                    null,
-                    null,
-                    true,
-                    false);
-                generator.GenerateFiles(
-                    string.Empty,
                     exclusions);
+                generator.Emit(string.Empty);
             }
         }
 
@@ -150,12 +136,14 @@ namespace Opc.Ua.SourceGeneration
                     BuiltInDesignFiles.UACoreServicesXml
                 ],
                 BuiltInDesignFiles.StandardTypesCsv,
-                0,
-                false,
                 exclusions,
-                "1.05.06", // <--- Read from version file
-                "2025-11-08", // <--- Read from version file
-                false,
+                new DesignFileOptions
+                {
+                    StartId = 0,
+                    ModelVersion = "1.05.06", // <--- Read from version file
+                    ModelPublicationDate = "2025-11-08", // <--- Read from version file
+                    ReleaseCandidate = true
+                },
                 false);
 
             // Generate schemas
@@ -224,9 +212,7 @@ namespace Opc.Ua.SourceGeneration
                 "Core",
                 true);
 
-            generator.GenerateFiles(
-                outputDir,
-                exclusions);
+            generator.Emit(outputDir);
         }
     }
 }
