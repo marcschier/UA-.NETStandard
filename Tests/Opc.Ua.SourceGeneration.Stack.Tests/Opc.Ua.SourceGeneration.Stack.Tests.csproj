@@ -20,6 +20,7 @@
     <PackageReference Include="System.Collections.Immutable" />
     <PackageReference Include="System.Threading.Tasks.Extensions" />
     <PackageReference Include="System.Diagnostics.DiagnosticSource" />
+    <PackageReference Include="System.Text.Json" />
   </ItemGroup>
   <PropertyGroup Condition="'$(NetStandardTests)' == 'true'">
     <DefineConstants>$(DefineConstants);NET_STANDARD_TESTS</DefineConstants>

@@ -31,8 +31,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Diagnostics;
 using NUnit.Framework;
 
 namespace Opc.Ua.SourceGeneration
@@ -57,6 +59,7 @@ namespace Opc.Ua.SourceGeneration
 
             CSharpCompilation compilation = optimizationLevel.CreateCompilation("Opc.Ua.Core")
                 .AddCode(new Dictionary<string, string>(), LanguageVersion.Latest);
+
             // Create the driver the executes the generator
             GeneratorDriver driver = CSharpGeneratorDriver.Create(host);
             // Run it
@@ -67,6 +70,7 @@ namespace Opc.Ua.SourceGeneration
 
             Assert.That(diagnostics, Is.Empty);
             Assert.That(outputCompilation.SyntaxTrees.Count(), Is.GreaterThan(1));
+
             outputCompilation.GetDiagnostics().Check(
                 TestContext.Out,
                 out int errors,

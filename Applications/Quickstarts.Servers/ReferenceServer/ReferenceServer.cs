@@ -53,6 +53,17 @@ namespace Quickstarts.ReferenceServer
     /// </remarks>
     public class ReferenceServer : ReverseConnectServer
     {
+        /// <summary>
+        /// Create reference server
+        /// </summary>
+        public ReferenceServer(ITelemetryContext telemetry)
+            : base(telemetry)
+        {
+        }
+
+        /// <summary>
+        /// Token validator
+        /// </summary>
         public ITokenValidator TokenValidator { get; set; }
 
         /// <summary>

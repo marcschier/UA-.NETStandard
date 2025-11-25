@@ -22,6 +22,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="System.Private.Uri" />
+    <PackageReference Include="System.Composition.AttributedModel" />
     <PackageReference Include="BenchmarkDotNet" />
   </ItemGroup>
   <PropertyGroup Condition="'$(NetStandardTests)' == 'true'">

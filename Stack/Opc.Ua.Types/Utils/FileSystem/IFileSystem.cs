@@ -73,5 +73,12 @@ namespace Opc.Ua
         /// <param name="path"></param>
         /// <returns></returns>
         DateTime GetLastWriteTime(string path);
+
+        /// <summary>
+        /// Get length of file
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        long GetLength(string path);
     }
 }

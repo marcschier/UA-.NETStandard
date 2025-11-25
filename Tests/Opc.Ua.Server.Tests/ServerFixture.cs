@@ -43,7 +43,7 @@ namespace Opc.Ua.Server.Tests
     /// </summary>
     /// <typeparam name="T">A server class T used for testing.</typeparam>
     public class ServerFixture<T>
-        where T : ServerBase, new()
+        where T : ServerBase
     {
         public ApplicationInstance Application { get; private set; }
         public ApplicationConfiguration Config { get; private set; }
@@ -63,15 +63,17 @@ namespace Opc.Ua.Server.Tests
         public bool SecurityNone { get; set; }
         public string UriScheme { get; set; } = Utils.UriSchemeOpcTcp;
         public int Port { get; private set; }
+
         public bool UseTracing { get; }
         public bool DurableSubscriptionsEnabled { get; set; }
         public bool UseSamplingGroupsInReferenceNodeManager { get; set; }
         public ActivityListener ActivityListener { get; private set; }
 
         public ServerFixture(
+            Func<ITelemetryContext, T> factory,
             bool useTracing,
             bool disableActivityLogging)
-            : this()
+            : this(factory)
         {
             UseTracing = useTracing;
             if (UseTracing)
@@ -80,8 +82,9 @@ namespace Opc.Ua.Server.Tests
             }
         }
 
-        public ServerFixture()
+        public ServerFixture(Func<ITelemetryContext, T> factory)
         {
+            m_factory = factory;
             m_telemetry = NUnitTelemetryContext.Create(true);
             m_logger = m_telemetry.CreateLogger<ServerFixture<T>>();
         }
@@ -258,7 +261,7 @@ namespace Opc.Ua.Server.Tests
             }
 
             // start the server.
-            var server = new T();
+            var server = m_factory(m_telemetry);
             if (AllNodeManagers && server is StandardServer standardServer)
             {
                 Quickstarts.Servers.Utils.AddDefaultNodeManagers(standardServer);
@@ -333,6 +336,7 @@ namespace Opc.Ua.Server.Tests
             await Task.Delay(100).ConfigureAwait(false);
         }
 
+        private readonly Func<ITelemetryContext, T> m_factory;
         private readonly ITelemetryContext m_telemetry;
         private readonly ILogger m_logger;
     }

@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Opc.Ua.Tests;
+using Quickstarts.ReferenceServer;
 
 namespace Opc.Ua.Server.Tests
 {
@@ -23,7 +24,7 @@ namespace Opc.Ua.Server.Tests
         public async Task TestComponentCacheAsync()
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.Create();
-            var fixture = new ServerFixture<StandardServer>();
+            var fixture = new ServerFixture<StandardServer>(t => new ReferenceServer(t));
 
             try
             {
@@ -65,7 +66,7 @@ namespace Opc.Ua.Server.Tests
         public async Task TestPredefinedNodesAsync()
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.Create();
-            var fixture = new ServerFixture<StandardServer>();
+            var fixture = new ServerFixture<StandardServer>(t => new ReferenceServer(t));
 
             try
             {

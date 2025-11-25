@@ -75,7 +75,7 @@ namespace Opc.Ua.SourceGeneration
                 switch (datatype.Name)
                 {
                     case "Guid":
-                        return "new UuidCollection()";
+                        return "new global::Opc.Ua.UuidCollection()";
                     default:
                         return CoreUtils.Format("new {0}Collection()", datatype.Name);
                 }
@@ -115,19 +115,19 @@ namespace Opc.Ua.SourceGeneration
                 case "XmlElement":
                     return "null";
                 case "Guid":
-                    return "Opc.Ua.Uuid.Empty";
+                    return "global::Opc.Ua.Uuid.Empty";
                 case "DateTime":
-                    return "DateTime.MinValue";
+                    return "global::System.DateTime.MinValue";
                 case "StatusCode":
-                    return "Opc.Ua.StatusCodes.Good";
+                    return "global::Opc.Ua.StatusCodes.Good";
                 case "NodeId":
-                    return "Opc.Ua.NodeId.Null";
+                    return "global::Opc.Ua.NodeId.Null";
                 case "ExpandedNodeId":
-                    return "Opc.Ua.ExpandedNodeId.Null";
+                    return "global::Opc.Ua.ExpandedNodeId.Null";
                 case "LocalizedText":
-                    return "Opc.Ua.LocalizedText.Null";
+                    return "global::Opc.Ua.LocalizedText.Null";
                 case "QualifiedName":
-                    return "Opc.Ua.QualifiedName.Null";
+                    return "global::Opc.Ua.QualifiedName.Null";
                 default:
                     return CoreUtils.Format("new {0}()", datatype.Name);
             }
@@ -198,9 +198,9 @@ namespace Opc.Ua.SourceGeneration
                         case "String":
                             return !nullable ? "string" : "string?";
                         case "DateTime":
-                            return "DateTime";
+                            return "global::System.DateTime";
                         case "Guid":
-                            return "Uuid";
+                            return "global::Opc.Ua.Uuid";
                         case "ByteString":
                             return !nullable ? "byte[]" : "byte[]?";
                     }
@@ -208,7 +208,7 @@ namespace Opc.Ua.SourceGeneration
                 switch (qname.Name)
                 {
                     case "Guid":
-                        typeName = "Uuid";
+                        typeName = "global::Opc.Ua.Uuid";
                         break;
                 }
             }
@@ -287,7 +287,7 @@ namespace Opc.Ua.SourceGeneration
                     scalarName = FixClassName(variable.DataTypeNode);
                     break;
                 case BasicDataType.Structure:
-                    scalarName = "ExtensionObject";
+                    scalarName = "global::Opc.Ua.ExtensionObject";
                     break;
                 default:
                     scalarName = GetDotNetTypeName(
@@ -329,11 +329,23 @@ namespace Opc.Ua.SourceGeneration
 
             if (((DataTypeDesign)dataType.BaseTypeNode).BasicDataType == BasicDataType.Structure)
             {
-                return "IEncodeable";
+                return "global::Opc.Ua.IEncodeable";
             }
 
             string ns = namespaces.GetNamespacePrefix(type.BaseTypeNode.SymbolicId.Namespace);
             return ns + "." + type.BaseTypeNode.SymbolicName.Name;
+        }
+
+        /// <summary>
+        /// Returns the class name to use when creating an instance of the type.
+        /// </summary>
+        public static bool IsDerivedDataType(this TypeDesign type, Namespace[] namespaces)
+        {
+            if (type is not DataTypeDesign dataType || type.BaseTypeNode is not DataTypeDesign dtd)
+            {
+                return true;
+            }
+            return dtd.BasicDataType != BasicDataType.Structure;
         }
 
         /// <summary>
@@ -620,10 +632,10 @@ namespace Opc.Ua.SourceGeneration
         {
             if (supportsEvents)
             {
-                return "EventNotifiers.SubscribeToEvents";
+                return "global::Opc.Ua.EventNotifiers.SubscribeToEvents";
             }
 
-            return "EventNotifiers.None";
+            return "global::Opc.Ua.EventNotifiers.None";
         }
 
         /// <summary>
@@ -633,12 +645,12 @@ namespace Opc.Ua.SourceGeneration
         {
             return accessLevel switch
             {
-                AccessLevel.Read => "AccessLevels.CurrentRead",
-                AccessLevel.Write => "AccessLevels.CurrentWrite",
-                AccessLevel.ReadWrite => "AccessLevels.CurrentReadOrWrite",
-                AccessLevel.HistoryRead => "AccessLevels.HistoryRead",
-                AccessLevel.HistoryWrite => "AccessLevels.HistoryWrite",
-                AccessLevel.HistoryReadWrite => "AccessLevels.HistoryReadOrWrite",
+                AccessLevel.Read => "global::Opc.Ua.AccessLevels.CurrentRead",
+                AccessLevel.Write => "global::Opc.Ua.AccessLevels.CurrentWrite",
+                AccessLevel.ReadWrite => "global::Opc.Ua.AccessLevels.CurrentReadOrWrite",
+                AccessLevel.HistoryRead => "global::Opc.Ua.AccessLevels.HistoryRead",
+                AccessLevel.HistoryWrite => "global::Opc.Ua.AccessLevels.HistoryWrite",
+                AccessLevel.HistoryReadWrite => "global::Opc.Ua.AccessLevels.HistoryReadOrWrite",
                 _ => "AccessLevels.None"
             };
         }
@@ -651,30 +663,30 @@ namespace Opc.Ua.SourceGeneration
             switch (valueRank)
             {
                 case ValueRank.Array:
-                    return "ValueRanks.OneDimension";
+                    return "global::Opc.Ua.ValueRanks.OneDimension";
                 case ValueRank.Scalar:
-                    return "ValueRanks.Scalar";
+                    return "global::Opc.Ua.ValueRanks.Scalar";
                 case ValueRank.Any:
                 case ValueRank.ScalarOrArray:
-                    return "ValueRanks.Any";
+                    return "global::Opc.Ua.ValueRanks.Any";
                 case ValueRank.ScalarOrOneDimension:
-                    return "ValueRanks.ScalarOrOneDimension";
+                    return "global::Opc.Ua.ValueRanks.ScalarOrOneDimension";
                 case ValueRank.OneOrMoreDimensions:
                     if (string.IsNullOrEmpty(arrayDimensions))
                     {
-                        return "ValueRanks.OneOrMoreDimensions";
+                        return "global::Opc.Ua.ValueRanks.OneOrMoreDimensions";
                     }
 
                     string[] dimensions = arrayDimensions.Split([','], StringSplitOptions.RemoveEmptyEntries);
 
                     if (dimensions.Length == 1)
                     {
-                        return "ValueRanks.TwoDimensions";
+                        return "global::Opc.Ua.ValueRanks.TwoDimensions";
                     }
                     return CoreUtils.Format("{0}", dimensions.Length + 1);
             }
 
-            return "ValueRanks.Any";
+            return "global::Opc.Ua.ValueRanks.Any";
         }
 
         /// <summary>
@@ -696,8 +708,8 @@ namespace Opc.Ua.SourceGeneration
         {
             return minimumSamplingInterval switch
             {
-                -1 => "MinimumSamplingIntervals.Indeterminate",
-                0 => "MinimumSamplingIntervals.Continuous",
+                -1 => "global::Opc.Ua.MinimumSamplingIntervals.Indeterminate",
+                0 => "global::Opc.Ua.MinimumSamplingIntervals.Continuous",
                 _ => minimumSamplingInterval.ToString(CultureInfo.InvariantCulture)
             };
         }
@@ -734,7 +746,7 @@ namespace Opc.Ua.SourceGeneration
             {
                 if (useVariantForObject)
                 {
-                    return "Variant.Null";
+                    return "global::Opc.Ua.Variant.Null";
                 }
 
                 return "null";
@@ -836,15 +848,15 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.DateTime:
                     if (decodedValue is not DateTime dateTimeValue)
                     {
-                        return "DateTime.MinValue";
+                        return "global::System.DateTime.MinValue";
                     }
                     return CoreUtils.Format(
-                        "DateTime.ParseExact(\"{0:yyyy-MM-dd HH:mm:ss}\", \"yyyy-MM-dd HH:mm:ss\", System.Globalization.CultureInfo.InvariantCulture)",
+                        "global::System.DateTime.ParseExact(\"{0:yyyy-MM-dd HH:mm:ss}\", \"yyyy-MM-dd HH:mm:ss\", global::System.Globalization.CultureInfo.InvariantCulture)",
                         dateTimeValue);
                 case BasicDataType.Guid:
                     if (decodedValue is not Uuid uuidValue)
                     {
-                        return "Uuid.Empty";
+                        return "global::Opc.Ua.Uuid.Empty";
                     }
                     return CoreUtils.Format("new Uuid(\"{0}\")", uuidValue);
                 case BasicDataType.ByteString:
@@ -856,12 +868,12 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.NodeId:
                     if (decodedValue is not NodeId nodeId)
                     {
-                        return "null";
+                        return "global::Opc.Ua.NodeId.Null";
                     }
 
                     if (nodeId.NamespaceIndex == 0 || nodeId.NamespaceIndex >= namespaces.Length)
                     {
-                        return CoreUtils.Format("NodeId.Parse(\"{0}\")", nodeId);
+                        return CoreUtils.Format("global::Opc.Ua.NodeId.Parse(\"{0}\")", nodeId);
                     }
 
                     var absoluteId = new ExpandedNodeId(nodeId, namespaces[nodeId.NamespaceIndex].Value);
@@ -869,25 +881,25 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.ExpandedNodeId:
                     if (decodedValue is not ExpandedNodeId expandedNodeId)
                     {
-                        return "null";
+                        return "global::Opc.Ua.ExpandedNodeId.Null";
                     }
-                    return CoreUtils.Format("ExpandedNodeId.Parse(\"{0}\")", expandedNodeId);
+                    return CoreUtils.Format("global::Opc.Ua.ExpandedNodeId.Parse(\"{0}\")", expandedNodeId);
                 case BasicDataType.QualifiedName:
                     if (decodedValue is not QualifiedName qualifiedName)
                     {
-                        return "null";
+                        return "global::Opc.Ua.QualifiedName.Null";
                     }
-                    return CoreUtils.Format("QualifiedName.Parse(\"{0}\")", qualifiedName);
+                    return CoreUtils.Format("global::Opc.Ua.QualifiedName.Parse(\"{0}\")", qualifiedName);
                 case BasicDataType.LocalizedText:
                     if (decodedValue is not LocalizedText localizedText)
                     {
-                        return "null";
+                        return "global::Opc.Ua.LocalizedText.Null";
                     }
-                    return CoreUtils.Format("new LocalizedText(\"{0}\", \"{1}\")", localizedText.Locale, localizedText.Text);
+                    return CoreUtils.Format("new global::Opc.Ua.LocalizedText(\"{0}\", \"{1}\")", localizedText.Locale, localizedText.Text);
                 case BasicDataType.StatusCode:
                     if (decodedValue is not StatusCode statusCode)
                     {
-                        return "StatusCodes.Good";
+                        return "global::Opc.Ua.StatusCodes.Good";
                     }
                     return CoreUtils.Format("(StatusCode){0}", statusCode);
                 case BasicDataType.Enumeration:
@@ -909,7 +921,7 @@ namespace Opc.Ua.SourceGeneration
                     }
                     return CoreUtils.Format("{0}.{1}", dataType.SymbolicName.Name, dataType.Fields[0].Name);
                 case BasicDataType.DataValue:
-                    return "new DataValue()";
+                    return "new global::Opc.Ua.DataValue()";
                 case BasicDataType.Structure:
                 case BasicDataType.XmlElement:
                     return "null";
@@ -947,20 +959,23 @@ namespace Opc.Ua.SourceGeneration
                 namespaces,
                 nullable: isOptional);
 
-            if (typeName == "Guid")
+            if (typeName == "global::System.Guid")
             {
-                typeName = "Uuid";
+                typeName = "global::Opc.Ua.Uuid";
             }
-            else if (typeName == "IEncodeable")
+            else if (typeName is "global::Opc.Ua.IEncodeable")
             {
-                typeName = "ExtensionObject";
+                typeName = "global::Opc.Ua.ExtensionObject";
             }
-
+            else if (typeName is "global::Opc.Ua.IEncodeable?")
+            {
+                typeName = "global::Opc.Ua.ExtensionObject?";
+            }
             if (valueRank == ValueRank.Array)
             {
-                if (typeName == "object")
+                if (typeName is "object" or "object?")
                 {
-                    typeName = "Variant";
+                    typeName = "global::Opc.Ua.Variant";
                 }
 
                 return typeName + "[]";
@@ -1038,29 +1053,29 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.String:
                     return !nullable ? "string" : "string?";
                 case BasicDataType.DateTime:
-                    return "DateTime";
+                    return "global::System.DateTime";
                 case BasicDataType.Guid:
-                    return "Guid";
+                    return "global::System.Guid";
                 case BasicDataType.ByteString:
                     return !nullable ? "byte[]" : "byte[]?";
                 case BasicDataType.XmlElement:
-                    return "XmlElement";
+                    return "global::System.Xml.XmlElement";
                 case BasicDataType.NodeId:
-                    return "NodeId";
+                    return "global::Opc.Ua.NodeId";
                 case BasicDataType.ExpandedNodeId:
-                    return "ExpandedNodeId";
+                    return "global::Opc.Ua.ExpandedNodeId";
                 case BasicDataType.StatusCode:
-                    return "StatusCode";
+                    return "global::Opc.Ua.StatusCode";
                 case BasicDataType.DiagnosticInfo:
-                    return !nullable ? "DiagnosticInfo" : "DiagnosticInfo?";
+                    return !nullable ? "global::Opc.Ua.DiagnosticInfo" : "global::Opc.Ua.DiagnosticInfo?";
                 case BasicDataType.QualifiedName:
-                    return "QualifiedName";
+                    return "global::Opc.Ua.QualifiedName";
                 case BasicDataType.LocalizedText:
-                    return "LocalizedText";
+                    return "global::Opc.Ua.LocalizedText";
                 case BasicDataType.DataValue:
-                    return "DataValue";
+                    return "global::Opc.Ua.DataValue";
                 case BasicDataType.Structure:
-                    return "ExtensionObject";
+                    return "global::Opc.Ua.ExtensionObject";
                 case BasicDataType.Enumeration:
                     if (datatype.SymbolicId ==
                         new XmlQualifiedName("Enumeration", Namespaces.OpcUa))
@@ -1090,11 +1105,14 @@ namespace Opc.Ua.SourceGeneration
                     {
                         typeName = datatype.SymbolicName.Name;
                     }
-                    if (datatype.IsEnumeration) 
+                    if (datatype.IsEnumeration)
                     {
                         return typeName;
                     }
-                    return !nullable ? typeName : typeName + "?";
+                    // TODO: Handle nullable user defined types
+                    // All of these are always set to default type in properties when null
+                    // is passed.
+                    return typeName; // !nullable ? typeName : typeName + "?";
             }
 
             return !nullable ? "object" : "object?";
@@ -1118,35 +1136,37 @@ namespace Opc.Ua.SourceGeneration
                     namespaces,
                     nullable);
 
-                if (typeName == "Guid")
+                if (typeName == "global::System.Guid")
                 {
-                    return "Uuid";
+                    return "global::Opc.Ua.Uuid";
                 }
 
-                if (typeName == "object" ||
-                    typeName == "object?")
+                if (typeName is "object" or "object?")
                 {
-                    return "Variant";
+                    return "global::Opc.Ua.Variant";
                 }
 
-                if (typeName == "IEncodeable" ||
-                    typeName == "IEncodeable?")
+                if (typeName is "global::Opc.Ua.IEncodeable")
                 {
-                    return "ExtensionObject";
+                    return "global::Opc.Ua.ExtensionObject";
                 }
 
+                if (typeName is "global::Opc.Ua.IEncodeable?")
+                {
+                    return "global::Opc.Ua.ExtensionObject?";
+                }
                 return typeName;
             }
 
             if (valueRank == ValueRank.Array)
             {
-                var typeName = GetCollectionTypeName();
+                string typeName = GetCollectionTypeName();
                 if (typeName != null)
                 {
                     // Leave collections always non nullable even though they can
-                    // serialized as null value.  But properties are always init
+                    // serialized as null value. But properties are always init
                     // as collection never null
-                    // return !!nullable ? typeName : typeName + "?";
+                    // return !nullable ? typeName : typeName + "?";
                     return typeName;
                 }
 
@@ -1155,63 +1175,63 @@ namespace Opc.Ua.SourceGeneration
                     switch (datatype.BasicDataType)
                     {
                         case BasicDataType.Boolean:
-                            return "BooleanCollection";
+                            return "global::Opc.Ua.BooleanCollection";
                         case BasicDataType.SByte:
-                            return "SByteCollection";
+                            return "global::Opc.Ua.SByteCollection";
                         case BasicDataType.Byte:
-                            return "ByteCollection";
+                            return "global::Opc.Ua.ByteCollection";
                         case BasicDataType.Int16:
-                            return "Int16Collection";
+                            return "global::Opc.Ua.Int16Collection";
                         case BasicDataType.UInt16:
-                            return "UInt16Collection";
+                            return "global::Opc.Ua.UInt16Collection";
                         case BasicDataType.Int32:
-                            return "Int32Collection";
+                            return "global::Opc.Ua.Int32Collection";
                         case BasicDataType.UInt32:
-                            return "UInt32Collection";
+                            return "global::Opc.Ua.UInt32Collection";
                         case BasicDataType.Int64:
-                            return "Int64Collection";
+                            return "global::Opc.Ua.Int64Collection";
                         case BasicDataType.UInt64:
-                            return "UInt64Collection";
+                            return "global::Opc.Ua.UInt64Collection";
                         case BasicDataType.Float:
-                            return "FloatCollection";
+                            return "global::Opc.Ua.FloatCollection";
                         case BasicDataType.Double:
-                            return "DoubleCollection";
+                            return "global::Opc.Ua.DoubleCollection";
                         case BasicDataType.String:
-                            return "StringCollection";
+                            return "global::Opc.Ua.StringCollection";
                         case BasicDataType.DateTime:
-                            return "DateTimeCollection";
+                            return "global::Opc.Ua.DateTimeCollection";
                         case BasicDataType.Guid:
-                            return "UuidCollection";
+                            return "global::Opc.Ua.UuidCollection";
                         case BasicDataType.ByteString:
-                            return "ByteStringCollection";
+                            return "global::Opc.Ua.ByteStringCollection";
                         case BasicDataType.XmlElement:
-                            return "XmlElementCollection";
+                            return "global::Opc.Ua.XmlElementCollection";
                         case BasicDataType.NodeId:
-                            return "NodeIdCollection";
+                            return "global::Opc.Ua.NodeIdCollection";
                         case BasicDataType.ExpandedNodeId:
-                            return "ExpandedNodeIdCollection";
+                            return "global::Opc.Ua.ExpandedNodeIdCollection";
                         case BasicDataType.StatusCode:
-                            return "StatusCodeCollection";
+                            return "global::Opc.Ua.StatusCodeCollection";
                         case BasicDataType.DiagnosticInfo:
-                            return "DiagnosticInfoCollection";
+                            return "global::Opc.Ua.DiagnosticInfoCollection";
                         case BasicDataType.QualifiedName:
-                            return "QualifiedNameCollection";
+                            return "global::Opc.Ua.QualifiedNameCollection";
                         case BasicDataType.LocalizedText:
-                            return "LocalizedTextCollection";
+                            return "global::Opc.Ua.LocalizedTextCollection";
                         case BasicDataType.DataValue:
-                            return "DataValueCollection";
+                            return "global::Opc.Ua.DataValueCollection";
                         case BasicDataType.Number:
                         case BasicDataType.Integer:
                         case BasicDataType.UInteger:
                         case BasicDataType.BaseDataType:
-                            return "VariantCollection";
+                            return "global::Opc.Ua.VariantCollection";
                         case BasicDataType.Structure:
-                            return "ExtensionObjectCollection";
+                            return "global::Opc.Ua.ExtensionObjectCollection";
                         case BasicDataType.Enumeration:
                             if (datatype.SymbolicId ==
                                 new XmlQualifiedName("Enumeration", Namespaces.OpcUa))
                             {
-                                return "Int32Collection";
+                                return "global::Opc.Ua.Int32Collection";
                             }
 
                             if (datatype.IsOptionSet ||

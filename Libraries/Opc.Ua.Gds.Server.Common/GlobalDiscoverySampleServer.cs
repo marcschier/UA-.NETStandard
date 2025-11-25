@@ -62,8 +62,9 @@ namespace Opc.Ua.Gds.Server
             ICertificateRequest request,
             ICertificateGroup certificateGroup,
             IUserDatabase userDatabase,
-            bool autoApprove = true
-            )
+            ITelemetryContext telemetry,
+            bool autoApprove = true)
+            : base(telemetry)
         {
             m_database = database;
             m_request = request;

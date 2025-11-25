@@ -943,7 +943,6 @@ namespace Opc.Ua.Bindings
         /// treat TcpChannelState as int to use Interlocked
         /// </summary>
         private int m_state;
-
         private int m_activeWriteRequests;
         private readonly string m_contextId;
         private readonly ILogger m_logger;

@@ -46,6 +46,12 @@ namespace Opc.Ua.Server
     /// </summary>
     public class StandardServer : SessionServerBase
     {
+        /// <inheritdoc/>
+        public StandardServer(ITelemetryContext telemetry)
+            : base(telemetry)
+        {
+        }
+
         /// <summary>
         /// An overrideable version of the Dispose.
         /// </summary>

@@ -143,12 +143,9 @@ namespace Opc.Ua.Security.Certificates
             Exception ex = null;
 
             X509KeyStorageFlags defaultStorageSet = X509KeyStorageFlags.DefaultKeySet;
-            if (!noEphemeralKeySet)
+            if (!noEphemeralKeySet && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                {
-                    defaultStorageSet |= X509KeyStorageFlags.EphemeralKeySet;
-                }
+                defaultStorageSet |= X509KeyStorageFlags.EphemeralKeySet;
             }
             // By default keys are not persisted
             defaultStorageSet |= X509KeyStorageFlags.Exportable;

@@ -74,7 +74,8 @@ namespace Quickstarts
         {
             m_telemetry = telemetry;
             m_logger = telemetry.CreateLogger<ClientSamples>();
-            m_validateResponse = validateResponse ?? ClientBase.ValidateResponse;
+            m_validate = validateResponse;
+
             m_quitEvent = quitEvent;
             m_verbose = verbose;
             m_desiredEventFields = [];
@@ -146,7 +147,7 @@ namespace Quickstarts
                 DiagnosticInfoCollection diagnosticInfos = response.DiagnosticInfos;
 
                 // Validate the results
-                m_validateResponse(resultsValues, nodesToRead);
+                ValidateResponse(resultsValues, nodesToRead);
 
                 // Display the results.
                 foreach (DataValue result in resultsValues)
@@ -227,7 +228,7 @@ namespace Quickstarts
                 DiagnosticInfoCollection diagnosticInfos = response.DiagnosticInfos;
 
                 // Validate the response
-                m_validateResponse(results, nodesToWrite);
+                ValidateResponse(results, nodesToWrite);
 
                 // Display the results.
                 m_logger.LogInformation("Write Results :");
@@ -1616,7 +1617,21 @@ namespace Quickstarts
             return continuationPoints;
         }
 
-        private readonly Action<IList, IList> m_validateResponse;
+        private void ValidateResponse<TRequest, TResponse>(
+            IReadOnlyList<TRequest> requests,
+            IReadOnlyList<TResponse> responses)
+        {
+            if (m_validate != null)
+            {
+                m_validate(requests?.ToList(), responses?.ToList());
+            }
+            else
+            {
+                ClientBase.ValidateResponse(responses, requests);
+            }
+        }
+
+        private readonly Action<IList, IList> m_validate;
         private readonly ITelemetryContext m_telemetry;
         private readonly ILogger m_logger;
         private readonly ManualResetEvent m_quitEvent;

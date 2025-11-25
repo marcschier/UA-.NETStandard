@@ -272,7 +272,7 @@ namespace Opc.Ua.SourceGeneration
             template.WriteLine(string.Empty);
             template.Write(context.Prefix);
             template.Write(
-                "SupportedServices.Add(DataTypeIds.{0}Request, new ServiceDefinition(typeof({0}Request), new InvokeServiceAsyncEventHandler({0}Async)));",
+                "SupportedServices.Add(DataTypeIds.{0}Request, new ServiceDefinition(typeof({0}Request), new InvokeService({0}Async)));",
                 serviceType.Name);
 
             template.WriteLine(string.Empty);
@@ -533,7 +533,7 @@ namespace Opc.Ua.SourceGeneration
             if (context.Token.Contains("Stub", StringComparison.Ordinal) ||
                 context.Token.Contains("Interface", StringComparison.Ordinal))
             {
-                const string secureChannelContextType = "SecureChannelContext";
+                const string secureChannelContextType = "global::Opc.Ua.SecureChannelContext";
                 if (secureChannelContextType.Length > length)
                 {
                     length = secureChannelContextType.Length;
@@ -586,7 +586,7 @@ namespace Opc.Ua.SourceGeneration
             if (context.Token.Contains("Stub", StringComparison.Ordinal) ||
                 context.Token.Contains("Interface", StringComparison.Ordinal))
             {
-                const string secureChannelContextType = "SecureChannelContext";
+                const string secureChannelContextType = "global::Opc.Ua.SecureChannelContext";
                 if (secureChannelContextType.Length > length)
                 {
                     length = secureChannelContextType.Length;
@@ -597,7 +597,7 @@ namespace Opc.Ua.SourceGeneration
 
             CollectParameters(serviceType.Request, false, types, names, ref length);
 
-            const string tokenType = "CancellationToken";
+            const string tokenType = "global::System.Threading.CancellationToken";
             if (tokenType.Length > length)
             {
                 length = tokenType.Length;
@@ -616,7 +616,7 @@ namespace Opc.Ua.SourceGeneration
                 template.Write("public virtual async ");
             }
 
-            template.Write("Task<{0}Response> {1}Async(", serviceType.Name, serviceType.Name);
+            template.Write("global::System.Threading.Tasks.ValueTask<{0}Response> {1}Async(", serviceType.Name, serviceType.Name);
 
             WriteParameters(template, context, types, names, length);
 
@@ -936,9 +936,6 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(Tokens.Name, datatype.Name);
             template.AddReplacement(Tokens.Namespace, m_namespaceConstant);
             template.AddReplacement(Tokens.TypesNamespace, m_schemaNamespaceConstant);
-            template.AddReplacement(Tokens.XmlType, CoreUtils.Format(
-                "[DataContract(Namespace = Namespaces.{0})]",
-                m_schemaNamespaceConstant));
 
             template.AddTemplate(
                 Tokens.CollectionClass,
@@ -967,17 +964,17 @@ namespace Opc.Ua.SourceGeneration
                 }
                 else
                 {
-                    baseTypeName = "IEncodeable, IJsonEncodeable";
+                    baseTypeName = "global::Opc.Ua.IEncodeable, global::Opc.Ua.IJsonEncodeable";
                 }
 
                 if (context.Token == Tokens.RequestMessage)
                 {
-                    baseTypeName += ", IServiceRequest";
+                    baseTypeName += ", global::Opc.Ua.IServiceRequest";
                 }
 
                 if (context.Token == Tokens.ResponseMessage)
                 {
-                    baseTypeName += ", IServiceResponse";
+                    baseTypeName += ", global::Opc.Ua.IServiceResponse";
                 }
 
                 template.AddReplacement(Tokens.BaseType, baseTypeName);
@@ -1170,7 +1167,7 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(
                 Tokens.XmlType,
                 CoreUtils.Format(
-                    "[DataMember(Name = \"{0}\", Order = {1}]",
+                    "[global::System.Runtime.Serialization.DataMember(Name = \"{0}\", Order = {1}]",
                     field.Name,
                     context.Index + 1));
             template.AddReplacement(Tokens.InternalName, field.Name.ToLowerCamelCase());
@@ -1199,7 +1196,7 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddReplacement(
                 Tokens.XmlType,
-                CoreUtils.Format("[EnumMember(Value = \"{0}_{1}\")]", value.Name, value.Value));
+                CoreUtils.Format("[global.System.Runtime.Serialization.EnumMember(Value = \"{0}_{1}\")]", value.Name, value.Value));
             template.AddReplacement(Tokens.Name, value.Name);
 
             if (context.Index < enumeratedType.Value.Length - 1)
@@ -1228,12 +1225,7 @@ namespace Opc.Ua.SourceGeneration
             template.WriteLine(string.Empty);
 
             template.AddReplacement(Tokens.Name, datatype.Name);
-            template.AddReplacement(
-                Tokens.XmlArrayType,
-                CoreUtils.Format(
-                    "[CollectionDataContract(Name = \"ListOf{0}\", Namespace = Namespaces.{1}, ItemName=\"{0}\")]",
-                    datatype.Name,
-                    m_schemaNamespaceConstant));
+            template.AddReplacement(Tokens.XmlNamespaceUri, m_schemaNamespaceConstant);
 
             return template.WriteTemplate(context);
         }

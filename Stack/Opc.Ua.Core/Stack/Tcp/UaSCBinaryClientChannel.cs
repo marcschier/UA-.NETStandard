@@ -57,7 +57,7 @@ namespace Opc.Ua.Bindings
             m_telemetry = telemetry;
             m_logger = m_telemetry.CreateLogger<UaSCUaBinaryClientChannel>();
 
-            if (endpoint == null)
+            if (endpoint?.EndpointUrl == null)
             {
                 throw new ArgumentException("Endpoint not specified.", nameof(endpoint));
             }

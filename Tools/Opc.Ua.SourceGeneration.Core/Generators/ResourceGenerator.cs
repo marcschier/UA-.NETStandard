@@ -30,7 +30,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 
 namespace Opc.Ua.SourceGeneration
@@ -43,21 +42,51 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Create code generator
         /// </summary>
-        public ResourceGenerator(IFileSystem fileSystem, string outputFolder)
+        public ResourceGenerator(
+            IFileSystem fileSystem,
+            string outputFolder,
+            int base64Threshold = 16 * 1024)
         {
             m_fileSystem = fileSystem;
             m_outputFolder = outputFolder;
+
+            //
+            // This is the max size of the resources that will be inlined. The compiler is
+            // too slow to inline larger byte arrays. If length is known and the length is
+            // exceeding this value it will be base64 encoded and will be decoded at runtime.
+            //
+            m_base64Threshold = base64Threshold;
         }
 
         /// <summary>
         /// Embed resources as code into the compilation
         /// </summary>
-        public string Embed(string namespacePrefix, string name, params Resource[] resources)
+        /// <exception cref="ArgumentException"></exception>
+        public string Embed(
+            string namespacePrefix,
+            string name,
+            bool internalAccess,
+            params Resource[] resources)
         {
-            if (resources.Select(r => r.ResourceName).Distinct().Count() != resources.Length)
+            m_internalAccess = internalAccess;
+            if (resources.Length == 0)
+            {
+                throw new ArgumentException("At least one resource must be provided");
+            }
+
+            if (resources
+                .Select(r => (r.ResourceGroup, r.ResourceName))
+                .Distinct()
+                .Count() != resources.Length)
             {
                 throw new ArgumentException("Resource names must be unique");
             }
+
+            IGrouping<string, Resource>[] groups = [.. resources
+                .GroupBy(r => string.IsNullOrEmpty(r.ResourceGroup) ?
+                    name : // Use the passed in file name name as default group
+                    r.ResourceGroup)
+                .OrderBy(g => g.Key)];
 
             string outputFile = Path.Combine(m_outputFolder, CoreUtils.Format(
                 "{0}.{1}.g.cs",
@@ -71,45 +100,73 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddReplacement(Tokens.Date, DateTime.Now);
             template.AddReplacement(Tokens.Namespace, namespacePrefix);
-            template.AddReplacement(Tokens.ClassName, name);
-
             template.AddTemplate(
-                Tokens.ListOfResourceDeclarations,
-                CodeTemplateStrings.ResourceDeclaration_cs,
-                resources,
-                LoadTemplate_ResourceDeclaration,
-                WriteTemplate_ResourceDeclaration);
+                Tokens.ListOfResourceGroups,
+                CodeTemplateStrings.Resources_Classes_cs,
+                groups,
+                null,
+                WriteTemplate_ResourceGroup);
 
             template.WriteTemplate(null);
             return outputFile;
         }
 
+        private bool WriteTemplate_ResourceGroup(Template template, Context context)
+        {
+            if (context.Target is not IGrouping<string, Resource> group)
+            {
+                return false;
+            }
+
+            template.AddReplacement(Tokens.ClassName, group.Key);
+            template.AddReplacement(
+                Tokens.AccessModifier,
+                m_internalAccess ? "internal" : "public");
+
+            template.AddTemplate(
+                Tokens.ListOfResourceDeclarations,
+                string.Empty,
+                group.ToArray(),
+                LoadTemplate_ResourceDeclaration,
+                WriteTemplate_ResourceDeclaration);
+
+            return template.WriteTemplate(context);
+        }
+
         private string LoadTemplate_ResourceDeclaration(Template template, Context context)
         {
-            if (context.Target is StringResource str && str.AsUtf16)
+            if (context.Target is not Resource resource)
+            {
+                return null;
+            }
+            else if (context.Target is StringResource str && str.AsUtf16)
             {
                 return CodeTemplateStrings.ResourceConstant_cs;
             }
-            return CodeTemplateStrings.ResourceDeclaration_cs;
+            // else if (resource.GetLength(m_fileSystem) > m_base64Threshold)
+            // {
+            //     return CodeTemplateStrings.ResourceDeclaration_ByteArray_cs;
+            // }
+            else
+            {
+                return CodeTemplateStrings.ResourceDeclaration_cs;
+            }
         }
 
-        private bool WriteTemplate_ResourceDeclaration(
-            Template template,
-            Context context)
+        private bool WriteTemplate_ResourceDeclaration(Template template, Context context)
         {
-            object[] target = [context.Target];
             if (context.Target is not Resource resource)
             {
                 return false;
             }
             template.AddReplacement(Tokens.ResourceName, resource.ResourceName);
+            object[] target = [context.Target];
+
             template.AddTemplate(
                 Tokens.Resource,
                 string.Empty,
                 target,
-                resource.IsText ?
-                    LoadTemplate_TextResource :
-                    LoadTemplate_BinaryResource,
+                LoadTemplate_Resource,
                 WriteTemplate_Resource);
 
             return template.WriteTemplate(context);
@@ -140,120 +197,212 @@ namespace Opc.Ua.SourceGeneration
             return true;
         }
 
-        private string LoadTemplate_BinaryResource(Template template, Context context)
+        private string LoadTemplate_Resource(Template template, Context context)
         {
-            bool leaveOpen = false;
-            Stream reader;
-            switch (context.Target)
+            if (context.Target is not Resource resource)
             {
-                case BinaryFileResource fileResource:
-                    reader = m_fileSystem.OpenRead(fileResource.FileName);
-                    break;
-                case StreamResource stream:
-                    reader = stream.Stream;
-                    reader.Position = 0;
-                    leaveOpen = true;
-                    break;
-                case BinaryResource binary:
-                    reader = new MemoryStream(binary.Data);
-                    break;
-                default:
-                    return null;
+                return null;
             }
-            try
+
+            if (context.Target is StringResource str && str.AsUtf16)
             {
-                if (reader.Length > kBase64Threshold)
+                return context.TemplateString;
+            }
+
+            // Render the content here instead of rendering a template
+            if (resource.GetLength(m_fileSystem) > m_base64Threshold)
+            {
+                if (resource.IsText)
                 {
-                    WriteAsBase64StringLiteral(
-                        template,
-                        context,
-                        AsBase64String(reader));
+                    WriteTextResourceAsBase64(template, context, resource);
                 }
                 else
                 {
-                    WriteAsByteArray(template, context, reader);
+                    WriteBinaryResourceAsBase64(template, context, resource);
                 }
-                return string.Empty;
+            }
+            else if (resource.IsText)
+            {
+                WriteTextResource(template, context, resource);
+            }
+            else
+            {
+                WriteBinaryResource(template, context, resource);
+            }
+            return string.Empty;
+        }
+
+        private void WriteBinaryResource(
+            Template template,
+            Context context,
+            Resource resource)
+        {
+            Stream stream = GetResourceStream(resource, out bool leaveOpen);
+            try
+            {
+                WriteAsByteArray(template, context, stream);
             }
             finally
             {
                 if (!leaveOpen)
                 {
-                    reader.Dispose();
+                    stream.Dispose();
+                }
+            }
+
+            Stream GetResourceStream(Resource resource, out bool leaveOpen)
+            {
+                leaveOpen = false;
+                switch (resource)
+                {
+                    case BinaryFileResource fileResource:
+                        return m_fileSystem.OpenRead(fileResource.FileName);
+                    case StreamResource stream:
+                        stream.Stream.Position = 0;
+                        leaveOpen = true;
+                        return stream.Stream;
+                    case BinaryResource binary:
+                        return new MemoryStream(binary.Data);
+                    default:
+                        throw new NotSupportedException(
+                            $"Unable to get stream for resource {resource.GetType().Name}");
                 }
             }
         }
 
-        private string LoadTemplate_TextResource(Template template, Context context)
+        private void WriteBinaryResourceAsBase64(
+            Template template,
+            Context context,
+            Resource resource)
         {
-            Stream istrm = null;
-            var leaveOpen = false;
-            switch (context.Target)
-            {
-                case TextFileResource textFile:
-                    istrm = m_fileSystem.OpenRead(textFile.FileName);
-                    leaveOpen = false;
-                    break;
-                case StreamResource stream:
-                    stream.Stream.Position = 0;
-                    istrm = stream.Stream;
-                    leaveOpen = true;
-                    break;
-                case BinaryResource binary:
-                    istrm = new MemoryStream(binary.Data);
-                    leaveOpen = false;
-                    break;
-            }
-            if (istrm != null && istrm.Length > kBase64Threshold)
-            {
-                try
-                {
-                    WriteAsBase64StringLiteral(
-                        template,
-                        context,
-                        AsBase64String(istrm));
-                    return string.Empty;
-                }
-                finally
-                {
-                    if (!leaveOpen)
-                    {
-                        istrm.Dispose();
-                    }
-                }
-            }
-
-            TextReader reader;
-            switch (context.Target)
-            {
-                case TextResource text:
-                    reader = new StringReader(text.Text);
-                    break;
-                case TextReaderResource textReader:
-                    reader = textReader.Reader;
-                    break;
-                default:
-                    if (istrm == null)
-                    {
-                        // unknown resource type
-                        return null;
-                    }
-                    reader = new StreamReader(
-                        istrm,
-                        Encoding.UTF8,
-                        true,
-                        kReadBufferSize,
-                        leaveOpen);
-                    break;
-            }
+            Stream stream = GetResourceStream(resource, out bool leaveOpen);
             try
             {
-                WriteAsUtf8StringLiteral(template, context, reader);
-                return string.Empty;
+                WriteAsBase64StringLiteral(template, context, AsBase64String(stream));
             }
             finally
             {
-                reader.Dispose();
+                if (!leaveOpen)
+                {
+                    stream.Dispose();
+                }
+            }
+            Stream GetResourceStream(Resource resource, out bool leaveOpen)
+            {
+                leaveOpen = false;
+                switch (resource)
+                {
+                    case BinaryFileResource fileResource:
+                        return m_fileSystem.OpenRead(fileResource.FileName);
+                    case StreamResource stream:
+                        stream.Stream.Position = 0;
+                        leaveOpen = true;
+                        return stream.Stream;
+                    case BinaryResource binary:
+                        return new MemoryStream(binary.Data);
+                    default:
+                        throw new NotSupportedException(
+                            $"Unable to get stream for resource {resource.GetType().Name}");
+                }
+            }
+        }
+
+        private void WriteTextResource(
+            Template template,
+            Context context,
+            Resource resource)
+        {
+            TextReader reader = GetResourceTextReader(context, out bool disposeReader);
+            try
+            {
+                WriteAsUtf8StringLiteral(template, context, reader);
+            }
+            finally
+            {
+                if (!disposeReader)
+                {
+                    reader.Dispose();
+                }
+            }
+
+            TextReader GetResourceTextReader(Context context, out bool leaveOpen)
+            {
+                leaveOpen = false;
+                switch (context.Target)
+                {
+                    case TextResource text:
+                        return new StringReader(text.Text);
+                    case TextReaderResource textReader:
+                        leaveOpen = true;
+                        return textReader.Reader;
+                    case StreamResource stream:
+                        stream.Stream.Position = 0;
+                        return new StreamReader(
+                            stream.Stream,
+                            Encoding.UTF8,
+                            true,
+                            kReadBufferSize,
+                            true);
+                    case BinaryResource binary:
+                        return new StreamReader(
+                            new MemoryStream(binary.Data),
+                            Encoding.UTF8,
+                            true,
+                            kReadBufferSize,
+                            false);
+                    case TextFileResource textFile:
+                        return new StreamReader(
+                            m_fileSystem.OpenRead(textFile.FileName),
+                            Encoding.UTF8,
+                            true,
+                            kReadBufferSize,
+                            false);
+                    default:
+                        throw new NotSupportedException(
+                            $"Unable to get text reader for resource {resource.GetType().Name}");
+                }
+            }
+        }
+
+        private void WriteTextResourceAsBase64(
+            Template template,
+            Context context,
+            Resource resource)
+        {
+            Stream istrm = GetResourceTextReader(resource, out bool leaveOpen);
+            try
+            {
+                WriteAsBase64StringLiteral(
+                    template,
+                    context,
+                    AsBase64String(istrm));
+            }
+            finally
+            {
+                if (!leaveOpen)
+                {
+                    istrm.Dispose();
+                }
+            }
+
+            Stream GetResourceTextReader(Resource resource, out bool leaveOpen)
+            {
+                switch (resource)
+                {
+                    case TextFileResource textFile:
+                        leaveOpen = false;
+                        return m_fileSystem.OpenRead(textFile.FileName);
+                    case StreamResource stream:
+                        stream.Stream.Position = 0;
+                        leaveOpen = true;
+                        return stream.Stream;
+                    case BinaryResource binary:
+                        leaveOpen = false;
+                        return new MemoryStream(binary.Data);
+                    default:
+                        throw new NotSupportedException(
+                            $"Unable to get text reader for resource {resource.GetType().Name}");
+                }
             }
         }
 
@@ -265,7 +414,9 @@ namespace Opc.Ua.SourceGeneration
             template.WriteNextLine(context.Prefix);
             template.Write(template.Indent);
             template.Write("\"\"\"");
-            for (string line = reader.ReadLine(); line != null; line = reader.ReadLine())
+            for (string line = reader.ReadLine();
+                line != null;
+                line = reader.ReadLine())
             {
                 line = line.Trim();
                 if (string.IsNullOrEmpty(line))
@@ -281,13 +432,13 @@ namespace Opc.Ua.SourceGeneration
             template.Write("\"\"\"u8");
         }
 
-        private void WriteAsBase64StringLiteral(
+        private static void WriteAsBase64StringLiteral(
             Template template,
             Context context,
             string base64)
         {
             template.WriteNextLine(context.Prefix);
-            template.Write("Convert.FromBase64String(");
+            template.Write("global::System.Convert.FromBase64String(");
             for (int ii = 0; ii < base64.Length; ii += 80)
             {
                 if (ii > 0)
@@ -326,7 +477,10 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
-        private static void WriteAsByteArray(Template template, Context context, Stream reader)
+        private static void WriteAsByteArray(
+            Template template,
+            Context context,
+            Stream reader)
         {
             template.WriteNextLine(context.Prefix);
             template.Write("new byte[]");
@@ -366,31 +520,64 @@ namespace Opc.Ua.SourceGeneration
             {
                 return Convert.ToBase64String(ms.ToArray());
             }
-            else
-            {
-                using var memoryStream = new MemoryStream();
-                reader.CopyTo(memoryStream);
-                return Convert.ToBase64String(memoryStream.ToArray());
-            }
+            using var memoryStream = new MemoryStream();
+            reader.CopyTo(memoryStream);
+            return Convert.ToBase64String(memoryStream.ToArray());
         }
 
-        /// <summary>
-        /// This is the max size of the stream that will be inlined.
-        /// The compiler is too slow to inline larger byte arrays.
-        /// Otherwise it will be base64 encoded and must be decoded
-        /// at runtime.
-        /// </summary>
-        private const int kBase64Threshold = 1024;
         private const int kReadBufferSize = 16 * 1024;
+        private readonly int m_base64Threshold;
         private readonly IFileSystem m_fileSystem;
         private readonly string m_outputFolder;
+        private bool m_internalAccess;
     }
 
     /// <summary>
     /// An embeddeable resource
     /// </summary>
-    internal abstract record class Resource(string ResourceName, bool IsText)
+    internal abstract record class Resource
     {
+        /// <summary>
+        /// How the resources should be grouped in the resource file
+        /// </summary>
+        public string ResourceGroup { get; }
+
+        /// <summary>
+        /// The name of the resource variable in the file
+        /// </summary>
+        public string ResourceName { get; }
+
+        /// <summary>
+        /// Whether the resource is text or binary
+        /// </summary>
+        public bool IsText { get; }
+
+        /// <summary>
+        /// Create resource
+        /// </summary>
+        public Resource(string resourceName, bool isText)
+        {
+            int index = resourceName
+                .Trim('.')
+                .IndexOf('.', StringComparison.Ordinal);
+            if (index == -1)
+            {
+                ResourceGroup = string.Empty;
+                ResourceName = resourceName;
+            }
+            else
+            {
+                ResourceGroup = resourceName[..index];
+                ResourceName = resourceName[(index + 1)..];
+            }
+            IsText = isText;
+        }
+
+        /// <summary>
+        /// Get length of the resource
+        /// </summary>
+        public abstract long GetLength(IFileSystem fileSystem);
+
         /// <summary>
         /// Make a resource name out of the input file name
         /// </summary>
@@ -421,26 +608,80 @@ namespace Opc.Ua.SourceGeneration
         }
     }
 
-    internal sealed record class StreamResource(string ResourceName, Stream Stream, bool IsText = false)
-        : Resource(ResourceName, IsText);
-
-    internal sealed record class BinaryResource(string ResourceName, byte[] Data, bool IsText = false)
-        : Resource(ResourceName, IsText);
-
-    internal abstract record class StringResource(string ResourceName, bool AsUtf16)
+    internal abstract record class StringResource(
+        string ResourceName,
+        bool AsUtf16)
         : Resource(ResourceName, true);
 
-    internal sealed record class TextReaderResource(string ResourceName, TextReader Reader, bool AsUtf16 = false)
-        : StringResource(ResourceName, AsUtf16);
+    internal sealed record class StreamResource(
+        string ResourceName,
+        Stream Stream,
+        bool IsText = false)
+        : Resource(ResourceName, IsText)
+    {
+        public override long GetLength(IFileSystem fileSystem)
+        {
+            return Stream.Length;
+        }
+    }
 
-    internal record class TextResource(string ResourceName, string Text, bool AsUtf16 = false)
-        : StringResource(ResourceName, AsUtf16);
+    internal sealed record class BinaryResource(
+        string ResourceName,
+        byte[] Data,
+        bool IsText = false)
+        : Resource(ResourceName, IsText)
+    {
+        public override long GetLength(IFileSystem fileSystem)
+        {
+            return Data.Length;
+        }
+    }
 
-    internal sealed record class TextFileResource(string ResourceName, string FileName)
-        : Resource(ResourceName, true);
+    internal sealed record class TextReaderResource(
+        string ResourceName,
+        TextReader Reader,
+        bool AsUtf16 = false)
+        : StringResource(ResourceName, AsUtf16)
+    {
+        public override long GetLength(IFileSystem fileSystem)
+        {
+            return 0; // Unknown
+        }
+    }
 
-    internal sealed record class BinaryFileResource(string ResourceName, string FileName)
-        : Resource(ResourceName, false);
+    internal record class TextResource(
+        string ResourceName,
+        string Text,
+        bool AsUtf16 = false)
+        : StringResource(ResourceName, AsUtf16)
+    {
+        public override long GetLength(IFileSystem fileSystem)
+        {
+            return Encoding.UTF8.GetByteCount(Text);
+        }
+    }
+
+    internal sealed record class TextFileResource(
+        string ResourceName,
+        string FileName)
+        : Resource(ResourceName, true)
+    {
+        public override long GetLength(IFileSystem fileSystem)
+        {
+            return fileSystem.GetLength(FileName);
+        }
+    }
+
+    internal sealed record class BinaryFileResource(
+        string ResourceName,
+        string FileName)
+        : Resource(ResourceName, false)
+    {
+        public override long GetLength(IFileSystem fileSystem)
+        {
+            return fileSystem.GetLength(FileName);
+        }
+    }
 
     internal sealed record class StringConstant(string Text)
         : TextResource(GetName(Text), Text, true)

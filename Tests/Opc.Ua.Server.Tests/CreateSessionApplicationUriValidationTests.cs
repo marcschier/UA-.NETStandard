@@ -40,6 +40,7 @@ using Opc.Ua.Client;
 using Opc.Ua.Configuration;
 using Opc.Ua.Security.Certificates;
 using Opc.Ua.Tests;
+using Quickstarts.ReferenceServer;
 using Assert = NUnit.Framework.Legacy.ClassicAssert;
 
 namespace Opc.Ua.Server.Tests
@@ -78,7 +79,7 @@ namespace Opc.Ua.Server.Tests
             m_pkiRoot = Path.GetTempPath() + Path.GetRandomFileName() + Path.DirectorySeparatorChar;
 
             // Start a server for testing CreateSession
-            m_serverFixture = new ServerFixture<StandardServer>
+            m_serverFixture = new ServerFixture<StandardServer>(t => new ReferenceServer(t))
             {
                 AutoAccept = true,
                 AllNodeManagers = true,

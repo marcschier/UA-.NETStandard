@@ -377,7 +377,7 @@ namespace Opc.Ua.Server
         /// </summary>
         protected override NodeStateCollection LoadPredefinedNodes(ISystemContext context)
         {
-            return Ua.PredefinedNodes.Load(context);
+            return new NodeStateCollection().AddOpcUa(context);
         }
 
         /// <summary>

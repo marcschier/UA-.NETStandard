@@ -1079,7 +1079,7 @@ namespace Opc.Ua.Client
                 return;
             }
 
-            NodeStateCollection predefinedNodes = PredefinedNodes.Load(context);
+            var predefinedNodes = new NodeStateCollection().AddOpcUa(context)
 
             m_cacheLock.EnterWriteLock();
             try

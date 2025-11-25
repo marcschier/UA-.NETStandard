@@ -247,7 +247,6 @@ namespace Opc.Ua.SourceGeneration
                         writer.Write(") ");
                         writer.Write(FormatPermissions(permission.Permissions));
                         writer.Write("'");
-
                     }
                     writer.Write("}\"");
                 }

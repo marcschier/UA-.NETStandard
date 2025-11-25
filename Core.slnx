@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/SourceGeneration/">
+    <Project Path="Tools/Opc.Ua.SourceGeneration.Core/Opc.Ua.SourceGeneration.Core.csproj" />
+    <Project Path="Tools/Opc.Ua.SourceGeneration.Stack/Opc.Ua.SourceGeneration.Stack.csproj" />
+    <Project Path="Tools/Opc.Ua.SourceGeneration/Opc.Ua.SourceGeneration.csproj" />
+  </Folder>
+  <Folder Name="/Stack/">
+    <Project Path="Libraries/Opc.Ua.Security.Certificates/Opc.Ua.Security.Certificates.csproj" />
+    <Project Path="Stack/Opc.Ua.Core/Opc.Ua.Core.csproj" />
+    <Project Path="Stack/Opc.Ua.Types/Opc.Ua.Types.csproj" />
+  </Folder>
+</Solution>

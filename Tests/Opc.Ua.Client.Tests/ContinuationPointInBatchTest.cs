@@ -36,6 +36,7 @@ using BenchmarkDotNet.Attributes;
 using NUnit.Framework;
 using NUnit.Framework.Internal;
 using Opc.Ua.Server.Tests;
+using Quickstarts.ReferenceServer;
 using Assert = NUnit.Framework.Legacy.ClassicAssert;
 
 namespace Opc.Ua.Client.Tests
@@ -119,6 +120,7 @@ namespace Opc.Ua.Client.Tests
         {
             // start Ref server
             ServerFixtureWithLimits = new ServerFixture<ReferenceServerWithLimits>(
+                t => new ReferenceServerWithLimits(t),
                 enableTracing,
                 disableActivityLogging)
             {

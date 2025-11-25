@@ -37,6 +37,7 @@ using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Text;
 
@@ -174,21 +175,24 @@ namespace Opc.Ua.SourceGeneration
             {
                 Diagnostic diag = diagnostics[ii];
                 string sev;
+                int beforeAfter;
                 switch (diag.Severity)
                 {
                     case DiagnosticSeverity.Error:
                         sev = "ERR";
+                        beforeAfter = 30;
                         errorCount++;
                         break;
                     case DiagnosticSeverity.Warning:
+                        beforeAfter = 2;
                         sev = "WRN";
                         warnCount++;
                         break;
                     default:
+                        beforeAfter = 1;
                         sev = "INF";
                         break;
                 }
-                const int beforeAfter = 10;
                 output.WriteLine();
                 output.WriteLine(diag.ToString());
                 TextLineCollection lines = diag.Location.SourceTree?.GetText().Lines;
@@ -208,6 +212,61 @@ namespace Opc.Ua.SourceGeneration
                     output.Write(i >= startLine && i <= endLine ? sev + ">>>> " : "        ");
                     output.WriteLine(lines[i]);
                 }
+            }
+        }
+
+        public static CSharpCompilation WithAnalyzers(
+            this CSharpCompilation compilation,
+            bool withAnalzers,
+            out CompilationWithAnalyzers compilationWithAnalyzers)
+        {
+            if (withAnalzers)
+            {
+                try
+                {
+                    Assembly dependencies = LoadFromNugetCache(
+                        Path.Combine("microsoft.codeanalysis.workspaces.common", "4.14.0", "lib", "netstandard2.0"),
+                        "Microsoft.CodeAnalysis.Workspaces.dll");
+                    Assembly netAnalyzer = LoadFromNugetCache(
+                        Path.Combine("microsoft.codeAnalysis.netanalyzers", "10.0.100", "analyzers", "dotnet"),
+                        "Microsoft.CodeAnalysis.NetAnalyzers.dll");
+                    if (netAnalyzer != null)
+                    {
+                        DiagnosticAnalyzer[] analyzers = [.. netAnalyzer.GetTypes()
+                            .Where(t => t.GetCustomAttribute<DiagnosticAnalyzerAttribute>() is not null)
+                            .Select(t => (DiagnosticAnalyzer)Activator.CreateInstance(t))];
+                        compilationWithAnalyzers = compilation.WithAnalyzers(
+                            ImmutableArray.Create(analyzers),
+                            new CompilationWithAnalyzersOptions(null, null, true, true, true));
+                        return (CSharpCompilation)compilationWithAnalyzers.Compilation;
+                    }
+                }
+                catch
+                {
+                    // ignore errors loading analyzers
+                }
+            }
+            compilationWithAnalyzers = null;
+            return compilation;
+
+            static Assembly LoadFromNugetCache(string path, string dll)
+            {
+                string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                var location = Path.Combine(
+                    userProfile,
+                    ".nuget",
+                    "packages",
+                    path);
+                var file = Path.Combine(location, dll);
+                if (!File.Exists(file))
+                {
+                    file = Path.Combine(location, "cs", dll);
+                }
+                if (File.Exists(file))
+                {
+                    return Assembly.LoadFrom(file);
+                }
+                return null;
             }
         }
 
@@ -237,6 +296,9 @@ namespace Opc.Ua.SourceGeneration
             using System.Threading.Tasks;
             using System.Threading;
             using System.Collections.Generic;
+            using System.Reflection;
+
+            [assembly: AssemblyVersionAttribute("4.3.2.1")]
             namespace Opc.Ua
             {
                 public static partial class StatusCodes
@@ -283,12 +345,12 @@ namespace Opc.Ua.SourceGeneration
                     protected ServiceResult? ServerError { get; set; }
                     protected virtual void OnRequestReceived(IServiceRequest request) {}
                     protected virtual void OnResponseSent(IServiceResponse response) {}
-                    protected Dictionary<ExpandedNodeId, ServiceDefinition> SupportedServices { get; set; }
+                    protected Dictionary<ExpandedNodeId, ServiceDefinition> SupportedServices { get; set; } = new();
                     protected class ServiceDefinition
                     {
-                        public ServiceDefinition(Type requestType, InvokeServiceAsyncEventHandler asyncInvokeMethod) {}
+                        public ServiceDefinition(Type requestType, InvokeService asyncInvokeMethod) {}
                     }
-                    protected delegate Task<IServiceResponse> InvokeServiceAsyncEventHandler(
+                    protected delegate ValueTask<IServiceResponse> InvokeService(
                         IServiceRequest request,
                         SecureChannelContext secureChannelContext,
                         CancellationToken cancellationToken = default);
@@ -296,7 +358,7 @@ namespace Opc.Ua.SourceGeneration
                 public class ServerBase : IServerBase
                 {
                     public ServerBase(ITelemetryContext telemetry) {}
-                    public ServiceResult ServerError { get; protected set; }
+                    public ServiceResult? ServerError { get; protected set; }
                     protected virtual void ValidateRequest(RequestHeader? requestHeader) {}
                     protected virtual ResponseHeader CreateResponse(
                         RequestHeader requestHeader, uint statusCode)

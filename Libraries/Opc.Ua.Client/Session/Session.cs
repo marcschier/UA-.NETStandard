@@ -291,7 +291,7 @@ namespace Opc.Ua.Client
         private void ValidateServerNonce(
             IUserIdentity identity,
             byte[]? serverNonce,
-            string securityPolicyUri,
+            string? securityPolicyUri,
             byte[]? previousServerNonce,
             MessageSecurityMode channelSecurityMode = MessageSecurityMode.None)
         {
@@ -1079,7 +1079,7 @@ namespace Opc.Ua.Client
 
             // validate the server certificate /certificate chain.
             X509Certificate2? serverCertificate = null;
-            byte[] certificateData = m_endpoint.Description.ServerCertificate;
+            byte[]? certificateData = m_endpoint.Description.ServerCertificate;
 
             if (certificateData != null && certificateData.Length > 0)
             {
@@ -1192,8 +1192,8 @@ namespace Opc.Ua.Client
             }
             NodeId sessionId = response.SessionId;
             NodeId sessionCookie = response.AuthenticationToken;
-            byte[] serverNonce = response.ServerNonce;
-            byte[] serverCertificateData = response.ServerCertificate;
+            byte[]? serverNonce = response.ServerNonce;
+            byte[]? serverCertificateData = response.ServerCertificate;
             SignatureData serverSignature = response.ServerSignature;
             EndpointDescriptionCollection serverEndpoints = response.ServerEndpoints;
             SignedSoftwareCertificateCollection serverSoftwareCertificates = response
@@ -1245,7 +1245,7 @@ namespace Opc.Ua.Client
                     dataToSign);
 
                 // select the security policy for the user token.
-                string tokenSecurityPolicyUri = identityPolicy.SecurityPolicyUri;
+                string? tokenSecurityPolicyUri = identityPolicy.SecurityPolicyUri;
 
                 if (string.IsNullOrEmpty(tokenSecurityPolicyUri))
                 {
@@ -1418,7 +1418,8 @@ namespace Opc.Ua.Client
             }
 
             // get the identity token.
-            string securityPolicyUri = m_endpoint.Description.SecurityPolicyUri;
+            string securityPolicyUri =
+                m_endpoint.Description.SecurityPolicyUri ?? SecurityPolicies.None;
 
             // create the client signature.
             byte[] dataToSign = Utils.Append(m_serverCertificate?.RawData, serverNonce);
@@ -1441,11 +1442,10 @@ namespace Opc.Ua.Client
                     "Endpoint does not support the user identity type provided.");
 
             // select the security policy for the user token.
-            string tokenSecurityPolicyUri = identityPolicy.SecurityPolicyUri;
-
+            string? tokenSecurityPolicyUri = identityPolicy.SecurityPolicyUri;
             if (string.IsNullOrEmpty(tokenSecurityPolicyUri))
             {
-                tokenSecurityPolicyUri = m_endpoint.Description.SecurityPolicyUri;
+                tokenSecurityPolicyUri = securityPolicyUri;
             }
 
             bool requireEncryption = tokenSecurityPolicyUri != SecurityPolicies.None;
@@ -2304,8 +2304,7 @@ namespace Opc.Ua.Client
                 }
 
                 // select the security policy for the user token.
-                string tokenSecurityPolicyUri = identityPolicy.SecurityPolicyUri;
-
+                string? tokenSecurityPolicyUri = identityPolicy.SecurityPolicyUri;
                 if (string.IsNullOrEmpty(tokenSecurityPolicyUri))
                 {
                     tokenSecurityPolicyUri = endpoint.SecurityPolicyUri;
@@ -2419,13 +2418,13 @@ namespace Opc.Ua.Client
                     ActivateSessionResponse activateResult = await ActivateSessionAsync(
                         header,
                         clientSignature,
-                        null,
+                        [],
                         m_preferredLocales,
                         new ExtensionObject(identityToken),
                         userTokenSignature,
                         timeout.Token).ConfigureAwait(false);
 
-                    byte[] serverNonce = activateResult.ServerNonce;
+                    byte[]? serverNonce = activateResult.ServerNonce;
                     StatusCodeCollection certificateResults = activateResult.Results;
                     DiagnosticInfoCollection certificateDiagnosticInfos = activateResult.DiagnosticInfos;
 
@@ -2699,7 +2698,7 @@ namespace Opc.Ua.Client
                 {
                     NodeId = Variables.Server_ServerStatus_State,
                     AttributeId = Attributes.Value,
-                    DataEncoding = null,
+                    DataEncoding = QualifiedName.Null,
                     IndexRange = null
                 }
             };
@@ -3760,7 +3759,7 @@ namespace Opc.Ua.Client
                 }
             }
 
-            securityPolicyUri = m_endpoint.Description.SecurityPolicyUri;
+            securityPolicyUri = m_endpoint.Description.SecurityPolicyUri ?? SecurityPolicies.None;
 
             // catch security policies which are not supported by core
             if (SecurityPolicies.GetDisplayName(securityPolicyUri) == null)
@@ -3835,7 +3834,7 @@ namespace Opc.Ua.Client
         /// Validates the server certificate returned.
         /// </summary>
         /// <exception cref="ServiceResultException"></exception>
-        private void ValidateServerCertificateData(byte[] serverCertificateData)
+        private void ValidateServerCertificateData(byte[]? serverCertificateData)
         {
             if (serverCertificateData != null &&
                 m_endpoint.Description.ServerCertificate != null &&
@@ -4520,6 +4519,7 @@ namespace Opc.Ua.Client
             bool throwIfConfigurationChangedFromLastLoad,
             CancellationToken ct = default)
         {
+            m_endpoint.Description.SecurityPolicyUri ??= SecurityPolicies.None;
             if (m_endpoint.Description.SecurityPolicyUri == SecurityPolicies.None)
             {
                 // No need to load instance certificates
@@ -4796,11 +4796,11 @@ namespace Opc.Ua.Client
         /// for the ecc user token security policy, if needed.
         /// </summary>
         private RequestHeader CreateRequestHeaderPerUserTokenPolicy(
-            string identityTokenSecurityPolicyUri,
-            string endpointSecurityPolicyUri)
+            string? identityTokenSecurityPolicyUri,
+            string? endpointSecurityPolicyUri)
         {
             var requestHeader = new RequestHeader();
-            string userTokenSecurityPolicyUri = identityTokenSecurityPolicyUri;
+            string? userTokenSecurityPolicyUri = identityTokenSecurityPolicyUri;
             if (string.IsNullOrEmpty(userTokenSecurityPolicyUri))
             {
                 userTokenSecurityPolicyUri = m_endpoint.Description.SecurityPolicyUri;
@@ -4857,7 +4857,7 @@ namespace Opc.Ua.Client
                         }
 
                         if (!EccUtils.Verify(
-                                new ArraySegment<byte>(key.PublicKey),
+                                new ArraySegment<byte>(key.PublicKey ?? []),
                                 key.Signature,
                                 serverCertificate,
                                 m_userTokenSecurityPolicyUri))

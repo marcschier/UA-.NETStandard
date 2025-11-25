@@ -111,6 +111,16 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
+        public long GetLength(string path)
+        {
+            if (m_files.TryGetValue(path, out VirtualFile data))
+            {
+                return data.Length;
+            }
+            return 0;
+        }
+
+        /// <inheritdoc/>
         public Stream OpenRead(string path)
         {
             // open a stream on the file - if it

@@ -67,6 +67,34 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
+        public long GetLength(string path)
+        {
+            try
+            {
+                if (m_primary.Exists(path))
+                {
+                    return m_primary.GetLength(path);
+                }
+            }
+            catch
+            {
+                // Nothing found
+            }
+            try
+            {
+                if (m_secondary.Exists(path))
+                {
+                    return m_secondary.GetLength(path);
+                }
+            }
+            catch
+            {
+                // Nothing found
+            }
+            return 0;
+        }
+
+        /// <inheritdoc/>
         public Stream OpenRead(string path)
         {
             try

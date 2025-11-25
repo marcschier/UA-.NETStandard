@@ -452,7 +452,7 @@ namespace Quickstarts.ConsoleReferenceClient
                         application.ApplicationConfiguration,
                         reverseConnectManager,
                         telemetry,
-                        ClientBase.ValidateResponse
+                        null
                     )
                     {
                         AutoAccept = autoAccept,
@@ -479,7 +479,7 @@ namespace Quickstarts.ConsoleReferenceClient
                         uaClient.Session.TransferSubscriptionsOnReconnect = true;
                         var samples = new ClientSamples(
                             telemetry,
-                            ClientBase.ValidateResponse,
+                            null,
                             quitEvent,
                             verbose);
                         if (loadTypes)

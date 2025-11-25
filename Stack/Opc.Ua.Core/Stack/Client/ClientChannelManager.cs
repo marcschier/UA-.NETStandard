@@ -107,6 +107,7 @@ namespace Opc.Ua
         /// Creates a new UA-binary transport channel if requested. Null otherwise.
         /// </summary>
         /// <exception cref="ServiceResultException"></exception>
+        /// <exception cref="ArgumentException"></exception>
         internal static async ValueTask<ITransportChannel> CreateUaBinaryChannelAsync(
             ApplicationConfiguration configuration,
             ITransportWaitingConnection connection,
@@ -119,7 +120,8 @@ namespace Opc.Ua
             CancellationToken ct = default)
         {
             // initialize the channel which will be created with the server.
-            string uriScheme = new Uri(description.EndpointUrl).Scheme;
+            string uriScheme = new Uri(description.EndpointUrl
+                ?? throw new ArgumentException("EndpointUrl cannot be null", nameof(description))).Scheme;
             transportChannelBindings ??= TransportBindings.Channels;
             ITransportChannel channel =
                 transportChannelBindings.Create(uriScheme, messageContext.Telemetry)
@@ -187,12 +189,14 @@ namespace Opc.Ua
             ITransportChannelBindings? transportChannelBindings = null,
             CancellationToken ct = default)
         {
+            var endpointUrl = new Uri(description.EndpointUrl
+                ?? throw new ArgumentException("EndpointUrl cannot be null", nameof(description)));
             string uriScheme = description.TransportProfileUri switch
             {
                 Profiles.UaTcpTransport => Utils.UriSchemeOpcTcp,
                 Profiles.HttpsBinaryTransport => Utils.UriSchemeOpcHttps,
                 Profiles.UaWssTransport => Utils.UriSchemeOpcWss,
-                _ => new Uri(description.EndpointUrl).Scheme
+                _ => endpointUrl.Scheme
             };
 
             // initialize the channel which will be created with the server.
@@ -236,10 +240,7 @@ namespace Opc.Ua
             settings.NamespaceUris = messageContext.NamespaceUris;
             settings.Factory = messageContext.Factory;
 
-            await secureChannel.OpenAsync(
-                new Uri(description.EndpointUrl),
-                settings,
-                ct).ConfigureAwait(false);
+            await secureChannel.OpenAsync(endpointUrl, settings, ct).ConfigureAwait(false);
             return channel;
         }
 

@@ -442,7 +442,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public override Task<HistoryReadResponse> HistoryReadAsync(
             RequestHeader? requestHeader,
-            ExtensionObject historyReadDetails,
+            ExtensionObject? historyReadDetails,
             TimestampsToReturn timestampsToReturn,
             bool releaseContinuationPoints,
             HistoryReadValueIdCollection nodesToRead,

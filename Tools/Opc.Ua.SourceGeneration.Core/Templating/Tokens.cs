@@ -80,8 +80,6 @@ namespace Opc.Ua.SourceGeneration
         public static string Identifier => "_Identifier_";
         public static string IdType => "_IdType_";
         public static string Imports => "<!-- Imports -->";
-        public static string InitializationString => "// InitializationString";
-        public static string InitializationStringForType => "// InitializationStringForType";
         public static string InitializeOptionalChildren => "// InitializeOptionalChildren";
         public static string InternalName => "_INTERNALNAME_";
         public static string InvokeServiceAsync => "InvokeServiceAsync();";
@@ -101,6 +99,8 @@ namespace Opc.Ua.SourceGeneration
         public static string ListOfEncodings => "// ListOfEncodings";
         public static string ListOfFieldInitializers => "// ListOfFieldInitializers";
         public static string ListOfFields => "// ListOfFields";
+        public static string ListOfSwitchFieldNames => "// ListOfFieldNames";
+        public static string ListOfEncodingMaskFieldNames => "// ListOfEncodingMaskFieldNames";
         public static string ListOfFieldsForType => "// ListOfFieldsForType";
         public static string ListOfFindChildCase => "// ListOfFindChildCase";
         public static string ListOfFindChildren => "// ListOfFindChildren";
@@ -156,7 +156,6 @@ namespace Opc.Ua.SourceGeneration
         public static string VariableTypeValue => "// VariableTypeValue";
         public static string Version => "_Version_";
         public static string Tool => "_Tool_";
-        public static string XmlArrayType => "// _XMLARRAYTYPE_";
         public static string XmlEncodingId => "_XmlEncodingId_";
         public static string XmlIdentifier => "_XmlIdentifier_";
         public static string XmlNamespaceUri => "_XmlNamespaceUri_";
@@ -181,6 +180,8 @@ namespace Opc.Ua.SourceGeneration
         public static string Header => "// _HEADER_";
         public static string ResourceName => "_ResourceName_";
         public static string Resource => "_ResourceString_";
+        public static string ListOfResourceGroups => "// ListOfResourceGroups";
         public static string ListOfResourceDeclarations => "// ListOfResourceString";
+        public static string AccessModifier => "_AccessModifier_";
     }
 }

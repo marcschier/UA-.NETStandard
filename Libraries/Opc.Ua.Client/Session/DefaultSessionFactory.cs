@@ -254,7 +254,8 @@ namespace Opc.Ua.Client
 
             X509Certificate2? clientCertificate = null;
             X509Certificate2Collection? clientCertificateChain = null;
-            if (endpointDescription.SecurityPolicyUri != SecurityPolicies.None)
+            if (endpointDescription.SecurityPolicyUri != null &&
+                endpointDescription.SecurityPolicyUri != SecurityPolicies.None)
             {
                 clientCertificate = await Session.LoadInstanceCertificateAsync(
                     configuration,

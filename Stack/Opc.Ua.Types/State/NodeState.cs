@@ -146,6 +146,7 @@ namespace Opc.Ua
         /// <param name="context">The object that describes how access the system containing the data.</param>
         /// <param name="initializationString">The initialization string that is used to initializes the node.</param>
         /// <param name="encoding">The initialization string is a utf8 xml string or binary</param>
+        /// <exception cref="NotSupportedException"></exception>
         public virtual void Initialize(ISystemContext context, ReadOnlySpan<byte> initializationString, EncodingType encoding)
         {
             using var istrm = new MemoryStream(initializationString.ToArray());

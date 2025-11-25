@@ -227,12 +227,12 @@ namespace Opc.Ua.SourceGeneration
                 return SchemaTemplateStrings.Stack_XmlSchema_ComplexType_xml;
             }
 
-            if (context.Target is EnumeratedType enumeratedType)
+            if (context.Target is EnumeratedType)
             {
                 return SchemaTemplateStrings.Stack_XmlSchema_EnumeratedType_xml;
             }
 
-            if (context.Target is ServiceType serviceType)
+            if (context.Target is ServiceType)
             {
                 return SchemaTemplateStrings.Stack_XmlSchema_ServiceType_xml;
             }

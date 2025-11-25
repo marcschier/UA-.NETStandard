@@ -81,6 +81,20 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
+        public long GetLength(string path)
+        {
+            try
+            {
+                using Stream resource = OpenRead(path);
+                return resource.Length;
+            }
+            catch (Exception)
+            {
+                return 0;
+            }
+        }
+
+        /// <inheritdoc/>
         public Stream OpenRead(string path)
         {
             string fileName = Path.GetFileName(path);

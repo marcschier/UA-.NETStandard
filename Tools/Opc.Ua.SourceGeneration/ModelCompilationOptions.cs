@@ -64,7 +64,8 @@ namespace Opc.Ua.SourceGeneration
                 Options = new DesignFileOptions
                 {
                     Version = provider.GlobalOptions.GetString(
-                        nameof(DesignFileOptions.Version)) ?? "v105",
+                        nameof(DesignFileOptions.Version)) ??
+                        "v105",
                     StartId = (uint)provider.GlobalOptions.GetInteger(
                         nameof(DesignFileOptions.StartId)),
                     ModelVersion = provider.GlobalOptions.GetString(

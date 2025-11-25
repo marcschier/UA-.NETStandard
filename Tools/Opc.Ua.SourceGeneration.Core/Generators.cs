@@ -175,6 +175,7 @@ namespace Opc.Ua.SourceGeneration
             schemaResources.Embed(
                 StackNamespacePrefix,
                 "XmlSchemas",
+                false,
                 binarySchemaResource,
                 xmlSchemaResource);
 

@@ -16,9 +16,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.Serialization;
-#if !NETSTANDARD2_0
 using System.Text.Json;
-#endif
 using Microsoft.Extensions.Logging;
 
 namespace Opc.Ua
@@ -275,9 +273,7 @@ namespace Opc.Ua
                 // Encode the dictionary to a mul locale.
                 m_translations = value;
                 XmlEncodedLocale = kMulLocale;
-#if !NETSTANDARD2_0
                 XmlEncodedText = EncodeMulLocale(m_translations);
-#endif
             }
         }
 
@@ -536,7 +532,6 @@ namespace Opc.Ua
             return new LocalizedText(defaultKVP.Key, defaultKVP.Value);
         }
 
-#if !NETSTANDARD2_0
         /// <summary>
         /// Ecodes the translations to a JSON string according to the format specified
         /// in https://reference.opcfoundation.org/Core/Part3/v105/docs/8.5
@@ -567,7 +562,6 @@ namespace Opc.Ua
             return JsonSerializer.Serialize(
                 new Dictionary<string, List<string[]>> { { kMulLocaleDictionaryKey, t } });
         }
-#endif
 
         /// <summary>
         /// If this is a "mul" locale, returns a dictionary of locale/text pairs from the JSON Text.
@@ -585,11 +579,7 @@ namespace Opc.Ua
             {
                 // The expected JSON structure is defined in https://reference.opcfoundation.org/Core/Part3/v105/docs/8.5
                 Dictionary<string, List<string[]>> json =
-#if NETSTANDARD2_0
-                    null;
-#else
                     JsonSerializer.Deserialize<Dictionary<string, List<string[]>>>(XmlEncodedText);
-#endif
                 if (json.TryGetValue(kMulLocaleDictionaryKey, out List<string[]> tValue))
                 {
                     foreach (string[] pair in tValue)

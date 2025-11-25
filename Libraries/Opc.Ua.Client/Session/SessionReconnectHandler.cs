@@ -425,9 +425,11 @@ namespace Opc.Ua.Client
                 {
                     if (m_reverseConnectManager != null)
                     {
+                        var endpointUrl = current.Endpoint.EndpointUrl
+                            ?? throw ServiceResultException.Unexpected("Endpoint URL is null");
                         ITransportWaitingConnection connection = await m_reverseConnectManager
                             .WaitForConnectionAsync(
-                                new Uri(current.Endpoint.EndpointUrl),
+                                new Uri(endpointUrl),
                                 current.Endpoint.Server.ApplicationUri)
                             .ConfigureAwait(false);
 
@@ -519,10 +521,11 @@ namespace Opc.Ua.Client
                     {
                         EndpointDescription endpointDescription =
                             current.Endpoint ?? transportChannel.EndpointDescription;
-
+                        var endpointUrl = endpointDescription.EndpointUrl
+                            ?? throw ServiceResultException.Unexpected("Endpoint URL is null");
                         connection = await m_reverseConnectManager
                             .WaitForConnectionAsync(
-                                new Uri(endpointDescription.EndpointUrl),
+                                new Uri(endpointUrl),
                                 endpointDescription.Server.ApplicationUri)
                             .ConfigureAwait(false);
 

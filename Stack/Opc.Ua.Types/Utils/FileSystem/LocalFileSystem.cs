@@ -88,5 +88,11 @@ namespace Opc.Ua
         {
             return new FileInfo(path).LastWriteTimeUtc;
         }
+
+        /// <inheritdoc/>
+        public long GetLength(string path)
+        {
+            return new FileInfo(path).Length;
+        }
     }
 }

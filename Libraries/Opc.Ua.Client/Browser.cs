@@ -297,7 +297,7 @@ namespace Opc.Ua.Client
             }
 
             // fetch initial set of references.
-            byte[] continuationPoint = results[0].ContinuationPoint;
+            byte[]? continuationPoint = results[0].ContinuationPoint;
             ReferenceDescriptionCollection references = results[0].References;
 
             try
@@ -676,7 +676,7 @@ namespace Opc.Ua.Client
         /// <param name="ct">The cancellation token.</param>
         /// <returns>The next batch of references</returns>
         /// <exception cref="ServiceResultException"></exception>
-        private static async ValueTask<(ReferenceDescriptionCollection, byte[])> BrowseNextAsync(
+        private static async ValueTask<(ReferenceDescriptionCollection, byte[]?)> BrowseNextAsync(
             ISessionClient session,
             byte[] continuationPoint,
             bool cancel,

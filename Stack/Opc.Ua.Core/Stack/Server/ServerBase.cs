@@ -34,10 +34,12 @@ namespace Opc.Ua
         /// <summary>
         /// Initializes object with default values.
         /// </summary>
-        public ServerBase()
+        public ServerBase(ITelemetryContext telemetry)
         {
             ServerError = new ServiceResult(StatusCodes.BadServerHalted);
             m_requestQueue = new RequestQueue(this, 10, 100, 1000);
+            m_telemetry = telemetry;
+            m_logger = m_telemetry.CreateLogger(this);
         }
 
         /// <summary>
@@ -91,18 +93,7 @@ namespace Opc.Ua
         /// </value>
         /// <exception cref="ServiceResultException">if server was not started</exception>
         public IServiceMessageContext MessageContext
-        {
-            get => m_messageContext ?? throw new ServiceResultException(StatusCodes.BadServerHalted);
-            private set
-            {
-                m_messageContext = value;
-                if (m_telemetry != value.Telemetry)
-                {
-                    m_telemetry = value.Telemetry;
-                    m_logger = m_telemetry.CreateLogger(this);
-                }
-            }
-        }
+            => m_messageContext ?? throw new ServiceResultException(StatusCodes.BadServerHalted);
 
         /// <summary>
         /// An error condition that describes why the server if not running (null if no error exists).
@@ -796,14 +787,16 @@ namespace Opc.Ua
             // create the stack listener.
             try
             {
+                var messageContext = m_messageContext
+                    ?? throw new ServiceResultException(StatusCodes.BadServerHalted);
                 var settings = new TransportListenerSettings
                 {
                     Descriptions = endpoints,
                     Configuration = endpointConfiguration,
                     ServerCertificateTypesProvider = InstanceCertificateTypesProvider,
                     CertificateValidator = certificateValidator,
-                    NamespaceUris = MessageContext.NamespaceUris,
-                    Factory = MessageContext.Factory,
+                    NamespaceUris = messageContext.NamespaceUris,
+                    Factory = messageContext.Factory,
                     MaxChannelCount = 0
                 };
 
@@ -1350,7 +1343,7 @@ namespace Opc.Ua
             // from configuration.
             ServiceMessageContext messageContext = configuration.CreateMessageContext(true);
             messageContext.NamespaceUris = new NamespaceTable();
-            MessageContext = messageContext;
+            m_messageContext = messageContext;
 
             // fetch properties and configuration.
             Configuration = configuration;
@@ -1382,7 +1375,7 @@ namespace Opc.Ua
             X509Certificate2 defaultInstanceCertificate = null;
             InstanceCertificateTypesProvider = new CertificateTypesProvider(
                 configuration,
-                MessageContext.Telemetry);
+                m_telemetry);
             InstanceCertificateTypesProvider.InitializeAsync().GetAwaiter().GetResult();
 
             foreach (ServerSecurityPolicy securityPolicy in configuration.ServerConfiguration
@@ -1439,7 +1432,7 @@ namespace Opc.Ua
             }
 
             // initialize namespace table.
-            MessageContext.NamespaceUris.Append(configuration.ApplicationUri);
+            messageContext.NamespaceUris.Append(configuration.ApplicationUri);
 
             // assign an instance name.
             if (string.IsNullOrEmpty(configuration.ApplicationName) &&
@@ -1728,12 +1721,12 @@ namespace Opc.Ua
         /// deriving from this class.
         /// </summary>
 #pragma warning disable IDE1006 // Naming Styles
-        protected ILogger m_logger { get; private set; } = LoggerUtils.Null.Logger;
+        protected ILogger m_logger { get; }
 #pragma warning restore IDE1006 // Naming Styles
 
         private IServiceMessageContext m_messageContext;
         private RequestQueue m_requestQueue;
-        private ITelemetryContext m_telemetry;
+        private readonly ITelemetryContext m_telemetry;
 
         /// <summary>
         /// identifier for the UserTokenPolicy should be unique within the context of a single Server
