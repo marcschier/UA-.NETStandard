@@ -40,12 +40,14 @@ namespace Opc.Ua.SourceGeneration
     internal sealed class ResourceGenerator
     {
         /// <summary>
-        /// Create code generator
+        /// Create code generator for embedded resources.
         /// </summary>
         public ResourceGenerator(
             IFileSystem fileSystem,
             string outputFolder,
-            int base64Threshold = 16 * 1024)
+            GeneratorOptions options,
+            int? base64Threshold = null,
+            bool useByteArrayForBase64 = false)
         {
             m_fileSystem = fileSystem;
             m_outputFolder = outputFolder;
@@ -55,7 +57,9 @@ namespace Opc.Ua.SourceGeneration
             // too slow to inline larger byte arrays. If length is known and the length is
             // exceeding this value it will be base64 encoded and will be decoded at runtime.
             //
-            m_base64Threshold = base64Threshold;
+            m_base64Threshold = base64Threshold ??
+                (options.OptimizeForCompileSpeed ? 256 : 8 * 1024); // Tweak this
+            m_useByteArrayForBase64 = useByteArrayForBase64;
         }
 
         /// <summary>
@@ -139,18 +143,16 @@ namespace Opc.Ua.SourceGeneration
             {
                 return null;
             }
-            else if (context.Target is StringResource str && str.AsUtf16)
+            if (context.Target is StringResource str && str.AsUtf16)
             {
-                return CodeTemplateStrings.ResourceConstant_cs;
+                return CodeTemplateStrings.ResourceDeclaration_ConstString_cs;
             }
-            // else if (resource.GetLength(m_fileSystem) > m_base64Threshold)
-            // {
-            //     return CodeTemplateStrings.ResourceDeclaration_ByteArray_cs;
-            // }
-            else
+            if (m_useByteArrayForBase64 &&
+                resource.GetLength(m_fileSystem) > m_base64Threshold)
             {
-                return CodeTemplateStrings.ResourceDeclaration_cs;
+                return CodeTemplateStrings.ResourceDeclaration_ByteArray_cs;
             }
+            return CodeTemplateStrings.ResourceDeclaration_ReadOnlySpan_cs;
         }
 
         private bool WriteTemplate_ResourceDeclaration(Template template, Context context)
@@ -439,6 +441,25 @@ namespace Opc.Ua.SourceGeneration
         {
             template.WriteNextLine(context.Prefix);
             template.Write("global::System.Convert.FromBase64String(");
+            //
+            // Do not forrmat the string, roslyn code analyzers barf with stack
+            // overflow when there are too many string "add" binary operations
+            // in a single statement to visit.
+            //
+#if !BEAUTY_CONTEST
+            template.Write("\"");
+            for (int ii = 0; ii < base64.Length; ii++)
+            {
+                // Escape backslashes
+                if (base64[ii] == '\\')
+                {
+                    template.Write("""\\""");
+                    continue;
+                }
+                template.Write(base64[ii]);
+            }
+            template.Write("\")");
+#else
             for (int ii = 0; ii < base64.Length; ii += 80)
             {
                 if (ii > 0)
@@ -475,6 +496,7 @@ namespace Opc.Ua.SourceGeneration
 
                 template.Write("\"");
             }
+#endif
         }
 
         private static void WriteAsByteArray(
@@ -527,6 +549,7 @@ namespace Opc.Ua.SourceGeneration
 
         private const int kReadBufferSize = 16 * 1024;
         private readonly int m_base64Threshold;
+        private readonly bool m_useByteArrayForBase64;
         private readonly IFileSystem m_fileSystem;
         private readonly string m_outputFolder;
         private bool m_internalAccess;

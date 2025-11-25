@@ -31,6 +31,7 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using ILogger = SGF.Diagnostics.ILogger;
@@ -70,7 +71,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Perform the compilation
         /// </summary>
-        public void Emit()
+        public void Emit(CancellationToken cancellationToken)
         {
             if (!CheckCompilationOptions())
             {
@@ -108,6 +109,12 @@ namespace Opc.Ua.SourceGeneration
                     fileSystem,
                     exclusions,
                     m_telemetry,
+                    new GeneratorOptions
+                    {
+                        Cancellation = cancellationToken,
+                        OptimizeForCompileSpeed =
+                            m_compilationOptions.OptimizationLevel == OptimizationLevel.Debug
+                    },
                     m_options.UseAllowSubtypes);
 
                 // Collect all generated cs files and produce them into the compilation

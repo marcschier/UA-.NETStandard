@@ -3429,7 +3429,7 @@ namespace Opc.Ua.Client
                 Task<PublishResponse> task = PublishAsync(
                     requestHeader,
                     acknowledgementsToSend,
-                    default); // TODO: Need a session scoped cancellation token.
+                    default).AsTask(); // TODO: Need a session scoped cancellation token.
                 AsyncRequestStarted(task, activity, requestHeader.RequestHandle, DataTypes.PublishRequest);
                 task.ConfigureAwait(false)
                     .GetAwaiter()

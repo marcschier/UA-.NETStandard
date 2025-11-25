@@ -99,7 +99,7 @@ namespace Opc.Ua.Server
         /// <returns>
         /// Returns a <see cref="FindServersResponse"/> object
         /// </returns>
-        public override async Task<FindServersResponse> FindServersAsync(
+        public override async ValueTask<FindServersResponse> FindServersAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             string endpointUrl,
@@ -202,7 +202,7 @@ namespace Opc.Ua.Server
         /// <returns>
         /// Returns a <see cref="GetEndpointsResponse"/> object
         /// </returns>
-        public override async Task<GetEndpointsResponse> GetEndpointsAsync(
+        public override async ValueTask<GetEndpointsResponse> GetEndpointsAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             string endpointUrl,
@@ -333,7 +333,7 @@ namespace Opc.Ua.Server
         /// <returns>
         /// Returns a <see cref="CreateSessionResponse"/> object
         /// </returns>
-        public override async Task<CreateSessionResponse> CreateSessionAsync(
+        public override async ValueTask<CreateSessionResponse> CreateSessionAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             ApplicationDescription clientDescription,
@@ -713,7 +713,7 @@ namespace Opc.Ua.Server
         /// <returns>
         /// Returns a <see cref="ActivateSessionResponse"/> object
         /// </returns>
-        public override async Task<ActivateSessionResponse> ActivateSessionAsync(
+        public override async ValueTask<ActivateSessionResponse> ActivateSessionAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             SignatureData clientSignature,
@@ -954,7 +954,7 @@ namespace Opc.Ua.Server
         /// <param name="requestHeader">The request header.</param>
         /// <param name="deleteSubscriptions">if set to <c>true</c> subscriptions are deleted.</param>
         /// <param name="ct">The cancellation token.</param>
-        public override async Task<CloseSessionResponse> CloseSessionAsync(
+        public override async ValueTask<CloseSessionResponse> CloseSessionAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             bool deleteSubscriptions,
@@ -1009,23 +1009,23 @@ namespace Opc.Ua.Server
         /// <returns>
         /// Returns a <see cref="CancelResponse"/> object
         /// </returns>
-        public override Task<CancelResponse> CancelAsync(
+        public override ValueTask<CancelResponse> CancelAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             uint requestHandle,
             CancellationToken ct)
         {
             OperationContext context = ValidateRequest(secureChannelContext, requestHeader, RequestType.Cancel);
-
+            CancelResponse response;
             try
             {
                 m_serverInternal.RequestManager.CancelRequests(requestHandle, out uint cancelCount);
 
-                return Task.FromResult(new CancelResponse
+                response = new CancelResponse
                 {
                     ResponseHeader = CreateResponse(requestHeader, context.StringTable),
                     CancelCount = cancelCount
-                });
+                };
             }
             catch (ServiceResultException e)
             {
@@ -1045,12 +1045,13 @@ namespace Opc.Ua.Server
             {
                 OnRequestComplete(context);
             }
+            return new ValueTask<CancelResponse>(response);
         }
 
         /// <summary>
         /// Invokes the Browse service using async Task based request.
         /// </summary>
-        public override async Task<BrowseResponse> BrowseAsync(
+        public override async ValueTask<BrowseResponse> BrowseAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             ViewDescription view,
@@ -1103,7 +1104,7 @@ namespace Opc.Ua.Server
         /// <summary>
         /// Invokes the BrowseNext service using async Task based request.
         /// </summary>
-        public override async Task<BrowseNextResponse> BrowseNextAsync(
+        public override async ValueTask<BrowseNextResponse> BrowseNextAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             bool releaseContinuationPoints,
@@ -1161,14 +1162,14 @@ namespace Opc.Ua.Server
         /// <returns>
         /// Returns a <see cref="RegisterNodesResponse"/> object
         /// </returns>
-        public override Task<RegisterNodesResponse> RegisterNodesAsync(
+        public override ValueTask<RegisterNodesResponse> RegisterNodesAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             NodeIdCollection nodesToRegister,
             CancellationToken ct)
         {
             OperationContext context = ValidateRequest(secureChannelContext, requestHeader, RequestType.RegisterNodes);
-
+            RegisterNodesResponse response;
             try
             {
                 ValidateOperationLimits(nodesToRegister, OperationLimits.MaxNodesPerRegisterNodes);
@@ -1176,11 +1177,11 @@ namespace Opc.Ua.Server
                 m_serverInternal.NodeManager
                     .RegisterNodes(context, nodesToRegister, out NodeIdCollection registeredNodeIds);
 
-                return Task.FromResult(new RegisterNodesResponse
+                response = new RegisterNodesResponse
                 {
                     ResponseHeader = CreateResponse(requestHeader, context.StringTable),
                     RegisteredNodeIds = registeredNodeIds
-                });
+                };
             }
             catch (ServiceResultException e)
             {
@@ -1200,6 +1201,7 @@ namespace Opc.Ua.Server
             {
                 OnRequestComplete(context);
             }
+            return new ValueTask<RegisterNodesResponse>(response);
         }
 
         /// <summary>
@@ -1212,14 +1214,14 @@ namespace Opc.Ua.Server
         /// <returns>
         /// Returns a <see cref="UnregisterNodesResponse"/> object
         /// </returns>
-        public override Task<UnregisterNodesResponse> UnregisterNodesAsync(
+        public override ValueTask<UnregisterNodesResponse> UnregisterNodesAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             NodeIdCollection nodesToUnregister,
             CancellationToken ct)
         {
             OperationContext context = ValidateRequest(secureChannelContext, requestHeader, RequestType.UnregisterNodes);
-
+            UnregisterNodesResponse response;
             try
             {
                 ValidateOperationLimits(
@@ -1228,10 +1230,10 @@ namespace Opc.Ua.Server
 
                 m_serverInternal.NodeManager.UnregisterNodes(context, nodesToUnregister);
 
-                return Task.FromResult(new UnregisterNodesResponse
+                response = new UnregisterNodesResponse
                 {
                     ResponseHeader = CreateResponse(requestHeader, context.StringTable)
-                });
+                };
             }
             catch (ServiceResultException e)
             {
@@ -1251,12 +1253,13 @@ namespace Opc.Ua.Server
             {
                 OnRequestComplete(context);
             }
+            return new ValueTask<UnregisterNodesResponse>(response);
         }
 
         /// <summary>
         /// Invokes the TranslateBrowsePathsToNodeIds service using async Task based request.
         /// </summary>
-        public override async Task<TranslateBrowsePathsToNodeIdsResponse> TranslateBrowsePathsToNodeIdsAsync(
+        public override async ValueTask<TranslateBrowsePathsToNodeIdsResponse> TranslateBrowsePathsToNodeIdsAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             BrowsePathCollection browsePaths,
@@ -1317,7 +1320,7 @@ namespace Opc.Ua.Server
         /// <summary>
         /// Invokes the Read service using async Task based request.
         /// </summary>
-        public override async Task<ReadResponse> ReadAsync(
+        public override async ValueTask<ReadResponse> ReadAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             double maxAge,
@@ -1371,7 +1374,7 @@ namespace Opc.Ua.Server
         /// <summary>
         /// Invokes the HistoryRead service using async Task based request.
         /// </summary>
-        public override async Task<HistoryReadResponse> HistoryReadAsync(
+        public override async ValueTask<HistoryReadResponse> HistoryReadAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             ExtensionObject historyReadDetails,
@@ -1439,7 +1442,7 @@ namespace Opc.Ua.Server
         /// <summary>
         /// Invokes the Write service using async Task based request.
         /// </summary>
-        public override async Task<WriteResponse> WriteAsync(
+        public override async ValueTask<WriteResponse> WriteAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             WriteValueCollection nodesToWrite,
@@ -1486,7 +1489,7 @@ namespace Opc.Ua.Server
         /// <summary>
         /// Invokes the HistoryUpdate service using async Task based request.
         /// </summary>
-        public override async Task<HistoryUpdateResponse> HistoryUpdateAsync(
+        public override async ValueTask<HistoryUpdateResponse> HistoryUpdateAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             ExtensionObjectCollection historyUpdateDetails,
@@ -1546,7 +1549,7 @@ namespace Opc.Ua.Server
         /// <returns>
         /// Returns a <see cref="CreateSubscriptionResponse"/> object
         /// </returns>
-        public override Task<CreateSubscriptionResponse> CreateSubscriptionAsync(
+        public override ValueTask<CreateSubscriptionResponse> CreateSubscriptionAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             double requestedPublishingInterval,
@@ -1562,6 +1565,7 @@ namespace Opc.Ua.Server
                 requestHeader,
                 RequestType.CreateSubscription);
 
+            CreateSubscriptionResponse response;
             try
             {
                 ServerInternal.SubscriptionManager.CreateSubscription(
@@ -1577,14 +1581,14 @@ namespace Opc.Ua.Server
                     out uint revisedLifetimeCount,
                     out uint revisedMaxKeepAliveCount);
 
-                return Task.FromResult(new CreateSubscriptionResponse
+                response = new CreateSubscriptionResponse
                 {
                     ResponseHeader = CreateResponse(requestHeader, context.StringTable),
                     SubscriptionId = subscriptionId,
                     RevisedPublishingInterval = revisedPublishingInterval,
                     RevisedLifetimeCount = revisedLifetimeCount,
                     RevisedMaxKeepAliveCount = revisedMaxKeepAliveCount
-                });
+                };
             }
             catch (ServiceResultException e)
             {
@@ -1604,6 +1608,7 @@ namespace Opc.Ua.Server
             {
                 OnRequestComplete(context);
             }
+            return new ValueTask<CreateSubscriptionResponse>(response);
         }
 
         /// <summary>
@@ -1614,7 +1619,7 @@ namespace Opc.Ua.Server
         /// <param name="subscriptionIds">The list of Subscriptions to transfer.</param>
         /// <param name="sendInitialValues">If the initial values should be sent.</param>
         /// <param name="ct">The cancellation token.</param>
-        public override Task<TransferSubscriptionsResponse> TransferSubscriptionsAsync(
+        public override ValueTask<TransferSubscriptionsResponse> TransferSubscriptionsAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             UInt32Collection subscriptionIds,
@@ -1626,6 +1631,7 @@ namespace Opc.Ua.Server
                 requestHeader,
                 RequestType.TransferSubscriptions);
 
+            TransferSubscriptionsResponse response;
             try
             {
                 ValidateOperationLimits(subscriptionIds);
@@ -1637,12 +1643,12 @@ namespace Opc.Ua.Server
                     out TransferResultCollection results,
                     out DiagnosticInfoCollection diagnosticInfos);
 
-                return Task.FromResult(new TransferSubscriptionsResponse
+                response = new TransferSubscriptionsResponse
                 {
                     ResponseHeader = CreateResponse(requestHeader, context.StringTable),
                     Results = results,
                     DiagnosticInfos = diagnosticInfos
-                });
+                };
             }
             catch (ServiceResultException e)
             {
@@ -1662,6 +1668,7 @@ namespace Opc.Ua.Server
             {
                 OnRequestComplete(context);
             }
+            return new ValueTask<TransferSubscriptionsResponse>(response);
         }
 
         /// <summary>
@@ -1674,7 +1681,7 @@ namespace Opc.Ua.Server
         /// <returns>
         /// Returns a <see cref="DeleteSubscriptionsResponse"/> object
         /// </returns>
-        public override Task<DeleteSubscriptionsResponse> DeleteSubscriptionsAsync(
+        public override ValueTask<DeleteSubscriptionsResponse> DeleteSubscriptionsAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             UInt32Collection subscriptionIds,
@@ -1685,6 +1692,7 @@ namespace Opc.Ua.Server
                 requestHeader,
                 RequestType.DeleteSubscriptions);
 
+            DeleteSubscriptionsResponse response;
             try
             {
                 ValidateOperationLimits(subscriptionIds);
@@ -1695,12 +1703,12 @@ namespace Opc.Ua.Server
                     out StatusCodeCollection results,
                     out DiagnosticInfoCollection diagnosticInfos);
 
-                return Task.FromResult(new DeleteSubscriptionsResponse
+                response = new DeleteSubscriptionsResponse
                 {
                     ResponseHeader = CreateResponse(requestHeader, context.StringTable),
                     Results = results,
                     DiagnosticInfos = diagnosticInfos
-                });
+                };
             }
             catch (ServiceResultException e)
             {
@@ -1720,6 +1728,7 @@ namespace Opc.Ua.Server
             {
                 OnRequestComplete(context);
             }
+            return new ValueTask<DeleteSubscriptionsResponse>(response);
         }
 
         /// <summary>
@@ -1732,7 +1741,7 @@ namespace Opc.Ua.Server
         /// <returns>
         /// Returns a <see cref="PublishResponse"/>
         /// </returns>
-        public override async Task<PublishResponse> PublishAsync(
+        public override async ValueTask<PublishResponse> PublishAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             SubscriptionAcknowledgementCollection subscriptionAcknowledgements,
@@ -1810,7 +1819,7 @@ namespace Opc.Ua.Server
         /// <returns>
         /// Returns a <see cref="RepublishResponse"/> object
         /// </returns>
-        public override Task<RepublishResponse> RepublishAsync(
+        public override ValueTask<RepublishResponse> RepublishAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             uint subscriptionId,
@@ -1818,7 +1827,7 @@ namespace Opc.Ua.Server
             CancellationToken ct)
         {
             OperationContext context = ValidateRequest(secureChannelContext, requestHeader, RequestType.Republish);
-
+            RepublishResponse response;
             try
             {
                 NotificationMessage notificationMessage = ServerInternal.SubscriptionManager.Republish(
@@ -1826,11 +1835,11 @@ namespace Opc.Ua.Server
                     subscriptionId,
                     retransmitSequenceNumber);
 
-                return Task.FromResult(new RepublishResponse
+                response = new RepublishResponse
                 {
                     ResponseHeader = CreateResponse(requestHeader, context.StringTable),
                     NotificationMessage = notificationMessage
-                });
+                };
             }
             catch (ServiceResultException e)
             {
@@ -1850,6 +1859,7 @@ namespace Opc.Ua.Server
             {
                 OnRequestComplete(context);
             }
+            return new ValueTask<RepublishResponse>(response);
         }
 
         /// <summary>
@@ -1867,7 +1877,7 @@ namespace Opc.Ua.Server
         /// <returns>
         /// Returns a <see cref="ModifySubscriptionResponse"/> object
         /// </returns>
-        public override Task<ModifySubscriptionResponse> ModifySubscriptionAsync(
+        public override ValueTask<ModifySubscriptionResponse> ModifySubscriptionAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             uint subscriptionId,
@@ -1883,6 +1893,7 @@ namespace Opc.Ua.Server
                 requestHeader,
                 RequestType.ModifySubscription);
 
+            ModifySubscriptionResponse response;
             try
             {
                 ServerInternal.SubscriptionManager.ModifySubscription(
@@ -1897,13 +1908,13 @@ namespace Opc.Ua.Server
                     out uint revisedLifetimeCount,
                     out uint revisedMaxKeepAliveCount);
 
-                return Task.FromResult(new ModifySubscriptionResponse
+                response = new ModifySubscriptionResponse
                 {
                     RevisedPublishingInterval = revisedPublishingInterval,
                     RevisedLifetimeCount = revisedLifetimeCount,
                     RevisedMaxKeepAliveCount = revisedMaxKeepAliveCount,
                     ResponseHeader = CreateResponse(requestHeader, context.StringTable)
-                });
+                };
             }
             catch (ServiceResultException e)
             {
@@ -1923,6 +1934,7 @@ namespace Opc.Ua.Server
             {
                 OnRequestComplete(context);
             }
+            return new ValueTask<ModifySubscriptionResponse>(response);
         }
 
         /// <summary>
@@ -1936,7 +1948,7 @@ namespace Opc.Ua.Server
         /// <returns>
         /// Returns a <see cref="SetPublishingModeResponse"/> object
         /// </returns>
-        public override Task<SetPublishingModeResponse> SetPublishingModeAsync(
+        public override ValueTask<SetPublishingModeResponse> SetPublishingModeAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             bool publishingEnabled,
@@ -1948,6 +1960,7 @@ namespace Opc.Ua.Server
                 requestHeader,
                 RequestType.SetPublishingMode);
 
+            SetPublishingModeResponse response;
             try
             {
                 ValidateOperationLimits(subscriptionIds);
@@ -1959,12 +1972,12 @@ namespace Opc.Ua.Server
                     out StatusCodeCollection results,
                     out DiagnosticInfoCollection diagnosticInfos);
 
-                return Task.FromResult(new SetPublishingModeResponse
+                response = new SetPublishingModeResponse
                 {
                     Results = results,
                     DiagnosticInfos = diagnosticInfos,
                     ResponseHeader = CreateResponse(requestHeader, context.StringTable)
-                });
+                };
             }
             catch (ServiceResultException e)
             {
@@ -1984,6 +1997,7 @@ namespace Opc.Ua.Server
             {
                 OnRequestComplete(context);
             }
+            return new ValueTask<SetPublishingModeResponse>(response);
         }
 
         /// <summary>
@@ -1999,7 +2013,7 @@ namespace Opc.Ua.Server
         /// <returns>
         /// Returns a <see cref="SetTriggeringResponse"/> object
         /// </returns>
-        public override Task<SetTriggeringResponse> SetTriggeringAsync(
+        public override ValueTask<SetTriggeringResponse> SetTriggeringAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             uint subscriptionId,
@@ -2009,7 +2023,7 @@ namespace Opc.Ua.Server
             CancellationToken ct)
         {
             OperationContext context = ValidateRequest(secureChannelContext, requestHeader, RequestType.SetTriggering);
-
+            SetTriggeringResponse response;
             try
             {
                 if ((linksToAdd == null || linksToAdd.Count == 0) &&
@@ -2036,14 +2050,14 @@ namespace Opc.Ua.Server
                     out StatusCodeCollection removeResults,
                     out DiagnosticInfoCollection removeDiagnosticInfos);
 
-                return Task.FromResult(new SetTriggeringResponse
+                response = new SetTriggeringResponse
                 {
                     AddResults = addResults,
                     AddDiagnosticInfos = addDiagnosticInfos,
                     RemoveResults = removeResults,
                     RemoveDiagnosticInfos = removeDiagnosticInfos,
                     ResponseHeader = CreateResponse(requestHeader, context.StringTable)
-                });
+                };
             }
             catch (ServiceResultException e)
             {
@@ -2063,6 +2077,7 @@ namespace Opc.Ua.Server
             {
                 OnRequestComplete(context);
             }
+            return new ValueTask<SetTriggeringResponse>(response);
         }
 
         /// <summary>
@@ -2077,7 +2092,7 @@ namespace Opc.Ua.Server
         /// <returns>
         /// Returns a <see cref="CreateMonitoredItemsResponse"/> object
         /// </returns>
-        public override Task<CreateMonitoredItemsResponse> CreateMonitoredItemsAsync(
+        public override ValueTask<CreateMonitoredItemsResponse> CreateMonitoredItemsAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             uint subscriptionId,
@@ -2089,7 +2104,7 @@ namespace Opc.Ua.Server
                 secureChannelContext,
                 requestHeader,
                 RequestType.CreateMonitoredItems);
-
+            CreateMonitoredItemsResponse response;
             try
             {
                 ValidateOperationLimits(itemsToCreate, OperationLimits.MaxMonitoredItemsPerCall);
@@ -2102,12 +2117,12 @@ namespace Opc.Ua.Server
                     out MonitoredItemCreateResultCollection results,
                     out DiagnosticInfoCollection diagnosticInfos);
 
-                return Task.FromResult(new CreateMonitoredItemsResponse
+                response = new CreateMonitoredItemsResponse
                 {
                     Results = results,
                     DiagnosticInfos = diagnosticInfos,
                     ResponseHeader = CreateResponse(requestHeader, context.StringTable)
-                });
+                };
             }
             catch (ServiceResultException e)
             {
@@ -2127,6 +2142,7 @@ namespace Opc.Ua.Server
             {
                 OnRequestComplete(context);
             }
+            return new ValueTask<CreateMonitoredItemsResponse>(response);
         }
 
         /// <summary>
@@ -2141,7 +2157,7 @@ namespace Opc.Ua.Server
         /// <returns>
         /// Returns a <see cref="ModifyMonitoredItemsResponse"/> object
         /// </returns>
-        public override Task<ModifyMonitoredItemsResponse> ModifyMonitoredItemsAsync(
+        public override ValueTask<ModifyMonitoredItemsResponse> ModifyMonitoredItemsAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             uint subscriptionId,
@@ -2153,7 +2169,7 @@ namespace Opc.Ua.Server
                 secureChannelContext,
                 requestHeader,
                 RequestType.ModifyMonitoredItems);
-
+            ModifyMonitoredItemsResponse response;
             try
             {
                 ValidateOperationLimits(itemsToModify, OperationLimits.MaxMonitoredItemsPerCall);
@@ -2166,12 +2182,12 @@ namespace Opc.Ua.Server
                     out MonitoredItemModifyResultCollection results,
                     out DiagnosticInfoCollection diagnosticInfos);
 
-                return Task.FromResult(new ModifyMonitoredItemsResponse
+                response = new ModifyMonitoredItemsResponse
                 {
                     Results = results,
                     DiagnosticInfos = diagnosticInfos,
                     ResponseHeader = CreateResponse(requestHeader, context.StringTable)
-                });
+                };
             }
             catch (ServiceResultException e)
             {
@@ -2191,6 +2207,7 @@ namespace Opc.Ua.Server
             {
                 OnRequestComplete(context);
             }
+            return new ValueTask<ModifyMonitoredItemsResponse>(response);
         }
 
         /// <summary>
@@ -2204,7 +2221,7 @@ namespace Opc.Ua.Server
         /// <returns>
         /// Returns a <see cref="DeleteMonitoredItemsResponse"/> object
         /// </returns>
-        public override Task<DeleteMonitoredItemsResponse> DeleteMonitoredItemsAsync(
+        public override ValueTask<DeleteMonitoredItemsResponse> DeleteMonitoredItemsAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             uint subscriptionId,
@@ -2215,7 +2232,7 @@ namespace Opc.Ua.Server
                 secureChannelContext,
                 requestHeader,
                 RequestType.DeleteMonitoredItems);
-
+            DeleteMonitoredItemsResponse response;
             try
             {
                 ValidateOperationLimits(monitoredItemIds, OperationLimits.MaxMonitoredItemsPerCall);
@@ -2227,12 +2244,12 @@ namespace Opc.Ua.Server
                     out StatusCodeCollection results,
                     out DiagnosticInfoCollection diagnosticInfos);
 
-                return Task.FromResult(new DeleteMonitoredItemsResponse
+                response = new DeleteMonitoredItemsResponse
                 {
                     Results = results,
                     DiagnosticInfos = diagnosticInfos,
                     ResponseHeader = CreateResponse(requestHeader, context.StringTable)
-                });
+                };
             }
             catch (ServiceResultException e)
             {
@@ -2252,6 +2269,7 @@ namespace Opc.Ua.Server
             {
                 OnRequestComplete(context);
             }
+            return new ValueTask<DeleteMonitoredItemsResponse>(response);
         }
 
         /// <summary>
@@ -2266,7 +2284,7 @@ namespace Opc.Ua.Server
         /// <returns>
         /// Returns a <see cref="SetMonitoringModeResponse"/>
         /// </returns>
-        public override async Task<SetMonitoringModeResponse> SetMonitoringModeAsync(
+        public override async ValueTask<SetMonitoringModeResponse> SetMonitoringModeAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             uint subscriptionId,
@@ -2329,7 +2347,7 @@ namespace Opc.Ua.Server
         /// <returns>
         /// Returns a <see cref="ResponseHeader"/> object
         /// </returns>
-        public override async Task<CallResponse> CallAsync(
+        public override async ValueTask<CallResponse> CallAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             CallMethodRequestCollection methodsToCall,

@@ -66,7 +66,7 @@ namespace Opc.Ua.SourceGeneration
                     context,
                     combination.Left,
                     combination.Right,
-                    Logger).Emit());
+                    Logger).Emit(context.CancellationToken));
         }
     }
 }

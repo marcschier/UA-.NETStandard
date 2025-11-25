@@ -2662,7 +2662,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// ResourceGenerator.cs
         /// </summary>
-        public static string ResourceDeclaration_cs =>
+        public static string ResourceDeclaration_ReadOnlySpan_cs =>
             $$"""
             /// <summary>
             /// The embedded {{Tokens.ResourceName}} resource as span
@@ -2676,6 +2676,7 @@ namespace Opc.Ua.SourceGeneration
             /// </summary>
             public static global::System.IO.Stream {{Tokens.ResourceName}}AsStream
             {
+                // Copy operation
                 get => new global::System.IO.MemoryStream({{Tokens.ResourceName}}.ToArray(), false);
             }
             """;
@@ -2704,7 +2705,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// ResourceGenerator.cs
         /// </summary>
-        public static string ResourceConstant_cs =>
+        public static string ResourceDeclaration_ConstString_cs =>
             $$"""
             public const string {{Tokens.ResourceName}} = {{Tokens.Resource}};
             """;

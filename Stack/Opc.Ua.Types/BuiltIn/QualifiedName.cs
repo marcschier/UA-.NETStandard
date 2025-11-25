@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
@@ -374,32 +375,12 @@ namespace Opc.Ua
             }
 
             // extract local namespace index.
-            ushort namespaceIndex = 0;
-            int start = -1;
-
-            for (int ii = 0; ii < text.Length; ii++)
-            {
-                char ch = text[ii];
-
-                if (ch == ':')
-                {
-                    start = ii + 1;
-                    break;
-                }
-
-                if (char.IsDigit(ch))
-                {
-                    namespaceIndex *= 10;
-                    namespaceIndex += (ushort)(ch - '0');
-                }
-            }
-
-            // no prefix found.
-            if (start == -1)
+            int start = text.IndexOf(':', StringComparison.Ordinal);
+            if (start < 0 ||
+                !ushort.TryParse(text[..start], out ushort namespaceIndex))
             {
                 return new QualifiedName(text);
             }
-
             return new QualifiedName(text[start..], namespaceIndex);
         }
 

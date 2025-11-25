@@ -65,7 +65,7 @@ namespace Opc.Ua.Client.Tests
         private MasterNodeManager MasterNodeManagerReference { get; set; }
         private SessionManagerWithLimits SessionManagerForTest { get; set; }
 
-        public override Task<BrowseResponse> BrowseAsync(
+        public override ValueTask<BrowseResponse> BrowseAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             ViewDescription view,

@@ -298,13 +298,13 @@ namespace Opc.Ua.Client.Tests
             }
 
             // try to read nodes using discovery channel
-            ServiceResultException sre = NUnit.Framework.Assert.ThrowsAsync<ServiceResultException>(() =>
-                sessionClient.ReadAsync(
+            ServiceResultException sre = NUnit.Framework.Assert.ThrowsAsync<ServiceResultException>(async () =>
+                await sessionClient.ReadAsync(
                     null,
                     0,
                     TimestampsToReturn.Neither,
                     readValues,
-                    default));
+                    default).ConfigureAwait(false));
             StatusCode statusCode = StatusCodes.BadSecurityPolicyRejected;
             // race condition, if socket closed is detected before the error was returned,
             // client may report channel closed instead of security policy rejected

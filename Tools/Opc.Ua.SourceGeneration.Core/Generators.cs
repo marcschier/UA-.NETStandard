@@ -28,10 +28,27 @@
  * ======================================================================*/
 
 using System.Collections.Generic;
+using System.Threading;
 using Opc.Ua.Types;
 
 namespace Opc.Ua.SourceGeneration
 {
+    /// <summary>
+    /// Generator options
+    /// </summary>
+    public sealed class GeneratorOptions
+    {
+        /// <summary>
+        /// Optimize generated code for compile speed.
+        /// </summary>
+        public bool OptimizeForCompileSpeed { get; set; }
+
+        /// <summary>
+        /// Generation should be cancelled
+        /// </summary>
+        public CancellationToken Cancellation { get; set; }
+    }
+
     /// <summary>
     /// Source Generation API
     /// </summary>
@@ -42,23 +59,28 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Generate code from design files
         /// </summary>
-        /// <param name="designFiles"></param>
-        /// <param name="fileSystem"></param>
-        /// <param name="exclusions"></param>
-        /// <param name="telemetry"></param>
-        /// <param name="useAllowSubtypes"></param>
+        /// <param name="designFiles">Design files to process</param>
+        /// <param name="fileSystem">File system abstraction to use</param>
+        /// <param name="exclusions">Exclusion map</param>
+        /// <param name="telemetry">Telemetry context for logging</param>
+        /// <param name="options">Generator options</param>
+        /// <param name="useAllowSubtypes">allow subtypes</param>
         public static void GenerateCode(
             this DesignFileCollection designFiles,
             IFileSystem fileSystem,
             string[] exclusions,
             ITelemetryContext telemetry,
+            GeneratorOptions options = null,
             bool useAllowSubtypes = false)
         {
             if (designFiles.DesignFiles.Count == 0)
             {
                 return;
             }
-            var generator = new ModelGenerator(fileSystem, telemetry);
+            var generator = new ModelGenerator(
+                fileSystem,
+                telemetry,
+                options ?? new GeneratorOptions());
             // The rest of the input is processed as design files
             generator.ValidateAndUpdateIds(
                 designFiles.DesignFiles,
@@ -73,15 +95,17 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Generate from nodesets
         /// </summary>
-        /// <param name="nodesets"></param>
-        /// <param name="fileSystem"></param>
-        /// <param name="exclusions"></param>
-        /// <param name="telemetry"></param>
+        /// <param name="nodesets">Nodesets to process</param>
+        /// <param name="fileSystem">File system abstraction to use</param>
+        /// <param name="exclusions">Exclusion map</param>
+        /// <param name="telemetry">Telemetry context for logging</param>
+        /// <param name="options">Generator options</param>
         public static void GenerateCode(
             this NodesetFileCollection nodesets,
             IFileSystem fileSystem,
             string[] exclusions,
-            ITelemetryContext telemetry)
+            ITelemetryContext telemetry,
+            GeneratorOptions options = null)
         {
             if (nodesets.Files.Count == 0)
             {
@@ -89,7 +113,10 @@ namespace Opc.Ua.SourceGeneration
             }
             foreach (string modelUri in nodesets.ModelUris)
             {
-                var generator = new ModelGenerator(fileSystem, telemetry)
+                var generator = new ModelGenerator(
+                    fileSystem,
+                    telemetry,
+                    options ?? new GeneratorOptions())
                 {
                     AvailableNodeSets = nodesets.Files
                 };
@@ -115,12 +142,15 @@ namespace Opc.Ua.SourceGeneration
         /// <param name="outputDir">The output folder in it</param>
         /// <param name="exclusions">Optional exclusions</param>
         /// <param name="telemetry">A telemetry context for logging</param>
+        /// <param name="options">Generator options</param>
         public static void GenerateStack(
             IFileSystem fileSystem,
             string outputDir,
             IReadOnlyList<string> exclusions,
-            ITelemetryContext telemetry)
+            ITelemetryContext telemetry,
+            GeneratorOptions options = null)
         {
+            options ??= new GeneratorOptions();
             // Combine with embedded resources in this assembly.
             fileSystem = typeof(Generators).Assembly
                 .AsFileSystem("Opc.Ua.SourceGeneration.Design")
@@ -129,7 +159,8 @@ namespace Opc.Ua.SourceGeneration
             // Generate standard types
             var generator = new ModelGenerator(
                 fileSystem,
-                telemetry);
+                telemetry,
+                options);
             generator.ValidateAndUpdateIds(
                 [
                     BuiltInDesignFiles.StandardTypesXml,
@@ -171,7 +202,8 @@ namespace Opc.Ua.SourceGeneration
             // Embed schemas
             var schemaResources = new ResourceGenerator(
                 fileSystem,
-                outputDir);
+                outputDir,
+                options);
             schemaResources.Embed(
                 StackNamespacePrefix,
                 "XmlSchemas",
@@ -207,7 +239,8 @@ namespace Opc.Ua.SourceGeneration
                 BuiltInDesignFiles.UACoreServicesXml,
                 outputDir,
                 nodeDictionaries,
-                exclusions);
+                exclusions,
+                options);
             core.Generate(
                 StackNamespacePrefix,
                 "Core",

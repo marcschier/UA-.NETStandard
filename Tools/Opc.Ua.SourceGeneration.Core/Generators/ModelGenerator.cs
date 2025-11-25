@@ -48,9 +48,13 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Loads the model design from the specified file and validates it.
         /// </summary>
-        public ModelGenerator(IFileSystem fileSystem, ITelemetryContext telemetry)
+        public ModelGenerator(
+            IFileSystem fileSystem,
+            ITelemetryContext telemetry,
+            GeneratorOptions options)
         {
             m_telemetry = telemetry;
+            m_options = options;
             m_context = new ServiceMessageContext(telemetry);
             m_fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
         }
@@ -352,7 +356,7 @@ namespace Opc.Ua.SourceGeneration
                     collectionWithServices);
 
                 // Pack as resources
-                var resourceGenerator = new ResourceGenerator(m_fileSystem, filePath);
+                var resourceGenerator = new ResourceGenerator(m_fileSystem, filePath, m_options);
                 resourceGenerator.Embed(
                     m_model.TargetNamespaceInfo.Prefix,
                     "NodeSet2",
@@ -607,7 +611,7 @@ namespace Opc.Ua.SourceGeneration
             SystemContext context,
             NodeStateCollection collection)
         {
-            var initializers = new ResourceGenerator(m_fileSystem, filePath);
+            var initializers = new ResourceGenerator(m_fileSystem, filePath, m_options);
             using var ostrm = new MemoryStream();
             if (!UseXmlInitializers)
             {
@@ -2076,23 +2080,6 @@ namespace Opc.Ua.SourceGeneration
                     LoadTemplate_VariableTypeValue,
                     WriteTemplate_VariableTypeValue);
             }
-
-            // AddInitializers(node);
-
-            // template.AddTemplate(
-            //     Tokens.InitializationStringForType, // TODO: Do we need this - it is not referenced in any template?
-            //     null,
-            //     new NodeDesign[] { node },
-            //     LoadTemplate_InitializationString,
-            //     null);
-
-            // template.AddTemplate(
-            //     Tokens.InitializationString,
-            //     null,
-            //     new NodeDesign[] { node },
-            //     LoadTemplate_InitializationString,
-            //     null);
-            //
 
             template.AddTemplate(
                 Tokens.InitializeOptionalChildren,
@@ -4400,6 +4387,7 @@ namespace Opc.Ua.SourceGeneration
         private readonly Dictionary<string, Resource> m_initializers = [];
         private readonly IServiceMessageContext m_context;
         private readonly ITelemetryContext m_telemetry;
+        private readonly GeneratorOptions m_options;
         private ModelDesignValidator m_validator;
         private ModelDesign m_model;
         private IReadOnlyList<string> m_exclusions;

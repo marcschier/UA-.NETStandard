@@ -51,7 +51,8 @@ namespace Opc.Ua.SourceGeneration
             string typeDictionary,
             string outputDirectory,
             IDictionary<string, string> knownFiles,
-            IReadOnlyList<string> exclusions)
+            IReadOnlyList<string> exclusions,
+            GeneratorOptions options)
         {
             // load and validate type dictionary.
             Validator = new TypeDictionaryValidator(
@@ -64,6 +65,7 @@ namespace Opc.Ua.SourceGeneration
             FileSystem = fileSystem ?? LocalFileSystem.Instance;
             DictionariesToExport = [];
             Exclusions = exclusions;
+            Options = options;
         }
 
         /// <summary>
@@ -100,6 +102,11 @@ namespace Opc.Ua.SourceGeneration
         /// The types to exclude.
         /// </summary>
         internal IReadOnlyList<string> Exclusions { get; }
+
+        /// <summary>
+        /// Generator options
+        /// </summary>
+        public GeneratorOptions Options { get; }
 
         // Public Methods
         /// <summary>

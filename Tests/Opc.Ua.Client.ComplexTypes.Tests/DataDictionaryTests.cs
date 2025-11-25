@@ -181,14 +181,13 @@ namespace Opc.Ua.Client.ComplexTypes.Tests
 
                 var nodesToRead = new ReadValueIdCollection { readValueId };
 
-                ServiceResultException x = NUnit.Framework.Assert
-                    .ThrowsAsync<ServiceResultException>(() =>
-                        theSession.ReadAsync(
-                            null,
-                            0,
-                            TimestampsToReturn.Neither,
-                            nodesToRead,
-                            default));
+                ServiceResultException x = NUnit.Framework.Assert.ThrowsAsync<ServiceResultException>(async () =>
+                    await theSession.ReadAsync(
+                        null,
+                        0,
+                        TimestampsToReturn.Neither,
+                        nodesToRead,
+                        default).ConfigureAwait(false));
 
                 Assert.AreEqual(StatusCodes.BadEncodingLimitsExceeded, x.StatusCode);
 

@@ -30,6 +30,7 @@
 using System;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using ILogger = SGF.Diagnostics.ILogger;
@@ -60,7 +61,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Generate all stack files
         /// </summary>
-        public void Emit()
+        public void Emit(CancellationToken cancellationToken)
         {
             if (!CheckCompilationOptions())
             {
@@ -70,7 +71,17 @@ namespace Opc.Ua.SourceGeneration
             try
             {
                 // Generate files into the virtual file system
-                Generators.GenerateStack(fileSystem, string.Empty, m_options.Exclude, m_telemetry);
+                Generators.GenerateStack(
+                    fileSystem,
+                    string.Empty,
+                    m_options.Exclude,
+                    m_telemetry,
+                    new GeneratorOptions
+                    {
+                        Cancellation = cancellationToken,
+                        OptimizeForCompileSpeed =
+                            m_compilationOptions.OptimizationLevel == OptimizationLevel.Debug
+                    });
                 // Collect all generated cs files and produce them into the compilation
                 foreach (string file in fileSystem.CreatedFiles
                     .Where(f => f.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)))
