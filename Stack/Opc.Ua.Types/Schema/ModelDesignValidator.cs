@@ -521,6 +521,23 @@ namespace Opc.Ua.Schema.Model
         {
             ModelDesign model = LoadBuiltInModelFromResource();
 
+            LoadNodes(model);
+
+            using Stream stream = OpenRead("StandardTypes.csv");
+            LoadIdentifiersFromStream2(model, stream);
+
+            // flag built-in types as declarations.
+            foreach (NodeDesign node in model.Items)
+            {
+                node.Description = null;
+                node.IsDeclaration = true;
+            }
+
+            return model;
+        }
+
+        private void LoadNodes(ModelDesign model)
+        {
             UpdateNamespaceTables(model);
 
             // import types from target dictionary.
@@ -544,18 +561,6 @@ namespace Opc.Ua.Schema.Model
             {
                 node.Hierarchy = BuildInstanceHierarchy(model, node, 0);
             }
-
-            using Stream stream = OpenRead("StandardTypes.csv");
-            LoadIdentifiersFromStream2(model, stream);
-
-            // flag built-in types as declarations.
-            foreach (NodeDesign node in model.Items)
-            {
-                node.Description = null;
-                node.IsDeclaration = true;
-            }
-
-            return model;
         }
 
         /// <summary>
@@ -585,29 +590,7 @@ namespace Opc.Ua.Schema.Model
                 model.TargetPublicationDateSpecified = true;
             }
 
-            UpdateNamespaceTables(model);
-
-            // import types from target dictionary.
-            var nodes = new List<NodeDesign>();
-
-            foreach (NodeDesign node in model.Items)
-            {
-                if (Import(model, node, null))
-                {
-                    nodes.Add(node);
-                }
-            }
-
-            model.Items = [.. nodes];
-
-            // do additional fix up after import.
-            ValidateDictionary(model);
-
-            // validate node in target dictionary.
-            foreach (NodeDesign node in model.Items)
-            {
-                node.Hierarchy = BuildInstanceHierarchy(model, node, 0);
-            }
+            LoadNodes(model);
 
             // assigning identifiers.
             if (identifierFilePath != null)

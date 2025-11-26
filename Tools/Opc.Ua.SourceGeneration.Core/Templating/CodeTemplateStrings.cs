@@ -77,71 +77,6 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ConstantsGenerator.cs
-        /// </summary>
-        public static string Constants_File_cs =>
-            $$"""
-            {{Tokens.Header}}
-
-            namespace {{Tokens.Prefix}}
-            {
-                /// <summary>
-                /// A class that defines constants used by UA applications.
-                /// </summary>
-                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
-                [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
-                public static partial class {{Tokens.ClassName}}
-                {
-                    {{Tokens.ListOfIdentifiers}}
-                }
-            }
-            """;
-
-        /// <summary>
-        /// ConstantsGenerator.cs
-        /// </summary>
-        public static string Constants_Constant_cs =>
-            $$"""
-            /// <summary>
-            /// {{Tokens.Description}}
-            /// </summary>
-            public const {{Tokens.IdType}} {{Tokens.SymbolicId}} = {{Tokens.Identifier}};
-            """;
-
-        /// <summary>
-        /// ConstantsGenerator.cs
-        /// </summary>
-        public static string Constants_DataTypes_cs =>
-            $$"""
-            {{Tokens.Header}}
-
-            using System.Reflection;
-
-            namespace {{Tokens.Prefix}}
-            {
-                /// <summary>
-                /// A class that defines identifiers for datatypes.
-                /// </summary>
-                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
-                [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
-                public static partial class DataTypes
-                {
-                    {{Tokens.ListOfIdentifiers}}
-                }
-
-                /// <summary>
-                /// A class that defines identifiers for datatype encodings.
-                /// </summary>
-                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
-                [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
-                public static partial class Objects
-                {
-                    {{Tokens.ListOfEncodings}}
-                }
-            }
-            """;
-
-        /// <summary>
         /// ModelGenerator.cs
         /// </summary>
         public static string Helpers_File_cs =>
@@ -153,13 +88,13 @@ namespace Opc.Ua.SourceGeneration
             namespace {{Tokens.NamespacePrefix}}
             {
                 [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
-                [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
                 public static partial class {{Tokens.Namespace}}Extensions
                 {
                     /// <summary>
                     /// Adds the predefined nodes for the {{Tokens.NamespacePrefix}} namespace
                     /// to the node state collection.
                     /// </summary>
+                    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
                     public static NodeStateCollection Add{{Tokens.Namespace}}(
                         this global::Opc.Ua.NodeStateCollection collection,
                         global::Opc.Ua.ISystemContext context)
@@ -2078,41 +2013,41 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string ClientApi_Interface_cs =>
+        public static string ClientApi_InterfaceMethods_cs =>
             $$"""
             /// <summary>
             /// Invokes the {{Tokens.Name}} service using async Task based request.
             /// </summary>
-            void AsyncCall();
+            {{Tokens.ClientInterfaceAsync}}
 
             /// <summary>
             /// Invokes the {{Tokens.Name}} service.
             /// </summary>
             [global::System.Obsolete("Sync methods are deprecated in this version. Use {{Tokens.Name}}Async instead.")]
-            void SyncCall();
+            {{Tokens.ClientInterfaceSync}}
 
             /// <summary>
             /// Begins an asynchronous invocation of the {{Tokens.Name}} service.
             /// </summary>
             [global::System.Obsolete("Begin/End methods are deprecated in this version. Use {{Tokens.Name}}Async instead.")]
-            void BeginAsyncCall();
+            {{Tokens.ClientInterfaceBegin}}
 
             /// <summary>
             /// Finishes an asynchronous invocation of the {{Tokens.Name}} service.
             /// </summary>
             [global::System.Obsolete("Begin/End methods are deprecated in this version. Use {{Tokens.Name}}Async instead.")]
-            void EndAsyncCall();
+            {{Tokens.ClientInterfaceEnd}}
             """;
 
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string ClientApi_Method_cs =>
+        public static string ClientApi_MethodImplementations_cs =>
             $$"""
             /// <summary>
             /// Invokes the {{Tokens.Name}} service.
             /// </summary>
-            void AsyncCall()
+            {{Tokens.ClientStubAsync}}
             {
                 {{Tokens.Name}}Request request = new {{Tokens.Name}}Request();
                 {{Tokens.Name}}Response response = null;
@@ -2146,7 +2081,7 @@ namespace Opc.Ua.SourceGeneration
             /// Invokes the {{Tokens.Name}} service synchronously.
             /// </summary>
             [Obsolete("Sync methods are deprecated in this version. Use {{Tokens.Name}}Async instead.")]
-            void SyncCall()
+            {{Tokens.ClientStubSync}}
             {
                 {{Tokens.Name}}Request request = new {{Tokens.Name}}Request();
                 {{Tokens.Name}}Response? response = null;
@@ -2181,7 +2116,7 @@ namespace Opc.Ua.SourceGeneration
             /// Begins an asynchronous invocation of the {{Tokens.Name}} service.
             /// </summary>
             [Obsolete("Begin/End methods are deprecated in this version. Use {{Tokens.Name}}Async instead.")]
-            void BeginAsyncCall()
+            {{Tokens.ClientStubBegin}}
             {
                 {{Tokens.Name}}Request request = new {{Tokens.Name}}Request();
 
@@ -2196,7 +2131,7 @@ namespace Opc.Ua.SourceGeneration
             /// Finishes an asynchronous invocation of the {{Tokens.Name}} service.
             /// </summary>
             [Obsolete("Begin/End methods are deprecated in this version. Use {{Tokens.Name}}Async instead.")]
-            void EndAsyncCall()
+            {{Tokens.ClientStubEnd}}
             {
                 {{Tokens.Name}}Response response = null;
 
@@ -2226,7 +2161,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string Classes_File_cs =>
+        public static string Messages_File_cs =>
             $$"""
             {{Tokens.Header}}
 
@@ -2239,24 +2174,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string Classes_Enumeration_cs =>
-            $$"""
-            /// <summary>
-            /// The {{Tokens.Name}} enumeration.
-            /// </summary>
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
-            [global::System.Runtime.Serialization.DataContract(Namespace = Namespaces.{{Tokens.TypesNamespace}})]
-            public enum {{Tokens.Name}}
-            {
-                {{Tokens.ValueList}}
-            }
-            {{Tokens.EnumCollectionClass}}
-            """;
-
-        /// <summary>
-        /// StackGenerator.cs
-        /// </summary>
-        public static string Classes_Service_cs =>
+        public static string Classes_ServiceMessage_cs =>
             $$"""
             /// <summary>
             /// The request message for the {{Tokens.Name}} service.
@@ -2276,106 +2194,20 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string Classes_ClassCollection_cs =>
+        public static string Constants_File_cs =>
             $$"""
+            {{Tokens.Header}}
 
-            /// <summary>
-            /// A collection of {{Tokens.Name}} objects.
-            /// </summary>
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
-            [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
-            [global::System.Runtime.Serialization.CollectionDataContract(
-                Name = "ListOf{{Tokens.Name}}",
-                Namespace = {{Tokens.XmlNamespaceUri}},
-                ItemName = "{{Tokens.Name}}")]
-            public partial class {{Tokens.Name}}Collection :
-                global::System.Collections.Generic.List<{{Tokens.Name}}>,
-                global::System.ICloneable
+            namespace {{Tokens.Prefix}}
             {
                 /// <summary>
-                /// Initializes the collection with default values.
+                /// A class that defines constants used by UA applications.
                 /// </summary>
-                public {{Tokens.Name}}Collection()
+                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
+                [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
+                public static partial class {{Tokens.ClassName}}
                 {
-                }
-
-                /// <summary>
-                /// Initializes the collection with an initial capacity.
-                /// </summary>
-                public {{Tokens.Name}}Collection(int capacity)
-                    : base(capacity)
-                {
-                }
-
-                /// <summary>
-                /// Initializes the collection with another collection.
-                /// </summary>
-                public {{Tokens.Name}}Collection(
-                    global::System.Collections.Generic.IEnumerable<{{Tokens.Name}}> collection)
-                    : base(collection)
-                {
-                }
-
-                /// <summary>
-                /// Converts an array to a collection.
-                /// </summary>
-                public static implicit operator {{Tokens.Name}}Collection({{Tokens.Name}}[]? values)
-                {
-                    return To{{Tokens.Name}}Collection(values);
-                }
-
-                /// <summary>
-                /// Converts an array to a collection.
-                /// </summary>
-                public static {{Tokens.Name}}Collection To{{Tokens.Name}}Collection({{Tokens.Name}}[]? values)
-                {
-                    if (values != null)
-                    {
-                        return new {{Tokens.Name}}Collection(values);
-                    }
-
-                    return new {{Tokens.Name}}Collection();
-                }
-
-                /// <summary>
-                /// Converts a collection to an array.
-                /// </summary>
-                public static explicit operator {{Tokens.Name}}[]?({{Tokens.Name}}Collection? values)
-                {
-                    return From{{Tokens.Name}}Collection(values);
-                }
-
-                /// <summary>
-                /// Converts a collection to an array.
-                /// </summary>
-                public static {{Tokens.Name}}[]? From{{Tokens.Name}}Collection({{Tokens.Name}}Collection? values)
-                {
-                    if (values != null)
-                    {
-                        return values.ToArray();
-                    }
-
-                    return null;
-                }
-
-                /// <inheritdoc/>
-                public object Clone()
-                {
-                    {{Tokens.Name}}Collection clone = new {{Tokens.Name}}Collection(this.Count);
-
-                    foreach ({{Tokens.Name}} element in this)
-                    {
-                        if (element != null)
-                        {
-                            clone.Add(({{Tokens.Name}})element.Clone());
-                        }
-                        else
-                        {
-                            clone.Add(null);
-                        }
-                    }
-
-                    return clone;
+                    {{Tokens.ListOfIdentifiers}}
                 }
             }
             """;
@@ -2383,254 +2215,12 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string Classes_EnumerationCollection_cs =>
-            $$"""
-
-            /// <summary>
-            /// A collection of {{Tokens.Name}} objects.
-            /// </summary>
-            [global::System.Runtime.Serialization.CollectionDataContract(
-                Name = "ListOf{{Tokens.Name}}",
-                Namespace = {{Tokens.XmlNamespaceUri}},
-                ItemName = "{{Tokens.Name}}")]
-            public partial class {{Tokens.Name}}Collection :
-                global::System.Collections.Generic.List<{{Tokens.Name}}>,
-                global::System.ICloneable
-            {
-                /// <summary>
-                /// Initializes the collection with default values.
-                /// </summary>
-                public {{Tokens.Name}}Collection()
-                {
-                }
-
-                /// <summary>
-                /// Initializes the collection with an initial capacity.
-                /// </summary>
-                public {{Tokens.Name}}Collection(int capacity)
-                    : base(capacity)
-                {
-                }
-
-                /// <summary>
-                /// Initializes the collection with another collection.
-                /// </summary>
-                public {{Tokens.Name}}Collection(
-                    global::System.Collections.Generic.IEnumerable<{{Tokens.Name}}> collection)
-                    : base(collection)
-                {
-                }
-
-                /// <summary>
-                /// Converts an array to a collection.
-                /// </summary>
-                public static implicit operator {{Tokens.Name}}Collection({{Tokens.Name}}[]? values)
-                {
-                    return To{{Tokens.Name}}Collection(values);
-                }
-
-                /// <summary>
-                /// Converts an array to a collection.
-                /// </summary>
-                public static {{Tokens.Name}}Collection To{{Tokens.Name}}Collection({{Tokens.Name}}[]? values)
-                {
-                    if (values != null)
-                    {
-                        return new {{Tokens.Name}}Collection(values);
-                    }
-
-                    return new {{Tokens.Name}}Collection();
-                }
-
-                /// <summary>
-                /// Converts a collection to an array.
-                /// </summary>
-                public static explicit operator {{Tokens.Name}}[]?({{Tokens.Name}}Collection? values)
-                {
-                    return From{{Tokens.Name}}Collection(values);
-                }
-
-                /// <summary>
-                /// Converts a collection to an array.
-                /// </summary>
-                public static {{Tokens.Name}}[]? From{{Tokens.Name}}Collection({{Tokens.Name}}Collection? values)
-                {
-                    if (values != null)
-                    {
-                        return values.ToArray();
-                    }
-
-                    return null;
-                }
-
-                /// <summary>
-                /// Creates a deep copy of the collection.
-                /// </summary>
-                public object Clone()
-                {
-                    return new {{Tokens.Name}}Collection(this);
-                }
-            }
-            """;
-
-        /// <summary>
-        /// StackGenerator.cs
-        /// </summary>
-        public static string Classes_Property_cs =>
+        public static string Constants_Constant_cs =>
             $$"""
             /// <summary>
-            /// The {{Tokens.ExternalName}} property.
+            /// {{Tokens.Description}}
             /// </summary>
-            {{Tokens.XmlType}}
-            public {{Tokens.Type}} {{Tokens.ExternalName}}
-            {
-                get => m_{{Tokens.InternalName}};
-                set => m_{{Tokens.InternalName}} = value;
-            }
-            """;
-
-        /// <summary>
-        /// StackGenerator.cs
-        /// </summary>
-        public static string Classes_EnumerationValue_cs =>
-            $$"""
-            /// <summary>
-            /// {{Tokens.Name}} = {{Tokens.Value}}
-            /// </summary>
-            {{Tokens.XmlType}}
-            {{Tokens.Name}} = {{Tokens.Value}}
-            """;
-
-        /// <summary>
-        /// StackGenerator.cs
-        /// StackGenerator.cs
-        /// StackGenerator.cs
-        /// </summary>
-        public static string Classes_Class_cs =>
-            $$"""
-            /// <summary>
-            /// The {{Tokens.Name}} class.
-            /// </summary>
-            {{Tokens.XmlType}}
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
-            [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
-            [global::System.Runtime.Serialization.DataContract(Namespace = Namespaces.{{Tokens.TypesNamespace}})]
-            public partial class {{Tokens.Name}} : {{Tokens.BaseType}}
-            {
-                /// <summary>
-                /// The default constructor.
-                /// </summary>
-                public {{Tokens.Name}}()
-                {
-                    Initialize();
-                }
-
-                /// <summary>
-                /// Called by the .NET framework during deserialization.
-                /// </summary>
-                [global::System.Runtime.Serialization.OnDeserializing]
-                private void Initialize(global::System.Runtime.Serialization.StreamingContext context)
-                {
-                    Initialize();
-                }
-
-                /// <summary>
-                /// Sets private members to default values.
-                /// </summary>
-                private void Initialize()
-                {
-                    {{Tokens.DefaultList}}
-                }
-
-                {{Tokens.PropertyList}}
-
-                /// <inheritdoc/>
-                public override global::Opc.Ua.ExpandedNodeId TypeId => DataTypeIds.{{Tokens.Name}};
-
-                /// <inheritdoc/>
-                public override global::Opc.Ua.ExpandedNodeId BinaryEncodingId => {{Tokens.BinaryEncodingId}};
-
-                /// <inheritdoc/>
-                public override global::Opc.Ua.ExpandedNodeId XmlEncodingId => {{Tokens.XmlEncodingId}};
-
-                /// <inheritdoc/>
-                public override global::Opc.Ua.ExpandedNodeId JsonEncodingId => {{Tokens.JsonEncodingId}};
-
-                /// <inheritdoc/>
-                public override void Encode(global::Opc.Ua.IEncoder encoder)
-                {
-                    base.Encode(encoder);
-
-                    encoder.PushNamespace(Namespaces.{{Tokens.TypesNamespace}});
-                    {{Tokens.EncodeList}}
-                    encoder.PopNamespace();
-                }
-
-                /// <inheritdoc/>
-                public override void Decode(global::Opc.Ua.IDecoder decoder)
-                {
-                    base.Decode(decoder);
-
-                    decoder.PushNamespace(Namespaces.{{Tokens.TypesNamespace}});
-                    {{Tokens.DecodeList}}
-                    decoder.PopNamespace();
-                }
-
-                /// <inheritdoc/>
-                public override bool IsEqual(global::Opc.Ua.IEncodeable encodeable)
-                {
-                    if (object.ReferenceEquals(this, encodeable))
-                    {
-                        return true;
-                    }
-
-                    {{Tokens.Name}}? value = encodeable as {{Tokens.Name}};
-
-                    if (value == null)
-                    {
-                        return false;
-                    }
-
-                    if (typeof({{Tokens.Name}}).BaseType != typeof(object))
-                    {
-                        if (!base.IsEqual(encodeable))
-                        {
-                            return false;
-                        }
-                    }
-
-                    {{Tokens.IsEqualList}}
-
-                    return true;
-                }
-
-                /// <inheritdoc/>
-                public override object Clone()
-                {
-                    {{Tokens.Name}} clone = ({{Tokens.Name}})base.Clone();
-                    {{Tokens.CloneList}}
-                    return clone;
-                }
-
-                {{Tokens.MemberList}}
-            }
-            {{Tokens.CollectionClass}}
-            """;
-
-        /// <summary>
-        /// StackGenerator.cs
-        /// </summary>
-        public static string Classes_PropertyArray_cs =>
-            $$"""
-            /// <summary>
-            /// The {{Tokens.ExternalName}} property.
-            /// </summary>
-            {{Tokens.XmlType}}
-            public {{Tokens.Type}} {{Tokens.ExternalName}}
-            {
-                get => m_{{Tokens.InternalName}};
-                set => m_{{Tokens.InternalName}} = value != null ? value : new {{Tokens.Type}}();
-            }
+            public const {{Tokens.IdType}} {{Tokens.SymbolicId}} = {{Tokens.Identifier}};
             """;
 
         /// <summary>
@@ -2653,7 +2243,7 @@ namespace Opc.Ua.SourceGeneration
             $$"""
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
             [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
-            {{Tokens.AccessModifier}} static partial class {{Tokens.ClassName}}
+            {{Tokens.AccessModifier}} static class {{Tokens.ClassName}}
             {
                 {{Tokens.ListOfResourceDeclarations}}
             }

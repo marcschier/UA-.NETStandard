@@ -29,7 +29,7 @@
 
 namespace Opc.Ua.SourceGeneration
 {
-    internal sealed class Tokens
+    internal static class Tokens
     {
         public static string AccessLevel => "_AccessLevel_";
         public static string ArrayDeclaration => "<!-- ArrayDeclaration -->";
@@ -49,31 +49,21 @@ namespace Opc.Ua.SourceGeneration
         public static string ClassName => "_ClassName_";
         public static string ClientApi => "// _ClientApi_";
         public static string ClientInterface => "// _ClientInterface_";
-        public static string CloneList => "// _CLONELIST_";
         public static string CodeName => "_CodeName_";
         public static string CollectionClass => "// CollectionClass";
         public static string CollectionType => "<!-- CollectionType -->";
         public static string DataType => "_DataType_";
         public static string DataTypeNamespacePrefix => "_DataTypeNamespacePrefix_";
         public static string DataTypeNamespaceUri => "_DataTypeNamespaceUri_";
-        public static string Date => "_Date_";
-        public static string DecodeList => "// _DECODELIST_";
-        public static string DefaultList => "// _DEFAULTLIST_";
         public static string DefaultValue => "_DefaultValue_";
         public static string Description => "_Description_";
         public static string DictionaryUri => "_DictionaryUri_";
         public static string Documentation => "<!-- Documentation -->";
         public static string EmitDefaultValue => "_EmitDefaultValue_";
-        public static string EncodeList => "// _ENCODELIST_";
         public static string EnumerationName => "_EnumerationName_";
-        public static string EnumCollectionClass => "// _ENUMCOLLECTIONCLASS_";
         public static string EventNotifier => "_EventNotifier_";
-        public static string ExternalName => "_EXTERNALNAME_";
         public static string FieldIndex => "_FieldIndex_";
         public static string FieldName => "_FieldName_";
-        public static string FieldNames => "// _FIELDNAMES_";
-        public static string FieldNameSwitch => "// _FIELDNAMESWITCH_";
-        public static string FileName => "_FileName_";
         public static string FindChildMethods => "// FindChildMethods";
         public static string FindChildMethodsForType => "// FindChildMethodsForType";
         public static string Historizing => "_Historizing_";
@@ -81,10 +71,8 @@ namespace Opc.Ua.SourceGeneration
         public static string IdType => "_IdType_";
         public static string Imports => "<!-- Imports -->";
         public static string InitializeOptionalChildren => "// InitializeOptionalChildren";
-        public static string InternalName => "_INTERNALNAME_";
         public static string InvokeServiceAsync => "InvokeServiceAsync();";
         public static string IsAbstract => "_IsAbstract_";
-        public static string IsEqualList => "// _ISEQUALLIST_";
         public static string IsOptionSet => "_IsOptionSet_";
         public static string IsRequired => "_IsRequired_";
         public static string LengthInBits => "_LengthInBits_";
@@ -122,7 +110,6 @@ namespace Opc.Ua.SourceGeneration
         public static string ListOfTypes => "// ListOfTypes";
         public static string ListOfUpdateChildrenChangeMasks => "// ListOfUpdateChildrenChangeMasks";
         public static string ListOfValues => "<!-- ListOfValues -->";
-        public static string MemberList => "// _MEMBERLIST_";
         public static string MethodList => "// _MethodList_";
         public static string MinimumSamplingInterval => "_MinimumSamplingInterval_";
         public static string Name => "_NAME_";
@@ -136,10 +123,7 @@ namespace Opc.Ua.SourceGeneration
         public static string OnCallDeclaration => "// OnCallDeclaration";
         public static string OnCallImplementation => "// OnCallImplementation";
         public static string Prefix => "_Prefix_";
-        public static string PropertyList => "// _PROPERTYLIST_";
-        public static string RequestMessage => "// _RequestMessage_";
         public static string RequestParameters => "// RequestParameters";
-        public static string ResponseMessage => "// _ResponseMessage_";
         public static string ResponseParameters => "// ResponseParameters";
         public static string ServerApi => "// _ServerApi_";
         public static string ServerStubs => "// _ServerStubs_";
@@ -147,11 +131,9 @@ namespace Opc.Ua.SourceGeneration
         public static string ServiceSets => "// _SERVICESETS_";
         public static string SymbolicId => "_SymbolicId_";
         public static string SymbolicName => "_SymbolicName_";
-        public static string Type => "_TYPE_";
         public static string TypedVariableType => "// TypedVariableType";
         public static string TypeName => "_TypeName_";
         public static string TypesNamespace => "_TypesNamespace_";
-        public static string Value => "_VALUE_";
         public static string ValueRank => "_ValueRank_";
         public static string VariableTypeValue => "// VariableTypeValue";
         public static string Version => "_Version_";
@@ -160,13 +142,10 @@ namespace Opc.Ua.SourceGeneration
         public static string XmlIdentifier => "_XmlIdentifier_";
         public static string XmlNamespaceUri => "_XmlNamespaceUri_";
         public static string XmlnsS0ListOfNamespaces => "xmlns:s0=\"ListOfNamespaces\"";
-        public static string XmlType => "// XmlType";
         public static string TypeList => "// _TypeList_";
-        public static string ValueList => "// _VALUELIST_";
         public static string BasicType => " : _BasicType_";
         public static string Flags => "[Flags]";
         public static string Encoding => "_Encoding_";
-        public static string Decode => "_Decode_";
         public static string AddKnownType => "// AddKnownType";
         public static string ModelUri => "<!-- ModelUri -->";
         public static string TargetPublicationDate => "<!-- TargetPublicationDate -->";
@@ -177,6 +156,14 @@ namespace Opc.Ua.SourceGeneration
         public static string JsonEncodingId => "_JsonEncodingId_";
         public static string ServerInterfaceAsync => "void InterfaceAsync();";
         public static string ServerStubAsync => "void StubAsync()";
+        public static string ClientInterfaceAsync => "void AsyncCall();";
+        public static string ClientInterfaceSync => "void SyncCall();";
+        public static string ClientInterfaceBegin => "void BeginAsyncCall();";
+        public static string ClientInterfaceEnd => "void EndAsyncCall();";
+        public static string ClientStubAsync => "void AsyncCall()";
+        public static string ClientStubSync => "void SyncCall()";
+        public static string ClientStubBegin => "void BeginAsyncCall()";
+        public static string ClientStubEnd => "void EndAsyncCall()";
         public static string Header => "// _HEADER_";
         public static string ResourceName => "_ResourceName_";
         public static string Resource => "_ResourceString_";

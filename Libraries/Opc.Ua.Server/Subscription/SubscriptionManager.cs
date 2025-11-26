@@ -437,7 +437,7 @@ namespace Opc.Ua.Server
                 storedSubscription.MaxNotificationsPerPublish);
 
             // create the subscription.
-            var subscription = await Subscription.RestoreAsync(m_server, storedSubscription, cancellationToken)
+            Subscription subscription = await Subscription.RestoreAsync(m_server, storedSubscription, cancellationToken)
                 .ConfigureAwait(false);
 
             uint publishingIntervalCount;

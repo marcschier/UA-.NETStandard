@@ -28,7 +28,6 @@
  * ======================================================================*/
 
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -36,6 +35,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Running;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -52,26 +52,29 @@ namespace Opc.Ua.SourceGeneration
     [Category("SourceGeneration")]
     [SetCulture("en-us")]
     [SetUICulture("en-us")]
+    [MemoryDiagnoser]
+    [DisassemblyDiagnoser]
     public class GeneratorTests
     {
         [DatapointSource]
         public OptimizationLevel[] OptimizationLevels = CompilerUtils.SupportedOptimizationLevels;
 
         [Test]
-        [Benchmark]
         public void GenerateTest()
         {
-            GenerateStack();
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create(logLevel: LogLevel.Error);
+            GenerateStack(telemetry);
         }
 
         [Theory]
-        public async Task GenerateAndCompileTest(
+        public async Task GenerateAndCompileTestAsync(
             OptimizationLevel optimizationLevel,
             bool withAnalzers,
             bool withNodeLoader)
         {
             // Generate
-            Dictionary<string, string> generatedText = GenerateStack();
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create(logLevel: LogLevel.Error);
+            Dictionary<string, string> generatedText = GenerateStack(telemetry);
             if (withNodeLoader)
             {
                 AddPredefinedNodeLoader(generatedText);
@@ -111,16 +114,60 @@ namespace Opc.Ua.SourceGeneration
             Assert.That(xmlDoc, Is.Not.Null);
         }
 
+        [GlobalSetup(Target = nameof(GenerateToFile))]
+        [GlobalCleanup(Target = nameof(GenerateToFile))]
+        public void Setup()
+        {
+            try
+            {
+                Directory.Delete(Path.Combine(Directory.GetCurrentDirectory(), "Benchmark"), true);
+            }
+            catch
+            {
+                // Ignore
+            }
+        }
+
+        [Benchmark]
+        public void GenerateToFile()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.CreateForBenchmarks(logLevel: LogLevel.Error);
+            Generators.GenerateStack(
+                LocalFileSystem.Instance,
+                Path.Combine(Directory.GetCurrentDirectory(), "Benchmark"), [], telemetry);
+        }
+
+        [Benchmark]
+        public void GenerateToMemory()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.CreateForBenchmarks(logLevel: LogLevel.Error);
+            GenerateStack(telemetry);
+        }
+
+        [Benchmark]
+        [ArgumentsSource(nameof(OptimizationLevels))]
+        public void GenerateAndComile(OptimizationLevel optimizationLevel)
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.CreateForBenchmarks(logLevel: LogLevel.Error);
+            Dictionary<string, string> generatedText = GenerateStack(telemetry);
+            using var peStream = new MemoryStream();
+            using var xmlStream = new MemoryStream();
+            bool success = optimizationLevel
+                .CreateCompilation("Opc.Ua.Core")
+                .AddCode(generatedText, LanguageVersion.Latest)
+                .Emit(peStream, xmlDocumentationStream: xmlStream)
+                .Check(TestContext.Out, out int errorCount, out int warnCount);
+        }
+
         /// <summary>
         /// Generate stack code
         /// </summary>
         /// <returns></returns>
-        private static Dictionary<string, string> GenerateStack()
+        private static Dictionary<string, string> GenerateStack(ITelemetryContext telemetry)
         {
             // Generate
             var sw = Stopwatch.StartNew();
             using var fileSystem = new VirtualFileSystem();
-            ITelemetryContext telemetry = NUnitTelemetryContext.Create(logLevel: LogLevel.Error);
             Generators.GenerateStack(fileSystem, string.Empty, [], telemetry);
             var generatedText = fileSystem.CreatedFiles
                 .Where(c => Path.GetExtension(c) == ".cs")

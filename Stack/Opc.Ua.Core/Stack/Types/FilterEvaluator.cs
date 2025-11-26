@@ -2180,8 +2180,7 @@ namespace Opc.Ua
 
             // get the type of the m_target.
             targetTypeId = GetValue(operands[1]) as NodeId;
-
-            if ((NodeId)null == null)
+            if (NodeId.IsNull(targetTypeId))
             {
                 return false;
             }

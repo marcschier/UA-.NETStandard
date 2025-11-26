@@ -145,7 +145,7 @@ namespace Opc.Ua.Client.ComplexTypes
 
             if (TypeSystemId == Objects.XmlSchema_TypeSystem)
             {
-                imports ??= new Dictionary<string, byte[]>();
+                imports ??= [];
                 if (!imports.ContainsKey(Namespaces.OpcUa))
                 {
                     imports.Add(Namespaces.OpcUa, XmlSchemas.TypesXsd.ToArray());
@@ -166,7 +166,7 @@ namespace Opc.Ua.Client.ComplexTypes
 
             if (TypeSystemId == Objects.OPCBinarySchema_TypeSystem)
             {
-                imports ??= new Dictionary<string, byte[]>();
+                imports ??= [];
                 if (!imports.ContainsKey(Namespaces.OpcUa))
                 {
                     imports.Add(Namespaces.OpcUa, XmlSchemas.TypesBsd.ToArray());

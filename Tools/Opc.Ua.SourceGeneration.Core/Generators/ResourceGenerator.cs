@@ -102,7 +102,6 @@ namespace Opc.Ua.SourceGeneration
             string templateContent = CodeTemplateStrings.Resources_File_cs;
             var template = new Template(writer, templateContent);
 
-            template.AddReplacement(Tokens.Date, DateTime.Now);
             template.AddReplacement(Tokens.Namespace, namespacePrefix);
             template.AddTemplate(
                 Tokens.ListOfResourceGroups,

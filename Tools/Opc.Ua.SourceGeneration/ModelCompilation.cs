@@ -96,7 +96,7 @@ namespace Opc.Ua.SourceGeneration
 
                 // Generate code for all nodesets
                 string[] exclusions = [.. m_options.Exclude.Append("Draft").Distinct()];
-                nodesets.GenerateCode(fileSystem, exclusions, m_telemetry);
+                nodesets.GenerateCode(fileSystem, string.Empty, exclusions, m_telemetry);
 
                 // Process any remaining design files
                 new DesignFileCollection
@@ -107,6 +107,7 @@ namespace Opc.Ua.SourceGeneration
                     Options = m_options.Options
                 }.GenerateCode(
                     fileSystem,
+                    string.Empty,
                     exclusions,
                     m_telemetry,
                     new GeneratorOptions

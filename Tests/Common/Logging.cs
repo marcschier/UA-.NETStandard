@@ -188,6 +188,7 @@ namespace Opc.Ua.Tests
                         // intentionally ignored
                     }
                 }
+
                 private readonly BenchmarkDotNet.Loggers.ILogger m_logger;
             }
 
@@ -341,10 +342,10 @@ namespace Opc.Ua.Tests
                 private readonly string m_categoryName;
             }
 
-            private readonly ConcurrentDictionary<string, Logger> m_loggers =
-                new(StringComparer.OrdinalIgnoreCase);
             private readonly LogLevel m_logLevel;
             private readonly string m_context;
+            private readonly ConcurrentDictionary<string, Logger> m_loggers =
+                new(StringComparer.OrdinalIgnoreCase);
         }
     }
 }

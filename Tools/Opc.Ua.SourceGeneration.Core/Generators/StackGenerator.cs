@@ -29,8 +29,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
-using System.Xml;
 using Opc.Ua.Schema.Types;
 using Opc.Ua.SourceGeneration.Shared;
 using Opc.Ua.Types;
@@ -48,89 +48,101 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public StackGenerator(
             IFileSystem fileSystem,
-            string typeDictionary,
             string outputDirectory,
-            IDictionary<string, string> knownFiles,
             IReadOnlyList<string> exclusions,
             GeneratorOptions options)
         {
             // load and validate type dictionary.
+            var nodeDictionaries = new Dictionary<string, string>();
             Validator = new TypeDictionaryValidator(
                 fileSystem,
-                knownFiles);
-            Validator.Validate(typeDictionary);
+                nodeDictionaries);
+
+            Validator.Validate(BuiltInDesignFiles.UACoreServicesXml);
 
             // save output directory.
-            OutputDirectory = outputDirectory;
-            FileSystem = fileSystem ?? LocalFileSystem.Instance;
-            DictionariesToExport = [];
+            m_outputFolder = outputDirectory ?? string.Empty;
+            m_fileSystem = fileSystem ?? LocalFileSystem.Instance;
             Exclusions = exclusions;
             Options = options;
         }
 
         /// <summary>
-        /// File system used
-        /// </summary>
-        protected IFileSystem FileSystem { get; }
-
-        /// <summary>
         /// The validator used to verify the type dictionary.
         /// </summary>
-        internal TypeDictionaryValidator Validator { get; }
+        public TypeDictionaryValidator Validator { get; }
 
         /// <summary>
         /// The dictionary being processed.
         /// </summary>
-        internal TypeDictionary Dictionary => Validator.Dictionary;
-
-        /// <summary>
-        /// The name of the dictionary being processed.
-        /// </summary>
-        internal string DictionaryName { get; set; }
-
-        /// <summary>
-        /// The directory used to place any output files.
-        /// </summary>
-        internal string OutputDirectory { get; }
-
-        /// <summary>
-        /// The dictionaries that should be exported in addition to the target dictionary.
-        /// </summary>
-        public IReadOnlyList<string> DictionariesToExport { get; set; }
-
-        /// <summary>
-        /// The types to exclude.
-        /// </summary>
-        internal IReadOnlyList<string> Exclusions { get; }
+        public TypeDictionary Dictionary => Validator.Dictionary;
 
         /// <summary>
         /// Generator options
         /// </summary>
         public GeneratorOptions Options { get; }
 
-        // Public Methods
+        /// <summary>
+        /// The types to exclude.
+        /// </summary>
+        public IReadOnlyList<string> Exclusions { get; }
+
         /// <summary>
         /// Generates the datatype files.
         /// </summary>
-        public virtual void Generate(string namespacePrefix, string dictionaryName, bool exportAll)
+        public void Emit()
         {
-            DictionaryName = dictionaryName;
-
-            m_namespaceConstant = "OpcUa";
-            m_schemaNamespaceConstant = "OpcUaXsd";
-
-            m_exportAll = exportAll;
-
-            WriteTemplate_Messages(namespacePrefix);
-            WriteTemplate_ClientApi(namespacePrefix);
-            WriteTemplate_ServerApi(namespacePrefix);
-            WriteTemplate_Endpoints(namespacePrefix);
+            GenerateMessages();
+            GenerateClientApi();
+            GenerateServerApi();
+            GenerateEndpoints();
+            GenerateSchemas();
+            GenerateAttributes();
+            GenerateStatusCodes();
         }
 
         /// <summary>
-        /// Writes the classes and interaces that implement a UA endpoint.
+        /// Generate schemas
         /// </summary>
-        private void WriteTemplate_Endpoints(string namespacePrefix)
+        private void GenerateSchemas()
+        {
+            var typeDictionaries = new Dictionary<string, string>();
+            var xmlSchema = new XmlSchemaGenerator(
+                m_fileSystem,
+                BuiltInDesignFiles.UACoreServicesXml,
+                m_outputFolder,
+                typeDictionaries,
+                Exclusions);
+            TextFileResource xmlSchemaResource = xmlSchema.Emit(kNamespacePrefix);
+
+            typeDictionaries = [];
+            var binarySchema = new BinarySchemaGenerator(
+                m_fileSystem,
+                BuiltInDesignFiles.UACoreServicesXml,
+                m_outputFolder,
+                typeDictionaries,
+                Exclusions);
+            TextFileResource binarySchemaResource = binarySchema.Emit(
+                kNamespacePrefix,
+                Namespaces.OpcUa);
+
+            // Embed schemas
+            var schemaResources = new ResourceGenerator(
+                m_fileSystem,
+                m_outputFolder,
+                Options);
+            schemaResources.Embed(
+                kNamespacePrefix,
+                "XmlSchemas",
+                false,
+                binarySchemaResource,
+                xmlSchemaResource);
+        }
+
+        /// <summary>
+        /// Writes the classes and interaces that implement a UA server.
+        /// </summary>
+        private void GenerateServerApi()
         {
             List<ServiceSet> serviceSets =
             [
@@ -138,14 +150,67 @@ namespace Opc.Ua.SourceGeneration
                 new ServiceSet("Discovery", InterfaceType.Discovery, InterfaceType.Registration)
             ];
 
-            using TextWriter writer = FileSystem.CreateTextWriter(Path.Combine(
-                OutputDirectory,
-                CoreUtils.Format("{0}.Endpoints.g.cs", namespacePrefix)));
+            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
+                m_outputFolder,
+                CoreUtils.Format("{0}.ServerBase.g.cs", kNamespacePrefix)));
+            var template = new Template(writer, CodeTemplateStrings.ServerApi_File_cs);
+
+            template.AddReplacement(Tokens.Prefix, kNamespacePrefix);
+            template.AddReplacement(Tokens.Namespace, kNamespaceConstant);
+
+            template.AddTemplate(
+                Tokens.ServiceSets,
+                CodeTemplateStrings.ServerApi_ServiceSet_cs,
+                serviceSets,
+                null,
+                WriteTemplate_ServerApiServiceSet);
+
+            template.WriteTemplate(null);
+        }
+
+        /// <summary>
+        /// Writes the class that define the service types.
+        /// </summary>
+        private void GenerateClientApi()
+        {
+            List<ServiceSet> serviceSets = ServiceSets;
+
+            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
+                m_outputFolder,
+                CoreUtils.Format("{0}.Client.g.cs", kNamespacePrefix)));
+            var template = new Template(writer, CodeTemplateStrings.ClientApi_File_cs);
+
+            template.AddReplacement(Tokens.Prefix, kNamespacePrefix);
+            template.AddReplacement(Tokens.Namespace, kNamespaceConstant);
+
+            template.AddTemplate(
+                Tokens.ServiceSets,
+                CodeTemplateStrings.ClientApi_ServiceSet_cs,
+                serviceSets,
+                null,
+                WriteTemplate_ClientApiServiceSet);
+
+            template.WriteTemplate(null);
+        }
+
+        /// <summary>
+        /// Writes the classes and interaces that implement a UA endpoint.
+        /// </summary>
+        private void GenerateEndpoints()
+        {
+            List<ServiceSet> serviceSets =
+            [
+                new ServiceSet("Session", InterfaceType.Discovery, InterfaceType.Session, InterfaceType.Test),
+                new ServiceSet("Discovery", InterfaceType.Discovery, InterfaceType.Registration)
+            ];
+
+            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
+                m_outputFolder,
+                CoreUtils.Format("{0}.Endpoints.g.cs", kNamespacePrefix)));
             var template = new Template(writer, CodeTemplateStrings.Endpoints_File_cs);
 
-            template.AddReplacement(Tokens.Date, DateTime.Now);
-            template.AddReplacement(Tokens.Prefix, namespacePrefix);
-            template.AddReplacement(Tokens.Namespace, m_namespaceConstant);
+            template.AddReplacement(Tokens.Prefix, kNamespacePrefix);
+            template.AddReplacement(Tokens.Namespace, kNamespaceConstant);
 
             template.AddTemplate(
                 Tokens.ServiceSets,
@@ -155,6 +220,137 @@ namespace Opc.Ua.SourceGeneration
                 WriteTemplate_EndpointServiceSet);
 
             template.WriteTemplate(null);
+        }
+
+        /// <summary>
+        /// Attach the service interfaces to the partial data types
+        /// </summary>
+        private void GenerateMessages()
+        {
+            // get datatypes.
+            IReadOnlyList<DataType> serviceTypes = Validator.GetDataTypeList(
+                typeof(ServiceType),
+                [],
+                Exclusions,
+                true,
+                false);
+
+            if (serviceTypes.Count == 0)
+            {
+                return;
+            }
+
+            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
+                m_outputFolder,
+                CoreUtils.Format("{0}.Messages.g.cs", kNamespacePrefix)));
+            var template = new Template(writer, CodeTemplateStrings.Messages_File_cs);
+
+            template.AddReplacement(Tokens.Prefix, kNamespacePrefix);
+
+            template.AddTemplate(
+                Tokens.TypeList,
+                CodeTemplateStrings.Classes_ServiceMessage_cs,
+                serviceTypes,
+                null,
+                WriteTemplate_ServiceMessage);
+
+            template.WriteTemplate(null);
+        }
+
+        /// <summary>
+        /// Write status codes
+        /// </summary>
+        private void GenerateStatusCodes()
+        {
+            string fileName = Path.Combine(m_outputFolder,
+                CoreUtils.Format("{0}.StatusCodes.g.cs", kNamespacePrefix));
+            using TextWriter writer = m_fileSystem.CreateTextWriter(fileName);
+
+            var template = new Template(writer, CodeTemplateStrings.Constants_File_cs);
+            m_className = "StatusCodes";
+
+            template.AddReplacement(Tokens.Prefix, kNamespacePrefix);
+            template.AddReplacement(Tokens.ClassName, m_className);
+
+            Validator.Validate(BuiltInDesignFiles.UAStatusCodesXml);
+            Dictionary<string, int> identifiers = LoadIdentifiers(BuiltInDesignFiles.StatusCodesCsv);
+            var constants = new List<Constant>();
+            foreach (DataType datatype in Dictionary.Items)
+            {
+                if (!TypeDictionaryValidator.IsExcluded(Exclusions, datatype) &&
+                    datatype is Constant constant &&
+                    identifiers.TryGetValue(constant.Name, out int id))
+                {
+                    if (constant.Name.StartsWith(nameof(Severity.Bad), StringComparison.Ordinal))
+                    {
+                        constant.Severity = Severity.Bad;
+                    }
+                    else if (constant.Name.StartsWith(nameof(Severity.Good), StringComparison.Ordinal))
+                    {
+                        constant.Severity = Severity.Good;
+                    }
+                    else if (constant.Name.StartsWith(nameof(Severity.Uncertain), StringComparison.Ordinal))
+                    {
+                        constant.Severity = Severity.Uncertain;
+                    }
+                    constant.Identifier = id;
+                    constant.IdentifierSpecified = true;
+                    constants.Add(constant);
+                }
+            }
+
+            // collect datatypes with the specified type.
+            template.AddTemplate(
+                Tokens.ListOfIdentifiers,
+                CodeTemplateStrings.Constants_Constant_cs,
+                constants,
+                null,
+                WriteTemplate_Constant);
+
+            var context = new Context();
+            template.WriteTemplate(context);
+        }
+
+        /// <summary>
+        /// Write attributes
+        /// </summary>
+        private void GenerateAttributes()
+        {
+            string fileName = Path.Combine(m_outputFolder,
+                CoreUtils.Format("{0}.Attributes.g.cs", kNamespacePrefix));
+            using TextWriter writer = m_fileSystem.CreateTextWriter(fileName);
+
+            var template = new Template(writer, CodeTemplateStrings.Constants_File_cs);
+            m_className = "Attributes";
+
+            template.AddReplacement(Tokens.Prefix, kNamespacePrefix);
+            template.AddReplacement(Tokens.ClassName, m_className);
+
+            Validator.Validate(BuiltInDesignFiles.UAAttributesXml);
+            Dictionary<string, int> identifiers = LoadIdentifiers(BuiltInDesignFiles.AttributesCsv);
+            var constants = new List<Constant>();
+            foreach (DataType datatype in Dictionary.Items)
+            {
+                if (!TypeDictionaryValidator.IsExcluded(Exclusions, datatype) &&
+                    datatype is Constant constant &&
+                    identifiers.TryGetValue(constant.Name, out int id))
+                {
+                    constant.Identifier = id;
+                    constant.IdentifierSpecified = true;
+                    constants.Add(constant);
+                }
+            }
+
+            // collect datatypes with the specified type.
+            template.AddTemplate(
+                Tokens.ListOfIdentifiers,
+                CodeTemplateStrings.Constants_Constant_cs,
+                constants,
+                null,
+                WriteTemplate_Constant);
+
+            var context = new Context();
+            template.WriteTemplate(context);
         }
 
         /// <summary>
@@ -229,7 +425,7 @@ namespace Opc.Ua.SourceGeneration
             // write method declaration.
             template.WriteLine(string.Empty);
             template.Write(context.Prefix);
-            template.Write("response = await ServerInstance.{1}Async(", serviceType.Response[0].Name, serviceType.Name);
+            template.Write("response = await ServerInstance.{0}Async(", serviceType.Name);
 
             template.WriteLine(string.Empty);
             template.Write(context.Prefix);
@@ -237,20 +433,9 @@ namespace Opc.Ua.SourceGeneration
 
             if (serviceType.Request != null || serviceType.Request.Length > 0)
             {
-                bool first = false;
-
                 foreach (FieldType field in serviceType.Request)
                 {
-                    if (first)
-                    {
-                        first = false;
-                        template.WriteLine(string.Empty);
-                    }
-                    else
-                    {
-                        template.WriteLine(",");
-                    }
-
+                    template.WriteLine(",");
                     template.Write(context.Prefix);
                     template.Write("   request.{0}", field.Name);
                 }
@@ -258,7 +443,6 @@ namespace Opc.Ua.SourceGeneration
 
             template.Write(",");
             template.WriteLine("cancellationToken).ConfigureAwait(false);");
-
             return null;
         }
 
@@ -286,36 +470,6 @@ namespace Opc.Ua.SourceGeneration
             template.Write(context.Prefix);
 
             return null;
-        }
-
-        /// <summary>
-        /// Writes the classes and interaces that implement a UA server.
-        /// </summary>
-        private void WriteTemplate_ServerApi(string namespacePrefix)
-        {
-            List<ServiceSet> serviceSets =
-            [
-                new ServiceSet("Session", InterfaceType.Discovery, InterfaceType.Session, InterfaceType.Test),
-                new ServiceSet("Discovery", InterfaceType.Discovery, InterfaceType.Registration)
-            ];
-
-            using TextWriter writer = FileSystem.CreateTextWriter(Path.Combine(
-                OutputDirectory,
-                CoreUtils.Format("{0}.ServerBase.g.cs", namespacePrefix)));
-            var template = new Template(writer, CodeTemplateStrings.ServerApi_File_cs);
-
-            template.AddReplacement(Tokens.Date, DateTime.Now);
-            template.AddReplacement(Tokens.Prefix, namespacePrefix);
-            template.AddReplacement(Tokens.Namespace, m_namespaceConstant);
-
-            template.AddTemplate(
-                Tokens.ServiceSets,
-                CodeTemplateStrings.ServerApi_ServiceSet_cs,
-                serviceSets,
-                null,
-                WriteTemplate_ServerApiServiceSet);
-
-            template.WriteTemplate(null);
         }
 
         /// <summary>
@@ -349,7 +503,7 @@ namespace Opc.Ua.SourceGeneration
                 CodeTemplateStrings.ServerApi_Method_cs,
                 datatypes,
                 null,
-                WriteTemplate_StubMethod);
+                WriteTemplate_ServerApiMethod);
 
             return template.WriteTemplate(context);
         }
@@ -370,7 +524,11 @@ namespace Opc.Ua.SourceGeneration
                 Tokens.ServerInterfaceAsync,
                 null,
                 new ServiceType[] { serviceType },
-                LoadTemplate_AsyncParameters,
+                (template, context) => LoadTemplate_AsyncParameters(
+                    template,
+                    context,
+                    isInterface: true,
+                    isServerApi: true),
                 null);
 
             return template.WriteTemplate(context);
@@ -379,7 +537,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes a service.
         /// </summary>
-        private bool WriteTemplate_StubMethod(Template template, Context context)
+        private bool WriteTemplate_ServerApiMethod(Template template, Context context)
         {
             if (context.Target is not ServiceType serviceType)
             {
@@ -387,46 +545,24 @@ namespace Opc.Ua.SourceGeneration
             }
 
             template.AddReplacement(Tokens.Name, serviceType.Name);
-            template.AddReplacement(Tokens.Namespace, m_namespaceConstant);
+            template.AddReplacement(Tokens.Namespace, kNamespaceConstant);
 
             template.AddTemplate(
                 Tokens.ServerStubAsync,
                 null,
                 new ServiceType[] { serviceType },
-                LoadTemplate_AsyncParameters,
+                (template, context) => LoadTemplate_AsyncParameters(
+                    template,
+                    context,
+                    isInterface: false,
+                    isServerApi: true),
                 null);
 
             return template.WriteTemplate(context);
         }
 
         /// <summary>
-        /// Writes the class that define the service types.
-        /// </summary>
-        private void WriteTemplate_ClientApi(string namespacePrefix)
-        {
-            List<ServiceSet> serviceSets = ServiceSets;
-
-            using TextWriter writer = FileSystem.CreateTextWriter(Path.Combine(
-                OutputDirectory,
-                CoreUtils.Format("{0}.Client.g.cs", namespacePrefix)));
-            var template = new Template(writer, CodeTemplateStrings.ClientApi_File_cs);
-
-            template.AddReplacement(Tokens.Date, DateTime.Now);
-            template.AddReplacement(Tokens.Prefix, namespacePrefix);
-            template.AddReplacement(Tokens.Namespace, m_namespaceConstant);
-
-            template.AddTemplate(
-                Tokens.ServiceSets,
-                CodeTemplateStrings.ClientApi_ServiceSet_cs,
-                serviceSets,
-                null,
-                WriteTemplate_ClientApiServiceSet);
-
-            template.WriteTemplate(null);
-        }
-
-        /// <summary>
-        /// Writes a service.
+        /// Writes the client api.
         /// </summary>
         private bool WriteTemplate_ClientApiServiceSet(Template template, Context context)
         {
@@ -447,17 +583,23 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddTemplate(
                 Tokens.ClientInterface,
-                CodeTemplateStrings.ClientApi_Interface_cs,
+                CodeTemplateStrings.ClientApi_InterfaceMethods_cs,
                 datatypes,
                 null,
-                WriteTemplate_Method);
+                (template, context) => WriteTemplate_ClientApiMethod(
+                    template,
+                    context,
+                    isInterface: true));
 
             template.AddTemplate(
                 Tokens.ClientApi,
-                CodeTemplateStrings.ClientApi_Method_cs,
+                CodeTemplateStrings.ClientApi_MethodImplementations_cs,
                 datatypes,
                 null,
-                WriteTemplate_Method);
+                (template, context) => WriteTemplate_ClientApiMethod(
+                    template,
+                    context,
+                    isInterface: false));
 
             return template.WriteTemplate(context);
         }
@@ -465,44 +607,58 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes a service.
         /// </summary>
-        private bool WriteTemplate_Method(Template template, Context context)
+        private bool WriteTemplate_ClientApiMethod(
+            Template template,
+            Context context,
+            bool isInterface)
         {
             if (context.Target is not ServiceType serviceType)
             {
                 return false;
             }
 
-            bool semicolon = context.Token.Contains("Interface", StringComparison.Ordinal);
-
             template.AddReplacement(Tokens.Name, serviceType.Name);
-            template.AddReplacement(Tokens.Namespace, m_namespaceConstant);
+            template.AddReplacement(Tokens.Namespace, kNamespaceConstant);
 
             template.AddTemplate(
-                $"void SyncCall(){(semicolon ? ";" : string.Empty)}",
+                Tokens.ClientStubSync,
                 null,
                 new ServiceType[] { serviceType },
-                LoadTemplate_SyncParameters,
+                (template, context) => LoadTemplate_SyncParameters(
+                    template,
+                    context,
+                    isInterface),
                 null);
 
             template.AddTemplate(
-                $"void AsyncCall(){(semicolon ? ";" : string.Empty)}",
+                Tokens.ClientStubAsync,
                 null,
                 new ServiceType[] { serviceType },
-                LoadTemplate_AsyncParameters,
+                (template, context) => LoadTemplate_AsyncParameters(
+                    template,
+                    context,
+                    isInterface,
+                    isServerApi: false),
                 null);
 
             template.AddTemplate(
-                $"void BeginAsyncCall(){(semicolon ? ";" : string.Empty)}",
+                Tokens.ClientStubBegin,
                 null,
                 new ServiceType[] { serviceType },
-                LoadTemplate_BeginAsyncParameters,
+                (template, context) => LoadTemplate_BeginAsyncParameters(
+                    template,
+                    context,
+                    isInterface),
                 null);
 
             template.AddTemplate(
-                $"void EndAsyncCall(){(semicolon ? ";" : string.Empty)}",
+                Tokens.ClientStubEnd,
                 null,
                 new ServiceType[] { serviceType },
-                LoadTemplate_EndAsyncParameters,
+                (template, context) => LoadTemplate_EndAsyncParameters(
+                    template,
+                    context,
+                    isInterface),
                 null);
 
             template.AddTemplate(
@@ -525,7 +681,10 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes a synchronous method declaration.
         /// </summary>
-        private string LoadTemplate_SyncParameters(Template template, Context context)
+        private string LoadTemplate_SyncParameters(
+            Template template,
+            Context context,
+            bool isInterface)
         {
             if (context.Target is not ServiceType serviceType)
             {
@@ -537,18 +696,6 @@ namespace Opc.Ua.SourceGeneration
             List<string> types = [];
             List<string> names = [];
 
-            if (context.Token.Contains("Stub", StringComparison.Ordinal) ||
-                context.Token.Contains("Interface", StringComparison.Ordinal))
-            {
-                const string secureChannelContextType = "global::Opc.Ua.SecureChannelContext";
-                if (secureChannelContextType.Length > length)
-                {
-                    length = secureChannelContextType.Length;
-                }
-                types.Add(secureChannelContextType);
-                names.Add("secureChannelContext");
-            }
-
             CollectParameters(serviceType.Request, false, types, names, ref length);
             CollectParameters(serviceType.Response, true, types, names, ref length);
 
@@ -557,7 +704,7 @@ namespace Opc.Ua.SourceGeneration
             template.Write(context.Prefix);
 
             // write method type if not writing an interface declaration.
-            if (!context.Token.Contains(';', StringComparison.Ordinal))
+            if (!isInterface)
             {
                 template.Write("public virtual ");
             }
@@ -567,7 +714,7 @@ namespace Opc.Ua.SourceGeneration
             WriteParameters(template, context, types, names, length);
 
             // write closing semicolon for interface.
-            if (context.Token.Contains(';', StringComparison.Ordinal))
+            if (isInterface)
             {
                 template.Write(";");
             }
@@ -578,7 +725,11 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes an asynchronous method declaration.
         /// </summary>
-        private string LoadTemplate_AsyncParameters(Template template, Context context)
+        private string LoadTemplate_AsyncParameters(
+            Template template,
+            Context context,
+            bool isInterface,
+            bool isServerApi)
         {
             if (context.Target is not ServiceType serviceType)
             {
@@ -590,8 +741,7 @@ namespace Opc.Ua.SourceGeneration
             List<string> types = [];
             List<string> names = [];
 
-            if (context.Token.Contains("Stub", StringComparison.Ordinal) ||
-                context.Token.Contains("Interface", StringComparison.Ordinal))
+            if (isServerApi)
             {
                 const string secureChannelContextType = "global::Opc.Ua.SecureChannelContext";
                 if (secureChannelContextType.Length > length)
@@ -618,7 +768,7 @@ namespace Opc.Ua.SourceGeneration
             template.Write(context.Prefix);
 
             // write method type if not writing an interface declaration.
-            if (!context.Token.Contains(';', StringComparison.Ordinal))
+            if (!isInterface)
             {
                 template.Write("public virtual async ");
             }
@@ -628,7 +778,7 @@ namespace Opc.Ua.SourceGeneration
             WriteParameters(template, context, types, names, length);
 
             // write closing semicolon for interface.
-            if (context.Token.Contains(';', StringComparison.Ordinal))
+            if (isInterface)
             {
                 template.Write(";");
             }
@@ -639,7 +789,10 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes a begin asynchronous method declaration.
         /// </summary>
-        private string LoadTemplate_BeginAsyncParameters(Template template, Context context)
+        private string LoadTemplate_BeginAsyncParameters(
+            Template template,
+            Context context,
+            bool isInterface)
         {
             if (context.Target is not ServiceType serviceType)
             {
@@ -663,7 +816,7 @@ namespace Opc.Ua.SourceGeneration
             template.WriteLine(string.Empty);
             template.Write(context.Prefix);
 
-            if (!context.Token.Contains(';', StringComparison.Ordinal))
+            if (!isInterface)
             {
                 template.Write("public virtual ");
             }
@@ -673,7 +826,7 @@ namespace Opc.Ua.SourceGeneration
             WriteParameters(template, context, types, names, length);
 
             // write closing semicolon for interface.
-            if (context.Token.Contains(';', StringComparison.Ordinal))
+            if (isInterface)
             {
                 template.Write(";");
             }
@@ -684,7 +837,10 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes an end asynchronous method declaration.
         /// </summary>
-        private string LoadTemplate_EndAsyncParameters(Template template, Context context)
+        private string LoadTemplate_EndAsyncParameters(
+            Template template,
+            Context context,
+            bool isInterface)
         {
             if (context.Target is not ServiceType serviceType)
             {
@@ -705,7 +861,7 @@ namespace Opc.Ua.SourceGeneration
             template.WriteLine(string.Empty);
             template.Write(context.Prefix);
 
-            if (!context.Token.Contains(';', StringComparison.Ordinal))
+            if (!isInterface)
             {
                 template.Write("public virtual ");
             }
@@ -715,7 +871,7 @@ namespace Opc.Ua.SourceGeneration
             WriteParameters(template, context, types, names, length);
 
             // write closing semicolon for interface.
-            if (context.Token.Contains(';', StringComparison.Ordinal))
+            if (isInterface)
             {
                 template.Write(";");
             }
@@ -750,16 +906,13 @@ namespace Opc.Ua.SourceGeneration
 
                 foreach (FieldType field in serviceType.Request)
                 {
-                    string padding = null;
-
-                    if (field.Name.Length < length)
-                    {
-                        padding = new string(' ', length - field.Name.Length);
-                    }
-
                     template.WriteLine(string.Empty);
                     template.Write(context.Prefix);
-                    template.Write("request.{0}{1} = {2};", field.Name, padding, field.Name.ToLowerCamelCase());
+                    template.Write("request.");
+                    template.Write(field.Name);
+                    template.Write(" = ");
+                    template.Write(field.Name.ToLowerCamelCase());
+                    template.Write(";");
                 }
             }
 
@@ -807,25 +960,12 @@ namespace Opc.Ua.SourceGeneration
                         first = false;
                         continue;
                     }
-
-                    string padding = null;
-
-                    if (field.Name.Length < length)
-                    {
-                        padding = new string(' ', length - field.Name.Length);
-                    }
-
                     template.WriteLine(string.Empty);
                     template.Write(context.Prefix);
-
-                    if (context.Token.Contains("Set", StringComparison.Ordinal))
-                    {
-                        template.Write("response.{2}{1} = {0};", field.Name.ToLowerCamelCase(), padding, field.Name);
-                    }
-                    else
-                    {
-                        template.Write("{0}{1} = response.{2};", field.Name.ToLowerCamelCase(), padding, field.Name);
-                    }
+                    template.Write(field.Name.ToLowerCamelCase());
+                    template.Write(" = response.");
+                    template.Write(field.Name);
+                    template.Write(";");
                 }
             }
 
@@ -839,9 +979,9 @@ namespace Opc.Ua.SourceGeneration
         {
             IReadOnlyList<DataType> datatypes = Validator.GetDataTypeList(
                 typeof(ServiceType),
-                DictionariesToExport,
+                [],
                 Exclusions,
-                m_exportAll,
+                true,
                 true);
 
             List<ServiceType> services = [];
@@ -865,594 +1005,95 @@ namespace Opc.Ua.SourceGeneration
         }
 
         /// <summary>
-        /// Writes classes that implement the data types.
+        /// Writes a service type.
         /// </summary>
-        private void WriteTemplate_Messages(string namespacePrefix)
+        private bool WriteTemplate_ServiceMessage(Template template, Context context)
         {
-            // get datatypes.
-            IReadOnlyList<DataType> datatypes = Validator.GetDataTypeList(
-                typeof(ServiceType),
-                DictionariesToExport,
-                Exclusions,
-                m_exportAll,
-                false);
-
-            if (datatypes.Count == 0)
-            {
-                return;
-            }
-
-            using TextWriter writer = FileSystem.CreateTextWriter(Path.Combine(
-                OutputDirectory,
-                CoreUtils.Format("{0}.Messages.g.cs", namespacePrefix)));
-            var template = new Template(writer, CodeTemplateStrings.Classes_File_cs);
-
-            template.AddReplacement(Tokens.Date, DateTime.Now);
-            template.AddReplacement(Tokens.Prefix, namespacePrefix);
-
-            template.AddTemplate(
-                Tokens.TypeList,
-                null,
-                datatypes,
-                LoadTemplate_Class,
-                WriteTemplate_Class);
-
-            template.WriteTemplate(null);
-        }
-
-        /// <summary>
-        /// Loads the template
-        /// </summary>
-        private string LoadTemplate_Class(Template template, Context context)
-        {
-            // do not publish type declarations as classes.
-            if (context.Target is TypeDeclaration)
-            {
-                return null;
-            }
-
-            if (context.Target is ComplexType)
-            {
-                return CodeTemplateStrings.Classes_Class_cs;
-            }
-
-            if (context.Target is EnumeratedType)
-            {
-                return CodeTemplateStrings.Classes_Enumeration_cs;
-            }
-
-            if (context.Target is ServiceType)
-            {
-                return CodeTemplateStrings.Classes_Service_cs;
-            }
-
-            // do not publish unrecognized sub-types.
-            return null;
-        }
-
-        /// <summary>
-        /// Writes a class.
-        /// </summary>
-        private bool WriteTemplate_Class(Template template, Context context)
-        {
-            if (context.Target is not DataType datatype)
+            if (context.Target is not ServiceType serviceType)
             {
                 return false;
             }
 
-            template.AddReplacement(Tokens.Name, datatype.Name);
-            template.AddReplacement(Tokens.Namespace, m_namespaceConstant);
-            template.AddReplacement(Tokens.TypesNamespace, m_schemaNamespaceConstant);
+            template.AddReplacement(Tokens.Name, serviceType.Name);
+            template.AddReplacement(Tokens.Namespace, kNamespaceConstant);
+            template.AddReplacement(Tokens.TypesNamespace, kSchemaNamespaceConstant);
 
-            template.AddTemplate(
-                Tokens.CollectionClass,
-                CodeTemplateStrings.Classes_ClassCollection_cs,
-                new DataType[] { datatype },
-                null,
-                WriteTemplate_Collection);
+            return template.WriteTemplate(context);
+        }
 
-            template.AddTemplate(
-                Tokens.EnumCollectionClass,
-                CodeTemplateStrings.Classes_EnumerationCollection_cs,
-                new DataType[] { datatype },
-                null,
-                WriteTemplate_Collection);
-
-            if (datatype is ComplexType complexType)
+        /// <summary>
+        /// Writes a constant.
+        /// </summary>
+        private bool WriteTemplate_Constant(Template template, Context context)
+        {
+            if (context.Target is not Constant constant)
             {
-                string baseTypeName = null;
+                return false;
+            }
 
-                if (!complexType.BaseType.IsNull())
+            if (string.IsNullOrEmpty(constant.Value))
+            {
+                context.BlankLine = true;
+                if (constant.Severity != Severity.None)
                 {
-                    if (Validator.ResolveType(complexType.BaseType) is ComplexType baseType)
+                    // Status codes
+                    uint id = Convert.ToUInt32(constant.Identifier, CultureInfo.InvariantCulture);
+                    id <<= 16;
+
+                    switch (constant.Severity)
                     {
-                        baseTypeName = baseType.Name;
+                        case Severity.Bad:
+                            id += 0x80000000;
+                            break;
+                        case Severity.Uncertain:
+                            id += 0x40000000;
+                            break;
                     }
+                    template.AddReplacement(Tokens.IdType, "uint");
+                    template.AddReplacement(Tokens.Identifier, CoreUtils.Format("0x{0:X8}", id));
                 }
                 else
                 {
-                    baseTypeName = "global::Opc.Ua.IEncodeable, global::Opc.Ua.IJsonEncodeable";
+                    // Other
+                    template.AddReplacement(Tokens.IdType, "uint");
+                    template.AddReplacement(Tokens.Identifier, constant.Identifier);
                 }
-
-                if (context.Token == Tokens.RequestMessage)
-                {
-                    baseTypeName += ", global::Opc.Ua.IServiceRequest";
-                }
-
-                if (context.Token == Tokens.ResponseMessage)
-                {
-                    baseTypeName += ", global::Opc.Ua.IServiceResponse";
-                }
-
-                template.AddReplacement(Tokens.BaseType, baseTypeName);
-
-                List<FieldType> fields = [];
-
-                foreach (FieldType field in complexType.Field)
-                {
-                    if (!TypeDictionaryValidator.IsExcluded(Exclusions, field))
-                    {
-                        fields.Add(field);
-                    }
-                }
-
-                template.AddTemplate(
-                    Tokens.DefaultList,
-                    null,
-                    fields,
-                    LoadTemplate_DefaultValue,
-                    null);
-
-                template.AddTemplate(
-                    Tokens.PropertyList,
-                    CodeTemplateStrings.Classes_Property_cs,
-                    fields,
-                    LoadTemplate_Property,
-                    WriteTemplate_Property);
-
-                template.AddTemplate(
-                    Tokens.MemberList,
-                    null,
-                    fields,
-                    LoadTemplate_Member,
-                    null);
-
-                template.AddTemplate(
-                    Tokens.EncodeList,
-                    null,
-                    fields,
-                    LoadTemplate_Encode,
-                    null);
-
-                template.AddTemplate(
-                    Tokens.DecodeList,
-                    null,
-                    fields,
-                    LoadTemplate_Decode,
-                    null);
-
-                template.AddTemplate(
-                    Tokens.IsEqualList,
-                    null,
-                    fields,
-                    LoadTemplate_IsEqual,
-                    null);
-
-                template.AddTemplate(
-                    Tokens.CloneList,
-                    null,
-                    fields,
-                    LoadTemplate_Clone,
-                    null);
-
-                template.AddTemplate(
-                    Tokens.FieldNames,
-                    null,
-                    fields,
-                    LoadTemplate_FieldNames,
-                    null);
-
-                template.AddTemplate(
-                    Tokens.FieldNameSwitch,
-                    null,
-                    fields,
-                    LoadTemplate_GetFieldNameSwitch,
-                    null);
-            }
-
-            if (datatype is EnumeratedType enumeratedType)
-            {
-                var values = new List<EnumeratedValue>();
-
-                foreach (EnumeratedValue value in enumeratedType.Value)
-                {
-                    if (!TypeDictionaryValidator.IsExcluded(Exclusions, value))
-                    {
-                        values.Add(value);
-                    }
-                }
-
-                template.AddTemplate(
-                    Tokens.ValueList,
-                    CodeTemplateStrings.Classes_EnumerationValue_cs,
-                    values,
-                    null,
-                    WriteTemplate_EnumerationValue);
-            }
-
-            if (datatype is ServiceType serviceType)
-            {
-                var requestType = new ComplexType
-                {
-                    Name = serviceType.Name + "Request"
-                };
-                requestType.QName = new XmlQualifiedName(
-                    requestType.Name,
-                    serviceType.QName.Namespace);
-                requestType.Field = serviceType.Request;
-
-                template.AddTemplate(
-                    Tokens.RequestMessage,
-                    CodeTemplateStrings.Classes_Class_cs,
-                    new DataType[] { requestType },
-                    null,
-                    WriteTemplate_Class);
-
-                var responseType = new ComplexType
-                {
-                    Name = serviceType.Name + "Response"
-                };
-                responseType.QName = new XmlQualifiedName(
-                    responseType.Name,
-                    serviceType.QName.Namespace);
-                responseType.Field = serviceType.Response;
-
-                template.AddTemplate(
-                    Tokens.ResponseMessage,
-                    CodeTemplateStrings.Classes_Class_cs,
-                    new DataType[] { responseType },
-                    null,
-                    WriteTemplate_Class);
-            }
-
-            return template.WriteTemplate(context);
-        }
-
-        /// <summary>
-        /// Writes the default value for a field.
-        /// </summary>
-        private string LoadTemplate_DefaultValue(Template template, Context context)
-        {
-            if (context.Target is not FieldType field)
-            {
-                return null;
-            }
-
-            template.WriteLine(string.Empty);
-            template.Write(context.Prefix);
-            template.Write(
-                "m_{0} = {1};",
-                field.Name.ToLowerCamelCase(),
-                Validator.GetDotNetDefaultValue(field));
-
-            return null;
-        }
-
-        /// <summary>
-        /// Loads the template for a property.
-        /// </summary>
-        private string LoadTemplate_Property(Template template, Context context)
-        {
-            if (context.Target is not FieldType field)
-            {
-                return null;
-            }
-
-            if (field.ValueRank >= 0)
-            {
-                return CodeTemplateStrings.Classes_PropertyArray_cs;
-            }
-
-            if (Validator.ResolveType(field.DataType) is ComplexType)
-            {
-                return CodeTemplateStrings.Classes_PropertyArray_cs;
-            }
-
-            return CodeTemplateStrings.Classes_Property_cs;
-        }
-
-        /// <summary>
-        /// Writes a property.
-        /// </summary>
-        private bool WriteTemplate_Property(Template template, Context context)
-        {
-            if (context.Target is not FieldType field)
-            {
-                return false;
-            }
-
-            template.AddReplacement(
-                Tokens.XmlType,
-                CoreUtils.Format(
-                    "[global::System.Runtime.Serialization.DataMember(Name = \"{0}\", Order = {1}]",
-                    field.Name,
-                    context.Index + 1));
-            template.AddReplacement(Tokens.InternalName, field.Name.ToLowerCamelCase());
-            template.AddReplacement(Tokens.ExternalName, field.Name);
-            template.AddReplacement(
-                Tokens.Type,
-                Validator.GetDotNetTypeName(
-                    field.DataType,
-                    field.ValueRank,
-                    nullable: true));
-
-            return template.WriteTemplate(context);
-        }
-
-        /// <summary>
-        /// Writes an enumeration value.
-        /// </summary>
-        private bool WriteTemplate_EnumerationValue(Template template, Context context)
-        {
-            if (context.Target is not EnumeratedValue value)
-            {
-                return false;
-            }
-
-            var enumeratedType = context.Container as EnumeratedType;
-
-            template.AddReplacement(
-                Tokens.XmlType,
-                CoreUtils.Format("[global.System.Runtime.Serialization.EnumMember(Value = \"{0}_{1}\")]", value.Name, value.Value));
-            template.AddReplacement(Tokens.Name, value.Name);
-
-            if (context.Index < enumeratedType.Value.Length - 1)
-            {
-                template.AddReplacement(Tokens.Value, value.Value + ",");
             }
             else
             {
-                template.AddReplacement(Tokens.Value, value.Value);
+                template.AddReplacement(Tokens.IdType, "string"); // Never hit
+                template.AddReplacement(
+                    Tokens.Identifier,
+                    CoreUtils.Format("\"{0}\"", constant.Value)); // TODO: Make string resource
             }
+
+            string symbolicId = constant.Name;
+            if (constant.Severity != Severity.None && constant.Identifier != 0)
+            {
+                // Status codes
+                string name = constant.Name;
+                int index = name.IndexOf('_', StringComparison.Ordinal);
+                if (index != -1)
+                {
+                    name = name[(index + 1)..];
+                }
+                symbolicId = CoreUtils.Format("{0}{1}", constant.Severity, name);
+            }
+            template.AddReplacement(Tokens.SymbolicId, symbolicId);
+
+            string description = constant.Documentation.GetDescription();
+            if (string.IsNullOrEmpty(description))
+            {
+                // Never hit - remove
+                description = CoreUtils.Format(
+                    "The identifier for the {0} datatype.",
+                    symbolicId);
+            }
+            template.AddReplacement(Tokens.Description, description);
 
             return template.WriteTemplate(context);
         }
 
-        /// <summary>
-        /// Writes a collection class.
-        /// </summary>
-        private bool WriteTemplate_Collection(Template template, Context context)
-        {
-            if (context.Target is not DataType datatype ||
-                !datatype.AllowArrays)
-            {
-                return false;
-            }
-
-            template.WriteLine(string.Empty);
-
-            template.AddReplacement(Tokens.Name, datatype.Name);
-            template.AddReplacement(Tokens.XmlNamespaceUri, m_schemaNamespaceConstant);
-
-            return template.WriteTemplate(context);
-        }
-
-        /// <summary>
-        /// Writes the class member for a field.
-        /// </summary>
-        private string LoadTemplate_FieldNames(Template template, Context context)
-        {
-            if (context.Target is not FieldType field)
-            {
-                return null;
-            }
-
-            template.WriteLine(string.Empty);
-            template.Write(context.Prefix);
-            template.Write("/// <remarks />;");
-            template.WriteLine(string.Empty);
-            template.Write(context.Prefix);
-            template.Write("public const string {0} = \"{0}\";", field.Name);
-
-            return null;
-        }
-
-        /// <summary>
-        /// Writes the class member for a field.
-        /// </summary>
-        private string LoadTemplate_GetFieldNameSwitch(Template template, Context context)
-        {
-            if (context.Target is not FieldType field)
-            {
-                return null;
-            }
-
-            template.WriteLine(string.Empty);
-            template.Write(context.Prefix);
-            template.Write(
-                "case Names.{0}: return m_{1};",
-                field.Name,
-                field.Name.ToLowerCamelCase());
-
-            return null;
-        }
-
-        /// <summary>
-        /// Writes the class member for a field.
-        /// </summary>
-        private string LoadTemplate_Member(Template template, Context context)
-        {
-            if (context.Target is not FieldType field)
-            {
-                return null;
-            }
-
-            template.WriteLine(string.Empty);
-            template.Write(context.Prefix);
-            template.Write(
-                "private {1} m_{0};",
-                field.Name.ToLowerCamelCase(),
-                Validator.GetDotNetTypeName(
-                    field.DataType,
-                    field.ValueRank,
-                    nullable: true));
-
-            return null;
-        }
-
-        /// <summary>
-        /// Writes the encode function for a field.
-        /// </summary>
-        private string LoadTemplate_Encode(Template template, Context context)
-        {
-            if (context.Target is not FieldType field)
-            {
-                return null;
-            }
-
-            template.WriteLine(string.Empty);
-            template.Write(context.Prefix);
-
-            DataType datatype = Validator.ResolveType(field.DataType);
-
-            if (datatype is EnumeratedType enumeratedType)
-            {
-                if (field.ValueRank >= 0)
-                {
-                    template.Write("encoder.WriteEnumeratedArray");
-                    template.Write("(\"{0}\", ({1}[]){0}, typeof({1}));", field.Name, enumeratedType.Name);
-                }
-                else
-                {
-                    template.Write("encoder.WriteEnumerated");
-                    template.Write("(\"{0}\", {0});", field.Name);
-                }
-            }
-            else if (datatype.QName.Namespace == Namespaces.OpcUaBuiltInTypes)
-            {
-                if (field.ValueRank >= 0)
-                {
-                    template.Write("encoder.Write{0}Array", datatype.Name);
-                }
-                else
-                {
-                    template.Write("encoder.Write{0}", datatype.Name);
-                }
-
-                template.Write("(\"{0}\", {0});", field.Name);
-            }
-            else if (field.ValueRank >= 0)
-            {
-                template.Write("encoder.WriteEncodeableArray");
-                template.Write("(\"{0}\", ({1}[]){0}, typeof({1}));", field.Name, datatype.Name);
-            }
-            else
-            {
-                template.Write("encoder.WriteEncodeable");
-                template.Write("(\"{0}\", {0}, typeof({1}));", field.Name, datatype.Name);
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Writes the decode function for a field.
-        /// </summary>
-        private string LoadTemplate_Decode(Template template, Context context)
-        {
-            if (context.Target is not FieldType field)
-            {
-                return null;
-            }
-
-            template.WriteLine(string.Empty);
-            template.Write(context.Prefix);
-
-            DataType datatype = Validator.ResolveType(field.DataType);
-
-            if (datatype is EnumeratedType enumeratedType)
-            {
-                if (field.ValueRank >= 0)
-                {
-                    template.Write("{0} = ({1}[])decoder.ReadEnumeratedArray", field.Name, enumeratedType.Name);
-                    template.Write("(\"{0}\", typeof({1}));", field.Name, enumeratedType.Name);
-                }
-                else
-                {
-                    template.Write("{0} = ({1})decoder.ReadEnumerated", field.Name, enumeratedType.Name);
-                    template.Write("(\"{0}\", typeof({1}));", field.Name, enumeratedType.Name);
-                }
-            }
-            else if (datatype.QName.Namespace == Namespaces.OpcUaBuiltInTypes)
-            {
-                if (field.ValueRank >= 0)
-                {
-                    template.Write("{0} = decoder.Read{1}Array(\"{0}\");", field.Name, datatype.Name);
-                }
-                else
-                {
-                    template.Write("{0} = decoder.Read{1}(\"{0}\");", field.Name, datatype.Name);
-                }
-            }
-            else if (field.ValueRank >= 0)
-            {
-                template.Write(
-                    "{0} = ({1}Collection)decoder.ReadEncodeableArray(\"{0}\", typeof({1}));",
-                    field.Name,
-                    datatype.Name);
-            }
-            else
-            {
-                template.Write(
-                    "{0} = ({1})decoder.ReadEncodeable(\"{0}\", typeof({1}));",
-                    field.Name,
-                    datatype.Name);
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Writes the IsEqual statement for a field.
-        /// </summary>
-        private string LoadTemplate_IsEqual(Template template, Context context)
-        {
-            if (context.Target is not FieldType field)
-            {
-                return null;
-            }
-
-            template.WriteLine(string.Empty);
-            template.Write(context.Prefix);
-            template.Write("if (!CoreUtils.IsEqual(m_{0}, value.m_{0})) return false;", field.Name.ToLowerCamelCase());
-
-            return null;
-        }
-
-        /// <summary>
-        /// Writes the clone function for a field.
-        /// </summary>
-        private string LoadTemplate_Clone(Template template, Context context)
-        {
-            if (context.Target is not FieldType field)
-            {
-                return null;
-            }
-
-            template.WriteLine(string.Empty);
-            template.Write(context.Prefix);
-            template.Write(
-                "clone.m_{0} = ({1})CoreUtils.Clone(this.m_{0});",
-                field.Name.ToLowerCamelCase(),
-                Validator.GetDotNetTypeName(
-                    field.DataType,
-                    field.ValueRank,
-                    nullable: true));
-
-            return null;
-        }
-
-        // Private Methods
         /// <summary>
         /// Collects the parameters to write.
         /// </summary>
@@ -1574,6 +1215,60 @@ namespace Opc.Ua.SourceGeneration
         }
 
         /// <summary>
+        /// Loads the identifiers from a CSV file.
+        /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
+        private Dictionary<string, int> LoadIdentifiers(string identifiersFile)
+        {
+            var identifiers = new Dictionary<string, int>();
+            int maxId = 1;
+
+            using TextReader reader = m_fileSystem.CreateTextReader(identifiersFile);
+            while (true)
+            {
+                string line = reader.ReadLine();
+                if (line == null)
+                {
+                    break;
+                }
+
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    continue;
+                }
+
+                int index = line.IndexOf(',', StringComparison.Ordinal);
+
+                if (index == -1)
+                {
+                    continue;
+                }
+
+                // remove the node class if it is present.
+                int lastIndex = line.LastIndexOf(',');
+
+                if (lastIndex != -1 && index != lastIndex)
+                {
+                    line = line[..lastIndex];
+                }
+
+                string name = line[..index].Trim();
+
+                int uid = Convert.ToInt32(
+                    line[(index + 1)..].Trim(),
+                    CultureInfo.InvariantCulture);
+
+                if (maxId <= uid)
+                {
+                    maxId = uid + 1;
+                }
+
+                identifiers[name] = uid;
+            }
+            return identifiers;
+        }
+
+        /// <summary>
         /// Returns the service sets available.
         /// </summary>
         private static List<ServiceSet> ServiceSets =>
@@ -1583,8 +1278,12 @@ namespace Opc.Ua.SourceGeneration
             new ServiceSet("Registration", InterfaceType.Registration)
         ];
 
-        private bool m_exportAll;
-        private string m_namespaceConstant;
-        private string m_schemaNamespaceConstant;
+        private const string kNamespaceConstant = "OpcUa";
+        private const string kSchemaNamespaceConstant = "OpcUaXsd";
+        private const string kNamespacePrefix = "Opc.Ua";
+
+        private readonly IFileSystem m_fileSystem;
+        private readonly string m_outputFolder;
+        private string m_className;
     }
 }

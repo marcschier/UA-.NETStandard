@@ -341,7 +341,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public static bool IsDerivedDataType(this TypeDesign type, Namespace[] namespaces)
         {
-            if (type is not DataTypeDesign dataType || type.BaseTypeNode is not DataTypeDesign dtd)
+            if (type is not DataTypeDesign || type.BaseTypeNode is not DataTypeDesign dtd)
             {
                 return true;
             }
@@ -844,7 +844,7 @@ namespace Opc.Ua.SourceGeneration
                     {
                         return "null";
                     }
-                    return CoreUtils.Format("\"{0}\"", stringValue);
+                    return CoreUtils.Format("\"{0}\"", stringValue); // TODO: Make string resource
                 case BasicDataType.DateTime:
                     if (decodedValue is not DateTime dateTimeValue)
                     {
@@ -873,29 +873,29 @@ namespace Opc.Ua.SourceGeneration
 
                     if (nodeId.NamespaceIndex == 0 || nodeId.NamespaceIndex >= namespaces.Length)
                     {
-                        return CoreUtils.Format("global::Opc.Ua.NodeId.Parse(\"{0}\")", nodeId);
+                        return CoreUtils.Format("global::Opc.Ua.NodeId.Parse(\"{0}\")", nodeId); // TODO: Make string resource
                     }
 
                     var absoluteId = new ExpandedNodeId(nodeId, namespaces[nodeId.NamespaceIndex].Value);
-                    return CoreUtils.Format("ExpandedNodeId.Parse(\"{0}\", context.NamespaceUris)", absoluteId);
+                    return CoreUtils.Format("ExpandedNodeId.Parse(\"{0}\", context.NamespaceUris)", absoluteId); // TODO: Make string resource
                 case BasicDataType.ExpandedNodeId:
                     if (decodedValue is not ExpandedNodeId expandedNodeId)
                     {
                         return "global::Opc.Ua.ExpandedNodeId.Null";
                     }
-                    return CoreUtils.Format("global::Opc.Ua.ExpandedNodeId.Parse(\"{0}\")", expandedNodeId);
+                    return CoreUtils.Format("global::Opc.Ua.ExpandedNodeId.Parse(\"{0}\")", expandedNodeId); // TODO: Make string resource
                 case BasicDataType.QualifiedName:
                     if (decodedValue is not QualifiedName qualifiedName)
                     {
                         return "global::Opc.Ua.QualifiedName.Null";
                     }
-                    return CoreUtils.Format("global::Opc.Ua.QualifiedName.Parse(\"{0}\")", qualifiedName);
+                    return CoreUtils.Format("global::Opc.Ua.QualifiedName.Parse(\"{0}\")", qualifiedName); // TODO: Make string resource
                 case BasicDataType.LocalizedText:
                     if (decodedValue is not LocalizedText localizedText)
                     {
                         return "global::Opc.Ua.LocalizedText.Null";
                     }
-                    return CoreUtils.Format("new global::Opc.Ua.LocalizedText(\"{0}\", \"{1}\")", localizedText.Locale, localizedText.Text);
+                    return CoreUtils.Format("new global::Opc.Ua.LocalizedText(\"{0}\", \"{1}\")", localizedText.Locale, localizedText.Text); // TODO: Make string resource
                 case BasicDataType.StatusCode:
                     if (decodedValue is not StatusCode statusCode)
                     {

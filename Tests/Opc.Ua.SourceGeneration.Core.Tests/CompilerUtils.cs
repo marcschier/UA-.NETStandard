@@ -252,12 +252,12 @@ namespace Opc.Ua.SourceGeneration
             static Assembly LoadFromNugetCache(string path, string dll)
             {
                 string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                var location = Path.Combine(
+                string location = Path.Combine(
                     userProfile,
                     ".nuget",
                     "packages",
                     path);
-                var file = Path.Combine(location, dll);
+                string file = Path.Combine(location, dll);
                 if (!File.Exists(file))
                 {
                     file = Path.Combine(location, "cs", dll);

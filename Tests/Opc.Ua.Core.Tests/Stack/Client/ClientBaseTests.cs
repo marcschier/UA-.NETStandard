@@ -35,11 +35,9 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Threading;
-using EmbedIO.Sessions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
-using Opc.Ua.Tests;
 
 namespace Opc.Ua.Core.Tests.Stack.Client
 {
