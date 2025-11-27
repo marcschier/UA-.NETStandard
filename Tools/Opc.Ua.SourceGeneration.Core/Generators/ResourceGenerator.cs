@@ -99,15 +99,13 @@ namespace Opc.Ua.SourceGeneration
 
             using TextWriter writer = m_fileSystem.CreateTextWriter(outputFile);
 
-            string templateContent = CodeTemplateStrings.Resources_File_cs;
-            var template = new Template(writer, templateContent);
+            var template = new Template(writer, CodeTemplates.Resources_File_cs);
 
             template.AddReplacement(Tokens.Namespace, namespacePrefix);
             template.AddTemplate(
                 Tokens.ListOfResourceGroups,
-                CodeTemplateStrings.Resources_Classes_cs,
+                CodeTemplates.Resources_Classes_cs,
                 groups,
-                null,
                 WriteTemplate_ResourceGroup);
 
             template.WriteTemplate(null);
@@ -128,15 +126,14 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddTemplate(
                 Tokens.ListOfResourceDeclarations,
-                string.Empty,
-                group.ToArray(),
+                [.. group],
                 LoadTemplate_ResourceDeclaration,
                 WriteTemplate_ResourceDeclaration);
 
             return template.WriteTemplate(context);
         }
 
-        private string LoadTemplate_ResourceDeclaration(Template template, Context context)
+        private TemplateString LoadTemplate_ResourceDeclaration(Template template, Context context)
         {
             if (context.Target is not Resource resource)
             {
@@ -144,14 +141,14 @@ namespace Opc.Ua.SourceGeneration
             }
             if (context.Target is StringResource str && str.AsUtf16)
             {
-                return CodeTemplateStrings.ResourceDeclaration_ConstString_cs;
+                return CodeTemplates.ResourceDeclaration_ConstString_cs;
             }
             if (m_useByteArrayForBase64 &&
                 resource.GetLength(m_fileSystem) > m_base64Threshold)
             {
-                return CodeTemplateStrings.ResourceDeclaration_ByteArray_cs;
+                return CodeTemplates.ResourceDeclaration_ByteArray_cs;
             }
-            return CodeTemplateStrings.ResourceDeclaration_ReadOnlySpan_cs;
+            return CodeTemplates.ResourceDeclaration_ReadOnlySpan_cs;
         }
 
         private bool WriteTemplate_ResourceDeclaration(Template template, Context context)
@@ -161,12 +158,10 @@ namespace Opc.Ua.SourceGeneration
                 return false;
             }
             template.AddReplacement(Tokens.ResourceName, resource.ResourceName);
-            object[] target = [context.Target];
 
             template.AddTemplate(
                 Tokens.Resource,
-                string.Empty,
-                target,
+                context.Target,
                 LoadTemplate_Resource,
                 WriteTemplate_Resource);
 
@@ -198,7 +193,7 @@ namespace Opc.Ua.SourceGeneration
             return true;
         }
 
-        private string LoadTemplate_Resource(Template template, Context context)
+        private TemplateString LoadTemplate_Resource(Template template, Context context)
         {
             if (context.Target is not Resource resource)
             {
@@ -230,7 +225,7 @@ namespace Opc.Ua.SourceGeneration
             {
                 WriteBinaryResource(template, context, resource);
             }
-            return string.Empty;
+            return null;
         }
 
         private void WriteBinaryResource(
@@ -413,7 +408,7 @@ namespace Opc.Ua.SourceGeneration
             TextReader reader)
         {
             template.WriteNextLine(context.Prefix);
-            template.Write(template.Indent);
+            template.Write(template.Indentation);
             template.Write("\"\"\"");
             for (string line = reader.ReadLine();
                 line != null;
@@ -425,11 +420,11 @@ namespace Opc.Ua.SourceGeneration
                     continue;
                 }
                 template.WriteNextLine(context.Prefix);
-                template.Write(template.Indent);
+                template.Write(template.Indentation);
                 template.Write(line);
             }
             template.WriteNextLine(context.Prefix);
-            template.Write(template.Indent);
+            template.Write(template.Indentation);
             template.Write("\"\"\"u8");
         }
 

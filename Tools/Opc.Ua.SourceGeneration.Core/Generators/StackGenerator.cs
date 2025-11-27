@@ -153,16 +153,15 @@ namespace Opc.Ua.SourceGeneration
             using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
                 m_outputFolder,
                 CoreUtils.Format("{0}.ServerBase.g.cs", kNamespacePrefix)));
-            var template = new Template(writer, CodeTemplateStrings.ServerApi_File_cs);
+            var template = new Template(writer, CodeTemplates.ServerApi_File_cs);
 
             template.AddReplacement(Tokens.Prefix, kNamespacePrefix);
             template.AddReplacement(Tokens.Namespace, kNamespaceConstant);
 
             template.AddTemplate(
                 Tokens.ServiceSets,
-                CodeTemplateStrings.ServerApi_ServiceSet_cs,
+                CodeTemplates.ServerApi_ServiceSet_cs,
                 serviceSets,
-                null,
                 WriteTemplate_ServerApiServiceSet);
 
             template.WriteTemplate(null);
@@ -178,16 +177,15 @@ namespace Opc.Ua.SourceGeneration
             using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
                 m_outputFolder,
                 CoreUtils.Format("{0}.Client.g.cs", kNamespacePrefix)));
-            var template = new Template(writer, CodeTemplateStrings.ClientApi_File_cs);
+            var template = new Template(writer, CodeTemplates.ClientApi_File_cs);
 
             template.AddReplacement(Tokens.Prefix, kNamespacePrefix);
             template.AddReplacement(Tokens.Namespace, kNamespaceConstant);
 
             template.AddTemplate(
                 Tokens.ServiceSets,
-                CodeTemplateStrings.ClientApi_ServiceSet_cs,
+                CodeTemplates.ClientApi_ServiceSet_cs,
                 serviceSets,
-                null,
                 WriteTemplate_ClientApiServiceSet);
 
             template.WriteTemplate(null);
@@ -207,16 +205,15 @@ namespace Opc.Ua.SourceGeneration
             using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
                 m_outputFolder,
                 CoreUtils.Format("{0}.Endpoints.g.cs", kNamespacePrefix)));
-            var template = new Template(writer, CodeTemplateStrings.Endpoints_File_cs);
+            var template = new Template(writer, CodeTemplates.Endpoints_File_cs);
 
             template.AddReplacement(Tokens.Prefix, kNamespacePrefix);
             template.AddReplacement(Tokens.Namespace, kNamespaceConstant);
 
             template.AddTemplate(
                 Tokens.ServiceSets,
-                CodeTemplateStrings.Endpoints_ServiceSet_cs,
+                CodeTemplates.Endpoints_ServiceSet_cs,
                 serviceSets,
-                null,
                 WriteTemplate_EndpointServiceSet);
 
             template.WriteTemplate(null);
@@ -243,15 +240,14 @@ namespace Opc.Ua.SourceGeneration
             using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
                 m_outputFolder,
                 CoreUtils.Format("{0}.Messages.g.cs", kNamespacePrefix)));
-            var template = new Template(writer, CodeTemplateStrings.Messages_File_cs);
+            var template = new Template(writer, CodeTemplates.Messages_File_cs);
 
             template.AddReplacement(Tokens.Prefix, kNamespacePrefix);
 
             template.AddTemplate(
                 Tokens.TypeList,
-                CodeTemplateStrings.Classes_ServiceMessage_cs,
+                CodeTemplates.Classes_ServiceMessage_cs,
                 serviceTypes,
-                null,
                 WriteTemplate_ServiceMessage);
 
             template.WriteTemplate(null);
@@ -266,7 +262,7 @@ namespace Opc.Ua.SourceGeneration
                 CoreUtils.Format("{0}.StatusCodes.g.cs", kNamespacePrefix));
             using TextWriter writer = m_fileSystem.CreateTextWriter(fileName);
 
-            var template = new Template(writer, CodeTemplateStrings.Constants_File_cs);
+            var template = new Template(writer, CodeTemplates.Constants_File_cs);
             m_className = "StatusCodes";
 
             template.AddReplacement(Tokens.Prefix, kNamespacePrefix);
@@ -302,9 +298,8 @@ namespace Opc.Ua.SourceGeneration
             // collect datatypes with the specified type.
             template.AddTemplate(
                 Tokens.ListOfIdentifiers,
-                CodeTemplateStrings.Constants_Constant_cs,
+                CodeTemplates.Constants_Constant_cs,
                 constants,
-                null,
                 WriteTemplate_Constant);
 
             var context = new Context();
@@ -320,7 +315,7 @@ namespace Opc.Ua.SourceGeneration
                 CoreUtils.Format("{0}.Attributes.g.cs", kNamespacePrefix));
             using TextWriter writer = m_fileSystem.CreateTextWriter(fileName);
 
-            var template = new Template(writer, CodeTemplateStrings.Constants_File_cs);
+            var template = new Template(writer, CodeTemplates.Constants_File_cs);
             m_className = "Attributes";
 
             template.AddReplacement(Tokens.Prefix, kNamespacePrefix);
@@ -344,9 +339,8 @@ namespace Opc.Ua.SourceGeneration
             // collect datatypes with the specified type.
             template.AddTemplate(
                 Tokens.ListOfIdentifiers,
-                CodeTemplateStrings.Constants_Constant_cs,
+                CodeTemplates.Constants_Constant_cs,
                 constants,
-                null,
                 WriteTemplate_Constant);
 
             var context = new Context();
@@ -375,17 +369,14 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddTemplate(
                 Tokens.MethodList,
-                CodeTemplateStrings.Endpoints_Method_cs,
+                CodeTemplates.Endpoints_Method_cs,
                 datatypes,
-                null,
                 WriteTemplate_EndpointMethod);
 
             template.AddTemplate(
                 Tokens.AddKnownType,
-                null,
                 datatypes,
-                LoadTemplate_KnownType,
-                null);
+                LoadTemplate_KnownType);
 
             return template.WriteTemplate(context);
         }
@@ -404,10 +395,8 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddTemplate(
                 Tokens.InvokeServiceAsync,
-                null,
-                new ServiceType[] { serviceType },
-                LoadTemplate_InvokeServiceAsyncParameters,
-                null);
+                serviceType,
+                LoadTemplate_InvokeServiceAsyncParameters);
 
             return template.WriteTemplate(context);
         }
@@ -415,7 +404,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes an asynchronous method declaration.
         /// </summary>
-        private string LoadTemplate_InvokeServiceAsyncParameters(Template template, Context context)
+        private TemplateString LoadTemplate_InvokeServiceAsyncParameters(Template template, Context context)
         {
             if (context.Target is not ServiceType serviceType)
             {
@@ -449,7 +438,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes a synchronous method declaration.
         /// </summary>
-        private string LoadTemplate_KnownType(Template template, Context context)
+        private TemplateString LoadTemplate_KnownType(Template template, Context context)
         {
             if (context.Target is not ServiceType serviceType)
             {
@@ -482,9 +471,9 @@ namespace Opc.Ua.SourceGeneration
                 return false;
             }
 
-            List<ServiceType> datatypes = GetListOfServices(serviceSet.Interfaces);
+            List<ServiceType> serviceTypes = GetListOfServices(serviceSet.Interfaces);
 
-            if (datatypes.Count == 0)
+            if (serviceTypes.Count == 0)
             {
                 return false;
             }
@@ -493,16 +482,14 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddTemplate(
                 Tokens.ServerApi,
-                CodeTemplateStrings.ServerApi_InterfaceMethod_cs,
-                datatypes,
-                null,
+                CodeTemplates.ServerApi_InterfaceMethod_cs,
+                serviceTypes,
                 WriteTemplate_InterfaceMethod);
 
             template.AddTemplate(
                 Tokens.ServerStubs,
-                CodeTemplateStrings.ServerApi_Method_cs,
-                datatypes,
-                null,
+                CodeTemplates.ServerApi_Method_cs,
+                serviceTypes,
                 WriteTemplate_ServerApiMethod);
 
             return template.WriteTemplate(context);
@@ -522,14 +509,12 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddTemplate(
                 Tokens.ServerInterfaceAsync,
-                null,
-                new ServiceType[] { serviceType },
+                serviceType,
                 (template, context) => LoadTemplate_AsyncParameters(
                     template,
                     context,
                     isInterface: true,
-                    isServerApi: true),
-                null);
+                    isServerApi: true));
 
             return template.WriteTemplate(context);
         }
@@ -549,14 +534,12 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddTemplate(
                 Tokens.ServerStubAsync,
-                null,
-                new ServiceType[] { serviceType },
+                serviceType,
                 (template, context) => LoadTemplate_AsyncParameters(
                     template,
                     context,
                     isInterface: false,
-                    isServerApi: true),
-                null);
+                    isServerApi: true));
 
             return template.WriteTemplate(context);
         }
@@ -572,9 +555,9 @@ namespace Opc.Ua.SourceGeneration
             }
 
             // get datatypes.
-            List<ServiceType> datatypes = GetListOfServices(serviceSet.Interfaces);
+            List<ServiceType> serviceTypes = GetListOfServices(serviceSet.Interfaces);
 
-            if (datatypes.Count == 0)
+            if (serviceTypes.Count == 0)
             {
                 return false;
             }
@@ -583,9 +566,8 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddTemplate(
                 Tokens.ClientInterface,
-                CodeTemplateStrings.ClientApi_InterfaceMethods_cs,
-                datatypes,
-                null,
+                CodeTemplates.ClientApi_InterfaceMethods_cs,
+                serviceTypes,
                 (template, context) => WriteTemplate_ClientApiMethod(
                     template,
                     context,
@@ -593,9 +575,8 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddTemplate(
                 Tokens.ClientApi,
-                CodeTemplateStrings.ClientApi_MethodImplementations_cs,
-                datatypes,
-                null,
+                CodeTemplates.ClientApi_MethodImplementations_cs,
+                serviceTypes,
                 (template, context) => WriteTemplate_ClientApiMethod(
                     template,
                     context,
@@ -622,58 +603,46 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddTemplate(
                 Tokens.ClientStubSync,
-                null,
-                new ServiceType[] { serviceType },
+                serviceType,
                 (template, context) => LoadTemplate_SyncParameters(
                     template,
                     context,
-                    isInterface),
-                null);
+                    isInterface));
 
             template.AddTemplate(
                 Tokens.ClientStubAsync,
-                null,
-                new ServiceType[] { serviceType },
+                serviceType,
                 (template, context) => LoadTemplate_AsyncParameters(
                     template,
                     context,
                     isInterface,
-                    isServerApi: false),
-                null);
+                    isServerApi: false));
 
             template.AddTemplate(
                 Tokens.ClientStubBegin,
-                null,
-                new ServiceType[] { serviceType },
+                serviceType,
                 (template, context) => LoadTemplate_BeginAsyncParameters(
                     template,
                     context,
-                    isInterface),
-                null);
+                    isInterface));
 
             template.AddTemplate(
                 Tokens.ClientStubEnd,
-                null,
-                new ServiceType[] { serviceType },
+                serviceType,
                 (template, context) => LoadTemplate_EndAsyncParameters(
                     template,
                     context,
-                    isInterface),
-                null);
+                    isInterface));
 
             template.AddTemplate(
                 Tokens.RequestParameters,
-                null,
-                new ServiceType[] { serviceType },
-                LoadTemplate_RequestParameters,
-                null);
+                serviceType,
+                LoadTemplate_RequestParameters);
 
             template.AddTemplate(
                 Tokens.ResponseParameters,
-                null,
-                new ServiceType[] { serviceType },
-                LoadTemplate_ResponseParameters,
-                null);
+                serviceType,
+                LoadTemplate_ResponseParameters);
 
             return template.WriteTemplate(context);
         }
@@ -681,7 +650,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes a synchronous method declaration.
         /// </summary>
-        private string LoadTemplate_SyncParameters(
+        private TemplateString LoadTemplate_SyncParameters(
             Template template,
             Context context,
             bool isInterface)
@@ -725,7 +694,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes an asynchronous method declaration.
         /// </summary>
-        private string LoadTemplate_AsyncParameters(
+        private TemplateString LoadTemplate_AsyncParameters(
             Template template,
             Context context,
             bool isInterface,
@@ -789,7 +758,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes a begin asynchronous method declaration.
         /// </summary>
-        private string LoadTemplate_BeginAsyncParameters(
+        private TemplateString LoadTemplate_BeginAsyncParameters(
             Template template,
             Context context,
             bool isInterface)
@@ -837,7 +806,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes an end asynchronous method declaration.
         /// </summary>
-        private string LoadTemplate_EndAsyncParameters(
+        private TemplateString LoadTemplate_EndAsyncParameters(
             Template template,
             Context context,
             bool isInterface)
@@ -882,7 +851,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Copies the request paramaters into the request object.
         /// </summary>
-        private string LoadTemplate_RequestParameters(Template template, Context context)
+        private TemplateString LoadTemplate_RequestParameters(Template template, Context context)
         {
             if (context.Target is not ServiceType serviceType)
             {
@@ -922,7 +891,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Copies the response paramaters into the request object.
         /// </summary>
-        private string LoadTemplate_ResponseParameters(Template template, Context context)
+        private TemplateString LoadTemplate_ResponseParameters(Template template, Context context)
         {
             if (context.Target is not ServiceType serviceType)
             {

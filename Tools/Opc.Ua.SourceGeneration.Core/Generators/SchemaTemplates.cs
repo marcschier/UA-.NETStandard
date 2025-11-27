@@ -32,12 +32,12 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Template strings
     /// </summary>
-    internal static class SchemaTemplateStrings
+    internal static class SchemaTemplates
     {
         /// <summary>
         /// BinarySchemaGenerator.cs line#81
         /// </summary>
-        public static string Stack_BinarySchema_File_xml =>
+        public static readonly TemplateString Stack_BinarySchema_File_xml = TemplateString.Parse(
             $$"""
             <opc:TypeDictionary
               xmlns:s0="ListOfNamespaces"
@@ -52,22 +52,22 @@ namespace Opc.Ua.SourceGeneration
               {{Tokens.ListOfTypes}}
 
             </opc:TypeDictionary>
-            """;
+            """);
 
         /// <summary>
         /// BinarySchemaGenerator.cs line#125
         /// </summary>
-        public static string Stack_BinarySchema_OpaqueType_xml =>
+        public static readonly TemplateString Stack_BinarySchema_OpaqueType_xml = TemplateString.Parse(
             $$"""
             <opc:OpaqueType Name="{{Tokens.TypeName}}">
               <opc:Documentation>{{Tokens.Description}}</opc:Documentation>
             </opc:OpaqueType>
-            """;
+            """);
 
         /// <summary>
         /// BinarySchemaGenerator.cs line#185
         /// </summary>
-        public static string Stack_BinarySchema_BuiltInTypes_bsd =>
+        public static readonly TemplateString Stack_BinarySchema_BuiltInTypes_bsd =
             """
             <opc:Import Namespace="http://opcfoundation.org/BinarySchema/" />
 
@@ -255,29 +255,29 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// BinarySchemaGenerator.cs line#209
         /// </summary>
-        public static string Stack_BinarySchema_ComplexType_xml =>
+        public static readonly TemplateString Stack_BinarySchema_ComplexType_xml = TemplateString.Parse(
             $$"""
             <opc:StructuredType Name="{{Tokens.TypeName}}"  BaseType="{{Tokens.BaseType}}">
               <opc:Documentation>{{Tokens.Description}}</opc:Documentation>
               {{Tokens.ListOfFields}}
             </opc:StructuredType>
-            """;
+            """);
 
         /// <summary>
         /// BinarySchemaGenerator.cs line#214
         /// </summary>
-        public static string Stack_BinarySchema_EnumeratedType_xml =>
+        public static readonly TemplateString Stack_BinarySchema_EnumeratedType_xml = TemplateString.Parse(
             $$"""
             <opc:EnumeratedType Name="{{Tokens.TypeName}}" LengthInBits="{{Tokens.LengthInBits}}"{{Tokens.IsOptionSet}}>
               <opc:Documentation>{{Tokens.Description}}</opc:Documentation>
               {{Tokens.ListOfValues}}
             </opc:EnumeratedType>
-            """;
+            """);
 
         /// <summary>
         /// BinarySchemaGenerator.cs line#219
         /// </summary>
-        public static string Stack_BinarySchema_ServiceType_xml =>
+        public static readonly TemplateString Stack_BinarySchema_ServiceType_xml = TemplateString.Parse(
             $$"""
             <opc:StructuredType Name="{{Tokens.TypeName}}Request">
               <opc:Documentation>{{Tokens.Description}}</opc:Documentation>
@@ -288,12 +288,12 @@ namespace Opc.Ua.SourceGeneration
               <opc:Documentation>{{Tokens.Description}}</opc:Documentation>
               {{Tokens.ListOfResponseParameters}}
             </opc:StructuredType>
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs line#559
         /// </summary>
-        public static string XmlSchema_File_xml =>
+        public static readonly TemplateString XmlSchema_File_xml = TemplateString.Parse(
             $$"""
             <xs:schema
               xmlns:s0="ListOfNamespaces"
@@ -314,13 +314,13 @@ namespace Opc.Ua.SourceGeneration
               {{Tokens.ListOfTypes}}
 
             </xs:schema>
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs line#590
         /// XmlSchemaGenerator.cs line#392
         /// </summary>
-        public static string Stack_XmlSchema_BuiltInTypes_xsd =>
+        public static readonly TemplateString Stack_XmlSchema_BuiltInTypes_xsd =
             """
               <!-- WARNING - this information is copied from Common\Schema\Xml\BuiltInTypes.xsd -->
               <xs:element name="Boolean" type="xs:boolean" />
@@ -747,7 +747,7 @@ namespace Opc.Ua.SourceGeneration
         /// ModelGenerator.cs line#692
         /// ModelGenerator.cs line#709
         /// </summary>
-        public static string XmlSchema_DerivedType_xml =>
+        public static readonly TemplateString XmlSchema_DerivedType_xml = TemplateString.Parse(
             $$"""
             <xs:complexType name="{{Tokens.TypeName}}">
               {{Tokens.Documentation}}
@@ -761,12 +761,12 @@ namespace Opc.Ua.SourceGeneration
             </xs:complexType>
             <xs:element name="{{Tokens.TypeName}}" type="tns:{{Tokens.TypeName}}" />
             {{Tokens.CollectionType}}
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs line#695
         /// </summary>
-        public static string XmlSchema_EnumeratedType_xml =>
+        public static readonly TemplateString XmlSchema_EnumeratedType_xml = TemplateString.Parse(
             $$"""
             <xs:simpleType name="{{Tokens.TypeName}}">
               {{Tokens.Documentation}}
@@ -776,12 +776,12 @@ namespace Opc.Ua.SourceGeneration
             </xs:simpleType>
             <xs:element name="{{Tokens.TypeName}}" type="tns:{{Tokens.TypeName}}" />
             {{Tokens.CollectionType}}
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs line#701
         /// </summary>
-        public static string XmlSchema_Union_xml =>
+        public static readonly TemplateString XmlSchema_Union_xml = TemplateString.Parse(
             $$"""
             <xs:complexType name="{{Tokens.TypeName}}">
               {{Tokens.Documentation}}
@@ -794,12 +794,12 @@ namespace Opc.Ua.SourceGeneration
             </xs:complexType>
             <xs:element name="{{Tokens.TypeName}}" type="tns:{{Tokens.TypeName}}" />
             {{Tokens.CollectionType}}
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs line#705
         /// </summary>
-        public static string XmlSchema_ComplexType_xml =>
+        public static readonly TemplateString XmlSchema_ComplexType_xml = TemplateString.Parse(
             $$"""
             <xs:complexType name="{{Tokens.TypeName}}">
               {{Tokens.Documentation}}
@@ -809,30 +809,30 @@ namespace Opc.Ua.SourceGeneration
             </xs:complexType>
             <xs:element name="{{Tokens.TypeName}}" type="tns:{{Tokens.TypeName}}" />
             {{Tokens.CollectionType}}
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs line#713
         /// </summary>
-        public static string XmlSchema_SimpleType_xml =>
+        public static readonly TemplateString XmlSchema_SimpleType_xml = TemplateString.Parse(
             $$"""
             <xs:element name="{{Tokens.TypeName}}" type="{{Tokens.BaseType}}" />
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs line#762
         /// </summary>
-        public static string XmlSchema_Documentation_xml =>
+        public static readonly TemplateString XmlSchema_Documentation_xml = TemplateString.Parse(
             $$"""
             <xs:annotation>
               <xs:documentation>{{Tokens.Description}}</xs:documentation>
             </xs:annotation>
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs line#769
         /// </summary>
-        public static string XmlSchema_CollectionType_xml =>
+        public static readonly TemplateString XmlSchema_CollectionType_xml = TemplateString.Parse(
             $$"""
             <xs:complexType name="ListOf{{Tokens.TypeName}}">
               <xs:sequence>
@@ -840,12 +840,12 @@ namespace Opc.Ua.SourceGeneration
               </xs:sequence>
             </xs:complexType>
             <xs:element name="ListOf{{Tokens.TypeName}}" type="tns:ListOf{{Tokens.TypeName}}" nillable="true"></xs:element>
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs line#981
         /// </summary>
-        public static string BinarySchema_File_xml =>
+        public static readonly TemplateString BinarySchema_File_xml = TemplateString.Parse(
             $$"""
             <opc:TypeDictionary
               xmlns:s0="ListOfNamespaces"
@@ -861,12 +861,12 @@ namespace Opc.Ua.SourceGeneration
               {{Tokens.ListOfTypes}}
 
             </opc:TypeDictionary>
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs line#1003
         /// </summary>
-        public static string BinarySchema_BuiltInTypes_bsd =>
+        public static readonly TemplateString BinarySchema_BuiltInTypes_bsd =
             """
             <!-- WARNING - this information is copied from Common\Schema\Binary\BuiltInTypes.bsd -->
             <opc:Import Namespace="http://opcfoundation.org/BinarySchema/" />
@@ -1055,39 +1055,39 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// ModelGenerator.cs line#1104
         /// </summary>
-        public static string BinarySchema_EnumeratedType_xml =>
+        public static readonly TemplateString BinarySchema_EnumeratedType_xml = TemplateString.Parse(
             $$"""
             <opc:EnumeratedType Name="{{Tokens.TypeName}}" LengthInBits="{{Tokens.LengthInBits}}"{{Tokens.IsOptionSet}}>
               {{Tokens.Documentation}}
               {{Tokens.ListOfFields}}
             </opc:EnumeratedType>
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs line#1108
         /// </summary>
-        public static string BinarySchema_ComplexType_xml =>
+        public static readonly TemplateString BinarySchema_ComplexType_xml = TemplateString.Parse(
             $$"""
             <opc:StructuredType Name="{{Tokens.TypeName}}" BaseType="{{Tokens.BaseType}}">
               {{Tokens.Documentation}}
               {{Tokens.ListOfFields}}
             </opc:StructuredType>
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs line#1111
         /// </summary>
-        public static string BinarySchema_OpaqueType_xml =>
+        public static readonly TemplateString BinarySchema_OpaqueType_xml = TemplateString.Parse(
             $$"""
             <opc:OpaqueType Name="{{Tokens.TypeName}}">
               {{Tokens.Documentation}}
             </opc:OpaqueType>
-            """;
+            """);
 
         /// <summary>
         /// XmlSchemaGenerator.cs line#272
         /// </summary>
-        public static string Stack_XmlSchema_File_xml =>
+        public static readonly TemplateString Stack_XmlSchema_File_xml = TemplateString.Parse(
             $$"""
             <xs:schema
               xmlns:s0="ListOfNamespaces"
@@ -1101,12 +1101,12 @@ namespace Opc.Ua.SourceGeneration
               {{Tokens.ListOfTypes}}
 
             </xs:schema>
-            """;
+            """);
 
         /// <summary>
         /// XmlSchemaGenerator.cs line#410
         /// </summary>
-        public static string Stack_XmlSchema_DerivedType_xml =>
+        public static readonly TemplateString Stack_XmlSchema_DerivedType_xml = TemplateString.Parse(
             $$"""
             <xs:complexType name="{{Tokens.TypeName}}">
               <xs:annotation>
@@ -1122,12 +1122,12 @@ namespace Opc.Ua.SourceGeneration
             </xs:complexType>
             <xs:element name="{{Tokens.TypeName}}" type="tns:{{Tokens.TypeName}}" />
             {{Tokens.ArrayDeclaration}}
-            """;
+            """);
 
         /// <summary>
         /// XmlSchemaGenerator.cs line#413
         /// </summary>
-        public static string Stack_XmlSchema_ComplexType_xml =>
+        public static readonly TemplateString Stack_XmlSchema_ComplexType_xml = TemplateString.Parse(
             $$"""
             <xs:complexType name="{{Tokens.TypeName}}">
               <xs:annotation>
@@ -1139,12 +1139,12 @@ namespace Opc.Ua.SourceGeneration
             </xs:complexType>
             <xs:element name="{{Tokens.TypeName}}" type="tns:{{Tokens.TypeName}}" />
             {{Tokens.ArrayDeclaration}}
-            """;
+            """);
 
         /// <summary>
         /// XmlSchemaGenerator.cs line#418
         /// </summary>
-        public static string Stack_XmlSchema_EnumeratedType_xml =>
+        public static readonly TemplateString Stack_XmlSchema_EnumeratedType_xml = TemplateString.Parse(
             $$"""
             <xs:simpleType  name="{{Tokens.TypeName}}">
               <xs:annotation>
@@ -1156,12 +1156,12 @@ namespace Opc.Ua.SourceGeneration
             </xs:simpleType>
             <xs:element name="{{Tokens.TypeName}}" type="tns:{{Tokens.TypeName}}" />
             {{Tokens.ArrayDeclaration}}
-            """;
+            """);
 
         /// <summary>
         /// XmlSchemaGenerator.cs line#423
         /// </summary>
-        public static string Stack_XmlSchema_ServiceType_xml =>
+        public static readonly TemplateString Stack_XmlSchema_ServiceType_xml = TemplateString.Parse(
             $$"""
             <xs:complexType name="{{Tokens.TypeName}}Request">
               <xs:annotation>
@@ -1179,12 +1179,12 @@ namespace Opc.Ua.SourceGeneration
               </xs:sequence>
             </xs:complexType>
             <xs:element name="{{Tokens.TypeName}}Response" type="tns:{{Tokens.TypeName}}Response" />
-            """;
+            """);
 
         /// <summary>
         /// XmlSchemaGenerator.cs line#447
         /// </summary>
-        public static string Stack_XmlSchema_Array_xml =>
+        public static readonly TemplateString Stack_XmlSchema_Array_xml = TemplateString.Parse(
             $$"""
             <xs:complexType name="ListOf{{Tokens.TypeName}}">
               <xs:sequence>
@@ -1192,6 +1192,6 @@ namespace Opc.Ua.SourceGeneration
               </xs:sequence>
             </xs:complexType>
             <xs:element name="ListOf{{Tokens.TypeName}}" type="tns:ListOf{{Tokens.TypeName}}" nillable="true"></xs:element>
-            """;
+            """);
     }
 }

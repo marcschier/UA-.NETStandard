@@ -32,7 +32,7 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Template strings
     /// </summary>
-    internal static class CodeTemplateStrings
+    internal static class CodeTemplates
     {
         /// <summary>
         /// Header
@@ -79,7 +79,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string Helpers_File_cs =>
+        public static readonly TemplateString Helpers_File_cs = TemplateString.Parse(
             $$"""
             {{Tokens.Header}}
 
@@ -107,12 +107,12 @@ namespace Opc.Ua.SourceGeneration
                     }
                 }
             }
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string ConstantsFile_cs =>
+        public static readonly TemplateString ConstantsFile_cs = TemplateString.Parse(
             $$"""
             {{Tokens.Header}}
 
@@ -138,31 +138,31 @@ namespace Opc.Ua.SourceGeneration
                     {{Tokens.ListOfNamespaceUris}}
                 }
             }
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string NamespaceUri_cs =>
+        public static readonly TemplateString NamespaceUri_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// The URI for the {{Tokens.Name}} namespace (.NET code namespace is '{{Tokens.CodeName}}').
             /// </summary>
             public const string {{Tokens.Name}} = "{{Tokens.NamespaceUri}}";
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string BrowseName_cs =>
+        public static readonly TemplateString BrowseName_cs = TemplateString.Parse(
             $$"""
             public const string {{Tokens.SymbolicName}} = "{{Tokens.BrowseName}}";
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string IdClass_cs =>
+        public static readonly TemplateString IdClass_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// A class that declares constants for all {{Tokens.NodeClass}}
@@ -174,12 +174,12 @@ namespace Opc.Ua.SourceGeneration
             {
                 {{Tokens.ListOfIdentifiers}}
             }
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string NodeIdClass_cs =>
+        public static readonly TemplateString NodeIdClass_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// A class that declares constants for all {{Tokens.NodeClass}}
@@ -191,12 +191,12 @@ namespace Opc.Ua.SourceGeneration
             {
                 {{Tokens.ListOfIdentifiers}}
             }
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string TypesFile_cs =>
+        public static readonly TemplateString TypesFile_cs = TemplateString.Parse(
             $$"""
             {{Tokens.Header}}
 
@@ -206,38 +206,38 @@ namespace Opc.Ua.SourceGeneration
             {
                 {{Tokens.ListOfTypes}}
             }
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string IdDeclaration_cs =>
+        public static readonly TemplateString IdDeclaration_cs = TemplateString.Parse(
             $$"""
             public const {{Tokens.IdType}} {{Tokens.SymbolicName}} = {{Tokens.Identifier}};
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string NodeIdDeclarationAbsolute_cs =>
+        public static readonly TemplateString NodeIdDeclarationAbsolute_cs = TemplateString.Parse(
             $$"""
             public static readonly global::Opc.Ua.ExpandedNodeId {{Tokens.SymbolicName}} =
                 new global::Opc.Ua.ExpandedNodeId({{Tokens.NamespacePrefix}}.{{Tokens.NodeClass}}s.{{Tokens.SymbolicName}}, {{Tokens.NamespaceUri}});
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string NodeIdDeclaration_cs =>
+        public static readonly TemplateString NodeIdDeclaration_cs = TemplateString.Parse(
             $$"""
             public static readonly global::Opc.Ua.NodeId {{Tokens.SymbolicName}} =
                 new global::Opc.Ua.NodeId({{Tokens.NamespacePrefix}}.{{Tokens.NodeClass}}s.{{Tokens.SymbolicName}});
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string DataTypes_Union_cs =>
+        public static readonly TemplateString DataTypes_Union_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// The field bitmask for the {{Tokens.ClassName}} class.
@@ -389,12 +389,12 @@ namespace Opc.Ua.SourceGeneration
                 };
             }
             {{Tokens.CollectionClass}}
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string DataTypes_DerivedClassWithOptionalFields_cs =>
+        public static readonly TemplateString DataTypes_DerivedClassWithOptionalFields_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// The field bitmask for the {{Tokens.ClassName}} class.
@@ -519,12 +519,12 @@ namespace Opc.Ua.SourceGeneration
                 };
             }
             {{Tokens.CollectionClass}}
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string DataTypes_ClassWithOptionalFields_cs =>
+        public static readonly TemplateString DataTypes_ClassWithOptionalFields_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// The field bitmask for the {{Tokens.ClassName}} class.
@@ -659,12 +659,12 @@ namespace Opc.Ua.SourceGeneration
                 };
             }
             {{Tokens.CollectionClass}}
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string DataTypes_Class_cs =>
+        public static readonly TemplateString DataTypes_Class_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// The {{Tokens.BrowseName}} DataType.
@@ -770,13 +770,13 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.ListOfFields}}
             }
             {{Tokens.CollectionClass}}
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// ModelGenerator.cs
         /// </summary>
-        public static string DataTypes_DerivedClass_cs =>
+        public static readonly TemplateString DataTypes_DerivedClass_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// The {{Tokens.BrowseName}} DataType.
@@ -886,12 +886,12 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.ListOfFields}}
             }
             {{Tokens.CollectionClass}}
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string DataTypes_Enumeration_cs =>
+        public static readonly TemplateString DataTypes_Enumeration_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// The {{Tokens.BrowseName}} DataType.
@@ -903,12 +903,12 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.ListOfProperties}}
             }
             {{Tokens.CollectionClass}}
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string ObjectType_cs =>
+        public static readonly TemplateString ObjectType_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// The {{Tokens.ClassName}} ObjectType state.
@@ -962,12 +962,12 @@ namespace Opc.Ua.SourceGeneration
 
                 {{Tokens.ListOfFields}}
             }
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string VariableType_cs =>
+        public static readonly TemplateString VariableType_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// The {{Tokens.ClassName}} VariableType state.
@@ -1037,12 +1037,12 @@ namespace Opc.Ua.SourceGeneration
             }
             {{Tokens.TypedVariableType}}
             {{Tokens.VariableTypeValue}}
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string MethodType_cs =>
+        public static readonly TemplateString MethodType_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// The {{Tokens.ClassName}} MethodType.
@@ -1172,12 +1172,12 @@ namespace Opc.Ua.SourceGeneration
             /// </summary>
             public delegate global::System.Threading.Tasks.ValueTask<{{Tokens.ClassName}}Result> {{Tokens.ClassName}}MethodAsyncCallHandler(
                 {{Tokens.OnCallAsyncDeclaration}}
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string DataTypes_CollectionClass_cs =>
+        public static readonly TemplateString DataTypes_CollectionClass_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// A collection of {{Tokens.BrowseName}} objects.
@@ -1262,12 +1262,12 @@ namespace Opc.Ua.SourceGeneration
                     return clone;
                 }
             }
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string TypedVariableType_cs =>
+        public static readonly TemplateString TypedVariableType_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// The {{Tokens.ClassName}} VariableType state.
@@ -1309,12 +1309,12 @@ namespace Opc.Ua.SourceGeneration
                     set => ((BaseVariableState)this).Value = value;
                 }
             }
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string VariableTypeValue_cs =>
+        public static readonly TemplateString VariableTypeValue_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// The {{Tokens.ClassName}} VariableType value.
@@ -1488,12 +1488,12 @@ namespace Opc.Ua.SourceGeneration
                 private {{Tokens.DataType}}? m_value;
                 private {{Tokens.ClassName}}State m_variable;
             }
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string InitializeOptionalChild_cs =>
+        public static readonly TemplateString InitializeOptionalChild_cs = TemplateString.Parse(
             $$"""
             if ({{Tokens.ChildName}} != null)
             {
@@ -1502,12 +1502,12 @@ namespace Opc.Ua.SourceGeneration
                     {{Tokens.ClassName}}Initializers.{{Tokens.ChildName}}{{Tokens.Encoding}},
                     global::Opc.Ua.EncodingType.{{Tokens.Encoding}});
             }
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string Property_cs =>
+        public static readonly TemplateString Property_cs = TemplateString.Parse(
             $$"""
             {{Tokens.PropertyAccessor}} {{Tokens.ClassName}} {{Tokens.ChildName}}
             {
@@ -1522,12 +1522,12 @@ namespace Opc.Ua.SourceGeneration
                     {{Tokens.FieldName}} = value;
                 }
             }
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string FindChildMethods_cs =>
+        public static readonly TemplateString FindChildMethods_cs = TemplateString.Parse(
             $$"""
             /// <inheritdoc/>
             public override void GetChildren(
@@ -1573,12 +1573,12 @@ namespace Opc.Ua.SourceGeneration
 
                 return base.FindChild(context, browseName, createOrReplace, replacement);
             }
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string VariableTypeValueField_cs =>
+        public static readonly TemplateString VariableTypeValueField_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// Handles the read of the {{Tokens.ChildName}} variable.
@@ -1646,12 +1646,12 @@ namespace Opc.Ua.SourceGeneration
 
                 return global::Opc.Ua.ServiceResult.Good;
             }
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string DataTypes_Property_cs =>
+        public static readonly TemplateString DataTypes_Property_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// {{Tokens.BrowseName}} property
@@ -1666,12 +1666,12 @@ namespace Opc.Ua.SourceGeneration
                 get => {{Tokens.FieldName}};
                 set => {{Tokens.FieldName}} = value;
             }
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string DataTypes_ArrayProperty_cs =>
+        public static readonly TemplateString DataTypes_ArrayProperty_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// {{Tokens.BrowseName}} property
@@ -1686,24 +1686,24 @@ namespace Opc.Ua.SourceGeneration
                 get => {{Tokens.FieldName}};
                 set => {{Tokens.FieldName}} = value == null ? {{Tokens.DefaultValue}} : value;
             }
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string DataTypes_EnumerationValue_cs =>
+        public static readonly TemplateString DataTypes_EnumerationValue_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// {{Tokens.EnumerationName}} enumeration value ({{Tokens.Identifier}})
             /// </summary>
             [global::System.Runtime.Serialization.EnumMember(Value = "{{Tokens.XmlIdentifier}}")]
             {{Tokens.EnumerationName}} = {{Tokens.Identifier}},
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string PropertyOverride_cs =>
+        public static readonly TemplateString PropertyOverride_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// {{Tokens.ChildName}} property
@@ -1713,12 +1713,12 @@ namespace Opc.Ua.SourceGeneration
                 get => ({{Tokens.ClassName}})base.{{Tokens.ChildName}};
                 set => base.{{Tokens.ChildName}} = value;
             }
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string FindChildCase_cs =>
+        public static readonly TemplateString FindChildCase_cs = TemplateString.Parse(
             $$"""
             case {{Tokens.BrowseNameNamespacePrefix}}.BrowseNames.{{Tokens.ChildName}}:
             {
@@ -1740,35 +1740,35 @@ namespace Opc.Ua.SourceGeneration
                 instance = {{Tokens.ChildName}};
                 break;
             }
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string FindChildren_cs =>
+        public static readonly TemplateString FindChildren_cs = TemplateString.Parse(
             $$"""
             if ({{Tokens.FieldName}} != null)
             {
                 children.Add({{Tokens.FieldName}});
             }
-            """;
+            """);
 
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static string RemoveChild_cs =>
+        public static readonly TemplateString RemoveChild_cs = TemplateString.Parse(
             $$"""
             if (object.ReferenceEquals({{Tokens.FieldName}}, child))
             {
                 {{Tokens.FieldName}} = null;
                 return;
             }
-            """;
+            """);
 
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string Endpoints_File_cs =>
+        public static readonly TemplateString Endpoints_File_cs = TemplateString.Parse(
             $$"""
             {{Tokens.Header}}
 
@@ -1778,12 +1778,12 @@ namespace Opc.Ua.SourceGeneration
             {
                 {{Tokens.ServiceSets}}
             }
-            """;
+            """);
 
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string Endpoints_ServiceSet_cs =>
+        public static readonly TemplateString Endpoints_ServiceSet_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// A endpoint object used by clients to access a UA service.
@@ -1846,12 +1846,12 @@ namespace Opc.Ua.SourceGeneration
                     {{Tokens.AddKnownType}}
                 }
             }
-            """;
+            """);
 
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string Endpoints_Method_cs =>
+        public static readonly TemplateString Endpoints_Method_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// Invokes the {{Tokens.Name}} service.
@@ -1878,12 +1878,12 @@ namespace Opc.Ua.SourceGeneration
 
                 return response;
             }
-            """;
+            """);
 
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string ServerApi_File_cs =>
+        public static readonly TemplateString ServerApi_File_cs = TemplateString.Parse(
             $$"""
             {{Tokens.Header}}
 
@@ -1891,12 +1891,12 @@ namespace Opc.Ua.SourceGeneration
             {
                 {{Tokens.ServiceSets}}
             }
-            """;
+            """);
 
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string ServerApi_ServiceSet_cs =>
+        public static readonly TemplateString ServerApi_ServiceSet_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// An interface to a UA server implementation.
@@ -1926,23 +1926,23 @@ namespace Opc.Ua.SourceGeneration
 
                 {{Tokens.ServerStubs}}
             }
-            """;
+            """);
 
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string ServerApi_InterfaceMethod_cs =>
+        public static readonly TemplateString ServerApi_InterfaceMethod_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// Invokes the {{Tokens.Name}} service using async Task based request.
             /// </summary>
             {{Tokens.ServerInterfaceAsync}}
-            """;
+            """);
 
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string ServerApi_Method_cs =>
+        public static readonly TemplateString ServerApi_Method_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// Invokes the {{Tokens.Name}} service using async Task based request.
@@ -1956,12 +1956,12 @@ namespace Opc.Ua.SourceGeneration
 
                 throw new global::Opc.Ua.ServiceResultException(global::Opc.Ua.StatusCodes.BadServiceUnsupported);
             }
-            """;
+            """);
 
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string ClientApi_File_cs =>
+        public static readonly TemplateString ClientApi_File_cs = TemplateString.Parse(
             $$"""
             {{Tokens.Header}}
 
@@ -1971,12 +1971,12 @@ namespace Opc.Ua.SourceGeneration
             {
                 {{Tokens.ServiceSets}}
             }
-            """;
+            """);
 
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string ClientApi_ServiceSet_cs =>
+        public static readonly TemplateString ClientApi_ServiceSet_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// An interface used by by clients to access a UA server.
@@ -2008,12 +2008,12 @@ namespace Opc.Ua.SourceGeneration
 
                 {{Tokens.ClientApi}}
             }
-            """;
+            """);
 
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string ClientApi_InterfaceMethods_cs =>
+        public static readonly TemplateString ClientApi_InterfaceMethods_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// Invokes the {{Tokens.Name}} service using async Task based request.
@@ -2037,12 +2037,12 @@ namespace Opc.Ua.SourceGeneration
             /// </summary>
             [global::System.Obsolete("Begin/End methods are deprecated in this version. Use {{Tokens.Name}}Async instead.")]
             {{Tokens.ClientInterfaceEnd}}
-            """;
+            """);
 
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string ClientApi_MethodImplementations_cs =>
+        public static readonly TemplateString ClientApi_MethodImplementations_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// Invokes the {{Tokens.Name}} service.
@@ -2156,12 +2156,12 @@ namespace Opc.Ua.SourceGeneration
 
                 return response.ResponseHeader;
             }
-            """;
+            """);
 
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string Messages_File_cs =>
+        public static readonly TemplateString Messages_File_cs = TemplateString.Parse(
             $$"""
             {{Tokens.Header}}
 
@@ -2169,12 +2169,12 @@ namespace Opc.Ua.SourceGeneration
             {
                 {{Tokens.TypeList}}
             }
-            """;
+            """);
 
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string Classes_ServiceMessage_cs =>
+        public static readonly TemplateString Classes_ServiceMessage_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// The request message for the {{Tokens.Name}} service.
@@ -2189,12 +2189,12 @@ namespace Opc.Ua.SourceGeneration
             public partial class {{Tokens.Name}}Response : global::Opc.Ua.IServiceResponse
             {
             }
-            """;
+            """);
 
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string Constants_File_cs =>
+        public static readonly TemplateString Constants_File_cs = TemplateString.Parse(
             $$"""
             {{Tokens.Header}}
 
@@ -2210,23 +2210,23 @@ namespace Opc.Ua.SourceGeneration
                     {{Tokens.ListOfIdentifiers}}
                 }
             }
-            """;
+            """);
 
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
-        public static string Constants_Constant_cs =>
+        public static readonly TemplateString Constants_Constant_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// {{Tokens.Description}}
             /// </summary>
             public const {{Tokens.IdType}} {{Tokens.SymbolicId}} = {{Tokens.Identifier}};
-            """;
+            """);
 
         /// <summary>
         /// ResourceGenerator.cs
         /// </summary>
-        public static string Resources_File_cs =>
+        public static readonly TemplateString Resources_File_cs = TemplateString.Parse(
             $$"""
             {{Tokens.Header}}
 
@@ -2234,12 +2234,12 @@ namespace Opc.Ua.SourceGeneration
             {
                 {{Tokens.ListOfResourceGroups}}
             }
-            """;
+            """);
 
         /// <summary>
         /// ResourceGenerator.cs
         /// </summary>
-        public static string Resources_Classes_cs =>
+        public static readonly TemplateString Resources_Classes_cs = TemplateString.Parse(
             $$"""
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
             [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
@@ -2247,12 +2247,12 @@ namespace Opc.Ua.SourceGeneration
             {
                 {{Tokens.ListOfResourceDeclarations}}
             }
-            """;
+            """);
 
         /// <summary>
         /// ResourceGenerator.cs
         /// </summary>
-        public static string ResourceDeclaration_ReadOnlySpan_cs =>
+        public static readonly TemplateString ResourceDeclaration_ReadOnlySpan_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// The embedded {{Tokens.ResourceName}} resource as span
@@ -2269,12 +2269,12 @@ namespace Opc.Ua.SourceGeneration
                 // Copy operation
                 get => new global::System.IO.MemoryStream({{Tokens.ResourceName}}.ToArray(), false);
             }
-            """;
+            """);
 
         /// <summary>
         /// ResourceGenerator.cs
         /// </summary>
-        public static string ResourceDeclaration_ByteArray_cs =>
+        public static readonly TemplateString ResourceDeclaration_ByteArray_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// The embedded {{Tokens.ResourceName}} resource
@@ -2290,14 +2290,14 @@ namespace Opc.Ua.SourceGeneration
             {
                 get => new global::System.IO.MemoryStream({{Tokens.ResourceName}}, false);
             }
-            """;
+            """);
 
         /// <summary>
         /// ResourceGenerator.cs
         /// </summary>
-        public static string ResourceDeclaration_ConstString_cs =>
+        public static readonly TemplateString ResourceDeclaration_ConstString_cs = TemplateString.Parse(
             $$"""
             public const string {{Tokens.ResourceName}} = {{Tokens.Resource}};
-            """;
+            """);
     }
 }

@@ -54,7 +54,7 @@ namespace Opc.Ua.SourceGeneration
             ITelemetryContext telemetry)
         {
             m_model = model;
-            Nodes = nodes;
+            m_nodes = nodes;
             m_fileSystem = fileSystem;
             m_logger = telemetry.CreateLogger<Nodeset2Generator>();
         }
@@ -223,12 +223,12 @@ namespace Opc.Ua.SourceGeneration
                     bool start = true;
                     foreach (RolePermissionType permission in permissions)
                     {
-                        NodeDesign role = Nodes
+                        NodeDesign role = m_nodes
                             .FirstOrDefault(x =>
                                 x.NumericId == (uint)permission.RoleId.Identifier &&
                                 x.SymbolicId.Namespace == Namespaces.OpcUa);
 
-                        role ??= Nodes
+                        role ??= m_nodes
                             .FirstOrDefault(x =>
                                 x.NumericId == (uint)permission.RoleId.Identifier &&
                                 x.SymbolicId.Namespace != Namespaces.OpcUa &&
@@ -443,7 +443,7 @@ namespace Opc.Ua.SourceGeneration
         }
 
         private readonly ModelDesign m_model;
-        private readonly List<NodeDesign> Nodes;
+        private readonly List<NodeDesign> m_nodes;
         private readonly IFileSystem m_fileSystem;
         private readonly ILogger m_logger;
     }

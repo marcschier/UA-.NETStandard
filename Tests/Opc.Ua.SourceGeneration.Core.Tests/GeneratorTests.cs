@@ -35,7 +35,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Running;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;

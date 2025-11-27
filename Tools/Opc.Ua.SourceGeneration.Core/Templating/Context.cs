@@ -35,29 +35,24 @@ namespace Opc.Ua.SourceGeneration
     internal sealed class Context
     {
         /// <summary>
-        /// The template string being processed.
+        /// The interpolated template string passed to AddTemplate method.
         /// </summary>
-        public string TemplateString { get; set; }
+        public TemplateString TemplateString { get; set; }
 
         /// <summary>
-        /// The container for the object being processed.
+        /// The token that is to be replaced by the current template evaluation.
         /// </summary>
-        public object Container { get; set; }
+        public string Token { get; set; } = string.Empty;
 
         /// <summary>
-        /// The current object being processed.
+        /// The current iteration variable that is the target of the template.
         /// </summary>
         public object Target { get; set; }
 
         /// <summary>
-        /// The prefix to prepend to every line of output.
-        /// </summary>
-        public string Prefix { get; set; } = string.Empty;
-
-        /// <summary>
-        /// The token current being processed.
-        /// </summary>
-        public string Token { get; set; } = string.Empty;
+        /// Whether the current target being processed is the first in the list.
+        /// </summary>>
+        public bool NothingWrittenYet { get; set; } = true;
 
         /// <summary>
         /// The index of the current target within the list being processed.
@@ -65,9 +60,14 @@ namespace Opc.Ua.SourceGeneration
         public int Index { get; set; } = -1;
 
         /// <summary>
-        /// Whether the current target being processed is the first in the list.
+        /// Whether the current target being processed is the last in the list.
         /// </summary>>
-        public bool FirstInList { get; set; } = true;
+        public int TotalItemsInList { get; set; }
+
+        /// <summary>
+        /// The prefix to prepend to every line of output.
+        /// </summary>
+        public string Prefix { get; set; } = string.Empty;
 
         /// <summary>
         /// Whether a blank line seperates entries in the list.

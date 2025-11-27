@@ -39,7 +39,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// The template composite string
         /// </summary>
-        public string TemplateString { get; set; }
+        public TemplateString TemplateString { get; set; }
 
         /// <summary>
         /// The targets that the template should be applied to.
@@ -59,7 +59,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Loads the template.
         /// </summary>
-        public string Load(Template template, Context context)
+        public TemplateString Load(Template template, Context context)
         {
             // check for override.
             if (OnTemplateLoad != null)
@@ -90,7 +90,7 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// A delegate handle events associated with template.
     /// </summary>
-    internal delegate string LoadTemplateEventHandler(Template template, Context context);
+    internal delegate TemplateString LoadTemplateEventHandler(Template template, Context context);
 
     /// <summary>
     /// A delegate handle events associated with template.

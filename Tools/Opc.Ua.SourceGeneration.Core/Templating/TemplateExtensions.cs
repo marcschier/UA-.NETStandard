@@ -29,6 +29,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using Opc.Ua.SourceGeneration;
 
 namespace Opc.Ua
@@ -36,28 +37,134 @@ namespace Opc.Ua
     internal static class TemplateExtensions
     {
         /// <summary>
-        /// Initializes a template to use for substitution.
+        /// Add a template for substitution.
         /// </summary>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="template"/> is <c>null</c>.
-        /// </exception>
+        /// <exception cref="ArgumentNullException" />
         public static void AddTemplate(
             this Template template,
             string replacement,
-            string templatePath,
-            IEnumerable targets,
-            LoadTemplateEventHandler onLoad,
+            TemplateString templateString,
+            IReadOnlyList<object> targets,
             WriteTemplateEventHandler onWrite)
+        {
+            template.AddTemplate(
+                replacement,
+                templateString,
+                targets,
+                null,
+                onWrite);
+        }
+
+        /// <summary>
+        /// Add a template for substitution.
+        /// </summary>
+        /// <exception cref="ArgumentNullException" />
+        public static void AddTemplate(
+            this Template template,
+            string replacement,
+            TemplateString templateString,
+            object target,
+            WriteTemplateEventHandler onWrite)
+        {
+            template.AddTemplate(
+                replacement,
+                templateString,
+                target,
+                null,
+                onWrite);
+        }
+
+        /// <summary>
+        /// Add a template for substitution.
+        /// </summary>
+        /// <exception cref="ArgumentNullException" />
+        public static void AddTemplate(
+            this Template template,
+            string replacement,
+            TemplateString templateString,
+            object target,
+            LoadTemplateEventHandler onLoad = null,
+            WriteTemplateEventHandler onWrite = null)
+        {
+            template.AddTemplate(
+                replacement,
+                templateString,
+                [target],
+                onLoad,
+                onWrite);
+        }
+
+        /// <summary>
+        /// Add a template for substitution.
+        /// </summary>
+        /// <exception cref="ArgumentNullException" />
+        public static void AddTemplate(
+            this Template template,
+            string replacement,
+            object target,
+            LoadTemplateEventHandler onLoad,
+            WriteTemplateEventHandler onWrite = null)
+        {
+            template.AddTemplate(
+                replacement,
+                TemplateString.Empty,
+                [target],
+                onLoad,
+                onWrite);
+        }
+
+        /// <summary>
+        /// Add a template for substitution.
+        /// </summary>
+        /// <exception cref="ArgumentNullException" />
+        public static void AddTemplate(
+            this Template template,
+            string replacement,
+            IReadOnlyList<object> targets,
+            LoadTemplateEventHandler onLoad,
+            WriteTemplateEventHandler onWrite = null)
+        {
+            template.AddTemplate(
+                replacement,
+                TemplateString.Empty,
+                targets,
+                onLoad,
+                onWrite);
+        }
+
+        /// <summary>
+        /// Initializes a template to use for substitution.
+        /// </summary>
+        /// <exception cref="ArgumentNullException" />
+        /// <exception cref="ArgumentException"></exception>
+        public static void AddTemplate(
+            this Template template,
+            string replacement,
+            TemplateString templateString,
+            IReadOnlyList<object> targets,
+            LoadTemplateEventHandler onLoad = null,
+            WriteTemplateEventHandler onWrite = null)
         {
             if (template == null)
             {
                 throw new ArgumentNullException(nameof(template));
             }
-            template.Replacements.Add(replacement, null);
+            if (string.IsNullOrEmpty(replacement))
+            {
+                throw new ArgumentNullException(nameof(replacement));
+            }
+
+            if (templateString is null && onLoad is null)
+            {
+                throw new ArgumentException(
+                    "A template loader must be passed if template string is null",
+                    nameof(onLoad));
+            }
+
+            template.Reserve(replacement);
 
             // create a collection of targets.
             var targetList = new ArrayList();
-
             if (targets != null)
             {
                 foreach (object target in targets)
@@ -65,24 +172,14 @@ namespace Opc.Ua
                     targetList.Add(target);
                 }
             }
-
             var definition = new TemplateDefinition
             {
-                TemplateString = templatePath,
-                Targets = targetList
+                TemplateString = templateString,
+                Targets = targetList,
+                OnTemplateLoad = onLoad,
+                OnTemplateWrite = onWrite
             };
-
-            if (onLoad != null)
-            {
-                definition.OnTemplateLoad += onLoad;
-            }
-
-            if (onWrite != null)
-            {
-                definition.OnTemplateWrite += onWrite;
-            }
-
-            template.Templates.Add(replacement, definition);
+            template.AddReplacement(replacement, definition);
         }
     }
 }

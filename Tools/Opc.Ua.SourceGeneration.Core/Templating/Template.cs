@@ -31,218 +31,189 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Opc.Ua.SourceGeneration
 {
     /// <summary>
-    /// Generates types used to implement an address space.
+    /// Templating engine
     /// </summary>
     internal sealed class Template
     {
         /// <summary>
-        /// Initializes the stream from the resource block of the specified assembly.
+        /// Create template
         /// </summary>
-        public Template(TextWriter writer, string templatePath)
-            : this(writer, false, templatePath)
+        public Template(TextWriter writer, TemplateString templateString)
+            : this(writer, false, 0, templateString)
         {
         }
 
         /// <summary>
-        /// Initializes the stream from the resource block of the specified assembly.
+        /// Create template
         /// </summary>
-        private Template(TextWriter writer, bool written, string templateString)
+        private Template(TextWriter writer, bool written, int indentCount, TemplateString templateString)
         {
-            Replacements = [];
-            Templates = [];
-            m_reader = null;
-            m_writer = null;
-            IndentCount = 0;
+            m_replacements = [];
+            m_templates = [];
+            m_indentCount = indentCount;
 
-            m_reader = new StringReader(templateString ?? string.Empty);
-
+            m_templateString = templateString;
             m_writer = writer;
             m_written = written;
 
-            Replacements.Add(Tokens.Header, CodeTemplateStrings.Header);
-            Replacements.Add(Tokens.Tool,
+            m_replacements.Add(Tokens.Header, CodeTemplates.Header);
+            m_replacements.Add(Tokens.Tool,
                 Assembly.GetExecutingAssembly().GetName().Name);
-            Replacements.Add(Tokens.Version, CoreUtils.Format(
+            m_replacements.Add(Tokens.Version, CoreUtils.Format(
                 "{0}.{1}",
                 s_softwareVersion,
                 s_buildVersion));
         }
 
         /// <summary>
-        /// The number of levels to ident a the current line.
-        /// </summary>
-        private int IndentCount { get; }
-
-        /// <summary>
         /// Returns enough whitespace to indent the current line properly.
         /// </summary>
-        public string Indent
-        {
-            get
-            {
-                if (IndentCount > 0)
-                {
-                    return new string(' ', IndentCount * 4);
-                }
-
-                return string.Empty;
-            }
-        }
-
-        /// <summary>
-        /// The table of tokens to replace.
-        /// </summary>
-        public Dictionary<string, string> Replacements { get; }
-
-        /// <summary>
-        /// The templates to load.
-        /// </summary>
-        public Dictionary<string, TemplateDefinition> Templates { get; }
+        public string Indentation
+            => m_indentCount > 0 ? new string(' ', m_indentCount * 4) : string.Empty;
 
         /// <summary>
         /// Adds a replacement value for a token.
         /// </summary>
-        public void AddReplacement(string token, object replacement)
+        /// <typeparam name="T"></typeparam>
+        public void AddReplacement<T>(string token, T replacement)
         {
-            if (replacement is bool boolValue)
-            {
-                Replacements[token] = boolValue ? "true" : "false";
-            }
-            else
-            {
-                Replacements[token] = CoreUtils.Format("{0}", replacement);
-            }
+            m_replacements[token] = CoreUtils.Format("{0}", replacement);
+        }
+
+        /// <summary>
+        /// Adds a replacement value for a token.
+        /// </summary>
+        public void AddReplacement(string token, bool replacement)
+        {
+            m_replacements[token] = replacement ? "true" : "false";
+        }
+
+        /// <summary>
+        /// Adds a replacement value for a token.
+        /// </summary>
+        public void AddReplacement(string token, string replacement)
+        {
+            m_replacements[token] = replacement;
+        }
+
+        /// <summary>
+        /// Add template definition for a token.
+        /// </summary>
+        public void AddReplacement(string token, TemplateDefinition templateDefinition)
+        {
+            m_templates.Add(token, templateDefinition);
+        }
+
+        /// <summary>
+        /// Reserves a token without a replacement value.
+        /// </summary>
+        public void Reserve(string token)
+        {
+            m_replacements[token] = null;
         }
 
         /// <summary>
         /// Performs the substitutions specified in the template and writes it to the stream.
         /// </summary>
-        public bool WriteTemplate(Context context)
+        public bool WriteTemplate(Context context = null)
         {
             // ensure context is not null.
             context ??= new Context();
 
             bool written = false;
-
-            // build list of tokens.
-            int count = 0;
-
-            string[] tokens = new string[Replacements.Count];
-
-            foreach (string token in Replacements.Keys)
+            foreach (ParsedTemplateString.Op op in m_templateString.ParsedTemplate.Operations)
             {
-                tokens[count++] = token;
-            }
-
-            // read first line.
-            string line = m_reader.ReadLine();
-
-            while (line != null)
-            {
-                // process empty lines.
-                if (line.Length == 0)
+                switch (op.Type)
                 {
-                    if (written)
-                    {
-                        Write(Environment.NewLine);
-                    }
-
-                    written = true;
-                    line = m_reader.ReadLine();
-                    continue;
-                }
-
-                bool found = false;
-
-                for (int index = 0; index < line.Length; index++)
-                {
-                    // check for a token at the current position.
-                    string token = null;
-
-                    for (int ii = 0; ii < tokens.Length; ii++)
-                    {
-                        if (StrCmp(line, index, tokens[ii]))
+                    case ParsedTemplateString.OpType.Token:
+                        // check if a template substitution is required.
+                        string token = op.Item;
+                        if (m_templates.TryGetValue(token, out TemplateDefinition definition))
                         {
-                            token = tokens[ii];
+                            if (definition == null ||
+                                definition.Targets == null ||
+                                definition.Targets.Count == 0)
+                            {
+                                break;
+                            }
+
+                            // write multi-line template.
+                            written = false;
+                            var pushedContext = new Context
+                            {
+                                Token = token,
+                                Index = 0,
+                                NothingWrittenYet = true,
+                                Prefix = context.Prefix,
+                                TemplateString = definition.TemplateString
+                            };
+                            foreach (object target in definition.Targets)
+                            {
+                                pushedContext.Target = target;
+
+                                // get the template path name.
+                                TemplateString templateString = definition.Load(this, pushedContext);
+                                // skip item if no template specified.
+                                if (templateString == null)
+                                {
+                                    pushedContext.Index++;
+                                    continue;
+                                }
+
+                                // load the template.
+                                var template = new Template(
+                                    m_writer,
+                                    m_written,
+                                    m_indentCount + op.Offset,
+                                    templateString);
+
+                                if (!pushedContext.NothingWrittenYet && pushedContext.BlankLine)
+                                {
+                                    Write(Environment.NewLine);
+                                }
+
+                                if (definition.Write(template, pushedContext))
+                                {
+                                    pushedContext.NothingWrittenYet = false;
+                                    written = true;
+                                }
+
+                                m_written = template.m_written;
+                                pushedContext.Index++;
+                            }
+                            Write(Environment.NewLine);
                             break;
                         }
-                    }
-
-                    // nothing found.
-                    if (token == null)
-                    {
-                        continue;
-                    }
-
-                    // check if a template substitution is required.
-                    if (Templates.TryGetValue(token, out TemplateDefinition definition))
-                    {
-                        if (definition == null || definition.Targets == null || definition.Targets.Count == 0)
+                        else if (m_replacements.TryGetValue(token, out string tokenSubstitution) &&
+                            tokenSubstitution != null)
                         {
-                            found = true;
-                            line = line[(index + token.Length)..];
-                            index = -1;
-                            continue;
-                        }
-
-                        // write multi-line template.
-                        bool result = WriteTemplate(
-                            context.Target,
-                            token,
-                            CoreUtils.Format("{0}{1}", context.Prefix, line[..index]));
-
-                        if (result)
-                        {
+                            Write(tokenSubstitution);
                             written = true;
                         }
-
-                        line = string.Empty;
-                        continue;
-                    }
-
-                    // only process tokens if a value is provided.
-                    if (Replacements[token] != null)
-                    {
-                        written = WriteToken(
-                            context.Target,
-                            context,
-                            !found,
-                            line[..index],
-                            token);
-
-                        found = true;
-                    }
-
-                    line = line[(index + token.Length)..];
-                    index = -1;
-                }
-
-                // write line if no token found.
-                if (line.Length > 0)
-                {
-                    if (!found)
-                    {
-                        // ensure that an empty line does not get inserted at the start of a file.
-                        if (written || context.Target != null)
+                        else
                         {
+                            // write line if no token found.
                             Write(Environment.NewLine);
+                            Write(Indentation);
                         }
-
-                        Write(context.Prefix);
+                        break;
+                    case ParsedTemplateString.OpType.LineBreak:
+                        Write(Environment.NewLine);
+                        Write(Indentation);
                         written = true;
-                    }
-
-                    Write(line);
+                        break;
+                    case ParsedTemplateString.OpType.Value:  // Not a token, e.g. a date time or value that was appended
+                    case ParsedTemplateString.OpType.Literal:
+                    case ParsedTemplateString.OpType.WhiteSpace:
+                        Write(op.Item);
+                        break;
                 }
-
-                // read next line.
-                line = m_reader.ReadLine();
             }
-
             return written;
         }
 
@@ -264,7 +235,6 @@ namespace Opc.Ua.SourceGeneration
             {
                 return;
             }
-
             m_writer.Write(text);
             m_written = true;
         }
@@ -302,7 +272,7 @@ namespace Opc.Ua.SourceGeneration
         public void WriteNextLine(string prefix)
         {
             m_writer.Write(Environment.NewLine);
-            m_writer.Write(Indent);
+            m_writer.Write(Indentation);
             m_writer.Write(prefix);
             m_written = true;
         }
@@ -312,7 +282,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public void WriteLine(string text)
         {
-            m_writer.Write(Indent);
+            m_writer.Write(Indentation);
             m_writer.Write(text);
             m_writer.Write(Environment.NewLine);
             m_written = true;
@@ -347,124 +317,19 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public void WriteLine(string text, object[] args)
         {
-            m_writer.Write(Indent);
+            m_writer.Write(Indentation);
             m_writer.Write(text, args);
             m_writer.Write(Environment.NewLine);
             m_written = true;
         }
 
-        /// <summary>
-        /// Substitutes simple text template for a token.
-        /// </summary>
-        private bool WriteToken(
-            object target,
-            Context context,
-            bool firstToken,
-            string prefix,
-            string token)
-        {
-            // write context prefix for first token.
-            if (firstToken)
-            {
-                Write(Environment.NewLine);
-                Write(context.Prefix);
-            }
-
-            // write prefix.
-            Write(prefix);
-
-            // write replacement.
-            string replacement = Replacements[token];
-
-            if (replacement != null)
-            {
-                Write(replacement);
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Substitutes a multi-line template for a token.
-        /// </summary>
-        private bool WriteTemplate(
-            object container,
-            string token,
-            string prefix)
-        {
-            bool written = false;
-
-            // write each item in the list.
-            var context = new Context
-            {
-                Container = container,
-                Token = token,
-                Index = 0,
-                FirstInList = true,
-                Prefix = prefix
-            };
-
-            TemplateDefinition definition = Templates[token];
-
-            context.TemplateString = definition.TemplateString;
-
-            foreach (object target in definition.Targets)
-            {
-                context.Target = target;
-
-                // get the template path name.
-                string templateString = definition.Load(this, context);
-
-                // skip item if no template specified.
-                if (templateString == null)
-                {
-                    context.Index++;
-                    continue;
-                }
-
-                // load the template.
-                var template = new Template(m_writer, m_written, templateString);
-
-                if (!context.FirstInList && context.BlankLine)
-                {
-                    Write(Environment.NewLine);
-                }
-
-                if (definition.Write(template, context))
-                {
-                    context.FirstInList = false;
-                    written = true;
-                }
-
-                m_written = template.m_written;
-
-                context.Index++;
-            }
-
-            // return flag indicating whether something was written.
-            return written;
-        }
-
-        /// <summary>
-        /// Determines if the target exists in the string at the specified index.
-        /// </summary>
-        private static bool StrCmp(string source, int index, string target)
-        {
-            for (int ii = 0; ii < target.Length; ii++)
-            {
-                if (index + ii >= source.Length || source[index + ii] != target[ii])
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
         private static readonly string s_softwareVersion = CoreUtils.GetAssemblySoftwareVersion();
         private static readonly string s_buildVersion = CoreUtils.GetAssemblyBuildNumber();
-        private readonly StringReader m_reader;
+        private readonly TemplateString m_templateString;
         private readonly TextWriter m_writer;
+        private readonly Dictionary<string, TemplateDefinition> m_templates;
+        private readonly Dictionary<string, string> m_replacements;
+        private readonly int m_indentCount;
         private bool m_written;
     }
 }

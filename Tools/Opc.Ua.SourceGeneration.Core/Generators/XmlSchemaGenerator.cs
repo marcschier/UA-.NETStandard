@@ -96,9 +96,9 @@ namespace Opc.Ua.SourceGeneration
         private void WriteTemplate_XmlSchema(string fileName)
         {
             using TextWriter writer = FileSystem.CreateTextWriter(fileName);
-            var template = new Template(writer, SchemaTemplateStrings.Stack_XmlSchema_File_xml);
+            var template = new Template(writer, SchemaTemplates.Stack_XmlSchema_File_xml);
 
-            template.Replacements.Add(Tokens.Namespace, TargetNamespace);
+            template.AddReplacement(Tokens.Namespace, TargetNamespace);
 
             var buffer = new StringBuilder();
             buffer.AppendFormat(
@@ -124,7 +124,7 @@ namespace Opc.Ua.SourceGeneration
                 }
             }
 
-            template.Replacements.Add(Tokens.XmlnsS0ListOfNamespaces, buffer.ToString());
+            template.AddReplacement(Tokens.XmlnsS0ListOfNamespaces, buffer.ToString());
             List<string> imports = [Namespaces.OpcUaBuiltInTypes];
             if (!m_exportAll)
             {
@@ -136,17 +136,14 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddTemplate(
                 Tokens.Imports,
-                null,
                 imports,
-                LoadTemplate_Imports,
-                null);
+                LoadTemplate_Imports);
 
             template.AddTemplate(
-                 Tokens.ListOfTypes,
-                 string.Empty,
-                 GetListOfTypes(m_exportAll),
-                 LoadTemplate_DataType,
-                 WriteTemplate_DataType);
+                Tokens.ListOfTypes,
+                GetListOfTypes(m_exportAll),
+                LoadTemplate_DataType,
+                WriteTemplate_DataType);
 
             template.WriteTemplate(null);
         }
@@ -177,7 +174,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes the import statements.
         /// </summary>
-        private string LoadTemplate_Imports(Template template, Context context)
+        private TemplateString LoadTemplate_Imports(Template template, Context context)
         {
             if (context.Target is not string namespaceUri)
             {
@@ -203,13 +200,13 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            return SchemaTemplateStrings.Stack_XmlSchema_BuiltInTypes_xsd;
+            return SchemaTemplates.Stack_XmlSchema_BuiltInTypes_xsd;
         }
 
         /// <summary>
         /// Writes the attributes for a node.
         /// </summary>
-        private string LoadTemplate_DataType(Template template, Context context)
+        private TemplateString LoadTemplate_DataType(Template template, Context context)
         {
             // do not publish type declarations in OPC BinarySchema files.
             if (context.Target is TypeDeclaration)
@@ -221,20 +218,20 @@ namespace Opc.Ua.SourceGeneration
             {
                 if (!complexType.BaseType.IsNull())
                 {
-                    return SchemaTemplateStrings.Stack_XmlSchema_DerivedType_xml;
+                    return SchemaTemplates.Stack_XmlSchema_DerivedType_xml;
                 }
 
-                return SchemaTemplateStrings.Stack_XmlSchema_ComplexType_xml;
+                return SchemaTemplates.Stack_XmlSchema_ComplexType_xml;
             }
 
             if (context.Target is EnumeratedType)
             {
-                return SchemaTemplateStrings.Stack_XmlSchema_EnumeratedType_xml;
+                return SchemaTemplates.Stack_XmlSchema_EnumeratedType_xml;
             }
 
             if (context.Target is ServiceType)
             {
-                return SchemaTemplateStrings.Stack_XmlSchema_ServiceType_xml;
+                return SchemaTemplates.Stack_XmlSchema_ServiceType_xml;
             }
 
             // do not publish unrecognized sub-types.
@@ -257,9 +254,8 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddTemplate(
                 Tokens.ArrayDeclaration,
-                SchemaTemplateStrings.Stack_XmlSchema_Array_xml,
-                new DataType[] { datatype },
-                null,
+                SchemaTemplates.Stack_XmlSchema_Array_xml,
+                datatype,
                 WriteTemplate_Array);
 
             if (datatype is ComplexType complexType)
@@ -287,10 +283,8 @@ namespace Opc.Ua.SourceGeneration
 
                 template.AddTemplate(
                     Tokens.ListOfFields,
-                    string.Empty,
                     fields,
-                    LoadTemplate_Field,
-                    null);
+                    LoadTemplate_Field);
             }
 
             if (datatype is EnumeratedType enumeratedType)
@@ -307,27 +301,21 @@ namespace Opc.Ua.SourceGeneration
 
                 template.AddTemplate(
                     Tokens.ListOfValues,
-                    string.Empty,
                     values,
-                    LoadTemplate_EnumeratedValue,
-                    null);
+                    LoadTemplate_EnumeratedValue);
             }
 
             if (datatype is ServiceType serviceType)
             {
                 template.AddTemplate(
                     Tokens.ListOfRequestParameters,
-                    string.Empty,
                     serviceType.Request,
-                    LoadTemplate_Field,
-                    null);
+                    LoadTemplate_Field);
 
                 template.AddTemplate(
                     Tokens.ListOfResponseParameters,
-                    string.Empty,
                     serviceType.Response,
-                    LoadTemplate_Field,
-                    null);
+                    LoadTemplate_Field);
             }
 
             return template.WriteTemplate(context);
@@ -358,7 +346,7 @@ namespace Opc.Ua.SourceGeneration
         /// Writes a field in an OPCBinary schema.
         /// </summary>
         /// <exception cref="InvalidOperationException"></exception>
-        private string LoadTemplate_Field(Template template, Context context)
+        private TemplateString LoadTemplate_Field(Template template, Context context)
         {
             if (context.Target is not FieldType fieldType)
             {
@@ -411,7 +399,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes an enumerated value in an OPCBinary schema.
         /// </summary>
-        private string LoadTemplate_EnumeratedValue(Template template, Context context)
+        private TemplateString LoadTemplate_EnumeratedValue(Template template, Context context)
         {
             if (context.Target is not EnumeratedValue valueType)
             {
