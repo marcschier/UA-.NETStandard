@@ -144,7 +144,8 @@ namespace Opc.Ua.SourceGeneration.Tests
         }
 
         [Benchmark]
-        [Arguments([OptimizationLevel.Release, OptimizationLevel.Debug])]
+        [Arguments(OptimizationLevel.Release)]
+        [Arguments(OptimizationLevel.Debug)]
         public void GenerateAndComile(OptimizationLevel optimizationLevel)
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.CreateForBenchmarks(logLevel: LogLevel.Error);
