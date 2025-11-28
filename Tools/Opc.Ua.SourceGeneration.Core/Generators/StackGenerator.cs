@@ -868,8 +868,7 @@ namespace Opc.Ua.SourceGeneration
 
                 foreach (FieldType field in serviceType.Request)
                 {
-                    template.WriteNewLine();
-                    template.Write("request.");
+                    template.WriteAfterNewLine("request.");
                     template.Write(field.Name);
                     template.Write(" = ");
                     template.Write(field.Name.ToLowerCamelCase());
@@ -921,8 +920,7 @@ namespace Opc.Ua.SourceGeneration
                         first = false;
                         continue;
                     }
-                    template.WriteNewLine();
-                    template.Write(field.Name.ToLowerCamelCase());
+                    template.WriteAfterNewLine(field.Name.ToLowerCamelCase());
                     template.Write(" = response.");
                     template.Write(field.Name);
                     template.Write(";");

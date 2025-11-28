@@ -834,40 +834,35 @@ namespace Opc.Ua.SourceGeneration
                     return null;
                 }
 
-                template.WriteNewLine();
-
                 if (field.IdentifierInName)
                 {
-                    template.Write("""<xs:enumeration value="{0}" />""", field.Name);
+                    template.WriteLine(
+                        """<xs:enumeration value="{0}" />""",
+                        field.Name);
                     return null;
                 }
 
-                template.Write("""<xs:enumeration value="{0}_{1}" />""", field.Name, field.Identifier);
+                template.WriteLine(
+                    """<xs:enumeration value="{0}_{1}" />""",
+                    field.Name,
+                    field.Identifier);
                 return null;
             }
 
             basicType = field.DataTypeNode.BasicDataType;
 
-            if (basicType == BasicDataType.XmlElement && field.ValueRank == ValueRank.Scalar)
+            if (basicType == BasicDataType.XmlElement &&
+                field.ValueRank == ValueRank.Scalar)
             {
-                template.WriteNewLine();
-                template.Write("""<xs:element name="{0}" minOccurs="0" nillable="true">""", field.Name);
-                template.WriteNewLine();
-                template.Write("  <xs:complexType>");
-                template.WriteNewLine();
-                template.Write("    <xs:sequence>");
-                template.WriteNewLine();
-                template.Write("""      <xs:any minOccurs="0" processContents="lax" />""");
-                template.WriteNewLine();
-                template.Write("    </xs:sequence>");
-                template.WriteNewLine();
-                template.Write("  </xs:complexType>");
-                template.WriteNewLine();
-                template.Write("</xs:element>");
+                template.WriteLine("""<xs:element name="{0}" minOccurs="0" nillable="true">""", field.Name);
+                template.WriteLine("  <xs:complexType>");
+                template.WriteLine("    <xs:sequence>");
+                template.WriteLine("""      <xs:any minOccurs="0" processContents="lax" />""");
+                template.WriteLine("    </xs:sequence>");
+                template.WriteLine("  </xs:complexType>");
+                template.WriteLine("</xs:element>");
                 return null;
             }
-
-            template.WriteNewLine();
 
             if (field.ValueRank != ValueRank.Scalar)
             {
@@ -881,7 +876,7 @@ namespace Opc.Ua.SourceGeneration
                     fieldDataType = "ua:ListOfExtensionObject";
                 }
 
-                template.Write(
+                template.WriteLine(
                     """<xs:element name="{0}" type="{1}" minOccurs="0" nillable="true" />""",
                     field.Name,
                     fieldDataType);
@@ -899,7 +894,7 @@ namespace Opc.Ua.SourceGeneration
                     case BasicDataType.QualifiedName:
                     case BasicDataType.Structure:
                     case BasicDataType.DataValue:
-                        template.Write(
+                        template.WriteLine(
                                 """<xs:element name="{0}" type="{1}" minOccurs="0" nillable="true" />""",
                                 field.Name,
                                 field.DataTypeNode.GetXmlDataType(
@@ -909,7 +904,7 @@ namespace Opc.Ua.SourceGeneration
                         break;
                     case BasicDataType.Guid:
                     case BasicDataType.StatusCode:
-                        template.Write(
+                        template.WriteLine(
                                 """<xs:element name="{0}" type="{1}" minOccurs="0" />""",
                                 field.Name,
                                 field.DataTypeNode.GetXmlDataType(
@@ -928,16 +923,16 @@ namespace Opc.Ua.SourceGeneration
                             fieldDataType = "ua:ExtensionObject";
                         }
 
-                        template.Write(
+                        template.WriteLine(
                             """<xs:element name="{0}" type="{1}" minOccurs="0" nillable="true" />""",
                             field.Name,
                             fieldDataType);
                         break;
                     default:
-                        template.Write("""<xs:element name="{0}" type="{1}" minOccurs="0" />""",
+                        template.WriteLine("""<xs:element name="{0}" type="{1}" minOccurs="0" />""",
                                 field.Name,
                                 field.DataTypeNode.GetXmlDataType(
-    field.ValueRank,
+                                    field.ValueRank,
                                     m_model.TargetNamespace,
                                     m_model.Namespaces));
                         break;
@@ -1057,8 +1052,7 @@ namespace Opc.Ua.SourceGeneration
                     return null;
                 }
 
-                template.WriteNewLine();
-                template.Write(
+                template.WriteLine(
                     """
                     xmlns:{0}="{1}"
                     """,
@@ -1067,8 +1061,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            template.WriteNewLine();
-            template.Write(
+            template.WriteLine(
                 """<opc:Import Namespace="{0}" Location="{1}.BinarySchema.bsd"/>""",
                 ns.Value,
                 m_model.Namespaces.GetNamespacePrefix(ns.Value));
@@ -1303,8 +1296,7 @@ namespace Opc.Ua.SourceGeneration
 
             if (basicType == BasicDataType.Enumeration)
             {
-                template.WriteNewLine();
-                template.Write(
+                template.WriteLine(
                     """<opc:EnumeratedValue Name="{0}" Value="{1}" />""",
                     field.Name,
                     field.Identifier);
@@ -1313,23 +1305,18 @@ namespace Opc.Ua.SourceGeneration
 
             if (field.ValueRank != ValueRank.Scalar)
             {
-                template.WriteNewLine();
-                template.Write(
+                template.WriteLine(
                     """<opc:Field Name="NoOf{0}" TypeName="opc:Int32" />""",
                     field.Name);
-                template.WriteNewLine();
-                template.Write(
+                template.WriteLine(
                     """<opc:Field Name="{0}" TypeName="{1}" LengthField="NoOf{0}" />""",
                     field.Name,
                     fieldDataType);
                 return null;
             }
-
-            template.WriteNewLine();
-
             if (field.IsInherited)
             {
-                template.Write(
+                template.WriteLine(
                     """<opc:Field Name="{0}" TypeName="{1}" SourceType="{2}" />""",
                     field.Name,
                     fieldDataType,
@@ -1337,7 +1324,7 @@ namespace Opc.Ua.SourceGeneration
             }
             else
             {
-                template.Write("""<opc:Field Name="{0}" TypeName="{1}" />""", field.Name, fieldDataType);
+                template.WriteLine("""<opc:Field Name="{0}" TypeName="{1}" />""", field.Name, fieldDataType);
             }
 
             return null;
@@ -1350,13 +1337,15 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            if (dataType.Description == null || dataType.Description.IsAutogenerated)
+            if (dataType.Description == null ||
+                dataType.Description.IsAutogenerated)
             {
                 return null;
             }
 
-            template.WriteNewLine();
-            template.Write("<opc:Documentation>{0}</opc:Documentation>", dataType.Description.Value);
+            template.WriteLine(
+                "<opc:Documentation>{0}</opc:Documentation>",
+                dataType.Description.Value);
 
             return context.TemplateString;
         }
@@ -1536,8 +1525,7 @@ namespace Opc.Ua.SourceGeneration
 
             string externalPrefix = m_model.Namespaces.GetNamespacePrefix(ns.Value);
 
-            template.WriteNewLine();
-            template.Write("using {0};", externalPrefix);
+            template.WriteAfterNewLine("using {0};", externalPrefix);
 
             return null;
         }
@@ -1995,7 +1983,7 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(
                 Tokens.InitializeOptionalChildren,
                 CodeTemplates.InitializeOptionalChild_cs,
-                children.ToArray(),
+                children,
                 LoadTemplate_InitializeOptionalChildren,
                 WriteTemplate_InitializeOptionalChildren);
 
@@ -2155,26 +2143,13 @@ namespace Opc.Ua.SourceGeneration
             // string path = field.Key.Replace('_', '.');
             string path = field.Key;
 
-            template.WriteNewLine();
-            template.Write("instance = m_variable.{0};", path);
-
-            template.WriteNewLine();
-            template.Write("if (instance != null)");
-
-            template.WriteNewLine();
-            template.Write("{");
-
-            template.WriteNewLine();
-            template.Write("    instance.OnReadValue = OnRead_{0};", name);
-
-            template.WriteNewLine();
-            template.Write("    instance.OnWriteValue = OnWrite_{0};", name);
-
-            template.WriteNewLine();
-            template.Write("    updateList.Add(instance);");
-
-            template.WriteNewLine();
-            template.Write("}");
+            template.WriteAfterNewLine("instance = m_variable.{0};", path);
+            template.WriteAfterNewLine("if (instance != null)");
+            template.WriteAfterNewLine("{");
+            template.WriteAfterNewLine("    instance.OnReadValue = OnRead_{0};", name);
+            template.WriteAfterNewLine("    instance.OnWriteValue = OnWrite_{0};", name);
+            template.WriteAfterNewLine("    updateList.Add(instance);");
+            template.WriteAfterNewLine("}");
 
             return context.TemplateString;
         }
@@ -2195,10 +2170,14 @@ namespace Opc.Ua.SourceGeneration
             // string path = field.Key.Replace('_', '.');
             string path = field.Key;
 
-            template.WriteNewLine();
-            template.Write(
-                "if (!CoreUtils.IsEqual(m_value.{0}, newValue.{0})) UpdateChildVariableStatus(m_variable.{0}, ref statusCode, ref timestamp);",
+            template.WriteAfterNewLine(
+                "if (!global::Opc.Ua.CoreUtils.IsEqual(m_value.{0}, newValue.{0}))",
                 path);
+            template.WriteAfterNewLine("{");
+            template.WriteAfterNewLine(
+                "    UpdateChildVariableStatus(m_variable.{0}, ref statusCode, ref timestamp);",
+                path);
+            template.WriteAfterNewLine("}");
 
             return context.TemplateString;
         }
@@ -2262,12 +2241,13 @@ namespace Opc.Ua.SourceGeneration
                     return null;
                 }
 
-                template.WriteNewLine();
-                template.Write("private {0} {1};", field.DataTypeNode.GetDotNetTypeName(
-                    field.ValueRank,
-                    m_model.TargetNamespace,
-                    m_model.Namespaces,
-                    nullable: true),
+                template.WriteAfterNewLine(
+                    "private {0} {1};",
+                    field.DataTypeNode.GetDotNetTypeName(
+                        field.ValueRank,
+                        m_model.TargetNamespace,
+                        m_model.Namespaces,
+                        nullable: true),
                     field.GetChildFieldName());
 
                 return context.TemplateString;
@@ -2306,8 +2286,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            template.WriteNewLine();
-            template.Write(
+            template.WriteAfterNewLine(
                 "private {0} {1};",
                 instance.GetClassName(m_model.TargetNamespace, m_model.Namespaces),
                 instance.GetChildFieldName());
@@ -2327,14 +2306,14 @@ namespace Opc.Ua.SourceGeneration
             int index = context.Index + 1;
             bool isLast = index == dataType.Fields.Length;
 
-            template.WriteNewLine();
             if (context.Token == Tokens.ListOfSwitchFieldNames)
             {
-                template.Write($"\"{field.Name}\""); // TODO: Make string resource
+                template.WriteAfterNewLine(
+                    $"\"{field.Name}\""); // TODO: Make string resource
             }
             else
             {
-                template.Write(field.Name);
+                template.WriteAfterNewLine(field.Name);
                 template.Write(" = ");
                 template.Write(index.ToString(CultureInfo.InvariantCulture));
             }
@@ -2369,14 +2348,13 @@ namespace Opc.Ua.SourceGeneration
                 //    }
                 //}
 
-                template.WriteNewLine();
                 if (context.Token == Tokens.ListOfEncodingMaskFieldNames)
                 {
-                    template.Write($"\"{field.Name}\""); // TODO: Make string resource
+                    template.WriteAfterNewLine($"\"{field.Name}\""); // TODO: Make string resource
                 }
                 else
                 {
-                    template.Write(field.Name);
+                    template.WriteAfterNewLine(field.Name);
                     template.Write(" = 0x{0:X}", 1 << index);
                 }
                 template.Write(",");
@@ -2854,9 +2832,7 @@ namespace Opc.Ua.SourceGeneration
                 template.WriteAfterNewLine(string.Empty);
             }
 
-            template.WriteNewLine();
-
-            template.Write(
+            template.WriteAfterNewLine(
                 "{1} {0} = ({1})_outputArguments[{2}];",
                 field.GetChildFieldName()[2..],
                 field.DataTypeNode.GetMethodArgumentDotNetType(
@@ -2881,9 +2857,7 @@ namespace Opc.Ua.SourceGeneration
                 template.WriteAfterNewLine(string.Empty);
             }
 
-            template.WriteNewLine();
-
-            template.Write(
+            template.WriteAfterNewLine(
                 "_outputArguments[{1}] = {0};",
                 field.GetChildFieldName()[2..],
                 context.Index);
@@ -2898,14 +2872,9 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            template.WriteNewLine();
-            template.Write("global::Opc.Ua.ISystemContext _context,");
-
-            template.WriteNewLine();
-            template.Write("global::Opc.Ua.MethodState _method,");
-
-            template.WriteNewLine();
-            template.Write("global::Opc.Ua.NodeId _objectId");
+            template.WriteAfterNewLine("global::Opc.Ua.ISystemContext _context,");
+            template.WriteAfterNewLine("global::Opc.Ua.MethodState _method,");
+            template.WriteAfterNewLine("global::Opc.Ua.NodeId _objectId");
 
             if (method.InputArguments != null)
             {
@@ -2913,8 +2882,7 @@ namespace Opc.Ua.SourceGeneration
                 {
                     Parameter argument = method.InputArguments[ii];
 
-                    template.Write(",");
-                    template.WriteNewLine();
+                    template.WriteLine(",");
                     template.Write("{1} {0}", argument.GetChildFieldName()[2..],
                         argument.DataTypeNode.GetMethodArgumentDotNetType(
                             argument.ValueRank,
@@ -2930,8 +2898,7 @@ namespace Opc.Ua.SourceGeneration
                 {
                     Parameter argument = method.OutputArguments[ii];
 
-                    template.Write(",");
-                    template.WriteNewLine();
+                    template.WriteLine(",");
                     template.Write("ref {1} {0}", argument.GetChildFieldName()[2..],
                         argument.DataTypeNode.GetMethodArgumentDotNetType(
                             argument.ValueRank,
@@ -2953,14 +2920,9 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            template.WriteNewLine();
-            template.Write("global::Opc.Ua.ISystemContext _context,");
-
-            template.WriteNewLine();
-            template.Write("global::Opc.Ua.MethodState _method,");
-
-            template.WriteNewLine();
-            template.Write("global::Opc.Ua.NodeId _objectId");
+            template.WriteAfterNewLine("global::Opc.Ua.ISystemContext _context,");
+            template.WriteAfterNewLine("global::Opc.Ua.MethodState _method,");
+            template.WriteAfterNewLine("global::Opc.Ua.NodeId _objectId");
 
             if (method.InputArguments != null)
             {
@@ -2968,8 +2930,7 @@ namespace Opc.Ua.SourceGeneration
                 {
                     Parameter argument = method.InputArguments[ii];
 
-                    template.Write(",");
-                    template.WriteNewLine();
+                    template.WriteLine(",");
                     template.Write("{1} {0}", argument.GetChildFieldName()[2..],
                         argument.DataTypeNode.GetMethodArgumentDotNetType(
                             argument.ValueRank,
@@ -2979,10 +2940,8 @@ namespace Opc.Ua.SourceGeneration
                 }
             }
 
-            template.Write(",");
-            template.WriteNewLine();
+            template.WriteLine(",");
             template.Write("global::System.Threading.CancellationToken cancellationToken");
-
             template.Write(");");
 
             return context.TemplateString;
@@ -3000,11 +2959,9 @@ namespace Opc.Ua.SourceGeneration
                 template.WriteAfterNewLine(string.Empty);
             }
 
-            template.WriteNewLine();
-
             string fieldName = field.GetChildFieldName();
 
-            template.Write(
+            template.WriteAfterNewLine(
                 "_outputArguments[{1}] = _result.{2}{0};",
                 fieldName[3..],
                 context.Index,
@@ -3020,11 +2977,9 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            template.WriteNewLine();
-
             string fieldName = field.GetChildFieldName();
 
-            template.Write(
+            template.WriteAfterNewLine(
                "public {1} {2}{0} {{ get; set; }}",
                fieldName[3..],
                field.DataTypeNode.GetMethodArgumentDotNetType(
@@ -3044,24 +2999,16 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            template.WriteNewLine();
-            template.Write("_result = OnCall(");
-
-            template.WriteNewLine();
-            template.Write("    _context,");
-
-            template.WriteNewLine();
-            template.Write("    this,");
-
-            template.WriteNewLine();
-            template.Write("    _objectId");
+            template.WriteAfterNewLine("_result = OnCall(");
+            template.WriteAfterNewLine("    _context,");
+            template.WriteAfterNewLine("    this,");
+            template.WriteAfterNewLine("    _objectId");
 
             if (method.InputArguments != null)
             {
                 for (int ii = 0; ii < method.InputArguments.Length; ii++)
                 {
-                    template.Write(",");
-                    template.WriteNewLine();
+                    template.WriteLine(",");
                     template.Write("    {0}", method.InputArguments[ii].GetChildFieldName()[2..]);
                 }
             }
@@ -3070,8 +3017,7 @@ namespace Opc.Ua.SourceGeneration
             {
                 for (int ii = 0; ii < method.OutputArguments.Length; ii++)
                 {
-                    template.Write(",");
-                    template.WriteNewLine();
+                    template.WriteLine(",");
                     template.Write("    ref {0}", method.OutputArguments[ii].GetChildFieldName()[2..]);
                 }
             }
@@ -3088,33 +3034,22 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            template.WriteNewLine();
-            template.Write("_result = await OnCallAsync(");
-
-            template.WriteNewLine();
-            template.Write("    _context,");
-
-            template.WriteNewLine();
-            template.Write("    this,");
-
-            template.WriteNewLine();
-            template.Write("    _objectId");
+            template.WriteAfterNewLine("_result = await OnCallAsync(");
+            template.WriteAfterNewLine("    _context,");
+            template.WriteAfterNewLine("    this,");
+            template.WriteAfterNewLine("    _objectId");
 
             if (method.InputArguments != null)
             {
                 for (int ii = 0; ii < method.InputArguments.Length; ii++)
                 {
-                    template.Write(",");
-                    template.WriteNewLine();
+                    template.WriteLine(",");
                     template.Write("    {0}", method.InputArguments[ii].GetChildFieldName()[2..]);
                 }
             }
 
-            template.Write(",");
-            template.WriteNewLine();
-            template.Write("    cancellationToken");
-
-            template.Write(").ConfigureAwait(false);");
+            template.WriteLine(",");
+            template.Write("    cancellationToken).ConfigureAwait(false);");
             return context.TemplateString;
         }
 
@@ -3134,8 +3069,7 @@ namespace Opc.Ua.SourceGeneration
                 m_model.Namespaces,
                 m_context);
 
-            template.WriteNewLine();
-            template.Write("{0} = {1};", field.GetChildFieldName(), value);
+            template.WriteLine("{0} = {1};", field.GetChildFieldName(), value);
 
             return context.TemplateString;
         }

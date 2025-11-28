@@ -466,9 +466,7 @@ namespace Opc.Ua.SourceGeneration
                     base.Encode(encoder);
 
                     encoder.PushNamespace({{Tokens.XmlNamespaceUri}});
-
                     {{Tokens.ListOfEncodedFields}}
-
                     encoder.PopNamespace();
                 }
 

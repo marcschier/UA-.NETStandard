@@ -189,16 +189,15 @@ namespace Opc.Ua.SourceGeneration
 
             if (!m_exportAll)
             {
-                template.WriteNewLine();
                 if (namespaceUri == Namespaces.OpcUaBuiltInTypes)
                 {
-                    template.Write(
+                    template.WriteLine(
                         """<xs:import namespace="{0}" schemaLocation="BuiltInTypes.xsd" />""",
                         Namespaces.OpcUaBuiltInTypes);
                 }
                 else
                 {
-                    template.Write(GetImportStatment(namespaceUri));
+                    template.WriteLine(GetImportStatment(namespaceUri));
                 }
 
                 return null;
