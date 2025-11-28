@@ -144,9 +144,15 @@ namespace Opc.Ua.SourceGeneration
         public int FormattedCount { get; }
 
         /// <summary>
+        /// Is multi line string
+        /// </summary>
+        public bool IsMultiLine
+            => m_operations.Any(o => o.Type == OpType.LineBreak);
+
+        /// <summary>
         /// Get formatting instructions
         /// </summary>
-        public IEnumerable<Op> Operations => m_operations;
+        public IReadOnlyList<Op> Operations => m_operations;
 
         /// <inheritdoc/>
         public override int ArgumentCount => GetArguments().Length;

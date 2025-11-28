@@ -102,13 +102,13 @@ namespace Opc.Ua.SourceGeneration
             var template = new Template(writer, CodeTemplates.Resources_File_cs);
 
             template.AddReplacement(Tokens.Namespace, namespacePrefix);
-            template.AddTemplate(
+            template.AddReplacement(
                 Tokens.ListOfResourceGroups,
                 CodeTemplates.Resources_Classes_cs,
                 groups,
                 WriteTemplate_ResourceGroup);
 
-            template.WriteTemplate(null);
+            template.WriteTemplate();
             return outputFile;
         }
 
@@ -124,13 +124,13 @@ namespace Opc.Ua.SourceGeneration
                 Tokens.AccessModifier,
                 m_internalAccess ? "internal" : "public");
 
-            template.AddTemplate(
+            template.AddReplacement(
                 Tokens.ListOfResourceDeclarations,
                 [.. group],
                 LoadTemplate_ResourceDeclaration,
                 WriteTemplate_ResourceDeclaration);
 
-            return template.WriteTemplate(context);
+            return template.WriteTemplate();
         }
 
         private TemplateString LoadTemplate_ResourceDeclaration(Template template, Context context)
@@ -159,13 +159,13 @@ namespace Opc.Ua.SourceGeneration
             }
             template.AddReplacement(Tokens.ResourceName, resource.ResourceName);
 
-            template.AddTemplate(
+            template.AddReplacement(
                 Tokens.Resource,
-                context.Target,
+                [context.Target],
                 LoadTemplate_Resource,
                 WriteTemplate_Resource);
 
-            return template.WriteTemplate(context);
+            return template.WriteTemplate();
         }
 
         private bool WriteTemplate_Resource(Template template, Context context)
@@ -178,12 +178,12 @@ namespace Opc.Ua.SourceGeneration
                         template.AddReplacement(
                             Tokens.Resource,
                             textResource.Text);
-                        return template.WriteTemplate(context);
+                        return template.WriteTemplate();
                     case TextReaderResource textReaderResource:
                         template.AddReplacement(
                             Tokens.Resource,
                             textReaderResource.Reader.ReadToEnd());
-                        return template.WriteTemplate(context);
+                        return template.WriteTemplate();
                     default:
                         // SHould not be here
                         return false;
@@ -236,7 +236,7 @@ namespace Opc.Ua.SourceGeneration
             Stream stream = GetResourceStream(resource, out bool leaveOpen);
             try
             {
-                WriteAsByteArray(template, context, stream);
+                WriteAsByteArray(template, stream);
             }
             finally
             {
@@ -311,7 +311,7 @@ namespace Opc.Ua.SourceGeneration
             TextReader reader = GetResourceTextReader(context, out bool disposeReader);
             try
             {
-                WriteAsUtf8StringLiteral(template, context, reader);
+                WriteAsUtf8StringLiteral(template, reader);
             }
             finally
             {
@@ -404,12 +404,9 @@ namespace Opc.Ua.SourceGeneration
 
         private static void WriteAsUtf8StringLiteral(
             Template template,
-            Context context,
             TextReader reader)
         {
-            template.WriteNextLine(context.Prefix);
-            template.Write(template.Indentation);
-            template.Write("\"\"\"");
+            template.WriteAfterNewLine("\"\"\"");
             for (string line = reader.ReadLine();
                 line != null;
                 line = reader.ReadLine())
@@ -419,13 +416,9 @@ namespace Opc.Ua.SourceGeneration
                 {
                     continue;
                 }
-                template.WriteNextLine(context.Prefix);
-                template.Write(template.Indentation);
-                template.Write(line);
+                template.WriteAfterNewLine(line);
             }
-            template.WriteNextLine(context.Prefix);
-            template.Write(template.Indentation);
-            template.Write("\"\"\"u8");
+            template.WriteAfterNewLine("\"\"\"u8");
         }
 
         private static void WriteAsBase64StringLiteral(
@@ -433,8 +426,7 @@ namespace Opc.Ua.SourceGeneration
             Context context,
             string base64)
         {
-            template.WriteNextLine(context.Prefix);
-            template.Write("global::System.Convert.FromBase64String(");
+            template.WriteAfterNewLine("global::System.Convert.FromBase64String(");
             //
             // Do not forrmat the string, roslyn code analyzers barf with stack
             // overflow when there are too many string "add" binary operations
@@ -473,9 +465,7 @@ namespace Opc.Ua.SourceGeneration
 
             static void WriteChunk(Template template, Context context, string line)
             {
-                template.WriteNextLine(context.Prefix);
-                template.Write(template.Indent);
-                template.Write("   \"");
+                template.WriteAfterNewLine("   \"");
 
                 for (int ii = 0; ii < line.Length; ii++)
                 {
@@ -495,15 +485,11 @@ namespace Opc.Ua.SourceGeneration
 
         private static void WriteAsByteArray(
             Template template,
-            Context context,
             Stream reader)
         {
-            template.WriteNextLine(context.Prefix);
-            template.Write("new byte[]");
-            template.WriteNextLine(context.Prefix);
-            template.Write("{");
-            template.WriteNextLine(context.Prefix);
-            template.Write("    ");
+            template.WriteAfterNewLine("new byte[]");
+            template.WriteAfterNewLine("{");
+            template.WriteAfterNewLine("    ");
             bool first = true;
             int column = 0;
 
@@ -514,8 +500,7 @@ namespace Opc.Ua.SourceGeneration
                 if (column++ >= 12)
                 {
                     template.Write(",");
-                    template.WriteNextLine(context.Prefix);
-                    template.Write("    ");
+                    template.WriteAfterNewLine("    ");
                     column = 1;
                 }
                 else if (!first)
@@ -526,8 +511,7 @@ namespace Opc.Ua.SourceGeneration
                 template.Write("0x{0:X2}", (byte)b);
                 b = reader.ReadByte();
             }
-            template.WriteNextLine(context.Prefix);
-            template.Write("}");
+            template.WriteAfterNewLine("}");
         }
 
         private static string AsBase64String(Stream reader)

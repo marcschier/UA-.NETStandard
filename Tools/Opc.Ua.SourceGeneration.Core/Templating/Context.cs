@@ -35,7 +35,7 @@ namespace Opc.Ua.SourceGeneration
     internal sealed class Context
     {
         /// <summary>
-        /// The interpolated template string passed to AddTemplate method.
+        /// The interpolated template string passed to AddReplacement method.
         /// </summary>
         public TemplateString TemplateString { get; set; }
 
@@ -58,20 +58,5 @@ namespace Opc.Ua.SourceGeneration
         /// The index of the current target within the list being processed.
         /// </summary>
         public int Index { get; set; } = -1;
-
-        /// <summary>
-        /// Whether the current target being processed is the last in the list.
-        /// </summary>>
-        public int TotalItemsInList { get; set; }
-
-        /// <summary>
-        /// The prefix to prepend to every line of output.
-        /// </summary>
-        public string Prefix { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Whether a blank line seperates entries in the list.
-        /// </summary>>
-        public bool BlankLine { get; set; } = true;
     }
 }

@@ -78,12 +78,13 @@ namespace Opc.Ua.SourceGeneration
             {
                 return;
             }
+            options ??= new GeneratorOptions();
+
             // Combine with embedded resources in this assembly.
             fileSystem = typeof(Generators).Assembly
                 .AsFileSystem("Opc.Ua.SourceGeneration.Design")
                 .WithFallback(fileSystem);
 
-            options ??= new GeneratorOptions();
             var generator = new ModelGenerator(
                 fileSystem,
                 outputDir,
@@ -121,12 +122,13 @@ namespace Opc.Ua.SourceGeneration
             {
                 return;
             }
+            options ??= new GeneratorOptions();
+
             // Combine with embedded resources in this assembly.
             fileSystem = typeof(Generators).Assembly
                 .AsFileSystem("Opc.Ua.SourceGeneration.Design")
                 .WithFallback(fileSystem);
 
-            options ??= new GeneratorOptions();
             foreach (string modelUri in nodesets.ModelUris)
             {
                 var generator = new ModelGenerator(
@@ -167,6 +169,7 @@ namespace Opc.Ua.SourceGeneration
             ITelemetryContext telemetry,
             GeneratorOptions options = null)
         {
+            options ??= new GeneratorOptions();
             // Combine with embedded resources in this assembly.
             fileSystem = typeof(Generators).Assembly
                 .AsFileSystem("Opc.Ua.SourceGeneration.Design")
@@ -178,7 +181,6 @@ namespace Opc.Ua.SourceGeneration
                 outputDir,
                 telemetry,
                 options);
-            options ??= new GeneratorOptions();
             modelGenerator.ValidateAndUpdateIds(
                 [
                     BuiltInDesignFiles.StandardTypesXml,

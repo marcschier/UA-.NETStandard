@@ -53,11 +53,11 @@ namespace Opc.Ua.SourceGeneration
             Dictionary<string, string> knownFiles,
             IReadOnlyList<string> exclusions)
             : base(
-                  fileSystem,
-                  typeDictionary,
-                  outputDirectory,
-                  knownFiles,
-                  exclusions)
+                fileSystem,
+                typeDictionary,
+                outputDirectory,
+                knownFiles,
+                exclusions)
         {
         }
 
@@ -122,8 +122,12 @@ namespace Opc.Ua.SourceGeneration
                         NamespaceUris[ii]);
                 }
             }
+            buffer.Append(Environment.NewLine);
 
-            template.AddReplacement(Tokens.XmlnsS0ListOfNamespaces, buffer.ToString());
+            template.AddReplacement(
+                Tokens.XmlnsS0ListOfNamespaces,
+                buffer.ToString(),
+                ["Dummy"]); // Ensure new lines are correctly processed
             List<string> imports = [Namespaces.OpcUaBuiltInTypes];
             if (!m_exportAll)
             {
@@ -133,19 +137,19 @@ namespace Opc.Ua.SourceGeneration
                 }
             }
 
-            template.AddTemplate(
+            template.AddReplacement(
                 Tokens.Imports,
                 imports,
                 LoadTemplate_Imports);
 
-            template.AddTemplate(
+            template.AddReplacement(
                 Tokens.ListOfTypes,
                 SchemaTemplates.Stack_BinarySchema_OpaqueType_xml,
                 GetListOfTypes(m_exportAll),
                 LoadTemplate_DataType,
                 WriteTemplate_DataType);
 
-            template.WriteTemplate(null);
+            template.WriteTemplate();
         }
 
         /// <summary>
@@ -165,7 +169,10 @@ namespace Opc.Ua.SourceGeneration
                 }
             }
 
-            return CoreUtils.Format("<opc:Import Namespace=\"{0}\" Location=\"{1}.bsd\" />", uri, location);
+            return CoreUtils.Format(
+                "<opc:Import Namespace=\"{0}\" Location=\"{1}.bsd\" />",
+                uri,
+                location);
         }
 
         /// <summary>
@@ -180,12 +187,12 @@ namespace Opc.Ua.SourceGeneration
 
             if (!m_exportAll)
             {
-                template.WriteLine(string.Empty);
-                template.Write(context.Prefix);
-
+                template.WriteNewLine();
                 if (namespaceUri == Namespaces.OpcUaBuiltInTypes)
                 {
-                    template.Write("<opc:Import Namespace=\"{0}\" />", Namespaces.OpcUaBuiltInTypes);
+                    template.Write(
+                        "<opc:Import Namespace=\"{0}\" />",
+                        Namespaces.OpcUaBuiltInTypes);
                 }
                 else
                 {
@@ -254,7 +261,7 @@ namespace Opc.Ua.SourceGeneration
                 List<FieldType> fields = [];
                 GetFields(complexType, fields);
 
-                template.AddTemplate(
+                template.AddReplacement(
                     Tokens.ListOfFields,
                     fields,
                     LoadTemplate_Field);
@@ -311,10 +318,14 @@ namespace Opc.Ua.SourceGeneration
                     });
                 }
 
-                template.AddReplacement(Tokens.LengthInBits, lengthInBits);
-                template.AddReplacement(Tokens.IsOptionSet, isOptionSet ? " IsOptionSet=\"true\"" : string.Empty);
+                template.AddReplacement(
+                    Tokens.LengthInBits,
+                    lengthInBits);
+                template.AddReplacement(
+                    Tokens.IsOptionSet,
+                    isOptionSet ? " IsOptionSet=\"true\"" : string.Empty);
 
-                template.AddTemplate(
+                template.AddReplacement(
                     Tokens.ListOfValues,
                     values,
                     LoadTemplate_EnumeratedValue);
@@ -322,18 +333,18 @@ namespace Opc.Ua.SourceGeneration
 
             if (datatype is ServiceType serviceType)
             {
-                template.AddTemplate(
+                template.AddReplacement(
                     Tokens.ListOfRequestParameters,
                     serviceType.Request,
                     LoadTemplate_Field);
 
-                template.AddTemplate(
+                template.AddReplacement(
                     Tokens.ListOfResponseParameters,
                     serviceType.Response,
                     LoadTemplate_Field);
             }
 
-            return template.WriteTemplate(context);
+            return template.WriteTemplate();
         }
 
         /// <summary>
@@ -354,13 +365,12 @@ namespace Opc.Ua.SourceGeneration
                     fieldType.DataType,
                     fieldType.Name));
 
-            template.WriteLine(string.Empty);
-            template.Write(context.Prefix);
-
+            template.WriteNewLine();
             if (fieldType.ValueRank == 0)
             {
-                template.WriteLine("<opc:Field Name=\"NoOf{0}\" TypeName=\"opc:Int32\" />", fieldType.Name);
-                template.Write(context.Prefix);
+                template.WriteLine(
+                    "<opc:Field Name=\"NoOf{0}\" TypeName=\"opc:Int32\" />",
+                    fieldType.Name);
             }
 
             template.Write("<opc:Field Name=\"{0}\"", fieldType.Name);
@@ -386,9 +396,10 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            template.WriteLine(string.Empty);
-            template.Write(context.Prefix);
-            template.Write("<opc:EnumeratedValue Name=\"{0}\" Value=\"{1}\" />", valueType.Name, valueType.Value);
+            template.WriteAfterNewLine(
+                "<opc:EnumeratedValue Name=\"{0}\" Value=\"{1}\" />",
+                valueType.Name,
+                valueType.Value);
 
             return null;
         }

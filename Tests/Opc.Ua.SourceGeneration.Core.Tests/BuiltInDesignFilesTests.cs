@@ -31,7 +31,7 @@ using System.IO;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
-namespace Opc.Ua.SourceGeneration
+namespace Opc.Ua.SourceGeneration.Tests
 {
     /// <summary>
     /// Test Client Services.

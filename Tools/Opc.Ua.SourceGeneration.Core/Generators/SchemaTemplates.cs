@@ -35,12 +35,12 @@ namespace Opc.Ua.SourceGeneration
     internal static class SchemaTemplates
     {
         /// <summary>
-        /// BinarySchemaGenerator.cs line#81
+        /// BinarySchemaGenerator.cs
         /// </summary>
         public static readonly TemplateString Stack_BinarySchema_File_xml = TemplateString.Parse(
             $$"""
             <opc:TypeDictionary
-              xmlns:s0="ListOfNamespaces"
+              {{Tokens.XmlnsS0ListOfNamespaces}}
               xmlns:opc="http://opcfoundation.org/BinarySchema/"
               xmlns:ua="http://opcfoundation.org/UA/"
               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -55,7 +55,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// BinarySchemaGenerator.cs line#125
+        /// BinarySchemaGenerator.cs
         /// </summary>
         public static readonly TemplateString Stack_BinarySchema_OpaqueType_xml = TemplateString.Parse(
             $$"""
@@ -65,195 +65,195 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// BinarySchemaGenerator.cs line#185
+        /// BinarySchemaGenerator.cs
         /// </summary>
         public static readonly TemplateString Stack_BinarySchema_BuiltInTypes_bsd =
             """
             <opc:Import Namespace="http://opcfoundation.org/BinarySchema/" />
 
             <opc:StructuredType Name="XmlElement">
-                <opc:Documentation>An XML element encoded as a UTF-8 string.</opc:Documentation>
-                <opc:Field Name="Length" TypeName="opc:Int32" />
-                <opc:Field Name="Value" TypeName="opc:Char" LengthField="Length" />
-              </opc:StructuredType>
+              <opc:Documentation>An XML element encoded as a UTF-8 string.</opc:Documentation>
+              <opc:Field Name="Length" TypeName="opc:Int32" />
+              <opc:Field Name="Value" TypeName="opc:Char" LengthField="Length" />
+            </opc:StructuredType>
 
-              <opc:EnumeratedType Name="NodeIdType" LengthInBits="6">
-                <opc:Documentation>The possible encodings for a NodeId value.</opc:Documentation>
-                <opc:EnumeratedValue Name="TwoByte" Value="0" />
-                <opc:EnumeratedValue Name="FourByte" Value="1" />
-                <opc:EnumeratedValue Name="Numeric" Value="2" />
-                <opc:EnumeratedValue Name="String" Value="3" />
-                <opc:EnumeratedValue Name="Guid" Value="4" />
-                <opc:EnumeratedValue Name="ByteString" Value="5" />
-              </opc:EnumeratedType>
+            <opc:EnumeratedType Name="NodeIdType" LengthInBits="6">
+              <opc:Documentation>The possible encodings for a NodeId value.</opc:Documentation>
+              <opc:EnumeratedValue Name="TwoByte" Value="0" />
+              <opc:EnumeratedValue Name="FourByte" Value="1" />
+              <opc:EnumeratedValue Name="Numeric" Value="2" />
+              <opc:EnumeratedValue Name="String" Value="3" />
+              <opc:EnumeratedValue Name="Guid" Value="4" />
+              <opc:EnumeratedValue Name="ByteString" Value="5" />
+            </opc:EnumeratedType>
 
-              <opc:StructuredType Name="TwoByteNodeId">
-                <opc:Field Name="Identifier" TypeName="opc:Byte" />
-              </opc:StructuredType>
+            <opc:StructuredType Name="TwoByteNodeId">
+              <opc:Field Name="Identifier" TypeName="opc:Byte" />
+            </opc:StructuredType>
 
-              <opc:StructuredType Name="FourByteNodeId">
-                <opc:Field Name="NamespaceIndex" TypeName="opc:Byte" />
-                <opc:Field Name="Identifier" TypeName="opc:UInt16" />
-              </opc:StructuredType>
+            <opc:StructuredType Name="FourByteNodeId">
+              <opc:Field Name="NamespaceIndex" TypeName="opc:Byte" />
+              <opc:Field Name="Identifier" TypeName="opc:UInt16" />
+            </opc:StructuredType>
 
-              <opc:StructuredType Name="NumericNodeId">
-                <opc:Field Name="NamespaceIndex" TypeName="opc:UInt16" />
-                <opc:Field Name="Identifier" TypeName="opc:UInt32" />
-              </opc:StructuredType>
+            <opc:StructuredType Name="NumericNodeId">
+              <opc:Field Name="NamespaceIndex" TypeName="opc:UInt16" />
+              <opc:Field Name="Identifier" TypeName="opc:UInt32" />
+            </opc:StructuredType>
 
-              <opc:StructuredType Name="StringNodeId">
-                <opc:Field Name="NamespaceIndex" TypeName="opc:UInt16" />
-                <opc:Field Name="Identifier" TypeName="opc:CharArray" />
-              </opc:StructuredType>
+            <opc:StructuredType Name="StringNodeId">
+              <opc:Field Name="NamespaceIndex" TypeName="opc:UInt16" />
+              <opc:Field Name="Identifier" TypeName="opc:CharArray" />
+            </opc:StructuredType>
 
-              <opc:StructuredType Name="GuidNodeId">
-                <opc:Field Name="NamespaceIndex" TypeName="opc:UInt16" />
-                <opc:Field Name="Identifier" TypeName="opc:Guid" />
-              </opc:StructuredType>
+            <opc:StructuredType Name="GuidNodeId">
+              <opc:Field Name="NamespaceIndex" TypeName="opc:UInt16" />
+              <opc:Field Name="Identifier" TypeName="opc:Guid" />
+            </opc:StructuredType>
 
-              <opc:StructuredType Name="ByteStringNodeId">
-                <opc:Field Name="NamespaceIndex" TypeName="opc:UInt16" />
-                <opc:Field Name="Identifier" TypeName="opc:ByteString" />
-              </opc:StructuredType>
+            <opc:StructuredType Name="ByteStringNodeId">
+              <opc:Field Name="NamespaceIndex" TypeName="opc:UInt16" />
+              <opc:Field Name="Identifier" TypeName="opc:ByteString" />
+            </opc:StructuredType>
 
-              <opc:StructuredType Name="NodeId">
-                <opc:Documentation>An identifier for a node in a UA server address space.</opc:Documentation>
-                <opc:Field Name="NodeIdType" TypeName="ua:NodeIdType" />
-                <opc:Field Name="Reserved1" TypeName="opc:Bit" Length="2" />
-                <opc:Field Name="TwoByte" TypeName="ua:TwoByteNodeId" SwitchField="NodeIdType" SwitchValue="0" />
-                <opc:Field Name="FourByte" TypeName="ua:FourByteNodeId" SwitchField="NodeIdType" SwitchValue="1" />
-                <opc:Field Name="Numeric" TypeName="ua:NumericNodeId" SwitchField="NodeIdType" SwitchValue="2" />
-                <opc:Field Name="String" TypeName="ua:StringNodeId" SwitchField="NodeIdType" SwitchValue="3" />
-                <opc:Field Name="Guid" TypeName="ua:GuidNodeId" SwitchField="NodeIdType" SwitchValue="4" />
-                <opc:Field Name="ByteString" TypeName="ua:ByteStringNodeId" SwitchField="NodeIdType" SwitchValue="5" />
-              </opc:StructuredType>
+            <opc:StructuredType Name="NodeId">
+              <opc:Documentation>An identifier for a node in a UA server address space.</opc:Documentation>
+              <opc:Field Name="NodeIdType" TypeName="ua:NodeIdType" />
+              <opc:Field Name="Reserved1" TypeName="opc:Bit" Length="2" />
+              <opc:Field Name="TwoByte" TypeName="ua:TwoByteNodeId" SwitchField="NodeIdType" SwitchValue="0" />
+              <opc:Field Name="FourByte" TypeName="ua:FourByteNodeId" SwitchField="NodeIdType" SwitchValue="1" />
+              <opc:Field Name="Numeric" TypeName="ua:NumericNodeId" SwitchField="NodeIdType" SwitchValue="2" />
+              <opc:Field Name="String" TypeName="ua:StringNodeId" SwitchField="NodeIdType" SwitchValue="3" />
+              <opc:Field Name="Guid" TypeName="ua:GuidNodeId" SwitchField="NodeIdType" SwitchValue="4" />
+              <opc:Field Name="ByteString" TypeName="ua:ByteStringNodeId" SwitchField="NodeIdType" SwitchValue="5" />
+            </opc:StructuredType>
 
-              <opc:StructuredType Name="ExpandedNodeId">
-                <opc:Documentation>An identifier for a node in a UA server address space qualified with a complete namespace string.</opc:Documentation>
-                <opc:Field Name="NodeIdType" TypeName="ua:NodeIdType" />
-                <opc:Field Name="ServerIndexSpecified" TypeName="opc:Bit" />
-                <opc:Field Name="NamespaceURISpecified" TypeName="opc:Bit" />
-                <opc:Field Name="TwoByte" TypeName="ua:TwoByteNodeId" SwitchField="NodeIdType" SwitchValue="0" />
-                <opc:Field Name="FourByte" TypeName="ua:FourByteNodeId" SwitchField="NodeIdType" SwitchValue="1" />
-                <opc:Field Name="Numeric" TypeName="ua:NumericNodeId" SwitchField="NodeIdType" SwitchValue="2" />
-                <opc:Field Name="String" TypeName="ua:StringNodeId" SwitchField="NodeIdType" SwitchValue="3" />
-                <opc:Field Name="Guid" TypeName="ua:GuidNodeId" SwitchField="NodeIdType" SwitchValue="4" />
-                <opc:Field Name="ByteString" TypeName="ua:ByteStringNodeId" SwitchField="NodeIdType" SwitchValue="5" />
-                <opc:Field Name="NamespaceURI" TypeName="opc:CharArray" SwitchField="NamespaceURISpecified"/>
-                <opc:Field Name="ServerIndex" TypeName="opc:UInt32" SwitchField="ServerIndexSpecified"/>
-              </opc:StructuredType>
+            <opc:StructuredType Name="ExpandedNodeId">
+              <opc:Documentation>An identifier for a node in a UA server address space qualified with a complete namespace string.</opc:Documentation>
+              <opc:Field Name="NodeIdType" TypeName="ua:NodeIdType" />
+              <opc:Field Name="ServerIndexSpecified" TypeName="opc:Bit" />
+              <opc:Field Name="NamespaceURISpecified" TypeName="opc:Bit" />
+              <opc:Field Name="TwoByte" TypeName="ua:TwoByteNodeId" SwitchField="NodeIdType" SwitchValue="0" />
+              <opc:Field Name="FourByte" TypeName="ua:FourByteNodeId" SwitchField="NodeIdType" SwitchValue="1" />
+              <opc:Field Name="Numeric" TypeName="ua:NumericNodeId" SwitchField="NodeIdType" SwitchValue="2" />
+              <opc:Field Name="String" TypeName="ua:StringNodeId" SwitchField="NodeIdType" SwitchValue="3" />
+              <opc:Field Name="Guid" TypeName="ua:GuidNodeId" SwitchField="NodeIdType" SwitchValue="4" />
+              <opc:Field Name="ByteString" TypeName="ua:ByteStringNodeId" SwitchField="NodeIdType" SwitchValue="5" />
+              <opc:Field Name="NamespaceURI" TypeName="opc:CharArray" SwitchField="NamespaceURISpecified"/>
+              <opc:Field Name="ServerIndex" TypeName="opc:UInt32" SwitchField="ServerIndexSpecified"/>
+            </opc:StructuredType>
 
-              <opc:OpaqueType Name="StatusCode" LengthInBits="32" ByteOrderSignificant="true">
-                <opc:Documentation>A 32-bit status code value.</opc:Documentation>
-              </opc:OpaqueType>
+            <opc:OpaqueType Name="StatusCode" LengthInBits="32" ByteOrderSignificant="true">
+              <opc:Documentation>A 32-bit status code value.</opc:Documentation>
+            </opc:OpaqueType>
 
-              <opc:StructuredType Name="DiagnosticInfo">
-                <opc:Documentation>A recursive structure containing diagnostic information associated with a status code.</opc:Documentation>
-                <opc:Field Name="SymbolicIdSpecified" TypeName="opc:Bit" />
-                <opc:Field Name="NamespaceURISpecified" TypeName="opc:Bit" />
-                <opc:Field Name="LocalizedTextSpecified" TypeName="opc:Bit" />
-                <opc:Field Name="LocaleSpecified" TypeName="opc:Bit" />
-                <opc:Field Name="AdditionalInfoSpecified" TypeName="opc:Bit" />
-                <opc:Field Name="InnerStatusCodeSpecified" TypeName="opc:Bit" />
-                <opc:Field Name="InnerDiagnosticInfoSpecified" TypeName="opc:Bit" />
-                <opc:Field Name="Reserved1" TypeName="opc:Bit" Length="1" />
-                <opc:Field Name="SymbolicId" TypeName="opc:Int32" SwitchField="SymbolicIdSpecified" />
-                <opc:Field Name="NamespaceURI" TypeName="opc:Int32" SwitchField="NamespaceURISpecified" />
-                <opc:Field Name="Locale" TypeName="opc:Int32" SwitchField="LocaleSpecified" />
-                <opc:Field Name="LocalizedText" TypeName="opc:Int32" SwitchField="LocalizedTextSpecified" />
-                <opc:Field Name="AdditionalInfo" TypeName="opc:CharArray" SwitchField="AdditionalInfoSpecified" />
-                <opc:Field Name="InnerStatusCode" TypeName="ua:StatusCode" SwitchField="InnerStatusCodeSpecified" />
-                <opc:Field Name="InnerDiagnosticInfo" TypeName="ua:DiagnosticInfo" SwitchField="InnerDiagnosticInfoSpecified" />
-              </opc:StructuredType>
+            <opc:StructuredType Name="DiagnosticInfo">
+              <opc:Documentation>A recursive structure containing diagnostic information associated with a status code.</opc:Documentation>
+              <opc:Field Name="SymbolicIdSpecified" TypeName="opc:Bit" />
+              <opc:Field Name="NamespaceURISpecified" TypeName="opc:Bit" />
+              <opc:Field Name="LocalizedTextSpecified" TypeName="opc:Bit" />
+              <opc:Field Name="LocaleSpecified" TypeName="opc:Bit" />
+              <opc:Field Name="AdditionalInfoSpecified" TypeName="opc:Bit" />
+              <opc:Field Name="InnerStatusCodeSpecified" TypeName="opc:Bit" />
+              <opc:Field Name="InnerDiagnosticInfoSpecified" TypeName="opc:Bit" />
+              <opc:Field Name="Reserved1" TypeName="opc:Bit" Length="1" />
+              <opc:Field Name="SymbolicId" TypeName="opc:Int32" SwitchField="SymbolicIdSpecified" />
+              <opc:Field Name="NamespaceURI" TypeName="opc:Int32" SwitchField="NamespaceURISpecified" />
+              <opc:Field Name="Locale" TypeName="opc:Int32" SwitchField="LocaleSpecified" />
+              <opc:Field Name="LocalizedText" TypeName="opc:Int32" SwitchField="LocalizedTextSpecified" />
+              <opc:Field Name="AdditionalInfo" TypeName="opc:CharArray" SwitchField="AdditionalInfoSpecified" />
+              <opc:Field Name="InnerStatusCode" TypeName="ua:StatusCode" SwitchField="InnerStatusCodeSpecified" />
+              <opc:Field Name="InnerDiagnosticInfo" TypeName="ua:DiagnosticInfo" SwitchField="InnerDiagnosticInfoSpecified" />
+            </opc:StructuredType>
 
-              <opc:StructuredType Name="QualifiedName">
-                <opc:Documentation>A string qualified with a namespace index.</opc:Documentation>
-                <opc:Field Name="NamespaceIndex" TypeName="opc:UInt16" />
-                <opc:Field Name="Name" TypeName="opc:CharArray" />
-              </opc:StructuredType>
+            <opc:StructuredType Name="QualifiedName">
+              <opc:Documentation>A string qualified with a namespace index.</opc:Documentation>
+              <opc:Field Name="NamespaceIndex" TypeName="opc:UInt16" />
+              <opc:Field Name="Name" TypeName="opc:CharArray" />
+            </opc:StructuredType>
 
-              <opc:StructuredType Name="LocalizedText">
-                <opc:Documentation>A string qualified with a namespace index.</opc:Documentation>
-                <opc:Field Name="LocaleSpecified" TypeName="opc:Bit" />
-                <opc:Field Name="TextSpecified" TypeName="opc:Bit" />
-                <opc:Field Name="Reserved1" TypeName="opc:Bit" Length="6" />
-                <opc:Field Name="Locale" TypeName="opc:CharArray" SwitchField="LocaleSpecified" />
-                <opc:Field Name="Text" TypeName="opc:CharArray" SwitchField="TextSpecified" />
-              </opc:StructuredType>
+            <opc:StructuredType Name="LocalizedText">
+              <opc:Documentation>A string qualified with a namespace index.</opc:Documentation>
+              <opc:Field Name="LocaleSpecified" TypeName="opc:Bit" />
+              <opc:Field Name="TextSpecified" TypeName="opc:Bit" />
+              <opc:Field Name="Reserved1" TypeName="opc:Bit" Length="6" />
+              <opc:Field Name="Locale" TypeName="opc:CharArray" SwitchField="LocaleSpecified" />
+              <opc:Field Name="Text" TypeName="opc:CharArray" SwitchField="TextSpecified" />
+            </opc:StructuredType>
 
-              <opc:StructuredType Name="DataValue">
-                <opc:Documentation>A value with an associated timestamp, and quality.</opc:Documentation>
-                <opc:Field Name="ValueSpecified" TypeName="opc:Bit" />
-                <opc:Field Name="StatusCodeSpecified" TypeName="opc:Bit" />
-                <opc:Field Name="SourceTimestampSpecified" TypeName="opc:Bit" />
-                <opc:Field Name="ServerTimestampSpecified" TypeName="opc:Bit" />
-                <opc:Field Name="SourcePicosecondsSpecified" TypeName="opc:Bit" />
-                <opc:Field Name="ServerPicosecondsSpecified" TypeName="opc:Bit" />
-                <opc:Field Name="Reserved1" TypeName="opc:Bit" Length="2" />
-                <opc:Field Name="Value" TypeName="ua:Variant" SwitchField="ValueSpecified" />
-                <opc:Field Name="StatusCode" TypeName="ua:StatusCode" SwitchField="StatusCodeSpecified" />
-                <opc:Field Name="SourceTimestamp" TypeName="opc:DateTime" SwitchField="SourceTimestampSpecified" />
-                <opc:Field Name="SourcePicoseconds" TypeName="opc:UInt16" SwitchField="SourcePicosecondsSpecified" />
-                <opc:Field Name="ServerTimestamp" TypeName="opc:DateTime" SwitchField="ServerTimestampSpecified" />
-                <opc:Field Name="ServerPicoseconds" TypeName="opc:UInt16" SwitchField="ServerPicosecondsSpecified" />
-              </opc:StructuredType>
+            <opc:StructuredType Name="DataValue">
+              <opc:Documentation>A value with an associated timestamp, and quality.</opc:Documentation>
+              <opc:Field Name="ValueSpecified" TypeName="opc:Bit" />
+              <opc:Field Name="StatusCodeSpecified" TypeName="opc:Bit" />
+              <opc:Field Name="SourceTimestampSpecified" TypeName="opc:Bit" />
+              <opc:Field Name="ServerTimestampSpecified" TypeName="opc:Bit" />
+              <opc:Field Name="SourcePicosecondsSpecified" TypeName="opc:Bit" />
+              <opc:Field Name="ServerPicosecondsSpecified" TypeName="opc:Bit" />
+              <opc:Field Name="Reserved1" TypeName="opc:Bit" Length="2" />
+              <opc:Field Name="Value" TypeName="ua:Variant" SwitchField="ValueSpecified" />
+              <opc:Field Name="StatusCode" TypeName="ua:StatusCode" SwitchField="StatusCodeSpecified" />
+              <opc:Field Name="SourceTimestamp" TypeName="opc:DateTime" SwitchField="SourceTimestampSpecified" />
+              <opc:Field Name="SourcePicoseconds" TypeName="opc:UInt16" SwitchField="SourcePicosecondsSpecified" />
+              <opc:Field Name="ServerTimestamp" TypeName="opc:DateTime" SwitchField="ServerTimestampSpecified" />
+              <opc:Field Name="ServerPicoseconds" TypeName="opc:UInt16" SwitchField="ServerPicosecondsSpecified" />
+            </opc:StructuredType>
 
-              <opc:StructuredType Name="ExtensionObject">
-                <opc:Documentation>A serialized object prefixed with its data type identifier.</opc:Documentation>
-                <opc:Field Name="TypeIdSpecified" TypeName="opc:Bit" />
-                <opc:Field Name="BinaryBody" TypeName="opc:Bit" />
-                <opc:Field Name="XmlBody" TypeName="opc:Bit" />
-                <opc:Field Name="Reserved1" TypeName="opc:Bit" Length="5" />
-                <opc:Field Name="TypeId" TypeName="ua:ExpandedNodeId" SwitchField="TypeIdSpecified" />
-                <opc:Field Name="BodyLength" TypeName="opc:Int32" />
-                <opc:Field Name="Body" TypeName="opc:Byte" LengthField="BodyLength" />
-              </opc:StructuredType>
+            <opc:StructuredType Name="ExtensionObject">
+              <opc:Documentation>A serialized object prefixed with its data type identifier.</opc:Documentation>
+              <opc:Field Name="TypeIdSpecified" TypeName="opc:Bit" />
+              <opc:Field Name="BinaryBody" TypeName="opc:Bit" />
+              <opc:Field Name="XmlBody" TypeName="opc:Bit" />
+              <opc:Field Name="Reserved1" TypeName="opc:Bit" Length="5" />
+              <opc:Field Name="TypeId" TypeName="ua:ExpandedNodeId" SwitchField="TypeIdSpecified" />
+              <opc:Field Name="BodyLength" TypeName="opc:Int32" />
+              <opc:Field Name="Body" TypeName="opc:Byte" LengthField="BodyLength" />
+            </opc:StructuredType>
 
-              <opc:StructuredType Name="Variant">
-                <opc:Documentation>A union of several types.</opc:Documentation>
-                <opc:Field Name="VariantType" TypeName="opc:Bit" Length="6" />
-                <opc:Field Name="ArrayDimensionsSpecified" TypeName="opc:Bit" Length="1"/>
-                <opc:Field Name="ArrayLengthSpecified" TypeName="opc:Bit" Length="1"/>
-                <opc:Field Name="ArrayLength" TypeName="opc:Int32" SwitchField="ArrayLengthSpecified" />
-                <opc:Field Name="Boolean" TypeName="opc:Boolean" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="1" />
-                <opc:Field Name="SByte" TypeName="opc:SByte" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="2" />
-                <opc:Field Name="Byte" TypeName="opc:Byte" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="3" />
-                <opc:Field Name="Int16" TypeName="opc:Int16" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="4" />
-                <opc:Field Name="UInt16" TypeName="opc:UInt16" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="5" />
-                <opc:Field Name="Int32" TypeName="opc:Int32" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="6" />
-                <opc:Field Name="UInt32" TypeName="opc:UInt32" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="7" />
-                <opc:Field Name="Int64" TypeName="opc:Int64" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="8" />
-                <opc:Field Name="UInt64" TypeName="opc:UInt64" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="9" />
-                <opc:Field Name="Float" TypeName="opc:Float" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="10" />
-                <opc:Field Name="Double" TypeName="opc:Double" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="11" />
-                <opc:Field Name="String" TypeName="opc:CharArray" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="12" />
-                <opc:Field Name="DateTime" TypeName="opc:DateTime" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="13" />
-                <opc:Field Name="Guid" TypeName="opc:Guid" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="14" />
-                <opc:Field Name="ByteString" TypeName="opc:ByteString" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="15" />
-                <opc:Field Name="XmlElement" TypeName="ua:XmlElement" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="16" />
-                <opc:Field Name="NodeId" TypeName="ua:NodeId" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="17" />
-                <opc:Field Name="ExpandedNodeId" TypeName="ua:ExpandedNodeId" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="18" />
-                <opc:Field Name="StatusCode" TypeName="ua:StatusCode" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="19" />
-                <opc:Field Name="QualifiedName" TypeName="ua:QualifiedName" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="20" />
-                <opc:Field Name="LocalizedText" TypeName="ua:LocalizedText" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="21" />
-                <opc:Field Name="ExtensionObject" TypeName="ua:ExtensionObject" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="22" />
-                <opc:Field Name="DataValue" TypeName="ua:DataValue" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="23" />
-                <opc:Field Name="Variant" TypeName="ua:Variant" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="24" />
-                <opc:Field Name="DiagnosticInfo" TypeName="ua:DiagnosticInfo" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="25" />
-                <opc:Field Name="NoOfArrayDimensions" TypeName="opc:Int32" SwitchField="ArrayDimensionsSpecified" />
-                <opc:Field Name="ArrayDimensions" TypeName="opc:Int32" LengthField="NoOfArrayDimensions" SwitchField="ArrayDimensionsSpecified" />
-              </opc:StructuredType>
+            <opc:StructuredType Name="Variant">
+              <opc:Documentation>A union of several types.</opc:Documentation>
+              <opc:Field Name="VariantType" TypeName="opc:Bit" Length="6" />
+              <opc:Field Name="ArrayDimensionsSpecified" TypeName="opc:Bit" Length="1"/>
+              <opc:Field Name="ArrayLengthSpecified" TypeName="opc:Bit" Length="1"/>
+              <opc:Field Name="ArrayLength" TypeName="opc:Int32" SwitchField="ArrayLengthSpecified" />
+              <opc:Field Name="Boolean" TypeName="opc:Boolean" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="1" />
+              <opc:Field Name="SByte" TypeName="opc:SByte" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="2" />
+              <opc:Field Name="Byte" TypeName="opc:Byte" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="3" />
+              <opc:Field Name="Int16" TypeName="opc:Int16" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="4" />
+              <opc:Field Name="UInt16" TypeName="opc:UInt16" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="5" />
+              <opc:Field Name="Int32" TypeName="opc:Int32" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="6" />
+              <opc:Field Name="UInt32" TypeName="opc:UInt32" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="7" />
+              <opc:Field Name="Int64" TypeName="opc:Int64" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="8" />
+              <opc:Field Name="UInt64" TypeName="opc:UInt64" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="9" />
+              <opc:Field Name="Float" TypeName="opc:Float" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="10" />
+              <opc:Field Name="Double" TypeName="opc:Double" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="11" />
+              <opc:Field Name="String" TypeName="opc:CharArray" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="12" />
+              <opc:Field Name="DateTime" TypeName="opc:DateTime" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="13" />
+              <opc:Field Name="Guid" TypeName="opc:Guid" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="14" />
+              <opc:Field Name="ByteString" TypeName="opc:ByteString" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="15" />
+              <opc:Field Name="XmlElement" TypeName="ua:XmlElement" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="16" />
+              <opc:Field Name="NodeId" TypeName="ua:NodeId" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="17" />
+              <opc:Field Name="ExpandedNodeId" TypeName="ua:ExpandedNodeId" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="18" />
+              <opc:Field Name="StatusCode" TypeName="ua:StatusCode" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="19" />
+              <opc:Field Name="QualifiedName" TypeName="ua:QualifiedName" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="20" />
+              <opc:Field Name="LocalizedText" TypeName="ua:LocalizedText" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="21" />
+              <opc:Field Name="ExtensionObject" TypeName="ua:ExtensionObject" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="22" />
+              <opc:Field Name="DataValue" TypeName="ua:DataValue" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="23" />
+              <opc:Field Name="Variant" TypeName="ua:Variant" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="24" />
+              <opc:Field Name="DiagnosticInfo" TypeName="ua:DiagnosticInfo" LengthField="ArrayLength" SwitchField="VariantType" SwitchValue="25" />
+              <opc:Field Name="NoOfArrayDimensions" TypeName="opc:Int32" SwitchField="ArrayDimensionsSpecified" />
+              <opc:Field Name="ArrayDimensions" TypeName="opc:Int32" LengthField="NoOfArrayDimensions" SwitchField="ArrayDimensionsSpecified" />
+            </opc:StructuredType>
 
-              <opc:EnumeratedType Name="NamingRuleType" LengthInBits="32">
-                <opc:EnumeratedValue Name="Mandatory" Value="1" />
-                <opc:EnumeratedValue Name="Optional" Value="2" />
-                <opc:EnumeratedValue Name="Constraint" Value="3" />
-              </opc:EnumeratedType>
+            <opc:EnumeratedType Name="NamingRuleType" LengthInBits="32">
+              <opc:EnumeratedValue Name="Mandatory" Value="1" />
+              <opc:EnumeratedValue Name="Optional" Value="2" />
+              <opc:EnumeratedValue Name="Constraint" Value="3" />
+            </opc:EnumeratedType>
 
             """;
 
         /// <summary>
-        /// BinarySchemaGenerator.cs line#209
+        /// BinarySchemaGenerator.cs
         /// </summary>
         public static readonly TemplateString Stack_BinarySchema_ComplexType_xml = TemplateString.Parse(
             $$"""
@@ -261,10 +261,11 @@ namespace Opc.Ua.SourceGeneration
               <opc:Documentation>{{Tokens.Description}}</opc:Documentation>
               {{Tokens.ListOfFields}}
             </opc:StructuredType>
+
             """);
 
         /// <summary>
-        /// BinarySchemaGenerator.cs line#214
+        /// BinarySchemaGenerator.cs
         /// </summary>
         public static readonly TemplateString Stack_BinarySchema_EnumeratedType_xml = TemplateString.Parse(
             $$"""
@@ -272,10 +273,11 @@ namespace Opc.Ua.SourceGeneration
               <opc:Documentation>{{Tokens.Description}}</opc:Documentation>
               {{Tokens.ListOfValues}}
             </opc:EnumeratedType>
+
             """);
 
         /// <summary>
-        /// BinarySchemaGenerator.cs line#219
+        /// BinarySchemaGenerator.cs
         /// </summary>
         public static readonly TemplateString Stack_BinarySchema_ServiceType_xml = TemplateString.Parse(
             $$"""
@@ -288,15 +290,16 @@ namespace Opc.Ua.SourceGeneration
               <opc:Documentation>{{Tokens.Description}}</opc:Documentation>
               {{Tokens.ListOfResponseParameters}}
             </opc:StructuredType>
+
             """);
 
         /// <summary>
-        /// ModelGenerator.cs line#559
+        /// ModelGenerator.cs
         /// </summary>
         public static readonly TemplateString XmlSchema_File_xml = TemplateString.Parse(
             $$"""
             <xs:schema
-              xmlns:s0="ListOfNamespaces"
+              {{Tokens.XmlnsS0ListOfNamespaces}}
               xmlns:xs="http://www.w3.org/2001/XMLSchema"
               xmlns:ua="http://opcfoundation.org/UA/2008/02/Types.xsd"
               xmlns:tns="{{Tokens.Namespace}}"
@@ -317,11 +320,11 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs line#590
-        /// XmlSchemaGenerator.cs line#392
+        /// ModelGenerator.cs
+        /// XmlSchemaGenerator.cs
         /// </summary>
         public static readonly TemplateString Stack_XmlSchema_BuiltInTypes_xsd =
-            """
+              """
               <!-- WARNING - this information is copied from Common\Schema\Xml\BuiltInTypes.xsd -->
               <xs:element name="Boolean" type="xs:boolean" />
 
@@ -741,11 +744,11 @@ namespace Opc.Ua.SourceGeneration
 
               <xs:element name="InvokeServiceRequest" type="xs:base64Binary" nillable="true" />
               <xs:element name="InvokeServiceResponse" type="xs:base64Binary" nillable="true" />
-            """;
+              """;
 
         /// <summary>
-        /// ModelGenerator.cs line#692
-        /// ModelGenerator.cs line#709
+        /// ModelGenerator.cs
+        /// ModelGenerator.cs
         /// </summary>
         public static readonly TemplateString XmlSchema_DerivedType_xml = TemplateString.Parse(
             $$"""
@@ -760,11 +763,13 @@ namespace Opc.Ua.SourceGeneration
               </xs:complexContent>
             </xs:complexType>
             <xs:element name="{{Tokens.TypeName}}" type="tns:{{Tokens.TypeName}}" />
+
             {{Tokens.CollectionType}}
+
             """);
 
         /// <summary>
-        /// ModelGenerator.cs line#695
+        /// ModelGenerator.cs
         /// </summary>
         public static readonly TemplateString XmlSchema_EnumeratedType_xml = TemplateString.Parse(
             $$"""
@@ -775,11 +780,13 @@ namespace Opc.Ua.SourceGeneration
               </xs:restriction>
             </xs:simpleType>
             <xs:element name="{{Tokens.TypeName}}" type="tns:{{Tokens.TypeName}}" />
+
             {{Tokens.CollectionType}}
+
             """);
 
         /// <summary>
-        /// ModelGenerator.cs line#701
+        /// ModelGenerator.cs
         /// </summary>
         public static readonly TemplateString XmlSchema_Union_xml = TemplateString.Parse(
             $$"""
@@ -793,11 +800,13 @@ namespace Opc.Ua.SourceGeneration
               </xs:sequence>
             </xs:complexType>
             <xs:element name="{{Tokens.TypeName}}" type="tns:{{Tokens.TypeName}}" />
+
             {{Tokens.CollectionType}}
+
             """);
 
         /// <summary>
-        /// ModelGenerator.cs line#705
+        /// ModelGenerator.cs
         /// </summary>
         public static readonly TemplateString XmlSchema_ComplexType_xml = TemplateString.Parse(
             $$"""
@@ -808,29 +817,33 @@ namespace Opc.Ua.SourceGeneration
               </xs:sequence>
             </xs:complexType>
             <xs:element name="{{Tokens.TypeName}}" type="tns:{{Tokens.TypeName}}" />
+
             {{Tokens.CollectionType}}
+
             """);
 
         /// <summary>
-        /// ModelGenerator.cs line#713
+        /// ModelGenerator.cs
         /// </summary>
         public static readonly TemplateString XmlSchema_SimpleType_xml = TemplateString.Parse(
             $$"""
             <xs:element name="{{Tokens.TypeName}}" type="{{Tokens.BaseType}}" />
+
             """);
 
         /// <summary>
-        /// ModelGenerator.cs line#762
+        /// ModelGenerator.cs
         /// </summary>
         public static readonly TemplateString XmlSchema_Documentation_xml = TemplateString.Parse(
             $$"""
             <xs:annotation>
               <xs:documentation>{{Tokens.Description}}</xs:documentation>
             </xs:annotation>
+
             """);
 
         /// <summary>
-        /// ModelGenerator.cs line#769
+        /// ModelGenerator.cs
         /// </summary>
         public static readonly TemplateString XmlSchema_CollectionType_xml = TemplateString.Parse(
             $$"""
@@ -840,15 +853,16 @@ namespace Opc.Ua.SourceGeneration
               </xs:sequence>
             </xs:complexType>
             <xs:element name="ListOf{{Tokens.TypeName}}" type="tns:ListOf{{Tokens.TypeName}}" nillable="true"></xs:element>
+
             """);
 
         /// <summary>
-        /// ModelGenerator.cs line#981
+        /// ModelGenerator.cs
         /// </summary>
         public static readonly TemplateString BinarySchema_File_xml = TemplateString.Parse(
             $$"""
             <opc:TypeDictionary
-              xmlns:s0="ListOfNamespaces"
+              {{Tokens.XmlnsS0ListOfNamespaces}}
               xmlns:opc="http://opcfoundation.org/BinarySchema/"
               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
               xmlns:ua="http://opcfoundation.org/UA/"
@@ -857,14 +871,15 @@ namespace Opc.Ua.SourceGeneration
               TargetNamespace="{{Tokens.DictionaryUri}}"
             >
               {{Tokens.Imports}}
-              {{Tokens.BuiltInTypes}}
-              {{Tokens.ListOfTypes}}
 
+              {{Tokens.BuiltInTypes}}
+
+              {{Tokens.ListOfTypes}}
             </opc:TypeDictionary>
             """);
 
         /// <summary>
-        /// ModelGenerator.cs line#1003
+        /// ModelGenerator.cs
         /// </summary>
         public static readonly TemplateString BinarySchema_BuiltInTypes_bsd =
             """
@@ -1053,7 +1068,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs line#1104
+        /// ModelGenerator.cs
         /// </summary>
         public static readonly TemplateString BinarySchema_EnumeratedType_xml = TemplateString.Parse(
             $$"""
@@ -1061,10 +1076,11 @@ namespace Opc.Ua.SourceGeneration
               {{Tokens.Documentation}}
               {{Tokens.ListOfFields}}
             </opc:EnumeratedType>
+
             """);
 
         /// <summary>
-        /// ModelGenerator.cs line#1108
+        /// ModelGenerator.cs
         /// </summary>
         public static readonly TemplateString BinarySchema_ComplexType_xml = TemplateString.Parse(
             $$"""
@@ -1072,25 +1088,27 @@ namespace Opc.Ua.SourceGeneration
               {{Tokens.Documentation}}
               {{Tokens.ListOfFields}}
             </opc:StructuredType>
+
             """);
 
         /// <summary>
-        /// ModelGenerator.cs line#1111
+        /// ModelGenerator.cs
         /// </summary>
         public static readonly TemplateString BinarySchema_OpaqueType_xml = TemplateString.Parse(
             $$"""
             <opc:OpaqueType Name="{{Tokens.TypeName}}">
               {{Tokens.Documentation}}
             </opc:OpaqueType>
+
             """);
 
         /// <summary>
-        /// XmlSchemaGenerator.cs line#272
+        /// XmlSchemaGenerator.cs
         /// </summary>
         public static readonly TemplateString Stack_XmlSchema_File_xml = TemplateString.Parse(
             $$"""
             <xs:schema
-              xmlns:s0="ListOfNamespaces"
+              {{Tokens.XmlnsS0ListOfNamespaces}}
               xmlns:xs="http://www.w3.org/2001/XMLSchema"
               xmlns:ua="http://opcfoundation.org/UA/BuiltInTypes/"
               targetNamespace="{{Tokens.Namespace}}"
@@ -1104,7 +1122,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// XmlSchemaGenerator.cs line#410
+        /// XmlSchemaGenerator.cs
         /// </summary>
         public static readonly TemplateString Stack_XmlSchema_DerivedType_xml = TemplateString.Parse(
             $$"""
@@ -1121,11 +1139,13 @@ namespace Opc.Ua.SourceGeneration
               </xs:complexContent>
             </xs:complexType>
             <xs:element name="{{Tokens.TypeName}}" type="tns:{{Tokens.TypeName}}" />
+
             {{Tokens.ArrayDeclaration}}
+
             """);
 
         /// <summary>
-        /// XmlSchemaGenerator.cs line#413
+        /// XmlSchemaGenerator.cs
         /// </summary>
         public static readonly TemplateString Stack_XmlSchema_ComplexType_xml = TemplateString.Parse(
             $$"""
@@ -1138,11 +1158,13 @@ namespace Opc.Ua.SourceGeneration
               </xs:sequence>
             </xs:complexType>
             <xs:element name="{{Tokens.TypeName}}" type="tns:{{Tokens.TypeName}}" />
+
             {{Tokens.ArrayDeclaration}}
+
             """);
 
         /// <summary>
-        /// XmlSchemaGenerator.cs line#418
+        /// XmlSchemaGenerator.cs
         /// </summary>
         public static readonly TemplateString Stack_XmlSchema_EnumeratedType_xml = TemplateString.Parse(
             $$"""
@@ -1155,11 +1177,13 @@ namespace Opc.Ua.SourceGeneration
               </xs:restriction>
             </xs:simpleType>
             <xs:element name="{{Tokens.TypeName}}" type="tns:{{Tokens.TypeName}}" />
+
             {{Tokens.ArrayDeclaration}}
+
             """);
 
         /// <summary>
-        /// XmlSchemaGenerator.cs line#423
+        /// XmlSchemaGenerator.cs
         /// </summary>
         public static readonly TemplateString Stack_XmlSchema_ServiceType_xml = TemplateString.Parse(
             $$"""
@@ -1179,10 +1203,11 @@ namespace Opc.Ua.SourceGeneration
               </xs:sequence>
             </xs:complexType>
             <xs:element name="{{Tokens.TypeName}}Response" type="tns:{{Tokens.TypeName}}Response" />
+
             """);
 
         /// <summary>
-        /// XmlSchemaGenerator.cs line#447
+        /// XmlSchemaGenerator.cs
         /// </summary>
         public static readonly TemplateString Stack_XmlSchema_Array_xml = TemplateString.Parse(
             $$"""
@@ -1192,6 +1217,7 @@ namespace Opc.Ua.SourceGeneration
               </xs:sequence>
             </xs:complexType>
             <xs:element name="ListOf{{Tokens.TypeName}}" type="tns:ListOf{{Tokens.TypeName}}" nillable="true"></xs:element>
+
             """);
     }
 }

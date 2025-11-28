@@ -30,6 +30,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Opc.Ua.SourceGeneration;
 
 namespace Opc.Ua
@@ -40,14 +41,15 @@ namespace Opc.Ua
         /// Add a template for substitution.
         /// </summary>
         /// <exception cref="ArgumentNullException" />
-        public static void AddTemplate(
+        /// <exception cref="ArgumentException"></exception>
+        public static void AddReplacement(
             this Template template,
             string replacement,
             TemplateString templateString,
-            IReadOnlyList<object> targets,
+            IEnumerable targets,
             WriteTemplateEventHandler onWrite)
         {
-            template.AddTemplate(
+            template.AddReplacement(
                 replacement,
                 templateString,
                 targets,
@@ -59,72 +61,15 @@ namespace Opc.Ua
         /// Add a template for substitution.
         /// </summary>
         /// <exception cref="ArgumentNullException" />
-        public static void AddTemplate(
+        /// <exception cref="ArgumentException"></exception>
+        public static void AddReplacement(
             this Template template,
             string replacement,
-            TemplateString templateString,
-            object target,
-            WriteTemplateEventHandler onWrite)
-        {
-            template.AddTemplate(
-                replacement,
-                templateString,
-                target,
-                null,
-                onWrite);
-        }
-
-        /// <summary>
-        /// Add a template for substitution.
-        /// </summary>
-        /// <exception cref="ArgumentNullException" />
-        public static void AddTemplate(
-            this Template template,
-            string replacement,
-            TemplateString templateString,
-            object target,
-            LoadTemplateEventHandler onLoad = null,
-            WriteTemplateEventHandler onWrite = null)
-        {
-            template.AddTemplate(
-                replacement,
-                templateString,
-                [target],
-                onLoad,
-                onWrite);
-        }
-
-        /// <summary>
-        /// Add a template for substitution.
-        /// </summary>
-        /// <exception cref="ArgumentNullException" />
-        public static void AddTemplate(
-            this Template template,
-            string replacement,
-            object target,
+            IEnumerable targets,
             LoadTemplateEventHandler onLoad,
             WriteTemplateEventHandler onWrite = null)
         {
-            template.AddTemplate(
-                replacement,
-                TemplateString.Empty,
-                [target],
-                onLoad,
-                onWrite);
-        }
-
-        /// <summary>
-        /// Add a template for substitution.
-        /// </summary>
-        /// <exception cref="ArgumentNullException" />
-        public static void AddTemplate(
-            this Template template,
-            string replacement,
-            IReadOnlyList<object> targets,
-            LoadTemplateEventHandler onLoad,
-            WriteTemplateEventHandler onWrite = null)
-        {
-            template.AddTemplate(
+            template.AddReplacement(
                 replacement,
                 TemplateString.Empty,
                 targets,
@@ -137,7 +82,79 @@ namespace Opc.Ua
         /// </summary>
         /// <exception cref="ArgumentNullException" />
         /// <exception cref="ArgumentException"></exception>
-        public static void AddTemplate(
+        public static void AddReplacement(
+            this Template template,
+            string replacement,
+            TemplateString templateString,
+            IEnumerable targets,
+            LoadTemplateEventHandler onLoad = null,
+            WriteTemplateEventHandler onWrite = null)
+        {
+            object[] targetArray;
+            if (targets is string str)
+            {
+                targetArray = [str];
+            }
+            else if (targets is null)
+            {
+                targetArray = [];
+            }
+            else
+            {
+                targetArray = [.. targets.Cast<object>()];
+            }
+            template.AddReplacement(
+                replacement,
+                templateString,
+                targetArray,
+                onLoad,
+                onWrite);
+        }
+
+        /// <summary>
+        /// Add a template for substitution.
+        /// </summary>
+        /// <exception cref="ArgumentNullException" />
+        public static void AddReplacement(
+            this Template template,
+            string replacement,
+            TemplateString templateString,
+            IReadOnlyList<object> targets,
+            WriteTemplateEventHandler onWrite)
+        {
+            template.AddReplacement(
+                replacement,
+                templateString,
+                targets,
+                null,
+                onWrite);
+        }
+
+        /// <summary>
+        /// Add a template for substitution.
+        /// </summary>
+        /// <exception cref="ArgumentNullException" />
+        public static void AddReplacement(
+            this Template template,
+            string replacement,
+            IReadOnlyList<object> targets,
+            LoadTemplateEventHandler onLoad,
+            WriteTemplateEventHandler onWrite = null)
+        {
+            template.AddReplacement(
+                replacement,
+                TemplateString.Empty,
+                targets,
+                onLoad,
+                onWrite);
+        }
+
+        /// <summary>
+        /// Initializes a template to use for substitution.
+        /// </summary>
+        /// <exception cref="ArgumentNullException" />
+        /// <exception cref="ArgumentException"></exception>
+        public static void AddReplacement(
             this Template template,
             string replacement,
             TemplateString templateString,
@@ -160,22 +177,10 @@ namespace Opc.Ua
                     "A template loader must be passed if template string is null",
                     nameof(onLoad));
             }
-
-            template.Reserve(replacement);
-
-            // create a collection of targets.
-            var targetList = new ArrayList();
-            if (targets != null)
-            {
-                foreach (object target in targets)
-                {
-                    targetList.Add(target);
-                }
-            }
             var definition = new TemplateDefinition
             {
                 TemplateString = templateString,
-                Targets = targetList,
+                Targets = targets ?? [],
                 OnTemplateLoad = onLoad,
                 OnTemplateWrite = onWrite
             };

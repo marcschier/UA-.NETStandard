@@ -27,7 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System.Collections;
+using System.Collections.Generic;
 
 namespace Opc.Ua.SourceGeneration
 {
@@ -44,7 +44,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// The targets that the template should be applied to.
         /// </summary>
-        public ICollection Targets { get; set; }
+        public IReadOnlyList<object> Targets { get; set; }
 
         /// <summary>
         /// The callback to call when loading the template.
@@ -83,7 +83,7 @@ namespace Opc.Ua.SourceGeneration
             }
 
             // use the default function to write the template.
-            return template.WriteTemplate(context);
+            return template.WriteTemplate();
         }
     }
 

@@ -149,6 +149,7 @@ namespace Opc.Ua.SourceGeneration
             /// The URI for the {{Tokens.Name}} namespace (.NET code namespace is '{{Tokens.CodeName}}').
             /// </summary>
             public const string {{Tokens.Name}} = "{{Tokens.NamespaceUri}}";
+
             """);
 
         /// <summary>
@@ -157,6 +158,7 @@ namespace Opc.Ua.SourceGeneration
         public static readonly TemplateString BrowseName_cs = TemplateString.Parse(
             $$"""
             public const string {{Tokens.SymbolicName}} = "{{Tokens.BrowseName}}";
+
             """);
 
         /// <summary>
@@ -174,6 +176,7 @@ namespace Opc.Ua.SourceGeneration
             {
                 {{Tokens.ListOfIdentifiers}}
             }
+
             """);
 
         /// <summary>
@@ -191,6 +194,7 @@ namespace Opc.Ua.SourceGeneration
             {
                 {{Tokens.ListOfIdentifiers}}
             }
+
             """);
 
         /// <summary>
@@ -214,6 +218,7 @@ namespace Opc.Ua.SourceGeneration
         public static readonly TemplateString IdDeclaration_cs = TemplateString.Parse(
             $$"""
             public const {{Tokens.IdType}} {{Tokens.SymbolicName}} = {{Tokens.Identifier}};
+
             """);
 
         /// <summary>
@@ -223,6 +228,7 @@ namespace Opc.Ua.SourceGeneration
             $$"""
             public static readonly global::Opc.Ua.ExpandedNodeId {{Tokens.SymbolicName}} =
                 new global::Opc.Ua.ExpandedNodeId({{Tokens.NamespacePrefix}}.{{Tokens.NodeClass}}s.{{Tokens.SymbolicName}}, {{Tokens.NamespaceUri}});
+
             """);
 
         /// <summary>
@@ -232,6 +238,7 @@ namespace Opc.Ua.SourceGeneration
             $$"""
             public static readonly global::Opc.Ua.NodeId {{Tokens.SymbolicName}} =
                 new global::Opc.Ua.NodeId({{Tokens.NamespacePrefix}}.{{Tokens.NodeClass}}s.{{Tokens.SymbolicName}});
+
             """);
 
         /// <summary>
@@ -388,7 +395,9 @@ namespace Opc.Ua.SourceGeneration
                     {{Tokens.ListOfSwitchFieldNames}}
                 };
             }
+
             {{Tokens.CollectionClass}}
+
             """);
 
         /// <summary>
@@ -518,7 +527,9 @@ namespace Opc.Ua.SourceGeneration
                     {{Tokens.ListOfEncodingMaskFieldNames}}
                 };
             }
+
             {{Tokens.CollectionClass}}
+
             """);
 
         /// <summary>
@@ -658,7 +669,9 @@ namespace Opc.Ua.SourceGeneration
                     {{Tokens.ListOfEncodingMaskFieldNames}}
                 };
             }
+
             {{Tokens.CollectionClass}}
+
             """);
 
         /// <summary>
@@ -769,7 +782,9 @@ namespace Opc.Ua.SourceGeneration
 
                 {{Tokens.ListOfFields}}
             }
+
             {{Tokens.CollectionClass}}
+
             """);
 
         /// <summary>
@@ -885,7 +900,9 @@ namespace Opc.Ua.SourceGeneration
 
                 {{Tokens.ListOfFields}}
             }
+
             {{Tokens.CollectionClass}}
+
             """);
 
         /// <summary>
@@ -902,7 +919,9 @@ namespace Opc.Ua.SourceGeneration
             {
                 {{Tokens.ListOfProperties}}
             }
+
             {{Tokens.CollectionClass}}
+
             """);
 
         /// <summary>
@@ -962,6 +981,7 @@ namespace Opc.Ua.SourceGeneration
 
                 {{Tokens.ListOfFields}}
             }
+
             """);
 
         /// <summary>
@@ -1035,8 +1055,11 @@ namespace Opc.Ua.SourceGeneration
 
                 {{Tokens.ListOfFields}}
             }
+
             {{Tokens.TypedVariableType}}
+
             {{Tokens.VariableTypeValue}}
+
             """);
 
         /// <summary>
@@ -1172,6 +1195,7 @@ namespace Opc.Ua.SourceGeneration
             /// </summary>
             public delegate global::System.Threading.Tasks.ValueTask<{{Tokens.ClassName}}Result> {{Tokens.ClassName}}MethodAsyncCallHandler(
                 {{Tokens.OnCallAsyncDeclaration}}
+
             """);
 
         /// <summary>
@@ -1262,6 +1286,7 @@ namespace Opc.Ua.SourceGeneration
                     return clone;
                 }
             }
+
             """);
 
         /// <summary>
@@ -1309,6 +1334,7 @@ namespace Opc.Ua.SourceGeneration
                     set => ((BaseVariableState)this).Value = value;
                 }
             }
+
             """);
 
         /// <summary>
@@ -1488,6 +1514,7 @@ namespace Opc.Ua.SourceGeneration
                 private {{Tokens.DataType}}? m_value;
                 private {{Tokens.ClassName}}State m_variable;
             }
+
             """);
 
         /// <summary>
@@ -1502,6 +1529,7 @@ namespace Opc.Ua.SourceGeneration
                     {{Tokens.ClassName}}Initializers.{{Tokens.ChildName}}{{Tokens.Encoding}},
                     global::Opc.Ua.EncodingType.{{Tokens.Encoding}});
             }
+
             """);
 
         /// <summary>
@@ -1522,6 +1550,7 @@ namespace Opc.Ua.SourceGeneration
                     {{Tokens.FieldName}} = value;
                 }
             }
+
             """);
 
         /// <summary>
@@ -1573,6 +1602,7 @@ namespace Opc.Ua.SourceGeneration
 
                 return base.FindChild(context, browseName, createOrReplace, replacement);
             }
+
             """);
 
         /// <summary>
@@ -1646,6 +1676,7 @@ namespace Opc.Ua.SourceGeneration
 
                 return global::Opc.Ua.ServiceResult.Good;
             }
+
             """);
 
         /// <summary>
@@ -1666,6 +1697,7 @@ namespace Opc.Ua.SourceGeneration
                 get => {{Tokens.FieldName}};
                 set => {{Tokens.FieldName}} = value;
             }
+
             """);
 
         /// <summary>
@@ -1686,6 +1718,7 @@ namespace Opc.Ua.SourceGeneration
                 get => {{Tokens.FieldName}};
                 set => {{Tokens.FieldName}} = value == null ? {{Tokens.DefaultValue}} : value;
             }
+
             """);
 
         /// <summary>
@@ -1698,6 +1731,7 @@ namespace Opc.Ua.SourceGeneration
             /// </summary>
             [global::System.Runtime.Serialization.EnumMember(Value = "{{Tokens.XmlIdentifier}}")]
             {{Tokens.EnumerationName}} = {{Tokens.Identifier}},
+
             """);
 
         /// <summary>
@@ -1713,6 +1747,7 @@ namespace Opc.Ua.SourceGeneration
                 get => ({{Tokens.ClassName}})base.{{Tokens.ChildName}};
                 set => base.{{Tokens.ChildName}} = value;
             }
+
             """);
 
         /// <summary>
@@ -1740,6 +1775,7 @@ namespace Opc.Ua.SourceGeneration
                 instance = {{Tokens.ChildName}};
                 break;
             }
+
             """);
 
         /// <summary>
@@ -1751,6 +1787,7 @@ namespace Opc.Ua.SourceGeneration
             {
                 children.Add({{Tokens.FieldName}});
             }
+
             """);
 
         /// <summary>
@@ -1763,6 +1800,7 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.FieldName}} = null;
                 return;
             }
+
             """);
 
         /// <summary>
@@ -1778,6 +1816,7 @@ namespace Opc.Ua.SourceGeneration
             {
                 {{Tokens.ServiceSets}}
             }
+
             """);
 
         /// <summary>
@@ -1846,6 +1885,7 @@ namespace Opc.Ua.SourceGeneration
                     {{Tokens.AddKnownType}}
                 }
             }
+
             """);
 
         /// <summary>
@@ -1878,6 +1918,7 @@ namespace Opc.Ua.SourceGeneration
 
                 return response;
             }
+
             """);
 
         /// <summary>
@@ -1926,6 +1967,7 @@ namespace Opc.Ua.SourceGeneration
 
                 {{Tokens.ServerStubs}}
             }
+
             """);
 
         /// <summary>
@@ -1936,7 +1978,8 @@ namespace Opc.Ua.SourceGeneration
             /// <summary>
             /// Invokes the {{Tokens.Name}} service using async Task based request.
             /// </summary>
-            {{Tokens.ServerInterfaceAsync}}
+            {{Tokens.ServerMethodAsync}}
+
             """);
 
         /// <summary>
@@ -1947,7 +1990,7 @@ namespace Opc.Ua.SourceGeneration
             /// <summary>
             /// Invokes the {{Tokens.Name}} service using async Task based request.
             /// </summary>
-            {{Tokens.ServerStubAsync}}
+            {{Tokens.ServerMethodAsync}}
             {
                 ValidateRequest(requestHeader);
 
@@ -1956,6 +1999,7 @@ namespace Opc.Ua.SourceGeneration
 
                 throw new global::Opc.Ua.ServiceResultException(global::Opc.Ua.StatusCodes.BadServiceUnsupported);
             }
+
             """);
 
         /// <summary>
@@ -1984,7 +2028,7 @@ namespace Opc.Ua.SourceGeneration
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
             public interface I{{Tokens.ServiceSet}}ClientMethods
             {
-                {{Tokens.ClientInterface}}
+                {{Tokens.ClientMethod}}
             }
 
             /// <summary>
@@ -2008,6 +2052,7 @@ namespace Opc.Ua.SourceGeneration
 
                 {{Tokens.ClientApi}}
             }
+
             """);
 
         /// <summary>
@@ -2018,25 +2063,26 @@ namespace Opc.Ua.SourceGeneration
             /// <summary>
             /// Invokes the {{Tokens.Name}} service using async Task based request.
             /// </summary>
-            {{Tokens.ClientInterfaceAsync}}
+            {{Tokens.ClientMethodAsync}}
 
             /// <summary>
             /// Invokes the {{Tokens.Name}} service.
             /// </summary>
             [global::System.Obsolete("Sync methods are deprecated in this version. Use {{Tokens.Name}}Async instead.")]
-            {{Tokens.ClientInterfaceSync}}
+            {{Tokens.ClientMethodSync}}
 
             /// <summary>
             /// Begins an asynchronous invocation of the {{Tokens.Name}} service.
             /// </summary>
             [global::System.Obsolete("Begin/End methods are deprecated in this version. Use {{Tokens.Name}}Async instead.")]
-            {{Tokens.ClientInterfaceBegin}}
+            {{Tokens.ClientMethodBegin}}
 
             /// <summary>
             /// Finishes an asynchronous invocation of the {{Tokens.Name}} service.
             /// </summary>
             [global::System.Obsolete("Begin/End methods are deprecated in this version. Use {{Tokens.Name}}Async instead.")]
-            {{Tokens.ClientInterfaceEnd}}
+            {{Tokens.ClientMethodEnd}}
+
             """);
 
         /// <summary>
@@ -2047,7 +2093,7 @@ namespace Opc.Ua.SourceGeneration
             /// <summary>
             /// Invokes the {{Tokens.Name}} service.
             /// </summary>
-            {{Tokens.ClientStubAsync}}
+            {{Tokens.ClientMethodAsync}}
             {
                 {{Tokens.Name}}Request request = new {{Tokens.Name}}Request();
                 {{Tokens.Name}}Response response = null;
@@ -2080,8 +2126,8 @@ namespace Opc.Ua.SourceGeneration
             /// <summary>
             /// Invokes the {{Tokens.Name}} service synchronously.
             /// </summary>
-            [Obsolete("Sync methods are deprecated in this version. Use {{Tokens.Name}}Async instead.")]
-            {{Tokens.ClientStubSync}}
+            [global::System.Obsolete("Sync methods are deprecated in this version. Use {{Tokens.Name}}Async instead.")]
+            {{Tokens.ClientMethodSync}}
             {
                 {{Tokens.Name}}Request request = new {{Tokens.Name}}Request();
                 {{Tokens.Name}}Response? response = null;
@@ -2115,8 +2161,8 @@ namespace Opc.Ua.SourceGeneration
             /// <summary>
             /// Begins an asynchronous invocation of the {{Tokens.Name}} service.
             /// </summary>
-            [Obsolete("Begin/End methods are deprecated in this version. Use {{Tokens.Name}}Async instead.")]
-            {{Tokens.ClientStubBegin}}
+            [global::System.Obsolete("Begin/End methods are deprecated in this version. Use {{Tokens.Name}}Async instead.")]
+            {{Tokens.ClientMethodBegin}}
             {
                 {{Tokens.Name}}Request request = new {{Tokens.Name}}Request();
 
@@ -2130,8 +2176,8 @@ namespace Opc.Ua.SourceGeneration
             /// <summary>
             /// Finishes an asynchronous invocation of the {{Tokens.Name}} service.
             /// </summary>
-            [Obsolete("Begin/End methods are deprecated in this version. Use {{Tokens.Name}}Async instead.")]
-            {{Tokens.ClientStubEnd}}
+            [global::System.Obsolete("Begin/End methods are deprecated in this version. Use {{Tokens.Name}}Async instead.")]
+            {{Tokens.ClientMethodEnd}}
             {
                 {{Tokens.Name}}Response response = null;
 
@@ -2156,6 +2202,7 @@ namespace Opc.Ua.SourceGeneration
 
                 return response.ResponseHeader;
             }
+
             """);
 
         /// <summary>
@@ -2189,6 +2236,7 @@ namespace Opc.Ua.SourceGeneration
             public partial class {{Tokens.Name}}Response : global::Opc.Ua.IServiceResponse
             {
             }
+
             """);
 
         /// <summary>
@@ -2221,6 +2269,7 @@ namespace Opc.Ua.SourceGeneration
             /// {{Tokens.Description}}
             /// </summary>
             public const {{Tokens.IdType}} {{Tokens.SymbolicId}} = {{Tokens.Identifier}};
+
             """);
 
         /// <summary>
@@ -2247,6 +2296,7 @@ namespace Opc.Ua.SourceGeneration
             {
                 {{Tokens.ListOfResourceDeclarations}}
             }
+
             """);
 
         /// <summary>
@@ -2269,6 +2319,7 @@ namespace Opc.Ua.SourceGeneration
                 // Copy operation
                 get => new global::System.IO.MemoryStream({{Tokens.ResourceName}}.ToArray(), false);
             }
+
             """);
 
         /// <summary>
@@ -2290,6 +2341,7 @@ namespace Opc.Ua.SourceGeneration
             {
                 get => new global::System.IO.MemoryStream({{Tokens.ResourceName}}, false);
             }
+
             """);
 
         /// <summary>
@@ -2298,6 +2350,7 @@ namespace Opc.Ua.SourceGeneration
         public static readonly TemplateString ResourceDeclaration_ConstString_cs = TemplateString.Parse(
             $$"""
             public const string {{Tokens.ResourceName}} = {{Tokens.Resource}};
+
             """);
     }
 }

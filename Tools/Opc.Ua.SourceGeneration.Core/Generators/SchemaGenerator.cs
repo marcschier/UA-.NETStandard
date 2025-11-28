@@ -177,12 +177,12 @@ namespace Opc.Ua.SourceGeneration
                 {
                     if (buffer.Length > 0)
                     {
-                        buffer.Append("\r\n");
+                        buffer.Append(Environment.NewLine);
                     }
                     buffer.Append(documentation.Text[ii]);
                 }
             }
-            template.AddReplacement(token, buffer.ToString());
+            template.AddReplacement(token, buffer.ToString(), ["Dummy"]);
         }
 
         /// <summary>

@@ -54,11 +54,11 @@ namespace Opc.Ua.SourceGeneration
             knownFiles,
             IReadOnlyList<string> exclusions)
             : base(
-                  fileSystem,
-                  typeDictionary,
-                  outputDirectory,
-                  knownFiles,
-                  exclusions)
+                fileSystem,
+                typeDictionary,
+                outputDirectory,
+                knownFiles,
+                exclusions)
         {
         }
 
@@ -96,7 +96,9 @@ namespace Opc.Ua.SourceGeneration
         private void WriteTemplate_XmlSchema(string fileName)
         {
             using TextWriter writer = FileSystem.CreateTextWriter(fileName);
-            var template = new Template(writer, SchemaTemplates.Stack_XmlSchema_File_xml);
+            var template = new Template(
+                writer,
+                SchemaTemplates.Stack_XmlSchema_File_xml);
 
             template.AddReplacement(Tokens.Namespace, TargetNamespace);
 
@@ -123,8 +125,12 @@ namespace Opc.Ua.SourceGeneration
                         NamespaceUris[ii]);
                 }
             }
+            buffer.Append(Environment.NewLine);
 
-            template.AddReplacement(Tokens.XmlnsS0ListOfNamespaces, buffer.ToString());
+            template.AddReplacement(
+                Tokens.XmlnsS0ListOfNamespaces,
+                buffer.ToString(),
+                ["Dummy"]); // Ensure new lines are correctly processed
             List<string> imports = [Namespaces.OpcUaBuiltInTypes];
             if (!m_exportAll)
             {
@@ -134,18 +140,18 @@ namespace Opc.Ua.SourceGeneration
                 }
             }
 
-            template.AddTemplate(
+            template.AddReplacement(
                 Tokens.Imports,
                 imports,
                 LoadTemplate_Imports);
 
-            template.AddTemplate(
+            template.AddReplacement(
                 Tokens.ListOfTypes,
                 GetListOfTypes(m_exportAll),
                 LoadTemplate_DataType,
                 WriteTemplate_DataType);
 
-            template.WriteTemplate(null);
+            template.WriteTemplate();
         }
 
         /// <summary>
@@ -183,9 +189,7 @@ namespace Opc.Ua.SourceGeneration
 
             if (!m_exportAll)
             {
-                template.WriteLine(string.Empty);
-                template.Write(context.Prefix);
-
+                template.WriteNewLine();
                 if (namespaceUri == Namespaces.OpcUaBuiltInTypes)
                 {
                     template.Write(
@@ -252,10 +256,10 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(Tokens.TypeName, datatype.QName.Name);
             CreateDescription(template, Tokens.Description, datatype.Documentation);
 
-            template.AddTemplate(
+            template.AddReplacement(
                 Tokens.ArrayDeclaration,
                 SchemaTemplates.Stack_XmlSchema_Array_xml,
-                datatype,
+                [datatype],
                 WriteTemplate_Array);
 
             if (datatype is ComplexType complexType)
@@ -281,7 +285,7 @@ namespace Opc.Ua.SourceGeneration
                     }
                 }
 
-                template.AddTemplate(
+                template.AddReplacement(
                     Tokens.ListOfFields,
                     fields,
                     LoadTemplate_Field);
@@ -299,7 +303,7 @@ namespace Opc.Ua.SourceGeneration
                     }
                 }
 
-                template.AddTemplate(
+                template.AddReplacement(
                     Tokens.ListOfValues,
                     values,
                     LoadTemplate_EnumeratedValue);
@@ -307,18 +311,18 @@ namespace Opc.Ua.SourceGeneration
 
             if (datatype is ServiceType serviceType)
             {
-                template.AddTemplate(
+                template.AddReplacement(
                     Tokens.ListOfRequestParameters,
                     serviceType.Request,
                     LoadTemplate_Field);
 
-                template.AddTemplate(
+                template.AddReplacement(
                     Tokens.ListOfResponseParameters,
                     serviceType.Response,
                     LoadTemplate_Field);
             }
 
-            return template.WriteTemplate(context);
+            return template.WriteTemplate();
         }
 
         /// <summary>
@@ -339,7 +343,7 @@ namespace Opc.Ua.SourceGeneration
             template.WriteLine(string.Empty);
             template.AddReplacement(Tokens.TypeName, datatype.QName.Name);
 
-            return template.WriteTemplate(context);
+            return template.WriteTemplate();
         }
 
         /// <summary>
@@ -360,22 +364,20 @@ namespace Opc.Ua.SourceGeneration
                     fieldType.DataType,
                     fieldType.Name));
 
-            template.WriteLine(string.Empty);
-            template.Write(context.Prefix);
-            template.Write("""
+            template.WriteAfterNewLine("""
                 <xs:element name="{0}"
                 """, fieldType.Name);
 
             if (datatype.Name == "XmlElement" && fieldType.ValueRank < 0)
             {
                 template.WriteLine(">");
-                template.WriteLine("{0}  <xs:complexType>", context.Prefix);
-                template.WriteLine("{0}    <xs:sequence>", context.Prefix);
-                template.WriteLine("""{0}      <xs:any minOccurs="0" processContents="lax" />""", context.Prefix);
-                template.WriteLine("{0}    </xs:sequence>", context.Prefix);
-                template.WriteLine("{0}  </xs:complexType>", context.Prefix);
+                template.WriteLine("  <xs:complexType>");
+                template.WriteLine("    <xs:sequence>");
+                template.WriteLine("""      <xs:any minOccurs="0" processContents="lax" />""");
+                template.WriteLine("    </xs:sequence>");
+                template.WriteLine("  </xs:complexType>");
 
-                template.Write("{0}</xs:element>", context.Prefix);
+                template.Write("</xs:element>");
             }
             else
             {
@@ -406,20 +408,21 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            template.WriteLine(string.Empty);
-            template.Write(context.Prefix);
-            template.Write("""<xs:enumeration value="{0}_{1}" />""", valueType.Name, valueType.Value);
+            template.WriteAfterNewLine(
+                """<xs:enumeration value="{0}_{1}" />""",
+                valueType.Name,
+                valueType.Value);
 
             /*
             if (valueType.Value != 1)
             {
                 template.WriteLine(">");
-                template.WriteLine("{0}  <xs:annotation>", context.Prefix);
-                template.WriteLine("{0}    <xs:appinfo>", context.Prefix);
-                template.WriteLine("{0}      <EnumerationValue xmlns=\"http://schemas.microsoft.com/2003/10/Serialization/\">{1}</EnumerationValue>", context.Prefix, valueType.Value);
-                template.WriteLine("{0}    </xs:appinfo>", context.Prefix);
-                template.WriteLine("{0}  </xs:annotation>", context.Prefix);
-                template.WriteLine("{0}</xs:enumeration>", context.Prefix);
+                template.WriteLine("  <xs:annotation>");
+                template.WriteLine("    <xs:appinfo>");
+                template.WriteLine("      <EnumerationValue xmlns=\"http://schemas.microsoft.com/2003/10/Serialization/\">{1}</EnumerationValue>", valueType.Value);
+                template.WriteLine("    </xs:appinfo>");
+                template.WriteLine("  </xs:annotation>");
+                template.WriteLine("</xs:enumeration>");
             }
             else
             {

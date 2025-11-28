@@ -94,7 +94,7 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
             parsed.AddLiteral(string.Empty);
 
             // Assert
-            Assert.That(parsed.Operations.Count(), Is.EqualTo(0));
+            Assert.That(parsed.Operations.Count, Is.EqualTo(0));
         }
 
         [Test]

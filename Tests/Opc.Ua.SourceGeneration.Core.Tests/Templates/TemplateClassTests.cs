@@ -72,6 +72,7 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
                 /// The URI for the MyNamespace namespace (.NET code namespace is 'My.Namespace').
                 /// </summary>
                 public const string MyNamespace = "http://mynamespace.org/UA/";
+
                 """;
             Assert.That(result, Is.EqualTo(expected));
         }
@@ -92,7 +93,10 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
             string result = writer.ToString();
 
             // Assert
-            const string expected = """public const string MyBrowseName = "MyBrowseName";""";
+            const string expected = """
+                public const string MyBrowseName = "MyBrowseName";
+
+                """;
             Assert.That(result, Is.EqualTo(expected));
         }
 
@@ -113,7 +117,10 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
             string result = writer.ToString();
 
             // Assert
-            const string expected = "public const uint MyId = 12345;";
+            const string expected = """
+                public const uint MyId = 12345;
+
+                """;
             Assert.That(result, Is.EqualTo(expected));
         }
 
@@ -199,7 +206,7 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
         }
 
         [Test]
-        public void AddTemplate_WithListOfTargets_RendersCorrectly()
+        public void AddReplacement_WithListOfTargets_RendersCorrectly()
         {
             // Arrange
             using var writer = new StringWriter();
@@ -211,31 +218,30 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
                 {{myList}}
                 """));
             string[] targets = ["One", "Two", "Three"];
-            var itemTemplate = TemplateString.Parse($"Item: {itemValue}");
+            var itemTemplate = TemplateString.Parse($"Item: {itemValue} ");
 
-            template.AddTemplate(myList, itemTemplate, targets, (t, c) =>
+            template.AddReplacement(myList, itemTemplate, targets, (t, c) =>
             {
                 t.AddReplacement(itemValue, (string)c.Target);
-                return t.WriteTemplate(c);
+                return t.WriteTemplate();
             });
 
             // Act
             template.WriteTemplate();
             string result = writer.ToString();
 
-            // Assert
+            // There is no line break in the item value template, so the
+            // result of mylist substitution will be on a single line.
             const string expected =
                 """
-                Item: One
-                Item: Two
-                Item: Three
 
+                Item: One Item: Two Item: Three 
                 """;
             Assert.That(result, Is.EqualTo(expected));
         }
 
         [Test]
-        public void AddTemplate_WithSingleTarget_RendersCorrectly()
+        public void AddReplacement_WithSingleTarget_RendersCorrectly()
         {
             // Arrange
             using var writer = new StringWriter();
@@ -246,10 +252,10 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
 #pragma warning restore RCS1214 // Unnecessary interpolated string
             var itemTemplate = TemplateString.Parse($"Item: {itemValue}");
 
-            template.AddTemplate(myList, itemTemplate, "Single", (t, c) =>
+            template.AddReplacement(myList, itemTemplate, "Single", (t, c) =>
             {
                 t.AddReplacement(itemValue, (string)c.Target);
-                return t.WriteTemplate(c);
+                return t.WriteTemplate();
             });
 
             // Act
@@ -260,13 +266,12 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
             const string expected =
                 """
                 Item: Single
-
                 """;
             Assert.That(result, Is.EqualTo(expected));
         }
 
         [Test]
-        public void AddTemplate_WithSingleTargetAndLoadHandler_RendersCorrectly()
+        public void AddReplacement_WithSingleTargetAndLoadHandler_RendersCorrectly()
         {
             // Arrange
             using var writer = new StringWriter();
@@ -278,12 +283,12 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
             var itemTemplate1 = TemplateString.Parse($"Template1: {itemValue}");
             var itemTemplate2 = TemplateString.Parse($"Template2: {itemValue}");
 
-            template.AddTemplate(myItem, "Single",
+            template.AddReplacement(myItem, "Single",
                 onLoad: (t, c) => (string)c.Target == "Single" ? itemTemplate1 : itemTemplate2,
                 onWrite: (t, c) =>
                 {
                     t.AddReplacement(itemValue, (string)c.Target);
-                    return t.WriteTemplate(c);
+                    return t.WriteTemplate();
                 });
 
             // Act
@@ -294,13 +299,12 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
             const string expected =
                 """
                 Template1: Single
-
                 """;
             Assert.That(result, Is.EqualTo(expected));
         }
 
         [Test]
-        public void AddTemplate_WithListOfTargetsAndLoadHandler_RendersCorrectly()
+        public void AddReplacement_WithListOfTargetsAndLoadHandler_RendersCorrectly()
         {
             // Arrange
             using var writer = new StringWriter();
@@ -310,15 +314,15 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
             var template = new Template(writer, TemplateString.Parse($"{myList}"));
 #pragma warning restore RCS1214 // Unnecessary interpolated string
             string[] targets = ["One", "Two"];
-            var itemTemplate1 = TemplateString.Parse($"Template1: {itemValue}");
+            var itemTemplate1 = TemplateString.Parse($"Template1: {itemValue}\r\n");
             var itemTemplate2 = TemplateString.Parse($"Template2: {itemValue}");
 
-            template.AddTemplate(myList, targets,
+            template.AddReplacement(myList, targets,
                 onLoad: (t, c) => (string)c.Target == "One" ? itemTemplate1 : itemTemplate2,
                 onWrite: (t, c) =>
                 {
                     t.AddReplacement(itemValue, (string)c.Target);
-                    return t.WriteTemplate(c);
+                    return t.WriteTemplate();
                 });
 
             // Act
@@ -329,14 +333,124 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
             const string expected =
                 """
                 Template1: One
+
                 Template2: Two
+                """;
+            Assert.That(result, Is.EqualTo(expected));
+        }
+
+
+        [Test]
+        public void AddReplacement_WithListOfTargetsAndFinalLineBreakRendersCorrectly()
+        {
+            // Arrange
+            using var writer = new StringWriter();
+            const string myList = nameof(myList);
+            const string itemValue = nameof(itemValue);
+#pragma warning disable RCS1214 // Unnecessary interpolated string
+            var template = new Template(writer, TemplateString.Parse($"{myList}"));
+#pragma warning restore RCS1214 // Unnecessary interpolated string
+            string[] targets = ["One", "Two"];
+            var itemTemplate1 = TemplateString.Parse($"Template1: {itemValue}\r\n");
+            var itemTemplate2 = TemplateString.Parse($"Template2: {itemValue}");
+
+            template.AddReplacement(myList, targets,
+                onLoad: (t, c) => (string)c.Target == "Two" ? itemTemplate1 : itemTemplate2,
+                onWrite: (t, c) =>
+                {
+                    t.AddReplacement(itemValue, (string)c.Target);
+                    return t.WriteTemplate();
+                });
+
+            // Act
+            template.WriteTemplate();
+            string result = writer.ToString();
+
+            // Assert
+            const string expected =
+                """
+                Template2: OneTemplate1: Two
 
                 """;
             Assert.That(result, Is.EqualTo(expected));
         }
 
         [Test]
-        public void AddTemplate_NestedTemplate_RendersCorrectly()
+        public void AddReplacement_WithMessageTemplate_RendersCorrectly()
+        {
+            // Arrange
+            using var writer = new StringWriter();
+            var template = new Template(writer, CodeTemplates.Messages_File_cs);
+
+            template.AddReplacement(Tokens.Prefix, "MyNamespace");
+            template.AddReplacement(Tokens.Header, string.Empty);
+            template.AddReplacement(
+                Tokens.TypeList,
+                CodeTemplates.Classes_ServiceMessage_cs,
+                ["Type1", "Type2", "Type3"],
+                (template, context) =>
+                {
+                    template.AddReplacement(Tokens.Name, (string)context.Target);
+                    return template.WriteTemplate();
+                });
+
+            template.WriteTemplate();
+            string result = writer.ToString();
+            // Assert
+            const string expected =
+                """
+
+
+                namespace MyNamespace
+                {
+                    /// <summary>
+                    /// The request message for the Type1 service.
+                    /// </summary>
+                    public partial class Type1Request : global::Opc.Ua.IServiceRequest
+                    {
+                    }
+
+                    /// <summary>
+                    /// The response message for the Type1 service.
+                    /// </summary>
+                    public partial class Type1Response : global::Opc.Ua.IServiceResponse
+                    {
+                    }
+
+                    /// <summary>
+                    /// The request message for the Type2 service.
+                    /// </summary>
+                    public partial class Type2Request : global::Opc.Ua.IServiceRequest
+                    {
+                    }
+
+                    /// <summary>
+                    /// The response message for the Type2 service.
+                    /// </summary>
+                    public partial class Type2Response : global::Opc.Ua.IServiceResponse
+                    {
+                    }
+
+                    /// <summary>
+                    /// The request message for the Type3 service.
+                    /// </summary>
+                    public partial class Type3Request : global::Opc.Ua.IServiceRequest
+                    {
+                    }
+
+                    /// <summary>
+                    /// The response message for the Type3 service.
+                    /// </summary>
+                    public partial class Type3Response : global::Opc.Ua.IServiceResponse
+                    {
+                    }
+                }
+                """;
+            Assert.That(result, Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void AddReplacement_NestedTemplate_RendersCorrectly()
         {
             // Arrange
             using var writer = new StringWriter();
@@ -357,28 +471,28 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
                 """);
             var innerTemplateString = TemplateString.Parse(
                 $$"""
-                1, This is my value: {{myValue}}
+                1. This is my value: {{myValue}}
                 2. This is my value: {{myValue}}
                 3. This is my value: {{myValue}}
                 """);
 
-            mainTemplate.AddTemplate(
+            mainTemplate.AddReplacement(
                 subTemplate,
                 subTemplateString,
                 ["target"],
                 onWrite: (subTemplate, subContext) =>
                 {
-                    subTemplate.AddTemplate(
+                    subTemplate.AddReplacement(
                         innerTemplate,
                         innerTemplateString,
                         ["inner_target"],
                         onWrite: (innerTemplate, innerContext) =>
                         {
                             innerTemplate.AddReplacement(myValue, 123);
-                            return innerTemplate.WriteTemplate(innerContext);
+                            return innerTemplate.WriteTemplate();
                         }
                     );
-                    return subTemplate.WriteTemplate(subContext);
+                    return subTemplate.WriteTemplate();
                 }
             );
 
@@ -394,7 +508,6 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
                         1. This is my value: 123
                         2. This is my value: 123
                         3. This is my value: 123
-
                 """;
             Assert.That(result, Is.EqualTo(expected));
         }
