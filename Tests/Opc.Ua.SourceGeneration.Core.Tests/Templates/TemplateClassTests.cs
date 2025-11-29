@@ -339,7 +339,6 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
             Assert.That(result, Is.EqualTo(expected));
         }
 
-
         [Test]
         public void AddReplacement_WithListOfTargetsAndFinalLineBreakRendersCorrectly()
         {

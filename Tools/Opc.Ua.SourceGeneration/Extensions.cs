@@ -47,7 +47,7 @@ namespace Opc.Ua.SourceGeneration
         {
             if (options == null)
             {
-                return null;
+                return new NodesetFileOptions();
             }
             return new NodesetFileOptions
             {
@@ -110,13 +110,10 @@ namespace Opc.Ua.SourceGeneration
             bool buildProperty = true)
         {
             string prefix = buildProperty ? "build_property" : "build_metadata.AdditionalFiles";
-            if (options.TryGetValue(
+            options.TryGetValue(
                 $"{prefix}.{SourceGenerator.Name}{propertyName}".ToLowerInvariant(),
-                out string value))
-            {
-                return converter(value);
-            }
-            return default;
+                out string value);
+            return converter(value);
         }
 
         /// <summary>
@@ -128,7 +125,10 @@ namespace Opc.Ua.SourceGeneration
             bool buildProperty = true)
         {
             return config.GetValue(propertyName,
-                s => int.TryParse(s, out int integer) ? integer : 0, buildProperty);
+                s => s != null && int.TryParse(s, out int integer) ?
+                    integer :
+                    0,
+                buildProperty);
         }
 
         /// <summary>
@@ -140,7 +140,8 @@ namespace Opc.Ua.SourceGeneration
             bool buildProperty = true)
         {
             return config.GetValue(propertyName,
-                s => s.Equals("true", StringComparison.OrdinalIgnoreCase), buildProperty);
+                s => string.Equals(s, "true", StringComparison.OrdinalIgnoreCase),
+                buildProperty);
         }
 
         /// <summary>
@@ -151,7 +152,8 @@ namespace Opc.Ua.SourceGeneration
             string propertyName,
             bool buildProperty = true)
         {
-            return config.GetValue(propertyName, s => s, buildProperty);
+            return config.GetValue(propertyName, s => s, buildProperty)
+                ?? string.Empty;
         }
 
         /// <summary>
@@ -166,7 +168,7 @@ namespace Opc.Ua.SourceGeneration
 
             static List<string> Split(string s)
             {
-                return [.. s
+                return s == null ? [] : [.. s
                     .Split(';', ',', '+')
                     .Select(e => e.Trim())
                     .Where(s => !string.IsNullOrEmpty(s))];

@@ -28,7 +28,6 @@
  * ======================================================================*/
 
 using System;
-using System.Linq;
 using NUnit.Framework;
 
 namespace Opc.Ua.SourceGeneration.Tests.Templating

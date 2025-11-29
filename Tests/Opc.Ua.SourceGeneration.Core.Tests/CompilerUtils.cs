@@ -34,6 +34,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -43,14 +44,116 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Opc.Ua.SourceGeneration
 {
+    /// <summary>
+    /// Concrete in memory Additional text
+    /// </summary>
+    public sealed class EmbeddedText : AdditionalText
+    {
+        /// <summary>
+        /// Create text
+        /// </summary>
+        private EmbeddedText(string path, string content)
+        {
+            Path = path ?? throw new ArgumentNullException(nameof(path));
+            m_text = SourceText.From(content);
+        }
+
+        /// <inheritdoc/>
+        public override string Path { get; }
+
+        /// <inheritdoc/>
+        public override SourceText GetText(
+            CancellationToken cancellationToken = default)
+        {
+            return m_text;
+        }
+
+        /// <summary>
+        /// Create additional text
+        /// </summary>
+        /// <exception cref="FileNotFoundException"></exception>
+        public static AdditionalText From(string resourceName)
+        {
+            Assembly assembly = typeof(CompilerUtils).Assembly;
+            foreach (string name in assembly.GetManifestResourceNames())
+            {
+                if (!name.EndsWith(resourceName, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+                using Stream stream = assembly.GetManifestResourceStream(name);
+                using var reader = new StreamReader(stream);
+                return new EmbeddedText(resourceName, reader.ReadToEnd());
+            }
+            throw new FileNotFoundException("Resource not found");
+        }
+
+        private readonly SourceText m_text;
+    }
+
+    public sealed class AnalyzerOptions : AnalyzerConfigOptions
+    {
+        /// <summary>
+        /// Create from dictionary
+        /// </summary>
+        public AnalyzerOptions(Dictionary<string, string> options)
+        {
+            Options = options.ToDictionary(k => k.Key, v => v.Value, KeyComparer);
+        }
+
+        /// <inheritdoc/>
+        public Dictionary<string, string> Options { get; }
+
+        /// <inheritdoc/>
+        public override IEnumerable<string> Keys => Options.Keys;
+
+        /// <inheritdoc/>
+        public override bool TryGetValue(string key, out string value)
+        {
+            return Options.TryGetValue(key, out value);
+        }
+    }
+
+    public sealed class AnalyzerOptionsProvider : AnalyzerConfigOptionsProvider
+    {
+        /// <summary>
+        /// Create provider
+        /// </summary>
+        public AnalyzerOptionsProvider(Dictionary<string, string> options)
+        {
+            GlobalOptions = new AnalyzerOptions(options);
+        }
+
+        /// <inheritdoc/>
+        public override AnalyzerConfigOptions GlobalOptions { get; }
+
+        /// <inheritdoc/>
+        public override AnalyzerConfigOptions GetOptions(SyntaxTree tree)
+        {
+            return SyntaxOptions
+                .Select(f => f(tree))
+                .Where(o => o != null)
+                .Select(o => new AnalyzerOptions(o))
+                .FirstOrDefault();
+        }
+
+        /// <inheritdoc/>
+        public override AnalyzerConfigOptions GetOptions(AdditionalText textFile)
+        {
+            return TextOptions
+                .TryGetValue(textFile.Path, out Dictionary<string, string> result) ?
+                    new AnalyzerOptions(result) :
+                    null;
+        }
+
+        public Dictionary<string, Dictionary<string, string>> TextOptions { get; } = [];
+        public List<Func<SyntaxTree, Dictionary<string, string>>> SyntaxOptions { get; } = [];
+    }
+
     public static class CompilerUtils
     {
         public static LanguageVersion[] SupportedLanguageVersions =>
         [
-            LanguageVersion.CSharp7,
-            LanguageVersion.CSharp7_1,
-            LanguageVersion.CSharp7_2,
-            LanguageVersion.CSharp7_3,
             LanguageVersion.CSharp8,
             LanguageVersion.CSharp9,
             LanguageVersion.CSharp10,
@@ -143,7 +246,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public static CSharpCompilation AddCode(
             this CSharpCompilation compilation,
-            IReadOnlyDictionary<string, string> fileAndCode,
+            IEnumerable<KeyValuePair<string, string>> fileAndCode,
             LanguageVersion languageVersion)
         {
             CSharpParseOptions parseOptions = new CSharpParseOptions()
@@ -151,9 +254,28 @@ namespace Opc.Ua.SourceGeneration
                 .WithLanguageVersion(languageVersion);
             SyntaxTree[] syntaxTrees =
                 [.. fileAndCode
-                    .Append(new KeyValuePair<string, string>(nameof(OpcUaCoreStubs), OpcUaCoreStubs))
                     .Select(c => CSharpSyntaxTree.ParseText(c.Value, parseOptions, c.Key))];
             return compilation.AddSyntaxTrees(syntaxTrees);
+        }
+
+        /// <summary>
+        /// Add core stubs
+        /// </summary>
+        public static IEnumerable<KeyValuePair<string, string>> WithOpcUaCoreStubs(
+            this IEnumerable<KeyValuePair<string, string>> codeFiles)
+        {
+            return codeFiles.Append(new KeyValuePair<string, string>(
+                nameof(OpcUaCoreStubs), OpcUaCoreStubs));
+        }
+
+        /// <summary>
+        /// Add core stubs
+        /// </summary>
+        public static IEnumerable<KeyValuePair<string, string>> WithOpcUaCore(
+            this IEnumerable<KeyValuePair<string, string>> codeFiles)
+        {
+            return codeFiles.Append(new KeyValuePair<string, string>(
+                nameof(OpcUaCore), OpcUaCore));
         }
 
         /// <summary>
@@ -180,7 +302,7 @@ namespace Opc.Ua.SourceGeneration
                 {
                     case DiagnosticSeverity.Error:
                         sev = "ERR";
-                        beforeAfter = 30;
+                        beforeAfter = 1;
                         errorCount++;
                         break;
                     case DiagnosticSeverity.Warning:
@@ -385,6 +507,67 @@ namespace Opc.Ua.SourceGeneration
                 public class FolderState : BaseObjectState
                 {
                     public FolderState(NodeState? parent) : base(parent) { }
+                }
+            }
+            """;
+
+        /// <summary>
+        /// All stubs needed to compile models against Opc.Ua.
+        /// </summary>
+        public const string OpcUaCore =
+            """
+            #nullable enable
+            using System.Reflection;
+
+            [assembly: AssemblyVersionAttribute("4.3.2.1")]
+            namespace Opc.Ua
+            {
+                public static partial class StatusCodes
+                {
+                    public const uint Good = 0;
+                }
+
+                public static partial class DataTypes
+                {
+                    public const uint String = 0;
+                    public const uint BaseDataType = 0;
+                    public const uint Number = 0;
+                }
+                public static partial class BrowseNames
+                {
+                    public const string FileSystem = "FileSystem";
+                }
+                public static partial class Namespaces
+                {
+                    public const string OpcUa = "http://opcfoundation.org/UA/";
+                }
+                public class FiniteStateMachineState : BaseObjectState
+                {
+                    public FiniteStateMachineState(NodeState? parent) : base(parent) { }
+                }
+                public class FileDirectoryState : BaseObjectState
+                {
+                    public FileDirectoryState(NodeState? parent) : base(parent) { }
+                }
+                public class AnalogUnitState : BaseDataVariableState<double>
+                {
+                    public AnalogUnitState(NodeState? parent) : base(parent) { }
+                }
+                public class BaseInterfaceState : BaseObjectState
+                {
+                    public BaseInterfaceState(NodeState? parent) : base(parent) { }
+                }
+                public class FolderState : BaseObjectState
+                {
+                    public FolderState(NodeState? parent) : base(parent) { }
+                }
+                public class InstrumentDiagnosticAlarmState : BaseObjectState
+                {
+                    public InstrumentDiagnosticAlarmState(NodeState? parent) : base(parent) { }
+                }
+                public class TemporaryFileTransferState : BaseObjectState
+                {
+                    public TemporaryFileTransferState(NodeState? parent) : base(parent) { }
                 }
             }
             """;

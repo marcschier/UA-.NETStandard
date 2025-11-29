@@ -77,7 +77,9 @@ namespace Opc.Ua.SourceGeneration
             {
                 return;
             }
-            using var fileSystem = new VirtualFileSystem();
+            var sourceFiles = new SourceGeneratorFileSystem(
+                m_input.Select(i => i.Item1).Concat(m_identifierFiles));
+            using var vfs = new VirtualFileSystem(); // Use a virtual file sytem
             try
             {
                 string identiferFile = m_identifierFiles
@@ -91,12 +93,18 @@ namespace Opc.Ua.SourceGeneration
 
                 // Load all available nodeset files from the input
                 NodesetFileCollection nodesets = m_input.ToNodeSetFileCollection(
-                    fileSystem,
+                    sourceFiles, // .WithFallback(vfs),
                     m_telemetry);
 
                 // Generate code for all nodesets
-                string[] exclusions = [.. m_options.Exclude.Append("Draft").Distinct()];
-                nodesets.GenerateCode(fileSystem, string.Empty, exclusions, m_telemetry);
+                string[] exclusions = [.. m_options.Exclude
+                    .Append("Draft")
+                    .Distinct()];
+                nodesets.GenerateCode(
+                    sourceFiles.WithFallback(vfs),
+                    string.Empty,
+                    exclusions,
+                    m_telemetry);
 
                 // Process any remaining design files
                 new DesignFileCollection
@@ -106,7 +114,7 @@ namespace Opc.Ua.SourceGeneration
                         .Select(f => f.Item1.Path)],
                     Options = m_options.Options
                 }.GenerateCode(
-                    fileSystem,
+                    sourceFiles.WithFallback(vfs),
                     string.Empty,
                     exclusions,
                     m_telemetry,
@@ -119,10 +127,10 @@ namespace Opc.Ua.SourceGeneration
                     m_options.UseAllowSubtypes);
 
                 // Collect all generated cs files and produce them into the compilation
-                foreach (string file in fileSystem.CreatedFiles
+                foreach (string file in vfs.CreatedFiles
                     .Where(f => f.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)))
                 {
-                    string content = Encoding.UTF8.GetString(fileSystem.Get(file));
+                    string content = Encoding.UTF8.GetString(vfs.Get(file));
                     m_context.AddSource(file, content);
                 }
             }
@@ -143,13 +151,13 @@ namespace Opc.Ua.SourceGeneration
         /// <returns></returns>
         private bool CheckCompilationOptions()
         {
-            if (m_compilationOptions.LanguageVersion < LanguageVersion.CSharp7)
+            if (m_compilationOptions.LanguageVersion < LanguageVersion.CSharp8)
             {
                 m_context.ReportDiagnostic(
                     Diagnostic.Create(
                         SourceGenerator.GenericError,
                         Location.None,
-                        "Opc UA stack is too old. Minimum required language version is CSharp 7."));
+                        "Minimum required language version is CSharp 8."));
                 return false;
             }
             return true;

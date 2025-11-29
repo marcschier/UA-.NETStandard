@@ -35,7 +35,25 @@ using System.Text;
 namespace Opc.Ua.SourceGeneration
 {
     /// <summary>
-    /// Generates embedded resources or string constants as code
+    /// <para>
+    /// Generates embedded resources or string constants as code.
+    /// </para>
+    /// <para>
+    /// The resource generator can be configured with a threshold value
+    /// which specifies the max size of the resources that will be inlined
+    /// as byte arrays or utf8 string literals which amounts to the same
+    /// as the latter is lowered to a byte array. The compiler is however
+    /// rather slow when it needs to pack large byte arrays into the .data
+    /// section. So if length is known and the length is exceeding this
+    /// value it will the value will be base64 encoded and included as a
+    /// string constant, which then will be decoded at runtime into bytes.
+    /// </para>
+    /// <para>
+    /// Add the $(Features);experimental-data-section-string-literals=x
+    /// to let the compiler intern const strings as utf8 byte arrays. See
+    /// https://github.com/dotnet/roslyn/blob/main/docs/features/string-literals-data-section.md
+    /// for more information.
+    /// </para>
     /// </summary>
     internal sealed class ResourceGenerator
     {
@@ -51,14 +69,8 @@ namespace Opc.Ua.SourceGeneration
         {
             m_fileSystem = fileSystem;
             m_outputFolder = outputFolder;
-
-            //
-            // This is the max size of the resources that will be inlined. The compiler is
-            // too slow to inline larger byte arrays. If length is known and the length is
-            // exceeding this value it will be base64 encoded and will be decoded at runtime.
-            //
             m_base64Threshold = base64Threshold ??
-                (options.OptimizeForCompileSpeed ? 256 : 8 * 1024); // Tweak this
+                (options.OptimizeForCompileSpeed ? 0 : int.MaxValue);
             m_useByteArrayForBase64 = useByteArrayForBase64;
         }
 

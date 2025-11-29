@@ -27,12 +27,9 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Opc.Ua.SourceGeneration
 {
@@ -144,7 +141,7 @@ namespace Opc.Ua.SourceGeneration
                             TemplateString = definition.TemplateString
                         };
                         m_writer.PushIndentChars(op.Offset);
-                        var writeNewLineBetweenTargets = false;
+                        bool writeNewLineBetweenTargets = false;
                         for (int j = 0; j < definition.Targets.Count; j++)
                         {
                             context.Target = definition.Targets[j];

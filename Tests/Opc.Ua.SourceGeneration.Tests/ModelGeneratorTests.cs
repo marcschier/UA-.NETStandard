@@ -44,22 +44,83 @@ namespace Opc.Ua.SourceGeneration
     [Category("SourceGeneration")]
     [SetCulture("en-us")]
     [SetUICulture("en-us")]
-    public class StackGeneratorTests
+    public class ModelGeneratorTests
     {
         [DatapointSource]
-        public OptimizationLevel[] OptimizationLevels = CompilerUtils.SupportedOptimizationLevels;
+        public OptimizationLevel[] OptimizationLevels =
+            CompilerUtils.SupportedOptimizationLevels;
+
+        [DatapointSource]
+        public LanguageVersion[] LanguageVersions =
+            CompilerUtils.SupportedLanguageVersions;
 
         [Theory]
-        public void GenerateAndCompileTest(OptimizationLevel optimizationLevel)
+        public void GenerateAndCompileDemoModelXmlTest(
+            LanguageVersion languageVersion,
+            OptimizationLevel optimizationLevel)
         {
-            var generator = new StackSourceGenerator();
-            var host = new StackSourceGeneratorHoist(generator);
+            var generator = new ModelSourceGenerator();
+            var host = new ModelSourceGeneratorHoist(generator);
 
-            CSharpCompilation compilation = optimizationLevel.CreateCompilation("Opc.Ua.Core")
-                .AddCode(new Dictionary<string, string>().WithOpcUaCoreStubs(), LanguageVersion.Latest);
+            CSharpCompilation compilation = optimizationLevel.CreateCompilation()
+                .AddCode(new Dictionary<string, string>().WithOpcUaCore(), languageVersion);
+
+            var options = new AnalyzerOptionsProvider(
+                new Dictionary<string, string>
+                {
+                    ["build_property.ModelSourceGeneratorVersion"] = "v105",
+                    ["build_property.ModelSourceGeneratorExclude"] = "Draft",
+                    ["build_property.ModelSourceGeneratorUseAllowSubtypes"] = "true"
+                });
 
             // Create the driver the executes the generator
-            GeneratorDriver driver = CSharpGeneratorDriver.Create(host);
+            GeneratorDriver driver = CSharpGeneratorDriver.Create(host)
+                .WithUpdatedParseOptions(new CSharpParseOptions()
+                    .WithKind(SourceCodeKind.Regular)
+                    .WithLanguageVersion(languageVersion))
+                .AddAdditionalTexts([EmbeddedText.From("DemoModel.xml")])
+                .WithUpdatedAnalyzerConfigOptions(options)
+                ;
+            GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation);
+            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(5));
+        }
+
+        [Theory]
+        public void GenerateAndCompileDemoModelNodeSetsTest(
+            LanguageVersion languageVersion,
+            OptimizationLevel optimizationLevel)
+        {
+            var generator = new ModelSourceGenerator();
+            var host = new ModelSourceGeneratorHoist(generator);
+
+            CSharpCompilation compilation = optimizationLevel.CreateCompilation()
+                .AddCode(new Dictionary<string, string>().WithOpcUaCore(), languageVersion);
+
+            var options = new AnalyzerOptionsProvider(
+                new Dictionary<string, string>
+                {
+                    ["build_property.ModelSourceGeneratorStartId"] = "1000"
+                });
+
+            // Create the driver the executes the generator
+            GeneratorDriver driver = CSharpGeneratorDriver.Create(host)
+                .WithUpdatedParseOptions(new CSharpParseOptions()
+                    .WithKind(SourceCodeKind.Regular)
+                    .WithLanguageVersion(languageVersion))
+                .AddAdditionalTexts([
+                    EmbeddedText.From("DemoModel.NodeSet2.xml"),
+                    EmbeddedText.From("Opc.Ua.Di.NodeSet2.xml")
+                 ])
+                .WithUpdatedAnalyzerConfigOptions(options)
+                ;
+            GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation);
+            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(10));
+        }
+
+        private static GeneratorRunResult GenerateAndCompile(
+            GeneratorDriver driver,
+            CSharpCompilation compilation)
+        {
             // Run it
             driver = driver.RunGeneratorsAndUpdateCompilation(
                 compilation,
@@ -73,6 +134,7 @@ namespace Opc.Ua.SourceGeneration
                 TestContext.Out,
                 out int errors,
                 out int warnings);
+
             Assert.That(errors, Is.EqualTo(0), $"Compilation produced {errors} errors");
             // TestContext.Out.WriteLine($"Compilation produced {warnings} warnings");
             Assert.That(warnings, Is.EqualTo(0), $"Compilation produced {warnings} warnings");
@@ -90,8 +152,8 @@ namespace Opc.Ua.SourceGeneration
             Assert.That(errors, Is.EqualTo(0));
             TestContext.Out.WriteLine($"Generate run produced {warnings} warnings");
 
-            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(12));
             Assert.That(generatorResult.Exception, Is.Null);
+            return generatorResult;
         }
     }
 }

@@ -238,17 +238,20 @@ namespace Opc.Ua.SourceGeneration
                 if (method.TypeDefinition != null)
                 {
                     className = method.TypeDefinition.Name;
-                }
 
+                    if (className.EndsWith("MethodType", StringComparison.Ordinal))
+                    {
+                        className = className[..^"MethodType".Length];
+                    }
+                    else if (className.EndsWith("Type", StringComparison.Ordinal))
+                    {
+                        className = className[..^"Type".Length];
+                    }
+                }
                 if (className.EndsWith("MethodType", StringComparison.Ordinal))
                 {
                     className = className[..^"MethodType".Length];
                 }
-                else if (className.EndsWith("Type", StringComparison.Ordinal))
-                {
-                    className = className[..^"Type".Length];
-                }
-
                 if (method.HasArguments)
                 {
                     return CoreUtils.Format("{0}MethodState", className);

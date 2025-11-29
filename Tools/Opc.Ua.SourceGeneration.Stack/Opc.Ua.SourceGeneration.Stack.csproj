@@ -45,9 +45,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="OPCFoundation.Opc.Ua.SourceGeneration.Stack.props" Visible="false" Pack="true" PackagePath="build" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="..\Opc.Ua.SourceGeneration\SourceGeneratorTelemetry.cs" />
     <Compile Include="..\Opc.Ua.SourceGeneration\CompilationOptions.cs" />
     <Compile Include="..\Opc.Ua.SourceGeneration\Extensions.cs" />

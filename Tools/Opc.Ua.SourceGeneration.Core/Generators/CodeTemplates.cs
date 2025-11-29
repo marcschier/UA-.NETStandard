@@ -463,6 +463,10 @@ namespace Opc.Ua.SourceGeneration
                 /// <inheritdoc/>
                 public override void Encode(global::Opc.Ua.IEncoder encoder)
                 {
+                    encoder.PushNamespace({{Tokens.XmlNamespaceUri}});
+                    encoder.WriteEncodingMask((uint)EncodingMask);
+                    encoder.PopNamespace();
+
                     base.Encode(encoder);
 
                     encoder.PushNamespace({{Tokens.XmlNamespaceUri}});
@@ -473,6 +477,10 @@ namespace Opc.Ua.SourceGeneration
                 /// <inheritdoc/>
                 public override void Decode(global::Opc.Ua.IDecoder decoder)
                 {
+                    decoder.PushNamespace({{Tokens.XmlNamespaceUri}});
+                    EncodingMask = decoder.ReadEncodingMask(m_FieldNames);
+                    decoder.PopNamespace();
+
                     base.Decode(decoder);
 
                     decoder.PushNamespace({{Tokens.XmlNamespaceUri}});

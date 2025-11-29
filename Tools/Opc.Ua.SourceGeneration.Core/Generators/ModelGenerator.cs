@@ -530,14 +530,14 @@ namespace Opc.Ua.SourceGeneration
         }
 
         private TextWriter GenerateFile(
-            string m_outputFolder,
+            string outputFolder,
             string file,
             TemplateString templateString,
             out Template template,
             out List<string> namespaces)
         {
             TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
-                m_outputFolder,
+                outputFolder,
                 CoreUtils.Format("{0}.{1}.g.cs", m_model.TargetNamespaceInfo.Prefix, file)));
 
             template = new Template(writer, templateString);
@@ -1617,7 +1617,7 @@ namespace Opc.Ua.SourceGeneration
                 return false;
             }
 
-            var children = GetFields(node);
+            object[] children = GetFields(node);
 
             template.AddReplacement(Tokens.NodeClass, node.GetNodeClassString());
             template.AddReplacement(
@@ -1792,29 +1792,26 @@ namespace Opc.Ua.SourceGeneration
                             }
                         });
 
-                        foreach (Parameter parameter in children)
-                        {
-                            clone.Add(parameter);
-                        }
+                        clone.AddRange(children.Cast<Parameter>());
                     }
 
-                    children = clone.ToArray();
+                    children = [.. clone];
                 }
 
                 Dictionary<string, string> encodings = new()
                 {
                     { Tokens.BinaryEncodingId,
-                        CoreUtils.Format("{0}_Encoding_DefaultBinary", node.SymbolicName.Name) },
+                        CoreUtils.Format("{0}_Encoding_DefaultBinary", dataType.SymbolicName.Name) },
                     { Tokens.XmlEncodingId,
-                        CoreUtils.Format("{0}_Encoding_DefaultXml", node.SymbolicName.Name) },
+                        CoreUtils.Format("{0}_Encoding_DefaultXml", dataType.SymbolicName.Name) },
                     { Tokens.JsonEncodingId,
-                        CoreUtils.Format("{0}_Encoding_DefaultJson", node.SymbolicName.Name) }
+                        CoreUtils.Format("{0}_Encoding_DefaultJson", dataType.SymbolicName.Name) }
                 };
                 foreach (KeyValuePair<string, string> kv in encodings)
                 {
                     bool isEncodingPartOfModel = m_model.Items.Any(x =>
                         x.SymbolicId.Name == kv.Value &&
-                        x.SymbolicId.Namespace == node.SymbolicName.Namespace);
+                        x.SymbolicId.Namespace == dataType.SymbolicName.Namespace);
                     if (!isEncodingPartOfModel)
                     {
                         template.AddReplacement(
@@ -4173,13 +4170,15 @@ namespace Opc.Ua.SourceGeneration
         }
 
         private string EncodingString => UseXmlInitializers ? "Xml" : "Binary";
+
         private static readonly string[] s_builtInPropertyNames =
         [
             "Description",
             "Save",
             "Handle",
             "Specification",
-            "Update"
+            "Update",
+            "Delete"
         ];
 
         private readonly Dictionary<string, Resource> m_initializers = [];

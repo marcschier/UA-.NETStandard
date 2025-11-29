@@ -72,14 +72,22 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Get diagnostic descriptor for event id
         /// </summary>
-        public static bool TryGetDiagnostic(LogLevel logLevel, EventId eventId, out DiagnosticDescriptor descriptor)
+        public static bool TryGetDiagnostic(
+            LogLevel logLevel,
+            EventId eventId,
+            out DiagnosticDescriptor descriptor)
         {
             descriptor = eventId.Id switch
             {
                 1 => GenericError,
                 2 => GenericWarning,
                 3 => Exception,
-                _ => logLevel switch { LogLevel.Error => GenericError, LogLevel.Warning => GenericWarning, _ => null }
+                _ => logLevel switch
+                {
+                    LogLevel.Error => GenericError,
+                    LogLevel.Warning => GenericWarning,
+                    _ => null
+                }
             };
             return descriptor != null;
         }

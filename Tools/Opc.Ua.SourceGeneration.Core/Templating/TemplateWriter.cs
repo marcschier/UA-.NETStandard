@@ -30,7 +30,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 
 namespace Opc.Ua.SourceGeneration
 {
@@ -186,7 +185,7 @@ namespace Opc.Ua.SourceGeneration
         }
 
         /// <summary>
-        /// Write indent if needed. 
+        /// Write indent if needed.
         /// </summary>
         private void WriteIndentIfNeeded()
         {

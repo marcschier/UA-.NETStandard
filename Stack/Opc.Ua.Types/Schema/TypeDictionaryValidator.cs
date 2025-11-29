@@ -547,7 +547,7 @@ namespace Opc.Ua.Schema.Types
                     enumeratedType.Name);
             }
 
-            int nextIndex = 0;
+            decimal nextIndex = 0;
             var values = new Dictionary<string, EnumeratedValue>();
 
             for (int ii = 0; ii < enumeratedType.Value.Length; ii++)

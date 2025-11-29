@@ -85,7 +85,7 @@ namespace Opc.Ua.SourceGeneration.Tests
             using var xmlStream = new MemoryStream();
             bool success = optimizationLevel
                 .CreateCompilation()
-                .AddCode(generatedText, LanguageVersion.Latest) // Only support latest - internal use only
+                .AddCode(generatedText.WithOpcUaCoreStubs(), LanguageVersion.Latest) // Only support latest - internal use only
                 .WithAnalyzers(withAnalzers, out CompilationWithAnalyzers compilationWithAnalyzers)
                 .Emit(peStream, xmlDocumentationStream: xmlStream)
                 .Check(TestContext.Out, out int errorCount, out int warnCount);
@@ -154,7 +154,7 @@ namespace Opc.Ua.SourceGeneration.Tests
             using var xmlStream = new MemoryStream();
             bool success = optimizationLevel
                 .CreateCompilation("Opc.Ua.Core")
-                .AddCode(generatedText, LanguageVersion.Latest)
+                .AddCode(generatedText.WithOpcUaCoreStubs(), LanguageVersion.Latest)
                 .Emit(peStream, xmlDocumentationStream: xmlStream)
                 .Check(TestContext.Out, out int errorCount, out int warnCount);
         }

@@ -27,7 +27,6 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
 using System.Linq;
 using NUnit.Framework;
 
@@ -36,7 +35,6 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
     [TestFixture]
     public class TemplateParserTests
     {
-
         [Test]
         public void CreateFromParser_WithLiteralsOnly_CreatesValidTemplateString()
         {

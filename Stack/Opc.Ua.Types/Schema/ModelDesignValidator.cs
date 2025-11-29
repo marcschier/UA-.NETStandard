@@ -334,6 +334,7 @@ namespace Opc.Ua.Schema.Model
             m_namespaceTables = [];
             m_nodesByNodeId = [];
             m_browseNames = [];
+            m_startId = 15000;
             DesignFilePaths = new Dictionary<string, string>
             {
                 [m_defaultNamespace] = string.Empty
@@ -924,19 +925,17 @@ namespace Opc.Ua.Schema.Model
 
             ModelDesign datatypes = null;
 
-            Stream stream = OpenRead("UA Core Services.xml");
-
-            using (stream)
+            using (Stream stream = OpenRead("UA Core Services.xml"))
             {
                 datatypes = ImportTypeDictionary(stream);
             }
+
             if (datatypes != null)
             {
                 nodes.AddRange(datatypes.Items);
             }
 
             ModelDesign standard = Load<ModelDesign>("StandardTypes.xml");
-
             nodes.AddRange(standard.Items);
 
             builtin.PermissionSets = standard.PermissionSets;
@@ -1343,7 +1342,7 @@ namespace Opc.Ua.Schema.Model
             model.Items = [.. nodes];
         }
 
-        private static void IndexNodesByNodeId(
+        private void IndexNodesByNodeId(
             NamespaceTable namespaceUris,
             IEnumerable<NodeDesign> nodes,
             IDictionary<NodeId, NodeDesign> index,
@@ -1364,7 +1363,11 @@ namespace Opc.Ua.Schema.Model
 
                     if (node.Children?.Items != null)
                     {
-                        IndexNodesByNodeId(namespaceUris, node.Children.Items, index, parent ?? node);
+                        IndexNodesByNodeId(
+                            namespaceUris,
+                            node.Children.Items,
+                            index,
+                            parent ?? node);
                     }
                 }
                 else if (parent != null && parent.Hierarchy != null)
@@ -1379,6 +1382,19 @@ namespace Opc.Ua.Schema.Model
 
                         index[nodeId] = node;
                     }
+                    else
+                    {
+                        m_logger.LogDebug(
+                            "Node {Node} missing from parent {Parent} hierarchy.",
+                            node.SymbolicId,
+                            parent.SymbolicId);
+                    }
+                }
+                else
+                {
+                    m_logger.LogDebug(
+                        "Node {Node} does not have a valid NodeId.",
+                        node);
                 }
             }
         }
@@ -1411,9 +1427,13 @@ namespace Opc.Ua.Schema.Model
                     settings.NamespaceUris.GetIndexOrAppend(ns.Value);
                 }
 
-                IndexNodesByNodeId(settings.NamespaceUris, m_nodes.Values, settings.NodesById, null);
+                IndexNodesByNodeId(
+                    settings.NamespaceUris,
+                    m_nodes.Values,
+                    settings.NodesById,
+                    null);
 
-                var reader = new NodeSetToModelDesign(settings, fileToLoad, FileSystem);
+                var reader = new NodeSetToModelDesign(FileSystem, fileToLoad, settings, m_telemetry);
                 model = reader.Import(prefix, name);
                 model.SourceFilePath = fileToLoad;
                 model.IsSourceNodeSet = true;
@@ -1430,16 +1450,23 @@ namespace Opc.Ua.Schema.Model
                             instance.StringId == null &&
                             instance.ModellingRule == ModellingRule.Mandatory)
                         {
-                            m_logger.LogError("{Value} missing NodeId for Mandatory child in NodeSet.", ii.Key);
+                            // Not an error, show informational
+                            m_logger.LogInformation(
+                                "{Value} missing NodeId for Mandatory child in NodeSet.",
+                                ii.Key);
                         }
                     }
                 }
             }
             else
             {
-                model = LoadModelDesign(fileToLoad, identifierFilePath, generateIds);
+                model = LoadModelDesign(
+                    fileToLoad,
+                    identifierFilePath,
+                    generateIds);
 
-                Namespace ns = model.Namespaces.FirstOrDefault(x => x.Value == model.TargetNamespace);
+                Namespace ns = model.Namespaces
+                    .FirstOrDefault(x => x.Value == model.TargetNamespace);
                 if (name != null)
                 {
                     ns.Name = name;
@@ -1803,7 +1830,7 @@ namespace Opc.Ua.Schema.Model
                             value.DisplayName = new Ua.LocalizedText(string.Empty, parameter.Name);
                         }
 
-                        value.Value = parameter.Identifier;
+                        value.Value = (long)parameter.Identifier;
 
                         if (parameter.Description != null && !parameter.Description.IsAutogenerated)
                         {
@@ -1959,7 +1986,10 @@ namespace Opc.Ua.Schema.Model
                 };
 
                 m_nodes[dictionary.SymbolicId] = dictionary;
-                m_logger.LogDebug("Added {Type}: {Name}", dictionary.GetType().Name, dictionary.SymbolicId.Name);
+                m_logger.LogDebug(
+                    "Added {Type}: {Name}",
+                    dictionary.GetType().Name,
+                    dictionary.SymbolicId.Name);
                 nodesToAdd.Add(dictionary);
             }
         }
@@ -2025,14 +2055,18 @@ namespace Opc.Ua.Schema.Model
                         property.ArrayDimensions += ",";
                     }
 
-                    property.ArrayDimensions += ii.ToString(CultureInfo.InvariantCulture);
+                    property.ArrayDimensions +=
+                        ii.ToString(CultureInfo.InvariantCulture);
                 }
             }
 
             children.Add(property);
 
             m_nodes[property.SymbolicId] = property;
-            m_logger.LogDebug("Added {Type}: {Name}", property.GetType().Name, property.SymbolicId.Name);
+            m_logger.LogDebug(
+                "Added {Type}: {Name}",
+                property.GetType().Name,
+                property.SymbolicId.Name);
         }
 
         private void AddDataTypeDescription(
@@ -2110,7 +2144,10 @@ namespace Opc.Ua.Schema.Model
                 }
 
                 m_nodes[description.SymbolicId] = description;
-                m_logger.LogDebug("Added {Type}: {Name}", description.GetType().Name, description.SymbolicId.Name);
+                m_logger.LogDebug(
+                    "Added {Type}: {Name}",
+                    description.GetType().Name,
+                    description.SymbolicId.Name);
             }
 
             if (dataType.BasicDataType == BasicDataType.UserDefined && !dataType.NoEncodings)
@@ -2207,7 +2244,10 @@ namespace Opc.Ua.Schema.Model
 
             m_nodes[encoding.SymbolicId] = encoding;
             nodesToAdd.Add(encoding);
-            m_logger.LogDebug("Added {Type}: {Name}", encoding.GetType().Name, encoding.SymbolicId.Name);
+            m_logger.LogDebug(
+                "Added {Type}: {Name}",
+                encoding.GetType().Name,
+                encoding.SymbolicId.Name);
         }
 
         /// <summary>
@@ -2409,7 +2449,7 @@ namespace Opc.Ua.Schema.Model
             Dictionary<string, object> identifiers = ParseFile(istrm);
             var uniqueIdentifiers = new SortedDictionary<object, IdInfo>(uniqueIdentifiersComparer);
             var duplicateIdentifiers = new Dictionary<string, object>();
-            var assignedIds = new IdAllocator();
+            var assignedIds = new IdAllocator(m_startId);
 
             foreach (object existingId in identifiers.Values)
             {
@@ -2577,7 +2617,10 @@ namespace Opc.Ua.Schema.Model
             }
 
             m_nodes.Add(node.SymbolicId, node);
-            m_logger.LogInformation("Imported {Type}: {Name}", node.GetType().Name, node.SymbolicId.Name);
+            m_logger.LogInformation(
+                "Imported {Type}: {Name}",
+                node.GetType().Name,
+                node.SymbolicId.Name);
 
             // import children.
             if (node.Children != null && node.Children.Items != null)
@@ -2758,7 +2801,9 @@ namespace Opc.Ua.Schema.Model
             // check for duplicates.
             if (m_nodes.ContainsKey(node.SymbolicId))
             {
-                throw Exception("The SymbolicId is already used by another node: {0}.", node.SymbolicId.Name);
+                throw Exception(
+                    "The SymbolicId is already used by another node: {0}.",
+                    node.SymbolicId.Name);
             }
 
             // check numeric id.
@@ -3044,7 +3089,10 @@ namespace Opc.Ua.Schema.Model
 
                 // add to table.
                 m_nodes.Add(encoding.SymbolicId, encoding);
-                m_logger.LogInformation("Imported {Type}: {Name}", encoding.GetType().Name, encoding.SymbolicId.Name);
+                m_logger.LogInformation(
+                    "Imported {Type}: {Name}",
+                    encoding.GetType().Name,
+                    encoding.SymbolicId.Name);
 
                 if (encoding.NumericIdSpecified)
                 {
@@ -3696,7 +3744,10 @@ namespace Opc.Ua.Schema.Model
                 "VariableType");
 
             m_nodes.Add(property.SymbolicId, property);
-            m_logger.LogInformation("Imported {Type}: {Name}", property.GetType().Name, property.SymbolicId.Name);
+            m_logger.LogInformation(
+                "Imported {Type}: {Name}",
+                property.GetType().Name,
+                property.SymbolicId.Name);
 
             return property;
         }
@@ -3711,7 +3762,7 @@ namespace Opc.Ua.Schema.Model
                 return false;
             }
 
-            int id = 0;
+            decimal id = 0;
             var filteredParameters = new List<Parameter>();
 
             foreach (Parameter parameter in parameters)
@@ -3743,7 +3794,7 @@ namespace Opc.Ua.Schema.Model
                     if (ulong.TryParse(parameter.BitMask, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out ulong mask))
                     {
                         byte[] bytes = BitConverter.GetBytes(mask);
-                        parameter.Identifier = BitConverter.ToInt32(bytes, 0);
+                        parameter.Identifier = BitConverter.ToUInt64(bytes, 0);
                         parameter.IdentifierSpecified = true;
                     }
                 }
@@ -3768,7 +3819,7 @@ namespace Opc.Ua.Schema.Model
                         }
                     }
 
-                    if (index > 0 && int.TryParse(name[(index + 1)..], out id))
+                    if (index > 0 && decimal.TryParse(name[(index + 1)..], out id))
                     {
                         parameter.Identifier = id;
                         parameter.IdentifierSpecified = true;
@@ -4438,7 +4489,10 @@ namespace Opc.Ua.Schema.Model
             }
 
             m_nodes.Add(encoding.SymbolicId, encoding);
-            m_logger.LogDebug("Created {Type}: {Name}", encoding.GetType().Name, encoding.SymbolicId.Name);
+            m_logger.LogDebug(
+                "Created {Type}: {Name}",
+                encoding.GetType().Name,
+                encoding.SymbolicId.Name);
 
             return encoding;
         }
@@ -6894,9 +6948,9 @@ namespace Opc.Ua.Schema.Model
                                 long bit = 1;
                                 int value = 0;
 
-                                while (field.Identifier > 0 && bit <= uint.MaxValue)
+                                while (field.Identifier > 0 && bit <= long.MaxValue)
                                 {
-                                    if ((bit & field.Identifier) != 0)
+                                    if ((bit & (long)field.Identifier) != 0)
                                     {
                                         break;
                                     }
@@ -6918,7 +6972,7 @@ namespace Opc.Ua.Schema.Model
                                 {
                                     Name = field.Name,
                                     DisplayName = new Ua.LocalizedText(field.Name),
-                                    Value = field.Identifier
+                                    Value = (long)field.Identifier
                                 };
                             }
 
@@ -7238,7 +7292,7 @@ namespace Opc.Ua.Schema.Model
             /// Allocate identifiers
             /// </summary>
             /// <param name="startId"></param>
-            public IdAllocator(uint startId = 15000)
+            public IdAllocator(uint startId)
             {
                 m_lastId = startId;
                 m_lastBuiltInId = 15000;
@@ -7297,11 +7351,11 @@ namespace Opc.Ua.Schema.Model
         private Dictionary<string, string[]> m_namespaceTables;
         private Dictionary<NodeId, NodeDesign> m_nodesByNodeId;
         private Dictionary<uint, NodeDesign> m_identifiers;
+        private uint m_startId;
+        private Dictionary<XmlQualifiedName, string> m_browseNames = [];
         private readonly string m_defaultNamespace = Namespaces.OpcUa;
         private readonly ServiceMessageContext m_context;
-        private readonly uint m_startId;
         private readonly IReadOnlyList<string> m_exclusions;
-        private Dictionary<XmlQualifiedName, string> m_browseNames = [];
         private readonly Dictionary<XmlQualifiedName, NodeId> m_symbolicIdToNodeId = [];
     }
 }

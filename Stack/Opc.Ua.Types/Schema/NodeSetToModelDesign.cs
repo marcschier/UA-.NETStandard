@@ -37,6 +37,7 @@ using System;
 using System.Linq;
 using System.IO;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 
 namespace Opc.Ua.Schema.Model
 {
@@ -56,11 +57,6 @@ namespace Opc.Ua.Schema.Model
             NodesById = new Dictionary<NodeId, NodeDesign>();
             NamespaceTables = new Dictionary<string, string[]>();
         }
-
-        /// <summary>
-        /// The telemetry context for logging.
-        /// </summary>
-        public ITelemetryContext Telemetry { get; set; }
 
         /// <summary>
         /// Namespace uris.
@@ -96,12 +92,17 @@ namespace Opc.Ua.Schema.Model
         /// <summary>
         /// Create converter
         /// </summary>
-        /// <param name="settings"></param>
-        /// <param name="filePath"></param>
         /// <param name="fileSystem"></param>
+        /// <param name="filePath"></param>
+        /// <param name="settings"></param>
+        /// <param name="telemetry"></param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="InvalidDataException"></exception>
-        public NodeSetToModelDesign(NodeSetReaderSettings settings, string filePath, IFileSystem fileSystem)
+        public NodeSetToModelDesign(
+            IFileSystem fileSystem,
+            string filePath,
+            NodeSetReaderSettings settings,
+            ITelemetryContext telemetry)
         {
             if (filePath == null)
             {
@@ -110,6 +111,8 @@ namespace Opc.Ua.Schema.Model
 
             m_settings = settings ?? throw new ArgumentNullException(nameof(settings));
             m_fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
+            m_telemetry = telemetry;
+            m_logger = telemetry.CreateLogger<NodeSetToModelDesign>();
             m_index = [];
             m_symbolicIds = [];
 
@@ -131,7 +134,8 @@ namespace Opc.Ua.Schema.Model
                 foreach (NodeIdAlias ii in m_nodeset.Aliases)
                 {
                     m_aliases[ii.Alias] = ImportNodeId(ii.Value, false) ??
-                        throw new InvalidDataException($"Alias ({ii.Alias}) is not valid.");
+                        throw new InvalidDataException(
+                            $"Alias ({ii.Alias}) is not valid.");
                 }
             }
 
@@ -140,7 +144,8 @@ namespace Opc.Ua.Schema.Model
                 foreach (UANode node in m_nodeset.Items)
                 {
                     NodeId nodeId = ImportNodeId(node.NodeId, false) ??
-                        throw new InvalidDataException($"NodeId ({node.BrowseName}) is not valid.");
+                        throw new InvalidDataException(
+                            $"NodeId ({node.BrowseName}) is not valid.");
                     m_index.Add(nodeId, node);
                 }
             }
@@ -597,7 +602,8 @@ namespace Opc.Ua.Schema.Model
                 return new ViewDesign();
             }
 
-            throw new InvalidDataException($"Object is not a valid NodeClass: '{input.BrowseName}/{input.GetType().Name}'.");
+            throw new InvalidDataException(
+                $"Object is not a valid NodeClass: '{input.BrowseName}/{input.GetType().Name}'.");
         }
 
         private void UpdateTypeDesign(UAType input, TypeDesign output)
@@ -614,7 +620,8 @@ namespace Opc.Ua.Schema.Model
             {
                 ReferenceNode reference = ImportReference(ii);
 
-                if (reference.ReferenceTypeId == ReferenceTypes.HasSubtype && reference.IsInverse)
+                if (reference.ReferenceTypeId == ReferenceTypes.HasSubtype &&
+                    reference.IsInverse)
                 {
                     TypeDesign superType = FindNode<TypeDesign>(reference.TargetId);
 
@@ -630,7 +637,8 @@ namespace Opc.Ua.Schema.Model
 
             if (output.BaseType == null)
             {
-                throw new InvalidDataException($"Could not find supertype for '{input.BrowseName}'.");
+                throw new InvalidDataException(
+                    $"Could not find supertype for '{input.BrowseName}'.");
             }
         }
 
@@ -714,7 +722,10 @@ namespace Opc.Ua.Schema.Model
 
             while (parent != null)
             {
-                var parentId = new NodeId(parent.NumericId, (ushort)m_settings.NamespaceUris.GetIndex(parent.SymbolicId.Namespace));
+                var parentId = new NodeId(
+                    parent.NumericId,
+                    (ushort)m_settings.NamespaceUris.GetIndex(
+                        parent.SymbolicId.Namespace));
 
                 if (parentId == superTypeId)
                 {
@@ -769,6 +780,12 @@ namespace Opc.Ua.Schema.Model
             output.HasFields = false;
             output.Fields = null;
             output.HasEncodings = false;
+
+            if (output.BasicDataType == BasicDataType.UserDefined &&
+                input.Definition == null)
+            {
+                output.IsStructure = true;
+            }
 
             if (input.Definition != null)
             {
@@ -832,9 +849,9 @@ namespace Opc.Ua.Schema.Model
 
                         if (output.IsOptionSet)
                         {
-                            long mask = 1 << ii.Value;
+                            long mask = 1L << ii.Value;
                             field.BitMask = $"{mask:X8}";
-                            field.Identifier = (int)mask;
+                            field.Identifier = mask;
                             field.IdentifierSpecified = true;
                         }
                         else if (output.IsEnumeration)
@@ -1197,7 +1214,8 @@ namespace Opc.Ua.Schema.Model
             output.Extensions = input.Extensions;
 
             if (input is UAType &&
-                output.SymbolicId.Name.EndsWith("_" + nodeId.Identifier, StringComparison.Ordinal))
+                output.SymbolicId.Name.EndsWith(
+                    "_" + nodeId.Identifier, StringComparison.Ordinal))
             {
                 output.SymbolicName = new XmlQualifiedName(
                     $"{output.SymbolicName.Name}_{nodeId.Identifier}",
@@ -1220,6 +1238,15 @@ namespace Opc.Ua.Schema.Model
             {
                 output.StringId = stringId;
                 output.NumericIdSpecified = false;
+            }
+            else if (NodeId.IsNull(nodeId))
+            {
+                m_logger.LogInformation("NodeId is not specified.");
+            }
+            else
+            {
+                m_logger.LogInformation("NodeId {Identifier} is supported.",
+                    nodeId.Identifier);
             }
 
             m_settings.NodesByQName[output.SymbolicId] = output;
@@ -1846,6 +1873,45 @@ namespace Opc.Ua.Schema.Model
 
             items.AddRange(methods.Values);
 
+            foreach (NodeDesign item in items)
+            {
+                if (item is TypeDesign type)
+                {
+                    string className = type.SymbolicName.Name;
+
+                    if (type is DataTypeDesign dt)
+                    {
+                        if (dt.HasFields)
+                        {
+                            foreach (Parameter field in dt.Fields)
+                            {
+                                if (field.Name == className)
+                                {
+                                    type.ClassName = className + "DataType";
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else if (type.HasChildren)
+                    {
+                        if (className.EndsWith("Type", StringComparison.Ordinal))
+                        {
+                            className = className[..^"Type".Length];
+                        }
+
+                        foreach (InstanceDesign child in type.Children.Items)
+                        {
+                            if (child.BrowseName == type.ClassName)
+                            {
+                                type.ClassName = className +
+                                    (type is VariableTypeDesign ? "Variable" : "Object");
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
             dictionary.Items = [.. items];
             dictionary.NamespaceUris = m_settings.NamespaceUris;
             return dictionary;
@@ -1902,7 +1968,7 @@ namespace Opc.Ua.Schema.Model
         /// </summary>
         private XmlDecoder CreateDecoder(XmlElement source, string sourceNodeSetUri = null)
         {
-            IServiceMessageContext messageContext = new ServiceMessageContext(m_settings.Telemetry)
+            IServiceMessageContext messageContext = new ServiceMessageContext(m_telemetry)
             {
                 NamespaceUris = m_settings.NamespaceUris,
                 ServerUris = m_serverUris
@@ -2085,7 +2151,7 @@ namespace Opc.Ua.Schema.Model
         {
             if (string.IsNullOrEmpty(source))
             {
-                return null;
+                return NodeId.Null;
             }
 
             // lookup alias.
@@ -2342,6 +2408,8 @@ namespace Opc.Ua.Schema.Model
         ];
 
         private readonly NodeSetReaderSettings m_settings;
+        private readonly ITelemetryContext m_telemetry;
+        private readonly ILogger m_logger;
         private readonly IFileSystem m_fileSystem;
         private readonly StringTable m_serverUris = new();
         private readonly UANodeSet m_nodeset;
