@@ -63,7 +63,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public void Emit(CancellationToken cancellationToken)
         {
-            if (!CheckCompilationOptions())
+            if (!CheckCompilationOptions(out StackGenerationType generationType))
             {
                 return;
             }
@@ -72,6 +72,7 @@ namespace Opc.Ua.SourceGeneration
             {
                 // Generate files into the virtual file system
                 Generators.GenerateStack(
+                    generationType,
                     fileSystem,
                     string.Empty,
                     m_options.Exclude,
@@ -80,7 +81,8 @@ namespace Opc.Ua.SourceGeneration
                     {
                         Cancellation = cancellationToken,
                         OptimizeForCompileSpeed =
-                            m_compilationOptions.OptimizationLevel == OptimizationLevel.Debug
+                            m_compilationOptions.OptimizationLevel ==
+                                OptimizationLevel.Debug
                     });
                 // Collect all generated cs files and produce them into the compilation
                 foreach (string file in fileSystem.CreatedFiles
@@ -105,26 +107,40 @@ namespace Opc.Ua.SourceGeneration
         /// Tests the compilation options are valid
         /// </summary>
         /// <returns></returns>
-        private bool CheckCompilationOptions()
+        private bool CheckCompilationOptions(out StackGenerationType type)
         {
-            // Check that we are running with opc ua core production only
-            if (m_compilationOptions.AssemblyName != "Opc.Ua.Core")
-            {
-                m_context.ReportDiagnostic(
-                    Diagnostic.Create(
-                        SourceGenerator.GenericError,
-                        Location.None,
-                        $"Stack generation not supported for {m_compilationOptions.AssemblyName} assembly."));
-                return false;
-            }
             if (m_compilationOptions.LanguageVersion < LanguageVersion.CSharp13)
             {
+                type = StackGenerationType.None;
                 m_context.ReportDiagnostic(
                     Diagnostic.Create(
                         SourceGenerator.GenericError,
                         Location.None,
                         "Opc UA stack is too old. Minimum required language version is CSharp 14."));
                 return false;
+            }
+
+            // Check that we are running with opc ua core production only
+            switch (m_compilationOptions.AssemblyName)
+            {
+                case "Opc.Ua":
+                    type = StackGenerationType.Models;
+                    break;
+                case "Opc.Ua.Test":
+                    type = StackGenerationType.All;
+                    break;
+                case "Opc.Ua.Core":
+                    // TODO type = StackGenerationType.Stack;
+                    type = StackGenerationType.All;
+                    break;
+                default:
+                    type = StackGenerationType.None;
+                    m_context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            SourceGenerator.GenericError,
+                            Location.None,
+                            $"Stack generation not supported for {m_compilationOptions.AssemblyName} assembly."));
+                    return false;
             }
             return true;
         }

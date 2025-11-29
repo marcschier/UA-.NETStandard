@@ -27,6 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using System;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -46,6 +47,33 @@ namespace Opc.Ua.SourceGeneration
         /// Generation should be cancelled
         /// </summary>
         public CancellationToken Cancellation { get; set; }
+    }
+
+    /// <summary>
+    /// What part of the stack to generate
+    /// </summary>
+    [Flags]
+    public enum StackGenerationType
+    {
+        /// <summary>
+        /// Generate nothing
+        /// </summary>
+        None,
+
+        /// <summary>
+        /// Generate the .NET stack code
+        /// </summary>
+        Stack,
+
+        /// <summary>
+        /// Generate the core models
+        /// </summary>
+        Models,
+
+        /// <summary>
+        /// Generate both stack and models
+        /// </summary>
+        All
     }
 
     /// <summary>
@@ -139,9 +167,10 @@ namespace Opc.Ua.SourceGeneration
                 {
                     AvailableNodeSets = nodesets.Files
                 };
-                List<string> designFilesForModel = nodesets.GetDesignFileListForModel(
-                    modelUri,
-                    out NodesetFile nodeset);
+                List<string> designFilesForModel =
+                    nodesets.GetDesignFileListForModel(
+                        modelUri,
+                        out NodesetFile nodeset);
                 if (designFilesForModel == null || nodeset.Info.Ignore)
                 {
                     continue;
@@ -157,12 +186,14 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Generate the .net stack code
         /// </summary>
+        /// <param name="generatorType">Generator type</param>
         /// <param name="fileSystem">The root file system to use</param>
         /// <param name="outputDir">Output folder or null</param>
         /// <param name="exclusions">Optional exclusions</param>
         /// <param name="telemetry">A telemetry context for logging</param>
         /// <param name="options">Generator options</param>
         public static void GenerateStack(
+            StackGenerationType generatorType,
             IFileSystem fileSystem,
             string outputDir,
             IReadOnlyList<string> exclusions,
@@ -191,8 +222,8 @@ namespace Opc.Ua.SourceGeneration
                 new DesignFileOptions
                 {
                     StartId = 0,
-                    ModelVersion = "1.05.06", // <--- Read from version file
-                    ModelPublicationDate = "2025-11-08", // <--- Read from version file
+                    ModelVersion = "1.05.06",
+                    ModelPublicationDate = "2025-11-08",
                     ReleaseCandidate = true
                 },
                 false);
@@ -201,8 +232,16 @@ namespace Opc.Ua.SourceGeneration
                 outputDir,
                 exclusions,
                 options);
-            stackGenerator.Emit();
-            modelGenerator.Emit(skipSchemas: true);
+
+            if ((generatorType & StackGenerationType.Stack) != 0)
+            {
+                stackGenerator.Emit();
+            }
+
+            if ((generatorType & StackGenerationType.Models) != 0)
+            {
+                modelGenerator.Emit(skipSchemas: true);
+            }
         }
     }
 }
