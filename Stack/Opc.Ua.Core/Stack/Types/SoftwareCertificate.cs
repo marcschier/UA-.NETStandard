@@ -18,41 +18,39 @@ namespace Opc.Ua
     /// <summary>
     /// The SoftwareCertificate class.
     /// </summary>
-    public class SoftwareCertificate
+    public static class SoftwareCertificateExtensions
     {
-        /// <summary>
-        /// The SignedSoftwareCertificate that contains the SoftwareCertificate
-        /// </summary>
-        public X509Certificate2 SignedCertificate { get; set; }
-
-        /// <summary>
-        /// Validates a software certificate.
-        /// </summary>
-        public static ServiceResult Validate(
-            CertificateValidator validator,
-            byte[] signedCertificate,
-            ITelemetryContext telemetry,
-            out SoftwareCertificate softwareCertificate)
+        extension(SoftwareCertificate)
         {
-            softwareCertificate = null;
-
-            // validate the certificate.
-            X509Certificate2 certificate;
-            try
+            /// <summary>
+            /// Validates a software certificate.
+            /// </summary>
+            public static ServiceResult Validate(
+                CertificateValidator validator,
+                byte[] signedCertificate,
+                ITelemetryContext telemetry,
+                out SoftwareCertificate softwareCertificate)
             {
-                certificate = CertificateFactory.Create(signedCertificate);
-                validator.ValidateAsync(certificate, default).GetAwaiter().GetResult();
-            }
-            catch (Exception e)
-            {
-                return ServiceResult.Create(
-                    e,
-                    StatusCodes.BadDecodingError,
-                    "Could not decode software certificate body.");
-            }
+                softwareCertificate = null;
 
-            // certificate is valid.
-            return ServiceResult.Good;
+                // validate the certificate.
+                X509Certificate2 certificate;
+                try
+                {
+                    certificate = CertificateFactory.Create(signedCertificate);
+                    validator.ValidateAsync(certificate, default).GetAwaiter().GetResult();
+                }
+                catch (Exception e)
+                {
+                    return ServiceResult.Create(
+                        e,
+                        StatusCodes.BadDecodingError,
+                        "Could not decode software certificate body.");
+                }
+
+                // certificate is valid.
+                return ServiceResult.Good;
+            }
         }
     }
 }

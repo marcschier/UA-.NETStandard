@@ -88,17 +88,23 @@ namespace Opc.Ua.SourceGeneration
         public IReadOnlyList<string> Exclusions { get; }
 
         /// <summary>
-        /// Generates the datatype files.
+        /// Generates stack code.
         /// </summary>
-        public void Emit()
+        public void Emit(StackGenerationType stackType)
         {
-            GenerateMessages();
-            GenerateClientApi();
-            GenerateServerApi();
-            GenerateEndpoints();
-            GenerateSchemas();
-            GenerateAttributes();
-            GenerateStatusCodes();
+            if ((stackType & StackGenerationType.Stack) != 0)
+            {
+                GenerateClientApi();
+                GenerateServerApi();
+                GenerateEndpoints();
+                GenerateSchemas();
+            }
+            if ((stackType & StackGenerationType.Models) != 0)
+            {
+                GenerateMessages();
+                GenerateAttributes();
+                GenerateStatusCodes();
+            }
         }
 
         /// <summary>
@@ -274,7 +280,12 @@ namespace Opc.Ua.SourceGeneration
 
             Validator.Validate(BuiltInDesignFiles.UAStatusCodesXml);
             Dictionary<string, int> identifiers = LoadIdentifiers(BuiltInDesignFiles.StatusCodesCsv);
-            var constants = new List<Constant>();
+            var constants = new List<Constant>
+            {
+                new() { Severity = Severity.Good, Name = nameof(Severity.Good) },
+                new() { Severity = Severity.Bad, Name = nameof(Severity.Bad) },
+                new() { Severity = Severity.Uncertain, Name = nameof(Severity.Uncertain) }
+            };
             foreach (DataType datatype in Dictionary.Items)
             {
                 if (!TypeDictionaryValidator.IsExcluded(Exclusions, datatype) &&

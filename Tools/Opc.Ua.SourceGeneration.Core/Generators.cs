@@ -227,16 +227,13 @@ namespace Opc.Ua.SourceGeneration
                     ReleaseCandidate = true
                 },
                 false);
+
             var stackGenerator = new StackGenerator(
                 fileSystem,
                 outputDir,
                 exclusions,
                 options);
-
-            if ((generatorType & StackGenerationType.Stack) != 0)
-            {
-                stackGenerator.Emit();
-            }
+            stackGenerator.Emit(generatorType);
 
             if ((generatorType & StackGenerationType.Models) != 0)
             {

@@ -30,8 +30,8 @@ namespace Opc.Ua
         /// Initializes the object as an anonymous user.
         /// </summary>
         public UserIdentity()
-            : this(new AnonymousIdentityToken())
         {
+            m_token = new AnonymousIdentityTokenHandler();
         }
 
         /// <summary>
@@ -40,12 +40,8 @@ namespace Opc.Ua
         /// <param name="username">The user name.</param>
         /// <param name="password">The password.</param>
         public UserIdentity(string username, byte[] password)
-            : this(new UserNameIdentityToken
-            {
-                UserName = username,
-                DecryptedPassword = password
-            })
         {
+            m_token = new UserNameIdentityTokenHandler(username, password);
         }
 
         /// <summary>
@@ -54,23 +50,20 @@ namespace Opc.Ua
         /// <param name="username">The user name.</param>
         /// <param name="password">The password.</param>
         public UserIdentity(string username, ReadOnlySpan<byte> password)
-            : this(new UserNameIdentityToken
-            {
-                UserName = username,
-                DecryptedPassword = password.ToArray()
-            })
         {
+            m_token = new UserNameIdentityTokenHandler(username, password);
         }
 
         /// <summary>
-        /// Initializes the object with an X509 certificate identifier and a CertificatePasswordProvider
+        /// Initializes the object with an X509 certificate identifier
+        /// and a CertificatePasswordProvider
         /// </summary>
         [Obsolete("Use CreateAsync method instead.")]
         public UserIdentity(
             CertificateIdentifier certificateId,
             CertificatePasswordProvider certificatePasswordProvider)
-            : this(certificateId
-                .LoadPrivateKeyExAsync(certificatePasswordProvider).GetAwaiter().GetResult())
+            : this(certificateId.LoadPrivateKeyExAsync(
+                certificatePasswordProvider).GetAwaiter().GetResult())
         {
         }
 
@@ -78,8 +71,19 @@ namespace Opc.Ua
         /// Initializes the object with an X509 certificate
         /// </summary>
         public UserIdentity(X509Certificate2 certificate)
-            : this(Create(certificate))
         {
+            m_token = new X509IdentityTokenHandler(certificate);
+        }
+
+        /// <summary>
+        /// Create user identity with a custom token handler.
+        /// </summary>
+        /// <param name="token"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public UserIdentity(IUserIdentityTokenHandler token)
+        {
+            m_token = token
+                ?? throw new ArgumentNullException(nameof(token));
         }
 
         /// <summary>
@@ -88,59 +92,18 @@ namespace Opc.Ua
         /// <param name="token">The user identity token.</param>
         public UserIdentity(UserIdentityToken token)
         {
-            m_token = token ?? throw new ArgumentNullException(nameof(token));
-            switch (m_token)
-            {
-                case X509IdentityToken x509Token:
-                    TokenType = UserTokenType.Certificate;
-                    IssuedTokenType = null;
-                    if (x509Token.Certificate != null)
-                    {
-                        DisplayName = x509Token.Certificate.Subject;
-                    }
-                    else
-                    {
-                        X509Certificate2 cert = CertificateFactory.Create(
-                            x509Token.CertificateData);
-                        DisplayName = cert.Subject;
-                    }
-                    break;
-                case UserNameIdentityToken usernameToken:
-                    TokenType = UserTokenType.UserName;
-                    IssuedTokenType = null;
-                    DisplayName = usernameToken.UserName;
-                    break;
-                case AnonymousIdentityToken:
-                    TokenType = UserTokenType.Anonymous;
-                    IssuedTokenType = null;
-                    DisplayName = "Anonymous";
-                    break;
-                case IssuedIdentityToken issuedToken:
-                    if (issuedToken.IssuedTokenType == Ua.IssuedTokenType.JWT)
-                    {
-                        if (issuedToken.DecryptedTokenData == null ||
-                            issuedToken.DecryptedTokenData.Length == 0)
-                        {
-                            throw new ArgumentException(
-                                "JSON Web Token has no data associated with it.",
-                                nameof(token));
-                        }
-
-                        TokenType = UserTokenType.IssuedToken;
-                        IssuedTokenType = new XmlQualifiedName(string.Empty, Profiles.JwtUserToken);
-                        DisplayName = "JWT";
-                        break;
-                    }
-                    throw new NotSupportedException("Only JWT Issued Tokens are supported!");
-                default:
-                    throw new ArgumentException("Unrecognized UA user identity token type.", nameof(token));
-            }
+            m_token = token.AsTokenHandler() ?? throw new ArgumentException(
+                "Unrecognized UA user identity token type.",
+                nameof(token));
         }
 
         /// <summary>
-        /// Initializes the object with an X509 certificate identifier and a CertificatePasswordProvider
+        /// Initializes the object with an X509 certificate identifier
+        /// and a CertificatePasswordProvider
         /// </summary>
-        /// <exception cref="ArgumentNullException"><paramref name="certificateId"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="certificateId"/> is <c>null</c>.
+        /// </exception>
         /// <exception cref="ServiceResultException"></exception>
         public static async Task<UserIdentity> CreateAsync(
             CertificateIdentifier certificateId,
@@ -153,9 +116,11 @@ namespace Opc.Ua
                 throw new ArgumentNullException(nameof(certificateId));
             }
 
-            X509Certificate2 certificate = await certificateId
-                .LoadPrivateKeyExAsync(certificatePasswordProvider, applicationUri: null, telemetry, ct)
-                .ConfigureAwait(false);
+            X509Certificate2 certificate = await certificateId.LoadPrivateKeyExAsync(
+                certificatePasswordProvider,
+                applicationUri: null,
+                telemetry,
+                ct).ConfigureAwait(false);
 
             if (certificate == null || !certificate.HasPrivateKey)
             {
@@ -193,32 +158,39 @@ namespace Opc.Ua
         [OnDeserializing]
         private void Initialize(StreamingContext context)
         {
-            m_token = new AnonymousIdentityToken();
+            m_token = new AnonymousIdentityTokenHandler();
         }
 
         /// <summary>
-        /// Gets or sets the UserIdentityToken PolicyId associated with the UserIdentity.
+        /// Gets or sets the UserIdentityToken PolicyId associated
+        /// with the UserIdentity.
         /// </summary>
         /// <remarks>
-        /// This value is used to initialize the UserIdentityToken object when GetIdentityToken() is called.
+        /// This value is used to initialize the UserIdentityToken
+        /// object when GetIdentityToken() is called.
         /// </remarks>
         [DataMember(Name = "PolicyId", IsRequired = false, Order = 10)]
         public string PolicyId
         {
-            get => m_token.PolicyId;
-            set => m_token.PolicyId = value;
+            get => m_token.Token.PolicyId;
+            set => m_token.Token.PolicyId = value;
         }
 
         /// <inheritdoc/>
         [DataMember(Name = "TokenType", IsRequired = true, Order = 20)]
-        public UserTokenType TokenType { get; private set; }
+        public UserTokenType TokenType => m_token.TokenType;
 
         /// <inheritdoc/>
         [DataMember(Name = "IssuedTokenType", IsRequired = false, Order = 30)]
-        public XmlQualifiedName IssuedTokenType { get; private set; }
+        public XmlQualifiedName IssuedTokenType
+            => (m_token as IssuedIdentityTokenHandler)?.IssuedTokenProfileUri;
 
         /// <inheritdoc/>
-        public string DisplayName { get; set; }
+        public string DisplayName
+        {
+            get => field ?? m_token.DisplayName;
+            set => field = value;
+        }
 
         /// <inheritdoc/>
         public bool SupportsSignatures => false;
@@ -232,7 +204,7 @@ namespace Opc.Ua
         public UserIdentityToken GetIdentityToken()
         {
             // check for null and return anonymous.
-            return Utils.Clone(m_token);
+            return Utils.Clone(m_token.Token);
         }
 
         /// <inheritdoc/>
@@ -240,7 +212,7 @@ namespace Opc.Ua
         {
             if (obj is UserIdentity identity)
             {
-                return Utils.IsEqualUserIdentity(m_token, identity.m_token);
+                return Utils.IsEqualUserIdentity(m_token.Token, identity.m_token.Token);
             }
             return base.Equals(obj);
         }
@@ -275,32 +247,8 @@ namespace Opc.Ua
             }
         }
 
-        /// <summary>
-        /// Helper to create a identity token from X509 certificate
-        /// </summary>
-        /// <exception cref="ServiceResultException"></exception>
-        /// <exception cref="ArgumentNullException"><paramref name="certificate"/> is <c>null</c>.</exception>
-        private static X509IdentityToken Create(X509Certificate2 certificate)
-        {
-            if (certificate == null)
-            {
-                throw new ArgumentNullException(nameof(certificate));
-            }
 
-            if (!certificate.HasPrivateKey)
-            {
-                throw new ServiceResultException(
-                    "Cannot create User Identity with Certificate that does not have a private key");
-            }
-
-            return new X509IdentityToken
-            {
-                CertificateData = certificate.RawData,
-                Certificate = certificate
-            };
-        }
-
-        private UserIdentityToken m_token;
+        private IUserIdentityTokenHandler m_token;
     }
 
     /// <summary>

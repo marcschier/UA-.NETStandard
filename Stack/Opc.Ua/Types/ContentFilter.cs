@@ -21,6 +21,14 @@ namespace Opc.Ua
     public partial class ContentFilter : IFormattable
     {
         /// <summary>
+        /// Set the default StringComparison to use when evaluating the Equals operator.
+        /// This property is meant to be set as a config setting and not set / reset on
+        /// a per context basis, to ensure consistency
+        /// </summary>
+        public static StringComparison EqualsOperatorDefaultStringComparison { get; set; }
+            = StringComparison.Ordinal;
+
+        /// <summary>
         /// Formats the value of the current instance using the specified format.
         /// </summary>
         /// <param name="format">The <see cref="string"/> specifying the format to use.
@@ -47,7 +55,7 @@ namespace Opc.Ua
                 return buffer.ToString();
             }
 
-            throw new FormatException(Utils.Format("Invalid format string: '{0}'.", format));
+            throw new FormatException(CoreUtils.Format("Invalid format string: '{0}'.", format));
         }
 
         /// <summary>
@@ -442,7 +450,7 @@ namespace Opc.Ua
                 return buffer.ToString();
             }
 
-            throw new FormatException(Utils.Format("Invalid format string: '{0}'.", format));
+            throw new FormatException(CoreUtils.Format("Invalid format string: '{0}'.", format));
         }
 
         /// <summary>
@@ -735,7 +743,7 @@ namespace Opc.Ua
 
                         if (node != null)
                         {
-                            referenceType = Utils.Format("{0}", node);
+                            referenceType = CoreUtils.Format("{0}", node);
                         }
                     }
 
@@ -790,7 +798,7 @@ namespace Opc.Ua
         /// <returns>ContentFilterElement as a displayable string.</returns>
         public virtual string ToString(INodeTable nodeTable)
         {
-            return Utils.Format("{0}", this);
+            return CoreUtils.Format("{0}", this);
         }
     }
 
@@ -914,7 +922,7 @@ namespace Opc.Ua
                 return buffer.ToString();
             }
 
-            throw new FormatException(Utils.Format("Invalid format string: '{0}'.", format));
+            throw new FormatException(CoreUtils.Format("Invalid format string: '{0}'.", format));
         }
 
         /// <summary>
@@ -1085,7 +1093,7 @@ namespace Opc.Ua
                 return string.Format(formatProvider, "[{0}]", m_index);
             }
 
-            throw new FormatException(Utils.Format("Invalid format string: '{0}'.", format));
+            throw new FormatException(CoreUtils.Format("Invalid format string: '{0}'.", format));
         }
 
         /// <summary>
@@ -1141,7 +1149,7 @@ namespace Opc.Ua
         /// <returns>ElementOperand as a displayable string.</returns>
         public override string ToString(INodeTable nodeTable)
         {
-            return Utils.Format("Element[{0}]", Index);
+            return CoreUtils.Format("Element[{0}]", Index);
         }
     }
 
@@ -1176,7 +1184,7 @@ namespace Opc.Ua
                 return string.Format(formatProvider, "{0}", m_value);
             }
 
-            throw new FormatException(Utils.Format("Invalid format string: '{0}'.", format));
+            throw new FormatException(CoreUtils.Format("Invalid format string: '{0}'.", format));
         }
 
         /// <summary>
@@ -1224,11 +1232,11 @@ namespace Opc.Ua
 
                 if (node != null)
                 {
-                    return Utils.Format("{0} ({1})", node, nodeId);
+                    return CoreUtils.Format("{0} ({1})", node, nodeId);
                 }
             }
 
-            return Utils.Format("{0}", Value);
+            return CoreUtils.Format("{0}", Value);
         }
     }
 }

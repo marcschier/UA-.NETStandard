@@ -72,7 +72,7 @@ namespace Opc.Ua.Gds.Server.Diagnostics
                 e.SetChildValue(
                     systemContext,
                     Ua.BrowseNames.LocalTime,
-                    Utils.GetTimeZoneInfo(),
+                    TimeZoneDataType.Local,
                     false);
 
                 e.SetChildValue(systemContext, Ua.BrowseNames.MethodId, method?.NodeId, false);
@@ -153,7 +153,7 @@ namespace Opc.Ua.Gds.Server.Diagnostics
                 e.SetChildValue(
                     systemContext,
                     Ua.BrowseNames.LocalTime,
-                    Utils.GetTimeZoneInfo(),
+                    TimeZoneDataType.Local,
                     false);
 
                 e.SetChildValue(systemContext, Ua.BrowseNames.MethodId, method?.NodeId, false);
@@ -221,7 +221,7 @@ namespace Opc.Ua.Gds.Server.Diagnostics
                 e.SetChildValue(
                     systemContext,
                     Ua.BrowseNames.LocalTime,
-                    Utils.GetTimeZoneInfo(),
+                    TimeZoneDataType.Local,
                     false);
 
                 e.SetChildValue(systemContext, Ua.BrowseNames.MethodId, method?.NodeId, false);

@@ -113,7 +113,7 @@ namespace Opc.Ua.Server
                 e.SetChildValue(
                     systemContext,
                     BrowseNames.LocalTime,
-                    Utils.GetTimeZoneInfo(),
+                    TimeZoneDataType.Local,
                     false);
 
                 e.SetChildValue(
@@ -187,7 +187,7 @@ namespace Opc.Ua.Server
                 e.SetChildValue(
                     systemContext,
                     BrowseNames.LocalTime,
-                    Utils.GetTimeZoneInfo(),
+                    TimeZoneDataType.Local,
                     false);
 
                 e.SetChildValue(
@@ -775,7 +775,7 @@ namespace Opc.Ua.Server
                 e.SetChildValue(
                     systemContext,
                     BrowseNames.LocalTime,
-                    Utils.GetTimeZoneInfo(),
+                    TimeZoneDataType.Local,
                     false);
 
                 // set AuditSecurityEventType fields
@@ -842,7 +842,7 @@ namespace Opc.Ua.Server
                 e.SetChildValue(
                     systemContext,
                     BrowseNames.LocalTime,
-                    Utils.GetTimeZoneInfo(),
+                    TimeZoneDataType.Local,
                     false);
 
                 // set AuditSecurityEventType fields
@@ -904,7 +904,7 @@ namespace Opc.Ua.Server
                 e.SetChildValue(
                     systemContext,
                     BrowseNames.LocalTime,
-                    Utils.GetTimeZoneInfo(),
+                    TimeZoneDataType.Local,
                     false);
 
                 // set AuditUpdateMethodEventType fields
@@ -1362,7 +1362,7 @@ namespace Opc.Ua.Server
                 e.SetChildValue(
                     systemContext,
                     BrowseNames.LocalTime,
-                    Utils.GetTimeZoneInfo(),
+                    TimeZoneDataType.Local,
                     false);
 
                 e.SetChildValue(systemContext, BrowseNames.MethodId, method.NodeId, false);
@@ -1426,7 +1426,7 @@ namespace Opc.Ua.Server
                 e.SetChildValue(
                     systemContext,
                     BrowseNames.LocalTime,
-                    Utils.GetTimeZoneInfo(),
+                    TimeZoneDataType.Local,
                     false);
 
                 e.SetChildValue(systemContext, BrowseNames.MethodId, method?.NodeId, false);
@@ -1492,7 +1492,7 @@ namespace Opc.Ua.Server
                 e.SetChildValue(
                     systemContext,
                     BrowseNames.LocalTime,
-                    Utils.GetTimeZoneInfo(),
+                    TimeZoneDataType.Local,
                     false);
 
                 e.SetChildValue(systemContext, BrowseNames.NodesToAdd, addNodesItems, false);
@@ -1555,7 +1555,7 @@ namespace Opc.Ua.Server
                 e.SetChildValue(
                     systemContext,
                     BrowseNames.LocalTime,
-                    Utils.GetTimeZoneInfo(),
+                    TimeZoneDataType.Local,
                     false);
 
                 e.SetChildValue(systemContext, BrowseNames.NodesToDelete, nodesToDelete, false);
@@ -1662,7 +1662,7 @@ namespace Opc.Ua.Server
                 e.SetChildValue(
                     systemContext,
                     BrowseNames.LocalTime,
-                    Utils.GetTimeZoneInfo(),
+                    TimeZoneDataType.Local,
                     false);
 
                 // set AuditSecurityEventType fields
@@ -1786,7 +1786,7 @@ namespace Opc.Ua.Server
                 e.SetChildValue(
                     systemContext,
                     BrowseNames.LocalTime,
-                    Utils.GetTimeZoneInfo(),
+                    TimeZoneDataType.Local,
                     false);
 
                 // set AuditSecurityEventType fields
@@ -1852,7 +1852,7 @@ namespace Opc.Ua.Server
                 e.SetChildValue(
                     systemContext,
                     BrowseNames.LocalTime,
-                    Utils.GetTimeZoneInfo(),
+                    TimeZoneDataType.Local,
                     false);
 
                 e.SetChildValue(
@@ -1921,7 +1921,7 @@ namespace Opc.Ua.Server
                 e.SetChildValue(
                     systemContext,
                     BrowseNames.LocalTime,
-                    Utils.GetTimeZoneInfo(),
+                    TimeZoneDataType.Local,
                     false);
 
                 e.SetChildValue(systemContext, BrowseNames.MethodId, methodId, false);
@@ -1970,7 +1970,7 @@ namespace Opc.Ua.Server
                 e.SetChildValue(
                     systemContext,
                     BrowseNames.LocalTime,
-                    Utils.GetTimeZoneInfo(),
+                    TimeZoneDataType.Local,
                     false);
 
                 e.SetChildValue(systemContext, BrowseNames.MethodId, methodId, false);
@@ -2023,7 +2023,7 @@ namespace Opc.Ua.Server
                 historyUpdateDetails.NodeId,
                 false);
             e.SetChildValue(systemContext, BrowseNames.SourceName, sourceName, false);
-            e.SetChildValue(systemContext, BrowseNames.LocalTime, Utils.GetTimeZoneInfo(), false);
+            e.SetChildValue(systemContext, BrowseNames.LocalTime, TimeZoneDataType.Local, false);
 
             e.SetChildValue(
                 systemContext,

@@ -1316,7 +1316,7 @@ namespace Opc.Ua
             if (identity1 is IssuedIdentityToken issuedToken1 &&
                 identity2 is IssuedIdentityToken issuedToken2)
             {
-                return IsEqual(issuedToken1.DecryptedTokenData, issuedToken2.DecryptedTokenData);
+                return IsEqual(issuedToken1.TokenData, issuedToken2.TokenData);
             }
 
             return false;
@@ -1395,19 +1395,6 @@ namespace Opc.Ua
         public static bool IsEqual(object value1, object value2)
         {
             return CoreUtils.IsEqual(value1, value2);
-        }
-
-        /// <summary>
-        /// Returns the TimeZone information for the current local time.
-        /// </summary>
-        /// <returns>The TimeZone information for the current local time.</returns>
-        public static TimeZoneDataType GetTimeZoneInfo()
-        {
-            return new TimeZoneDataType
-            {
-                Offset = (short)TimeZoneInfo.Local.GetUtcOffset(DateTime.Now).TotalMinutes,
-                DaylightSavingInOffset = true
-            };
         }
 
         /// <summary>

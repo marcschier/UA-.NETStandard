@@ -109,6 +109,7 @@
     <Project Path="Stack/Opc.Ua.Bindings.Https/Opc.Ua.Bindings.Https.csproj" />
     <Project Path="Stack/Opc.Ua.Core/Opc.Ua.Core.csproj" />
     <Project Path="Stack/Opc.Ua.Types/Opc.Ua.Types.csproj" />
+    <Project Path="Stack/Opc.Ua/Opc.Ua.csproj" />
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="Tests/Opc.Ua.Client.ComplexTypes.Tests/Opc.Ua.Client.ComplexTypes.Tests.csproj" />

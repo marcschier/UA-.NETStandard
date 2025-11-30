@@ -10,6 +10,8 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 */
 
+using System;
+
 namespace Opc.Ua
 {
     public partial class BrowsePath

@@ -26,7 +26,8 @@ namespace Opc.Ua
         public StringCollection StringTable { get; set; }
 
         /// <summary>
-        /// Gets a value indicating whether there are more NotificationMessages for this publish interval.
+        /// Gets a value indicating whether there are more
+        /// NotificationMessages for this publish interval.
         /// </summary>
         public bool MoreNotifications { get; set; }
 

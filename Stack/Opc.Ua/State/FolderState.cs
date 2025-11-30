@@ -30,7 +30,7 @@ namespace Opc.Ua
         /// </summary>
         protected override void Initialize(ISystemContext context)
         {
-            SymbolicName = Utils.Format("{0}_Instance1", BrowseNames.FolderType);
+            SymbolicName = CoreUtils.Format("{0}_Instance1", BrowseNames.FolderType);
             NodeId = null;
             BrowseName = new QualifiedName(SymbolicName, 1);
             DisplayName = SymbolicName;

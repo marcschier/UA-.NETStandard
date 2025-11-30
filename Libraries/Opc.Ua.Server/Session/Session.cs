@@ -887,7 +887,7 @@ namespace Opc.Ua.Server
                 return new AnonymousIdentityToken { PolicyId = policy.PolicyId };
             }
 
-            UserIdentityToken token;
+            IUserIdentityTokenHandler token;
             // check for unrecognized token.
             if (!typeof(UserIdentityToken).IsInstanceOfType(identityToken.Body))
             {
@@ -917,10 +917,12 @@ namespace Opc.Ua.Server
                             "User token policy not supported.",
                             "Opc.Ua.Server.Session.ValidateUserIdentityToken");
                     }
+
+                    UserIdentityToken userToken;
                     switch (policy.TokenType)
                     {
                         case UserTokenType.Anonymous:
-                            token =
+                            userToken =
                                 BaseVariableState.DecodeExtensionObject(
                                     null,
                                     typeof(AnonymousIdentityToken),
@@ -929,7 +931,7 @@ namespace Opc.Ua.Server
                                 ) as AnonymousIdentityToken;
                             break;
                         case UserTokenType.UserName:
-                            token =
+                            userToken =
                                 BaseVariableState.DecodeExtensionObject(
                                     null,
                                     typeof(UserNameIdentityToken),
@@ -938,7 +940,7 @@ namespace Opc.Ua.Server
                                 ) as UserNameIdentityToken;
                             break;
                         case UserTokenType.Certificate:
-                            token =
+                            userToken =
                                 BaseVariableState.DecodeExtensionObject(
                                     null,
                                     typeof(X509IdentityToken),
@@ -947,7 +949,7 @@ namespace Opc.Ua.Server
                                 ) as X509IdentityToken;
                             break;
                         case UserTokenType.IssuedToken:
-                            token =
+                            userToken =
                                 BaseVariableState.DecodeExtensionObject(
                                     null,
                                     typeof(IssuedIdentityToken),
@@ -960,6 +962,7 @@ namespace Opc.Ua.Server
                                 StatusCodes.BadUserAccessDenied,
                                 "Invalid user identity token provided.");
                     }
+                    token = userToken.AsTokenHandler();
                 }
                 else
                 {
@@ -971,12 +974,12 @@ namespace Opc.Ua.Server
             else
             {
                 // get the token.
-                token = (UserIdentityToken)identityToken.Body;
+                token = ((UserIdentityToken)identityToken.Body).AsTokenHandler();
             }
 
             // find the user token policy.
             policy = EndpointDescription.FindUserTokenPolicy(
-                token.PolicyId,
+                token.Token.PolicyId,
                 EndpointDescription.SecurityPolicyUri);
 
             if (policy == null)
@@ -986,7 +989,7 @@ namespace Opc.Ua.Server
                     "User token policy not supported.");
             }
 
-            if (token is IssuedIdentityToken issuedToken &&
+            if (token is IssuedIdentityTokenHandler issuedToken &&
                 policy.IssuedTokenType == Profiles.JwtUserToken)
             {
                 issuedToken.IssuedTokenType = IssuedTokenType.JWT;
@@ -1043,7 +1046,7 @@ namespace Opc.Ua.Server
                         m_serverCertificate.RawData,
                         m_serverNonce.Data);
 
-                    if (!token.Verify(dataToSign, userTokenSignature, securityPolicyUri, m_server.Telemetry))
+                    if (!token.Verify(dataToSign, userTokenSignature, securityPolicyUri))
                     {
                         // verify for certificate chain in endpoint.
                         // validate the signature with complete chain if the check with leaf certificate failed.
@@ -1068,7 +1071,7 @@ namespace Opc.Ua.Server
                                 serverCertificateChainData,
                                 m_serverNonce.Data);
 
-                            if (!token.Verify(dataToSign, userTokenSignature, securityPolicyUri, m_server.Telemetry))
+                            if (!token.Verify(dataToSign, userTokenSignature, securityPolicyUri))
                             {
                                 throw new ServiceResultException(
                                     StatusCodes.BadIdentityTokenRejected,
@@ -1086,7 +1089,7 @@ namespace Opc.Ua.Server
             }
 
             // validate user identity token.
-            return token;
+            return token.Token;
         }
 
         /// <summary>

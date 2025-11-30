@@ -11,28 +11,58 @@
 */
 
 using System;
-using System.Security.Cryptography.X509Certificates;
 using System.Runtime.Serialization;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 
 namespace Opc.Ua
 {
     /// <summary>
     /// The UserIdentityToken class.
     /// </summary>
-    public partial class UserNameIdentityToken
+    public sealed class UserNameIdentityTokenHandler : IUserIdentityTokenHandler
     {
+        /// <summary>
+        /// Create token handler
+        /// </summary>
+        public UserNameIdentityTokenHandler(UserNameIdentityToken token)
+        {
+            DecryptedPassword = null;
+            m_token = token;
+        }
+
+        /// <summary>
+        /// Create token handler
+        /// </summary>
+        public UserNameIdentityTokenHandler(
+            string username,
+            ReadOnlySpan<byte> password)
+        {
+            DecryptedPassword = password.ToArray();
+            m_token = new UserNameIdentityToken
+            {
+                UserName = username,
+                Password = password.ToArray()
+            };
+        }
+
+        /// <inheritdoc/>
+        public UserIdentityToken Token => m_token;
+
+        /// <inheritdoc/>
+        public string DisplayName => m_token.UserName;
+
+        /// <inheritdoc/>
+        public UserTokenType TokenType => UserTokenType.UserName;
+
         /// <summary>
         /// The decrypted password associated with the token.
         /// </summary>
-        [IgnoreDataMember]
         public byte[] DecryptedPassword { get; set; }
 
-        /// <summary>
-        /// Encrypts the DecryptedPassword using the EncryptionAlgorithm and places the result in Password
-        /// </summary>
-        /// <exception cref="NotSupportedException"></exception>
-        public override void Encrypt(
+        /// <inheritdoc/>
+        public void Encrypt(
             X509Certificate2 receiverCertificate,
             byte[] receiverNonce,
             string securityPolicyUri,
@@ -44,7 +74,7 @@ namespace Opc.Ua
         {
             if (DecryptedPassword == null)
             {
-                m_password = null;
+                m_token.Password = null;
                 return;
             }
 
@@ -52,8 +82,8 @@ namespace Opc.Ua
             if (string.IsNullOrEmpty(securityPolicyUri) ||
                 securityPolicyUri == SecurityPolicies.None)
             {
-                m_password = DecryptedPassword;
-                m_encryptionAlgorithm = null;
+                m_token.Password = DecryptedPassword;
+                m_token.EncryptionAlgorithm = null;
                 return;
             }
 
@@ -69,8 +99,8 @@ namespace Opc.Ua
                     dataToEncrypt,
                     logger);
 
-                m_password = encryptedData.Data;
-                m_encryptionAlgorithm = encryptedData.Algorithm;
+                m_token.Password = encryptedData.Data;
+                m_token.EncryptionAlgorithm = encryptedData.Algorithm;
                 Array.Clear(dataToEncrypt, 0, dataToEncrypt.Length);
             }
             // handle ECC encryption.
@@ -102,17 +132,13 @@ namespace Opc.Ua
                     null,
                     doNotEncodeSenderCertificate);
 
-                m_password = secret.Encrypt(DecryptedPassword, receiverNonce);
-                m_encryptionAlgorithm = null;
+                m_token.Password = secret.Encrypt(DecryptedPassword, receiverNonce);
+                m_token.EncryptionAlgorithm = null;
             }
         }
 
-        /// <summary>
-        /// Decrypts the Password using the EncryptionAlgorithm and places the result in DecryptedPassword
-        /// </summary>
-        /// <exception cref="ServiceResultException"></exception>
-        /// <exception cref="NotSupportedException"></exception>
-        public override void Decrypt(
+        /// <inheritdoc/>
+        public void Decrypt(
             X509Certificate2 certificate,
             Nonce receiverNonce,
             string securityPolicyUri,
@@ -132,8 +158,8 @@ namespace Opc.Ua
             if (string.IsNullOrEmpty(securityPolicyUri) ||
                 securityPolicyUri == SecurityPolicies.None)
             {
-                DecryptedPassword = new byte[m_password.Length];
-                Array.Copy(m_password, DecryptedPassword, m_password.Length);
+                DecryptedPassword = new byte[m_token.Password.Length];
+                Array.Copy(m_token.Password, DecryptedPassword, m_token.Password.Length);
                 return;
             }
 
@@ -142,11 +168,11 @@ namespace Opc.Ua
             {
                 var encryptedData = new EncryptedData
                 {
-                    Data = m_password,
-                    Algorithm = m_encryptionAlgorithm
+                    Data = m_token.Password,
+                    Algorithm = m_token.EncryptionAlgorithm
                 };
 
-                ILogger logger = context.Telemetry.CreateLogger<UserNameIdentityToken>();
+                ILogger logger = context.Telemetry.CreateLogger<UserNameIdentityTokenHandler>();
                 byte[] decryptedPassword = SecurityPolicies.Decrypt(
                     certificate,
                     securityPolicyUri,
@@ -198,30 +224,45 @@ namespace Opc.Ua
                 DecryptedPassword = secret.Decrypt(
                     DateTime.UtcNow.AddHours(-1),
                     receiverNonce.Data,
-                    m_password,
+                    m_token.Password,
                     0,
-                    m_password.Length,
+                    m_token.Password.Length,
                     context.Telemetry);
             }
         }
 
         /// <inheritdoc/>
-        protected override void Dispose(bool disposing)
+        public SignatureData Sign(
+            byte[] dataToSign,
+            string securityPolicyUri)
         {
-            if (disposing)
-            {
-                if (DecryptedPassword != null)
-                {
-                    Array.Clear(DecryptedPassword, 0, DecryptedPassword.Length);
-                    DecryptedPassword = null;
-                }
-                if (m_password != null)
-                {
-                    Array.Clear(m_password, 0, m_password.Length);
-                    m_password = null;
-                }
-            }
-            base.Dispose(disposing);
+            return new SignatureData();
         }
+
+        /// <inheritdoc/>
+        public bool Verify(
+            byte[] dataToVerify,
+            SignatureData signatureData,
+            string securityPolicyUri)
+        {
+            return true;
+        }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            if (DecryptedPassword != null)
+            {
+                Array.Clear(DecryptedPassword, 0, DecryptedPassword.Length);
+                DecryptedPassword = null;
+            }
+            if (m_token.Password != null)
+            {
+                Array.Clear(m_token.Password, 0, m_token.Password.Length);
+                m_token.Password = null;
+            }
+        }
+
+        private readonly UserNameIdentityToken m_token;
     }
 }

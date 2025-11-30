@@ -1072,7 +1072,7 @@ namespace Opc.Ua.Client
 
             OpenValidateIdentity(
                 ref identity,
-                out UserIdentityToken identityToken,
+                out UserIdentityToken userIdentityToken,
                 out UserTokenPolicy identityPolicy,
                 out string securityPolicyUri,
                 out bool requireEncryption);
@@ -1080,6 +1080,7 @@ namespace Opc.Ua.Client
             // validate the server certificate /certificate chain.
             X509Certificate2? serverCertificate = null;
             byte[]? certificateData = m_endpoint.Description.ServerCertificate;
+            var identityToken = userIdentityToken.AsTokenHandler();
 
             if (certificateData != null && certificateData.Length > 0)
             {
@@ -1266,8 +1267,7 @@ namespace Opc.Ua.Client
                 // sign data with user token.
                 SignatureData userTokenSignature = identityToken.Sign(
                     dataToSign,
-                    tokenSecurityPolicyUri,
-                    m_telemetry);
+                    tokenSecurityPolicyUri);
 
                 // encrypt token.
                 identityToken.Encrypt(
@@ -1292,14 +1292,13 @@ namespace Opc.Ua.Client
 
                 // activate session.
                 ActivateSessionResponse activateResponse = await ActivateSessionAsync(
-                        null,
-                        clientSignature,
-                        clientSoftwareCertificates,
-                        m_preferredLocales,
-                        new ExtensionObject(identityToken),
-                        userTokenSignature,
-                        ct)
-                    .ConfigureAwait(false);
+                    null,
+                    clientSignature,
+                    clientSoftwareCertificates,
+                    m_preferredLocales,
+                    new ExtensionObject(identityToken),
+                    userTokenSignature,
+                    ct).ConfigureAwait(false);
 
                 //  process additional header
                 ProcessResponseAdditionalHeader(activateResponse.ResponseHeader, serverCertificate);
@@ -1455,7 +1454,9 @@ namespace Opc.Ua.Client
                 requireEncryption &&
                 identity.TokenType != UserTokenType.Anonymous)
             {
-                await m_configuration.CertificateValidator.ValidateAsync(m_serverCertificate, ct).ConfigureAwait(false);
+                await m_configuration.CertificateValidator.ValidateAsync(
+                    m_serverCertificate,
+                    ct).ConfigureAwait(false);
             }
 
             // validate server nonce and security parameters for user identity.
@@ -1467,12 +1468,11 @@ namespace Opc.Ua.Client
                 m_endpoint.Description.SecurityMode);
 
             // sign data with user token.
-            UserIdentityToken identityToken = identity.GetIdentityToken();
-            identityToken.PolicyId = identityPolicy.PolicyId;
+            var identityToken = identity.GetIdentityToken().AsTokenHandler();
+            identityToken.Token.PolicyId = identityPolicy.PolicyId;
             SignatureData userTokenSignature = identityToken.Sign(
                 dataToSign,
-                tokenSecurityPolicyUri,
-                m_telemetry);
+                tokenSecurityPolicyUri);
 
             m_userTokenSecurityPolicyUri = tokenSecurityPolicyUri;
 
@@ -2320,12 +2320,12 @@ namespace Opc.Ua.Client
                     m_endpoint.Description.SecurityMode);
 
                 // sign data with user token.
-                UserIdentityToken identityToken = m_identity.GetIdentityToken();
-                identityToken.PolicyId = identityPolicy.PolicyId;
+                var identityToken =
+                    m_identity.GetIdentityToken().AsTokenHandler();
+                identityToken.Token.PolicyId = identityPolicy.PolicyId;
                 SignatureData userTokenSignature = identityToken.Sign(
                     dataToSign,
-                    tokenSecurityPolicyUri,
-                    m_telemetry);
+                    tokenSecurityPolicyUri);
 
                 // encrypt token.
                 identityToken.Encrypt(

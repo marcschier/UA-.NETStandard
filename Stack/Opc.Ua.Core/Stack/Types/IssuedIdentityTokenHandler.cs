@@ -11,9 +11,11 @@
 */
 
 using System;
-using System.Security.Cryptography.X509Certificates;
 using System.Runtime.Serialization;
+using System.Security.Cryptography.X509Certificates;
+using System.Xml;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 
 namespace Opc.Ua
 {
@@ -44,14 +46,45 @@ namespace Opc.Ua
     }
 
     /// <summary>
-    /// The IssuedIdentityToken class.
+    /// The IssuedIdentityToken handler class.
     /// </summary>
-    public partial class IssuedIdentityToken
+    public sealed class IssuedIdentityTokenHandler : IUserIdentityTokenHandler
     {
+        /// <summary>
+        /// Create handler
+        /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
+        public IssuedIdentityTokenHandler(IssuedIdentityToken token)
+        {
+            m_token = token ?? throw new ArgumentNullException(nameof(token));
+        }
+
         /// <summary>
         /// The type of issued token.
         /// </summary>
         public IssuedTokenType IssuedTokenType { get; set; }
+
+        /// <inheritdoc/>
+        public UserTokenType TokenType => UserTokenType.IssuedToken;
+
+        /// <inheritdoc/>
+        public string DisplayName => IssuedTokenType switch
+        {
+            IssuedTokenType.GenericWSS => "Generic WSS Token",
+            IssuedTokenType.SAML => "SAML Token",
+            IssuedTokenType.JWT => "JWT",
+            IssuedTokenType.KerberosBinary => "Kerberos Token",
+            _ => "Issued Token"
+        };
+
+        /// <summary>
+        /// Token profile uri
+        /// </summary>
+        public XmlQualifiedName IssuedTokenProfileUri
+            => new(string.Empty, Namespaces.OpcUa + "UserToken#" + IssuedTokenType);
+
+        /// <inheritdoc/>
+        public UserIdentityToken Token => m_token;
 
         /// <summary>
         /// The decrypted password associated with the token.
@@ -60,7 +93,6 @@ namespace Opc.Ua
         /// Internally always creates a deep copy on get and set, so that the user
         /// can clear the token data after using or setting it.
         /// </remarks>
-        [IgnoreDataMember]
         public byte[] DecryptedTokenData
         {
             get
@@ -87,10 +119,8 @@ namespace Opc.Ua
             }
         }
 
-        /// <summary>
-        /// Encrypts the DecryptedTokenData using the EncryptionAlgorithm and places the result in Password
-        /// </summary>
-        public override void Encrypt(
+        /// <inheritdoc/>
+        public void Encrypt(
             X509Certificate2 receiverCertificate,
             byte[] receiverNonce,
             string securityPolicyUri,
@@ -104,14 +134,14 @@ namespace Opc.Ua
             if (string.IsNullOrEmpty(securityPolicyUri) ||
                 securityPolicyUri == SecurityPolicies.None)
             {
-                m_tokenData = m_decryptedTokenData;
-                m_encryptionAlgorithm = string.Empty;
+                m_token.TokenData = m_decryptedTokenData;
+                m_token.EncryptionAlgorithm = string.Empty;
                 return;
             }
 
             byte[] dataToEncrypt = Utils.Append(m_decryptedTokenData, receiverNonce);
 
-            ILogger logger = context.Telemetry.CreateLogger<IssuedIdentityToken>();
+            ILogger logger = context.Telemetry.CreateLogger<IssuedIdentityTokenHandler>();
             EncryptedData encryptedData = SecurityPolicies.Encrypt(
                 receiverCertificate,
                 securityPolicyUri,
@@ -120,15 +150,12 @@ namespace Opc.Ua
 
             Array.Clear(dataToEncrypt, 0, dataToEncrypt.Length);
 
-            m_tokenData = encryptedData.Data;
-            m_encryptionAlgorithm = encryptedData.Algorithm;
+            m_token.TokenData = encryptedData.Data;
+            m_token.EncryptionAlgorithm = encryptedData.Algorithm;
         }
 
-        /// <summary>
-        /// Decrypts the Password using the EncryptionAlgorithm and places the result in DecryptedPassword
-        /// </summary>
-        /// <exception cref="ServiceResultException"></exception>
-        public override void Decrypt(
+        /// <inheritdoc/>
+        public void Decrypt(
             X509Certificate2 certificate,
             Nonce receiverNonce,
             string securityPolicyUri,
@@ -142,17 +169,17 @@ namespace Opc.Ua
             if (string.IsNullOrEmpty(securityPolicyUri) ||
                 securityPolicyUri == SecurityPolicies.None)
             {
-                m_decryptedTokenData = m_tokenData;
+                m_decryptedTokenData = m_token.TokenData;
                 return;
             }
 
             var encryptedData = new EncryptedData
             {
-                Data = m_tokenData,
-                Algorithm = m_encryptionAlgorithm
+                Data = m_token.TokenData,
+                Algorithm = m_token.EncryptionAlgorithm
             };
 
-            ILogger logger = context.Telemetry.CreateLogger<IssuedIdentityToken>();
+            ILogger logger = context.Telemetry.CreateLogger<IssuedIdentityTokenHandler>();
             byte[] decryptedTokenData = SecurityPolicies.Decrypt(
                 certificate,
                 securityPolicyUri,
@@ -181,40 +208,34 @@ namespace Opc.Ua
             Array.Clear(decryptedTokenData, 0, decryptedTokenData.Length);
         }
 
-        /// <summary>
-        /// Creates a signature with the token.
-        /// </summary>
-        public override SignatureData Sign(
+        /// <inheritdoc/>
+        public SignatureData Sign(
             byte[] dataToSign,
-            string securityPolicyUri,
-            ITelemetryContext telemetry)
+            string securityPolicyUri)
         {
             return null;
         }
 
-        /// <summary>
-        /// Verifies a signature created with the token.
-        /// </summary>
-        public override bool Verify(
+        /// <inheritdoc/>
+        public bool Verify(
             byte[] dataToVerify,
             SignatureData signatureData,
-            string securityPolicyUri,
-            ITelemetryContext telemetry)
+            string securityPolicyUri)
         {
             return true;
         }
 
         /// <inheritdoc/>
-        protected override void Dispose(bool disposing)
+        public void Dispose()
         {
-            if (disposing && m_decryptedTokenData != null)
+            if (m_decryptedTokenData != null)
             {
                 Array.Clear(m_decryptedTokenData, 0, m_decryptedTokenData.Length);
                 m_decryptedTokenData = null;
             }
-            base.Dispose(disposing);
         }
 
         private byte[] m_decryptedTokenData;
+        private readonly IssuedIdentityToken m_token;
     }
 }

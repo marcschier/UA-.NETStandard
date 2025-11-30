@@ -10,20 +10,26 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 */
 
-using System;
 using System.Security.Cryptography.X509Certificates;
 
 namespace Opc.Ua
 {
     /// <summary>
-    /// The UserIdentityToken class.
+    /// Anonymous identity token handler.
     /// </summary>
-    public partial class UserIdentityToken : IDisposable
+    public sealed class AnonymousIdentityTokenHandler : IUserIdentityTokenHandler
     {
-        /// <summary>
-        /// Encrypts the token (implemented by the subclass).
-        /// </summary>
-        public virtual void Encrypt(
+        /// <inheritdoc/>
+        public UserIdentityToken Token => new AnonymousIdentityToken();
+
+        /// <inheritdoc/>
+        public UserTokenType TokenType => UserTokenType.Anonymous;
+
+        /// <inheritdoc/>
+        public string DisplayName => "Anonymous";
+
+        /// <inheritdoc/>
+        public void Encrypt(
             X509Certificate2 receiverCertificate,
             byte[] receiverNonce,
             string securityPolicyUri,
@@ -35,10 +41,8 @@ namespace Opc.Ua
         {
         }
 
-        /// <summary>
-        /// Decrypts the token (implemented by the subclass).
-        /// </summary>
-        public virtual void Decrypt(
+        /// <inheritdoc/>
+        public void Decrypt(
             X509Certificate2 certificate,
             Nonce receiverNonce,
             string securityPolicyUri,
@@ -50,42 +54,26 @@ namespace Opc.Ua
         {
         }
 
-        /// <summary>
-        /// Creates a signature with the token (implemented by the subclass).
-        /// </summary>
-        public virtual SignatureData Sign(
+        /// <inheritdoc/>
+        public SignatureData Sign(
             byte[] dataToSign,
-            string securityPolicyUri,
-            ITelemetryContext telemetry)
+            string securityPolicyUri)
         {
             return new SignatureData();
         }
 
-        /// <summary>
-        /// Verifies a signature created with the token (implemented by the subclass).
-        /// </summary>
-        public virtual bool Verify(
+        /// <inheritdoc/>
+        public bool Verify(
             byte[] dataToVerify,
             SignatureData signatureData,
-            string securityPolicyUri,
-            ITelemetryContext telemetry)
+            string securityPolicyUri)
         {
             return true;
-        }
-
-        /// <summary>
-        /// Disposes the state of the token
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected virtual void Dispose(bool disposing)
-        {
         }
 
         /// <inheritdoc/>
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
         }
     }
 }

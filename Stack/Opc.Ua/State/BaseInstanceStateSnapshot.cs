@@ -104,7 +104,7 @@ namespace Opc.Ua
         /// <summary>
         /// Stores the key attributes of a child node.
         /// </summary>
-        private class ChildNode
+        private sealed class ChildNode
         {
             public NodeClass NodeClass;
             public QualifiedName BrowseName;
@@ -169,7 +169,7 @@ namespace Opc.Ua
 
             if (state is BaseVariableState variable && !StatusCode.IsBad(variable.StatusCode))
             {
-                node.Value = Utils.Clone(variable.Value);
+                node.Value = CoreUtils.Clone(variable.Value);
             }
 
             if (state is BaseObjectState instance)

@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using Opc.Ua;
 using Opc.Ua.Server;
 
@@ -357,8 +358,9 @@ namespace Quickstarts.ReferenceServer
         /// <exception cref="ServiceResultException"></exception>
         private IUserIdentity VerifyPassword(UserNameIdentityToken userNameToken)
         {
+            using var userTokenHandler = new UserNameIdentityTokenHandler(userNameToken);
             string userName = userNameToken.UserName;
-            byte[] password = userNameToken.DecryptedPassword;
+            byte[] password = userTokenHandler.DecryptedPassword;
             if (string.IsNullOrEmpty(userName))
             {
                 // an empty username is not accepted.
@@ -411,16 +413,20 @@ namespace Quickstarts.ReferenceServer
         /// <exception cref="ServiceResultException"></exception>
         private void VerifyX509IdentityToken(X509IdentityToken token)
         {
-            X509Certificate2 certificate = token.GetOrCreateCertificate(MessageContext.Telemetry);
+            using var x509TokenHandler = new X509IdentityTokenHandler(token);
             try
             {
                 if (m_userCertificateValidator != null)
                 {
-                    m_userCertificateValidator.ValidateAsync(certificate, default).GetAwaiter().GetResult();
+                    m_userCertificateValidator.ValidateAsync(
+                        x509TokenHandler.Certificate,
+                        default).GetAwaiter().GetResult();
                 }
                 else
                 {
-                    CertificateValidator.ValidateAsync(certificate, default).GetAwaiter().GetResult();
+                    CertificateValidator.ValidateAsync(
+                        x509TokenHandler.Certificate,
+                        default).GetAwaiter().GetResult();
                 }
             }
             catch (Exception e)
@@ -434,7 +440,7 @@ namespace Quickstarts.ReferenceServer
                         "InvalidCertificate",
                         "en-US",
                         "'{0}' is an invalid user certificate.",
-                        certificate.Subject);
+                        x509TokenHandler.Certificate.Subject);
 
                     result = StatusCodes.BadIdentityTokenInvalid;
                 }
@@ -445,7 +451,7 @@ namespace Quickstarts.ReferenceServer
                         "UntrustedCertificate",
                         "en-US",
                         "'{0}' is not a trusted user certificate.",
-                        certificate.Subject);
+                        x509TokenHandler.Certificate.Subject);
                 }
 
                 // create an exception with a vendor defined sub-code.
@@ -459,6 +465,7 @@ namespace Quickstarts.ReferenceServer
 
         private IUserIdentity VerifyIssuedToken(IssuedIdentityToken issuedToken)
         {
+            using var issuedTokenHandler = new IssuedIdentityTokenHandler(issuedToken);
             if (TokenValidator == null)
             {
                 m_logger.LogWarning(Utils.TraceMasks.Security, "No TokenValidator is specified.");
@@ -466,7 +473,7 @@ namespace Quickstarts.ReferenceServer
             }
             try
             {
-                if (issuedToken.IssuedTokenType == IssuedTokenType.JWT)
+                if (issuedTokenHandler.IssuedTokenType == IssuedTokenType.JWT)
                 {
                     m_logger.LogDebug(Utils.TraceMasks.Security, "VerifyIssuedToken: ValidateToken");
                     return TokenValidator.ValidateToken(issuedToken);

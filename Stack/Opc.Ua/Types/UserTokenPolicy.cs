@@ -10,47 +10,46 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 */
 
-using Microsoft.Extensions.Logging;
+using System;
 
 namespace Opc.Ua
 {
     /// <summary>
-    /// Stores a StatusCode/DiagnosticInfo.
+    /// Defines constants for key user token policies.
     /// </summary>
-    public partial class StatusResult
+    public partial class UserTokenPolicy : IFormattable
     {
         /// <summary>
-        /// Initializes the object with a ServiceResult.
+        /// Creates an empty token policy with the specified token type.
         /// </summary>
-        public StatusResult(ServiceResult result)
+        public UserTokenPolicy(UserTokenType tokenType)
         {
             Initialize();
-
-            m_result = result;
-
-            if (result != null)
-            {
-                m_statusCode = result.StatusCode;
-            }
+            m_tokenType = tokenType;
         }
 
         /// <summary>
-        /// Applies the diagnostic mask if the object was initialize with a ServiceResult.
+        /// Returns the object formatted as a string.
         /// </summary>
-        public void ApplyDiagnosticMasks(DiagnosticsMasks diagnosticMasks, StringTable stringTable, ILogger logger)
+        public override string ToString()
         {
-            if (m_result != null)
-            {
-                m_statusCode = m_result.StatusCode;
-                m_diagnosticInfo = new DiagnosticInfo(
-                    m_result,
-                    diagnosticMasks,
-                    false,
-                    stringTable,
-                    logger);
-            }
+            return m_tokenType.ToString();
         }
 
-        private readonly ServiceResult m_result;
+        /// <summary>
+        /// Returns the string representation of the object.
+        /// </summary>
+        /// <exception cref="FormatException"></exception>
+        public string ToString(string format, IFormatProvider formatProvider)
+        {
+            if (format == null)
+            {
+                return string.Format(formatProvider, "{0}", ToString());
+            }
+
+            throw new FormatException(CoreUtils.Format(
+                "Invalid format string: '{0}'.",
+                format));
+        }
     }
 }

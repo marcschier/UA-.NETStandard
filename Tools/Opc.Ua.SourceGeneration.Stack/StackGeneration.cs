@@ -126,11 +126,10 @@ namespace Opc.Ua.SourceGeneration
                 case "Opc.Ua":
                     type = StackGenerationType.Models;
                     break;
-                case "Opc.Ua.Test":
-                    type = StackGenerationType.All;
-                    break;
                 case "Opc.Ua.Core":
-                    // TODO type = StackGenerationType.Stack;
+                    type = StackGenerationType.Stack;
+                    break;
+                case "Opc.Ua.Test":
                     type = StackGenerationType.All;
                     break;
                 default:

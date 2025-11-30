@@ -58,22 +58,30 @@ namespace Opc.Ua.SourceGeneration.Tests
         [DatapointSource]
         public OptimizationLevel[] OptimizationLevels = CompilerUtils.SupportedOptimizationLevels;
 
-        [Test]
-        public void GenerateTest()
+        [DatapointSource]
+        public StackGenerationType[] GenerationTypes = [
+            StackGenerationType.None,
+            StackGenerationType.Stack,
+            StackGenerationType.Models,
+            StackGenerationType.All
+        ];
+
+        [Theory]
+        public void GenerateStackTest(StackGenerationType generationType)
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.Create(logLevel: LogLevel.Error);
-            GenerateStack(telemetry);
+            GenerateStack(generationType, telemetry);
         }
 
         [Theory]
-        public async Task GenerateAndCompileTestAsync(
+        public async Task GenerateAndCompileStackTestAsync(
             OptimizationLevel optimizationLevel,
             bool withAnalzers,
             bool withNodeLoader)
         {
             // Generate
             ITelemetryContext telemetry = NUnitTelemetryContext.Create(logLevel: LogLevel.Error);
-            Dictionary<string, string> generatedText = GenerateStack(telemetry);
+            Dictionary<string, string> generatedText = GenerateStack(StackGenerationType.All, telemetry);
             if (withNodeLoader)
             {
                 AddPredefinedNodeLoader(generatedText);
@@ -132,6 +140,7 @@ namespace Opc.Ua.SourceGeneration.Tests
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.CreateForBenchmarks(logLevel: LogLevel.Error);
             Generators.GenerateStack(
+                StackGenerationType.All,
                 LocalFileSystem.Instance,
                 Path.Combine(Directory.GetCurrentDirectory(), "Benchmark"), [], telemetry);
         }
@@ -140,7 +149,7 @@ namespace Opc.Ua.SourceGeneration.Tests
         public void GenerateToMemory()
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.CreateForBenchmarks(logLevel: LogLevel.Error);
-            GenerateStack(telemetry);
+            GenerateStack(StackGenerationType.All, telemetry);
         }
 
         [Benchmark]
@@ -149,11 +158,11 @@ namespace Opc.Ua.SourceGeneration.Tests
         public void GenerateAndComile(OptimizationLevel optimizationLevel)
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.CreateForBenchmarks(logLevel: LogLevel.Error);
-            Dictionary<string, string> generatedText = GenerateStack(telemetry);
+            Dictionary<string, string> generatedText = GenerateStack(StackGenerationType.All, telemetry);
             using var peStream = new MemoryStream();
             using var xmlStream = new MemoryStream();
             bool success = optimizationLevel
-                .CreateCompilation("Opc.Ua.Core")
+                .CreateCompilation("Opc.Ua.Test")
                 .AddCode(generatedText.WithOpcUaCoreStubs(), LanguageVersion.Latest)
                 .Emit(peStream, xmlDocumentationStream: xmlStream)
                 .Check(TestContext.Out, out int errorCount, out int warnCount);
@@ -163,12 +172,14 @@ namespace Opc.Ua.SourceGeneration.Tests
         /// Generate stack code
         /// </summary>
         /// <returns></returns>
-        private static Dictionary<string, string> GenerateStack(ITelemetryContext telemetry)
+        private static Dictionary<string, string> GenerateStack(
+            StackGenerationType generationType,
+            ITelemetryContext telemetry)
         {
             // Generate
             var sw = Stopwatch.StartNew();
             using var fileSystem = new VirtualFileSystem();
-            Generators.GenerateStack(fileSystem, string.Empty, [], telemetry);
+            Generators.GenerateStack(generationType, fileSystem, string.Empty, [], telemetry);
             var generatedText = fileSystem.CreatedFiles
                 .Where(c => Path.GetExtension(c) == ".cs")
                 .ToDictionary(c => c, c => Encoding.UTF8.GetString(fileSystem.Get(c)));

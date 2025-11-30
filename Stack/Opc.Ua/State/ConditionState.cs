@@ -153,7 +153,7 @@ namespace Opc.Ua
                 branchedNodeState.AutoReportStateChanges = AutoReportStateChanges;
                 branchedNodeState.ReportStateChange(context, false);
 
-                string postEventId = Utils.ToHexString(branchedNodeState.EventId.Value);
+                string postEventId = CoreUtils.ToHexString(branchedNodeState.EventId.Value);
 
                 Dictionary<string, ConditionState> branches = GetBranches();
 
@@ -222,8 +222,8 @@ namespace Opc.Ua
         /// <param name="alarm">Branch, containing the updated EventId to be stored</param>
         protected void ReplaceBranchEvent(byte[] originalEventId, ConditionState alarm)
         {
-            string originalKey = Utils.ToHexString(originalEventId);
-            string newKey = Utils.ToHexString(alarm.EventId.Value);
+            string originalKey = CoreUtils.ToHexString(originalEventId);
+            string newKey = CoreUtils.ToHexString(alarm.EventId.Value);
 
             Dictionary<string, ConditionState> branches = GetBranches();
 
@@ -237,7 +237,7 @@ namespace Opc.Ua
         /// <param name="eventId">The desired event to remove</param>
         protected void RemoveBranchEvent(byte[] eventId)
         {
-            string key = Utils.ToHexString(eventId);
+            string key = CoreUtils.ToHexString(eventId);
 
             Dictionary<string, ConditionState> branches = GetBranches();
 
@@ -478,13 +478,7 @@ namespace Opc.Ua
         /// <returns>The display name for the current user.</returns>
         protected string GetCurrentUserId(ISystemContext context)
         {
-            if (context is ISessionOperationContext operationContext &&
-                operationContext.UserIdentity != null)
-            {
-                return operationContext.UserIdentity.DisplayName;
-            }
-
-            return null;
+            return context?.UserId;
         }
 
         /// <summary>

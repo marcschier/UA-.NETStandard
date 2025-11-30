@@ -14,17 +14,16 @@ using System;
 
 namespace Opc.Ua
 {
-    /// <summary>
-    /// Legacy content filter extensions
-    /// </summary>
-    public partial class ContentFilter
+    public partial class TimeZoneDataType
     {
         /// <summary>
-        /// Set the default StringComparison to use when evaluating the Equals operator.
-        /// This property is meant to be set as a config setting and not set / reset on
-        /// a per context basis, to ensure consistency
+        /// Returns the TimeZone information for the current local time.
         /// </summary>
-        public static StringComparison EqualsOperatorDefaultStringComparison { get; set; }
-            = StringComparison.Ordinal;
+        /// <returns>The TimeZone information for the current local time.</returns>
+        public static TimeZoneDataType Local => new TimeZoneDataType
+        {
+            Offset = (short)TimeZoneInfo.Local.GetUtcOffset(DateTime.Now).TotalMinutes,
+            DaylightSavingInOffset = true
+        };
     }
 }

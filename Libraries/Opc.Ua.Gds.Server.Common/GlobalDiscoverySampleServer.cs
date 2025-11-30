@@ -295,10 +295,12 @@ namespace Opc.Ua.Gds.Server
         /// <exception cref="ServiceResultException"></exception>
         private void VerifyX509IdentityToken(X509IdentityToken token)
         {
-            X509Certificate2 certificate = token.GetOrCreateCertificate(MessageContext.Telemetry);
+            using var x509TokenHandler = new X509IdentityTokenHandler(token);
             try
             {
-                CertificateValidator.ValidateAsync(certificate, default).GetAwaiter().GetResult();
+                CertificateValidator.ValidateAsync(
+                    x509TokenHandler.Certificate,
+                    default).GetAwaiter().GetResult();
             }
             catch (Exception e)
             {
@@ -311,7 +313,7 @@ namespace Opc.Ua.Gds.Server
                         "InvalidCertificate",
                         "en-US",
                         "'{0}' is an invalid user certificate.",
-                        certificate.Subject);
+                        x509TokenHandler.Certificate.Subject);
 
                     result = StatusCodes.BadIdentityTokenInvalid;
                 }
@@ -322,7 +324,7 @@ namespace Opc.Ua.Gds.Server
                         "UntrustedCertificate",
                         "en-US",
                         "'{0}' is not a trusted user certificate.",
-                        certificate.Subject);
+                        x509TokenHandler.Certificate.Subject);
                 }
 
                 // create an exception with a vendor defined sub-code.
@@ -336,9 +338,10 @@ namespace Opc.Ua.Gds.Server
 
         private bool VerifyPassword(UserNameIdentityToken userNameToken)
         {
+            using var userTokenHandler = new UserNameIdentityTokenHandler(userNameToken);
             return m_userDatabase.CheckCredentials(
                 userNameToken.UserName,
-                userNameToken.DecryptedPassword);
+                userTokenHandler.DecryptedPassword);
         }
 
         /// <summary>

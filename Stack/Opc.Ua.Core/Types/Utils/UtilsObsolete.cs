@@ -728,6 +728,16 @@ namespace Opc.Ua
         }
 
         /// <summary>
+        /// Returns the TimeZone information for the current local time.
+        /// </summary>
+        /// <returns>The TimeZone information for the current local time.</returns>
+        [Obsolete("Use TimeZoneDataType.Local property instead.")]
+        public static TimeZoneDataType GetTimeZoneInfo()
+        {
+            return TimeZoneDataType.Local;
+        }
+
+        /// <summary>
         /// Finds the file by search the common file folders and then bin directories in the source tree
         /// </summary>
         /// <param name="fileName">Name of the file.</param>

@@ -127,7 +127,8 @@ namespace Opc.Ua.Schema.Model
                 }
             }
 
-            m_settings.NamespaceTables[m_nodeset.Models[0].ModelUri] = m_nodeset.NamespaceUris;
+            m_settings.NamespaceTables[m_nodeset.Models[0].ModelUri] =
+                m_nodeset.NamespaceUris;
 
             if (m_nodeset.Aliases != null)
             {
@@ -251,7 +252,8 @@ namespace Opc.Ua.Schema.Model
                         .Replace(" ", ".", StringComparison.Ordinal),
                     Value = model.ModelUri,
                     XmlNamespace = model.XmlSchemaUri,
-                    PublicationDate = model.PublicationDate.ToString("yyyy-MM-ddT00:00:00Z", CultureInfo.InvariantCulture),
+                    PublicationDate = model.PublicationDate
+                        .ToString("yyyy-MM-ddT00:00:00Z", CultureInfo.InvariantCulture),
                     Version = model.Version
                 };
                 ns.XmlPrefix = ns.Prefix = "Opc.Ua." + ns.Name;
@@ -272,7 +274,8 @@ namespace Opc.Ua.Schema.Model
                         .Replace(" ", ".", StringComparison.Ordinal),
                     Value = model.ModelUri,
                     XmlNamespace = model.XmlSchemaUri,
-                    PublicationDate = model.PublicationDate.ToString("yyyy-MM-ddT00:00:00Z", CultureInfo.InvariantCulture),
+                    PublicationDate = model.PublicationDate
+                        .ToString("yyyy-MM-ddT00:00:00Z", CultureInfo.InvariantCulture),
                     Version = model.Version
                 };
                 ns.XmlPrefix = ns.Prefix = ns.Name;
@@ -328,7 +331,8 @@ namespace Opc.Ua.Schema.Model
             foreach (ModelTableEntry model in models)
             {
                 Namespace ns = CreateNamespace(model);
-                ModelTableEntry topLevelModel = nodeset.Models.FirstOrDefault(x => x.ModelUri == model.ModelUri);
+                ModelTableEntry topLevelModel = nodeset.Models
+                    .FirstOrDefault(x => x.ModelUri == model.ModelUri);
 
                 if (topLevelModel != null)
                 {
@@ -343,8 +347,7 @@ namespace Opc.Ua.Schema.Model
 
         private static void ImportModel(IList<Namespace> namespaces, ModelTableEntry model)
         {
-            Namespace ns = (from x in namespaces where x.Value == model.ModelUri select x).FirstOrDefault();
-
+            Namespace ns = namespaces.FirstOrDefault(x => x.Value == model.ModelUri);
             if (ns != null)
             {
                 return;
@@ -506,7 +509,8 @@ namespace Opc.Ua.Schema.Model
                     return rt;
                 }
 
-                throw new InvalidDataException($"Node exists and it is not a ReferenceType: {existing.SymbolicId}'.");
+                throw new InvalidDataException(
+                    $"Node exists and it is not a ReferenceType: {existing.SymbolicId}'.");
             }
 
             var output = new ReferenceTypeDesign
@@ -535,7 +539,8 @@ namespace Opc.Ua.Schema.Model
             {
                 ReferenceNode reference = ImportReference(ii);
 
-                if (reference.ReferenceTypeId == ReferenceTypes.HasSubtype && reference.IsInverse)
+                if (reference.ReferenceTypeId == ReferenceTypes.HasSubtype &&
+                    reference.IsInverse)
                 {
                     ReferenceTypeDesign superType = FindReferenceType(reference.TargetId);
 
@@ -551,7 +556,8 @@ namespace Opc.Ua.Schema.Model
 
             if (output.BaseType == null)
             {
-                throw new InvalidDataException($"Could not find supertype for '{input.BrowseName}'.");
+                throw new InvalidDataException(
+                    $"Could not find supertype for '{input.BrowseName}'.");
             }
 
             m_settings.NodesByQName[output.SymbolicId] = output;
@@ -1798,7 +1804,8 @@ namespace Opc.Ua.Schema.Model
                     // handle missing ParentNodeId when an inverse reference exists.
                     else
                     {
-                        foreach (Export.Reference ii in instance.References.Where(x => !x.IsForward))
+                        foreach (Export.Reference ii in instance.References
+                            .Where(x => !x.IsForward))
                         {
                             NodeId referenceTypeId = ImportNodeId(ii.ReferenceType);
 

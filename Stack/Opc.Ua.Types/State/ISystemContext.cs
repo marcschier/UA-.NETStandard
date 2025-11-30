@@ -28,6 +28,13 @@ namespace Opc.Ua
         object SystemHandle { get; }
 
         /// <summary>
+        /// Returns the display name of the user associated
+        /// with the context.
+        /// </summary>
+        /// <value>The id of the current user.</value>
+        string UserId { get; }
+
+        /// <summary>
         /// The locales to use if available.
         /// </summary>
         /// <value>The preferred locales.</value>
@@ -129,6 +136,13 @@ namespace Opc.Ua
         /// </summary>
         /// <value>The system handle.</value>
         public object SystemHandle { get; set; }
+
+        /// <summary>
+        /// Returns the display name of the user associated
+        /// with the context.
+        /// </summary>
+        /// <value>The id of the current user.</value>
+        public string UserId { get; set; }
 
         /// <summary>
         /// The locales to use if available.

@@ -1,35 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>$(LibCoreTargetFrameworks)</TargetFrameworks>
-    <AssemblyName>$(AssemblyPrefix).Core</AssemblyName>
-    <PackageId>$(PackagePrefix).Opc.Ua.Core</PackageId>
+    <AssemblyName>$(AssemblyPrefix)</AssemblyName>
+    <PackageId>$(PackagePrefix).Opc.Ua</PackageId>
     <RootNamespace>Opc.Ua</RootNamespace>
-    <Description>OPC UA Core Class Library</Description>
+    <Description>OPC UA Core Types Library</Description>
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  <ItemGroup>
-    <InternalsVisibleTo Include="Opc.Ua.Core.Tests" />
-  </ItemGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <PackageId>$(PackageId).Debug</PackageId>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" />
-    <PackageReference Include="Microsoft.Extensions.Logging" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'net472'">
-    <Reference Include="System.Net.Http" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Libraries\Opc.Ua.Security.Certificates\Opc.Ua.Security.Certificates.csproj" />
-    <ProjectReference Include="..\Opc.Ua\Opc.Ua.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Types\Utils\LocalizedData.txt" />
+    <ProjectReference Include="..\Opc.Ua.Types\Opc.Ua.Types.csproj" />
   </ItemGroup>
   <!-- Stack source generation -->
+  <PropertyGroup>
+    <!-- Do not run analyzers to speed up build since most of this assembly is generated -->
+    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Tools\Opc.Ua.SourceGeneration.Stack\Opc.Ua.SourceGeneration.Stack.csproj">
 	  <OutputItemType>Analyzer</OutputItemType>

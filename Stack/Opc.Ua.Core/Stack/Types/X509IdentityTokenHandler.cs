@@ -1,0 +1,168 @@
+/* Copyright (c) 1996-2022 The OPC Foundation. All rights reserved.
+   The source code in this file is covered under a dual-license scenario:
+     - RCL: for OPC Foundation Corporate Members in good-standing
+     - GPL V2: everybody else
+   RCL license terms accompanied with this source code. See http://opcfoundation.org/License/RCL/1.00/
+   GNU General Public License as published by the Free Software Foundation;
+   version 2 of the License are accompanied with this source code. See http://opcfoundation.org/License/GPLv2
+   This source code is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+*/
+
+using System;
+using System.Security.Cryptography.X509Certificates;
+using Newtonsoft.Json.Linq;
+
+namespace Opc.Ua
+{
+    /// <summary>
+    /// The X509IdentityTokenHandler class.
+    /// </summary>
+    public sealed class X509IdentityTokenHandler : IUserIdentityTokenHandler
+    {
+        /// <summary>
+        /// Create a new X509IdentityTokenHandler
+        /// </summary>
+        public X509IdentityTokenHandler(X509IdentityToken token)
+        {
+            m_token = token;
+        }
+
+        /// <summary>
+        /// Create a identity token from X509 certificate
+        /// </summary>
+        /// <exception cref="ServiceResultException"></exception>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="certificate"/> is <c>null</c>.
+        /// </exception>
+        public X509IdentityTokenHandler(X509Certificate2 certificate)
+        {
+            if (certificate == null)
+            {
+                throw new ArgumentNullException(nameof(certificate));
+            }
+
+            if (!certificate.HasPrivateKey)
+            {
+                throw new ServiceResultException(
+                    "Cannot create User Identity with Certificate that does not have a private key");
+            }
+
+            Certificate = certificate;
+            m_token = new X509IdentityToken
+            {
+                CertificateData = certificate.RawData,
+            };
+        }
+
+        /// <summary>
+        /// The certificate associated with the token.
+        /// </summary>
+        public X509Certificate2 Certificate
+        {
+            get
+            {
+                if (m_certificate == null && m_token.CertificateData != null)
+                {
+                    m_certificate = CertificateFactory.Create(m_token.CertificateData);
+                }
+                return m_certificate;
+            }
+            set => m_certificate = value;
+        }
+
+        /// <inheritdoc/>
+        public UserIdentityToken Token => m_token;
+
+        /// <inheritdoc/>
+        public string DisplayName => Certificate.Subject;
+
+        /// <inheritdoc/>
+        public UserTokenType TokenType => UserTokenType.Certificate;
+
+        /// <inheritdoc/>
+        public void Encrypt(
+            X509Certificate2 receiverCertificate,
+            byte[] receiverNonce,
+            string securityPolicyUri,
+            IServiceMessageContext context,
+            Nonce receiverEphemeralKey = null,
+            X509Certificate2 senderCertificate = null,
+            X509Certificate2Collection senderIssuerCertificates = null,
+            bool doNotEncodeSenderCertificate = false)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void Decrypt(
+            X509Certificate2 certificate,
+            Nonce receiverNonce,
+            string securityPolicyUri,
+            IServiceMessageContext context,
+            Nonce ephemeralKey = null,
+            X509Certificate2 senderCertificate = null,
+            X509Certificate2Collection senderIssuerCertificates = null,
+            CertificateValidator validator = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public SignatureData Sign(
+            byte[] dataToSign,
+            string securityPolicyUri)
+        {
+            X509Certificate2 certificate = Certificate ??
+                CertificateFactory.Create(m_token.CertificateData);
+
+            SignatureData signatureData = SecurityPolicies.Sign(
+                certificate,
+                securityPolicyUri,
+                dataToSign);
+
+            m_token.CertificateData = certificate.RawData;
+
+            return signatureData;
+        }
+
+        /// <inheritdoc/>
+        public bool Verify(
+            byte[] dataToVerify,
+            SignatureData signatureData,
+            string securityPolicyUri)
+        {
+            try
+            {
+                X509Certificate2 certificate = Certificate ??
+                    CertificateFactory.Create(m_token.CertificateData);
+
+                bool valid = SecurityPolicies.Verify(
+                    certificate,
+                    securityPolicyUri,
+                    dataToVerify,
+                    signatureData);
+
+                m_token.CertificateData = certificate.RawData;
+
+                return valid;
+            }
+            catch (Exception e)
+            {
+                throw ServiceResultException.Create(
+                    StatusCodes.BadIdentityTokenInvalid,
+                    e,
+                    "Could not verify user signature!");
+            }
+        }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            // TODOL Utils.SilentDispose(m_certificate);
+            m_certificate = null;
+        }
+
+        private readonly X509IdentityToken m_token;
+        private X509Certificate2 m_certificate;
+    }
+}

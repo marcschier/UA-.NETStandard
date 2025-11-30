@@ -568,7 +568,7 @@ namespace Opc.Ua
                 BrowseNames.SourceName,
                 $"Method/{causeMethod.BrowseName.Name}",
                 false);
-            e.SetChildValue(context, BrowseNames.LocalTime, Utils.GetTimeZoneInfo(), false);
+            e.SetChildValue(context, BrowseNames.LocalTime, TimeZoneDataType.Local, false);
 
             // AuditUpdateMethodStateEventType properties
             e.SetChildValue(context, BrowseNames.MethodId, causeMethod.NodeId, false);

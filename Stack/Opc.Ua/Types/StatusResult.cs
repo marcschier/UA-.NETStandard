@@ -10,44 +10,50 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 */
 
-using System;
+using Microsoft.Extensions.Logging;
 
 namespace Opc.Ua
 {
     /// <summary>
-    /// Defines constants for key user token policies.
+    /// Stores a StatusCode/DiagnosticInfo.
     /// </summary>
-    public partial class UserTokenPolicy : IFormattable
+    public partial class StatusResult
     {
         /// <summary>
-        /// Creates an empty token policy with the specified token type.
+        /// Initializes the object with a ServiceResult.
         /// </summary>
-        public UserTokenPolicy(UserTokenType tokenType)
+        public StatusResult(ServiceResult result)
         {
             Initialize();
-            m_tokenType = tokenType;
-        }
 
-        /// <summary>
-        /// Returns the object formatted as a string.
-        /// </summary>
-        public override string ToString()
-        {
-            return m_tokenType.ToString();
-        }
+            m_result = result;
 
-        /// <summary>
-        /// Returns the string representation of the object.
-        /// </summary>
-        /// <exception cref="FormatException"></exception>
-        public string ToString(string format, IFormatProvider formatProvider)
-        {
-            if (format == null)
+            if (result != null)
             {
-                return string.Format(formatProvider, "{0}", ToString());
+                m_statusCode = result.StatusCode;
             }
-
-            throw new FormatException(Utils.Format("Invalid format string: '{0}'.", format));
         }
+
+        /// <summary>
+        /// Applies the diagnostic mask if the object was initialize with a ServiceResult.
+        /// </summary>
+        public void ApplyDiagnosticMasks(
+            DiagnosticsMasks diagnosticMasks,
+            StringTable stringTable,
+            ILogger logger)
+        {
+            if (m_result != null)
+            {
+                m_statusCode = m_result.StatusCode;
+                m_diagnosticInfo = new DiagnosticInfo(
+                    m_result,
+                    diagnosticMasks,
+                    false,
+                    stringTable,
+                    logger);
+            }
+        }
+
+        private readonly ServiceResult m_result;
     }
 }
