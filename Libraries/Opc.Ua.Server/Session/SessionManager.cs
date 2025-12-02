@@ -294,7 +294,7 @@ namespace Opc.Ua.Server
             Nonce serverNonceObject = null;
 
             ISession session = null;
-            UserIdentityToken newIdentity = null;
+            IUserIdentityTokenHandler newIdentity = null;
             UserTokenPolicy userTokenPolicy = null;
 
             // fast path no lock
@@ -303,8 +303,7 @@ namespace Opc.Ua.Server
                 throw new ServiceResultException(StatusCodes.BadSessionIdInvalid);
             }
 
-            await m_semaphoreSlim.WaitAsync(cancellationToken)
-                .ConfigureAwait(false);
+            await m_semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
                 // find session.

@@ -69,7 +69,23 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
         }
 
         [Test]
-        public void FromString_WithWhitespace_ParsesWhitespaceCorrectly()
+        public void FromString_WithWhitespaceAllSpaces_ParsesWhitespaceCorrectly()
+        {
+            // Arrange
+            const string input = "     ";
+
+            // Act
+            var parsed = ParsedTemplateString.FromString(input);
+
+            // Assert
+            var operations = parsed.Operations.ToList();
+            Assert.That(operations, Has.Count.EqualTo(1));
+            Assert.That(operations[0].Type, Is.EqualTo(ParsedTemplateString.OpType.WhiteSpace));
+            Assert.That(operations[0].Item, Is.EqualTo(input));
+        }
+
+        [Test]
+        public void FromString_WithWhitespaceButNotSpaces_ParsesLiteralCorrectly()
         {
             // Arrange
             const string input = "   \t   ";
@@ -80,7 +96,7 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
             // Assert
             var operations = parsed.Operations.ToList();
             Assert.That(operations, Has.Count.EqualTo(1));
-            Assert.That(operations[0].Type, Is.EqualTo(ParsedTemplateString.OpType.WhiteSpace));
+            Assert.That(operations[0].Type, Is.EqualTo(ParsedTemplateString.OpType.Literal));
             Assert.That(operations[0].Item, Is.EqualTo(input));
         }
 
@@ -252,7 +268,7 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
             var parsed = new ParsedTemplateString(2, 0);
 
             // Act
-            parsed.AddLiteral("\n\r");
+            parsed.AddLiteral("\n  ");
 
             // Assert
             var operations = parsed.Operations.ToList();

@@ -30,14 +30,50 @@
 namespace Opc.Ua.SourceGeneration
 {
     /// <summary>
+    /// Context
+    /// </summary>
+    internal interface ITemplateContext
+    {
+        /// <summary>
+        /// The index of the current target within the list being processed.
+        /// </summary>
+        int Index { get; }
+
+        /// <summary>
+        /// Get template writer
+        /// </summary>
+        TemplateWriter Out { get; }
+
+        /// <summary>
+        /// The current iteration variable that is the target of the template.
+        /// </summary>
+        object Target { get; }
+
+        /// <summary>
+        /// The interpolated template string passed to AddReplacement method.
+        /// </summary>
+        TemplateString TemplateString { get; }
+
+        /// <summary>
+        /// The token that is to be replaced by the current template evaluation.
+        /// </summary>
+        string Token { get; }
+    }
+
+    /// <summary>
     /// Contains the current context to use for serialization.
     /// </summary>
-    internal sealed class Context
+    internal sealed class TemplateContext : ITemplateContext
     {
         /// <summary>
         /// The interpolated template string passed to AddReplacement method.
         /// </summary>
         public TemplateString TemplateString { get; set; }
+
+        /// <summary>
+        /// Get template writer
+        /// </summary>
+        public TemplateWriter Out { get; set; }
 
         /// <summary>
         /// The token that is to be replaced by the current template evaluation.
@@ -48,11 +84,6 @@ namespace Opc.Ua.SourceGeneration
         /// The current iteration variable that is the target of the template.
         /// </summary>
         public object Target { get; set; }
-
-        /// <summary>
-        /// Whether the current target being processed is the first in the list.
-        /// </summary>>
-        public bool NothingWrittenYet { get; set; } = true;
 
         /// <summary>
         /// The index of the current target within the list being processed.

@@ -19,6 +19,7 @@
   <Folder Name="/Core/">
     <Project Path="../Tests/Opc.Ua.SourceGeneration.Core.Tests/Opc.Ua.SourceGeneration.Core.Tests.csproj" />
     <Project Path="Opc.Ua.SourceGeneration.Core/Opc.Ua.SourceGeneration.Core.csproj" />
+    <Project Path="Opc.Ua.SourceGeneration.Tester/Opc.Ua.SourceGeneration.Tester.csproj" />
   </Folder>
   <Folder Name="/Stack/">
     <Project Path="../Stack/Opc.Ua.Types/Opc.Ua.Types.csproj" />

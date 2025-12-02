@@ -229,8 +229,7 @@ namespace Opc.Ua.SourceGeneration
                     return;
                 }
                 m_operations.Add(new Op(
-                    string.IsNullOrWhiteSpace(part) ?
-                        OpType.WhiteSpace : OpType.Literal,
+                    IsAllSpaces(part) ? OpType.WhiteSpace : OpType.Literal,
                     part,
                     m_curOffset,
                     m_curLine));
@@ -249,6 +248,18 @@ namespace Opc.Ua.SourceGeneration
                 m_curOffset,
                 m_curLine));
             m_curOffset += item.Length;
+        }
+
+        private static bool IsAllSpaces(string item)
+        {
+            for (int i = 0; i < item.Length; i++)
+            {
+                if (item[i] != ' ')
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         internal enum OpType

@@ -36,30 +36,37 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Template writer that handles indentation and line break management.
     /// </summary>
-    internal sealed class TemplateWriter
+    internal sealed class TemplateWriter : IDisposable
     {
         /// <summary>
         /// Create template
         /// </summary>
-        public TemplateWriter(TextWriter writer)
+        public TemplateWriter(TextWriter writer, bool leaveOpen = true)
         {
             m_writer = writer;
+            m_leaveOpen = leaveOpen;
             m_indentCharCount = new Stack<int>();
             m_indentCharCount.Push(0);
         }
 
         /// <summary>
-        /// Returns enough whitespace to indent the current line properly.
-        /// </summary>
-        public string Indentation => IndentationCharCount > 0 ?
-            new string(' ', IndentationCharCount) :
-            string.Empty;
-
-        /// <summary>
         /// Indent character count
         /// </summary>
-        public int IndentationCharCount
-            => m_indentCharCount.Peek();
+        public int IndentationCharCount => m_indentCharCount.Peek();
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            while (m_newLineCount > 0)
+            {
+                m_writer.Write(Environment.NewLine);
+                m_newLineCount--;
+            }
+            if (!m_leaveOpen)
+            {
+                m_writer.Dispose();
+            }
+        }
 
         /// <summary>
         /// Increases the current indentation level by the
@@ -70,8 +77,7 @@ namespace Opc.Ua.SourceGeneration
         /// zero or greater.</param>
         public void PushIndentChars(int charCount)
         {
-            m_indentCharCount.Push(
-                IndentationCharCount + charCount);
+            m_indentCharCount.Push(IndentationCharCount + charCount);
         }
 
         /// <summary>
@@ -82,6 +88,18 @@ namespace Opc.Ua.SourceGeneration
             if (m_indentCharCount.Count > 1)
             {
                 m_indentCharCount.Pop();
+                TrimLineBreak(0);
+            }
+        }
+
+        /// <summary>
+        /// Trim any whitespace and line breaks on the current line.
+        /// </summary>
+        public void TrimLineBreak(int maxNewLines = 1)
+        {
+            if (m_newLineCount > maxNewLines)
+            {
+                m_newLineCount = maxNewLines;
             }
         }
 
@@ -90,7 +108,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public void Write(char text)
         {
-            WriteIndentIfNeeded();
+            WriteWhiteSpaceIfNeeded();
             m_writer.Write(text);
         }
 
@@ -99,7 +117,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public void Write(string text)
         {
-            WriteIndentIfNeeded();
+            WriteWhiteSpaceIfNeeded();
             m_writer.Write(text);
         }
 
@@ -108,7 +126,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public void Write(string format, object arg1)
         {
-            WriteIndentIfNeeded();
+            WriteWhiteSpaceIfNeeded();
             m_writer.Write(format, arg1);
         }
 
@@ -117,7 +135,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public void Write(string format, object arg1, object arg2)
         {
-            WriteIndentIfNeeded();
+            WriteWhiteSpaceIfNeeded();
             m_writer.Write(format, arg1, arg2);
         }
 
@@ -126,28 +144,8 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public void Write(string format, object arg1, object arg2, object arg3)
         {
-            WriteIndentIfNeeded();
+            WriteWhiteSpaceIfNeeded();
             m_writer.Write(format, arg1, arg2, arg3);
-        }
-
-        /// <summary>
-        /// Writes a new line and then indents the text and writes the text.
-        /// </summary>
-        public void WriteAfterNewLine(string text)
-        {
-            WriteNewLine();
-            WriteIndentIfNeeded();
-            m_writer.Write(text);
-        }
-
-        /// <summary>
-        /// Writes the text (indented) to the stream followed by a new line.
-        /// </summary>
-        public void WriteAfterNewLine(string text, params object[] args)
-        {
-            WriteNewLine();
-            WriteIndentIfNeeded();
-            m_writer.Write(text, args);
         }
 
         /// <summary>
@@ -155,7 +153,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public void WriteLine(string text)
         {
-            WriteIndentIfNeeded();
+            WriteWhiteSpaceIfNeeded();
             m_writer.Write(text);
             WriteNewLine();
         }
@@ -165,39 +163,57 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public void WriteLine(string text, params object[] args)
         {
-            WriteIndentIfNeeded();
+            WriteWhiteSpaceIfNeeded();
             m_writer.Write(text, args);
             WriteNewLine();
         }
 
         /// <summary>
+        /// Write whitespace
+        /// </summary>
+        public void WriteWhiteSpace(int charCount)
+        {
+            // Queue up spaces to write on next write to drop trailing whitespace
+            m_writeSpaceCount += charCount;
+        }
+
+        /// <summary>
         /// Begin new line
         /// </summary>
-        public bool WriteNewLine(bool ifNotAlreadyWritten = false)
+        public bool WriteNewLine(int maxNewLines = int.MaxValue)
         {
-            if (ifNotAlreadyWritten && m_newLine)
+            if (m_newLineCount >= maxNewLines)
             {
                 return false;
             }
-            m_writer.Write(Environment.NewLine);
-            m_newLine = true;
+            m_newLineCount++;
+            // Reset to current indent level
+            m_writeSpaceCount = IndentationCharCount;
             return true;
         }
 
         /// <summary>
         /// Write indent if needed.
         /// </summary>
-        private void WriteIndentIfNeeded()
+        private void WriteWhiteSpaceIfNeeded()
         {
-            if (m_newLine)
+            // Write pending spaces.
+            while (m_newLineCount > 0)
             {
-                m_newLine = false;
-                m_writer.Write(Indentation);
+                m_writer.Write(Environment.NewLine);
+                m_newLineCount--;
+            }
+            if (m_writeSpaceCount > 0)
+            {
+                m_writer.Write(new string(' ', m_writeSpaceCount));
+                m_writeSpaceCount = 0;
             }
         }
 
+        private int m_writeSpaceCount;
+        private int m_newLineCount;
         private readonly TextWriter m_writer;
+        private readonly bool m_leaveOpen;
         private readonly Stack<int> m_indentCharCount;
-        private bool m_newLine;
     }
 }

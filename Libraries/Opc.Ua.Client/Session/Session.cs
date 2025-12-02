@@ -1072,15 +1072,14 @@ namespace Opc.Ua.Client
 
             OpenValidateIdentity(
                 ref identity,
-                out UserIdentityToken userIdentityToken,
                 out UserTokenPolicy identityPolicy,
                 out string securityPolicyUri,
                 out bool requireEncryption);
 
             // validate the server certificate /certificate chain.
+            var identityToken = identity.TokenHandler;
             X509Certificate2? serverCertificate = null;
             byte[]? certificateData = m_endpoint.Description.ServerCertificate;
-            var identityToken = userIdentityToken.AsTokenHandler();
 
             if (certificateData != null && certificateData.Length > 0)
             {
@@ -1296,7 +1295,7 @@ namespace Opc.Ua.Client
                     clientSignature,
                     clientSoftwareCertificates,
                     m_preferredLocales,
-                    new ExtensionObject(identityToken),
+                    new ExtensionObject(identityToken.Token),
                     userTokenSignature,
                     ct).ConfigureAwait(false);
 
@@ -1468,8 +1467,9 @@ namespace Opc.Ua.Client
                 m_endpoint.Description.SecurityMode);
 
             // sign data with user token.
-            var identityToken = identity.GetIdentityToken().AsTokenHandler();
-            identityToken.Token.PolicyId = identityPolicy.PolicyId;
+            using IUserIdentityTokenHandler identityToken =
+                (IUserIdentityTokenHandler)m_identity.TokenHandler.Clone();
+            identityToken.UpdatePolicy(identityPolicy);
             SignatureData userTokenSignature = identityToken.Sign(
                 dataToSign,
                 tokenSecurityPolicyUri);
@@ -1496,7 +1496,7 @@ namespace Opc.Ua.Client
                 clientSignature,
                 clientSoftwareCertificates,
                 preferredLocales,
-                new ExtensionObject(identityToken),
+                new ExtensionObject(identityToken.Token),
                 userTokenSignature,
                 ct).ConfigureAwait(false);
 
@@ -2320,9 +2320,9 @@ namespace Opc.Ua.Client
                     m_endpoint.Description.SecurityMode);
 
                 // sign data with user token.
-                var identityToken =
-                    m_identity.GetIdentityToken().AsTokenHandler();
-                identityToken.Token.PolicyId = identityPolicy.PolicyId;
+                using IUserIdentityTokenHandler identityToken =
+                    (IUserIdentityTokenHandler)m_identity.TokenHandler.Clone();
+                identityToken.UpdatePolicy(identityPolicy);
                 SignatureData userTokenSignature = identityToken.Sign(
                     dataToSign,
                     tokenSecurityPolicyUri);
@@ -2420,7 +2420,7 @@ namespace Opc.Ua.Client
                         clientSignature,
                         [],
                         m_preferredLocales,
-                        new ExtensionObject(identityToken),
+                        new ExtensionObject(identityToken.Token),
                         userTokenSignature,
                         timeout.Token).ConfigureAwait(false);
 
@@ -3743,7 +3743,6 @@ namespace Opc.Ua.Client
         /// <exception cref="ServiceResultException"></exception>
         private void OpenValidateIdentity(
             ref IUserIdentity identity,
-            out UserIdentityToken identityToken,
             out UserTokenPolicy identityPolicy,
             out string securityPolicyUri,
             out bool requireEncryption)
@@ -3772,12 +3771,10 @@ namespace Opc.Ua.Client
             // get the identity token.
             identity ??= new UserIdentity();
 
-            // get identity token.
-            identityToken = identity.GetIdentityToken();
-
             // check that the user identity is supported by the endpoint.
-            identityPolicy = m_endpoint.Description
-                .FindUserTokenPolicy(identityToken.PolicyId, securityPolicyUri);
+            identityPolicy = m_endpoint.Description.FindUserTokenPolicy(
+                identity.TokenHandler.Token.PolicyId,
+                securityPolicyUri);
 
             if (identityPolicy == null)
             {
@@ -3794,7 +3791,7 @@ namespace Opc.Ua.Client
                         "Endpoint does not support the user identity type provided.");
                 }
 
-                identityToken.PolicyId = identityPolicy.PolicyId;
+                identity.TokenHandler.UpdatePolicy(identityPolicy);
             }
 
             requireEncryption = securityPolicyUri != SecurityPolicies.None;

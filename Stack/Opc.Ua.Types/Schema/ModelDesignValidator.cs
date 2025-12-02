@@ -488,7 +488,7 @@ namespace Opc.Ua.Schema.Model
                 FileSystem.Delete(identifierFilePath);
             }
 
-            LoadIdentifiersFromFile2(Dictionary, identifierFilePath);
+            AssignIdentifiers(Dictionary, identifierFilePath);
 
             UpdateNamespaceObject(Dictionary);
 
@@ -525,7 +525,7 @@ namespace Opc.Ua.Schema.Model
             LoadNodes(model);
 
             using Stream stream = OpenRead("StandardTypes.csv");
-            LoadIdentifiersFromStream2(model, stream);
+            AssignIdentifiers(model, ParseIdentifiersFromStream(stream));
 
             // flag built-in types as declarations.
             foreach (NodeDesign node in model.Items)
@@ -601,24 +601,22 @@ namespace Opc.Ua.Schema.Model
                 {
                     FileSystem.Delete(identifierFilePath);
                 }
-
-                LoadIdentifiersFromFile2(model, identifierFilePath);
             }
             else
             {
-                string path = Path.Combine(Path.GetDirectoryName(designFilePath), Path.GetFileNameWithoutExtension(designFilePath) + ".csv");
+                identifierFilePath = Path.Combine(
+                    Path.GetDirectoryName(designFilePath),
+                    Path.GetFileNameWithoutExtension(designFilePath) + ".csv");
 
-                if (!FileSystem.Exists(path))
+                if (!FileSystem.Exists(identifierFilePath))
                 {
-                    path = Path.Combine(Path.GetDirectoryName(designFilePath), "..\\CSVs", Path.GetFileNameWithoutExtension(designFilePath) + ".csv");
+                    identifierFilePath = Path.Combine(
+                        Path.GetDirectoryName(designFilePath),
+                        "..\\CSVs", Path.GetFileNameWithoutExtension(designFilePath) + ".csv");
                 }
 
-                if (FileSystem.Exists(path))
-                {
-                    LoadIdentifiersFromFile2(model, path);
-                }
             }
-
+            AssignIdentifiers(model, identifierFilePath);
             return model;
         }
 
@@ -2126,14 +2124,17 @@ namespace Opc.Ua.Schema.Model
 
                 if (encodingType == EncodingType.Xml)
                 {
-                    description.DecodedValue = CoreUtils.Format("//xs:element[@name='{0}']", dataType.SymbolicName.Name);
+                    description.DecodedValue =
+                        CoreUtils.Format("//xs:element[@name='{0}']", dataType.SymbolicName.Name);
                 }
                 else
                 {
-                    description.DecodedValue = CoreUtils.Format("{0}", dataType.SymbolicName.Name);
+                    description.DecodedValue =
+                        CoreUtils.Format("{0}", dataType.SymbolicName.Name);
                 }
 
-                if (description.ReleaseStatus == ReleaseStatus.Released && m_standardVersion != SpecificationVersion.V103)
+                if (description.ReleaseStatus == ReleaseStatus.Released &&
+                    m_standardVersion != SpecificationVersion.V103)
                 {
                     description.ReleaseStatus = ReleaseStatus.Deprecated;
                 }
@@ -2177,19 +2178,25 @@ namespace Opc.Ua.Schema.Model
 
             if (encodingType == EncodingType.Xml)
             {
-                encoding.SymbolicId = new XmlQualifiedName(dataType.SymbolicId.Name + "_Encoding_DefaultXml", dataType.SymbolicId.Namespace);
+                encoding.SymbolicId = new XmlQualifiedName(
+                    dataType.SymbolicId.Name + "_Encoding_DefaultXml",
+                    dataType.SymbolicId.Namespace);
                 encoding.SymbolicName = new XmlQualifiedName("DefaultXml", m_defaultNamespace);
                 encoding.BrowseName = "Default XML";
             }
             else if (encodingType == EncodingType.Json)
             {
-                encoding.SymbolicId = new XmlQualifiedName(dataType.SymbolicId.Name + "_Encoding_DefaultJson", dataType.SymbolicId.Namespace);
+                encoding.SymbolicId = new XmlQualifiedName(
+                    dataType.SymbolicId.Name + "_Encoding_DefaultJson",
+                    dataType.SymbolicId.Namespace);
                 encoding.SymbolicName = new XmlQualifiedName("DefaultJson", m_defaultNamespace);
                 encoding.BrowseName = "Default JSON";
             }
             else
             {
-                encoding.SymbolicId = new XmlQualifiedName(dataType.SymbolicId.Name + "_Encoding_DefaultBinary", dataType.SymbolicId.Namespace);
+                encoding.SymbolicId = new XmlQualifiedName(
+                    dataType.SymbolicId.Name + "_Encoding_DefaultBinary",
+                    dataType.SymbolicId.Namespace);
                 encoding.SymbolicName = new XmlQualifiedName("DefaultBinary", m_defaultNamespace);
                 encoding.BrowseName = "Default Binary";
             }
@@ -2275,7 +2282,7 @@ namespace Opc.Ua.Schema.Model
             public string Category;
         }
 
-        private Dictionary<string, object> ParseFile(Stream istrm)
+        private Dictionary<string, object> ParseIdentifiersFromStream(Stream istrm)
         {
             var identifiers = new Dictionary<string, object>();
 
@@ -2433,7 +2440,9 @@ namespace Opc.Ua.Schema.Model
         /// Loads the identifiers from a CSV file.
         /// </summary>
         /// <exception cref="InvalidOperationException"></exception>
-        private SortedDictionary<object, IdInfo> LoadIdentifiersFromStream2(ModelDesign dictionary, Stream istrm)
+        private SortedDictionary<object, IdInfo> AssignIdentifiers(
+            ModelDesign dictionary,
+            Dictionary<string, object> identifiers)
         {
             var uniqueIdentifiersComparer = Comparer<object>.Create((lhs, rhs) =>
             {
@@ -2446,7 +2455,6 @@ namespace Opc.Ua.Schema.Model
                 return lhst.Name.CompareTo(rhst.Name, StringComparison.Ordinal);
             });
 
-            Dictionary<string, object> identifiers = ParseFile(istrm);
             var uniqueIdentifiers = new SortedDictionary<object, IdInfo>(uniqueIdentifiersComparer);
             var duplicateIdentifiers = new Dictionary<string, object>();
             var assignedIds = new IdAllocator(m_startId);
@@ -2473,7 +2481,13 @@ namespace Opc.Ua.Schema.Model
                 NodeDesign node = dictionary.Items[ii];
 
                 // assign identifier if one has not already been assigned.
-                object id = AssignIdToNode(node, identifiers, uniqueIdentifiers, duplicateIdentifiers, assignedIds, false);
+                object id = AssignIdToNode(
+                    node,
+                    identifiers,
+                    uniqueIdentifiers,
+                    duplicateIdentifiers,
+                    assignedIds,
+                    false);
 
                 if (node.Hierarchy == null)
                 {
@@ -2556,15 +2570,19 @@ namespace Opc.Ua.Schema.Model
         /// Loads the identifiers from a CSV file.
         /// </summary>
         /// <exception cref="FileNotFoundException"></exception>
-        private void LoadIdentifiersFromFile2(ModelDesign dictionary, string filePath)
+        private void AssignIdentifiers(ModelDesign dictionary, string filePath = null)
         {
+            Dictionary<string, object> identifiers;
             if (string.IsNullOrEmpty(filePath) || !FileSystem.Exists(filePath))
             {
-                throw new FileNotFoundException("The identifier file does not exist.", filePath);
+                identifiers = [];
             }
-
-            using Stream istrm = FileSystem.OpenRead(filePath);
-            IDictionary<object, IdInfo> uniqueIdentifiers = LoadIdentifiersFromStream2(dictionary, istrm);
+            else
+            {
+                using Stream istrm = FileSystem.OpenRead(filePath);
+                identifiers = ParseIdentifiersFromStream(istrm);
+            }
+            AssignIdentifiers(dictionary, identifiers);
         }
 
         /// <summary>

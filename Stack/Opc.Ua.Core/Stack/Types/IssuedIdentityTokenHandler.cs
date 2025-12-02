@@ -11,6 +11,7 @@
 */
 
 using System;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Security.Cryptography.X509Certificates;
 using System.Xml;
@@ -42,7 +43,12 @@ namespace Opc.Ua
         /// <summary>
         /// Kerberos token.
         /// </summary>
-        KerberosBinary
+        KerberosBinary,
+
+        /// <summary>
+        /// Unknown token.
+        /// </summary>
+        Unknown
     }
 
     /// <summary>
@@ -57,12 +63,35 @@ namespace Opc.Ua
         public IssuedIdentityTokenHandler(IssuedIdentityToken token)
         {
             m_token = token ?? throw new ArgumentNullException(nameof(token));
+            IssuedTokenTypeProfileUri = m_token.PolicyId ??= Profiles.JwtUserToken;
+        }
+
+        /// <summary>
+        /// Create handler
+        /// </summary>
+        public IssuedIdentityTokenHandler(
+            string issuedTokenTypeProfileUri,
+            ReadOnlySpan<byte> decryptedTokenData)
+        {
+            m_token = new IssuedIdentityToken
+            {
+                PolicyId = issuedTokenTypeProfileUri,
+            };
+            m_decryptedTokenData = decryptedTokenData.ToArray();
+            IssuedTokenTypeProfileUri = m_token.PolicyId;
         }
 
         /// <summary>
         /// The type of issued token.
         /// </summary>
-        public IssuedTokenType IssuedTokenType { get; set; }
+        public IssuedTokenType IssuedTokenType => IssuedTokenTypeProfileUri switch
+        {
+            Namespaces.OpcUa + "UserToken#GenericWSS" => IssuedTokenType.GenericWSS,
+            Namespaces.OpcUa + "UserToken#SAML" => IssuedTokenType.SAML,
+            Profiles.JwtUserToken => IssuedTokenType.JWT,
+            Namespaces.OpcUa + "UserToken#KerberosBinary" => IssuedTokenType.KerberosBinary,
+            _ => IssuedTokenType.Unknown
+        };
 
         /// <inheritdoc/>
         public UserTokenType TokenType => UserTokenType.IssuedToken;
@@ -78,13 +107,19 @@ namespace Opc.Ua
         };
 
         /// <summary>
-        /// Token profile uri
+        /// Token profile uri. Set from the token policy on the server.
         /// </summary>
-        public XmlQualifiedName IssuedTokenProfileUri
-            => new(string.Empty, Namespaces.OpcUa + "UserToken#" + IssuedTokenType);
+        public string IssuedTokenTypeProfileUri { get; set; }
 
         /// <inheritdoc/>
         public UserIdentityToken Token => m_token;
+
+        /// <inheritdoc/>
+        public void UpdatePolicy(UserTokenPolicy userTokenPolicy)
+        {
+            m_token.PolicyId = userTokenPolicy.PolicyId;
+            IssuedTokenTypeProfileUri = userTokenPolicy.IssuedTokenType;
+        }
 
         /// <summary>
         /// The decrypted password associated with the token.
@@ -107,14 +142,15 @@ namespace Opc.Ua
             }
             set
             {
+                if (m_decryptedTokenData != null)
+                {
+                    Array.Clear(m_decryptedTokenData, 0, m_decryptedTokenData.Length);
+                    m_decryptedTokenData = null;
+                }
                 if (value != null)
                 {
                     m_decryptedTokenData = new byte[value.Length];
                     Array.Copy(value, m_decryptedTokenData, value.Length);
-                }
-                else
-                {
-                    m_decryptedTokenData = null;
                 }
             }
         }
@@ -134,7 +170,7 @@ namespace Opc.Ua
             if (string.IsNullOrEmpty(securityPolicyUri) ||
                 securityPolicyUri == SecurityPolicies.None)
             {
-                m_token.TokenData = m_decryptedTokenData;
+                m_token.TokenData = [.. m_decryptedTokenData];
                 m_token.EncryptionAlgorithm = string.Empty;
                 return;
             }
@@ -169,7 +205,7 @@ namespace Opc.Ua
             if (string.IsNullOrEmpty(securityPolicyUri) ||
                 securityPolicyUri == SecurityPolicies.None)
             {
-                m_decryptedTokenData = m_token.TokenData;
+                DecryptedTokenData = m_token.TokenData;
                 return;
             }
 
@@ -233,6 +269,31 @@ namespace Opc.Ua
                 Array.Clear(m_decryptedTokenData, 0, m_decryptedTokenData.Length);
                 m_decryptedTokenData = null;
             }
+        }
+
+        /// <inheritdoc/>
+        public object Clone()
+        {
+            return new IssuedIdentityTokenHandler(m_token)
+            {
+                IssuedTokenTypeProfileUri = IssuedTokenTypeProfileUri,
+                DecryptedTokenData = m_decryptedTokenData
+            };
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(IUserIdentityTokenHandler other)
+        {
+            if (other is not IssuedIdentityTokenHandler tokenHandler)
+            {
+                return false;
+            }
+            if (tokenHandler.m_decryptedTokenData != null &&
+                m_decryptedTokenData != null)
+            {
+                return Utils.IsEqual(tokenHandler.m_decryptedTokenData, m_decryptedTokenData);
+            }
+            return Utils.IsEqual(m_token.TokenData, tokenHandler.m_token.TokenData);
         }
 
         private byte[] m_decryptedTokenData;

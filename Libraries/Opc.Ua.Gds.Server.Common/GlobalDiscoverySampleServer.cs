@@ -163,10 +163,8 @@ namespace Opc.Ua.Gds.Server
                             new LocalizedText(info)));
                 }
 
-                UserIdentityToken securityToken = context.UserIdentity.GetIdentityToken();
-
                 // check for a user name token.
-                if (securityToken is UserNameIdentityToken)
+                if (context.UserIdentity.TokenType == UserTokenType.UserName)
                 {
                     lock (m_contextLock)
                     {
@@ -201,7 +199,7 @@ namespace Opc.Ua.Gds.Server
         private void SessionManager_ImpersonateUser(ISession session, ImpersonateEventArgs args)
         {
             // check for a user name token
-            if (args.NewIdentity is UserNameIdentityToken userNameToken &&
+            if (args.UserIdentityTokenHandler is UserNameIdentityTokenHandler userNameToken &&
                 VerifyPassword(userNameToken))
             {
                 IEnumerable<Role> roles = m_userDatabase.GetUserRoles(userNameToken.UserName);
@@ -213,7 +211,7 @@ namespace Opc.Ua.Gds.Server
             }
 
             // check for x509 user token.
-            if (args.NewIdentity is X509IdentityToken x509Token)
+            if (args.UserIdentityTokenHandler is X509IdentityToken x509Token)
             {
                 VerifyX509IdentityToken(x509Token);
 
@@ -336,11 +334,10 @@ namespace Opc.Ua.Gds.Server
             }
         }
 
-        private bool VerifyPassword(UserNameIdentityToken userNameToken)
+        private bool VerifyPassword(UserNameIdentityTokenHandler userTokenHandler)
         {
-            using var userTokenHandler = new UserNameIdentityTokenHandler(userNameToken);
             return m_userDatabase.CheckCredentials(
-                userNameToken.UserName,
+                userTokenHandler.UserName,
                 userTokenHandler.DecryptedPassword);
         }
 

@@ -29,9 +29,9 @@
 
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
+using IIncrementalGenerator = SGF.IncrementalGenerator;
 using IncrementalGeneratorAttribute = SGF.IncrementalGeneratorAttribute;
 using IncrementalGeneratorInitializationContext = SGF.SgfInitializationContext;
-using IIncrementalGenerator = SGF.IncrementalGenerator;
 
 namespace Opc.Ua.SourceGeneration
 {
@@ -72,7 +72,7 @@ namespace Opc.Ua.SourceGeneration
                 context.CompilationProvider
                     .Select((c, _) => CompilationOptions.From(c));
 
-            context.RegisterImplementationSourceOutput(
+            context.RegisterSourceOutput(
                 inputFiles
                     .Combine(identiferFile)
                     .Combine(options)
@@ -84,6 +84,13 @@ namespace Opc.Ua.SourceGeneration
                     combination.Left.Right,
                     combination.Right,
                     Logger).Emit(context.CancellationToken));
+
+            context.RegisterSourceOutput(context.SyntaxProvider.ForAttributeWithMetadataName(
+                    "Opc.Ua.DataTypeAttribute",
+                    static (node, ct) => DataTypeCompilation.Handles(node, ct),
+                    static (context, ct) => new DataTypeCompilation(context, ct))
+                .Where(static m => m is not null),
+                static (spc, source) => source.Emit(spc));
         }
     }
 }

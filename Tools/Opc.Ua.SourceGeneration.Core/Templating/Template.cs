@@ -28,7 +28,6 @@
  * ======================================================================*/
 
 using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 
 namespace Opc.Ua.SourceGeneration
@@ -41,8 +40,8 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Create template
         /// </summary>
-        public Template(TextWriter writer, TemplateString templateString)
-            : this(new TemplateWriter(writer), templateString)
+        public Template(TemplateWriter writer, TemplateString templateString)
+            : this(writer, templateString, null)
         {
         }
 
@@ -52,7 +51,7 @@ namespace Opc.Ua.SourceGeneration
         private Template(
             TemplateWriter writer,
             TemplateString templateString,
-            Template parent = null)
+            Template parent)
         {
             m_replacements = [];
             m_templateString = templateString;
@@ -105,8 +104,8 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public bool WriteTemplate()
         {
+            m_writer.TrimLineBreak(2);
             bool written = false;
-            bool dropNextNewLine = false;
             ParsedTemplateString parsed = m_templateString.ParsedTemplate;
             for (int i = 0; i < parsed.Operations.Count; i++)
             {
@@ -115,10 +114,10 @@ namespace Opc.Ua.SourceGeneration
                 {
                     case ParsedTemplateString.OpType.Token:
                         // check if a template substitution is required.
-                        dropNextNewLine = false;
                         if (!TryGetReplacement(op.Item, out object replacement) ||
                             replacement == null)
                         {
+                            m_writer.TrimLineBreak(0);
                             break;
                         }
                         if (replacement is not TemplateDefinition definition)
@@ -130,14 +129,14 @@ namespace Opc.Ua.SourceGeneration
                         if (definition.Targets == null ||
                             definition.Targets.Count == 0)
                         {
+                            m_writer.TrimLineBreak(0);
                             break;
                         }
                         written = false;
-                        var context = new Context
+                        var context = new TemplateContext
                         {
                             Token = op.Item,
                             Index = 0,
-                            NothingWrittenYet = true,
                             TemplateString = definition.TemplateString
                         };
                         m_writer.PushIndentChars(op.Offset);
@@ -147,19 +146,21 @@ namespace Opc.Ua.SourceGeneration
                             context.Target = definition.Targets[j];
 
                             // get the template path name.
-                            TemplateString templateString =
-                                definition.Load(this, context);
+                            TemplateString templateString = definition.Load(this, context);
                             // skip item if no template specified.
                             if (templateString == null)
                             {
+                                m_writer.TrimLineBreak(writeNewLineBetweenTargets ? 0 : 1);
                                 context.Index++;
                                 continue;
                             }
+                            //m_writer.TrimLineBreak(1);
 
                             // begin new line between multi line items if needed.
                             if (writeNewLineBetweenTargets)
                             {
-                                m_writer.WriteNewLine();
+                                m_writer.WriteNewLine(2);
+                                m_writer.WriteNewLine(2);
                             }
 
                             // load the template.
@@ -169,7 +170,6 @@ namespace Opc.Ua.SourceGeneration
                                 this);
                             if (definition.Write(template, context))
                             {
-                                context.NothingWrittenYet = false;
                                 writeNewLineBetweenTargets =
                                     templateString.ParsedTemplate.IsMultiLine;
                                 written = true;
@@ -181,25 +181,19 @@ namespace Opc.Ua.SourceGeneration
                             context.Index++;
                         }
                         m_writer.PopIndentation();
-                        // Do not write final new line
-                        dropNextNewLine = true;
                         break;
                     case ParsedTemplateString.OpType.LineBreak:
-                        if (dropNextNewLine)
-                        {
-                            dropNextNewLine = false;
-                            break;
-                        }
                         m_writer.WriteNewLine();
                         written = true;
                         break;
                     // Not a token, e.g. a date time or value that was appended
                     case ParsedTemplateString.OpType.Value:
                     case ParsedTemplateString.OpType.Literal:
-                    case ParsedTemplateString.OpType.WhiteSpace:
                         m_writer.Write(op.Item);
                         written = true;
-                        dropNextNewLine = false;
+                        break;
+                    case ParsedTemplateString.OpType.WhiteSpace:
+                        m_writer.WriteWhiteSpace(op.Item.Length);
                         break;
                 }
             }
@@ -249,25 +243,9 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes a a new line character.
         /// </summary>
-        public void WriteNewLine()
+        public void WriteLine()
         {
-            m_writer.WriteNewLine();
-        }
-
-        /// <summary>
-        /// Writes a new line and then indents the text and writes the text.
-        /// </summary>
-        public void WriteAfterNewLine(string text)
-        {
-            m_writer.WriteAfterNewLine(text);
-        }
-
-        /// <summary>
-        /// Writes the text (indented) to the stream followed by a new line.
-        /// </summary>
-        public void WriteAfterNewLine(string text, params object[] args)
-        {
-            m_writer.WriteAfterNewLine(text, args);
+            m_writer.WriteNewLine(2); // do not write more than 2 new lines
         }
 
         /// <summary>

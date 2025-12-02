@@ -1037,12 +1037,12 @@ namespace Opc.Ua
         /// Get the opc ua core assembly to load manifest from or encodeable types
         /// </summary>
         /// <returns></returns>
-        public static Assembly GetOpcUaCoreAssembly()
+        public static Assembly GetOpcUaAssembly()
         {
             // Find the core assembly with all generated core types if referenced
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                if (assembly.FullName.StartsWith("Opc.Ua.Core,", StringComparison.Ordinal))
+                if (assembly.GetName().Name.Equals("Opc.Ua", StringComparison.Ordinal))
                 {
                     return assembly;
                 }

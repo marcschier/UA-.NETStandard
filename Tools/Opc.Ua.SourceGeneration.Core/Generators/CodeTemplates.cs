@@ -112,94 +112,6 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// ModelGenerator.cs
         /// </summary>
-        public static readonly TemplateString ConstantsFile_cs = TemplateString.Parse(
-            $$"""
-            {{Tokens.Header}}
-
-            {{Tokens.ListOfImports}}
-
-            namespace {{Tokens.Namespace}}
-            {
-                {{Tokens.ListOfIdentifiers}}
-
-                {{Tokens.ListOfNodeIds}}
-
-                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
-                [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
-                public static partial class BrowseNames
-                {
-                    {{Tokens.ListOfBrowseNames}}
-                }
-
-                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
-                [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
-                public static partial class Namespaces
-                {
-                    {{Tokens.ListOfNamespaceUris}}
-                }
-            }
-            """);
-
-        /// <summary>
-        /// ModelGenerator.cs
-        /// </summary>
-        public static readonly TemplateString NamespaceUri_cs = TemplateString.Parse(
-            $$"""
-            /// <summary>
-            /// The URI for the {{Tokens.Name}} namespace (.NET code namespace is '{{Tokens.CodeName}}').
-            /// </summary>
-            public const string {{Tokens.Name}} = "{{Tokens.NamespaceUri}}";
-
-            """);
-
-        /// <summary>
-        /// ModelGenerator.cs
-        /// </summary>
-        public static readonly TemplateString BrowseName_cs = TemplateString.Parse(
-            $$"""
-            public const string {{Tokens.SymbolicName}} = "{{Tokens.BrowseName}}";
-
-            """);
-
-        /// <summary>
-        /// ModelGenerator.cs
-        /// </summary>
-        public static readonly TemplateString IdClass_cs = TemplateString.Parse(
-            $$"""
-            /// <summary>
-            /// A class that declares constants for all {{Tokens.NodeClass}}
-            /// symbolic names in the {{Tokens.Namespace}} namespace.
-            /// </summary>
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
-            [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
-            public static partial class {{Tokens.NodeClass}}s
-            {
-                {{Tokens.ListOfIdentifiers}}
-            }
-
-            """);
-
-        /// <summary>
-        /// ModelGenerator.cs
-        /// </summary>
-        public static readonly TemplateString NodeIdClass_cs = TemplateString.Parse(
-            $$"""
-            /// <summary>
-            /// A class that declares constants for all {{Tokens.NodeClass}}
-            /// NodeIds in the {{Tokens.Namespace}} namespace.
-            /// </summary>
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
-            [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
-            public static partial class {{Tokens.NodeClass}}Ids
-            {
-                {{Tokens.ListOfIdentifiers}}
-            }
-
-            """);
-
-        /// <summary>
-        /// ModelGenerator.cs
-        /// </summary>
         public static readonly TemplateString TypesFile_cs = TemplateString.Parse(
             $$"""
             {{Tokens.Header}}
@@ -210,35 +122,6 @@ namespace Opc.Ua.SourceGeneration
             {
                 {{Tokens.ListOfTypes}}
             }
-            """);
-
-        /// <summary>
-        /// ModelGenerator.cs
-        /// </summary>
-        public static readonly TemplateString IdDeclaration_cs = TemplateString.Parse(
-            $$"""
-            public const {{Tokens.IdType}} {{Tokens.SymbolicName}} = {{Tokens.Identifier}};
-
-            """);
-
-        /// <summary>
-        /// ModelGenerator.cs
-        /// </summary>
-        public static readonly TemplateString NodeIdDeclarationAbsolute_cs = TemplateString.Parse(
-            $$"""
-            public static readonly global::Opc.Ua.ExpandedNodeId {{Tokens.SymbolicName}} =
-                new global::Opc.Ua.ExpandedNodeId({{Tokens.NamespacePrefix}}.{{Tokens.NodeClass}}s.{{Tokens.SymbolicName}}, {{Tokens.NamespaceUri}});
-
-            """);
-
-        /// <summary>
-        /// ModelGenerator.cs
-        /// </summary>
-        public static readonly TemplateString NodeIdDeclaration_cs = TemplateString.Parse(
-            $$"""
-            public static readonly global::Opc.Ua.NodeId {{Tokens.SymbolicName}} =
-                new global::Opc.Ua.NodeId({{Tokens.NamespacePrefix}}.{{Tokens.NodeClass}}s.{{Tokens.SymbolicName}});
-
             """);
 
         /// <summary>
@@ -315,8 +198,11 @@ namespace Opc.Ua.SourceGeneration
 
                     switch (SwitchField)
                     {
-                        default: { break; }
                         {{Tokens.ListOfEncodedFields}}
+                        default:
+                        {
+                            break;
+                        }
                     }
 
                     encoder.PopNamespace();
@@ -326,15 +212,17 @@ namespace Opc.Ua.SourceGeneration
                 public virtual void Decode(global::Opc.Ua.IDecoder decoder)
                 {
                     decoder.PushNamespace({{Tokens.XmlNamespaceUri}});
-
                     SwitchField = ({{Tokens.ClassName}}Fields)decoder.ReadSwitchField(
                         m_FieldNames,
                         out var fieldName);
 
                     switch (SwitchField)
                     {
-                        default: { break; }
                         {{Tokens.ListOfDecodedFields}}
+                        default:
+                        {
+                            break;
+                        }
                     }
 
                     decoder.PopNamespace();
@@ -397,7 +285,6 @@ namespace Opc.Ua.SourceGeneration
             }
 
             {{Tokens.CollectionClass}}
-
             """);
 
         /// <summary>
@@ -484,9 +371,7 @@ namespace Opc.Ua.SourceGeneration
                     base.Decode(decoder);
 
                     decoder.PushNamespace({{Tokens.XmlNamespaceUri}});
-
                     {{Tokens.ListOfDecodedFields}}
-
                     decoder.PopNamespace();
                 }
 
@@ -520,9 +405,7 @@ namespace Opc.Ua.SourceGeneration
                 public new object MemberwiseClone()
                 {
                     {{Tokens.BrowseName}} clone = ({{Tokens.BrowseName}})base.MemberwiseClone();
-
                     {{Tokens.ListOfClonedFields}}
-
                     return clone;
                 }
 
@@ -535,7 +418,6 @@ namespace Opc.Ua.SourceGeneration
             }
 
             {{Tokens.CollectionClass}}
-
             """);
 
         /// <summary>
@@ -610,9 +492,7 @@ namespace Opc.Ua.SourceGeneration
                 {
                     encoder.PushNamespace({{Tokens.XmlNamespaceUri}});
                     encoder.WriteEncodingMask((uint)EncodingMask);
-
                     {{Tokens.ListOfEncodedFields}}
-
                     encoder.PopNamespace();
                 }
 
@@ -620,11 +500,8 @@ namespace Opc.Ua.SourceGeneration
                 public virtual void Decode(global::Opc.Ua.IDecoder decoder)
                 {
                     decoder.PushNamespace({{Tokens.XmlNamespaceUri}});
-
                     EncodingMask = decoder.ReadEncodingMask(m_FieldNames);
-
                     {{Tokens.ListOfDecodedFields}}
-
                     decoder.PopNamespace();
                 }
 
@@ -660,11 +537,8 @@ namespace Opc.Ua.SourceGeneration
                 public new object MemberwiseClone()
                 {
                     {{Tokens.BrowseName}} clone = ({{Tokens.BrowseName}})base.MemberwiseClone();
-
                     clone.EncodingMask = this.EncodingMask;
-
                     {{Tokens.ListOfClonedFields}}
-
                     return clone;
                 }
 
@@ -677,7 +551,6 @@ namespace Opc.Ua.SourceGeneration
             }
 
             {{Tokens.CollectionClass}}
-
             """);
 
         /// <summary>
@@ -734,9 +607,7 @@ namespace Opc.Ua.SourceGeneration
                 public virtual void Encode(global::Opc.Ua.IEncoder encoder)
                 {
                     encoder.PushNamespace({{Tokens.XmlNamespaceUri}});
-
                     {{Tokens.ListOfEncodedFields}}
-
                     encoder.PopNamespace();
                 }
 
@@ -744,9 +615,7 @@ namespace Opc.Ua.SourceGeneration
                 public virtual void Decode(global::Opc.Ua.IDecoder decoder)
                 {
                     decoder.PushNamespace({{Tokens.XmlNamespaceUri}});
-
                     {{Tokens.ListOfDecodedFields}}
-
                     decoder.PopNamespace();
                 }
 
@@ -780,9 +649,7 @@ namespace Opc.Ua.SourceGeneration
                 public new object MemberwiseClone()
                 {
                     {{Tokens.BrowseName}} clone = ({{Tokens.BrowseName}})base.MemberwiseClone();
-
                     {{Tokens.ListOfClonedFields}}
-
                     return clone;
                 }
 
@@ -790,7 +657,6 @@ namespace Opc.Ua.SourceGeneration
             }
 
             {{Tokens.CollectionClass}}
-
             """);
 
         /// <summary>
@@ -848,11 +714,8 @@ namespace Opc.Ua.SourceGeneration
                 public override void Encode(global::Opc.Ua.IEncoder encoder)
                 {
                     base.Encode(encoder);
-
                     encoder.PushNamespace({{Tokens.XmlNamespaceUri}});
-
                     {{Tokens.ListOfEncodedFields}}
-
                     encoder.PopNamespace();
                 }
 
@@ -860,11 +723,8 @@ namespace Opc.Ua.SourceGeneration
                 public override void Decode(global::Opc.Ua.IDecoder decoder)
                 {
                     base.Decode(decoder);
-
                     decoder.PushNamespace({{Tokens.XmlNamespaceUri}});
-
                     {{Tokens.ListOfDecodedFields}}
-
                     decoder.PopNamespace();
                 }
 
@@ -898,9 +758,7 @@ namespace Opc.Ua.SourceGeneration
                 public new object MemberwiseClone()
                 {
                     {{Tokens.BrowseName}} clone = ({{Tokens.BrowseName}})base.MemberwiseClone();
-
                     {{Tokens.ListOfClonedFields}}
-
                     return clone;
                 }
 
@@ -1037,7 +895,10 @@ namespace Opc.Ua.SourceGeneration
                 protected override void Initialize(global::Opc.Ua.ISystemContext context)
                 {
                     base.Initialize(context);
-                    Initialize(context, {{Tokens.ClassName}}Initializers.{{Tokens.Encoding}}, global::Opc.Ua.EncodingType.{{Tokens.Encoding}});
+                    Initialize(
+                        context,
+                        {{Tokens.ClassName}}Initializers.{{Tokens.Encoding}},
+                        global::Opc.Ua.EncodingType.{{Tokens.Encoding}});
                     InitializeOptionalChildren(context);
                 }
 
@@ -1098,7 +959,10 @@ namespace Opc.Ua.SourceGeneration
                 protected override void Initialize(global::Opc.Ua.ISystemContext context)
                 {
                     base.Initialize(context);
-                    Initialize(context, {{Tokens.ClassName}}Initializers.{{Tokens.Encoding}}, global::Opc.Ua.EncodingType.{{Tokens.Encoding}});
+                    Initialize(
+                        context,
+                        {{Tokens.ClassName}}Initializers.{{Tokens.Encoding}},
+                        global::Opc.Ua.EncodingType.{{Tokens.Encoding}});
                     InitializeOptionalChildren(context);
                 }
 
@@ -1292,7 +1156,6 @@ namespace Opc.Ua.SourceGeneration
                     return clone;
                 }
             }
-
             """);
 
         /// <summary>
@@ -2242,7 +2105,6 @@ namespace Opc.Ua.SourceGeneration
             public partial class {{Tokens.Name}}Response : global::Opc.Ua.IServiceResponse
             {
             }
-
             """);
 
         /// <summary>
@@ -2252,18 +2114,123 @@ namespace Opc.Ua.SourceGeneration
             $$"""
             {{Tokens.Header}}
 
+            {{Tokens.ListOfImports}}
+
             namespace {{Tokens.Prefix}}
             {
                 /// <summary>
-                /// A class that defines constants used by UA applications.
+                /// A class that defines constants for all {{Tokens.ClassName}}
                 /// </summary>
                 [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
                 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
                 public static partial class {{Tokens.ClassName}}
                 {
                     {{Tokens.ListOfIdentifiers}}
+
+                    {{Tokens.IdentifierReflection}}
                 }
             }
+            """);
+
+        /// <summary>
+        /// ModelGenerator.cs
+        /// </summary>
+        public static readonly TemplateString ConstantsFile_cs = TemplateString.Parse(
+            $$"""
+            {{Tokens.Header}}
+
+            {{Tokens.ListOfImports}}
+
+            namespace {{Tokens.Namespace}}
+            {
+                {{Tokens.ListOfIdentifiers}}
+
+                {{Tokens.ListOfNodeIds}}
+
+                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
+                [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
+                public static partial class BrowseNames
+                {
+                    {{Tokens.ListOfBrowseNames}}
+                }
+
+                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
+                [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
+                public static partial class Namespaces
+                {
+                    {{Tokens.ListOfNamespaceUris}}
+                }
+            }
+            """);
+
+        /// <summary>
+        /// ModelGenerator.cs
+        /// </summary>
+        public static readonly TemplateString NamespaceUri_cs = TemplateString.Parse(
+            $$"""
+            /// <summary>
+            /// The URI for the {{Tokens.Name}} namespace (.NET code namespace is '{{Tokens.CodeName}}').
+            /// </summary>
+            public const string {{Tokens.Name}} = "{{Tokens.NamespaceUri}}";
+
+            """);
+
+        /// <summary>
+        /// ModelGenerator.cs
+        /// </summary>
+        public static readonly TemplateString BrowseName_cs = TemplateString.Parse(
+            $$"""
+            public const string {{Tokens.SymbolicName}} = "{{Tokens.BrowseName}}";
+
+            """);
+
+        /// <summary>
+        /// ModelGenerator.cs
+        /// </summary>
+        public static readonly TemplateString IdClass_cs = TemplateString.Parse(
+            $$"""
+            /// <summary>
+            /// A class that declares constants for all {{Tokens.NodeClass}}
+            /// symbolic names in the {{Tokens.Namespace}} namespace.
+            /// </summary>
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
+            [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
+            public static partial class {{Tokens.NodeClass}}s
+            {
+                {{Tokens.ListOfIdentifiers}}
+
+                {{Tokens.IdentifierReflection}}
+            }
+
+            """);
+
+        /// <summary>
+        /// ModelGenerator.cs
+        /// </summary>
+        public static readonly TemplateString NodeIdClass_cs = TemplateString.Parse(
+            $$"""
+            /// <summary>
+            /// A class that declares constants for all {{Tokens.NodeClass}}
+            /// NodeIds in the {{Tokens.Namespace}} namespace.
+            /// </summary>
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
+            [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
+            public static partial class {{Tokens.NodeClass}}Ids
+            {
+                {{Tokens.ListOfIdentifiers}}
+
+                {{Tokens.IdentifierReflection}}
+            }
+
+            """);
+
+        /// <summary>
+        /// ModelGenerator.cs
+        /// </summary>
+        public static readonly TemplateString IdDeclaration_cs = TemplateString.Parse(
+            $$"""
+            public const {{Tokens.IdType}} {{Tokens.SymbolicName}} = {{Tokens.Identifier}};
+
             """);
 
         /// <summary>
@@ -2276,6 +2243,113 @@ namespace Opc.Ua.SourceGeneration
             /// </summary>
             public const {{Tokens.IdType}} {{Tokens.SymbolicId}} = {{Tokens.Identifier}};
 
+            """);
+
+        /// <summary>
+        /// ModelGenerator.cs
+        /// </summary>
+        public static readonly TemplateString NodeIdDeclarationAbsolute_cs = TemplateString.Parse(
+            $$"""
+            public static readonly global::Opc.Ua.ExpandedNodeId {{Tokens.SymbolicName}} =
+                new global::Opc.Ua.ExpandedNodeId({{Tokens.NamespacePrefix}}.{{Tokens.NodeClass}}s.{{Tokens.SymbolicName}}, {{Tokens.NamespaceUri}});
+
+            """);
+
+        /// <summary>
+        /// ModelGenerator.cs
+        /// </summary>
+        public static readonly TemplateString NodeIdDeclaration_cs = TemplateString.Parse(
+            $$"""
+            public static readonly global::Opc.Ua.NodeId {{Tokens.SymbolicName}} =
+                new global::Opc.Ua.NodeId({{Tokens.NamespacePrefix}}.{{Tokens.NodeClass}}s.{{Tokens.SymbolicName}});
+
+            """);
+
+        /// <summary>
+        /// StackGenerator.cs
+        /// ModelGenerator.cs
+        /// </summary>
+        public static readonly TemplateString Constants_Reflection_cs = TemplateString.Parse(
+            $$"""
+            /// <summary>
+            /// Returns the browse names for all {{Tokens.ClassName}}
+            /// </summary>
+            public static global::System.Collections.Generic.IEnumerable<string> BrowseNames
+                => s_nameToId.Value.Keys;
+
+            /// <summary>
+            /// Returns the ids for all {{Tokens.ClassName}}.
+            /// </summary>
+            public static global::System.Collections.Generic.IEnumerable<{{Tokens.IdType}}> Identifiers
+                => s_idToName.Value.Keys;
+
+            /// <summary>
+            /// Returns the browse name for a {{Tokens.ClassName}} id.
+            /// </summary>
+            public static string GetBrowseName({{Tokens.IdType}} identifier)
+            {
+                return s_idToName.Value.TryGetValue(identifier, out string name) ?  name : string.Empty;
+            }
+
+            /// <summary>
+            /// Returns the id for a {{Tokens.ClassName}} string.
+            /// </summary>
+            public static {{Tokens.IdType}} GetIdentifier(string browseName)
+            {
+                return s_nameToId.Value.TryGetValue(browseName, out {{Tokens.IdType}} id) ? id : 0;
+            }
+
+            /// <summary>
+            /// Returns the browse name for a {{Tokens.ClassName}} id.
+            /// </summary>
+            public static bool TryGetBrowseName(
+                {{Tokens.IdType}} identifier,
+                /*[global::System.Diagnostics.CodeAnalysis.NotNullWhen(true)]*/ out string? name)
+            {
+                return s_idToName.Value.TryGetValue(identifier, out name);
+            }
+
+            /// <summary>
+            /// Returns the id for a {{Tokens.ClassName}} string.
+            /// </summary>
+            public static bool TryGetIdentifier(string browseName, out {{Tokens.IdType}} id)
+            {
+                return s_nameToId.Value.TryGetValue(browseName, out id);
+            }
+
+            /// <summary>
+            /// Lazy id to name lookup.
+            /// </summary>
+            private static readonly global::System.Lazy<
+                global::System.Collections.Generic.IReadOnlyDictionary<{{Tokens.IdType}}, string>> s_idToName =
+                new global::System.Lazy<
+                    global::System.Collections.Generic.IReadOnlyDictionary<{{Tokens.IdType}}, string>>(() =>
+                {
+                    var lookup = new global::System.Collections.Generic.Dictionary<{{Tokens.IdType}}, string>();
+                    {{Tokens.ListOfIdentifersToNames}}
+            #if NET8_0_OR_GREATER
+                    return global::System.Collections.Frozen.FrozenDictionary.ToFrozenDictionary(lookup);
+            #else
+                    return new global::System.Collections.ObjectModel.ReadOnlyDictionary<{{Tokens.IdType}}, string>(lookup);
+            #endif
+                });
+
+            /// <summary>
+            /// Lazy name to id lookup.
+            /// </summary>
+            private static readonly global::System.Lazy<
+                global::System.Collections.Generic.IReadOnlyDictionary<string, {{Tokens.IdType}}>> s_nameToId =
+                new  global::System.Lazy<
+                    global::System.Collections.Generic.IReadOnlyDictionary<string, {{Tokens.IdType}}>>(() =>
+                {
+                    var lookup = new global::System.Collections.Generic.Dictionary<string, {{Tokens.IdType}}>();
+                    {{Tokens.ListOfNamesToIdentifiers}}
+            #if NET8_0_OR_GREATER
+                    return global::System.Collections.Frozen.FrozenDictionary.ToFrozenDictionary(lookup);
+            #else
+                    return new global::System.Collections.ObjectModel.ReadOnlyDictionary<string, {{Tokens.IdType}}>(lookup);
+            #endif
+                });
             """);
 
         /// <summary>

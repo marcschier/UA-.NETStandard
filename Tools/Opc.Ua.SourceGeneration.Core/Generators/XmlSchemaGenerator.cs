@@ -96,8 +96,9 @@ namespace Opc.Ua.SourceGeneration
         private void WriteTemplate_XmlSchema(string fileName)
         {
             using TextWriter writer = FileSystem.CreateTextWriter(fileName);
+            using var templateWriter = new TemplateWriter(writer);
             var template = new Template(
-                writer,
+                templateWriter,
                 SchemaTemplates.Stack_XmlSchema_File_xml);
 
             template.AddReplacement(Tokens.Namespace, TargetNamespace);
@@ -180,7 +181,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes the import statements.
         /// </summary>
-        private TemplateString LoadTemplate_Imports(Template template, Context context)
+        private TemplateString LoadTemplate_Imports(Template template, ITemplateContext context)
         {
             if (context.Target is not string namespaceUri)
             {
@@ -209,7 +210,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes the attributes for a node.
         /// </summary>
-        private TemplateString LoadTemplate_DataType(Template template, Context context)
+        private TemplateString LoadTemplate_DataType(Template template, ITemplateContext context)
         {
             // do not publish type declarations in OPC BinarySchema files.
             if (context.Target is TypeDeclaration)
@@ -245,7 +246,7 @@ namespace Opc.Ua.SourceGeneration
         /// Writes a datatype to the stream.
         /// </summary>
         /// <exception cref="InvalidOperationException"></exception>
-        private bool WriteTemplate_DataType(Template template, Context context)
+        private bool WriteTemplate_DataType(Template template, ITemplateContext context)
         {
             if (context.Target is not DataType datatype)
             {
@@ -327,7 +328,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes an array declaration to the stream.
         /// </summary>
-        private bool WriteTemplate_Array(Template template, Context context)
+        private bool WriteTemplate_Array(Template template, ITemplateContext context)
         {
             if (context.Target is not DataType datatype)
             {
@@ -339,7 +340,6 @@ namespace Opc.Ua.SourceGeneration
                 return false;
             }
 
-            template.WriteLine(string.Empty);
             template.AddReplacement(Tokens.TypeName, datatype.QName.Name);
 
             return template.WriteTemplate();
@@ -349,7 +349,7 @@ namespace Opc.Ua.SourceGeneration
         /// Writes a field in an OPCBinary schema.
         /// </summary>
         /// <exception cref="InvalidOperationException"></exception>
-        private TemplateString LoadTemplate_Field(Template template, Context context)
+        private TemplateString LoadTemplate_Field(Template template, ITemplateContext context)
         {
             if (context.Target is not FieldType fieldType)
             {
@@ -363,7 +363,7 @@ namespace Opc.Ua.SourceGeneration
                     fieldType.DataType,
                     fieldType.Name));
 
-            template.WriteAfterNewLine("""
+            template.Write("""
                 <xs:element name="{0}"
                 """, fieldType.Name);
 
@@ -375,8 +375,7 @@ namespace Opc.Ua.SourceGeneration
                 template.WriteLine("""      <xs:any minOccurs="0" processContents="lax" />""");
                 template.WriteLine("    </xs:sequence>");
                 template.WriteLine("  </xs:complexType>");
-
-                template.Write("</xs:element>");
+                template.WriteLine("</xs:element>");
             }
             else
             {
@@ -391,7 +390,7 @@ namespace Opc.Ua.SourceGeneration
                         """);
                 }
 
-                template.Write(" />");
+                template.WriteLine(" />");
             }
 
             return null;
@@ -400,14 +399,14 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes an enumerated value in an OPCBinary schema.
         /// </summary>
-        private TemplateString LoadTemplate_EnumeratedValue(Template template, Context context)
+        private TemplateString LoadTemplate_EnumeratedValue(Template template, ITemplateContext context)
         {
             if (context.Target is not EnumeratedValue valueType)
             {
                 return null;
             }
 
-            template.WriteAfterNewLine(
+            template.Write(
                 """<xs:enumeration value="{0}_{1}" />""",
                 valueType.Name,
                 valueType.Value);
@@ -425,7 +424,7 @@ namespace Opc.Ua.SourceGeneration
             }
             else
             {
-                template.Write(" />");
+                template.WriteLine(" />");
             }
             */
 

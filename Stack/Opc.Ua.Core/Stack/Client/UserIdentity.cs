@@ -76,14 +76,23 @@ namespace Opc.Ua
         }
 
         /// <summary>
+        /// Initializes the object with a decrypted issued token.
+        /// </summary>
+        public UserIdentity(
+            ReadOnlySpan<byte> decryptedTokenData,
+            string issuedTokenTypeProfileUri)
+        {
+            m_token = new IssuedIdentityTokenHandler(issuedTokenTypeProfileUri, decryptedTokenData);
+        }
+
+        /// <summary>
         /// Create user identity with a custom token handler.
         /// </summary>
         /// <param name="token"></param>
         /// <exception cref="ArgumentNullException"></exception>
         public UserIdentity(IUserIdentityTokenHandler token)
         {
-            m_token = token
-                ?? throw new ArgumentNullException(nameof(token));
+            m_token = token?.Copy() ?? throw new ArgumentNullException(nameof(token));
         }
 
         /// <summary>
@@ -92,9 +101,10 @@ namespace Opc.Ua
         /// <param name="token">The user identity token.</param>
         public UserIdentity(UserIdentityToken token)
         {
-            m_token = token.AsTokenHandler() ?? throw new ArgumentException(
-                "Unrecognized UA user identity token type.",
-                nameof(token));
+            m_token = token.AsTokenHandler() ??
+                throw new ArgumentException(
+                    "Unrecognized UA user identity token type.",
+                    nameof(token));
         }
 
         /// <summary>
@@ -165,10 +175,6 @@ namespace Opc.Ua
         /// Gets or sets the UserIdentityToken PolicyId associated
         /// with the UserIdentity.
         /// </summary>
-        /// <remarks>
-        /// This value is used to initialize the UserIdentityToken
-        /// object when GetIdentityToken() is called.
-        /// </remarks>
         [DataMember(Name = "PolicyId", IsRequired = false, Order = 10)]
         public string PolicyId
         {
@@ -178,12 +184,39 @@ namespace Opc.Ua
 
         /// <inheritdoc/>
         [DataMember(Name = "TokenType", IsRequired = true, Order = 20)]
-        public UserTokenType TokenType => m_token.TokenType;
+        public UserTokenType TokenType
+        {
+            get => m_typeBackingField ?? m_token.TokenType;
+            set => m_typeBackingField = value;
+        }
+        // TODO Fix the save/restore asap
+        private UserTokenType? m_typeBackingField;
 
         /// <inheritdoc/>
         [DataMember(Name = "IssuedTokenType", IsRequired = false, Order = 30)]
         public XmlQualifiedName IssuedTokenType
-            => (m_token as IssuedIdentityTokenHandler)?.IssuedTokenProfileUri;
+        {
+            // Legacy support for issued token type as XmlQualifiedName.
+            // This will be removed in future releases.
+            // Use UpdatePolicy to set the policy and thus token type.
+            get
+            {
+                if (m_token is IssuedIdentityTokenHandler issuedToken)
+                {
+                    return new(null, issuedToken.IssuedTokenTypeProfileUri);
+                }
+                return field;
+            }
+            set
+            {
+                if (m_token is IssuedIdentityTokenHandler issuedToken)
+                {
+                    issuedToken.IssuedTokenTypeProfileUri = value.Namespace;
+                    return;
+                }
+                field = value;
+            }
+        }
 
         /// <inheritdoc/>
         public string DisplayName
@@ -191,6 +224,9 @@ namespace Opc.Ua
             get => field ?? m_token.DisplayName;
             set => field = value;
         }
+
+        /// <inheritdoc/>
+        public IUserIdentityTokenHandler TokenHandler => m_token;
 
         /// <inheritdoc/>
         public bool SupportsSignatures => false;
@@ -201,18 +237,11 @@ namespace Opc.Ua
         public NodeIdCollection GrantedRoleIds { get; } = [];
 
         /// <inheritdoc/>
-        public UserIdentityToken GetIdentityToken()
-        {
-            // check for null and return anonymous.
-            return Utils.Clone(m_token.Token);
-        }
-
-        /// <inheritdoc/>
         public override bool Equals(object obj)
         {
             if (obj is UserIdentity identity)
             {
-                return Utils.IsEqualUserIdentity(m_token.Token, identity.m_token.Token);
+                return m_token.Equals(identity.m_token);
             }
             return base.Equals(obj);
         }
@@ -246,7 +275,6 @@ namespace Opc.Ua
                 Utils.SilentDispose(m_token);
             }
         }
-
 
         private IUserIdentityTokenHandler m_token;
     }

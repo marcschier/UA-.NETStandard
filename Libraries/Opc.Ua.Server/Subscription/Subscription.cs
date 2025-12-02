@@ -2554,7 +2554,7 @@ namespace Opc.Ua.Server
                 MaxNotificationsPerPublish = m_maxNotificationsPerPublish,
                 Priority = Priority,
                 PublishingInterval = PublishingInterval,
-                UserIdentityToken = EffectiveIdentity?.GetIdentityToken(),
+                UserIdentityToken = EffectiveIdentity?.TokenHandler.Token,
                 MonitoredItems = monitoredItemsToStore,
                 IsDurable = IsDurable
             };

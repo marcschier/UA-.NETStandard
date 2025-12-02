@@ -11,6 +11,7 @@
 */
 
 using System;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Logging;
@@ -60,6 +61,17 @@ namespace Opc.Ua
         /// The decrypted password associated with the token.
         /// </summary>
         public byte[] DecryptedPassword { get; set; }
+
+        /// <summary>
+        /// User name in the token.
+        /// </summary>
+        public string UserName => m_token.UserName;
+
+        /// <inheritdoc/>
+        public void UpdatePolicy(UserTokenPolicy userTokenPolicy)
+        {
+            m_token.PolicyId = userTokenPolicy.PolicyId;
+        }
 
         /// <inheritdoc/>
         public void Encrypt(
@@ -261,6 +273,30 @@ namespace Opc.Ua
                 Array.Clear(m_token.Password, 0, m_token.Password.Length);
                 m_token.Password = null;
             }
+        }
+
+        /// <inheritdoc/>
+        public object Clone()
+        {
+            return new UserNameIdentityTokenHandler(Utils.Clone(m_token))
+            {
+                DecryptedPassword = DecryptedPassword == null ? null : [.. DecryptedPassword],
+            };
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(IUserIdentityTokenHandler other)
+        {
+            if (other is not UserNameIdentityTokenHandler tokenHandler)
+            {
+                return false;
+            }
+            if (!string.Equals(UserName, tokenHandler.UserName, StringComparison.Ordinal))
+            {
+                return false;
+            }
+            // TODO: Should compare password too?
+            return true;
         }
 
         private readonly UserNameIdentityToken m_token;

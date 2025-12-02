@@ -163,48 +163,5 @@ namespace Opc.Ua.Core.Tests.Types.Constants
                 Assert.AreEqual(id, retrievedId);
             }
         }
-
-        /// <summary>
-        /// Test GetUtf8BrowseName for standard status codes.
-        /// </summary>
-        [Test]
-        public void GetUtf8BrowseName_StandardStatusCodes_ReturnsValidUtf8Names()
-        {
-            uint[] statusCodeIds = [
-                StatusCodes.Good,
-                StatusCodes.Bad,
-                StatusCodes.Uncertain,
-                StatusCodes.BadNodeIdUnknown
-            ];
-
-            foreach (uint id in statusCodeIds)
-            {
-                byte[] utf8BrowseName = StatusCodes.GetUtf8BrowseName(id);
-                Assert.IsNotNull(utf8BrowseName);
-                Assert.Greater(utf8BrowseName.Length, 0);
-            }
-        }
-
-        /// <summary>
-        /// Test GetUtf8BrowseName returns same as UTF8 encoding of GetBrowseName.
-        /// </summary>
-        [Test]
-        public void GetUtf8BrowseName_MatchesUtf8EncodedGetBrowseName()
-        {
-            uint[] statusCodeIds = [
-                StatusCodes.Good,
-                StatusCodes.Bad,
-                StatusCodes.BadNodeIdUnknown
-            ];
-
-            foreach (uint id in statusCodeIds)
-            {
-                string browseName = StatusCodes.GetBrowseName(id);
-                byte[] utf8BrowseName = StatusCodes.GetUtf8BrowseName(id);
-                byte[] expectedUtf8 = System.Text.Encoding.UTF8.GetBytes(browseName);
-
-                Assert.AreEqual(expectedUtf8, utf8BrowseName);
-            }
-        }
     }
 }

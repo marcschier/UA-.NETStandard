@@ -624,17 +624,7 @@ namespace Opc.Ua.Client.Tests
         public async Task ConnectJWTAsync(string securityPolicy)
         {
             byte[] identityToken = "fakeTokenString"u8.ToArray();
-
-            var issuedToken = new IssuedIdentityTokenHandler(
-                new IssuedIdentityToken
-                {
-                    PolicyId = Profiles.JwtUserToken
-                })
-            {
-                IssuedTokenType = IssuedTokenType.JWT,
-                DecryptedTokenData = identityToken
-            };
-
+            using var issuedToken = new IssuedIdentityTokenHandler(Profiles.JwtUserToken, identityToken);
             var userIdentity = new UserIdentity(issuedToken);
 
             ISession session = await ClientFixture
@@ -643,9 +633,7 @@ namespace Opc.Ua.Client.Tests
             Assert.NotNull(session);
             Assert.NotNull(TokenValidator.LastIssuedToken);
 
-            using var lastIssuedToken = new IssuedIdentityTokenHandler(
-                TokenValidator.LastIssuedToken);
-            byte[] receivedToken = lastIssuedToken.DecryptedTokenData;
+            byte[] receivedToken = TokenValidator.LastIssuedToken.DecryptedTokenData;
             Assert.AreEqual(identityToken, receivedToken);
 
             StatusCode result = await session.CloseAsync().ConfigureAwait(false);
@@ -660,16 +648,7 @@ namespace Opc.Ua.Client.Tests
         {
             static UserIdentity CreateUserIdentity(byte[] tokenData)
             {
-                var issuedToken = new IssuedIdentityTokenHandler(
-                    new IssuedIdentityToken
-                {
-                    PolicyId = Profiles.JwtUserToken
-                })
-                {
-                    IssuedTokenType = IssuedTokenType.JWT,
-                    DecryptedTokenData = tokenData
-                };
-
+                var issuedToken = new IssuedIdentityTokenHandler(Profiles.JwtUserToken, tokenData);
                 return new UserIdentity(issuedToken);
             }
 
@@ -682,9 +661,7 @@ namespace Opc.Ua.Client.Tests
             Assert.NotNull(session);
             Assert.NotNull(TokenValidator.LastIssuedToken);
 
-            using var lastIssuedToken1 = new IssuedIdentityTokenHandler(
-                TokenValidator.LastIssuedToken);
-            byte[] receivedToken = lastIssuedToken1.DecryptedTokenData;
+            byte[] receivedToken = TokenValidator.LastIssuedToken.DecryptedTokenData;
             Assert.AreEqual(identityToken, receivedToken);
             Array.Clear(receivedToken, 0, receivedToken.Length);
 
@@ -692,9 +669,7 @@ namespace Opc.Ua.Client.Tests
             session.RenewUserIdentity += (_, _) => CreateUserIdentity(newIdentityToken);
 
             await session.ReconnectAsync().ConfigureAwait(false);
-            using var lastIssuedToken2 = new IssuedIdentityTokenHandler(
-                TokenValidator.LastIssuedToken);
-            receivedToken = lastIssuedToken2.DecryptedTokenData;
+            receivedToken = TokenValidator.LastIssuedToken.DecryptedTokenData;
             Assert.AreEqual(newIdentityToken, receivedToken);
             Array.Clear(receivedToken, 0, receivedToken.Length);
 
@@ -1916,17 +1891,9 @@ namespace Opc.Ua.Client.Tests
             {
                 const string identityToken = "fakeTokenString";
 
-
-                var issuedToken = new IssuedIdentityTokenHandler(
-                    new IssuedIdentityToken
-                    {
-                        PolicyId = Profiles.JwtUserToken,
-                    })
-                {
-                    IssuedTokenType = IssuedTokenType.JWT,
-                    DecryptedTokenData = Encoding.UTF8.GetBytes(identityToken)
-                };
-
+                using var issuedToken = new IssuedIdentityTokenHandler(
+                    Profiles.JwtUserToken,
+                    Encoding.UTF8.GetBytes(identityToken));
                 var userIdentity = new UserIdentity(issuedToken);
 
                 // the first channel determines the endpoint

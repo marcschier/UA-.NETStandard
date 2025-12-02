@@ -16,24 +16,41 @@ using System.Security.Cryptography.X509Certificates;
 namespace Opc.Ua
 {
     /// <summary>
-    /// Handles user identity tokens.
+    /// Handles user identity tokens. The individual token type handlers
+    /// implement this interface. They wrap a token that they encrypt, decrypt,
+    /// and sign / verify signatures for. The token can be retrieved using
+    /// the Token property and passed as extension object in service calls.
     /// </summary>
-    public interface IUserIdentityTokenHandler : IDisposable
+    /// <remarks>
+    /// Previously the tokens themselves implemented crypto operations, but
+    /// for security and better separation of concerns, the handlers now
+    /// perform these operations and are disposable/copyable to ensure better
+    /// lifetime management of sensitive data.
+    /// </remarks>
+    public interface IUserIdentityTokenHandler :
+        IDisposable, ICloneable, IEquatable<IUserIdentityTokenHandler>
     {
         /// <summary>
-        /// Token
+        /// The token the handler operates on.
         /// </summary>
         UserIdentityToken Token { get; }
 
         /// <summary>
-        /// Get display name of the token
+        /// Get display name of the token. This is used only for logging and
+        /// diagnostics.
         /// </summary>
         string DisplayName { get; }
 
         /// <summary>
-        /// Token type
+        /// The type of the wrapped token
         /// </summary>
         UserTokenType TokenType { get; }
+
+        /// <summary>
+        /// Update the policy associated with the token
+        /// </summary>
+        /// <param name="userTokenPolicy"></param>
+        void UpdatePolicy(UserTokenPolicy userTokenPolicy);
 
         /// <summary>
         /// Encrypts the token
@@ -83,10 +100,13 @@ namespace Opc.Ua
     public static class UserIdentityTokenExtensions
     {
         /// <summary>
-        /// Clones the token.
+        /// Wraps the raw token inside a token handler to operate on it.
+        /// Dispose the returned handler when done. When storing it for
+        /// later use clone it and then dispose the original when done.
         /// </summary>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public static IUserIdentityTokenHandler AsTokenHandler(this UserIdentityToken token)
+        /// <exception cref="ServiceResultException"></exception>
+        public static IUserIdentityTokenHandler AsTokenHandler(
+            this UserIdentityToken token)
         {
             switch (token)
             {
@@ -96,16 +116,24 @@ namespace Opc.Ua
                     return new UserNameIdentityTokenHandler(userNamePassword);
                 case X509IdentityToken x509Identity:
                     return new X509IdentityTokenHandler(x509Identity);
-                case IssuedIdentityToken issuedIdentity:
-                    return new IssuedIdentityTokenHandler(issuedIdentity);
+                case IssuedIdentityToken issuedToken:
+                    return new IssuedIdentityTokenHandler(issuedToken);
                 default:
-                    throw new ArgumentOutOfRangeException(
-                        nameof(token),
-                        token,
-                        "Invalid token type");
+                    throw ServiceResultException.Create(
+                        StatusCodes.BadNotSupported,
+                        "The token type {0} is not supported in this implementation.",
+                        token.GetType().Name);
             }
         }
+
+        /// <summary>
+        /// Simplified clone to produce a copy of the token handler.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public static T Copy<T>(this T tokenHandler)
+            where T : IUserIdentityTokenHandler
+        {
+            return (T)tokenHandler.Clone();
+        }
     }
-
-
 }

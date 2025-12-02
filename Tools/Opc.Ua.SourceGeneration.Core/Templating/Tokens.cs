@@ -93,6 +93,8 @@ namespace Opc.Ua.SourceGeneration
         public static string ListOfFindChildCase => nameof(ListOfFindChildCase);
         public static string ListOfFindChildren => nameof(ListOfFindChildren);
         public static string ListOfIdentifiers => nameof(ListOfIdentifiers);
+        public static string ListOfIdentifersToNames => nameof(ListOfIdentifersToNames);
+        public static string ListOfNamesToIdentifiers => nameof(ListOfNamesToIdentifiers);
         public static string ListOfImports => nameof(ListOfImports);
         public static string ListOfInputArguments => nameof(ListOfInputArguments);
         public static string ListOfNamespaceUris => nameof(ListOfNamespaceUris);
@@ -165,5 +167,6 @@ namespace Opc.Ua.SourceGeneration
         public static string ListOfResourceGroups => nameof(ListOfResourceGroups);
         public static string ListOfResourceDeclarations => nameof(ListOfResourceDeclarations);
         public static string AccessModifier => nameof(AccessModifier);
+        public static string IdentifierReflection => nameof(IdentifierReflection);
     }
 }

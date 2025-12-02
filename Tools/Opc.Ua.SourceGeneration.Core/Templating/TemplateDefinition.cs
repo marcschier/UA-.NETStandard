@@ -59,7 +59,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Loads the template.
         /// </summary>
-        public TemplateString Load(Template template, Context context)
+        public TemplateString Load(Template template, ITemplateContext context)
         {
             // check for override.
             if (OnTemplateLoad != null)
@@ -74,7 +74,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes the template.
         /// </summary>
-        public bool Write(Template template, Context context)
+        public bool Write(Template template, ITemplateContext context)
         {
             // check for override.
             if (OnTemplateWrite != null)
@@ -90,10 +90,10 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// A delegate handle events associated with template.
     /// </summary>
-    internal delegate TemplateString LoadTemplateEventHandler(Template template, Context context);
+    internal delegate TemplateString LoadTemplateEventHandler(Template template, ITemplateContext context);
 
     /// <summary>
     /// A delegate handle events associated with template.
     /// </summary>
-    internal delegate bool WriteTemplateEventHandler(Template template, Context context);
+    internal delegate bool WriteTemplateEventHandler(Template template, ITemplateContext context);
 }

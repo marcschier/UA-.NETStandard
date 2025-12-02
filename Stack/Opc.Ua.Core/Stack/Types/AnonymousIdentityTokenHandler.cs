@@ -11,6 +11,7 @@
 */
 
 using System.Security.Cryptography.X509Certificates;
+using Newtonsoft.Json.Linq;
 
 namespace Opc.Ua
 {
@@ -19,14 +20,39 @@ namespace Opc.Ua
     /// </summary>
     public sealed class AnonymousIdentityTokenHandler : IUserIdentityTokenHandler
     {
+        /// <summary>
+        /// Create anonymous identity token handler.
+        /// </summary>
+        public AnonymousIdentityTokenHandler(AnonymousIdentityToken token = null)
+        {
+            m_token = token ?? new AnonymousIdentityToken();
+        }
+
+        /// <summary>
+        /// Create anonymous identity token handler for policy.
+        /// </summary>
+        public static AnonymousIdentityTokenHandler Create(UserTokenPolicy policy)
+        {
+            return new AnonymousIdentityTokenHandler(new AnonymousIdentityToken
+            {
+                PolicyId = policy.PolicyId
+            });
+        }
+
         /// <inheritdoc/>
-        public UserIdentityToken Token => new AnonymousIdentityToken();
+        public UserIdentityToken Token => m_token;
 
         /// <inheritdoc/>
         public UserTokenType TokenType => UserTokenType.Anonymous;
 
         /// <inheritdoc/>
         public string DisplayName => "Anonymous";
+
+        /// <inheritdoc/>
+        public void UpdatePolicy(UserTokenPolicy userTokenPolicy)
+        {
+            m_token.PolicyId = userTokenPolicy.PolicyId;
+        }
 
         /// <inheritdoc/>
         public void Encrypt(
@@ -75,5 +101,19 @@ namespace Opc.Ua
         public void Dispose()
         {
         }
+
+        /// <inheritdoc/>
+        public object Clone()
+        {
+            return new AnonymousIdentityTokenHandler(m_token);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(IUserIdentityTokenHandler other)
+        {
+            return other is AnonymousIdentityTokenHandler;
+        }
+
+        private readonly AnonymousIdentityToken m_token;
     }
 }

@@ -30,11 +30,406 @@
 using System;
 using System.Collections.Generic;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 
 namespace Opc.Ua.Schema.Model
 {
-    public partial class ModelDesign
+    public partial class Namespace : IEquatable<Namespace>
+    {
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as Namespace);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(Namespace other)
+        {
+            return
+                other is not null &&
+                Name == other.Name &&
+                Prefix == other.Prefix &&
+                InternalPrefix == other.InternalPrefix &&
+                XmlNamespace == other.XmlNamespace &&
+                XmlPrefix == other.XmlPrefix &&
+                FilePath == other.FilePath &&
+                Version == other.Version &&
+                PublicationDate == other.PublicationDate &&
+                Value == other.Value;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(Name);
+            hash.Add(Prefix);
+            hash.Add(InternalPrefix);
+            hash.Add(XmlNamespace);
+            hash.Add(XmlPrefix);
+            hash.Add(FilePath);
+            hash.Add(Version);
+            hash.Add(PublicationDate);
+            hash.Add(Value);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Namespace left, Namespace right)
+        {
+            return EqualityComparer<Namespace>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Namespace left, Namespace right)
+        {
+            return !(left == right);
+        }
+    }
+
+    public partial class ListOfChildren : IEquatable<ListOfChildren>
+    {
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ListOfChildren);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(ListOfChildren other)
+        {
+            return other is not null &&
+                SequenceEqualityComparer<InstanceDesign>.Default.Equals(Items, other.Items);
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(Items, SequenceEqualityComparer<InstanceDesign>.Default);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(ListOfChildren left, ListOfChildren right)
+        {
+            return EqualityComparer<ListOfChildren>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(ListOfChildren left, ListOfChildren right)
+        {
+            return !(left == right);
+        }
+    }
+
+    public partial class RolePermissionSet : IEquatable<RolePermissionSet>
+    {
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as RolePermissionSet);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(RolePermissionSet other)
+        {
+            return other is not null &&
+                SequenceEqualityComparer<RolePermission>.Default.Equals(RolePermission, other.RolePermission) &&
+                Name == other.Name &&
+                DoNotInheirit == other.DoNotInheirit;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(RolePermission, SequenceEqualityComparer<RolePermission>.Default);
+            hash.Add(Name);
+            hash.Add(DoNotInheirit);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(RolePermissionSet left, RolePermissionSet right)
+        {
+            return EqualityComparer<RolePermissionSet>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(RolePermissionSet left, RolePermissionSet right)
+        {
+            return !(left == right);
+        }
+    }
+
+    public partial class RolePermission : IEquatable<RolePermission>
+    {
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as RolePermission);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(RolePermission other)
+        {
+            return other is not null &&
+                ArrayEqualityComparer<Permissions>.Default.Equals(Permission, other.Permission) &&
+                XmlQualifiedNameEqualityComparer.Default.Equals(Role, other.Role);
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(Permission, ArrayEqualityComparer<Permissions>.Default);
+            hash.Add(Role, XmlQualifiedNameEqualityComparer.Default);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(RolePermission left, RolePermission right)
+        {
+            return EqualityComparer<RolePermission>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(RolePermission left, RolePermission right)
+        {
+            return !(left == right);
+        }
+    }
+
+    public partial class ReferenceTypeDesign : IEquatable<ReferenceTypeDesign>
+    {
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ReferenceTypeDesign);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(ReferenceTypeDesign other)
+        {
+            return
+                other is not null &&
+                base.Equals(other) &&
+                EqualityComparer<LocalizedText>.Default.Equals(InverseName, other.InverseName) &&
+                Symmetric == other.Symmetric &&
+                SymmetricSpecified == other.SymmetricSpecified;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(base.GetHashCode(), InverseName, Symmetric, SymmetricSpecified);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(ReferenceTypeDesign left, ReferenceTypeDesign right)
+        {
+            return EqualityComparer<ReferenceTypeDesign>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(ReferenceTypeDesign left, ReferenceTypeDesign right)
+        {
+            return !(left == right);
+        }
+    }
+
+    public partial class EncodingDesign : IEquatable<EncodingDesign>
+    {
+        /// <inheritdoc/>
+        public bool Equals(EncodingDesign other)
+        {
+            return other is not null && base.Equals(other);
+        }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj);
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+    }
+
+    public partial class ObjectDesign : IEquatable<ObjectDesign>
+    {
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ObjectDesign);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(ObjectDesign other)
+        {
+            return other is not null &&
+                base.Equals(other) &&
+                SupportsEvents == other.SupportsEvents &&
+                SupportsEventsSpecified == other.SupportsEventsSpecified;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(base.GetHashCode(), SupportsEvents, SupportsEventsSpecified);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(ObjectDesign left, ObjectDesign right)
+        {
+            return EqualityComparer<ObjectDesign>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(ObjectDesign left, ObjectDesign right)
+        {
+            return !(left == right);
+        }
+    }
+
+    public partial class ObjectTypeDesign : IEquatable<ObjectTypeDesign>
+    {
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ObjectTypeDesign);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(ObjectTypeDesign other)
+        {
+            return other is not null &&
+                base.Equals(other) &&
+                SupportsEvents == other.SupportsEvents &&
+                SupportsEventsSpecified == other.SupportsEventsSpecified;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(base.GetHashCode(), SupportsEvents, SupportsEventsSpecified);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(ObjectTypeDesign left, ObjectTypeDesign right)
+        {
+            return EqualityComparer<ObjectTypeDesign>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(ObjectTypeDesign left, ObjectTypeDesign right)
+        {
+            return !(left == right);
+        }
+    }
+
+    public partial class DictionaryDesign : IEquatable<DictionaryDesign>
+    {
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as DictionaryDesign);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(DictionaryDesign other)
+        {
+            return
+                other is not null &&
+                base.Equals(other) &&
+                XmlQualifiedNameEqualityComparer.Default.Equals(EncodingName, other.EncodingName);
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(base.GetHashCode());
+            hash.Add(EncodingName, XmlQualifiedNameEqualityComparer.Default);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(DictionaryDesign left, DictionaryDesign right)
+        {
+            return EqualityComparer<DictionaryDesign>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(DictionaryDesign left, DictionaryDesign right)
+        {
+            return !(left == right);
+        }
+    }
+
+    public partial class PropertyDesign : IEquatable<PropertyDesign>
+    {
+        /// <inheritdoc/>
+        public bool Equals(PropertyDesign other)
+        {
+            return other is not null && base.Equals(other);
+        }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj);
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+    }
+
+    public partial class ViewDesign : IEquatable<ViewDesign>
+    {
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ViewDesign);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(ViewDesign other)
+        {
+            return other is not null &&
+                base.Equals(other) &&
+                SupportsEvents == other.SupportsEvents &&
+                ContainsNoLoops == other.ContainsNoLoops;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(base.GetHashCode(), SupportsEvents, ContainsNoLoops);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(ViewDesign left, ViewDesign right)
+        {
+            return EqualityComparer<ViewDesign>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(ViewDesign left, ViewDesign right)
+        {
+            return !(left == right);
+        }
+    }
+
+    public partial class ModelDesign : IEquatable<ModelDesign>
     {
         /// <summary>
         /// Target namespace information
@@ -67,15 +462,98 @@ namespace Opc.Ua.Schema.Model
         /// </summary>
         [XmlIgnore]
         public Dictionary<string, Export.ModelTableEntry> Dependencies { get; set; }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return obj is ModelDesign design && Equals(design);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(ModelDesign design)
+        {
+            return
+                SequenceEqualityComparer<Namespace>.Default.Equals(Namespaces, design.Namespaces) &&
+                SequenceEqualityComparer<RolePermissionSet>.Default.Equals(PermissionSets, design.PermissionSets) &&
+                SequenceEqualityComparer<NodeDesign>.Default.Equals(Items, design.Items) &&
+                XmlElementArrayStringEqualityComparer.Default.Equals(Extensions, design.Extensions) &&
+                TargetNamespace == design.TargetNamespace &&
+                TargetVersion == design.TargetVersion &&
+                TargetPublicationDate == design.TargetPublicationDate &&
+                TargetXmlNamespace == design.TargetXmlNamespace &&
+                DefaultLocale == design.DefaultLocale;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(Namespaces, SequenceEqualityComparer<Namespace>.Default);
+            hash.Add(PermissionSets, SequenceEqualityComparer<RolePermissionSet>.Default);
+            hash.Add(Items, SequenceEqualityComparer<NodeDesign>.Default);
+            hash.Add(Extensions, XmlElementArrayStringEqualityComparer.Default);
+            hash.Add(TargetNamespace);
+            hash.Add(TargetVersion);
+            hash.Add(TargetPublicationDate);
+            hash.Add(TargetXmlNamespace);
+            hash.Add(DefaultLocale);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(ModelDesign left, ModelDesign right)
+        {
+            return EqualityComparer<ModelDesign>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(ModelDesign left, ModelDesign right)
+        {
+            return !(left == right);
+        }
     }
 
-    public partial class LocalizedText
+    public partial class LocalizedText : IEquatable<LocalizedText>
     {
         /// <summary>
         /// Text is autogenerated
         /// </summary>
         [XmlIgnore]
         public bool IsAutogenerated { get; set; }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as LocalizedText);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(LocalizedText other)
+        {
+            return other is not null &&
+                Key == other.Key &&
+                DoNotIgnore == other.DoNotIgnore &&
+                Value == other.Value &&
+                IsAutogenerated == other.IsAutogenerated;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Key, DoNotIgnore, Value, IsAutogenerated);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(LocalizedText left, LocalizedText right)
+        {
+            return EqualityComparer<LocalizedText>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(LocalizedText left, LocalizedText right)
+        {
+            return !(left == right);
+        }
     }
 
     /// <summary>
@@ -243,7 +721,7 @@ namespace Opc.Ua.Schema.Model
     /// <summary>
     /// A class that stores the model design for a Node.
     /// </summary>
-    public partial class NodeDesign : IFormattable
+    public partial class NodeDesign : IFormattable, IEquatable<NodeDesign>
     {
         /// <summary>
         /// Parent node
@@ -351,16 +829,98 @@ namespace Opc.Ua.Schema.Model
             return CoreUtils.Format("{0}{1}{2}", parentId, PathChar, childName);
         }
 
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as NodeDesign);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(NodeDesign other)
+        {
+            return
+                other is not null &&
+                BrowseName == other.BrowseName &&
+                EqualityComparer<LocalizedText>.Default.Equals(DisplayName, other.DisplayName) &&
+                EqualityComparer<LocalizedText>.Default.Equals(Description, other.Description) &&
+                EqualityComparer<ListOfChildren>.Default.Equals(Children, other.Children) &&
+                SequenceEqualityComparer<Reference>.Default.Equals(References, other.References) &&
+                EqualityComparer<RolePermissionSet>.Default.Equals(RolePermissions, other.RolePermissions) &&
+                EqualityComparer<RolePermissionSet>.Default.Equals(DefaultRolePermissions, other.DefaultRolePermissions) &&
+                AccessRestrictions == other.AccessRestrictions &&
+                AccessRestrictionsSpecified == other.AccessRestrictionsSpecified &&
+                DefaultAccessRestrictions == other.DefaultAccessRestrictions &&
+                DefaultAccessRestrictionsSpecified == other.DefaultAccessRestrictionsSpecified &&
+                XmlElementArrayStringEqualityComparer.Default.Equals(Extensions, other.Extensions) &&
+                XmlQualifiedNameEqualityComparer.Default.Equals(SymbolicName, other.SymbolicName) &&
+                XmlQualifiedNameEqualityComparer.Default.Equals(SymbolicId, other.SymbolicId) &&
+                IsDeclaration == other.IsDeclaration &&
+                NumericId == other.NumericId &&
+                NumericIdSpecified == other.NumericIdSpecified &&
+                StringId == other.StringId &&
+                WriteAccess == other.WriteAccess &&
+                PartNo == other.PartNo &&
+                Category == other.Category &&
+                NotInAddressSpace == other.NotInAddressSpace &&
+                ReleaseStatus == other.ReleaseStatus &&
+                Purpose == other.Purpose &&
+                IsDynamic == other.IsDynamic;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(BrowseName);
+            hash.Add(DisplayName);
+            hash.Add(Description);
+            hash.Add(Children);
+            hash.Add(References, SequenceEqualityComparer<Reference>.Default);
+            hash.Add(RolePermissions);
+            hash.Add(DefaultRolePermissions);
+            hash.Add(AccessRestrictions);
+            hash.Add(AccessRestrictionsSpecified);
+            hash.Add(DefaultAccessRestrictions);
+            hash.Add(DefaultAccessRestrictionsSpecified);
+            hash.Add(Extensions, XmlElementArrayStringEqualityComparer.Default);
+            hash.Add(SymbolicName, XmlQualifiedNameEqualityComparer.Default);
+            hash.Add(SymbolicId, XmlQualifiedNameEqualityComparer.Default);
+            hash.Add(IsDeclaration);
+            hash.Add(NumericId);
+            hash.Add(NumericIdSpecified);
+            hash.Add(StringId);
+            hash.Add(WriteAccess);
+            hash.Add(PartNo);
+            hash.Add(Category);
+            hash.Add(NotInAddressSpace);
+            hash.Add(ReleaseStatus);
+            hash.Add(Purpose);
+            hash.Add(IsDynamic);
+            return hash.ToHashCode();
+        }
+
         /// <summary>
         /// Path character to use when constructing symbolic ids.
         /// </summary>
         public const char PathChar = '_';
+
+        /// <inheritdoc/>
+        public static bool operator ==(NodeDesign left, NodeDesign right)
+        {
+            return EqualityComparer<NodeDesign>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(NodeDesign left, NodeDesign right)
+        {
+            return !(left == right);
+        }
     }
 
     /// <summary>
     /// A class that stores the model design for a Variable.
     /// </summary>
-    public partial class VariableDesign
+    public partial class VariableDesign : IEquatable<VariableDesign>
     {
         /// <summary>
         /// Decoded value
@@ -373,12 +933,70 @@ namespace Opc.Ua.Schema.Model
         /// </summary>
         [XmlIgnore]
         public DataTypeDesign DataTypeNode { get; set; }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as VariableDesign);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(VariableDesign other)
+        {
+            return
+                other is not null &&
+                base.Equals(other) &&
+                XmlElementStringEqualityComparer.Default.Equals(DefaultValue, other.DefaultValue) &&
+                XmlQualifiedNameEqualityComparer.Default.Equals(DataType, other.DataType) &&
+                ValueRank == other.ValueRank &&
+                ArrayDimensions == other.ArrayDimensions &&
+                AccessLevel == other.AccessLevel &&
+                AccessLevelSpecified == other.AccessLevelSpecified &&
+                InstanceAccessLevel == other.InstanceAccessLevel &&
+                InstanceAccessLevelSpecified == other.InstanceAccessLevelSpecified &&
+                MinimumSamplingInterval == other.MinimumSamplingInterval &&
+                MinimumSamplingIntervalSpecified == other.MinimumSamplingIntervalSpecified &&
+                Historizing == other.Historizing &&
+                HistorizingSpecified == other.HistorizingSpecified;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(base.GetHashCode());
+            hash.Add(DefaultValue, XmlElementStringEqualityComparer.Default);
+            hash.Add(DataType, XmlQualifiedNameEqualityComparer.Default);
+            hash.Add(ValueRank);
+            hash.Add(ArrayDimensions);
+            hash.Add(AccessLevel);
+            hash.Add(AccessLevelSpecified);
+            hash.Add(InstanceAccessLevel);
+            hash.Add(InstanceAccessLevelSpecified);
+            hash.Add(MinimumSamplingInterval);
+            hash.Add(MinimumSamplingIntervalSpecified);
+            hash.Add(Historizing);
+            hash.Add(HistorizingSpecified);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(VariableDesign left, VariableDesign right)
+        {
+            return EqualityComparer<VariableDesign>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(VariableDesign left, VariableDesign right)
+        {
+            return !(left == right);
+        }
     }
 
     /// <summary>
     /// A class that stores the model design for a VariableType.
     /// </summary>
-    public partial class VariableTypeDesign
+    public partial class VariableTypeDesign : IEquatable<VariableTypeDesign>
     {
         /// <summary>
         /// Decoded value
@@ -391,12 +1009,70 @@ namespace Opc.Ua.Schema.Model
         /// </summary>
         [XmlIgnore]
         public DataTypeDesign DataTypeNode { get; set; }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as VariableTypeDesign);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(VariableTypeDesign other)
+        {
+            return
+                other is not null &&
+                base.Equals(other) &&
+                XmlElementStringEqualityComparer.Default.Equals(DefaultValue, other.DefaultValue) &&
+                XmlQualifiedNameEqualityComparer.Default.Equals(DataType, other.DataType) &&
+                ValueRank == other.ValueRank &&
+                ValueRankSpecified == other.ValueRankSpecified &&
+                ArrayDimensions == other.ArrayDimensions &&
+                AccessLevel == other.AccessLevel &&
+                AccessLevelSpecified == other.AccessLevelSpecified &&
+                MinimumSamplingInterval == other.MinimumSamplingInterval &&
+                MinimumSamplingIntervalSpecified == other.MinimumSamplingIntervalSpecified &&
+                Historizing == other.Historizing &&
+                HistorizingSpecified == other.HistorizingSpecified &&
+                ExposesItsChildren == other.ExposesItsChildren;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(base.GetHashCode());
+            hash.Add(DefaultValue, XmlElementStringEqualityComparer.Default);
+            hash.Add(DataType, XmlQualifiedNameEqualityComparer.Default);
+            hash.Add(ValueRank);
+            hash.Add(ValueRankSpecified);
+            hash.Add(ArrayDimensions);
+            hash.Add(AccessLevel);
+            hash.Add(AccessLevelSpecified);
+            hash.Add(MinimumSamplingInterval);
+            hash.Add(MinimumSamplingIntervalSpecified);
+            hash.Add(Historizing);
+            hash.Add(HistorizingSpecified);
+            hash.Add(ExposesItsChildren);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(VariableTypeDesign left, VariableTypeDesign right)
+        {
+            return EqualityComparer<VariableTypeDesign>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(VariableTypeDesign left, VariableTypeDesign right)
+        {
+            return !(left == right);
+        }
     }
 
     /// <summary>
     /// A class that stores the model design for a Method.
     /// </summary>
-    public partial class MethodDesign
+    public partial class MethodDesign : IEquatable<MethodDesign>
     {
         /// <summary>
         /// Has arguments
@@ -415,12 +1091,54 @@ namespace Opc.Ua.Schema.Model
         /// </summary>
         [XmlIgnore]
         public MethodDesign MethodDeclarationNode { get; set; }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as MethodDesign);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(MethodDesign other)
+        {
+            return
+                other is not null &&
+                base.Equals(other) &&
+                SequenceEqualityComparer<Parameter>.Default.Equals(InputArguments, other.InputArguments) &&
+                SequenceEqualityComparer<Parameter>.Default.Equals(OutputArguments, other.OutputArguments) &&
+                NonExecutable == other.NonExecutable &&
+                NonExecutableSpecified == other.NonExecutableSpecified;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(base.GetHashCode());
+            hash.Add(InputArguments, SequenceEqualityComparer<Parameter>.Default);
+            hash.Add(OutputArguments, SequenceEqualityComparer<Parameter>.Default);
+            hash.Add(NonExecutable);
+            hash.Add(NonExecutableSpecified);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(MethodDesign left, MethodDesign right)
+        {
+            return EqualityComparer<MethodDesign>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(MethodDesign left, MethodDesign right)
+        {
+            return !(left == right);
+        }
     }
 
     /// <summary>
     /// A class that stores the model design for a Type.
     /// </summary>
-    public partial class TypeDesign
+    public partial class TypeDesign : IEquatable<TypeDesign>
     {
         /// <summary>
         /// Base type node
@@ -436,12 +1154,56 @@ namespace Opc.Ua.Schema.Model
         {
             return (TypeDesign)MemberwiseClone();
         }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as TypeDesign);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(TypeDesign other)
+        {
+            return
+                other is not null &&
+                base.Equals(other) &&
+                ClassName == other.ClassName &&
+                XmlQualifiedNameEqualityComparer.Default.Equals(BaseType, other.BaseType) &&
+                IsAbstract == other.IsAbstract &&
+                NoClassGeneration == other.NoClassGeneration &&
+                EqualityComparer<TypeDesign>.Default.Equals(BaseTypeNode, other.BaseTypeNode);
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(base.GetHashCode());
+            hash.Add(ClassName);
+            hash.Add(BaseType, XmlQualifiedNameEqualityComparer.Default);
+            hash.Add(IsAbstract);
+            hash.Add(NoClassGeneration);
+            hash.Add(BaseTypeNode);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(TypeDesign left, TypeDesign right)
+        {
+            return EqualityComparer<TypeDesign>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(TypeDesign left, TypeDesign right)
+        {
+            return !(left == right);
+        }
     }
 
     /// <summary>
     /// A class that stores the model design for a Type.
     /// </summary>
-    public partial class InstanceDesign
+    public partial class InstanceDesign : IEquatable<InstanceDesign>
     {
         /// <summary>
         /// Type definition node
@@ -474,12 +1236,72 @@ namespace Opc.Ua.Schema.Model
         {
             return (InstanceDesign)MemberwiseClone();
         }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as InstanceDesign);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(InstanceDesign other)
+        {
+            return
+                other is not null &&
+                base.Equals(other) &&
+                XmlQualifiedNameEqualityComparer.Default.Equals(ReferenceType, other.ReferenceType) &&
+                XmlQualifiedNameEqualityComparer.Default.Equals(Declaration, other.Declaration) &&
+                XmlQualifiedNameEqualityComparer.Default.Equals(TypeDefinition, other.TypeDefinition) &&
+                ModellingRule == other.ModellingRule &&
+                ModellingRuleSpecified == other.ModellingRuleSpecified &&
+                MinCardinality == other.MinCardinality &&
+                MaxCardinality == other.MaxCardinality &&
+                PreserveDefaultAttributes == other.PreserveDefaultAttributes &&
+                DesignToolOnly == other.DesignToolOnly &&
+                EqualityComparer<TypeDesign>.Default.Equals(TypeDefinitionNode, other.TypeDefinitionNode) &&
+                EqualityComparer<InstanceDesign>.Default.Equals(InstanceDeclarationNode, other.InstanceDeclarationNode) &&
+                EqualityComparer<InstanceDesign>.Default.Equals(OveriddenNode, other.OveriddenNode) &&
+                IdentifierRequired == other.IdentifierRequired;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(base.GetHashCode());
+            hash.Add(ReferenceType, XmlQualifiedNameEqualityComparer.Default);
+            hash.Add(Declaration, XmlQualifiedNameEqualityComparer.Default);
+            hash.Add(TypeDefinition, XmlQualifiedNameEqualityComparer.Default);
+            hash.Add(ModellingRule);
+            hash.Add(ModellingRuleSpecified);
+            hash.Add(MinCardinality);
+            hash.Add(MaxCardinality);
+            hash.Add(PreserveDefaultAttributes);
+            hash.Add(DesignToolOnly);
+            hash.Add(TypeDefinitionNode);
+            hash.Add(InstanceDeclarationNode);
+            hash.Add(OveriddenNode);
+            hash.Add(IdentifierRequired);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(InstanceDesign left, InstanceDesign right)
+        {
+            return EqualityComparer<InstanceDesign>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(InstanceDesign left, InstanceDesign right)
+        {
+            return !(left == right);
+        }
     }
 
     /// <summary>
     /// A class that stores a reference between nodes.
     /// </summary>
-    public partial class Reference
+    public partial class Reference : IEquatable<Reference>
     {
         /// <summary>
         /// Source node
@@ -508,12 +1330,52 @@ namespace Opc.Ua.Schema.Model
 #pragma warning disable CA2235 // Mark all non-serializable fields
         public RelativePath TargetRelativePath { get; set; }
 #pragma warning restore CA2235 // Mark all non-serializable fields
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as Reference);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(Reference other)
+        {
+            return
+                other is not null &&
+                XmlQualifiedNameEqualityComparer.Default.Equals(ReferenceType, other.ReferenceType) &&
+                XmlQualifiedNameEqualityComparer.Default.Equals(TargetId, other.TargetId) &&
+                IsInverse == other.IsInverse &&
+                IsOneWay == other.IsOneWay;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(ReferenceType, XmlQualifiedNameEqualityComparer.Default);
+            hash.Add(TargetId, XmlQualifiedNameEqualityComparer.Default);
+            hash.Add(IsInverse);
+            hash.Add(IsOneWay);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Reference left, Reference right)
+        {
+            return EqualityComparer<Reference>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Reference left, Reference right)
+        {
+            return !(left == right);
+        }
     }
 
     /// <summary>
     /// A class that stores a parameter for a node.
     /// </summary>
-    public partial class Parameter
+    public partial class Parameter : IEquatable<Parameter>
     {
         /// <summary>
         /// Parent node
@@ -538,6 +1400,64 @@ namespace Opc.Ua.Schema.Model
         /// </summary>
         [XmlIgnore]
         public bool IsInherited { get; set; }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as Parameter);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(Parameter other)
+        {
+            return
+                other is not null &&
+                EqualityComparer<LocalizedText>.Default.Equals(Description, other.Description) &&
+                EqualityComparer<XmlElement>.Default.Equals(DefaultValue, other.DefaultValue) &&
+                EqualityComparer<LocalizedText>.Default.Equals(DisplayName, other.DisplayName) &&
+                Name == other.Name &&
+                Identifier == other.Identifier &&
+                IdentifierSpecified == other.IdentifierSpecified &&
+                BitMask == other.BitMask &&
+                XmlQualifiedNameEqualityComparer.Default.Equals(DataType, other.DataType) &&
+                ValueRank == other.ValueRank &&
+                ArrayDimensions == other.ArrayDimensions &&
+                AllowSubTypes == other.AllowSubTypes &&
+                IsOptional == other.IsOptional &&
+                ReleaseStatus == other.ReleaseStatus;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(Description);
+            hash.Add(DefaultValue);
+            hash.Add(DisplayName);
+            hash.Add(Name);
+            hash.Add(Identifier);
+            hash.Add(IdentifierSpecified);
+            hash.Add(BitMask);
+            hash.Add(DataType, XmlQualifiedNameEqualityComparer.Default);
+            hash.Add(ValueRank);
+            hash.Add(ArrayDimensions);
+            hash.Add(AllowSubTypes);
+            hash.Add(IsOptional);
+            hash.Add(ReleaseStatus);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Parameter left, Parameter right)
+        {
+            return EqualityComparer<Parameter>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Parameter left, Parameter right)
+        {
+            return !(left == right);
+        }
     }
 
     /// <summary>
@@ -699,7 +1619,7 @@ namespace Opc.Ua.Schema.Model
     /// <summary>
     /// A class that stores the model design for a DataType.
     /// </summary>
-    public partial class DataTypeDesign
+    public partial class DataTypeDesign : IEquatable<DataTypeDesign>
     {
         /// <summary>
         /// Has encodings
@@ -730,5 +1650,225 @@ namespace Opc.Ua.Schema.Model
         /// </summary>
         [XmlIgnore]
         public BasicDataType BasicDataType { get; set; }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as DataTypeDesign);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(DataTypeDesign other)
+        {
+            return
+                other is not null &&
+                base.Equals(other) &&
+                SequenceEqualityComparer<Parameter>.Default.Equals(Fields, other.Fields) &&
+                SequenceEqualityComparer<EncodingDesign>.Default.Equals(Encodings, other.Encodings) &&
+                IsOptionSet == other.IsOptionSet &&
+                IsUnion == other.IsUnion &&
+                NoArraysAllowed == other.NoArraysAllowed &&
+                ForceEnumValues == other.ForceEnumValues &&
+                NoEncodings == other.NoEncodings;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(base.GetHashCode());
+            hash.Add(Fields, SequenceEqualityComparer<Parameter>.Default);
+            hash.Add(Encodings, SequenceEqualityComparer<EncodingDesign>.Default);
+            hash.Add(IsOptionSet);
+            hash.Add(IsUnion);
+            hash.Add(NoArraysAllowed);
+            hash.Add(ForceEnumValues);
+            hash.Add(NoEncodings);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(DataTypeDesign left, DataTypeDesign right)
+        {
+            return EqualityComparer<DataTypeDesign>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(DataTypeDesign left, DataTypeDesign right)
+        {
+            return !(left == right);
+        }
+    }
+
+    /// <summary>
+    /// Helper to compare arrays for deep equality
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public sealed class SequenceEqualityComparer<T> : EqualityComparer<T[]> where T : IEquatable<T>
+    {
+        /// <inheritdoc/>
+        public override bool Equals(T[] x, T[] y)
+        {
+            if (ReferenceEquals(x, y))
+            {
+                return true;
+            }
+            if (x is null || y is null || x.Length != y.Length)
+            {
+                return false;
+            }
+            return x.AsSpan().SequenceEqual(y.AsSpan());
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode(T[] obj)
+        {
+            var hash = new HashCode();
+            if (obj != null)
+            {
+                foreach (T item in obj)
+                {
+                    hash.Add(item);
+                }
+            }
+            return hash.ToHashCode();
+        }
+    }
+
+    /// <summary>
+    /// Helper to compare arrays for deep equality
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public sealed class ArrayEqualityComparer<T> : EqualityComparer<T[]>
+    {
+        /// <inheritdoc/>
+        public override bool Equals(T[] x, T[] y)
+        {
+            if (ReferenceEquals(x, y))
+            {
+                return true;
+            }
+            if (x is null || y is null || x.Length != y.Length)
+            {
+                return false;
+            }
+            for (int i = 0; i < x.Length; i++)
+            {
+                if (!x[i].Equals(y[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode(T[] obj)
+        {
+            var hash = new HashCode();
+            if (obj != null)
+            {
+                foreach (T item in obj)
+                {
+                    hash.Add(item);
+                }
+            }
+            return hash.ToHashCode();
+        }
+    }
+
+    /// <summary>
+    /// Deep comparison of XmlElement array
+    /// </summary>
+    public sealed class XmlElementArrayStringEqualityComparer : EqualityComparer<XmlElement[]>
+    {
+        /// <inheritdoc/>
+        public override bool Equals(XmlElement[] x, XmlElement[] y)
+        {
+            if (ReferenceEquals(x, y))
+            {
+                return true;
+            }
+            if (x is null || y is null || x.Length != y.Length)
+            {
+                return false;
+            }
+            for (int i = 0; i < x.Length; i++)
+            {
+                if (!XmlElementStringEqualityComparer.Default.Equals(x[i], y[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode(XmlElement[] obj)
+        {
+            var hash = new HashCode();
+            if (obj != null)
+            {
+                foreach (XmlElement item in obj)
+                {
+                    hash.Add(XmlElementStringEqualityComparer.Default.GetHashCode(item));
+                }
+            }
+            return hash.ToHashCode();
+        }
+    }
+
+    /// <summary>
+    /// String comparison of xml element
+    /// </summary>
+    public sealed class XmlElementStringEqualityComparer : EqualityComparer<XmlElement>
+    {
+        /// <inheritdoc/>
+        public override bool Equals(XmlElement x, XmlElement y)
+        {
+            if (ReferenceEquals(x, y))
+            {
+                return true;
+            }
+            if (x is null || y is null)
+            {
+                return false;
+            }
+            return string.Equals(x.OuterXml, y.OuterXml, StringComparison.Ordinal);
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode(XmlElement obj)
+        {
+            return EqualityComparer<string>.Default.GetHashCode(obj?.OuterXml);
+        }
+    }
+
+    /// <summary>
+    /// String comparison of xml element
+    /// </summary>
+    public sealed class XmlQualifiedNameEqualityComparer : EqualityComparer<XmlQualifiedName>
+    {
+        /// <inheritdoc/>
+        public override bool Equals(XmlQualifiedName x, XmlQualifiedName y)
+        {
+            if (ReferenceEquals(x, y))
+            {
+                return true;
+            }
+            if (x is null || y is null)
+            {
+                return false;
+            }
+            return
+                string.Equals(x.Name, y.Name, StringComparison.Ordinal) &&
+                string.Equals(x.Namespace, y.Namespace, StringComparison.Ordinal);
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode(XmlQualifiedName obj)
+        {
+            return HashCode.Combine(obj?.Name, obj?.Namespace);
+        }
     }
 }

@@ -47,32 +47,32 @@ namespace Opc.Ua.Core.Tests.Types.Constants
         public void GetBrowseName_StandardDataTypes_ReturnsValidNames()
         {
             // Test a few standard data type IDs
-            int[] dataTypeIds =
+            uint[] dataTypeIds =
             [
-                (int)DataTypes.Boolean,
-                (int)DataTypes.SByte,
-                (int)DataTypes.Byte,
-                (int)DataTypes.Int16,
-                (int)DataTypes.UInt16,
-                (int)DataTypes.Int32,
-                (int)DataTypes.UInt32,
-                (int)DataTypes.Int64,
-                (int)DataTypes.UInt64,
-                (int)DataTypes.Float,
-                (int)DataTypes.Double,
-                (int)DataTypes.String,
-                (int)DataTypes.DateTime,
-                (int)DataTypes.Guid,
-                (int)DataTypes.ByteString,
-                (int)DataTypes.XmlElement,
-                (int)DataTypes.NodeId,
-                (int)DataTypes.ExpandedNodeId,
-                (int)DataTypes.StatusCode,
-                (int)DataTypes.QualifiedName,
-                (int)DataTypes.LocalizedText
+                DataTypes.Boolean,
+                DataTypes.SByte,
+                DataTypes.Byte,
+                DataTypes.Int16,
+                DataTypes.UInt16,
+                DataTypes.Int32,
+                DataTypes.UInt32,
+                DataTypes.Int64,
+                DataTypes.UInt64,
+                DataTypes.Float,
+                DataTypes.Double,
+                DataTypes.String,
+                DataTypes.DateTime,
+                DataTypes.Guid,
+                DataTypes.ByteString,
+                DataTypes.XmlElement,
+                DataTypes.NodeId,
+                DataTypes.ExpandedNodeId,
+                DataTypes.StatusCode,
+                DataTypes.QualifiedName,
+                DataTypes.LocalizedText
             ];
 
-            foreach (int id in dataTypeIds)
+            foreach (uint id in dataTypeIds)
             {
                 string browseName = DataTypes.GetBrowseName(id);
                 Assert.IsNotNull(browseName);
@@ -86,7 +86,7 @@ namespace Opc.Ua.Core.Tests.Types.Constants
         [Test]
         public void GetBrowseName_BooleanDataType_ReturnsBoolean()
         {
-            string browseName = DataTypes.GetBrowseName((int)DataTypes.Boolean);
+            string browseName = DataTypes.GetBrowseName(DataTypes.Boolean);
             Assert.AreEqual("Boolean", browseName);
         }
 
@@ -96,7 +96,7 @@ namespace Opc.Ua.Core.Tests.Types.Constants
         [Test]
         public void GetBrowseName_InvalidDataTypeId_ReturnsEmptyString()
         {
-            string browseName = DataTypes.GetBrowseName(-9999);
+            string browseName = DataTypes.GetBrowseName(unchecked((uint)-9999));
             Assert.AreEqual(string.Empty, browseName);
         }
 
@@ -149,20 +149,20 @@ namespace Opc.Ua.Core.Tests.Types.Constants
         [Test]
         public void GetBrowseName_GetIdentifier_AreInverseOperations()
         {
-            int[] dataTypeIds =
+            uint[] dataTypeIds =
             [
-                (int)DataTypes.Boolean,
-                (int)DataTypes.Int32,
-                (int)DataTypes.String,
-                (int)DataTypes.DateTime,
-                (int)DataTypes.NodeId
+                DataTypes.Boolean,
+                DataTypes.Int32,
+                DataTypes.String,
+                DataTypes.DateTime,
+                DataTypes.NodeId
             ];
 
-            foreach (int id in dataTypeIds)
+            foreach (uint id in dataTypeIds)
             {
                 string browseName = DataTypes.GetBrowseName(id);
                 uint retrievedId = DataTypes.GetIdentifier(browseName);
-                Assert.AreEqual((uint)id, retrievedId);
+                Assert.AreEqual(id, retrievedId);
             }
         }
     }

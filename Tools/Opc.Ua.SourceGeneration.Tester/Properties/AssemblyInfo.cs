@@ -1,5 +1,5 @@
 /* ========================================================================
- * Copyright (c) 2005-2020 The OPC Foundation, Inc. All rights reserved.
+ * Copyright (c) 2005-2021 The OPC Foundation, Inc. All rights reserved.
  *
  * OPC Foundation MIT License 1.00
  *
@@ -28,25 +28,5 @@
  * ======================================================================*/
 
 using System;
-using Quickstarts.ReferenceServer;
 
-namespace Opc.Ua.Client.Tests
-{
-    public sealed class TokenValidatorMock : ITokenValidator, IDisposable
-    {
-        public IssuedIdentityTokenHandler LastIssuedToken { get; set; }
-
-        public void Dispose()
-        {
-            LastIssuedToken?.Dispose();
-        }
-
-        public IUserIdentity ValidateToken(IssuedIdentityTokenHandler issuedToken)
-        {
-            LastIssuedToken?.Dispose();
-            LastIssuedToken = issuedToken.Copy();
-
-            return new UserIdentity(issuedToken);
-        }
-    }
-}
+[assembly: CLSCompliant(false)]

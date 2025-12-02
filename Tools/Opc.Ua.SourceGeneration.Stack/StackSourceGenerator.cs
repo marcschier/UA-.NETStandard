@@ -60,7 +60,7 @@ namespace Opc.Ua.SourceGeneration
                 context.CompilationProvider
                     .Select((c, _) => CompilationOptions.From(c));
 
-            context.RegisterImplementationSourceOutput(
+            context.RegisterSourceOutput(
                 settings.Combine(options),
                 (context, combination) => new StackGeneration(
                     context,

@@ -492,7 +492,7 @@ namespace Opc.Ua
             IEncodeableFactoryBuilder builder = factory.Builder
                 .AddEncodeableTypes(typeof(EncodeableFactory).Assembly);
 
-            Assembly? core = CoreUtils.GetOpcUaCoreAssembly();
+            Assembly? core = CoreUtils.GetOpcUaAssembly();
             if (core != null)
             {
                 builder = builder.AddEncodeableTypes(core);

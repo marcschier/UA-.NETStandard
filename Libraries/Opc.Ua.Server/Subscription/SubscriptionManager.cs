@@ -1384,27 +1384,21 @@ namespace Opc.Ua.Server
                         continue;
                     }
 
-                    // get the identity of the current or last owner
-                    UserIdentityToken ownerIdentity = subscription.EffectiveIdentity
-                        .GetIdentityToken();
-
                     // Validate the identity of the user who owns/owned the subscription
                     // is the same as the new owner.
-                    bool validIdentity = Utils.IsEqualUserIdentity(
-                        ownerIdentity,
-                        context.Session.EffectiveIdentity.GetIdentityToken());
+                    bool validIdentity = subscription.EffectiveIdentity.TokenHandler.Equals(
+                        context.Session.EffectiveIdentity.TokenHandler);
 
-                    // Test if anonymous user is using a
-                    // secure session using Sign or SignAndEncrypt
-                    if (validIdentity && (ownerIdentity is AnonymousIdentityToken))
+                    // Test if anonymous user is using a secure session using Sign or SignAndEncrypt
+                    if (validIdentity &&
+                        subscription.EffectiveIdentity.TokenType == UserTokenType.Anonymous)
                     {
                         MessageSecurityMode securityMode = context.ChannelContext
                             .EndpointDescription
                             .SecurityMode;
-                        if (securityMode is not MessageSecurityMode.Sign and not MessageSecurityMode.SignAndEncrypt)
-                        {
-                            validIdentity = false;
-                        }
+                        validIdentity = securityMode
+                            is MessageSecurityMode.Sign
+                            or MessageSecurityMode.SignAndEncrypt;
                     }
 
                     // continue if identity check failed

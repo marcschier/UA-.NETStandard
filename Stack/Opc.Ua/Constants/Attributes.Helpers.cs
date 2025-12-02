@@ -33,30 +33,11 @@ namespace Opc.Ua
         public const int MaxAttributes = (int)AccessLevelEx - (int)NodeId + 1;
 
         /// <summary>
-        /// Returns the browse names for all attributes
-        /// </summary>
-        public static IEnumerable<string> BrowseNames => s_attributesNameToId.Value.Keys;
-
-        /// <summary>
-        /// Returns the ids for all attributes.
-        /// </summary>
-        public static IEnumerable<uint> Identifiers => s_attributesIdToName.Value.Keys;
-
-        /// <summary>
         /// Returns true if the attribute id is valid.
         /// </summary>
         public static bool IsValid(uint attributeId)
         {
             return attributeId is >= NodeId and <= AccessLevelEx;
-        }
-
-        /// <summary>
-        /// Returns the browse name for the attribute.
-        /// </summary>
-        public static string GetBrowseName(uint identifier)
-        {
-            return s_attributesIdToName.Value.TryGetValue(identifier, out string name)
-                ? name : string.Empty;
         }
 
         /// <summary>
@@ -66,15 +47,6 @@ namespace Opc.Ua
         public static string[] GetBrowseNames()
         {
             return [.. BrowseNames];
-        }
-
-        /// <summary>
-        /// Returns the id for the attribute with the specified browse name.
-        /// </summary>
-        public static uint GetIdentifier(string browseName)
-        {
-            return s_attributesNameToId.Value.TryGetValue(browseName, out uint id)
-                ? id : 0;
         }
 
         /// <summary>
@@ -92,9 +64,9 @@ namespace Opc.Ua
         /// </summary>
         public static UInt32Collection GetIdentifiers(NodeClass nodeClass)
         {
-            var ids = new UInt32Collection(s_attributesIdToName.Value.Count);
+            var ids = new UInt32Collection(s_idToName.Value.Count);
 
-            foreach (uint id in s_attributesIdToName.Value.Keys)
+            foreach (uint id in s_idToName.Value.Keys)
             {
                 if (IsValid(nodeClass, id))
                 {
@@ -515,46 +487,5 @@ namespace Opc.Ua
                     $"Invalid attribute id {attributeId}. This attribute is not defined.");
             }
         }
-
-        /// <summary>
-        /// Creates a dictionary of names to attribute identifiers
-        /// </summary>
-        private static readonly Lazy<IReadOnlyDictionary<string, uint>> s_attributesNameToId =
-            new(() =>
-            {
-#if NET8_0_OR_GREATER
-                return s_attributesIdToName.Value.ToFrozenDictionary(k => k.Value, k => k.Key);
-#else
-                return new ReadOnlyDictionary<string, uint>(
-                    s_attributesIdToName.Value.ToDictionary(k => k.Value, k => k.Key));
-#endif
-            });
-
-        /// <summary>
-        /// Creates a dictionary of identifiers to browse names for the attributes.
-        /// </summary>
-        private static readonly Lazy<IReadOnlyDictionary<uint, string>> s_attributesIdToName =
-            new(() =>
-            {
-                FieldInfo[] fields = typeof(Attributes).GetFields(
-                    BindingFlags.Public | BindingFlags.Static);
-
-                var keyValuePairs = new Dictionary<uint, string>();
-                foreach (FieldInfo field in fields)
-                {
-                    if (field.FieldType == typeof(uint))
-                    {
-                        uint value = Convert.ToUInt32(
-                            field.GetValue(typeof(Attributes)),
-                            System.Globalization.CultureInfo.InvariantCulture);
-                        keyValuePairs.Add(value, field.Name);
-                    }
-                }
-#if NET8_0_OR_GREATER
-                return keyValuePairs.ToFrozenDictionary();
-#else
-                return new ReadOnlyDictionary<uint, string>(keyValuePairs);
-#endif
-            });
     }
 }

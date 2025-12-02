@@ -82,6 +82,12 @@ namespace Opc.Ua
         public UserTokenType TokenType => UserTokenType.Certificate;
 
         /// <inheritdoc/>
+        public void UpdatePolicy(UserTokenPolicy userTokenPolicy)
+        {
+            m_token.PolicyId = userTokenPolicy.PolicyId;
+        }
+
+        /// <inheritdoc/>
         public void Encrypt(
             X509Certificate2 receiverCertificate,
             byte[] receiverNonce,
@@ -160,6 +166,25 @@ namespace Opc.Ua
         {
             // TODOL Utils.SilentDispose(m_certificate);
             m_certificate = null;
+        }
+
+        /// <inheritdoc/>
+        public object Clone()
+        {
+            return new X509IdentityTokenHandler(Utils.Clone(m_token))
+            {
+                // TODO: m_certificate = m_certificate
+            };
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(IUserIdentityTokenHandler other)
+        {
+            if (other is not X509IdentityTokenHandler tokenHandler)
+            {
+                return false;
+            }
+            return Utils.IsEqual(m_token.CertificateData, tokenHandler.m_token.CertificateData);
         }
 
         private readonly X509IdentityToken m_token;

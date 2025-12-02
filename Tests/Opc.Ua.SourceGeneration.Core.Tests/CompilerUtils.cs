@@ -33,7 +33,6 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -41,6 +40,9 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Text;
+#if NETFRAMEWORK
+using System.Runtime.Serialization;
+#endif
 
 namespace Opc.Ua.SourceGeneration
 {
@@ -275,7 +277,7 @@ namespace Opc.Ua.SourceGeneration
             this IEnumerable<KeyValuePair<string, string>> codeFiles)
         {
             return codeFiles.Append(new KeyValuePair<string, string>(
-                nameof(OpcUaCore), OpcUaCore));
+                nameof(OpcUa), OpcUa));
         }
 
         /// <summary>
@@ -302,7 +304,7 @@ namespace Opc.Ua.SourceGeneration
                 {
                     case DiagnosticSeverity.Error:
                         sev = "ERR";
-                        beforeAfter = 1;
+                        beforeAfter = 12;
                         errorCount++;
                         break;
                     case DiagnosticSeverity.Warning:
@@ -423,10 +425,6 @@ namespace Opc.Ua.SourceGeneration
             [assembly: AssemblyVersionAttribute("4.3.2.1")]
             namespace Opc.Ua
             {
-                public static partial class StatusCodes
-                {
-                    public const uint Good = 0;
-                }
                 public interface IServiceRequest
                 {
                     RequestHeader? RequestHeader { get; set; }
@@ -512,9 +510,9 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// All stubs needed to compile models against Opc.Ua.
+        /// All stubs needed to compile models against Opc.Ua models.
         /// </summary>
-        public const string OpcUaCore =
+        public const string OpcUa =
             """
             #nullable enable
             using System.Reflection;

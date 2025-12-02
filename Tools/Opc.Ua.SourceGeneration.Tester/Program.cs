@@ -1,5 +1,5 @@
 /* ========================================================================
- * Copyright (c) 2005-2020 The OPC Foundation, Inc. All rights reserved.
+ * Copyright (c) 2005-2024 The OPC Foundation, Inc. All rights reserved.
  *
  * OPC Foundation MIT License 1.00
  *
@@ -28,25 +28,36 @@
  * ======================================================================*/
 
 using System;
-using Quickstarts.ReferenceServer;
+using System.IO;
+using System.Text;
+using Microsoft.Extensions.Logging;
 
-namespace Opc.Ua.Client.Tests
+namespace Opc.Ua.SourceGeneration.Tester
 {
-    public sealed class TokenValidatorMock : ITokenValidator, IDisposable
+    internal static class Program
     {
-        public IssuedIdentityTokenHandler LastIssuedToken { get; set; }
-
-        public void Dispose()
+        public static void Main(string[] args)
         {
-            LastIssuedToken?.Dispose();
+            Console.OutputEncoding = Encoding.UTF8;
+            Console.WriteLine("Opc.Ua.SourceGeneration Tester");
+            Console.WriteLine("==============================");
+
+            string output = Path.Combine(Directory.GetCurrentDirectory(), "generated", "stack");
+            LocalFileSystem fs = LocalFileSystem.Instance;
+            // if (fs.Exists(output, true))
+            // {
+            //     fs.Delete(output, true);
+            // }
+            Generators.GenerateStack(StackGenerationType.All, fs, output, [], new Telemetry());
+            Console.WriteLine("Stack generated.");
         }
 
-        public IUserIdentity ValidateToken(IssuedIdentityTokenHandler issuedToken)
+        private sealed class Telemetry : TelemetryContextBase
         {
-            LastIssuedToken?.Dispose();
-            LastIssuedToken = issuedToken.Copy();
-
-            return new UserIdentity(issuedToken);
+            public Telemetry()
+                : base(Microsoft.Extensions.Logging.LoggerFactory.Create(p => p.AddConsole()))
+            {
+            }
         }
     }
 }

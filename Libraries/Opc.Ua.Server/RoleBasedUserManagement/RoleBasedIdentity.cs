@@ -229,9 +229,6 @@ namespace Opc.Ua.Server
         public bool SupportsSignatures => m_identity.SupportsSignatures;
 
         /// <inheritdoc/>
-        public UserIdentityToken GetIdentityToken()
-        {
-            return m_identity.GetIdentityToken();
-        }
+        public IUserIdentityTokenHandler TokenHandler => m_identity.TokenHandler;
     }
 }
