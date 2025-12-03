@@ -13,9 +13,16 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Xml.Serialization;
+using Opc.Ua.Types;
+#if NET8_0_OR_GREATER
+using System.Collections.Frozen;
+#else
+using System.Collections.ObjectModel;
+#endif
 
 namespace Opc.Ua
 {
@@ -117,7 +124,7 @@ namespace Opc.Ua
     /// </remarks>
     [DataContract(Name = "StatusCode", Namespace = Namespaces.OpcUaXsd)]
     [Serializable]
-    public struct StatusCode :
+    public readonly struct StatusCode :
         IFormattable,
         IComparable,
         IComparable<StatusCode>,
@@ -129,11 +136,28 @@ namespace Opc.Ua
         /// Initializes the object with a numeric value.
         /// </summary>
         /// <param name="code">The numeric code to apply to this status code</param>
-        /// <param name="symbolicId">The optional symbol</param>
-        public StatusCode(uint code, string symbolicId = null)
+        public StatusCode(uint code)
+        {
+            if (TryGetInternedStatusCode(code, out StatusCode s))
+            {
+                this = s;
+            }
+            else
+            {
+                SymbolicId = null;
+            }
+            Code = code; // Set code again which could be containing more than code bits
+        }
+
+        /// <summary>
+        /// Initializes the object with a numeric value.
+        /// </summary>
+        /// <param name="code">The numeric code to apply to this status code</param>
+        /// <param name="symbolicId">The symbol for the status code</param>
+        public StatusCode(uint code, string symbolicId)
         {
             Code = code;
-            SymbolicId = symbolicId;
+            SymbolicId = string.Intern(symbolicId);
         }
 
         /// <summary>
@@ -157,7 +181,7 @@ namespace Opc.Ua
             else
             {
                 Code = defaultCode;
-                SymbolicId = symbolicId;
+                SymbolicId = string.Intern(symbolicId);
             }
         }
 
@@ -188,7 +212,15 @@ namespace Opc.Ua
         /// The entire 32-bit status value.
         /// </summary>
         [DataMember(Name = "Code", Order = 1, IsRequired = false)]
-        public uint Code { get; set; }
+        public uint Code { get; }
+
+        /// <summary>
+        /// Returns a copy of the status code with the Code but current symbolic id.
+        /// </summary>
+        public StatusCode SetCode(uint code)
+        {
+            return new StatusCode(code, SymbolicId);
+        }
 
         /// <summary>
         /// The symbolic name for the code bits of the status code.
@@ -199,7 +231,7 @@ namespace Opc.Ua
         /// <summary>
         /// The 16 code bits of the status code.
         /// </summary>
-        public readonly uint CodeBits => Code & 0xFFFF0000;
+        public uint CodeBits => Code & 0xFFFF0000;
 
         /// <summary>
         /// Returns a copy of the status code with the Code bits set.
@@ -208,10 +240,24 @@ namespace Opc.Ua
         /// <returns>The status code with the Code bits set to the specified values.</returns>
         public StatusCode SetCodeBits(uint bits)
         {
-            Code &= 0x0000FFFF;
-            Code |= bits & 0xFFFF0000;
+            uint code = Code;
+            code &= 0x0000FFFF;
+            code |= bits & 0xFFFF0000;
+            return new StatusCode(code, SymbolicId);
+        }
 
-            return this;
+        /// <summary>
+        /// Returns a copy of the status code with the Code bits set to the code bits of the
+        /// provided status code.
+        /// </summary>
+        /// <param name="statusCode">The code bits of this status code.</param>
+        /// <returns>The status code with the Code bits set to the specified values.</returns>
+        public StatusCode SetCodeBits(StatusCode statusCode)
+        {
+            uint code = Code;
+            code &= 0x0000FFFF;
+            code |= statusCode.CodeBits & 0xFFFF0000;
+            return new StatusCode(code, SymbolicId);
         }
 
         /// <summary>
@@ -220,7 +266,7 @@ namespace Opc.Ua
         /// <remarks>
         /// The 16 flag bits of the status code.
         /// </remarks>
-        public readonly uint FlagBits => Code & 0x0000FFFF;
+        public uint FlagBits => Code & 0x0000FFFF;
 
         /// <summary>
         /// Returns a copy of the status code with the Flag bits set.
@@ -229,10 +275,10 @@ namespace Opc.Ua
         /// <returns>The status code with the Flag bits set to the specified values.</returns>
         public StatusCode SetFlagBits(uint bits)
         {
-            Code &= 0xFFFF0000;
-            Code |= bits & 0x0000FFFF;
-
-            return this;
+            uint code = Code;
+            code &= 0xFFFF0000;
+            code |= bits & 0x0000FFFF;
+            return new StatusCode(code, SymbolicId);
         }
 
         /// <summary>
@@ -241,10 +287,14 @@ namespace Opc.Ua
         /// <remarks>
         /// The sub-code portion of the status code.
         /// </remarks>
-        public uint SubCode
+        public uint SubCode => Code & 0x0FFF0000;
+
+        /// <summary>
+        /// Returns a copy of the status code with the sub code set.
+        /// </summary>
+        public StatusCode SetSubCode(uint subCode)
         {
-            readonly get => Code & 0x0FFF0000;
-            set => Code = 0x0FFF0000 & value;
+            return new StatusCode(0x0FFF0000 & subCode, SymbolicId);
         }
 
         /// <summary>
@@ -254,21 +304,7 @@ namespace Opc.Ua
         /// Set to indicate that the structure of the data value has changed.
         /// </remarks>
         [XmlIgnore]
-        public bool StructureChanged
-        {
-            readonly get => (Code & kStructureChangedBit) != 0;
-            set
-            {
-                if (value)
-                {
-                    Code |= kStructureChangedBit;
-                }
-                else
-                {
-                    Code &= ~kStructureChangedBit;
-                }
-            }
-        }
+        public bool StructureChanged => (Code & kStructureChangedBit) != 0;
 
         /// <summary>
         /// Returns a copy of the status code with the StructureChanged bit set.
@@ -277,8 +313,16 @@ namespace Opc.Ua
         /// <returns>The status code with the StructureChanged bit set to the specified value.</returns>
         public StatusCode SetStructureChanged(bool structureChanged)
         {
-            StructureChanged = structureChanged;
-            return this;
+            uint code = Code;
+            if (structureChanged)
+            {
+                code |= kStructureChangedBit;
+            }
+            else
+            {
+                code &= ~kStructureChangedBit;
+            }
+            return new StatusCode(code, SymbolicId);
         }
 
         /// <summary>
@@ -288,21 +332,7 @@ namespace Opc.Ua
         /// Set to indicate that the semantics associated with the data value have changed.
         /// </remarks>
         [XmlIgnore]
-        public bool SemanticsChanged
-        {
-            readonly get => (Code & kSemanticsChangedBit) != 0;
-            set
-            {
-                if (value)
-                {
-                    Code |= kSemanticsChangedBit;
-                }
-                else
-                {
-                    Code &= ~kSemanticsChangedBit;
-                }
-            }
-        }
+        public bool SemanticsChanged => (Code & kSemanticsChangedBit) != 0;
 
         /// <summary>
         /// Returns a copy of the status code with the SemanticsChanged bit set.
@@ -311,32 +341,41 @@ namespace Opc.Ua
         /// <returns>The status code with the SemanticsChanged bit set to the specified value.</returns>
         public StatusCode SetSemanticsChanged(bool semanticsChanged)
         {
-            SemanticsChanged = semanticsChanged;
-            return this;
+            uint code = Code;
+            if (semanticsChanged)
+            {
+                code |= kSemanticsChangedBit;
+            }
+            else
+            {
+                code &= ~kSemanticsChangedBit;
+            }
+            return new StatusCode(code, SymbolicId);
         }
 
         /// <summary>
         /// The bits that indicate the meaning of the status code
         /// </summary>
-        /// <remarks>
-        /// The bits that indicate the meaning of the status code
-        /// </remarks>
         [XmlIgnore]
-        public bool HasDataValueInfo
+        public bool HasDataValueInfo => (Code & kDataValueInfoType) != 0;
+
+        /// <summary>
+        /// Sets the HasDataValueInfo bits.
+        /// </summary>
+        /// <returns>The status code with the bits set to specify data value</returns>
+        public StatusCode SetHasDataValueInfo(bool value)
         {
-            readonly get => (Code & kDataValueInfoType) != 0;
-            set
+            uint code = Code;
+            if (value)
             {
-                if (value)
-                {
-                    Code |= kDataValueInfoType;
-                }
-                else
-                {
-                    Code &= ~kDataValueInfoType;
-                    Code &= 0xFFFFFC00;
-                }
+                code |= kDataValueInfoType;
             }
+            else
+            {
+                code &= ~kDataValueInfoType;
+                code &= 0xFFFFFC00;
+            }
+            return new StatusCode(code, SymbolicId);
         }
 
         /// <summary>
@@ -344,16 +383,7 @@ namespace Opc.Ua
         /// </summary>
         /// <seealso cref="LimitBits"/>
         [XmlIgnore]
-        public LimitBits LimitBits
-        {
-            readonly get => (LimitBits)(Code & kLimitBits);
-            set
-            {
-                Code |= kDataValueInfoType;
-                Code &= ~kLimitBits;
-                Code |= (uint)value & kLimitBits;
-            }
-        }
+        public LimitBits LimitBits => (LimitBits)(Code & kLimitBits);
 
         /// <summary>
         /// Returns a copy of the status code with the limit bits set.
@@ -362,34 +392,18 @@ namespace Opc.Ua
         /// <returns>The status code with the limit bits set to the specified values.</returns>
         public StatusCode SetLimitBits(LimitBits bits)
         {
-            LimitBits = bits;
-            return this;
+            uint code = Code;
+            code |= kDataValueInfoType;
+            code &= ~kLimitBits;
+            code |= (uint)bits & kLimitBits;
+            return new StatusCode(code, SymbolicId);
         }
 
         /// <summary>
-        /// The overflow bit.
-        /// </summary>
-        /// <remarks>
         /// Specifies if there is an overflow or not
-        /// </remarks>
+        /// </summary>
         [XmlIgnore]
-        public bool Overflow
-        {
-            readonly get => ((Code & kDataValueInfoType) != 0) && ((Code & kOverflowBit) != 0);
-            set
-            {
-                Code |= kDataValueInfoType;
-
-                if (value)
-                {
-                    Code |= kOverflowBit;
-                }
-                else
-                {
-                    Code &= ~kOverflowBit;
-                }
-            }
-        }
+        public bool Overflow => ((Code & kDataValueInfoType) != 0) && ((Code & kOverflowBit) != 0);
 
         /// <summary>
         /// Returns a copy of the status code with the overflow bit set.
@@ -398,25 +412,24 @@ namespace Opc.Ua
         /// <returns>The status code with the overflow bit set to the specified value.</returns>
         public StatusCode SetOverflow(bool overflow)
         {
-            Overflow = overflow;
-            return this;
+            uint code = Code;
+            if (overflow)
+            {
+                code |= kOverflowBit;
+            }
+            else
+            {
+                code &= ~kOverflowBit;
+            }
+            return new StatusCode(code, SymbolicId);
         }
 
         /// <summary>
-        /// The historian bits.
+        /// The aggregate bits.
         /// </summary>
         /// <seealso cref="AggregateBits"/>
         [XmlIgnore]
-        public AggregateBits AggregateBits
-        {
-            readonly get => (AggregateBits)(Code & kAggregateBits);
-            set
-            {
-                Code |= kDataValueInfoType;
-                Code &= ~kAggregateBits;
-                Code |= (uint)value & kAggregateBits;
-            }
-        }
+        public AggregateBits AggregateBits => (AggregateBits)(Code & kAggregateBits);
 
         /// <summary>
         /// Returns a copy of the status code with the aggregate bits set.
@@ -425,12 +438,15 @@ namespace Opc.Ua
         /// <returns>The status code with the aggregate bits set to the specified values.</returns>
         public StatusCode SetAggregateBits(AggregateBits bits)
         {
-            AggregateBits = bits;
-            return this;
+            uint code = Code;
+            code |= kDataValueInfoType;
+            code &= ~kAggregateBits;
+            code |= (uint)bits & kAggregateBits;
+            return new StatusCode(code, SymbolicId);
         }
 
         /// <inheritdoc/>
-        public readonly int CompareTo(object obj)
+        public int CompareTo(object obj)
         {
             // compare codes
             if (obj is StatusCode statusCode)
@@ -455,21 +471,21 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public readonly int CompareTo(StatusCode other)
+        public int CompareTo(StatusCode other)
         {
             // check for status code.
             return CompareTo(other.Code);
         }
 
         /// <inheritdoc/>
-        public readonly int CompareTo(uint other)
+        public int CompareTo(uint other)
         {
             // check for status code.
             return Code.CompareTo(other);
         }
 
         /// <inheritdoc/>
-        public readonly string ToString(string format, IFormatProvider formatProvider)
+        public string ToString(string format, IFormatProvider formatProvider)
         {
             if (format == null)
             {
@@ -484,31 +500,31 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public override readonly bool Equals(object obj)
+        public override bool Equals(object obj)
         {
-            return CompareTo(obj) == 0;
+            return obj is StatusCode s ? Equals(s) : obj is uint code && Equals(code);
         }
 
         /// <inheritdoc/>
-        public readonly bool Equals(StatusCode other)
+        public bool Equals(StatusCode other)
         {
-            return CompareTo(other) == 0;
+            return CodeBits == other.CodeBits;
         }
 
         /// <inheritdoc/>
-        public readonly bool Equals(uint other)
+        public bool Equals(uint other)
         {
-            return CompareTo(other) == 0;
+            return Code == other;
         }
 
         /// <inheritdoc/>
-        public override readonly int GetHashCode()
+        public override int GetHashCode()
         {
             return Code.GetHashCode();
         }
 
         /// <inheritdoc/>
-        public override readonly string ToString()
+        public override string ToString()
         {
             var buffer = new StringBuilder();
 
@@ -666,6 +682,110 @@ namespace Opc.Ua
             return (code.Code & 0x80000000) == 0;
         }
 
+        /// <summary>
+        /// Lookup symbolic id for a status code.
+        /// </summary>
+        /// <param name="code"></param>
+        public static string LookupSymbolicId(uint code)
+        {
+            return TryGetInternedStatusCode(code, out StatusCode s) ? s.SymbolicId : null;
+        }
+
+        /// <summary>
+        /// Looks up the Utf8 encoded symbolic name for a status code.
+        /// </summary>
+        /// <param name="code">The numeric error-code to convert to a textual description</param>
+        public static byte[] LookupUtf8SymbolicId(uint code)
+        {
+            return TryGetInternedStatusCode(code, out StatusCode s) ?
+                Encoding.UTF8.GetBytes(s.SymbolicId) :
+                null;
+        }
+
+        /// <summary>
+        /// Try get interned status code
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="statusCode"></param>
+        /// <returns></returns>
+        public static bool TryGetInternedStatusCode(uint code, out StatusCode statusCode)
+        {
+            return s_statusCodes.TryGetValue(code & 0xFFFF0000, out statusCode);
+        }
+
+        /// <summary>
+        /// Add status codes to the internal table.
+        /// </summary>
+        /// <param name="statusCodes"></param>
+        public static void Intern(IReadOnlyList<StatusCode> statusCodes)
+        {
+            var cur = s_statusCodes.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            foreach (StatusCode kvp in statusCodes)
+            {
+                if (kvp.SymbolicId == null)
+                {
+                    continue;
+                }
+                cur[kvp.Code & 0xFFFF0000] = kvp;
+            }
+#if NET8_0_OR_GREATER
+            s_statusCodes = cur.ToFrozenDictionary();
+#else
+            s_statusCodes = new ReadOnlyDictionary<uint, StatusCode>(cur);
+#endif
+        }
+
+        /// <summary>
+        /// Gets the interned status codes
+        /// </summary>
+        public static StatusCodeCollection InternedStatusCodes => new(s_statusCodes.Values);
+
+        static StatusCode()
+        {
+            // Intern the Opc.Ua.Types internal status codes
+            Intern(
+            [
+                StatusCodes.Good,
+                StatusCodes.Uncertain,
+                StatusCodes.Bad,
+                StatusCodes.BadUnexpectedError,
+                StatusCodes.BadEncodingError,
+                StatusCodes.BadDecodingError,
+                StatusCodes.BadEncodingLimitsExceeded,
+                StatusCodes.BadUserAccessDenied,
+                StatusCodes.BadTooManyArguments,
+                StatusCodes.BadWaitingForInitialData,
+                StatusCodes.BadNodeIdInvalid,
+                StatusCodes.BadNodeIdUnknown,
+                StatusCodes.BadAttributeIdInvalid,
+                StatusCodes.BadIndexRangeInvalid,
+                StatusCodes.BadIndexRangeNoData,
+                StatusCodes.BadDataEncodingInvalid,
+                StatusCodes.BadDataEncodingUnsupported,
+                StatusCodes.BadNotReadable,
+                StatusCodes.BadNotWritable,
+                StatusCodes.BadNotSupported,
+                StatusCodes.BadNotImplemented,
+                StatusCodes.BadConfigurationError,
+                StatusCodes.BadStructureMissing,
+                StatusCodes.BadBrowseNameInvalid,
+                StatusCodes.BadWriteNotSupported,
+                StatusCodes.BadTypeMismatch,
+                StatusCodes.BadArgumentsMissing,
+                StatusCodes.BadNotExecutable,
+                StatusCodes.BadInvalidArgument,
+                StatusCodes.BadSyntaxError
+            ]);
+        }
+
+#if NET8_0_OR_GREATER
+        private static FrozenDictionary<uint, StatusCode> s_statusCodes =
+            FrozenDictionary<uint, StatusCode>.Empty;
+#else
+        private static ReadOnlyDictionary<uint, StatusCode> s_statusCodes
+            = new(new Dictionary<uint, StatusCode>());
+#endif
+
         private const uint kAggregateBits = 0x001F;
         private const uint kOverflowBit = 0x0080;
         private const uint kLimitBits = 0x0300;
@@ -815,27 +935,6 @@ namespace Opc.Ua
         public new object MemberwiseClone()
         {
             return new StatusCodeCollection(this);
-        }
-
-        /// <summary>
-        /// Looks up the symbolic name for a status code.
-        /// </summary>
-        /// <param name="code">The numeric error-code to convert to a textual description</param>
-        [Obsolete("Unsupported. Use ToSymbolicId() extension method instead.")]
-
-        public static string LookupSymbolicId(uint code)
-        {
-            return null;
-        }
-
-        /// <summary>
-        /// Looks up the Utf8 encoded symbolic name for a status code.
-        /// </summary>
-        /// <param name="code">The numeric error-code to convert to a textual description</param>
-        [Obsolete("Unsupported. Use ToSymbolicId() extension method instead.")]
-        public static byte[] LookupUtf8SymbolicId(uint code)
-        {
-            return null;
         }
     }
 }

@@ -47,8 +47,7 @@ namespace Opc.Ua
             this StringBuilder buffer,
             ServiceResult result)
         {
-            buffer.Append("Id: ")
-                .Append(StatusCodes.GetBrowseName(result.Code));
+            buffer.Append("Id: ").Append((StatusCode)result.Code);
             if (!string.IsNullOrEmpty(result.SymbolicId))
             {
                 buffer.AppendLine()

@@ -931,32 +931,12 @@ namespace Opc.Ua.Test
             return new LocalizedText(locale, CreateString(locale, false));
         }
 
-        private readonly List<KeyValuePair<uint, string>> m_knownStatusCodes = [];
-
         /// <inheritdoc/>
         public StatusCode GetRandomStatusCode()
         {
-            if (m_knownStatusCodes.Count == 0)
-            {
-                foreach (FieldInfo field in typeof(StatusCodes).GetFields(
-                    BindingFlags.Public | BindingFlags.Static))
-                {
-                    if (field.FieldType == typeof(uint) &&
-                        (field.Name.StartsWith("Good", StringComparison.Ordinal) ||
-                            field.Name.StartsWith("Uncertain", StringComparison.Ordinal) ||
-                            field.Name.StartsWith("Bad", StringComparison.Ordinal)))
-                    {
-                        uint value = Convert.ToUInt32(
-                            field.GetValue(null),
-                            System.Globalization.CultureInfo.InvariantCulture);
-                        m_knownStatusCodes.Add(
-                            new KeyValuePair<uint, string>(value, field.Name));
-                    }
-                }
-            }
-
-            int index = GetRandomRange(0, m_knownStatusCodes.Count - 1);
-            return m_knownStatusCodes[index].Key;
+            var interned = StatusCode.InternedStatusCodes;
+            int index = GetRandomRange(0, interned.Count - 1);
+            return interned[index];
         }
 
         /// <inheritdoc/>

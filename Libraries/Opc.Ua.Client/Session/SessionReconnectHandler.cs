@@ -451,14 +451,13 @@ namespace Opc.Ua.Client
                         m_logger.LogWarning("Reconnect failed. Reason={Reason}.", sre.Result);
 
                         // check if the server endpoint could not be reached.
-                        if (sre.StatusCode
-                            is StatusCodes.BadTcpInternalError
-                                or StatusCodes.BadCommunicationError
-                                or StatusCodes.BadNotConnected
-                                or StatusCodes.BadRequestTimeout
-                                or StatusCodes.BadTimeout
-                                or StatusCodes.BadNoCommunication
-                                or StatusCodes.BadConnectionClosed)
+                        if (sre.StatusCode == StatusCodes.BadTcpInternalError ||
+                            sre.StatusCode == StatusCodes.BadCommunicationError ||
+                            sre.StatusCode == StatusCodes.BadNotConnected ||
+                            sre.StatusCode == StatusCodes.BadRequestTimeout ||
+                            sre.StatusCode == StatusCodes.BadTimeout ||
+                            sre.StatusCode == StatusCodes.BadNoCommunication ||
+                            sre.StatusCode == StatusCodes.BadConnectionClosed)
                         {
                             // check if reactivating is still an option.
                             int timeout =
@@ -474,8 +473,8 @@ namespace Opc.Ua.Client
                         }
 
                         // check if the security configuration may have changed
-                        if (sre.StatusCode is StatusCodes.BadSecurityChecksFailed or StatusCodes
-                            .BadCertificateInvalid)
+                        if (sre.StatusCode == StatusCodes.BadSecurityChecksFailed ||
+                            sre.StatusCode == StatusCodes.BadCertificateInvalid)
                         {
                             m_updateFromServer = true;
                             m_logger.LogInformation(

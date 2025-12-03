@@ -1001,8 +1001,8 @@ namespace Quickstarts
                     }
                     catch (ServiceResultException sre)
                     {
-                        if (sre.StatusCode is StatusCodes.BadEncodingLimitsExceeded or StatusCodes
-                            .BadResponseTooLarge)
+                        if (sre.StatusCode == StatusCodes.BadEncodingLimitsExceeded ||
+                            sre.StatusCode == StatusCodes.BadResponseTooLarge)
                         {
                             // try to address by overriding operation limit
                             maxNodesPerBrowse =
@@ -1177,16 +1177,9 @@ namespace Quickstarts
             ISession session,
             CancellationToken ct = default)
         {
-            // fetch the reference types first, otherwise browse for e.g. hierarchical
-            // references with subtypes won't work
-            const BindingFlags bindingFlags = BindingFlags.Instance |
-                BindingFlags.Static |
-                BindingFlags.Public;
             NamespaceTable namespaceUris = session.NamespaceUris;
-            IEnumerable<ExpandedNodeId> referenceTypes = typeof(ReferenceTypeIds)
-                .GetFields(bindingFlags)
-                .Select(
-                    field => NodeId.ToExpandedNodeId((NodeId)field.GetValue(null), namespaceUris));
+            IEnumerable<ExpandedNodeId> referenceTypes = ReferenceTypeIds.Identifiers
+                .Select(nodeId => NodeId.ToExpandedNodeId(nodeId, namespaceUris));
             return session.FetchTypeTreeAsync([.. referenceTypes], ct);
         }
 

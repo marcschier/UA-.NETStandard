@@ -340,15 +340,15 @@ namespace Opc.Ua.SourceGeneration
             // collect datatypes with the specified type.
             template.AddReplacement(
                 Tokens.ListOfIdentifiers,
-                CodeTemplates.Constants_Constant_cs,
+                CodeTemplates.StatusCodeDeclaration_cs,
                 constants,
-                WriteTemplate_StatusCodeConstant);
+                WriteTemplate_StatusCodeDeclaration);
 
             template.AddReplacement(
                 Tokens.IdentifierReflection,
-                CodeTemplates.Constants_Reflection_cs,
+                CodeTemplates.StatusCodeRegistration_cs,
                 [constants],
-                WriteTemplate_ReflectionHelpers);
+                WriteTemplate_StatusCodeRegistration);
 
             template.WriteTemplate();
         }
@@ -999,9 +999,9 @@ namespace Opc.Ua.SourceGeneration
         }
 
         /// <summary>
-        /// Writes a constant.
+        /// Writes the status code declaration
         /// </summary>
-        private bool WriteTemplate_StatusCodeConstant(Template template, ITemplateContext context)
+        private bool WriteTemplate_StatusCodeDeclaration(Template template, ITemplateContext context)
         {
             if (context.Target is not Constant constant)
             {
@@ -1021,7 +1021,6 @@ namespace Opc.Ua.SourceGeneration
                     id += 0x40000000;
                     break;
             }
-            template.AddReplacement(Tokens.IdType, "uint");
             template.AddReplacement(Tokens.Identifier, CoreUtils.Format("0x{0:X8}", id));
 
             string symbolicId = constant.Name;
@@ -1042,6 +1041,47 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(Tokens.Description, description);
 
             return template.WriteTemplate();
+        }
+
+        /// <summary>
+        /// Write reflection helpers for identifiers.
+        /// </summary>
+        private bool WriteTemplate_StatusCodeRegistration(Template template, ITemplateContext context)
+        {
+            if (context.Target is not List<Constant> constants)
+            {
+                return false;
+            }
+            template.AddReplacement(
+                Tokens.ListOfIdentifiers,
+                constants,
+                LoadTemplate_StatusCodeIdentifier);
+            return template.WriteTemplate();
+        }
+
+        /// <summary>
+        /// Write lookup entries for identifiers.
+        /// </summary>
+        private TemplateString LoadTemplate_StatusCodeIdentifier(Template template, ITemplateContext context)
+        {
+            if (context.Target is Constant constant)
+            {
+                string symbolicId = constant.Name;
+                if (constant.Severity != Severity.None && constant.Identifier != 0)
+                {
+                    // Status codes
+                    string name = constant.Name;
+                    int index = name.IndexOf('_', StringComparison.Ordinal);
+                    if (index != -1)
+                    {
+                        name = name[(index + 1)..];
+                    }
+                    symbolicId = CoreUtils.Format("{0}{1}", constant.Severity, name);
+                }
+                template.Write(symbolicId);
+                template.WriteLine(",");
+            }
+            return null;
         }
 
         /// <summary>
@@ -1108,20 +1148,6 @@ namespace Opc.Ua.SourceGeneration
             if (context.Target is Constant constant)
             {
                 string symbolicId = constant.Name;
-
-                // Pick the status code symbolic id format
-                if (constant.Severity != Severity.None && constant.Identifier != 0)
-                {
-                    // Status codes
-                    string name = constant.Name;
-                    int index = name.IndexOf('_', StringComparison.Ordinal);
-                    if (index != -1)
-                    {
-                        name = name[(index + 1)..];
-                    }
-                    symbolicId = CoreUtils.Format("{0}{1}", constant.Severity, name);
-                }
-
                 if (context.Token == Tokens.ListOfIdentifersToNames)
                 {
                     template.WriteLine("lookup[{0}] = \"{0}\";", symbolicId);

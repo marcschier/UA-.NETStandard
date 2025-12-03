@@ -313,7 +313,7 @@ namespace Opc.Ua
                     message.AppendFormat(
                         CultureInfo.InvariantCulture,
                         " {0} '{1}'",
-                        StatusCodes.GetBrowseName(sre.StatusCode),
+                        (StatusCode)sre.StatusCode,
                         sre.Message);
                 }
                 else

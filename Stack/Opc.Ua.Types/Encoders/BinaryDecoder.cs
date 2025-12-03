@@ -2092,10 +2092,9 @@ namespace Opc.Ua
                     errorMessage = "End of stream";
                     exception = eofStream;
                 }
-                catch (ServiceResultException sre)
-                    when (sre.StatusCode is
-                    StatusCodes.BadEncodingLimitsExceeded or
-                    StatusCodes.BadDecodingError)
+                catch (ServiceResultException sre) when (
+                    sre.StatusCode == StatusCodes.BadEncodingLimitsExceeded ||
+                    sre.StatusCode == StatusCodes.BadDecodingError)
                 {
                     errorMessage = sre.Message;
                     exception = sre;

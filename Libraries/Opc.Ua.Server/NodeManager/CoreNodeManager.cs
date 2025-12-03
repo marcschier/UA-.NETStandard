@@ -1396,10 +1396,9 @@ namespace Opc.Ua.Server
                     // final check for initial value
                     ServiceResult error = ReadInitialValue(context, node, monitoredItem);
                     if (ServiceResult.IsBad(error) &&
-                        error.StatusCode.Code
-                            is StatusCodes.BadAttributeIdInvalid
-                                or StatusCodes.BadDataEncodingInvalid
-                                or StatusCodes.BadDataEncodingUnsupported)
+                        (error.StatusCode == StatusCodes.BadAttributeIdInvalid ||
+                         error.StatusCode == StatusCodes.BadDataEncodingInvalid ||
+                         error.StatusCode == StatusCodes.BadDataEncodingUnsupported))
                     {
                         errors[ii] = error;
                         continue;

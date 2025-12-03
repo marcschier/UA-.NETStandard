@@ -159,7 +159,7 @@ namespace Opc.Ua.Gds.Server
                     throw new ServiceResultException(
                         new ServiceResult(
                             Namespaces.OpcUaGds,
-                            new StatusCode(StatusCodes.BadUserAccessDenied, "NoWriteAllowed"),
+                            new StatusCode(StatusCodes.BadUserAccessDenied.Code, "NoWriteAllowed"),
                             new LocalizedText(info)));
                 }
 

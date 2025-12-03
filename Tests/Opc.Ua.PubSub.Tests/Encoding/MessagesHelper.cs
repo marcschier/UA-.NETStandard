@@ -2756,18 +2756,18 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                 Attributes.Value,
                 expandedNodeId);
             var statusCode = new DataValue(
-                new Variant(new StatusCode(StatusCodes.BadAggregateInvalidInputs)));
+                new Variant(StatusCodes.BadAggregateInvalidInputs));
             pubSubApplication.DataStore.WritePublishedDataItem(
                 new NodeId("StatusCode", namespaceIndexAllTypes),
                 Attributes.Value,
                 statusCode);
-            statusCode = new DataValue(new Variant(new StatusCode(StatusCodes.Good)));
+            statusCode = new DataValue(new Variant(StatusCodes.Good));
             pubSubApplication.DataStore.WritePublishedDataItem(
                 new NodeId("StatusCodeGood", namespaceIndexAllTypes),
                 Attributes.Value,
                 statusCode);
             statusCode = new DataValue(
-                new Variant(new StatusCode(StatusCodes.BadAttributeIdInvalid)));
+                new Variant(StatusCodes.BadAttributeIdInvalid));
             pubSubApplication.DataStore.WritePublishedDataItem(
                 new NodeId("StatusCodeBad", namespaceIndexAllTypes),
                 Attributes.Value,

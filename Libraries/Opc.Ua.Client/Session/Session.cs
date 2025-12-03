@@ -3637,50 +3637,53 @@ namespace Opc.Ua.Client
 
                 // don't send another publish for these errors,
                 // or throttle to avoid server overload.
-                switch (error.Code)
+                if (error.StatusCode == StatusCodes.BadTooManyPublishRequests)
                 {
-                    case StatusCodes.BadTooManyPublishRequests:
-                        int tooManyPublishRequests = GoodPublishRequestCount;
-                        if (BelowPublishRequestLimit(tooManyPublishRequests))
-                        {
-                            m_tooManyPublishRequests = tooManyPublishRequests;
-                            m_logger.LogInformation(
-                                "PUBLISH - Too many requests, set limit to GoodPublishRequestCount={GoodRequestCount}.",
-                                m_tooManyPublishRequests);
-                        }
-                        return;
-                    case StatusCodes.BadNoSubscription:
-                    case StatusCodes.BadSessionClosed:
-                    case StatusCodes.BadSecurityChecksFailed:
-                    case StatusCodes.BadCertificateInvalid:
-                    case StatusCodes.BadServerHalted:
-                        return;
-                    // may require a reconnect or activate to recover
-                    case StatusCodes.BadSessionIdInvalid:
-                    case StatusCodes.BadSecureChannelIdInvalid:
-                    case StatusCodes.BadSecureChannelClosed:
-                        OnKeepAliveError(error);
-                        return;
-                    // Servers may return this error when overloaded
-                    case StatusCodes.BadTooManyOperations:
-                    case StatusCodes.BadTcpServerTooBusy:
-                    case StatusCodes.BadServerTooBusy:
-                        // throttle the next publish to reduce server load
-                        _ = Task.Run(async () =>
-                        {
-                            await Task.Delay(100).ConfigureAwait(false);
-                            QueueBeginPublish();
-                        });
-                        return;
-                    case StatusCodes.BadTimeout:
-                        break;
-                    default:
+                    int tooManyPublishRequests = GoodPublishRequestCount;
+                    if (BelowPublishRequestLimit(tooManyPublishRequests))
+                    {
+                        m_tooManyPublishRequests = tooManyPublishRequests;
+                        m_logger.LogInformation(
+                            "PUBLISH - Too many requests, set limit to GoodPublishRequestCount={GoodRequestCount}.",
+                            m_tooManyPublishRequests);
+                    }
+                    return;
+                }
+                if (error.StatusCode == StatusCodes.BadNoSubscription ||
+                    error.StatusCode == StatusCodes.BadSessionClosed ||
+                    error.StatusCode == StatusCodes.BadSecurityChecksFailed ||
+                    error.StatusCode == StatusCodes.BadCertificateInvalid ||
+                    error.StatusCode == StatusCodes.BadServerHalted)
+                {
+                    return;
+                }
+                if (error.StatusCode == StatusCodes.BadSessionIdInvalid ||
+                    error.StatusCode == StatusCodes.BadSecureChannelIdInvalid ||
+                    error.StatusCode == StatusCodes.BadSecureChannelClosed)
+                {
+                    OnKeepAliveError(error);
+                    return;
+                }
+                // Servers may return this error when overloaded
+                if (error.StatusCode != StatusCodes.BadTimeout)
+                {
+                    if (error.StatusCode != StatusCodes.BadTooManyOperations &&
+                        error.StatusCode != StatusCodes.BadTcpServerTooBusy &&
+                        error.StatusCode != StatusCodes.BadServerTooBusy)
+                    {
                         m_logger.LogError(
                             e,
                             "PUBLISH #{RequestHandle} - Unhandled error {StatusCode} during Publish.",
                             requestHeader.RequestHandle,
                             error.StatusCode);
-                        goto case StatusCodes.BadServerTooBusy;
+                    }
+                    // throttle the next publish to reduce server load
+                    _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(100).ConfigureAwait(false);
+                        QueueBeginPublish();
+                    });
+                    return;
                 }
             }
 
@@ -4109,35 +4112,35 @@ namespace Opc.Ua.Client
             var error = new ServiceResult(e);
 
             bool result = true;
-            switch (error.StatusCode.Code)
+            if (error.StatusCode == StatusCodes.BadSubscriptionIdInvalid ||
+                error.StatusCode == StatusCodes.BadMessageNotAvailable)
             {
-                case StatusCodes.BadSubscriptionIdInvalid:
-                case StatusCodes.BadMessageNotAvailable:
-                    m_logger.LogWarning(
-                        "Message {SubscriptionId}-{SequenceNumber} no longer available.",
-                        subscriptionId,
-                        sequenceNumber);
-                    break;
+                m_logger.LogWarning(
+                    "Message {SubscriptionId}-{SequenceNumber} no longer available.",
+                    subscriptionId,
+                    sequenceNumber);
+            }
+            else if (error.StatusCode == StatusCodes.BadEncodingLimitsExceeded)
+            {
                 // if encoding limits are exceeded, the issue is logged and
                 // the published data is acknowledged to prevent the endless republish loop.
-                case StatusCodes.BadEncodingLimitsExceeded:
-                    m_logger.LogError(
-                        e,
-                        "Message {SubscriptionId}-{SequenceNumber} exceeded size limits, ignored.",
+                m_logger.LogError(
+                    e,
+                    "Message {SubscriptionId}-{SequenceNumber} exceeded size limits, ignored.",
+                    subscriptionId,
+                    sequenceNumber);
+                lock (m_acknowledgementsToSendLock)
+                {
+                    AddAcknowledgementToSend(
+                        m_acknowledgementsToSend,
                         subscriptionId,
                         sequenceNumber);
-                    lock (m_acknowledgementsToSendLock)
-                    {
-                        AddAcknowledgementToSend(
-                            m_acknowledgementsToSend,
-                            subscriptionId,
-                            sequenceNumber);
-                    }
-                    break;
-                default:
-                    result = false;
-                    m_logger.LogError(e, "Unexpected error sending republish request.");
-                    break;
+                }
+            }
+            else
+            {
+                result = false;
+                m_logger.LogError(e, "Unexpected error sending republish request.");
             }
 
             PublishErrorEventHandler? callback = m_PublishError;

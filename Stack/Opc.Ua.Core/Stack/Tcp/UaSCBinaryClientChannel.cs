@@ -833,19 +833,15 @@ namespace Opc.Ua.Bindings
         {
             if (ServiceResult.IsBad(error))
             {
-                StatusCode statusCode = error.StatusCode;
-                switch ((uint)statusCode)
+                if (error.StatusCode == StatusCodes.BadRequestInterrupted ||
+                    error.StatusCode == StatusCodes.BadSecureChannelClosed)
                 {
-                    case StatusCodes.BadRequestInterrupted:
-                    case StatusCodes.BadSecureChannelClosed:
-                        break;
-                    default:
-                        m_logger.LogWarning(
-                            "ChannelId {ChannelId}: Could not gracefully close the channel. Reason={ServiceResult}",
-                            ChannelId,
-                            error);
-                        break;
+                    return;
                 }
+                m_logger.LogWarning(
+                    "ChannelId {ChannelId}: Could not gracefully close the channel. Reason={ServiceResult}",
+                    ChannelId,
+                    error);
             }
         }
 
@@ -1109,9 +1105,8 @@ namespace Opc.Ua.Bindings
                         "Unexpected error reconnecting or renewing a token.");
 
                     // check for expired channel or token.
-                    if (error.Code is
-                            StatusCodes.BadTcpSecureChannelUnknown or
-                            StatusCodes.BadSecurityChecksFailed)
+                    if (error.StatusCode == StatusCodes.BadTcpSecureChannelUnknown ||
+                        error.StatusCode == StatusCodes.BadSecurityChecksFailed)
                     {
                         m_logger.LogError("ChannelId {ChannelId}: Cannot Recover Channel", ChannelId);
                         Shutdown(error);

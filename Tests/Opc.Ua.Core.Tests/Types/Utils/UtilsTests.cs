@@ -441,13 +441,8 @@ namespace Opc.Ua.Core.Tests.Types.UtilsTests
             };
             foreach (string name in bnList)
             {
-                object staticValue = typeof(DataTypeIds)
-                    .GetFields(BindingFlags.Public | BindingFlags.Static)
-                    .First(f => f.Name == name)
-                    .GetValue(null);
-                Assert.AreEqual(
-                    BuiltInType.ByteString,
-                    TypeInfo.GetBuiltInType((NodeId)staticValue));
+                NodeId staticValue = DataTypeIds.GetIdentifier(name);
+                Assert.AreEqual(BuiltInType.ByteString, TypeInfo.GetBuiltInType(staticValue));
             }
 
             Assert.AreEqual(
@@ -459,11 +454,8 @@ namespace Opc.Ua.Core.Tests.Types.UtilsTests
                 .Counter];
             foreach (string name in bnList)
             {
-                object staticValue = typeof(DataTypeIds)
-                    .GetFields(BindingFlags.Public | BindingFlags.Static)
-                    .First(f => f.Name == name)
-                    .GetValue(null);
-                Assert.AreEqual(BuiltInType.UInt32, TypeInfo.GetBuiltInType((NodeId)staticValue));
+                NodeId nodeId = DataTypeIds.GetIdentifier(name);
+                Assert.AreEqual(BuiltInType.UInt32, TypeInfo.GetBuiltInType(nodeId));
             }
 
             Assert.AreEqual(
@@ -482,11 +474,8 @@ namespace Opc.Ua.Core.Tests.Types.UtilsTests
             ];
             foreach (string name in bnList)
             {
-                object staticValue = typeof(DataTypeIds)
-                    .GetFields(BindingFlags.Public | BindingFlags.Static)
-                    .First(f => f.Name == name)
-                    .GetValue(null);
-                Assert.AreEqual(BuiltInType.String, TypeInfo.GetBuiltInType((NodeId)staticValue));
+                NodeId nodeId = DataTypeIds.GetIdentifier(name);
+                Assert.AreEqual(BuiltInType.String, TypeInfo.GetBuiltInType(nodeId));
             }
         }
 

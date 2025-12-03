@@ -1662,11 +1662,10 @@ namespace Opc.Ua
                 case BuiltInType.Guid:
                     return Uuid.Empty;
                 case BuiltInType.ByteString:
-
                 case BuiltInType.XmlElement:
                     return null;
                 case BuiltInType.StatusCode:
-                    return new StatusCode(StatusCodes.Good);
+                    return StatusCodes.Good;
                 case BuiltInType.NodeId:
                     return NodeId.Null;
                 case BuiltInType.ExpandedNodeId:

@@ -318,9 +318,9 @@ namespace Opc.Ua.Server.Tests
 
                         allResults.AddRange(browseResponse.Results);
                     }
-                    catch (ServiceResultException sre)
-                        when (sre.StatusCode is StatusCodes.BadEncodingLimitsExceeded or StatusCodes
-                            .BadResponseTooLarge)
+                    catch (ServiceResultException sre) when (
+                        sre.StatusCode == StatusCodes.BadEncodingLimitsExceeded ||
+                        sre.StatusCode == StatusCodes.BadResponseTooLarge)
                     {
                         // try to address by overriding operation limit
                         maxNodesPerBrowse =

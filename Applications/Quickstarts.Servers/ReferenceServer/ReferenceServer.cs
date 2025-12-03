@@ -169,16 +169,9 @@ namespace Quickstarts.ReferenceServer
         {
             var resourceManager = new ResourceManager(configuration);
 
-            foreach (
-                System.Reflection.FieldInfo field in typeof(StatusCodes).GetFields(
-                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
+            foreach (StatusCode id in StatusCode.InternedStatusCodes)
             {
-                uint? id = field.GetValue(typeof(StatusCodes)) as uint?;
-
-                if (id != null)
-                {
-                    resourceManager.Add(id.Value, "en-US", field.Name);
-                }
+                resourceManager.Add(id.SymbolicId, "en-US", id.SymbolicId);
             }
 
             return resourceManager;
@@ -398,7 +391,7 @@ namespace Quickstarts.ReferenceServer
                 throw new ServiceResultException(
                     new ServiceResult(
                         LoadServerProperties().ProductUri,
-                        new StatusCode(StatusCodes.BadUserAccessDenied, "InvalidPassword"),
+                        new StatusCode(StatusCodes.BadUserAccessDenied.Code, "InvalidPassword"),
                         new LocalizedText(info)));
             }
             return new RoleBasedIdentity(

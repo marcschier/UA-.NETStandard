@@ -1166,17 +1166,20 @@ namespace Opc.Ua
         /// </summary>
         public StatusCode ReadStatusCode(string fieldName)
         {
-            var value = new StatusCode();
+            StatusCode value;
 
             if (BeginField(fieldName, true))
             {
                 PushNamespace(Namespaces.OpcUaXsd);
-                value.Code = ReadUInt32("Code");
+                value = ReadUInt32("Code");
                 PopNamespace();
 
                 EndField(fieldName);
             }
-
+            else
+            {
+                value = StatusCodes.Good;
+            }
             return value;
         }
 

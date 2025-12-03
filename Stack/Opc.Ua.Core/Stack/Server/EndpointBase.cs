@@ -422,29 +422,29 @@ namespace Opc.Ua
             if (exception is ServiceResultException sre)
             {
                 result = new ServiceResult(sre);
-                switch (sre.StatusCode)
+                if (sre.StatusCode == StatusCodes.BadNoSubscription ||
+                    sre.StatusCode == StatusCodes.BadSessionClosed ||
+                    sre.StatusCode == StatusCodes.BadSecurityChecksFailed ||
+                    sre.StatusCode == StatusCodes.BadCertificateInvalid ||
+                    sre.StatusCode == StatusCodes.BadServerHalted)
                 {
-                    case StatusCodes.BadNoSubscription:
-                    case StatusCodes.BadSessionClosed:
-                    case StatusCodes.BadSecurityChecksFailed:
-                    case StatusCodes.BadCertificateInvalid:
-                    case StatusCodes.BadServerHalted:
-                        // Log debug instead of warning for expected disconnection scenarios
-                        logger.LogDebug(
-                            "SERVER - Service Fault Occurred. Reason={StatusCode}",
-                            result.StatusCode);
-                        break;
-                    case StatusCodes.BadUnexpectedError:
-                        logger.LogWarning(
-                            Utils.TraceMasks.StackTrace,
-                            sre,
-                            "SERVER - Service Fault Occurred due to unexpected state");
-                        break;
-                    default:
-                        logger.LogWarning(
-                            "SERVER - Service Fault Occurred. Reason={StatusCode}",
-                            result.StatusCode);
-                        break;
+                    // Log debug instead of warning for expected disconnection scenarios
+                    logger.LogDebug(
+                        "SERVER - Service Fault Occurred. Reason={StatusCode}",
+                        result.StatusCode);
+                }
+                else if (sre.StatusCode == StatusCodes.BadUnexpectedError)
+                {
+                    logger.LogWarning(
+                        Utils.TraceMasks.StackTrace,
+                        sre,
+                        "SERVER - Service Fault Occurred due to unexpected state");
+                }
+                else
+                {
+                    logger.LogWarning(
+                        "SERVER - Service Fault Occurred. Reason={StatusCode}",
+                        result.StatusCode);
                 }
             }
             else
@@ -470,25 +470,6 @@ namespace Opc.Ua
             fault.ResponseHeader.StringTable = stringTable.ToArray();
 
             return fault;
-        }
-
-        /// <summary>
-        /// Creates a fault message.
-        /// </summary>
-        /// <param name="request">The request.</param>
-        /// <param name="exception">The exception.</param>
-        /// <returns>A fault message.</returns>
-        protected Exception CreateSoapFault(IServiceRequest request, Exception exception)
-        {
-            ServiceFault fault = CreateFault(request, exception);
-
-            // get the error from the header.
-            StatusCode error = fault.ResponseHeader.ServiceResult;
-
-            // construct the fault code and fault reason.
-            string codeName = StatusCodes.GetBrowseName(error.Code);
-
-            return new ServiceResultException(error.Code, codeName, exception);
         }
 
         /// <summary>

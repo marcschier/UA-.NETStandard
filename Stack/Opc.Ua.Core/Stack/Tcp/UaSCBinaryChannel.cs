@@ -474,7 +474,7 @@ namespace Opc.Ua.Bindings
         /// </summary>
         protected void HandleMessageProcessingError(
             Exception e,
-            uint defaultCode,
+            StatusCode defaultCode,
             string format,
             params object[] args)
         {
@@ -485,7 +485,7 @@ namespace Opc.Ua.Bindings
         /// Handles an error parsing or verifying a message.
         /// </summary>
         protected void HandleMessageProcessingError(
-            uint statusCode,
+            StatusCode statusCode,
             string format,
             params object[] args)
         {

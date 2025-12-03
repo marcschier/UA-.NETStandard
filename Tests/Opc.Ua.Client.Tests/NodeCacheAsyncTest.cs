@@ -253,10 +253,8 @@ namespace Opc.Ua.Client.Tests
             nodeCache.LoadUaDefinedTypes(Session.SystemContext);
 
             // check on all reference type ids
-            var refTypeDictionary = typeof(ReferenceTypeIds)
-                .GetFields(BindingFlags.Public | BindingFlags.Static)
-                .Where(f => f.FieldType == typeof(NodeId))
-                .ToDictionary(f => f.Name, f => (NodeId)f.GetValue(null));
+            var refTypeDictionary = ReferenceTypeIds.Identifiers
+                .ToDictionary(f => ReferenceTypeIds.GetBrowseName(f), f => f);
 
             TestContext.Out.WriteLine("Testing {0} references", refTypeDictionary.Count);
             foreach (KeyValuePair<string, NodeId> property in refTypeDictionary)
@@ -389,14 +387,8 @@ namespace Opc.Ua.Client.Tests
         [Order(910)]
         public async Task FetchAllReferenceTypesAsync()
         {
-            const BindingFlags bindingFlags = BindingFlags.Instance |
-                BindingFlags.Static |
-                BindingFlags.Public;
-            IEnumerable<ExpandedNodeId> fieldValues = typeof(ReferenceTypeIds)
-                .GetFields(bindingFlags)
-                .Select(field => NodeId.ToExpandedNodeId(
-                    (NodeId)field.GetValue(null),
-                    Session.NamespaceUris));
+           IEnumerable<ExpandedNodeId> fieldValues = ReferenceTypeIds.Identifiers
+                .Select(nodeId=> NodeId.ToExpandedNodeId(nodeId, Session.NamespaceUris));
 
             await Session.FetchTypeTreeAsync([.. fieldValues]).ConfigureAwait(false);
         }

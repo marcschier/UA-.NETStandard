@@ -647,42 +647,45 @@ namespace Opc.Ua.Server
                 if (StatusCode.IsBad(sre.InnerResult.Code))
                 {
                     AuditCertificateEventState auditCertificateEventState;
-                    switch (sre.StatusCode)
+                    if (sre.StatusCode == StatusCodes.BadCertificateTimeInvalid ||
+                        sre.StatusCode == StatusCodes.BadCertificateIssuerTimeInvalid)
                     {
-                        case StatusCodes.BadCertificateTimeInvalid:
-                        case StatusCodes.BadCertificateIssuerTimeInvalid:
-                            // create AuditCertificateExpiredEventType
-                            auditCertificateEventState = new AuditCertificateExpiredEventState(
-                                null);
-                            break;
-                        case StatusCodes.BadCertificateInvalid:
-                        case StatusCodes.BadCertificateChainIncomplete:
-                        case StatusCodes.BadCertificatePolicyCheckFailed:
-                            // create AuditCertificateInvalidEventType
-                            auditCertificateEventState = new AuditCertificateInvalidEventState(
-                                null);
-                            break;
-                        case StatusCodes.BadCertificateUntrusted:
-                            // create AuditCertificateUntrustedEventType
-                            auditCertificateEventState = new AuditCertificateUntrustedEventState(
-                                null);
-                            break;
-                        case StatusCodes.BadCertificateRevoked:
-                        case StatusCodes.BadCertificateIssuerRevoked:
-                        case StatusCodes.BadCertificateRevocationUnknown:
-                        case StatusCodes.BadCertificateIssuerRevocationUnknown:
-                            // create AuditCertificateRevokedEventType
-                            auditCertificateEventState = new AuditCertificateRevokedEventState(
-                                null);
-                            break;
-                        case StatusCodes.BadCertificateUseNotAllowed:
-                        case StatusCodes.BadCertificateIssuerUseNotAllowed:
-                            // create AuditCertificateMismatchEventType
-                            auditCertificateEventState = new AuditCertificateMismatchEventState(
-                                null);
-                            break;
-                        default:
-                            return;
+                        // create AuditCertificateExpiredEventType
+                        auditCertificateEventState = new AuditCertificateExpiredEventState(
+                            null);
+                    }
+                    else if (sre.StatusCode == StatusCodes.BadCertificateInvalid ||
+                        sre.StatusCode == StatusCodes.BadCertificateChainIncomplete ||
+                        sre.StatusCode == StatusCodes.BadCertificatePolicyCheckFailed)
+                    {
+                        // create AuditCertificateInvalidEventType
+                        auditCertificateEventState = new AuditCertificateInvalidEventState(
+                            null);
+                    }
+                    else if (sre.StatusCode == StatusCodes.BadCertificateUntrusted)
+                    {
+                        // create AuditCertificateUntrustedEventType
+                        auditCertificateEventState = new AuditCertificateUntrustedEventState(
+                            null);
+                    }
+                    else if (sre.StatusCode == StatusCodes.BadCertificateRevoked ||
+                        sre.StatusCode == StatusCodes.BadCertificateIssuerRevoked ||
+                        sre.StatusCode == StatusCodes.BadCertificateRevocationUnknown)
+                    {
+                        // create AuditCertificateRevokedEventType
+                        auditCertificateEventState = new AuditCertificateRevokedEventState(
+                            null);
+                    }
+                    else if (sre.StatusCode == StatusCodes.BadCertificateUseNotAllowed ||
+                             sre.StatusCode == StatusCodes.BadCertificateIssuerUseNotAllowed)
+                    {
+                        // create AuditCertificateMismatchEventType
+                        auditCertificateEventState = new AuditCertificateMismatchEventState(
+                            null);
+                    }
+                    else
+                    {
+                        return;
                     }
 
                     auditCertificateEventState.Initialize(

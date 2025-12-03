@@ -1239,7 +1239,7 @@ namespace Opc.Ua
         /// <returns>Returns a description for the ResponseHeader DataType. </returns>
         protected virtual ResponseHeader CreateResponse(
             RequestHeader requestHeader,
-            uint statusCode)
+            StatusCode statusCode)
         {
             if (StatusCode.IsBad(statusCode))
             {

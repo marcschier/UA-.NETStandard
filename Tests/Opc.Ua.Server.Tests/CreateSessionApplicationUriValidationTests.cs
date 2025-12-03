@@ -339,12 +339,14 @@ namespace Opc.Ua.Server.Tests
                             null) // preferredLocales
                             .ConfigureAwait(false);
                     }
-                    catch (ServiceResultException e) when ((e.StatusCode is
-                        StatusCodes.BadServerHalted or
-                        StatusCodes.BadSecureChannelClosed or
-                        StatusCodes.BadNoCommunication or
-                        StatusCodes.BadNotConnected) &&
-                        attempt < maxAttempts)
+                    catch (ServiceResultException e) when (
+                    (
+                        e.StatusCode == StatusCodes.BadServerHalted ||
+                        e.StatusCode == StatusCodes.BadSecureChannelClosed ||
+                        e.StatusCode == StatusCodes.BadNoCommunication ||
+                        e.StatusCode == StatusCodes.BadNotConnected
+                    ) &&
+                    attempt < maxAttempts)
                     {
                         // Retry for transient connection errors (can happen on busy CI environments)
                         logger.LogWarning(

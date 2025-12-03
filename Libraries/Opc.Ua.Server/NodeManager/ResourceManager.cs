@@ -249,11 +249,11 @@ namespace Opc.Ua.Server
         /// <summary>
         /// Adds the translations to the resource manager.
         /// </summary>
-        public void Add(uint statusCode, string locale, string text)
+        public void Add(StatusCode statusCode, string locale, string text)
         {
             lock (m_lock)
             {
-                string key = statusCode.ToString(CultureInfo.InvariantCulture);
+                string key = statusCode.ToString(null, CultureInfo.InvariantCulture);
 
                 Add(key, locale, text);
 
@@ -294,16 +294,9 @@ namespace Opc.Ua.Server
         /// </summary>
         public void LoadDefaultText()
         {
-            foreach (
-                System.Reflection.FieldInfo field in typeof(StatusCodes).GetFields(
-                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
+            foreach (StatusCode id in StatusCode.InternedStatusCodes)
             {
-                uint? id = field.GetValue(typeof(StatusCodes)) as uint?;
-
-                if (id != null)
-                {
-                    Add(id.Value, "en-US", field.Name);
-                }
+                Add(id, "en-US", id.SymbolicId);
             }
         }
 
@@ -662,7 +655,7 @@ namespace Opc.Ua.Server
 
         private readonly Lock m_lock = new();
         private readonly List<TranslationTable> m_translationTables;
-        private Dictionary<uint, TranslationInfo> m_statusCodeMapping;
+        private Dictionary<StatusCode, TranslationInfo> m_statusCodeMapping;
         private Dictionary<XmlQualifiedName, TranslationInfo> m_symbolicIdMapping;
     }
 }

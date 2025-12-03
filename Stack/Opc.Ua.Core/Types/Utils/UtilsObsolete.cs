@@ -15,6 +15,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
+using System.Runtime.Serialization;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Xml;
@@ -787,6 +789,75 @@ namespace Opc.Ua
 
             // return what was found.
             return path;
+        }
+
+        /// <summary>
+        /// Returns the public static field names for a class.
+        /// </summary>
+        [Obsolete("Unused and will be removed in future versions.")]
+        public static string[] GetFieldNames(Type systemType)
+        {
+            FieldInfo[] fields = systemType.GetFields(BindingFlags.Public | BindingFlags.Static);
+
+            int ii = 0;
+
+            string[] names = new string[fields.Length];
+
+            foreach (FieldInfo field in fields)
+            {
+                names[ii++] = field.Name;
+            }
+
+            return names;
+        }
+
+        /// <summary>
+        /// Returns the data member name for a property.
+        /// </summary>
+        [Obsolete("Unused and will be removed in future versions.")]
+        public static string GetDataMemberName(PropertyInfo property)
+        {
+            object[] attributes = [.. property.GetCustomAttributes(
+                typeof(DataMemberAttribute),
+                true)];
+
+            if (attributes != null)
+            {
+                for (int ii = 0; ii < attributes.Length; ii++)
+                {
+                    if (attributes[ii] is DataMemberAttribute contract)
+                    {
+                        if (string.IsNullOrEmpty(contract.Name))
+                        {
+                            return property.Name;
+                        }
+
+                        return contract.Name;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Returns the numeric constant associated with a name.
+        /// </summary>
+        [Obsolete("Unused and will be removed in future versions.")]
+        public static uint GetIdentifier(string name, Type constants)
+        {
+            foreach (FieldInfo field in constants.GetFields(
+                BindingFlags.Public | BindingFlags.Static))
+            {
+                if (field.Name == name)
+                {
+                    return Convert.ToUInt32(
+                        field.GetValue(constants),
+                        CultureInfo.InvariantCulture);
+                }
+            }
+
+            return 0;
         }
 
         /// <summary>

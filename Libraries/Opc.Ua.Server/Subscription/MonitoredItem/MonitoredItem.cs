@@ -1653,27 +1653,27 @@ namespace Opc.Ua.Server
             }
 
             // get the current status.
-            uint status = StatusCodes.Good;
+            StatusCode status = StatusCodes.Good;
 
             if (error != null)
             {
-                status = error.StatusCode.Code;
+                status = error.StatusCode;
             }
             else if (lastValue != null)
             {
-                status = value.StatusCode.Code;
+                status = value.StatusCode;
             }
 
             // get the last status.
-            uint lastStatus = StatusCodes.Good;
+            StatusCode lastStatus = StatusCodes.Good;
 
             if (lastError != null)
             {
-                lastStatus = lastError.StatusCode.Code;
+                lastStatus = lastError.StatusCode;
             }
             else if (lastValue != null)
             {
-                lastStatus = lastValue.StatusCode.Code;
+                lastStatus = lastValue.StatusCode;
             }
 
             // value changed if any status change occurrs.

@@ -347,15 +347,12 @@ namespace Opc.Ua.Server
         {
             if (value != null)
             {
-                StatusCode status = value.StatusCode;
-                status.Overflow = true;
-                value.StatusCode = status;
+                value.StatusCode = value.StatusCode.SetOverflow(true);
             }
 
             if (error != null)
             {
-                StatusCode status = error.StatusCode;
-                status.Overflow = true;
+                StatusCode status = error.StatusCode.SetOverflow(true);
 
                 // have to copy before updating because the ServiceResult is invariant.
                 error = new ServiceResult(

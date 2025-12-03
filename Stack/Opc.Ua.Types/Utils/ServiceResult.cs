@@ -113,7 +113,7 @@ namespace Opc.Ua
         /// </summary>
         internal ServiceResult()
         {
-            StatusCode = new StatusCode(StatusCodes.Good, nameof(StatusCodes.Good));
+            StatusCode = StatusCodes.Good;
         }
 
         /// <summary>
@@ -385,7 +385,7 @@ namespace Opc.Ua
         /// Constructs an object from an exception.
         /// </summary>
         public ServiceResult(Exception exception)
-            : this(exception, new StatusCode(StatusCodes.Bad, nameof(StatusCodes.Bad)))
+            : this(exception, StatusCodes.Bad)
         {
         }
 
@@ -460,14 +460,12 @@ namespace Opc.Ua
         /// <summary>
         /// A result representing a good status.
         /// </summary>
-        public static ServiceResult Good { get; } = new ServiceResult(
-            new StatusCode(StatusCodes.Good, nameof(StatusCodes.Good)));
+        public static ServiceResult Good { get; } = new ServiceResult(StatusCodes.Good);
 
         /// <summary>
         /// A result representing a bad status.
         /// </summary>
-        public static ServiceResult Bad { get; } = new ServiceResult(
-            new StatusCode(StatusCodes.Bad, nameof(StatusCodes.Bad)));
+        public static ServiceResult Bad { get; } = new ServiceResult(StatusCodes.Bad);
 
         /// <summary>
         /// Creates a new instance of a ServiceResult
@@ -665,35 +663,12 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a 32-bit code to a ServiceResult object.
-        /// </summary>
-        public static implicit operator ServiceResult(uint code)
-        {
-            // TODO Obsolete
-            return new ServiceResult(code);
-        }
-
-        /// <summary>
-        /// Converts a StatusCode object to a 32-bit code.
-        /// </summary>
-        public static explicit operator uint(ServiceResult status)
-        {
-            // TODO Obsolete
-            if (status == null)
-            {
-                return StatusCodes.Good;
-            }
-
-            return status.Code;
-        }
-
-        /// <summary>
         /// Looks up the symbolic name for a status code.
         /// </summary>
-        [Obsolete("Unsupported. Use StatusCodes.LookupSymbolicId instead.")]
+        [Obsolete("Use Status code type with symbolic id directly.")]
         public static string LookupSymbolicId(uint code)
         {
-            return null;
+            return StatusCode.LookupSymbolicId(code);
         }
 
         /// <summary>

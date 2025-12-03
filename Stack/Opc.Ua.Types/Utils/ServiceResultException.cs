@@ -104,14 +104,14 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// The identifier for the status code.
+        /// The status code.
         /// </summary>
-        public uint StatusCode => Result.StatusCode.Code;
+        public StatusCode StatusCode => Result.StatusCode;
 
         /// <summary>
         /// The identifier for the status code.
         /// </summary>
-        public StatusCode Code => Result.StatusCode;
+        public uint Code => Result.StatusCode.Code;
 
         /// <summary>
         /// The namespace that qualifies symbolic identifier.
@@ -155,7 +155,10 @@ namespace Opc.Ua
         /// <summary>
         /// Creates a new instance of a ServiceResultException
         /// </summary>
-        public static ServiceResultException Create(uint code, string format, params object[] args)
+        public static ServiceResultException Create(
+            StatusCode code,
+            string format,
+            params object[] args)
         {
             if (format == null)
             {
@@ -169,7 +172,7 @@ namespace Opc.Ua
         /// Creates a new instance of a ServiceResultException
         /// </summary>
         public static ServiceResultException Create(
-            uint code,
+            StatusCode code,
             Exception e,
             string format,
             params object[] args)

@@ -755,10 +755,10 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
                 """, // compact
                 null // verbose - null == same as compact
             },
-            { BuiltInType.StatusCode, new StatusCode(StatusCodes.Good), null, null, null, "{}" },
+            { BuiltInType.StatusCode, StatusCodes.Good, null, null, null, "{}" },
             {
                 BuiltInType.StatusCode,
-                new StatusCode(StatusCodes.Good),
+                StatusCodes.Good,
                 $"{StatusCodes.Good}",
                 "{}",
                 null,
@@ -766,19 +766,19 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
                 true },
             {
                 BuiltInType.StatusCode,
-                new StatusCode(StatusCodes.BadBoundNotFound),
-                $"{StatusCodes.BadBoundNotFound}",
-                $$"""{"Code":{{StatusCodes.BadBoundNotFound}}, "Symbol":"{{nameof(StatusCodes.BadBoundNotFound)}}"}""",
-                $$"""{"Code":{{StatusCodes.BadBoundNotFound}}}""",
-                $$"""{"Code":{{StatusCodes.BadBoundNotFound}}, "Symbol":"{{nameof(StatusCodes.BadBoundNotFound)}}"}"""
+                StatusCodes.BadBoundNotFound,
+                $"{StatusCodes.BadBoundNotFound.Code}",
+                $$"""{"Code":{{StatusCodes.BadBoundNotFound.Code}}, "Symbol":"{{nameof(StatusCodes.BadBoundNotFound)}}"}""",
+                $$"""{"Code":{{StatusCodes.BadBoundNotFound.Code}}}""",
+                $$"""{"Code":{{StatusCodes.BadBoundNotFound.Code}}, "Symbol":"{{nameof(StatusCodes.BadBoundNotFound)}}"}"""
             },
             {
                 BuiltInType.StatusCode,
-                new StatusCode(StatusCodes.BadCertificateInvalid),
-                $"{StatusCodes.BadCertificateInvalid}",
-                $$"""{"Code":{{StatusCodes.BadCertificateInvalid}}, "Symbol":"{{nameof(StatusCodes.BadCertificateInvalid)}}"}""",
-                $$"""{"Code":{{StatusCodes.BadCertificateInvalid}}}""",
-                $$"""{"Code":{{StatusCodes.BadCertificateInvalid}}, "Symbol":"{{nameof(StatusCodes.BadCertificateInvalid)}}"}"""
+                StatusCodes.BadCertificateInvalid,
+                $"{StatusCodes.BadCertificateInvalid.Code}",
+                $$"""{"Code":{{StatusCodes.BadCertificateInvalid.Code}}, "Symbol":"{{nameof(StatusCodes.BadCertificateInvalid)}}"}""",
+                $$"""{"Code":{{StatusCodes.BadCertificateInvalid.Code}}}""",
+                $$"""{"Code":{{StatusCodes.BadCertificateInvalid.Code}}, "Symbol":"{{nameof(StatusCodes.BadCertificateInvalid)}}"}"""
             },
             {
                 BuiltInType.StatusCode,

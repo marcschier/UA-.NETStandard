@@ -45,10 +45,10 @@ namespace Opc.Ua.Core.Tests.Types.Constants
         /// Test GetBrowseName for standard status codes.
         /// </summary>
         [Test]
-        public void GetBrowseName_StandardStatusCodes_ReturnsValidNames()
+        public void StatusCode_SymbolicId_StandardStatusCodes_ReturnsValidNames()
         {
             // Test a few standard status code IDs
-            uint[] statusCodeIds = [
+            StatusCode[] statusCodeIds = [
                 StatusCodes.Good,
                 StatusCodes.Bad,
                 StatusCodes.Uncertain,
@@ -60,9 +60,9 @@ namespace Opc.Ua.Core.Tests.Types.Constants
                 StatusCodes.UncertainReferenceOutOfServer
             ];
 
-            foreach (uint id in statusCodeIds)
+            foreach (StatusCode id in statusCodeIds)
             {
-                string browseName = StatusCodes.GetBrowseName(id);
+                string browseName = id.SymbolicId;
                 Assert.IsNotNull(browseName);
                 Assert.IsNotEmpty(browseName);
             }
@@ -72,9 +72,9 @@ namespace Opc.Ua.Core.Tests.Types.Constants
         /// Test GetBrowseName for Good status code.
         /// </summary>
         [Test]
-        public void GetBrowseName_GoodStatusCode_ReturnsGood()
+        public void StatusCode_SymbolicId_GoodStatusCode_ReturnsGood()
         {
-            string browseName = StatusCodes.GetBrowseName(StatusCodes.Good);
+            string browseName = StatusCodes.Good.SymbolicId;
             Assert.AreEqual("Good", browseName);
         }
 
@@ -82,9 +82,9 @@ namespace Opc.Ua.Core.Tests.Types.Constants
         /// Test GetBrowseName for Bad status code.
         /// </summary>
         [Test]
-        public void GetBrowseName_BadStatusCode_ReturnsBad()
+        public void StatusCode_SymbolicId_BadStatusCode_ReturnsBad()
         {
-            string browseName = StatusCodes.GetBrowseName(StatusCodes.Bad);
+            string browseName =StatusCodes.Bad.SymbolicId;
             Assert.AreEqual("Bad", browseName);
         }
 
@@ -92,76 +92,10 @@ namespace Opc.Ua.Core.Tests.Types.Constants
         /// Test GetBrowseName for invalid status code ID returns empty string.
         /// </summary>
         [Test]
-        public void GetBrowseName_InvalidStatusCodeId_ReturnsEmptyString()
+        public void StatusCode_SymbolicId_InvalidStatusCodeId_ReturnsEmptyString()
         {
-            string browseName = StatusCodes.GetBrowseName(0x12345678);
+            string browseName = new StatusCode(0x12345678).SymbolicId;
             Assert.AreEqual(string.Empty, browseName);
-        }
-
-        /// <summary>
-        /// Test GetIdentifier for standard status code names.
-        /// </summary>
-        [Test]
-        public void GetIdentifier_StandardStatusCodes_ReturnsValidIds()
-        {
-            // Test a few standard status code names - note that "Good" has id 0
-            var testCases = new Dictionary<string, uint>
-            {
-                { "Good", StatusCodes.Good },
-                { "Bad", StatusCodes.Bad },
-                { "Uncertain", StatusCodes.Uncertain },
-                { "BadNodeIdUnknown", StatusCodes.BadNodeIdUnknown },
-                { "BadAttributeIdInvalid", StatusCodes.BadAttributeIdInvalid },
-                { "BadIndexRangeInvalid", StatusCodes.BadIndexRangeInvalid },
-                { "BadTypeMismatch", StatusCodes.BadTypeMismatch },
-                { "GoodResultsMayBeIncomplete", StatusCodes.GoodResultsMayBeIncomplete },
-                { "UncertainReferenceOutOfServer", StatusCodes.UncertainReferenceOutOfServer }
-            };
-
-            foreach (KeyValuePair<string, uint> testCase in testCases)
-            {
-                uint id = StatusCodes.GetIdentifier(testCase.Key);
-                Assert.AreEqual(testCase.Value, id);
-            }
-        }
-
-        /// <summary>
-        /// Test GetIdentifier for Good status code name.
-        /// </summary>
-        [Test]
-        public void GetIdentifier_GoodName_ReturnsGoodId()
-        {
-            uint id = StatusCodes.GetIdentifier("Good");
-            Assert.AreEqual(StatusCodes.Good, id);
-        }
-
-        /// <summary>
-        /// Test GetIdentifier for invalid name returns 0.
-        /// </summary>
-        [Test]
-        public void GetIdentifier_InvalidName_ReturnsZero()
-        {
-            uint id = StatusCodes.GetIdentifier("InvalidStatusCodeName");
-            Assert.AreEqual(0, id);
-        }
-
-        /// <summary>
-        /// Test that GetBrowseName and GetIdentifier are inverse operations.
-        /// </summary>
-        [Test]
-        public void GetBrowseName_GetIdentifier_AreInverseOperations()
-        {
-            uint[] statusCodeIds = [
-                StatusCodes.Good, StatusCodes.Bad, StatusCodes.Uncertain,
-                StatusCodes.BadNodeIdUnknown, StatusCodes.BadTypeMismatch
-            ];
-
-            foreach (uint id in statusCodeIds)
-            {
-                string browseName = StatusCodes.GetBrowseName(id);
-                uint retrievedId = StatusCodes.GetIdentifier(browseName);
-                Assert.AreEqual(id, retrievedId);
-            }
         }
     }
 }

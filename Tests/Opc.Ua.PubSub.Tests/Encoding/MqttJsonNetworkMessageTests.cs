@@ -2991,9 +2991,7 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                                                             (byte)BuiltInType.StatusCode)
                                                         {
                                                             dataValue = new DataValue(
-                                                                new Variant(
-                                                                    new StatusCode(
-                                                                        StatusCodes.Good)));
+                                                                new Variant(StatusCodes.Good));
                                                         }
                                                     }
 
