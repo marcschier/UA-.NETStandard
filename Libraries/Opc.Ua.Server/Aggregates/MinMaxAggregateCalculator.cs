@@ -389,8 +389,8 @@ namespace Opc.Ua.Server
                 // check if interval is partial and set the flag accordingly
                 if (slice.Partial)
                 {
-                    noDataValue.StatusCode = noDataValue.StatusCode
-                        .SetAggregateBits(AggregateBits.Partial);
+                    noDataValue.StatusCode =
+                        noDataValue.StatusCode.SetAggregateBits(AggregateBits.Partial);
                 }
                 return noDataValue;
             }

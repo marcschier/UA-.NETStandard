@@ -352,12 +352,10 @@ namespace Opc.Ua.Server
 
             if (error != null)
             {
-                StatusCode status = error.StatusCode.SetOverflow(true);
-
                 // have to copy before updating because the ServiceResult is invariant.
                 error = new ServiceResult(
                     error.NamespaceUri,
-                    status,
+                    error.StatusCode.SetOverflow(true),
                     error.LocalizedText,
                     error.AdditionalInfo,
                     error.InnerResult);

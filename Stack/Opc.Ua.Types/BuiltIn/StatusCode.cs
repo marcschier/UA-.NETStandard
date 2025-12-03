@@ -388,6 +388,10 @@ namespace Opc.Ua
         /// <summary>
         /// The limit bits, indicating Hi/Lo etc.
         /// </summary>
+        /// <remarks>
+        /// Requires the data value info type bit to be present. Otherwise always
+        /// returns false.
+        /// </remarks>
         /// <seealso cref="LimitBits"/>
         [XmlIgnore]
         public LimitBits LimitBits => (LimitBits)(Code & kLimitBits);
@@ -395,6 +399,7 @@ namespace Opc.Ua
         /// <summary>
         /// Returns a copy of the status code with the limit bits set.
         /// </summary>
+        /// <remarks>Always adds the data value info type bit no matter.</remarks>
         /// <param name="bits">The value for the limits bits</param>
         /// <returns>The status code with the limit bits set to the specified values.</returns>
         public StatusCode SetLimitBits(LimitBits bits)
@@ -409,17 +414,25 @@ namespace Opc.Ua
         /// <summary>
         /// Specifies if there is an overflow or not
         /// </summary>
+        /// <remarks>
+        /// Requires the data value info type bit to be present. Otherwise always
+        /// returns false.
+        /// </remarks>
         [XmlIgnore]
         public bool Overflow => ((Code & kDataValueInfoType) != 0) && ((Code & kOverflowBit) != 0);
 
         /// <summary>
-        /// Returns a copy of the status code with the overflow bit set.
+        /// Returns a copy of the status code with the overflow bit set or unsets it if false
+        /// is passed.
         /// </summary>
+        /// <remarks>Always adds the data value info type bit no matter.</remarks>
         /// <param name="overflow">The value for the overflow bit.</param>
         /// <returns>The status code with the overflow bit set to the specified value.</returns>
         public StatusCode SetOverflow(bool overflow)
         {
             uint code = Code;
+
+            code |= kDataValueInfoType;
             if (overflow)
             {
                 code |= kOverflowBit;

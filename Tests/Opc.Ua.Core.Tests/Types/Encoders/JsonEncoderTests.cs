@@ -759,7 +759,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
             {
                 BuiltInType.StatusCode,
                 StatusCodes.Good,
-                $"{StatusCodes.Good}",
+                $"{StatusCodes.Good.Code}",
                 "{}",
                 null,
                 "{}",
@@ -950,10 +950,10 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
             {
                 BuiltInType.DataValue,
                 new DataValue(StatusCodes.BadNotWritable),
-                $$"""{"StatusCode":{{StatusCodes.BadNotWritable}}}""",
-                $$$"""{"StatusCode":{"Code":{{{StatusCodes.BadNotWritable}}}, "Symbol":"{{{nameof(StatusCodes.BadNotWritable)}}}"}}""",
-                $$$"""{"StatusCode":{"Code":{{{StatusCodes.BadNotWritable}}}}}""",
-                $$$"""{"StatusCode":{"Code":{{{StatusCodes.BadNotWritable}}}, "Symbol":"{{{nameof(StatusCodes.BadNotWritable)}}}"}}"""
+                $$"""{"StatusCode":{{StatusCodes.BadNotWritable.Code}}}""",
+                $$$"""{"StatusCode":{"Code":{{{StatusCodes.BadNotWritable.Code}}}, "Symbol":"{{{nameof(StatusCodes.BadNotWritable)}}}"}}""",
+                $$$"""{"StatusCode":{"Code":{{{StatusCodes.BadNotWritable.Code}}}}}""",
+                $$$"""{"StatusCode":{"Code":{{{StatusCodes.BadNotWritable.Code}}}, "Symbol":"{{{nameof(StatusCodes.BadNotWritable)}}}"}}"""
             },
             { BuiltInType.Enumeration, (TestEnumType)0, "0", """
                 "0"

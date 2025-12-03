@@ -2711,17 +2711,14 @@ namespace Opc.Ua.Client
 
                 if (m_keepAliveWorker == null)
                 {
-                    m_keepAliveCancellation = new CancellationTokenSource();
+                    var keepAliveCancellation = new CancellationTokenSource();
 
-                    // start timer
-                    m_keepAliveWorker = Task
-                        .Factory.StartNew(
-                            () => OnSendKeepAliveAsync(
-                                nodesToRead,
-                                m_keepAliveCancellation.Token),
-                            m_keepAliveCancellation.Token,
-                            TaskCreationOptions.LongRunning,
-                            TaskScheduler.Default);
+                    m_keepAliveWorker = Task.Run(
+                        () => OnSendKeepAliveAsync(nodesToRead, keepAliveCancellation.Token),
+                        keepAliveCancellation.Token);
+
+                    m_keepAliveCancellation?.Dispose();
+                    m_keepAliveCancellation = keepAliveCancellation;
                 }
 
                 // send initial keep alive.

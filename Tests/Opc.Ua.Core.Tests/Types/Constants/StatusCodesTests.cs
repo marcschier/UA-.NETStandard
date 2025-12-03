@@ -27,9 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System.Collections.Generic;
 using NUnit.Framework;
-using Assert = NUnit.Framework.Legacy.ClassicAssert;
 
 namespace Opc.Ua.Core.Tests.Types.Constants
 {
@@ -63,8 +61,8 @@ namespace Opc.Ua.Core.Tests.Types.Constants
             foreach (StatusCode id in statusCodeIds)
             {
                 string browseName = id.SymbolicId;
-                Assert.IsNotNull(browseName);
-                Assert.IsNotEmpty(browseName);
+                Assert.That(browseName, Is.Not.Null);
+                Assert.That(browseName, Is.Not.Empty);
             }
         }
 
@@ -75,7 +73,7 @@ namespace Opc.Ua.Core.Tests.Types.Constants
         public void StatusCode_SymbolicId_GoodStatusCode_ReturnsGood()
         {
             string browseName = StatusCodes.Good.SymbolicId;
-            Assert.AreEqual("Good", browseName);
+            Assert.That(browseName, Is.EqualTo("Good"));
         }
 
         /// <summary>
@@ -85,7 +83,7 @@ namespace Opc.Ua.Core.Tests.Types.Constants
         public void StatusCode_SymbolicId_BadStatusCode_ReturnsBad()
         {
             string browseName =StatusCodes.Bad.SymbolicId;
-            Assert.AreEqual("Bad", browseName);
+            Assert.That(browseName, Is.EqualTo("Bad"));
         }
 
         /// <summary>
@@ -95,7 +93,7 @@ namespace Opc.Ua.Core.Tests.Types.Constants
         public void StatusCode_SymbolicId_InvalidStatusCodeId_ReturnsEmptyString()
         {
             string browseName = new StatusCode(0x12345678).SymbolicId;
-            Assert.AreEqual(string.Empty, browseName);
+            Assert.That(browseName, Is.Null);
         }
     }
 }

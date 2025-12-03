@@ -580,6 +580,7 @@ namespace Opc.Ua.Bindings
                     : IPAddress.Any;
 
                 // create IPv4 or IPv6 socket.
+                Exception exception = null;
                 try
                 {
                     var endpoint = new IPEndPoint(ipAddress, port);
@@ -613,7 +614,11 @@ namespace Opc.Ua.Bindings
                     // no IPv4 support.
                     m_listeningSocket?.Dispose();
                     m_listeningSocket = null;
-                    m_logger.LogWarning("Failed to create IPv4 listening socket: {Message}", ex.Message);
+                    m_logger.LogWarning(
+                        ex,
+                        "Failed to create IPv4 listening socket on port {Port}",
+                        port);
+                    exception = ex;
                 }
 
                 if (ipAddress == IPAddress.Any)
@@ -645,14 +650,20 @@ namespace Opc.Ua.Bindings
                         // no IPv6 support
                         m_listeningSocketIPv6?.Dispose();
                         m_listeningSocketIPv6 = null;
-                        m_logger.LogWarning("Failed to create IPv6 listening socket: {Message}", ex.Message);
+                        m_logger.LogWarning(
+                            ex,
+                            "Failed to create IPv6 listening socket on port {Port}",
+                            port);
+                        exception = exception == null ? ex : new AggregateException(exception, ex);
                     }
                 }
                 if (m_listeningSocketIPv6 == null && m_listeningSocket == null)
                 {
                     throw ServiceResultException.Create(
                         StatusCodes.BadNoCommunication,
-                        "Failed to establish tcp listener sockets for Ipv4 and IPv6.");
+                        exception,
+                        "Failed to establish tcp listener sockets on port {0} for Ipv4 and IPv6.",
+                        port);
                 }
             }
         }
