@@ -156,8 +156,15 @@ namespace Opc.Ua
         /// <param name="symbolicId">The symbol for the status code</param>
         public StatusCode(uint code, string symbolicId)
         {
-            Code = code;
-            SymbolicId = string.Intern(symbolicId);
+            if (symbolicId == null && TryGetInternedStatusCode(code, out StatusCode s))
+            {
+                this = s;
+            }
+            else
+            {
+                SymbolicId = symbolicId != null ? string.Intern(symbolicId) : null;
+            }
+            Code = code; // Set code again which could be containing more than code bits
         }
 
         /// <summary>
@@ -181,7 +188,7 @@ namespace Opc.Ua
             else
             {
                 Code = defaultCode;
-                SymbolicId = string.Intern(symbolicId);
+                SymbolicId = symbolicId != null ? string.Intern(symbolicId) : null;
             }
         }
 
@@ -686,6 +693,7 @@ namespace Opc.Ua
         /// Lookup symbolic id for a status code.
         /// </summary>
         /// <param name="code"></param>
+        [Obsolete("Use SymbolicId property directly.")]
         public static string LookupSymbolicId(uint code)
         {
             return TryGetInternedStatusCode(code, out StatusCode s) ? s.SymbolicId : null;

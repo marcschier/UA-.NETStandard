@@ -505,7 +505,7 @@ namespace Opc.Ua.Client
             Debug.Assert(!NodeId.IsNull(nodeId));
             return m_refs.GetOrAddAsync(
                 nodeId,
-                async (nodeId, context) =>
+                static async (nodeId, context) =>
                 {
                     ReferenceDescriptionCollection references =
                         await context.ctx.FetchReferencesAsync(null, nodeId, context.ct)
