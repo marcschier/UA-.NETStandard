@@ -386,6 +386,11 @@ namespace Opc.Ua.Gds.Tests
                     application.ApplicationRecord.ApplicationId).ConfigureAwait(false);
                 Assert.NotNull(result);
                 result.ServerCapabilities.Sort();
+                if (application.ApplicationRecord.ApplicationType != ApplicationType.Client &&
+                    application.ApplicationRecord.ServerCapabilities.Count == 0)
+                {
+                    application.ApplicationRecord.ServerCapabilities.Add("NA");
+                }
                 application.ApplicationRecord.ServerCapabilities.Sort();
                 Assert.IsTrue(Utils.IsEqual(application.ApplicationRecord, result));
             }

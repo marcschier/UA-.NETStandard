@@ -529,7 +529,7 @@ namespace Opc.Ua.Server
                     CloseSession(session.Id);
                 }
 
-                throw new ServiceResultException(e, StatusCodes.BadUnexpectedError);
+                throw ServiceResultException.Unexpected(e, e.Message);
             }
         }
 

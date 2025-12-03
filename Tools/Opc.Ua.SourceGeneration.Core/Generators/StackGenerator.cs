@@ -287,9 +287,24 @@ namespace Opc.Ua.SourceGeneration
                 BuiltInDesignFiles.StatusCodesCsv);
             var constants = new List<Constant>
             {
-                new() { Severity = Severity.Good, Name = nameof(Severity.Good) },
-                new() { Severity = Severity.Bad, Name = nameof(Severity.Bad) },
-                new() { Severity = Severity.Uncertain, Name = nameof(Severity.Uncertain) }
+                new()
+                {
+                    Severity = Severity.Good,
+                    Name = nameof(Severity.Good),
+                    Documentation = new Documentation { Text = ["Success"] }
+                },
+                new()
+                {
+                    Severity = Severity.Bad,
+                    Name = nameof(Severity.Bad),
+                    Documentation = new Documentation { Text = ["Bad status"] }
+                },
+                new()
+                {
+                    Severity = Severity.Uncertain,
+                    Name = nameof(Severity.Uncertain),
+                    Documentation = new Documentation { Text = ["Uncertain status"] }
+                }
             };
 
             foreach (DataType datatype in Dictionary.Items)
@@ -303,21 +318,18 @@ namespace Opc.Ua.SourceGeneration
                         StringComparison.Ordinal))
                     {
                         constant.Severity = Severity.Bad;
-                        constant.Documentation = new Documentation { Text = ["Bad status"] };
                     }
                     else if (constant.Name.StartsWith(
                         nameof(Severity.Good),
                         StringComparison.Ordinal))
                     {
                         constant.Severity = Severity.Good;
-                        constant.Documentation = new Documentation { Text = ["Success"] };
                     }
                     else if (constant.Name.StartsWith(
                         nameof(Severity.Uncertain),
                         StringComparison.Ordinal))
                     {
                         constant.Severity = Severity.Uncertain;
-                        constant.Documentation = new Documentation { Text = ["Uncertain status"] };
                     }
                     constant.Identifier = id;
                     constant.IdentifierSpecified = true;

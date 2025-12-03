@@ -163,8 +163,7 @@ namespace Opc.Ua.Server
                 {
                     if (store == null)
                     {
-                        throw new ServiceResultException(
-                            StatusCodes.BadConfigurationError,
+                        throw ServiceResultException.ConfigurationError(
                             "Failed to open trusted certificate store.");
                     }
 
@@ -195,8 +194,7 @@ namespace Opc.Ua.Server
                 {
                     if (store == null)
                     {
-                        throw new ServiceResultException(
-                            StatusCodes.BadConfigurationError,
+                        throw ServiceResultException.ConfigurationError(
                             "Failed to open issuer certificate store.");
                     }
 
@@ -586,8 +584,7 @@ namespace Opc.Ua.Server
                     {
                         if (store == null)
                         {
-                            throw new ServiceResultException(
-                                StatusCodes.BadConfigurationError,
+                            throw ServiceResultException.ConfigurationError(
                                 "Failed to open certificate store.");
                         }
 
@@ -707,8 +704,7 @@ namespace Opc.Ua.Server
                 {
                     if (store == null)
                     {
-                        throw new ServiceResultException(
-                            StatusCodes.BadConfigurationError,
+                        throw ServiceResultException.ConfigurationError(
                             "Failed to open certificate store.");
                     }
 
@@ -751,8 +747,7 @@ namespace Opc.Ua.Server
                 {
                     if (store == null)
                     {
-                        throw new ServiceResultException(
-                            StatusCodes.BadConfigurationError,
+                        throw ServiceResultException.ConfigurationError(
                             "Failed to open certificate store.");
                     }
 

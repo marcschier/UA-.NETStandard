@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
@@ -76,7 +77,7 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public Task<IServiceResponse> ProcessRequestAsync(
+        public ValueTask<IServiceResponse> ProcessRequestAsync(
             SecureChannelContext secureChannelContext,
             IServiceRequest request,
             CancellationToken cancellationToken = default)
@@ -258,59 +259,6 @@ namespace Opc.Ua
             }
         }
 
-#if OPCUA_USE_SYNCHRONOUS_ENDPOINTS
-        /// <summary>
-        /// Dispatches an incoming binary encoded request.
-        /// </summary>
-        /// <param name="request">Request.</param>
-        /// <returns>Invoke service response message.</returns>
-        public virtual InvokeServiceResponseMessage InvokeService(InvokeServiceMessage request)
-        {
-            IServiceRequest decodedRequest = null;
-            IServiceResponse response = null;
-
-            // create context for request and reply.
-            ServiceMessageContext context = MessageContext;
-
-            try
-            {
-                // check for null.
-                if (request == null || request.InvokeServiceRequest == null)
-                {
-                    throw new ServiceResultException(
-                        StatusCodes.BadDecodingError,
-                        Utils.Format("Null message cannot be processed."));
-                }
-
-                // decoding incoming message.
-                decodedRequest =
-                    BinaryDecoder.DecodeMessage(request.InvokeServiceRequest, null, context) as IServiceRequest;
-
-                // invoke service.
-                response = ProcessRequest(decodedRequest);
-
-                // encode response.
-                InvokeServiceResponseMessage outgoing = new InvokeServiceResponseMessage();
-                outgoing.InvokeServiceResponse = BinaryEncoder.EncodeMessage(response, context);
-                return outgoing;
-            }
-            catch (Exception e)
-            {
-                // create fault.
-                ServiceFault fault = CreateFault(decodedRequest, e);
-
-                // encode fault response.
-                if (context == null)
-                {
-                    context = new ServiceMessageContext();
-                }
-
-                InvokeServiceResponseMessage outgoing = new InvokeServiceResponseMessage();
-                outgoing.InvokeServiceResponse = BinaryEncoder.EncodeMessage(fault, context);
-                return outgoing;
-            }
-        }
-#else
         /// <summary>
         /// Dispatches an incoming binary encoded request.
         /// </summary>
@@ -362,7 +310,6 @@ namespace Opc.Ua
                 };
             }
         }
-#endif
 
         /// <summary>
         /// Returns the host associated with the current context.
@@ -482,8 +429,8 @@ namespace Opc.Ua
                     case StatusCodes.BadSecurityChecksFailed:
                     case StatusCodes.BadCertificateInvalid:
                     case StatusCodes.BadServerHalted:
-                        // Log information instead of warning for expected disconnection scenarios
-                        logger.LogInformation(
+                        // Log debug instead of warning for expected disconnection scenarios
+                        logger.LogDebug(
                             "SERVER - Service Fault Occurred. Reason={StatusCode}",
                             result.StatusCode);
                         break;
@@ -695,7 +642,7 @@ namespace Opc.Ua
                 ILogger logger)
             {
                 logger.LogWarning(
-                    "Async Service invoced sychronously. Prefer using InvokeAsync for best performance.");
+                    "Async Service invoked sychronously. Prefer using InvokeAsync for best performance.");
                 return InvokeAsync(request, secureChannelContext).AsTask().GetAwaiter().GetResult();
             }
 
@@ -745,7 +692,7 @@ namespace Opc.Ua
         /// <summary>
         /// An object that handles an incoming request for an endpoint.
         /// </summary>
-        protected class EndpointIncomingRequest : IEndpointIncomingRequest
+        protected readonly struct EndpointIncomingRequest : IEndpointIncomingRequest, IEquatable<EndpointIncomingRequest>
         {
             /// <summary>
             /// Initialize the Object with a Request
@@ -753,17 +700,16 @@ namespace Opc.Ua
             public EndpointIncomingRequest(
                 EndpointBase endpoint,
                 SecureChannelContext context,
-                IServiceRequest request)
+                IServiceRequest request,
+                CancellationToken cancellationToken = default)
             {
                 m_endpoint = endpoint;
                 SecureChannelContext = context;
                 Request = request;
-                m_tcs = new TaskCompletionSource<IServiceResponse>(
-                    TaskCreationOptions.RunContinuationsAsynchronously);
+                m_vts = ServiceResponsePooledValueTaskSource.Create();
+                m_service = m_endpoint.FindService(Request.TypeId);
+                m_cancellationToken = cancellationToken;
             }
-
-            /// <inheritdoc/>
-            public object Calldata { get; set; }
 
             /// <inheritdoc/>
             public SecureChannelContext SecureChannelContext { get; }
@@ -775,25 +721,22 @@ namespace Opc.Ua
             /// Process an incoming request
             /// </summary>
             /// <returns></returns>
-            public Task<IServiceResponse> ProcessAsync(CancellationToken cancellationToken = default)
+            public ValueTask<IServiceResponse> ProcessAsync(CancellationToken cancellationToken = default)
             {
                 try
                 {
-                    m_cancellationToken = cancellationToken;
-                    m_cancellationToken.Register(() => m_tcs.TrySetCanceled());
-                    m_service = m_endpoint.FindService(Request.TypeId);
-                    m_endpoint.ServerForContext.ScheduleIncomingRequest(this, m_cancellationToken);
+                    m_endpoint.ServerForContext.ScheduleIncomingRequest(this, cancellationToken);
                 }
                 catch (Exception e)
                 {
-                    m_tcs.TrySetResult(m_endpoint.CreateFault(Request, e));
+                    m_vts.SetResult(m_endpoint.CreateFault(Request, e));
                 }
 
-                return m_tcs.Task;
+                return m_vts.Task;
             }
 
             /// <inheritdoc/>
-            public async Task CallAsync(CancellationToken cancellationToken = default)
+            public async ValueTask CallAsync(CancellationToken cancellationToken = default)
             {
                 using CancellationTokenSource timeoutHintCts = (int)Request.RequestHeader.TimeoutHint > 0 ?
                     new CancellationTokenSource((int)Request.RequestHeader.TimeoutHint) : null;
@@ -827,11 +770,8 @@ namespace Opc.Ua
 
                     using (activity)
                     {
-                        IServiceResponse response = await m_service.InvokeAsync(
-                            Request,
-                            SecureChannelContext,
-                            linkedCts.Token).ConfigureAwait(false);
-                        m_tcs.TrySetResult(response);
+                        IServiceResponse response = await m_service.InvokeAsync(Request, SecureChannelContext, linkedCts.Token).ConfigureAwait(false);
+                        m_vts.SetResult(response);
                     }
                 }
                 catch (Exception e)
@@ -840,8 +780,7 @@ namespace Opc.Ua
                     {
                         e = new ServiceResultException(StatusCodes.BadTimeout);
                     }
-
-                    m_tcs.TrySetResult(m_endpoint.CreateFault(Request, e));
+                    m_vts.SetResult(m_endpoint.CreateFault(Request, e));
                 }
             }
 
@@ -850,18 +789,52 @@ namespace Opc.Ua
             {
                 if (ServiceResult.IsBad(error))
                 {
-                    m_tcs.TrySetResult(m_endpoint.CreateFault(Request, new ServiceResultException(error)));
+                    m_vts.SetResult(m_endpoint.CreateFault(Request, new ServiceResultException(error)));
                 }
                 else
                 {
-                    m_tcs.TrySetResult(response);
+                    m_vts.SetResult(response);
                 }
             }
 
+            /// <inheritdoc/>
+            public override bool Equals(object obj)
+            {
+                if (obj is EndpointIncomingRequest other)
+                {
+                    return Request.RequestHeader.Equals(other.Request.RequestHeader);
+                }
+                return false;
+            }
+
+            /// <inheritdoc/>
+            public override int GetHashCode()
+            {
+                return Request.RequestHeader.GetHashCode();
+            }
+
+            /// <inheritdoc/>
+            public static bool operator ==(EndpointIncomingRequest left, EndpointIncomingRequest right)
+            {
+                return left.Equals(right);
+            }
+
+            /// <inheritdoc/>
+            public static bool operator !=(EndpointIncomingRequest left, EndpointIncomingRequest right)
+            {
+                return !(left == right);
+            }
+
+            /// <inheritdoc/>
+            public bool Equals(EndpointIncomingRequest other)
+            {
+                return Request.RequestHeader.Equals(other.Request.RequestHeader);
+            }
+
             private readonly EndpointBase m_endpoint;
-            private CancellationToken m_cancellationToken;
-            private ServiceDefinition m_service;
-            private readonly TaskCompletionSource<IServiceResponse> m_tcs;
+            private readonly ServiceDefinition m_service;
+            private readonly ServiceResponsePooledValueTaskSource m_vts;
+            private readonly CancellationToken m_cancellationToken;
         }
 
         /// <summary>

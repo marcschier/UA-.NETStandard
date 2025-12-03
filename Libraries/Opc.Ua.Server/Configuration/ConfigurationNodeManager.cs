@@ -787,8 +787,7 @@ namespace Opc.Ua.Server
                     {
                         if (appStore == null)
                         {
-                            throw new ServiceResultException(
-                                StatusCodes.BadConfigurationError,
+                            throw ServiceResultException.ConfigurationError(
                                 "Failed to open application certificate store.");
                         }
 
@@ -831,8 +830,7 @@ namespace Opc.Ua.Server
                     {
                         if (issuerStore == null)
                         {
-                            throw new ServiceResultException(
-                                StatusCodes.BadConfigurationError,
+                            throw ServiceResultException.ConfigurationError(
                                 "Failed to open issuer certificate store.");
                         }
 

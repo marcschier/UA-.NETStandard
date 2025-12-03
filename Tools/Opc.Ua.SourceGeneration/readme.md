@@ -73,7 +73,16 @@ If the structure is abstract the type will be generated as abstract as well.
 The following functionality will be implemented over time
 
 - Record types and structs
-- Support for generating option set and union types
+- Support for generating structures with optional fields, option set and union types
+- Support to understand nullable annotation for optional fields
 - Support for generating collection types (arrays, lists, etc.)
 - Support for generating complex types with nested data types. If the type references other data types, these 
   must be built in or implement IEncodeable to be included.
+
+## Implementation details
+
+The source generator is implemented using the Roslyn API, which provides a rich set of tools for analyzing
+and generating C# code. The generator finds all marker attributes such as `[DataType]` in your code and
+builds the model design from it. It then processes the model design to generate the necessary C# code.
+The annotated types are grouped by namespace. Each namespace will result in a separate generated file.
+A namespace can be annotated with a namespace URI which 

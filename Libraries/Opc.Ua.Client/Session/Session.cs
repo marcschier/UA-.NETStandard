@@ -279,9 +279,9 @@ namespace Opc.Ua.Client
                 return;
             }
 
-            throw new ServiceResultException(
-                StatusCodes.BadConfigurationError,
-                $"The client configuration does not specify the {configurationField}.");
+            throw ServiceResultException.ConfigurationError(
+                "The client configuration does not specify the configuration field {0}.",
+                configurationField);
         }
 
         /// <summary>
@@ -3301,14 +3301,12 @@ namespace Opc.Ua.Client
             string[] namespaceArray = (string[])values[0].Value;
             if (namespaceArray.Length == 0)
             {
-                throw ServiceResultException.Create(
-                    StatusCodes.BadUnexpectedError,
+                throw ServiceResultException.Unexpected(
                     "Retrieved namespace list contain no entries.");
             }
             if (namespaceArray[0] != Namespaces.OpcUa)
             {
-                throw ServiceResultException.Create(
-                    StatusCodes.BadUnexpectedError,
+                throw ServiceResultException.Unexpected(
                     "Retrieved namespaces are missing OPC UA namespace at index 0.");
             }
 
@@ -4532,7 +4530,7 @@ namespace Opc.Ua.Client
                     // Updating a live session must be prevented unless the session was
                     // closed. Therefore we need to throw here to catch this case during any
                     // reconnect or other activation operation
-                    throw ServiceResultException.Create(StatusCodes.BadConfigurationError,
+                    throw ServiceResultException.ConfigurationError(
                         "Configuration was changed for an active session.");
                 }
                 // If the configured endpoint was updated while we are closed we reload.
@@ -4549,8 +4547,7 @@ namespace Opc.Ua.Client
                     .ConfigureAwait(false);
                 if (m_instanceCertificate == null)
                 {
-                    throw new ServiceResultException(
-                        StatusCodes.BadConfigurationError,
+                    throw ServiceResultException.ConfigurationError(
                         "The client configuration does not specify an application instance certificate.");
                 }
                 m_effectiveEndpoint = m_endpoint;
@@ -4560,8 +4557,7 @@ namespace Opc.Ua.Client
             // check for private key.
             if (!m_instanceCertificate.HasPrivateKey)
             {
-                throw ServiceResultException.Create(
-                    StatusCodes.BadConfigurationError,
+                throw ServiceResultException.ConfigurationError(
                     "Client certificate configured for security policy {0} is missing a private key.",
                     m_endpoint.Description.SecurityPolicyUri);
             }
@@ -4588,8 +4584,7 @@ namespace Opc.Ua.Client
                 privateKey: true,
                 telemetry,
                 ct).ConfigureAwait(false)
-                ?? throw ServiceResultException.Create(
-                    StatusCodes.BadConfigurationError,
+                ?? throw ServiceResultException.ConfigurationError(
                     "ApplicationCertificate for the security profile {0} cannot be found.",
                     securityProfile);
         }

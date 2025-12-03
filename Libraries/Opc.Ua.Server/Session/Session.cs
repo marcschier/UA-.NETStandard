@@ -1011,8 +1011,7 @@ namespace Opc.Ua.Server
                     // check for valid certificate.
                     if (m_serverCertificate == null)
                     {
-                        throw ServiceResultException.Create(
-                            StatusCodes.BadConfigurationError,
+                        throw ServiceResultException.ConfigurationError(
                             "ApplicationCertificate cannot be found.");
                     }
                 }

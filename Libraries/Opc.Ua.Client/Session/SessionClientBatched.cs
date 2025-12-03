@@ -1444,7 +1444,7 @@ namespace Opc.Ua
         {
             if (response is null)
             {
-                throw new ServiceResultException(StatusCodes.BadUnexpectedError,
+                throw ServiceResultException.Unexpected(
                     "Empty ops should have been covered in fast path");
             }
         }

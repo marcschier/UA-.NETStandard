@@ -122,7 +122,7 @@ namespace Opc.Ua.SourceGeneration
             };
 
             GenerateConstants(nodes);
-            GenerateDataTypes(nodes);
+            GenerateDataTypes(nodes, false);
             GenerateNonDataTypes(nodes);
 
             if (!skipSchemas)
@@ -414,7 +414,7 @@ namespace Opc.Ua.SourceGeneration
             template.WriteTemplate();
         }
 
-        private void GenerateDataTypes(List<NodeDesign> nodes)
+        private void GenerateDataTypes(List<NodeDesign> nodes, bool omitProperties = true)
         {
             using TextWriter writer = GenerateFile(
                 m_outputFolder,

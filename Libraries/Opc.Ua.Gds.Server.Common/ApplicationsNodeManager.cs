@@ -1492,14 +1492,9 @@ namespace Opc.Ua.Gds.Server
                     }
                     catch (Exception e)
                     {
-                        var error = new StringBuilder();
-                        error.AppendLine("Error Generating Certificate={0}")
-                            .AppendLine("ApplicationId={1}")
-                            .AppendLine("ApplicationUri={2}")
-                            .AppendLine("ApplicationName={3}");
                         result.ServiceResult = ServiceResult.Create(
                             StatusCodes.BadConfigurationError,
-                            error.ToString(),
+                            "Error Generating Certificate={0}\nApplicationId={1}\nApplicationUri={2}\nApplicationName={3}",
                             e.Message,
                             applicationId.ToString(),
                             application.ApplicationUri,
@@ -1525,13 +1520,9 @@ namespace Opc.Ua.Gds.Server
                     }
                     catch (Exception e)
                     {
-                        var error = new StringBuilder();
-                        error.AppendLine("Error Generating New Key Pair Certificate={0}")
-                            .AppendLine("ApplicationId={1}")
-                            .AppendLine("ApplicationUri={2}");
                         result.ServiceResult = ServiceResult.Create(
                             StatusCodes.BadConfigurationError,
-                            error.ToString(),
+                            "Error Generating New Key Pair Certificate={0}\nApplicationId={1}\nApplicationUri={2}",
                             e.Message,
                             applicationId.ToString(),
                             application.ApplicationUri);
