@@ -146,7 +146,7 @@ namespace Opc.Ua.SourceGeneration
             return template.WriteTemplate();
         }
 
-        private TemplateString LoadTemplate_ResourceDeclaration(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_ResourceDeclaration(ITemplateContext context)
         {
             if (context.Target is not Resource resource)
             {
@@ -206,7 +206,7 @@ namespace Opc.Ua.SourceGeneration
             return true;
         }
 
-        private TemplateString LoadTemplate_Resource(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_Resource(ITemplateContext context)
         {
             if (context.Target is not Resource resource)
             {
@@ -223,33 +223,30 @@ namespace Opc.Ua.SourceGeneration
             {
                 if (resource.IsText)
                 {
-                    WriteTextResourceAsBase64(template, context, resource);
+                    WriteTextResourceAsBase64(context, resource);
                 }
                 else
                 {
-                    WriteBinaryResourceAsBase64(template, context, resource);
+                    WriteBinaryResourceAsBase64(context, resource);
                 }
             }
             else if (resource.IsText)
             {
-                WriteTextResource(template, context, resource);
+                WriteTextResource(context, resource);
             }
             else
             {
-                WriteBinaryResource(template, context, resource);
+                WriteBinaryResource(context, resource);
             }
             return null;
         }
 
-        private void WriteBinaryResource(
-            Template template,
-            ITemplateContext context,
-            Resource resource)
+        private void WriteBinaryResource(ITemplateContext context, Resource resource)
         {
             Stream stream = GetResourceStream(resource, out bool leaveOpen);
             try
             {
-                WriteAsByteArray(template, stream);
+                WriteAsByteArray(context, stream);
             }
             finally
             {
@@ -279,15 +276,12 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
-        private void WriteBinaryResourceAsBase64(
-            Template template,
-            ITemplateContext context,
-            Resource resource)
+        private void WriteBinaryResourceAsBase64(ITemplateContext context, Resource resource)
         {
             Stream stream = GetResourceStream(resource, out bool leaveOpen);
             try
             {
-                WriteAsBase64StringLiteral(template, context, AsBase64String(stream));
+                WriteAsBase64StringLiteral(context, AsBase64String(stream));
             }
             finally
             {
@@ -316,15 +310,12 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
-        private void WriteTextResource(
-            Template template,
-            ITemplateContext context,
-            Resource resource)
+        private void WriteTextResource(ITemplateContext context, Resource resource)
         {
             TextReader reader = GetResourceTextReader(context, out bool disposeReader);
             try
             {
-                WriteAsUtf8StringLiteral(template, reader);
+                WriteAsUtf8StringLiteral(context, reader);
             }
             finally
             {
@@ -373,16 +364,12 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
-        private void WriteTextResourceAsBase64(
-            Template template,
-            ITemplateContext context,
-            Resource resource)
+        private void WriteTextResourceAsBase64(ITemplateContext context, Resource resource)
         {
             Stream istrm = GetResourceTextReader(resource, out bool leaveOpen);
             try
             {
                 WriteAsBase64StringLiteral(
-                    template,
                     context,
                     AsBase64String(istrm));
             }
@@ -415,11 +402,9 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
-        private static void WriteAsUtf8StringLiteral(
-            Template template,
-            TextReader reader)
+        private static void WriteAsUtf8StringLiteral(ITemplateContext context, TextReader reader)
         {
-            template.WriteLine("\"\"\"");
+            context.Out.WriteLine("\"\"\"");
             for (string line = reader.ReadLine();
                 line != null;
                 line = reader.ReadLine())
@@ -429,80 +414,75 @@ namespace Opc.Ua.SourceGeneration
                 {
                     continue;
                 }
-                template.WriteLine(line);
+                context.Out.WriteLine(line);
             }
-            template.Write("\"\"\"u8");
+            context.Out.Write("\"\"\"u8");
         }
 
-        private static void WriteAsBase64StringLiteral(
-            Template template,
-            ITemplateContext context,
-            string base64)
+        private static void WriteAsBase64StringLiteral(ITemplateContext context, string base64)
         {
-            template.WriteLine("global::System.Convert.FromBase64String(");
+            context.Out.WriteLine("global::System.Convert.FromBase64String(");
             //
             // Do not forrmat the string, roslyn code analyzers barf with stack
             // overflow when there are too many string "add" binary operations
             // in a single statement to visit.
             //
 #if !BEAUTY_CONTEST
-            template.Write("\"");
+            context.Out.Write("\"");
             for (int ii = 0; ii < base64.Length; ii++)
             {
                 // Escape backslashes
                 if (base64[ii] == '\\')
                 {
-                    template.Write("""\\""");
+                    context.Out.Write("""\\""");
                     continue;
                 }
-                template.Write(base64[ii]);
+                context.Out.Write(base64[ii]);
             }
-            template.WriteLine("\")");
+            context.Out.WriteLine("\")");
 #else
             for (int ii = 0; ii < base64.Length; ii += 80)
             {
                 if (ii > 0)
                 {
-                    template.Write(" +");
+                    context.Out.Write(" +");
                 }
                 if (ii + 80 >= base64.Length)
                 {
-                    WriteChunk(template, context, base64[ii..]);
+                    WriteChunk(context, base64[ii..]);
                 }
                 else
                 {
-                    WriteChunk(template, context, base64.Substring(ii, 80));
+                    WriteChunk(context, base64.Substring(ii, 80));
                 }
             }
-            template.WriteLine(")");
+            context.Out.WriteLine(")");
 
-            static void WriteChunk(Template template, Context context, string line)
+            static void WriteChunk(Context context, string line)
             {
-                template.Write("   \"");
+                context.Out.Write("   \"");
 
                 for (int ii = 0; ii < line.Length; ii++)
                 {
                     // Escape backslashes
                     if (line[ii] == '\\')
                     {
-                        template.Write("""\\""");
+                        context.Out.Write("""\\""");
                         continue;
                     }
-                    template.WriteLine(line[ii]);
+                    context.Out.WriteLine(line[ii]);
                 }
 
-                template.WriteLine("\"");
+                context.Out.WriteLine("\"");
             }
 #endif
         }
 
-        private static void WriteAsByteArray(
-            Template template,
-            Stream reader)
+        private static void WriteAsByteArray(ITemplateContext context, Stream reader)
         {
-            template.WriteLine("new byte[]");
-            template.WriteLine("{");
-            template.Write("    ");
+            context.Out.WriteLine("new byte[]");
+            context.Out.WriteLine("{");
+            context.Out.Write("    ");
             bool first = true;
             int column = 0;
 
@@ -512,19 +492,19 @@ namespace Opc.Ua.SourceGeneration
                 // line break after x entries
                 if (column++ >= 12)
                 {
-                    template.WriteLine(",");
-                    template.Write("    ");
+                    context.Out.WriteLine(",");
+                    context.Out.Write("    ");
                     column = 1;
                 }
                 else if (!first)
                 {
-                    template.Write(", ");
+                    context.Out.Write(", ");
                 }
                 first = false;
-                template.Write("0x{0:X2}", (byte)b);
+                context.Out.Write("0x{0:X2}", (byte)b);
                 b = reader.ReadByte();
             }
-            template.WriteLine("}");
+            context.Out.WriteLine("}");
         }
 
         private static string AsBase64String(Stream reader)

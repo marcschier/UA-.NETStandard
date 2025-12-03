@@ -628,7 +628,7 @@ namespace Opc.Ua.SourceGeneration
             template.WriteTemplate();
         }
 
-        private TemplateString LoadTemplate_XmlNamespaceImports(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_XmlNamespaceImports(ITemplateContext context)
         {
             if (context.Target is not Namespace ns)
             {
@@ -654,7 +654,7 @@ namespace Opc.Ua.SourceGeneration
                     return null;
                 }
 
-                template.WriteLine(
+                context.Out.WriteLine(
                     "xmlns:{0}=\"{1}\"",
                     m_model.Namespaces.GetXmlNamespacePrefix(ns.Value),
                     uri);
@@ -662,12 +662,12 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            template.WriteLine("""<xs:import namespace="{0}" />""", uri);
+            context.Out.WriteLine("""<xs:import namespace="{0}" />""", uri);
 
             return null;
         }
 
-        private TemplateString LoadTemplate_XmlType(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_XmlType(ITemplateContext context)
         {
             if (context.Target is ModelDesign)
             {
@@ -799,7 +799,7 @@ namespace Opc.Ua.SourceGeneration
             return template.WriteTemplate();
         }
 
-        private TemplateString LoadTemplate_XmlTypeFields(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_XmlTypeFields(ITemplateContext context)
         {
             if (context.Target is not Parameter field)
             {
@@ -822,13 +822,13 @@ namespace Opc.Ua.SourceGeneration
 
                 if (field.IdentifierInName)
                 {
-                    template.WriteLine(
+                    context.Out.WriteLine(
                         """<xs:enumeration value="{0}" />""",
                         field.Name);
                     return null;
                 }
 
-                template.WriteLine(
+                context.Out.WriteLine(
                     """<xs:enumeration value="{0}_{1}" />""",
                     field.Name,
                     field.Identifier);
@@ -840,13 +840,13 @@ namespace Opc.Ua.SourceGeneration
             if (basicType == BasicDataType.XmlElement &&
                 field.ValueRank == ValueRank.Scalar)
             {
-                template.WriteLine("""<xs:element name="{0}" minOccurs="0" nillable="true">""", field.Name);
-                template.WriteLine("  <xs:complexType>");
-                template.WriteLine("    <xs:sequence>");
-                template.WriteLine("""      <xs:any minOccurs="0" processContents="lax" />""");
-                template.WriteLine("    </xs:sequence>");
-                template.WriteLine("  </xs:complexType>");
-                template.WriteLine("</xs:element>");
+                context.Out.WriteLine("""<xs:element name="{0}" minOccurs="0" nillable="true">""", field.Name);
+                context.Out.WriteLine("  <xs:complexType>");
+                context.Out.WriteLine("    <xs:sequence>");
+                context.Out.WriteLine("""      <xs:any minOccurs="0" processContents="lax" />""");
+                context.Out.WriteLine("    </xs:sequence>");
+                context.Out.WriteLine("  </xs:complexType>");
+                context.Out.WriteLine("</xs:element>");
                 return null;
             }
 
@@ -862,7 +862,7 @@ namespace Opc.Ua.SourceGeneration
                     fieldDataType = "ua:ListOfExtensionObject";
                 }
 
-                template.WriteLine(
+                context.Out.WriteLine(
                     """<xs:element name="{0}" type="{1}" minOccurs="0" nillable="true" />""",
                     field.Name,
                     fieldDataType);
@@ -880,7 +880,7 @@ namespace Opc.Ua.SourceGeneration
                     case BasicDataType.QualifiedName:
                     case BasicDataType.Structure:
                     case BasicDataType.DataValue:
-                        template.WriteLine(
+                        context.Out.WriteLine(
                                 """<xs:element name="{0}" type="{1}" minOccurs="0" nillable="true" />""",
                                 field.Name,
                                 field.DataTypeNode.GetXmlDataType(
@@ -890,7 +890,7 @@ namespace Opc.Ua.SourceGeneration
                         break;
                     case BasicDataType.Guid:
                     case BasicDataType.StatusCode:
-                        template.WriteLine(
+                        context.Out.WriteLine(
                                 """<xs:element name="{0}" type="{1}" minOccurs="0" />""",
                                 field.Name,
                                 field.DataTypeNode.GetXmlDataType(
@@ -909,13 +909,13 @@ namespace Opc.Ua.SourceGeneration
                             fieldDataType = "ua:ExtensionObject";
                         }
 
-                        template.WriteLine(
+                        context.Out.WriteLine(
                             """<xs:element name="{0}" type="{1}" minOccurs="0" nillable="true" />""",
                             field.Name,
                             fieldDataType);
                         break;
                     default:
-                        template.WriteLine("""<xs:element name="{0}" type="{1}" minOccurs="0" />""",
+                        context.Out.WriteLine("""<xs:element name="{0}" type="{1}" minOccurs="0" />""",
                                 field.Name,
                                 field.DataTypeNode.GetXmlDataType(
                                     field.ValueRank,
@@ -928,7 +928,7 @@ namespace Opc.Ua.SourceGeneration
             return null;
         }
 
-        private TemplateString LoadTemplate_XmlDocumentation(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_XmlDocumentation(ITemplateContext context)
         {
             if (context.Target is not DataTypeDesign dataType)
             {
@@ -955,7 +955,7 @@ namespace Opc.Ua.SourceGeneration
             return template.WriteTemplate();
         }
 
-        private TemplateString LoadTemplate_XmlCollectionType(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_XmlCollectionType(ITemplateContext context)
         {
             if (context.Target is not DataTypeDesign dataType)
             {
@@ -1019,7 +1019,7 @@ namespace Opc.Ua.SourceGeneration
             template.WriteTemplate();
         }
 
-        private TemplateString LoadTemplate_BinaryNamespaceImports(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_BinaryNamespaceImports(ITemplateContext context)
         {
             if (context.Target is not Namespace ns)
             {
@@ -1038,7 +1038,7 @@ namespace Opc.Ua.SourceGeneration
                     return null;
                 }
 
-                template.WriteLine(
+                context.Out.WriteLine(
                     """
                     xmlns:{0}="{1}"
                     """,
@@ -1047,7 +1047,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            template.WriteLine(
+            context.Out.WriteLine(
                 """<opc:Import Namespace="{0}" Location="{1}.BinarySchema.bsd"/>""",
                 ns.Value,
                 m_model.Namespaces.GetNamespacePrefix(ns.Value));
@@ -1055,7 +1055,7 @@ namespace Opc.Ua.SourceGeneration
             return null;
         }
 
-        private TemplateString LoadTemplate_BinaryType(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_BinaryType(ITemplateContext context)
         {
             if (context.Target is ModelDesign)
             {
@@ -1251,7 +1251,7 @@ namespace Opc.Ua.SourceGeneration
             return template.WriteTemplate();
         }
 
-        private TemplateString LoadTemplate_BinaryTypeFields(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_BinaryTypeFields(ITemplateContext context)
         {
             if (context.Target is not Parameter field)
             {
@@ -1276,7 +1276,7 @@ namespace Opc.Ua.SourceGeneration
 
             if (basicType == BasicDataType.Enumeration)
             {
-                template.WriteLine(
+                context.Out.WriteLine(
                     """<opc:EnumeratedValue Name="{0}" Value="{1}" />""",
                     field.Name,
                     field.Identifier);
@@ -1285,10 +1285,10 @@ namespace Opc.Ua.SourceGeneration
 
             if (field.ValueRank != ValueRank.Scalar)
             {
-                template.WriteLine(
+                context.Out.WriteLine(
                     """<opc:Field Name="NoOf{0}" TypeName="opc:Int32" />""",
                     field.Name);
-                template.WriteLine(
+                context.Out.WriteLine(
                     """<opc:Field Name="{0}" TypeName="{1}" LengthField="NoOf{0}" />""",
                     field.Name,
                     fieldDataType);
@@ -1296,7 +1296,7 @@ namespace Opc.Ua.SourceGeneration
             }
             if (field.IsInherited)
             {
-                template.WriteLine(
+                context.Out.WriteLine(
                     """<opc:Field Name="{0}" TypeName="{1}" SourceType="{2}" />""",
                     field.Name,
                     fieldDataType,
@@ -1306,7 +1306,7 @@ namespace Opc.Ua.SourceGeneration
             }
             else
             {
-                template.WriteLine(
+                context.Out.WriteLine(
                     """<opc:Field Name="{0}" TypeName="{1}" />""",
                     field.Name,
                     fieldDataType);
@@ -1315,7 +1315,7 @@ namespace Opc.Ua.SourceGeneration
             return null;
         }
 
-        private TemplateString LoadTemplate_BinaryDocumentation(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_BinaryDocumentation(ITemplateContext context)
         {
             if (context.Target is not DataTypeDesign dataType)
             {
@@ -1328,14 +1328,14 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            template.WriteLine(
+            context.Out.WriteLine(
                 "<opc:Documentation>{0}</opc:Documentation>",
                 dataType.Description.Value);
 
             return context.TemplateString;
         }
 
-        private TemplateString LoadTemplate_IdClass(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_IdClass(ITemplateContext context)
         {
             if (context.Target is not KeyValuePair<string, List<NodeDesign>> nodes)
             {
@@ -1486,7 +1486,7 @@ namespace Opc.Ua.SourceGeneration
             return template.WriteTemplate();
         }
 
-        private TemplateString LoadTemplate_IdentifierLookup(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_IdentifierLookup(ITemplateContext context)
         {
             if (context.Target is not NodeDesign node)
             {
@@ -1497,13 +1497,13 @@ namespace Opc.Ua.SourceGeneration
 
             if (context.Token == Tokens.ListOfIdentifersToNames)
             {
-                // template.WriteLine("lookup[{0}] = BrowseNames.{0};", node.SymbolicName.Name);
-                template.WriteLine("lookup[{0}] = \"{0}\";", symbolicId);
+                // context.Out.WriteLine("lookup[{0}] = BrowseNames.{0};", node.SymbolicName.Name);
+                context.Out.WriteLine("lookup[{0}] = \"{0}\";", symbolicId);
             }
             else if (context.Token == Tokens.ListOfNamesToIdentifiers)
             {
-                // template.WriteLine("lookup[BrowseNames.{0}] = {0};", node.SymbolicName.Name);
-                template.WriteLine("lookup[\"{0}\"] = {0};", symbolicId);
+                // context.Out.WriteLine("lookup[BrowseNames.{0}] = {0};", node.SymbolicName.Name);
+                context.Out.WriteLine("lookup[\"{0}\"] = {0};", symbolicId);
             }
             return null;
         }
@@ -1561,7 +1561,7 @@ namespace Opc.Ua.SourceGeneration
             return template.WriteTemplate();
         }
 
-        private TemplateString LoadTemplate_BrowseNames(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_BrowseNames(ITemplateContext context)
         {
             if (context.Target is not KeyValuePair<string, string> browseName ||
                 browseName.Value == null)
@@ -1618,7 +1618,7 @@ namespace Opc.Ua.SourceGeneration
             return template.WriteTemplate();
         }
 
-        private TemplateString LoadTemplate_NamespaceImports(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_NamespaceImports(ITemplateContext context)
         {
             if (context.Target is not Namespace ns)
             {
@@ -1637,12 +1637,12 @@ namespace Opc.Ua.SourceGeneration
 
             string externalPrefix = m_model.Namespaces.GetNamespacePrefix(ns.Value);
 
-            template.WriteLine("using {0};", externalPrefix);
+            context.Out.WriteLine("using {0};", externalPrefix);
 
             return null;
         }
 
-        private TemplateString LoadTemplate_ListOfTypes(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_ListOfTypes(ITemplateContext context)
         {
             var node = context.Target as NodeDesign;
 
@@ -2123,7 +2123,7 @@ namespace Opc.Ua.SourceGeneration
             return template.WriteTemplate();
         }
 
-        private TemplateString LoadTemplate_TypedVariableType(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_TypedVariableType(ITemplateContext context)
         {
             if (context.Target is not VariableTypeDesign variableType)
             {
@@ -2153,7 +2153,7 @@ namespace Opc.Ua.SourceGeneration
             return template.WriteTemplate();
         }
 
-        private TemplateString LoadTemplate_VariableTypeValue(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_VariableTypeValue(ITemplateContext context)
         {
             if (context.Target is not VariableTypeDesign variableType)
             {
@@ -2212,7 +2212,7 @@ namespace Opc.Ua.SourceGeneration
             return template.WriteTemplate();
         }
 
-        private TemplateString LoadTemplate_VariableTypeValueInitializers(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_VariableTypeValueInitializers(ITemplateContext context)
         {
             if (context.Target is not KeyValuePair<string, Parameter> field ||
                 field.Value == null)
@@ -2224,18 +2224,18 @@ namespace Opc.Ua.SourceGeneration
             // string path = field.Key.Replace('_', '.');
             string path = field.Key;
 
-            template.WriteLine("instance = m_variable.{0};", path);
-            template.WriteLine("if (instance != null)");
-            template.WriteLine("{");
-            template.WriteLine("    instance.OnReadValue = OnRead_{0};", name);
-            template.WriteLine("    instance.OnWriteValue = OnWrite_{0};", name);
-            template.WriteLine("    updateList.Add(instance);");
-            template.WriteLine("}");
+            context.Out.WriteLine("instance = m_variable.{0};", path);
+            context.Out.WriteLine("if (instance != null)");
+            context.Out.WriteLine("{");
+            context.Out.WriteLine("    instance.OnReadValue = OnRead_{0};", name);
+            context.Out.WriteLine("    instance.OnWriteValue = OnWrite_{0};", name);
+            context.Out.WriteLine("    updateList.Add(instance);");
+            context.Out.WriteLine("}");
 
             return null;
         }
 
-        private TemplateString LoadTemplate_VariableTypeValueUpdateChildrenChangeMasks(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_VariableTypeValueUpdateChildrenChangeMasks(ITemplateContext context)
         {
             if (context.Target is not KeyValuePair<string, Parameter> field ||
                 field.Value == null)
@@ -2246,10 +2246,10 @@ namespace Opc.Ua.SourceGeneration
             // string path = field.Key.Replace('_', '.');
             string path = field.Key;
 
-            template.WriteLine("if (!global::Opc.Ua.CoreUtils.IsEqual(m_value.{0}, newValue.{0}))", path);
-            template.WriteLine("{");
-            template.WriteLine("    UpdateChildVariableStatus(m_variable.{0}, ref statusCode, ref timestamp);", path);
-            template.WriteLine("}");
+            context.Out.WriteLine("if (!global::Opc.Ua.CoreUtils.IsEqual(m_value.{0}, newValue.{0}))", path);
+            context.Out.WriteLine("{");
+            context.Out.WriteLine("    UpdateChildVariableStatus(m_variable.{0}, ref statusCode, ref timestamp);", path);
+            context.Out.WriteLine("}");
 
             return null;
         }
@@ -2275,7 +2275,7 @@ namespace Opc.Ua.SourceGeneration
             return template.WriteTemplate();
         }
 
-        private TemplateString LoadTemplate_CollectionClass(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_CollectionClass(ITemplateContext context)
         {
             if (context.Target is not DataTypeDesign dataType)
             {
@@ -2305,7 +2305,7 @@ namespace Opc.Ua.SourceGeneration
             return template.WriteTemplate();
         }
 
-        private TemplateString LoadTemplate_ListOfFields(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_ListOfFields(ITemplateContext context)
         {
             if (context.Target is not InstanceDesign instance)
             {
@@ -2314,7 +2314,7 @@ namespace Opc.Ua.SourceGeneration
                     return null;
                 }
 
-                template.WriteLine(
+                context.Out.WriteLine(
                     "private {0} {1};",
                     field.DataTypeNode.GetDotNetTypeName(
                         field.ValueRank,
@@ -2356,7 +2356,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            template.WriteLine(
+            context.Out.WriteLine(
                 "private {0} {1};",
                 instance.GetClassName(m_model.TargetNamespace, m_model.Namespaces),
                 instance.GetChildFieldName());
@@ -2364,7 +2364,7 @@ namespace Opc.Ua.SourceGeneration
             return null;
         }
 
-        private TemplateString LoadTemplate_ListOfSwitchFields(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_ListOfSwitchFields(ITemplateContext context)
         {
             if (context.Target is not Parameter field)
             {
@@ -2378,25 +2378,25 @@ namespace Opc.Ua.SourceGeneration
 
             if (context.Token == Tokens.ListOfSwitchFieldNames)
             {
-                template.Write('"');
-                template.Write(field.Name);
-                template.Write('"');
+                context.Out.Write('"');
+                context.Out.Write(field.Name);
+                context.Out.Write('"');
             }
             else
             {
-                template.Write(field.Name);
-                template.Write(" = ");
-                template.Write(index.ToString(CultureInfo.InvariantCulture));
+                context.Out.Write(field.Name);
+                context.Out.Write(" = ");
+                context.Out.Write(index.ToString(CultureInfo.InvariantCulture));
             }
             if (!isLast)
             {
-                template.Write(",");
+                context.Out.Write(",");
             }
-            template.WriteLine();
+            context.Out.WriteLine();
             return null;
         }
 
-        private TemplateString LoadTemplate_ListOfEncodingMaskFields(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_ListOfEncodingMaskFields(ITemplateContext context)
         {
             if (context.Target is not Parameter field)
             {
@@ -2422,21 +2422,21 @@ namespace Opc.Ua.SourceGeneration
 
                 if (context.Token == Tokens.ListOfEncodingMaskFieldNames)
                 {
-                    template.Write('"');
-                    template.Write(field.Name);
-                    template.Write('"');
+                    context.Out.Write('"');
+                    context.Out.Write(field.Name);
+                    context.Out.Write('"');
                 }
                 else
                 {
-                    template.Write(field.Name);
-                    template.Write(" = 0x{0:X}", 1 << index);
+                    context.Out.Write(field.Name);
+                    context.Out.Write(" = 0x{0:X}", 1 << index);
                 }
-                template.WriteLine(",");
+                context.Out.WriteLine(",");
             }
             return null;
         }
 
-        private TemplateString LoadTemplate_ListOfEncodedFields(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_ListOfEncodedFields(ITemplateContext context)
         {
             if (context.Target is not Parameter field)
             {
@@ -2448,12 +2448,12 @@ namespace Opc.Ua.SourceGeneration
 
             if (isUnion)
             {
-                template.WriteLine($$"""case {{dataType.ClassName}}Fields.{{field.Name}}: { """);
+                context.Out.WriteLine($$"""case {{dataType.ClassName}}Fields.{{field.Name}}: { """);
             }
 
             if (field.IsOptional)
             {
-                template.WriteLine($"if ((EncodingMask & (uint){dataType.ClassName}Fields.{field.Name}) != 0) ");
+                context.Out.WriteLine($"if ((EncodingMask & (uint){dataType.ClassName}Fields.{field.Name}) != 0) ");
             }
 
             string functionName = field.DataTypeNode.BasicDataType.ToString();
@@ -2505,14 +2505,14 @@ namespace Opc.Ua.SourceGeneration
                             m_model.TargetNamespace,
                             m_model.Namespaces,
                             nullable: false);
-                        template.WriteLine(
+                        context.Out.WriteLine(
                             "encoder.WriteEnumeratedArray({0}, {1}.ToArray(), typeof({2}));",
                             fieldName,
                             field.Name,
                             elementName);
                         if (isUnion)
                         {
-                            template.WriteLine(" break; }");
+                            context.Out.WriteLine(" break; }");
                         }
 
                         return null;
@@ -2524,14 +2524,14 @@ namespace Opc.Ua.SourceGeneration
                     {
                         if (field.ValueRank == ValueRank.Array)
                         {
-                            template.WriteLine(
+                            context.Out.WriteLine(
                                 "encoder.WriteExtensionObjectArray({0}, global::Opc.Ua.ExtensionObjectCollection.ToExtensionObjects({1}));",
                                 fieldName,
                                 field.Name);
 
                             if (isUnion)
                             {
-                                template.WriteLine(" break; }");
+                                context.Out.WriteLine(" break; }");
                             }
 
                             return null;
@@ -2539,24 +2539,24 @@ namespace Opc.Ua.SourceGeneration
 
                         if (field.ValueRank == ValueRank.Scalar)
                         {
-                            template.WriteLine(
+                            context.Out.WriteLine(
                                 "encoder.WriteExtensionObject({0}, new ExtensionObject({1}));",
                                 fieldName,
                                 field.Name);
 
                             if (isUnion)
                             {
-                                template.WriteLine(" break; }");
+                                context.Out.WriteLine(" break; }");
                             }
 
                             return null;
                         }
 
-                        template.WriteLine("encoder.WriteVariant({0}, {1});", fieldName, field.Name);
+                        context.Out.WriteLine("encoder.WriteVariant({0}, {1});", fieldName, field.Name);
 
                         if (isUnion)
                         {
-                            template.WriteLine(" break; }");
+                            context.Out.WriteLine(" break; }");
                         }
 
                         return null;
@@ -2571,14 +2571,14 @@ namespace Opc.Ua.SourceGeneration
 
                     if (field.ValueRank == ValueRank.Array)
                     {
-                        template.WriteLine("encoder.WriteEncodeableArray({0}, {1}.ToArray(), typeof({2}));",
+                        context.Out.WriteLine("encoder.WriteEncodeableArray({0}, {1}.ToArray(), typeof({2}));",
                             fieldName,
                             field.Name,
                             elementName);
 
                         if (isUnion)
                         {
-                            template.WriteLine(" break; }");
+                            context.Out.WriteLine(" break; }");
                         }
 
                         return null;
@@ -2596,23 +2596,23 @@ namespace Opc.Ua.SourceGeneration
                 elementName = null;
             }
 
-            template.Write($"encoder.Write{functionName}({fieldName}, {field.Name}");
+            context.Out.Write($"encoder.Write{functionName}({fieldName}, {field.Name}");
 
             if (elementName != null)
             {
-                template.Write($", typeof({elementName})");
+                context.Out.Write($", typeof({elementName})");
             }
 
-            template.WriteLine(");");
+            context.Out.WriteLine(");");
 
             if (isUnion)
             {
-                template.WriteLine(" break; }");
+                context.Out.WriteLine(" break; }");
             }
             return null;
         }
 
-        private TemplateString LoadTemplate_ListOfDecodedFields(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_ListOfDecodedFields(ITemplateContext context)
         {
             if (context.Target is not Parameter field)
             {
@@ -2624,12 +2624,12 @@ namespace Opc.Ua.SourceGeneration
 
             if (isUnion)
             {
-                template.WriteLine($$"""case {{dataType.ClassName}}Fields.{{field.Name}}: { """);
+                context.Out.WriteLine($$"""case {{dataType.ClassName}}Fields.{{field.Name}}: { """);
             }
 
             if (field.IsOptional)
             {
-                template.WriteLine(
+                context.Out.WriteLine(
                     $"if ((EncodingMask & (uint){dataType.ClassName}Fields.{field.Name}) != 0) ");
             }
 
@@ -2685,7 +2685,7 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.UserDefined:
                     if (field.AllowSubTypes)
                     {
-                        template.Write($"{valueName} = ");
+                        context.Out.Write($"{valueName} = ");
                         elementName = field.DataTypeNode.GetDotNetTypeName(
                             ValueRank.Scalar,
                             m_model.TargetNamespace,
@@ -2694,12 +2694,12 @@ namespace Opc.Ua.SourceGeneration
 
                         if (field.ValueRank == ValueRank.Array)
                         {
-                            template.WriteLine(
+                            context.Out.WriteLine(
                                 $"({elementName}[])ExtensionObject.ToArray(decoder.ReadExtensionObjectArray({fieldName}), typeof({elementName}));");
 
                             if (isUnion)
                             {
-                                template.WriteLine(" break; }");
+                                context.Out.WriteLine(" break; }");
                             }
 
                             return null;
@@ -2707,21 +2707,21 @@ namespace Opc.Ua.SourceGeneration
 
                         if (field.ValueRank == ValueRank.Scalar)
                         {
-                            template.WriteLine($"({elementName})ExtensionObject.ToEncodeable(decoder.ReadExtensionObject({fieldName}));");
+                            context.Out.WriteLine($"({elementName})ExtensionObject.ToEncodeable(decoder.ReadExtensionObject({fieldName}));");
 
                             if (isUnion)
                             {
-                                template.WriteLine(" break; }");
+                                context.Out.WriteLine(" break; }");
                             }
 
                             return null;
                         }
 
-                        template.WriteLine($"decoder.ReadVariant({fieldName});");
+                        context.Out.WriteLine($"decoder.ReadVariant({fieldName});");
 
                         if (isUnion)
                         {
-                            template.WriteLine(" break; }");
+                            context.Out.WriteLine(" break; }");
                         }
 
                         return null;
@@ -2746,35 +2746,35 @@ namespace Opc.Ua.SourceGeneration
                 elementName = null;
             }
 
-            template.Write("{0} = ", valueName);
+            context.Out.Write("{0} = ", valueName);
 
             if (elementName != null)
             {
                 if (field.ValueRank == ValueRank.Array)
                 {
-                    template.Write("({0}Collection)", elementName);
+                    context.Out.Write("({0}Collection)", elementName);
                 }
                 else
                 {
-                    template.Write("({0})", elementName);
+                    context.Out.Write("({0})", elementName);
                 }
 
-                template.WriteLine($"decoder.Read{functionName}({fieldName}, typeof({elementName}));");
+                context.Out.WriteLine($"decoder.Read{functionName}({fieldName}, typeof({elementName}));");
             }
             else
             {
-                template.WriteLine($"decoder.Read{functionName}({fieldName});");
+                context.Out.WriteLine($"decoder.Read{functionName}({fieldName});");
             }
 
             if (isUnion)
             {
-                template.WriteLine(" break; }");
+                context.Out.WriteLine(" break; }");
             }
 
             return null;
         }
 
-        private TemplateString LoadTemplate_ListOfComparedFields(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_ListOfComparedFields(ITemplateContext context)
         {
             if (context.Target is not Parameter field)
             {
@@ -2785,25 +2785,25 @@ namespace Opc.Ua.SourceGeneration
 
             if (dataType.IsUnion)
             {
-                template.WriteLine($$"""case {{dataType.ClassName}}Fields.{{field.Name}}: { """);
+                context.Out.WriteLine($$"""case {{dataType.ClassName}}Fields.{{field.Name}}: { """);
             }
 
             if (field.IsOptional)
             {
-                template.WriteLine($"if ((EncodingMask & (uint){dataType.ClassName}Fields.{field.Name}) != 0) ");
+                context.Out.WriteLine($"if ((EncodingMask & (uint){dataType.ClassName}Fields.{field.Name}) != 0) ");
             }
 
-            template.WriteLine("if (!global::Opc.Ua.CoreUtils.IsEqual({0}, value.{0})) return false;", field.GetChildFieldName());
+            context.Out.WriteLine("if (!global::Opc.Ua.CoreUtils.IsEqual({0}, value.{0})) return false;", field.GetChildFieldName());
 
             if (dataType.IsUnion)
             {
-                template.WriteLine(" break; }");
+                context.Out.WriteLine(" break; }");
             }
 
             return null;
         }
 
-        private TemplateString LoadTemplate_ListOfClonedFields(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_ListOfClonedFields(ITemplateContext context)
         {
             if (context.Target is not Parameter field)
             {
@@ -2814,15 +2814,15 @@ namespace Opc.Ua.SourceGeneration
 
             if (dataType.IsUnion)
             {
-                template.WriteLine($$"""case {{dataType.ClassName}}Fields.{{field.Name}}: { """);
+                context.Out.WriteLine($$"""case {{dataType.ClassName}}Fields.{{field.Name}}: { """);
             }
 
             if (field.IsOptional)
             {
-                template.WriteLine($"if ((EncodingMask & (uint){dataType.ClassName}Fields.{field.Name}) != 0) ");
+                context.Out.WriteLine($"if ((EncodingMask & (uint){dataType.ClassName}Fields.{field.Name}) != 0) ");
             }
 
-            template.WriteLine("clone.{0} = ({1})global::Opc.Ua.CoreUtils.Clone(this.{0});",
+            context.Out.WriteLine("clone.{0} = ({1})global::Opc.Ua.CoreUtils.Clone(this.{0});",
                 field.GetChildFieldName(),
                 field.DataTypeNode.GetDotNetTypeName(
                     field.ValueRank,
@@ -2832,13 +2832,13 @@ namespace Opc.Ua.SourceGeneration
 
             if (dataType.IsUnion)
             {
-                template.WriteLine(" break; }");
+                context.Out.WriteLine(" break; }");
             }
 
             return null;
         }
 
-        private TemplateString LoadTemplate_ListOfInputArguments(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_ListOfInputArguments(ITemplateContext context)
         {
             if (context.Target is not Parameter field)
             {
@@ -2865,7 +2865,7 @@ namespace Opc.Ua.SourceGeneration
                 }
             }
 
-            template.WriteLine(
+            context.Out.WriteLine(
                 format,
                 field.GetChildFieldName()[2..],
                 field.DataTypeNode.GetMethodArgumentDotNetType(
@@ -2878,14 +2878,14 @@ namespace Opc.Ua.SourceGeneration
             return null;
         }
 
-        private TemplateString LoadTemplate_ListOfOutputDeclarations(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_ListOfOutputDeclarations(ITemplateContext context)
         {
             if (context.Target is not Parameter field)
             {
                 return null;
             }
 
-            template.WriteLine(
+            context.Out.WriteLine(
                 "{1} {0} = ({1})_outputArguments[{2}];",
                 field.GetChildFieldName()[2..],
                 field.DataTypeNode.GetMethodArgumentDotNetType(
@@ -2898,14 +2898,14 @@ namespace Opc.Ua.SourceGeneration
             return null;
         }
 
-        private TemplateString LoadTemplate_ListOfOutputArguments(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_ListOfOutputArguments(ITemplateContext context)
         {
             if (context.Target is not Parameter field)
             {
                 return null;
             }
 
-            template.WriteLine(
+            context.Out.WriteLine(
                 "_outputArguments[{1}] = {0};",
                 field.GetChildFieldName()[2..],
                 context.Index);
@@ -2913,16 +2913,16 @@ namespace Opc.Ua.SourceGeneration
             return null;
         }
 
-        private TemplateString LoadTemplate_OnCallDeclaration(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_OnCallDeclaration(ITemplateContext context)
         {
             if (context.Target is not MethodDesign method)
             {
                 return null;
             }
 
-            template.WriteLine("global::Opc.Ua.ISystemContext _context,");
-            template.WriteLine("global::Opc.Ua.MethodState _method,");
-            template.Write("global::Opc.Ua.NodeId _objectId");
+            context.Out.WriteLine("global::Opc.Ua.ISystemContext _context,");
+            context.Out.WriteLine("global::Opc.Ua.MethodState _method,");
+            context.Out.Write("global::Opc.Ua.NodeId _objectId");
 
             if (method.InputArguments != null)
             {
@@ -2930,8 +2930,8 @@ namespace Opc.Ua.SourceGeneration
                 {
                     Parameter argument = method.InputArguments[ii];
 
-                    template.WriteLine(",");
-                    template.Write("{1} {0}", argument.GetChildFieldName()[2..],
+                    context.Out.WriteLine(",");
+                    context.Out.Write("{1} {0}", argument.GetChildFieldName()[2..],
                         argument.DataTypeNode.GetMethodArgumentDotNetType(
                             argument.ValueRank,
                             m_model.TargetNamespace,
@@ -2946,8 +2946,8 @@ namespace Opc.Ua.SourceGeneration
                 {
                     Parameter argument = method.OutputArguments[ii];
 
-                    template.WriteLine(",");
-                    template.Write("ref {1} {0}", argument.GetChildFieldName()[2..],
+                    context.Out.WriteLine(",");
+                    context.Out.Write("ref {1} {0}", argument.GetChildFieldName()[2..],
                         argument.DataTypeNode.GetMethodArgumentDotNetType(
                             argument.ValueRank,
                             m_model.TargetNamespace,
@@ -2956,21 +2956,21 @@ namespace Opc.Ua.SourceGeneration
                 }
             }
 
-            template.WriteLine(");");
+            context.Out.WriteLine(");");
 
             return null;
         }
 
-        private TemplateString LoadTemplate_OnCallAsyncDeclaration(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_OnCallAsyncDeclaration(ITemplateContext context)
         {
             if (context.Target is not MethodDesign method)
             {
                 return null;
             }
 
-            template.WriteLine("global::Opc.Ua.ISystemContext _context,");
-            template.WriteLine("global::Opc.Ua.MethodState _method,");
-            template.Write("global::Opc.Ua.NodeId _objectId");
+            context.Out.WriteLine("global::Opc.Ua.ISystemContext _context,");
+            context.Out.WriteLine("global::Opc.Ua.MethodState _method,");
+            context.Out.Write("global::Opc.Ua.NodeId _objectId");
 
             if (method.InputArguments != null)
             {
@@ -2978,8 +2978,8 @@ namespace Opc.Ua.SourceGeneration
                 {
                     Parameter argument = method.InputArguments[ii];
 
-                    template.WriteLine(",");
-                    template.Write("{1} {0}", argument.GetChildFieldName()[2..],
+                    context.Out.WriteLine(",");
+                    context.Out.Write("{1} {0}", argument.GetChildFieldName()[2..],
                         argument.DataTypeNode.GetMethodArgumentDotNetType(
                             argument.ValueRank,
                             m_model.TargetNamespace,
@@ -2988,14 +2988,14 @@ namespace Opc.Ua.SourceGeneration
                 }
             }
 
-            template.WriteLine(",");
-            template.Write("global::System.Threading.CancellationToken cancellationToken");
-            template.WriteLine(");");
+            context.Out.WriteLine(",");
+            context.Out.Write("global::System.Threading.CancellationToken cancellationToken");
+            context.Out.WriteLine(");");
 
             return null;
         }
 
-        private TemplateString LoadTemplate_ListOfOutputArgumentsFromResult(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_ListOfOutputArgumentsFromResult(ITemplateContext context)
         {
             if (context.Target is not Parameter field)
             {
@@ -3004,7 +3004,7 @@ namespace Opc.Ua.SourceGeneration
 
             string fieldName = field.GetChildFieldName();
 
-            template.WriteLine(
+            context.Out.WriteLine(
                 "_outputArguments[{1}] = _result.{2}{0};",
                 fieldName[3..],
                 context.Index,
@@ -3013,7 +3013,7 @@ namespace Opc.Ua.SourceGeneration
             return null;
         }
 
-        private TemplateString LoadTemplate_ListOfResultProperties(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_ListOfResultProperties(ITemplateContext context)
         {
             if (context.Target is not Parameter field)
             {
@@ -3022,7 +3022,7 @@ namespace Opc.Ua.SourceGeneration
 
             string fieldName = field.GetChildFieldName();
 
-            template.WriteLine(
+            context.Out.WriteLine(
                "public {1} {2}{0} {{ get; set; }}",
                fieldName[3..],
                field.DataTypeNode.GetMethodArgumentDotNetType(
@@ -3035,24 +3035,24 @@ namespace Opc.Ua.SourceGeneration
             return null;
         }
 
-        private TemplateString LoadTemplate_OnCallImplementation(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_OnCallImplementation(ITemplateContext context)
         {
             if (context.Target is not MethodDesign method)
             {
                 return null;
             }
 
-            template.WriteLine("_result = OnCall(");
-            template.WriteLine("    _context,");
-            template.WriteLine("    this,");
-            template.Write("    _objectId");
+            context.Out.WriteLine("_result = OnCall(");
+            context.Out.WriteLine("    _context,");
+            context.Out.WriteLine("    this,");
+            context.Out.Write("    _objectId");
 
             if (method.InputArguments != null)
             {
                 for (int ii = 0; ii < method.InputArguments.Length; ii++)
                 {
-                    template.WriteLine(",");
-                    template.Write("    {0}", method.InputArguments[ii].GetChildFieldName()[2..]);
+                    context.Out.WriteLine(",");
+                    context.Out.Write("    {0}", method.InputArguments[ii].GetChildFieldName()[2..]);
                 }
             }
 
@@ -3060,43 +3060,43 @@ namespace Opc.Ua.SourceGeneration
             {
                 for (int ii = 0; ii < method.OutputArguments.Length; ii++)
                 {
-                    template.WriteLine(",");
-                    template.Write("    ref {0}", method.OutputArguments[ii].GetChildFieldName()[2..]);
+                    context.Out.WriteLine(",");
+                    context.Out.Write("    ref {0}", method.OutputArguments[ii].GetChildFieldName()[2..]);
                 }
             }
 
-            template.WriteLine(");");
+            context.Out.WriteLine(");");
 
             return null;
         }
 
-        private TemplateString LoadTemplate_OnCallAsyncImplementation(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_OnCallAsyncImplementation(ITemplateContext context)
         {
             if (context.Target is not MethodDesign method)
             {
                 return null;
             }
 
-            template.WriteLine("_result = await OnCallAsync(");
-            template.WriteLine("    _context,");
-            template.WriteLine("    this,");
-            template.Write("    _objectId");
+            context.Out.WriteLine("_result = await OnCallAsync(");
+            context.Out.WriteLine("    _context,");
+            context.Out.WriteLine("    this,");
+            context.Out.Write("    _objectId");
 
             if (method.InputArguments != null)
             {
                 for (int ii = 0; ii < method.InputArguments.Length; ii++)
                 {
-                    template.WriteLine(",");
-                    template.Write("    {0}", method.InputArguments[ii].GetChildFieldName()[2..]);
+                    context.Out.WriteLine(",");
+                    context.Out.Write("    {0}", method.InputArguments[ii].GetChildFieldName()[2..]);
                 }
             }
 
-            template.WriteLine(",");
-            template.WriteLine("    cancellationToken).ConfigureAwait(false);");
+            context.Out.WriteLine(",");
+            context.Out.WriteLine("    cancellationToken).ConfigureAwait(false);");
             return null;
         }
 
-        private TemplateString LoadTemplate_ListOfFieldInitializers(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_ListOfFieldInitializers(ITemplateContext context)
         {
             if (context.Target is not Parameter field)
             {
@@ -3112,12 +3112,12 @@ namespace Opc.Ua.SourceGeneration
                 m_model.Namespaces,
                 m_context);
 
-            template.WriteLine("{0} = {1};", field.GetChildFieldName(), value);
+            context.Out.WriteLine("{0} = {1};", field.GetChildFieldName(), value);
 
             return null;
         }
 
-        private TemplateString LoadTemplate_InitializeOptionalChildren(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_InitializeOptionalChildren(ITemplateContext context)
         {
             if (context.Target is not InstanceDesign instance)
             {
@@ -3162,7 +3162,7 @@ namespace Opc.Ua.SourceGeneration
             return template.WriteTemplate();
         }
 
-        private TemplateString LoadTemplate_ListOfProperties(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_ListOfProperties(ITemplateContext context)
         {
             if (context.Target is not InstanceDesign instance)
             {
@@ -3339,7 +3339,7 @@ namespace Opc.Ua.SourceGeneration
             return template.WriteTemplate();
         }
 
-        private TemplateString LoadTemplate_FindChildMethods(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_FindChildMethods(ITemplateContext context)
         {
             if (context.Target is not TypeDesign type)
             {
@@ -3461,13 +3461,13 @@ namespace Opc.Ua.SourceGeneration
                 Tokens.ListOfRemoveChild,
                 CodeTemplates.RemoveChild_cs,
                 childrenToUse,
-                (template, context) => context.Target is InstanceDesign ? context.TemplateString : null,
+                context => context.Target is InstanceDesign ? context.TemplateString : null,
                 WriteTemplate_ListOfChildren);
 
             return template.WriteTemplate();
         }
 
-        private TemplateString LoadTemplate_ListOfFindChildCase(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_ListOfFindChildCase(ITemplateContext context)
         {
             if (context.Target is not InstanceDesign)
             {
@@ -3489,14 +3489,19 @@ namespace Opc.Ua.SourceGeneration
                 template.AddReplacement(Tokens.TypeName, type.SymbolicName.Name);
             }
 
-            template.AddReplacement(Tokens.ClassName, instance.GetClassName(m_model.TargetNamespace, m_model.Namespaces));
+            template.AddReplacement(
+                Tokens.ClassName,
+                instance.GetClassName(m_model.TargetNamespace, m_model.Namespaces));
             template.AddReplacement(Tokens.ChildName, instance.SymbolicName.Name);
             template.AddReplacement(Tokens.FieldName, instance.GetChildFieldName());
             template.AddReplacement(Tokens.NodeClass, instance.GetNodeClassString());
-
             template.AddReplacement(Tokens.BrowseName, instance.SymbolicName.Name);
-            template.AddReplacement(Tokens.BrowseNameNamespacePrefix, m_model.Namespaces.GetNamespacePrefix(instance.SymbolicName.Namespace));
-            template.AddReplacement(Tokens.BrowseNameNamespaceUri, m_model.Namespaces.GetConstantSymbolForNamespace(instance.SymbolicName.Namespace));
+            template.AddReplacement(
+                Tokens.BrowseNameNamespacePrefix,
+                m_model.Namespaces.GetNamespacePrefix(instance.SymbolicName.Namespace));
+            template.AddReplacement(
+                Tokens.BrowseNameNamespaceUri,
+                m_model.Namespaces.GetConstantSymbolForNamespace(instance.SymbolicName.Namespace));
 
             return template.WriteTemplate();
         }

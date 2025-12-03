@@ -36,7 +36,7 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Template writer that handles indentation and line break management.
     /// </summary>
-    internal sealed class TemplateWriter : IDisposable
+    internal sealed class TemplateWriter : IDisposable, ITemplateWriter
     {
         /// <summary>
         /// Create template
@@ -151,11 +151,19 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes the text followed by a new line.
         /// </summary>
+        public void WriteLine()
+        {
+            WriteNewLine(2); // do not write more than 2 new lines - make configurable
+        }
+
+        /// <summary>
+        /// Writes the text followed by a new line.
+        /// </summary>
         public void WriteLine(string text)
         {
             WriteWhiteSpaceIfNeeded();
             m_writer.Write(text);
-            WriteNewLine();
+            WriteNewLine(int.MaxValue);
         }
 
         /// <summary>
@@ -165,7 +173,7 @@ namespace Opc.Ua.SourceGeneration
         {
             WriteWhiteSpaceIfNeeded();
             m_writer.Write(text, args);
-            WriteNewLine();
+            WriteNewLine(int.MaxValue);
         }
 
         /// <summary>
@@ -180,7 +188,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Begin new line
         /// </summary>
-        public bool WriteNewLine(int maxNewLines = int.MaxValue)
+        public bool WriteNewLine(int maxNewLines)
         {
             if (m_newLineCount >= maxNewLines)
             {

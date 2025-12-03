@@ -346,9 +346,9 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddReplacement(
                 Tokens.IdentifierReflection,
-                CodeTemplates.StatusCodeRegistration_cs,
+                CodeTemplates.TypeInterning_cs,
                 [constants],
-                WriteTemplate_StatusCodeRegistration);
+                WriteTemplate_StatusCodeInterning);
 
             template.WriteTemplate();
         }
@@ -458,9 +458,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes an asynchronous method declaration.
         /// </summary>
-        private TemplateString LoadTemplate_InvokeServiceAsyncParameters(
-            Template template,
-            ITemplateContext context)
+        private TemplateString LoadTemplate_InvokeServiceAsyncParameters(ITemplateContext context)
         {
             if (context.Target is not ServiceType serviceType)
             {
@@ -468,29 +466,29 @@ namespace Opc.Ua.SourceGeneration
             }
 
             // write method declaration.
-            template.WriteLine(
+            context.Out.WriteLine(
                 "response = await ServerInstance.{0}Async(",
                 serviceType.Name);
-            template.Write("    secureChannelContext");
+            context.Out.Write("    secureChannelContext");
 
             if (serviceType.Request != null || serviceType.Request.Length > 0)
             {
                 foreach (FieldType field in serviceType.Request)
                 {
-                    template.WriteLine(",");
-                    template.Write("    request.{0}", field.Name);
+                    context.Out.WriteLine(",");
+                    context.Out.Write("    request.{0}", field.Name);
                 }
             }
 
-            template.WriteLine(",");
-            template.WriteLine("cancellationToken).ConfigureAwait(false);");
+            context.Out.WriteLine(",");
+            context.Out.WriteLine("cancellationToken).ConfigureAwait(false);");
             return null;
         }
 
         /// <summary>
         /// Writes a synchronous method declaration.
         /// </summary>
-        private TemplateString LoadTemplate_KnownType(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_KnownType(ITemplateContext context)
         {
             if (context.Target is not ServiceType serviceType)
             {
@@ -498,10 +496,10 @@ namespace Opc.Ua.SourceGeneration
             }
 
             // write method declaration.
-            template.WriteLine(
+            context.Out.WriteLine(
                 "SupportedServices.Add(DataTypeIds.{0}Request, new ServiceDefinition(typeof({0}Request), new InvokeService({0}Async)));",
                 serviceType.Name);
-            template.WriteLine();
+            context.Out.WriteLine();
 
             return null;
         }
@@ -555,8 +553,7 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(
                 Tokens.ServerMethodAsync,
                 [serviceType],
-                (template, context) => LoadTemplate_AsyncParameters(
-                    template,
+                context => LoadTemplate_AsyncParameters(
                     context,
                     isInterface: true,
                     isServerApi: true));
@@ -580,8 +577,7 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(
                 Tokens.ServerMethodAsync,
                 [serviceType],
-                (template, context) => LoadTemplate_AsyncParameters(
-                    template,
+                context => LoadTemplate_AsyncParameters(
                     context,
                     isInterface: false,
                     isServerApi: true));
@@ -649,16 +645,14 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(
                 Tokens.ClientMethodSync,
                 [serviceType],
-                (template, context) => LoadTemplate_SyncParameters(
-                    template,
+                context => LoadTemplate_SyncParameters(
                     context,
                     isInterface));
 
             template.AddReplacement(
                 Tokens.ClientMethodAsync,
                 [serviceType],
-                (template, context) => LoadTemplate_AsyncParameters(
-                    template,
+                context => LoadTemplate_AsyncParameters(
                     context,
                     isInterface,
                     isServerApi: false));
@@ -666,16 +660,14 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(
                 Tokens.ClientMethodBegin,
                 [serviceType],
-                (template, context) => LoadTemplate_BeginAsyncParameters(
-                    template,
+                context => LoadTemplate_BeginAsyncParameters(
                     context,
                     isInterface));
 
             template.AddReplacement(
                 Tokens.ClientMethodEnd,
                 [serviceType],
-                (template, context) => LoadTemplate_EndAsyncParameters(
-                    template,
+                context => LoadTemplate_EndAsyncParameters(
                     context,
                     isInterface));
 
@@ -696,7 +688,6 @@ namespace Opc.Ua.SourceGeneration
         /// Writes a synchronous method declaration.
         /// </summary>
         private TemplateString LoadTemplate_SyncParameters(
-            Template template,
             ITemplateContext context,
             bool isInterface)
         {
@@ -714,17 +705,17 @@ namespace Opc.Ua.SourceGeneration
             // write method type if not writing an interface declaration.
             if (!isInterface)
             {
-                template.Write("public virtual ");
+                context.Out.Write("public virtual ");
             }
 
-            template.WriteLine("{0} {1}(", GetReturnType(serviceType), serviceType.Name);
+            context.Out.WriteLine("{0} {1}(", GetReturnType(serviceType), serviceType.Name);
 
-            WriteParameters(template, context, types, names);
+            WriteParameters(context, types, names);
 
             // write closing semicolon for interface.
             if (isInterface)
             {
-                template.WriteLine(";");
+                context.Out.WriteLine(";");
             }
 
             return null;
@@ -734,7 +725,6 @@ namespace Opc.Ua.SourceGeneration
         /// Writes an asynchronous method declaration.
         /// </summary>
         private TemplateString LoadTemplate_AsyncParameters(
-            Template template,
             ITemplateContext context,
             bool isInterface,
             bool isServerApi)
@@ -761,20 +751,20 @@ namespace Opc.Ua.SourceGeneration
             // write method type if not writing an interface declaration.
             if (!isInterface)
             {
-                template.Write("public virtual async ");
+                context.Out.Write("public virtual async ");
             }
 
-            template.WriteLine(
+            context.Out.WriteLine(
                 "global::System.Threading.Tasks.ValueTask<{0}Response> {1}Async(",
                 serviceType.Name,
                 serviceType.Name);
 
-            WriteParameters(template, context, types, names);
+            WriteParameters(context, types, names);
 
             // write closing semicolon for interface.
             if (isInterface)
             {
-                template.WriteLine(";");
+                context.Out.WriteLine(";");
             }
 
             return null;
@@ -784,7 +774,6 @@ namespace Opc.Ua.SourceGeneration
         /// Writes a begin asynchronous method declaration.
         /// </summary>
         private TemplateString LoadTemplate_BeginAsyncParameters(
-            Template template,
             ITemplateContext context,
             bool isInterface)
         {
@@ -805,17 +794,17 @@ namespace Opc.Ua.SourceGeneration
 
             if (!isInterface)
             {
-                template.Write("public virtual ");
+                context.Out.Write("public virtual ");
             }
 
-            template.WriteLine("IAsyncResult Begin{0}(", serviceType.Name);
+            context.Out.WriteLine("IAsyncResult Begin{0}(", serviceType.Name);
 
-            WriteParameters(template, context, types, names);
+            WriteParameters(context, types, names);
 
             // write closing semicolon for interface.
             if (isInterface)
             {
-                template.WriteLine(";");
+                context.Out.WriteLine(";");
             }
 
             return null;
@@ -825,7 +814,6 @@ namespace Opc.Ua.SourceGeneration
         /// Writes an end asynchronous method declaration.
         /// </summary>
         private TemplateString LoadTemplate_EndAsyncParameters(
-            Template template,
             ITemplateContext context,
             bool isInterface)
         {
@@ -844,17 +832,17 @@ namespace Opc.Ua.SourceGeneration
 
             if (!isInterface)
             {
-                template.Write("public virtual ");
+                context.Out.Write("public virtual ");
             }
 
-            template.WriteLine("{0} End{1}(", GetReturnType(serviceType), serviceType.Name);
+            context.Out.WriteLine("{0} End{1}(", GetReturnType(serviceType), serviceType.Name);
 
-            WriteParameters(template, context, types, names);
+            WriteParameters(context, types, names);
 
             // write closing semicolon for interface.
             if (isInterface)
             {
-                template.WriteLine(";");
+                context.Out.WriteLine(";");
             }
 
             return null;
@@ -863,7 +851,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Copies the request paramaters into the request object.
         /// </summary>
-        private TemplateString LoadTemplate_RequestParameters(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_RequestParameters(ITemplateContext context)
         {
             if (context.Target is not ServiceType serviceType)
             {
@@ -887,11 +875,11 @@ namespace Opc.Ua.SourceGeneration
 
                 foreach (FieldType field in serviceType.Request)
                 {
-                    template.Write("request.");
-                    template.Write(field.Name);
-                    template.Write(" = ");
-                    template.Write(field.Name.ToLowerCamelCase());
-                    template.WriteLine(";");
+                    context.Out.Write("request.");
+                    context.Out.Write(field.Name);
+                    context.Out.Write(" = ");
+                    context.Out.Write(field.Name.ToLowerCamelCase());
+                    context.Out.WriteLine(";");
                 }
             }
 
@@ -901,7 +889,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Copies the response paramaters into the request object.
         /// </summary>
-        private TemplateString LoadTemplate_ResponseParameters(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_ResponseParameters(ITemplateContext context)
         {
             if (context.Target is not ServiceType serviceType)
             {
@@ -939,10 +927,10 @@ namespace Opc.Ua.SourceGeneration
                         first = false;
                         continue;
                     }
-                    template.Write(field.Name.ToLowerCamelCase());
-                    template.Write(" = response.");
-                    template.Write(field.Name);
-                    template.WriteLine(";");
+                    context.Out.Write(field.Name.ToLowerCamelCase());
+                    context.Out.Write(" = response.");
+                    context.Out.Write(field.Name);
+                    context.Out.WriteLine(";");
                 }
             }
 
@@ -1044,14 +1032,15 @@ namespace Opc.Ua.SourceGeneration
         }
 
         /// <summary>
-        /// Write reflection helpers for identifiers.
+        /// Write Status code interning template
         /// </summary>
-        private bool WriteTemplate_StatusCodeRegistration(Template template, ITemplateContext context)
+        private bool WriteTemplate_StatusCodeInterning(Template template, ITemplateContext context)
         {
             if (context.Target is not List<Constant> constants)
             {
                 return false;
             }
+            template.AddReplacement(Tokens.IdType, "global::Opc.Ua.StatusCode");
             template.AddReplacement(
                 Tokens.ListOfIdentifiers,
                 constants,
@@ -1060,9 +1049,9 @@ namespace Opc.Ua.SourceGeneration
         }
 
         /// <summary>
-        /// Write lookup entries for identifiers.
+        /// Write identifiers for interning
         /// </summary>
-        private TemplateString LoadTemplate_StatusCodeIdentifier(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_StatusCodeIdentifier(ITemplateContext context)
         {
             if (context.Target is Constant constant)
             {
@@ -1078,8 +1067,8 @@ namespace Opc.Ua.SourceGeneration
                     }
                     symbolicId = CoreUtils.Format("{0}{1}", constant.Severity, name);
                 }
-                template.Write(symbolicId);
-                template.WriteLine(",");
+                context.Out.Write(symbolicId);
+                context.Out.WriteLine(",");
             }
             return null;
         }
@@ -1143,18 +1132,18 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Write lookup entries for identifiers.
         /// </summary>
-        private TemplateString LoadTemplate_IdentifierLookup(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_IdentifierLookup(ITemplateContext context)
         {
             if (context.Target is Constant constant)
             {
                 string symbolicId = constant.Name;
                 if (context.Token == Tokens.ListOfIdentifersToNames)
                 {
-                    template.WriteLine("lookup[{0}] = \"{0}\";", symbolicId);
+                    context.Out.WriteLine("lookup[{0}] = \"{0}\";", symbolicId);
                 }
                 else if (context.Token == Tokens.ListOfNamesToIdentifiers)
                 {
-                    template.WriteLine("lookup[\"{0}\"] = {0};", symbolicId);
+                    context.Out.WriteLine("lookup[\"{0}\"] = {0};", symbolicId);
                 }
             }
             return null;
@@ -1205,7 +1194,6 @@ namespace Opc.Ua.SourceGeneration
         /// Writes a set of method parameters.
         /// </summary>
         private static void WriteParameters(
-            Template template,
             ITemplateContext context,
             List<string> types,
             List<string> names)
@@ -1214,15 +1202,15 @@ namespace Opc.Ua.SourceGeneration
             {
                 string typeName = types[ii];
 
-                template.Write("    {0} {1}", typeName, names[ii]);
+                context.Out.Write("    {0} {1}", typeName, names[ii]);
 
                 if (ii < types.Count - 1)
                 {
-                    template.WriteLine(",");
+                    context.Out.WriteLine(",");
                 }
                 else
                 {
-                    template.Write(")");
+                    context.Out.Write(")");
                 }
             }
         }

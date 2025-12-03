@@ -1228,7 +1228,8 @@ namespace Opc.Ua
         /// Converts an <see cref="ExpandedNodeId"/> to a <see cref="NodeId"/> using a namespace table.
         /// </remarks>
         /// <param name="nodeId">The ExpandedNodeId to convert to a NodeId</param>
-        /// <param name="namespaceTable">The namespace table that contains all the namespaces needed to resolve the namespace index as encoded within this object.</param>
+        /// <param name="namespaceTable">The namespace table that contains all the namespaces
+        /// needed to resolve the namespace index as encoded within this object.</param>
         public static NodeId ToNodeId(ExpandedNodeId nodeId, NamespaceTable namespaceTable)
         {
             // check for null.

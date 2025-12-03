@@ -122,7 +122,7 @@ namespace Opc.Ua.SourceGeneration
                         }
                         if (replacement is not TemplateDefinition definition)
                         {
-                            Write(replacement.ToString());
+                            m_writer.Write(replacement.ToString());
                             written = true;
                             break;
                         }
@@ -133,12 +133,7 @@ namespace Opc.Ua.SourceGeneration
                             break;
                         }
                         written = false;
-                        var context = new TemplateContext
-                        {
-                            Token = op.Item,
-                            Index = 0,
-                            TemplateString = definition.TemplateString
-                        };
+                        var context = new TemplateContext(m_writer, op.Item, definition.TemplateString);
                         m_writer.PushIndentChars(op.Offset);
                         bool writeNewLineBetweenTargets = false;
                         for (int j = 0; j < definition.Targets.Count; j++)
@@ -154,7 +149,6 @@ namespace Opc.Ua.SourceGeneration
                                 context.Index++;
                                 continue;
                             }
-                            //m_writer.TrimLineBreak(1);
 
                             // begin new line between multi line items if needed.
                             if (writeNewLineBetweenTargets)
@@ -183,7 +177,7 @@ namespace Opc.Ua.SourceGeneration
                         m_writer.PopIndentation();
                         break;
                     case ParsedTemplateString.OpType.LineBreak:
-                        m_writer.WriteNewLine();
+                        m_writer.WriteNewLine(int.MaxValue);
                         written = true;
                         break;
                     // Not a token, e.g. a date time or value that was appended
@@ -198,70 +192,6 @@ namespace Opc.Ua.SourceGeneration
                 }
             }
             return written;
-        }
-
-        /// <summary>
-        /// Writes the text to the stream.
-        /// </summary>
-        public void Write(char text)
-        {
-            m_writer.Write(text);
-        }
-
-        /// <summary>
-        /// Writes the text to the stream.
-        /// </summary>
-        public void Write(string text)
-        {
-            m_writer.Write(text);
-        }
-
-        /// <summary>
-        /// Formats and then writes the text to the stream.
-        /// </summary>
-        public void Write(string format, object arg1)
-        {
-            m_writer.Write(format, arg1);
-        }
-
-        /// <summary>
-        /// Formats and then writes the text to the stream.
-        /// </summary>
-        public void Write(string format, object arg1, object arg2)
-        {
-            m_writer.Write(format, arg1, arg2);
-        }
-
-        /// <summary>
-        /// Formats and then writes the text to the stream.
-        /// </summary>
-        public void Write(string format, object arg1, object arg2, object arg3)
-        {
-            m_writer.Write(format, arg1, arg2, arg3);
-        }
-
-        /// <summary>
-        /// Writes a a new line character.
-        /// </summary>
-        public void WriteLine()
-        {
-            m_writer.WriteNewLine(2); // do not write more than 2 new lines
-        }
-
-        /// <summary>
-        /// Writes the text followed by a new line.
-        /// </summary>
-        public void WriteLine(string text)
-        {
-            m_writer.WriteLine(text);
-        }
-
-        /// <summary>
-        /// Formats and then writes the text followed by a new line.
-        /// </summary>
-        public void WriteLine(string text, params object[] args)
-        {
-            m_writer.WriteLine(text, args);
         }
 
         /// <summary>

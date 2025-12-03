@@ -64,7 +64,7 @@ namespace Opc.Ua.SourceGeneration
             // check for override.
             if (OnTemplateLoad != null)
             {
-                return OnTemplateLoad(template, context);
+                return OnTemplateLoad(context);
             }
 
             // use the default function to write the template.
@@ -90,7 +90,7 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// A delegate handle events associated with template.
     /// </summary>
-    internal delegate TemplateString LoadTemplateEventHandler(Template template, ITemplateContext context);
+    internal delegate TemplateString LoadTemplateEventHandler(ITemplateContext context);
 
     /// <summary>
     /// A delegate handle events associated with template.

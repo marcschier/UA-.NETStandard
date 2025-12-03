@@ -179,7 +179,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes the import statements.
         /// </summary>
-        private TemplateString LoadTemplate_Imports(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_Imports(ITemplateContext context)
         {
             if (context.Target is not string namespaceUri)
             {
@@ -190,13 +190,13 @@ namespace Opc.Ua.SourceGeneration
             {
                 if (namespaceUri == Namespaces.OpcUaBuiltInTypes)
                 {
-                    template.WriteLine(
+                    context.Out.WriteLine(
                         "<opc:Import Namespace=\"{0}\" />",
                         Namespaces.OpcUaBuiltInTypes);
                 }
                 else
                 {
-                    template.WriteLine(GetImportStatment(namespaceUri));
+                    context.Out.WriteLine(GetImportStatment(namespaceUri));
                 }
 
                 return null;
@@ -208,7 +208,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes the attributes for a node.
         /// </summary>
-        private TemplateString LoadTemplate_DataType(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_DataType(ITemplateContext context)
         {
             // do not publish type declarations in OPC BinarySchema files.
             if (context.Target is TypeDeclaration)
@@ -351,7 +351,7 @@ namespace Opc.Ua.SourceGeneration
         /// Writes a field in an OPCBinary schema.
         /// </summary>
         /// <exception cref="InvalidOperationException"></exception>
-        private TemplateString LoadTemplate_Field(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_Field(ITemplateContext context)
         {
             if (context.Target is not FieldType fieldType)
             {
@@ -365,23 +365,23 @@ namespace Opc.Ua.SourceGeneration
                     fieldType.DataType,
                     fieldType.Name));
 
-            template.WriteLine();
+            context.Out.WriteLine();
             if (fieldType.ValueRank == 0)
             {
-                template.WriteLine(
+                context.Out.WriteLine(
                     "<opc:Field Name=\"NoOf{0}\" TypeName=\"opc:Int32\" />",
                     fieldType.Name);
             }
 
-            template.Write("<opc:Field Name=\"{0}\"", fieldType.Name);
-            template.Write(" TypeName=\"{0}\"", GetBinarySchemaTypeName(datatype.QName));
+            context.Out.Write("<opc:Field Name=\"{0}\"", fieldType.Name);
+            context.Out.Write(" TypeName=\"{0}\"", GetBinarySchemaTypeName(datatype.QName));
 
             if (fieldType.ValueRank == 0)
             {
-                template.Write(" LengthField=\"NoOf{0}\"", fieldType.Name);
+                context.Out.Write(" LengthField=\"NoOf{0}\"", fieldType.Name);
             }
 
-            template.Write(" />");
+            context.Out.Write(" />");
 
             return null;
         }
@@ -389,14 +389,14 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes an enumerated value in an OPCBinary schema.
         /// </summary>
-        private TemplateString LoadTemplate_EnumeratedValue(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_EnumeratedValue(ITemplateContext context)
         {
             if (context.Target is not EnumeratedValue valueType)
             {
                 return null;
             }
 
-            template.WriteLine(
+            context.Out.WriteLine(
                 "<opc:EnumeratedValue Name=\"{0}\" Value=\"{1}\" />",
                 valueType.Name,
                 valueType.Value);

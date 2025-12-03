@@ -2248,6 +2248,20 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// StackGenerator.cs
         /// </summary>
+        public static readonly TemplateString TypeInterning_cs = TemplateString.Parse(
+            $$"""
+            static {{Tokens.ClassName}}()
+            {
+                {{Tokens.IdType}}.Intern(new {{Tokens.IdType}}[]
+                {
+                    {{Tokens.ListOfIdentifiers}}
+                });
+            }
+            """);
+
+        /// <summary>
+        /// StackGenerator.cs
+        /// </summary>
         public static readonly TemplateString StatusCodeDeclaration_cs = TemplateString.Parse(
             $$"""
             /// <summary>
@@ -2255,20 +2269,6 @@ namespace Opc.Ua.SourceGeneration
             /// </summary>
             public static readonly global::Opc.Ua.StatusCode {{Tokens.SymbolicId}} =
                 new global::Opc.Ua.StatusCode({{Tokens.Identifier}}, nameof({{Tokens.SymbolicId}}));
-            """);
-
-        /// <summary>
-        /// StackGenerator.cs
-        /// </summary>
-        public static readonly TemplateString StatusCodeRegistration_cs = TemplateString.Parse(
-            $$"""
-            static {{Tokens.ClassName}}()
-            {
-                global::Opc.Ua.StatusCode.Intern(new global::Opc.Ua.StatusCode[]
-                {
-                    {{Tokens.ListOfIdentifiers}}
-                });
-            }
             """);
 
         /// <summary>

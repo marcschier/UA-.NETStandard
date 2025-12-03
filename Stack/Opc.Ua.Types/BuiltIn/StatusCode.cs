@@ -759,7 +759,7 @@ namespace Opc.Ua
         /// <summary>
         /// Gets the interned status codes
         /// </summary>
-        public static StatusCodeCollection InternedStatusCodes => new(s_statusCodes.Values);
+        public static StatusCodeCollection InternedStatusCodes => [.. s_statusCodes.Values];
 
         static StatusCode()
         {

@@ -2216,7 +2216,7 @@ namespace Opc.Ua
 
                 if (array == null)
                 {
-                    value = new Variant((StatusCode)StatusCodes.BadDecodingError);
+                    value = new Variant(StatusCodes.BadDecodingError);
                 }
                 else
                 {

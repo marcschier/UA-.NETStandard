@@ -181,7 +181,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes the import statements.
         /// </summary>
-        private TemplateString LoadTemplate_Imports(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_Imports(ITemplateContext context)
         {
             if (context.Target is not string namespaceUri)
             {
@@ -192,13 +192,13 @@ namespace Opc.Ua.SourceGeneration
             {
                 if (namespaceUri == Namespaces.OpcUaBuiltInTypes)
                 {
-                    template.WriteLine(
+                    context.Out.WriteLine(
                         """<xs:import namespace="{0}" schemaLocation="BuiltInTypes.xsd" />""",
                         Namespaces.OpcUaBuiltInTypes);
                 }
                 else
                 {
-                    template.WriteLine(GetImportStatment(namespaceUri));
+                    context.Out.WriteLine(GetImportStatment(namespaceUri));
                 }
 
                 return null;
@@ -210,7 +210,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes the attributes for a node.
         /// </summary>
-        private TemplateString LoadTemplate_DataType(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_DataType(ITemplateContext context)
         {
             // do not publish type declarations in OPC BinarySchema files.
             if (context.Target is TypeDeclaration)
@@ -349,7 +349,7 @@ namespace Opc.Ua.SourceGeneration
         /// Writes a field in an OPCBinary schema.
         /// </summary>
         /// <exception cref="InvalidOperationException"></exception>
-        private TemplateString LoadTemplate_Field(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_Field(ITemplateContext context)
         {
             if (context.Target is not FieldType fieldType)
             {
@@ -363,34 +363,34 @@ namespace Opc.Ua.SourceGeneration
                     fieldType.DataType,
                     fieldType.Name));
 
-            template.Write("""
+            context.Out.Write("""
                 <xs:element name="{0}"
                 """, fieldType.Name);
 
             if (datatype.Name == "XmlElement" && fieldType.ValueRank < 0)
             {
-                template.WriteLine(">");
-                template.WriteLine("  <xs:complexType>");
-                template.WriteLine("    <xs:sequence>");
-                template.WriteLine("""      <xs:any minOccurs="0" processContents="lax" />""");
-                template.WriteLine("    </xs:sequence>");
-                template.WriteLine("  </xs:complexType>");
-                template.WriteLine("</xs:element>");
+                context.Out.WriteLine(">");
+                context.Out.WriteLine("  <xs:complexType>");
+                context.Out.WriteLine("    <xs:sequence>");
+                context.Out.WriteLine("""      <xs:any minOccurs="0" processContents="lax" />""");
+                context.Out.WriteLine("    </xs:sequence>");
+                context.Out.WriteLine("  </xs:complexType>");
+                context.Out.WriteLine("</xs:element>");
             }
             else
             {
-                template.Write("""
+                context.Out.Write("""
                      type="{0}" minOccurs="0"
                     """, GetXmlSchemaTypeName(datatype.QName, fieldType.ValueRank));
 
                 if (datatype.Name is "String" or "ByteString")
                 {
-                    template.Write("""
+                    context.Out.Write("""
                          nillable="true"
                         """);
                 }
 
-                template.WriteLine(" />");
+                context.Out.WriteLine(" />");
             }
 
             return null;
@@ -399,14 +399,14 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes an enumerated value in an OPCBinary schema.
         /// </summary>
-        private TemplateString LoadTemplate_EnumeratedValue(Template template, ITemplateContext context)
+        private TemplateString LoadTemplate_EnumeratedValue(ITemplateContext context)
         {
             if (context.Target is not EnumeratedValue valueType)
             {
                 return null;
             }
 
-            template.Write(
+            context.Out.Write(
                 """<xs:enumeration value="{0}_{1}" />""",
                 valueType.Name,
                 valueType.Value);
@@ -414,17 +414,17 @@ namespace Opc.Ua.SourceGeneration
             /*
             if (valueType.Value != 1)
             {
-                template.WriteLine(">");
-                template.WriteLine("  <xs:annotation>");
-                template.WriteLine("    <xs:appinfo>");
-                template.WriteLine("      <EnumerationValue xmlns=\"http://schemas.microsoft.com/2003/10/Serialization/\">{1}</EnumerationValue>", valueType.Value);
-                template.WriteLine("    </xs:appinfo>");
-                template.WriteLine("  </xs:annotation>");
-                template.WriteLine("</xs:enumeration>");
+                context.Out.WriteLine(">");
+                context.Out.WriteLine("  <xs:annotation>");
+                context.Out.WriteLine("    <xs:appinfo>");
+                context.Out.WriteLine("      <EnumerationValue xmlns=\"http://schemas.microsoft.com/2003/10/Serialization/\">{1}</EnumerationValue>", valueType.Value);
+                context.Out.WriteLine("    </xs:appinfo>");
+                context.Out.WriteLine("  </xs:annotation>");
+                context.Out.WriteLine("</xs:enumeration>");
             }
             else
             {
-                template.WriteLine(" />");
+                context.Out.WriteLine(" />");
             }
             */
 

@@ -170,7 +170,6 @@ namespace Opc.Ua
             {
                 throw new ArgumentNullException(nameof(replacement));
             }
-
             if (templateString is null && onLoad is null)
             {
                 throw new ArgumentException(

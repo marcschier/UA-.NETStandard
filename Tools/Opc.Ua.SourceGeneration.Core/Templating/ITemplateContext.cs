@@ -42,7 +42,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Get template writer
         /// </summary>
-        TemplateWriter Out { get; }
+        ITemplateWriter Out { get; }
 
         /// <summary>
         /// The current iteration variable that is the target of the template.
@@ -63,31 +63,35 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Contains the current context to use for serialization.
     /// </summary>
-    internal sealed class TemplateContext : ITemplateContext
+    internal sealed record class TemplateContext : ITemplateContext
     {
         /// <summary>
-        /// The interpolated template string passed to AddReplacement method.
+        /// Create the template event handler context
         /// </summary>
+        public TemplateContext(
+            TemplateWriter writer,
+            string token,
+            TemplateString templateString)
+        {
+            Out = writer;
+            Token = token;
+            TemplateString = templateString;
+            Index = 0;
+        }
+
+        /// <inheritdoc/>
+        public ITemplateWriter Out { get; }
+
+        /// <inheritdoc/>
+        public string Token { get; }
+
+        /// <inheritdoc/>
         public TemplateString TemplateString { get; set; }
 
-        /// <summary>
-        /// Get template writer
-        /// </summary>
-        public TemplateWriter Out { get; set; }
-
-        /// <summary>
-        /// The token that is to be replaced by the current template evaluation.
-        /// </summary>
-        public string Token { get; set; } = string.Empty;
-
-        /// <summary>
-        /// The current iteration variable that is the target of the template.
-        /// </summary>
+        /// <inheritdoc/>
         public object Target { get; set; }
 
-        /// <summary>
-        /// The index of the current target within the list being processed.
-        /// </summary>
-        public int Index { get; set; } = -1;
+        /// <inheritdoc/>
+        public int Index { get; set; }
     }
 }

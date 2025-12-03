@@ -1313,7 +1313,7 @@ namespace Opc.Ua
                         catch (Exception ex) when (ex is not ServiceResultException)
                         {
                             m_logger.LogError(ex, "XmlDecoder: Error reading variant.");
-                            value = new Variant((StatusCode)StatusCodes.BadDecodingError);
+                            value = new Variant(StatusCodes.BadDecodingError);
                         }
                         EndField("Value");
                     }

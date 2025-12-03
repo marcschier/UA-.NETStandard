@@ -614,7 +614,6 @@ namespace Opc.Ua.Schema.Model
                         Path.GetDirectoryName(designFilePath),
                         "..\\CSVs", Path.GetFileNameWithoutExtension(designFilePath) + ".csv");
                 }
-
             }
             AssignIdentifiers(model, identifierFilePath);
             return model;

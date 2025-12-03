@@ -447,7 +447,7 @@ namespace Opc.Ua.Client
                 {
                     if (NodeId.IsNull(nodeId))
                     {
-                        // Nothing can be found since there is no
+                        // Nothing can be found since there is nothing to start
                         return null;
                     }
 
@@ -509,7 +509,8 @@ namespace Opc.Ua.Client
                 {
                     ReferenceDescriptionCollection references =
                         await context.ctx.FetchReferencesAsync(null, nodeId, context.ct)
-                            .ConfigureAwait(false);
+                            .ConfigureAwait(false) ??
+                        [];
                     foreach (ReferenceDescription? reference in references)
                     {
                         // transform absolute identifiers.
