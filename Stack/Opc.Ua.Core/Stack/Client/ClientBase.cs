@@ -742,7 +742,9 @@ namespace Opc.Ua
         /// <summary>
         /// Logger for client inheritence chain
         /// </summary>
+#pragma warning disable IDE1006 // Naming Styles
         protected readonly ILogger m_logger;
+#pragma warning restore IDE1006 // Naming Styles
         private readonly Meter m_meter;
         private ITransportChannel? m_channel;
         private readonly ConcurrentDictionary<string, Instrument<double>> m_instruments = [];

@@ -244,7 +244,8 @@ namespace Opc.Ua.Client.Tests
                     e.StatusCode == StatusCodes.BadServerHalted ||
                     e.StatusCode == StatusCodes.BadSecureChannelClosed ||
                     e.StatusCode == StatusCodes.BadNoCommunication
-                ) && attempt < maxAttempts)
+                ) &&
+                attempt < maxAttempts)
                 {
                     attempt++;
                     m_logger.LogError(e, "Failed to connect {Attempt}. Retrying in 1 second...", attempt + 1);
@@ -290,7 +291,8 @@ namespace Opc.Ua.Client.Tests
                     e.StatusCode == StatusCodes.BadServerHalted ||
                     e.StatusCode == StatusCodes.BadSecureChannelClosed ||
                     e.StatusCode == StatusCodes.BadNoCommunication
-                ) && attempt < maxAttempts)
+                ) &&
+                attempt < maxAttempts)
                 {
                     m_logger.LogError(e, "Failed to connect {Attempt}. Retrying in 1 second...", attempt + 1);
                     await Task.Delay(1000).ConfigureAwait(false);

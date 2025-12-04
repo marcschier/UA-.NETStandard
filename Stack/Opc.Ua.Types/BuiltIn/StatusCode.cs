@@ -800,8 +800,10 @@ namespace Opc.Ua
         }
 
 #if NET8_0_OR_GREATER
+#pragma warning disable IDE0301 // Cannot use collection initializer for FrozenDictionary
         private static FrozenDictionary<uint, StatusCode> s_statusCodes =
             FrozenDictionary<uint, StatusCode>.Empty;
+#pragma warning restore IDE0301
 #else
         private static ReadOnlyDictionary<uint, StatusCode> s_statusCodes
             = new(new Dictionary<uint, StatusCode>());

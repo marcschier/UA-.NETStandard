@@ -60,7 +60,7 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
                 template.AddReplacement(Tokens.CodeName, "My.Namespace");
                 template.AddReplacement(Tokens.NamespaceUri, "http://mynamespace.org/UA/");
 
-                template.WriteTemplate();
+                template.Render();
             }
             string result = writer.ToString();
 
@@ -87,7 +87,7 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
                 template.AddReplacement(Tokens.SymbolicName, "MyBrowseName");
                 template.AddReplacement(Tokens.BrowseName, "MyBrowseName");
 
-                template.WriteTemplate();
+                template.Render();
             }
             string result = writer.ToString();
 
@@ -111,7 +111,7 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
                 template.AddReplacement(Tokens.SymbolicName, "MyId");
                 template.AddReplacement(Tokens.Identifier, "12345");
 
-                template.WriteTemplate();
+                template.Render();
             }
             string result = writer.ToString();
 
@@ -136,7 +136,7 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
                 template.AddReplacement(Tokens.Namespace, "MyNamespace");
                 template.AddReplacement(Tokens.Encoding, "Binary");
 
-                template.WriteTemplate();
+                template.Render();
             }
             string result = writer.ToString();
 
@@ -158,7 +158,7 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
 
                 template.AddReplacement(myToken, 123.45);
 
-                template.WriteTemplate();
+                template.Render();
             }
             string result = writer.ToString();
 
@@ -177,7 +177,7 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
 
                 template.AddReplacement(myToken, true);
 
-                template.WriteTemplate();
+                template.Render();
             }
             string result = writer.ToString();
 
@@ -196,7 +196,7 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
 
                 template.AddReplacement(myToken, "test");
 
-                template.WriteTemplate();
+                template.Render();
             }
             string result = writer.ToString();
 
@@ -219,13 +219,13 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
                 string[] targets = ["One", "Two", "Three"];
                 var itemTemplate = TemplateString.Parse($"Item: {itemValue} ");
 
-                template.AddReplacement(myList, itemTemplate, targets, (t, c) =>
+                template.AddReplacement(myList, itemTemplate, targets, c =>
                 {
-                    t.AddReplacement(itemValue, (string)c.Target);
-                    return t.WriteTemplate();
+                    c.Template.AddReplacement(itemValue, (string)c.Target);
+                    return c.Template.Render();
                 });
 
-                template.WriteTemplate();
+                template.Render();
             }
             string result = writer.ToString();
 
@@ -252,13 +252,13 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
 #pragma warning restore RCS1214 // Unnecessary interpolated string
                 var itemTemplate = TemplateString.Parse($"Item: {itemValue}");
 
-                template.AddReplacement(myList, itemTemplate, "Single", (t, c) =>
+                template.AddReplacement(myList, itemTemplate, "Single", c =>
                 {
-                    t.AddReplacement(itemValue, (string)c.Target);
-                    return t.WriteTemplate();
+                    c.Template.AddReplacement(itemValue, (string)c.Target);
+                    return c.Template.Render();
                 });
 
-                template.WriteTemplate();
+                template.Render();
             }
             string result = writer.ToString();
 
@@ -286,13 +286,13 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
             """));
 
                 var itemTemplate = TemplateString.Parse($"Item: {itemValue}");
-                template.AddReplacement(myList, itemTemplate, ["Single"], (t, c) =>
+                template.AddReplacement(myList, itemTemplate, ["Single"], c =>
                 {
-                    t.AddReplacement(itemValue, (string)c.Target);
-                    return t.WriteTemplate();
+                    c.Template.AddReplacement(itemValue, (string)c.Target);
+                    return c.Template.Render();
                 });
 
-                template.WriteTemplate();
+                template.Render();
             }
             string result = writer.ToString();
 
@@ -320,14 +320,14 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
                 var itemTemplate2 = TemplateString.Parse($"Template2: {itemValue}");
 
                 template.AddReplacement(myItem, "Single",
-                    onLoad: (t, c) => (string)c.Target == "Single" ? itemTemplate1 : itemTemplate2,
-                    onWrite: (t, c) =>
+                    onLoad: c => (string)c.Target == "Single" ? itemTemplate1 : itemTemplate2,
+                    onWrite: c =>
                     {
-                        t.AddReplacement(itemValue, (string)c.Target);
-                        return t.WriteTemplate();
+                        c.Template.AddReplacement(itemValue, (string)c.Target);
+                        return c.Template.Render();
                     });
 
-                template.WriteTemplate();
+                template.Render();
             }
             string result = writer.ToString();
 
@@ -354,14 +354,14 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
                 var itemTemplate2 = TemplateString.Parse($"Template2: {itemValue}");
 
                 template.AddReplacement(myList, targets,
-                    onLoad: (t, c) => (string)c.Target == "One" ? itemTemplate1 : itemTemplate2,
-                    onWrite: (t, c) =>
+                    onLoad: c => (string)c.Target == "One" ? itemTemplate1 : itemTemplate2,
+                    onWrite: c =>
                     {
-                        t.AddReplacement(itemValue, (string)c.Target);
-                        return t.WriteTemplate();
+                        c.Template.AddReplacement(itemValue, (string)c.Target);
+                        return c.Template.Render();
                     });
 
-                template.WriteTemplate();
+                template.Render();
             }
             string result = writer.ToString();
 
@@ -390,14 +390,14 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
                 var itemTemplate2 = TemplateString.Parse($"Template2: {itemValue}");
 
                 template.AddReplacement(myList, targets,
-                    onLoad: (t, c) => (string)c.Target == "Two" ? itemTemplate1 : itemTemplate2,
-                    onWrite: (t, c) =>
+                    onLoad: c => (string)c.Target == "Two" ? itemTemplate1 : itemTemplate2,
+                    onWrite: c =>
                     {
-                        t.AddReplacement(itemValue, (string)c.Target);
-                        return t.WriteTemplate();
+                        c.Template.AddReplacement(itemValue, (string)c.Target);
+                        return c.Template.Render();
                     });
 
-                template.WriteTemplate();
+                template.Render();
             }
             string result = writer.ToString();
 
@@ -423,13 +423,13 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
                     Tokens.TypeList,
                     CodeTemplates.Classes_ServiceMessage_cs,
                     ["Type1", "Type2", "Type3"],
-                    (template, context) =>
+                    context =>
                     {
-                        template.AddReplacement(Tokens.Name, (string)context.Target);
-                        return template.WriteTemplate();
+                        context.Template.AddReplacement(Tokens.Name, (string)context.Target);
+                        return context.Template.Render();
                     });
 
-                template.WriteTemplate();
+                template.Render();
             }
             string result = writer.ToString();
 
@@ -517,23 +517,23 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
                     subTemplate,
                     subTemplateString,
                     ["target"],
-                    onWrite: (subTemplate, subContext) =>
+                    onWrite: subContext =>
                     {
-                        subTemplate.AddReplacement(
+                        subContext.Template.AddReplacement(
                             innerTemplate,
                             innerTemplateString,
                             ["inner_target"],
-                            onWrite: (innerTemplate, innerContext) =>
+                            onWrite: innerContext =>
                             {
-                                innerTemplate.AddReplacement(myValue, 123);
-                                return innerTemplate.WriteTemplate();
+                                innerContext.Template.AddReplacement(myValue, 123);
+                                return innerContext.Template.Render();
                             }
                         );
-                        return subTemplate.WriteTemplate();
+                        return subContext.Template.Render();
                     }
                 );
 
-                mainTemplate.WriteTemplate();
+                mainTemplate.Render();
             }
             string result = writer.ToString();
 

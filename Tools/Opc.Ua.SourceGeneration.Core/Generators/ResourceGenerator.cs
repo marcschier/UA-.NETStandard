@@ -121,32 +121,32 @@ namespace Opc.Ua.SourceGeneration
                 groups,
                 WriteTemplate_ResourceGroup);
 
-            template.WriteTemplate();
+            template.Render();
             return outputFile;
         }
 
-        private bool WriteTemplate_ResourceGroup(Template template, ITemplateContext context)
+        private bool WriteTemplate_ResourceGroup(IWriteContext context)
         {
             if (context.Target is not IGrouping<string, Resource> group)
             {
                 return false;
             }
 
-            template.AddReplacement(Tokens.ClassName, group.Key);
-            template.AddReplacement(
+            context.Template.AddReplacement(Tokens.ClassName, group.Key);
+            context.Template.AddReplacement(
                 Tokens.AccessModifier,
                 m_internalAccess ? "internal" : "public");
 
-            template.AddReplacement(
+            context.Template.AddReplacement(
                 Tokens.ListOfResourceDeclarations,
                 [.. group],
                 LoadTemplate_ResourceDeclaration,
                 WriteTemplate_ResourceDeclaration);
 
-            return template.WriteTemplate();
+            return context.Template.Render();
         }
 
-        private TemplateString LoadTemplate_ResourceDeclaration(ITemplateContext context)
+        private TemplateString LoadTemplate_ResourceDeclaration(ILoadContext context)
         {
             if (context.Target is not Resource resource)
             {
@@ -164,39 +164,39 @@ namespace Opc.Ua.SourceGeneration
             return CodeTemplates.ResourceDeclaration_ReadOnlySpan_cs;
         }
 
-        private bool WriteTemplate_ResourceDeclaration(Template template, ITemplateContext context)
+        private bool WriteTemplate_ResourceDeclaration(IWriteContext context)
         {
             if (context.Target is not Resource resource)
             {
                 return false;
             }
-            template.AddReplacement(Tokens.ResourceName, resource.ResourceName);
+            context.Template.AddReplacement(Tokens.ResourceName, resource.ResourceName);
 
-            template.AddReplacement(
+            context.Template.AddReplacement(
                 Tokens.Resource,
                 [context.Target],
                 LoadTemplate_Resource,
                 WriteTemplate_Resource);
 
-            return template.WriteTemplate();
+            return context.Template.Render();
         }
 
-        private bool WriteTemplate_Resource(Template template, ITemplateContext context)
+        private bool WriteTemplate_Resource(IWriteContext context)
         {
             if (context.Target is StringResource str && str.AsUtf16)
             {
                 switch (str)
                 {
                     case TextResource textResource:
-                        template.AddReplacement(
+                        context.Template.AddReplacement(
                             Tokens.Resource,
                             textResource.Text);
-                        return template.WriteTemplate();
+                        return context.Template.Render();
                     case TextReaderResource textReaderResource:
-                        template.AddReplacement(
+                        context.Template.AddReplacement(
                             Tokens.Resource,
                             textReaderResource.Reader.ReadToEnd());
-                        return template.WriteTemplate();
+                        return context.Template.Render();
                     default:
                         // SHould not be here
                         return false;
@@ -206,7 +206,7 @@ namespace Opc.Ua.SourceGeneration
             return true;
         }
 
-        private TemplateString LoadTemplate_Resource(ITemplateContext context)
+        private TemplateString LoadTemplate_Resource(ILoadContext context)
         {
             if (context.Target is not Resource resource)
             {
@@ -241,7 +241,7 @@ namespace Opc.Ua.SourceGeneration
             return null;
         }
 
-        private void WriteBinaryResource(ITemplateContext context, Resource resource)
+        private void WriteBinaryResource(ILoadContext context, Resource resource)
         {
             Stream stream = GetResourceStream(resource, out bool leaveOpen);
             try
@@ -276,7 +276,7 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
-        private void WriteBinaryResourceAsBase64(ITemplateContext context, Resource resource)
+        private void WriteBinaryResourceAsBase64(ILoadContext context, Resource resource)
         {
             Stream stream = GetResourceStream(resource, out bool leaveOpen);
             try
@@ -310,7 +310,7 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
-        private void WriteTextResource(ITemplateContext context, Resource resource)
+        private void WriteTextResource(ILoadContext context, Resource resource)
         {
             TextReader reader = GetResourceTextReader(context, out bool disposeReader);
             try
@@ -325,7 +325,7 @@ namespace Opc.Ua.SourceGeneration
                 }
             }
 
-            TextReader GetResourceTextReader(ITemplateContext context, out bool leaveOpen)
+            TextReader GetResourceTextReader(ILoadContext context, out bool leaveOpen)
             {
                 leaveOpen = false;
                 switch (context.Target)
@@ -364,7 +364,7 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
-        private void WriteTextResourceAsBase64(ITemplateContext context, Resource resource)
+        private void WriteTextResourceAsBase64(ILoadContext context, Resource resource)
         {
             Stream istrm = GetResourceTextReader(resource, out bool leaveOpen);
             try
@@ -402,7 +402,7 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
-        private static void WriteAsUtf8StringLiteral(ITemplateContext context, TextReader reader)
+        private static void WriteAsUtf8StringLiteral(ILoadContext context, TextReader reader)
         {
             context.Out.WriteLine("\"\"\"");
             for (string line = reader.ReadLine();
@@ -419,7 +419,7 @@ namespace Opc.Ua.SourceGeneration
             context.Out.Write("\"\"\"u8");
         }
 
-        private static void WriteAsBase64StringLiteral(ITemplateContext context, string base64)
+        private static void WriteAsBase64StringLiteral(ILoadContext context, string base64)
         {
             context.Out.WriteLine("global::System.Convert.FromBase64String(");
             //
@@ -478,7 +478,7 @@ namespace Opc.Ua.SourceGeneration
 #endif
         }
 
-        private static void WriteAsByteArray(ITemplateContext context, Stream reader)
+        private static void WriteAsByteArray(ILoadContext context, Stream reader)
         {
             context.Out.WriteLine("new byte[]");
             context.Out.WriteLine("{");

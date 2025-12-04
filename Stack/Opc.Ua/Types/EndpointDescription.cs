@@ -11,7 +11,6 @@
 */
 
 using System;
-using System.Xml;
 
 namespace Opc.Ua
 {

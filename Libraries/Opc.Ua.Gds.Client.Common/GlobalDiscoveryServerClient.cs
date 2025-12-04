@@ -379,7 +379,8 @@ namespace Opc.Ua.Gds.Client
                     e.StatusCode == StatusCodes.BadServerHalted ||
                     e.StatusCode == StatusCodes.BadSecureChannelClosed ||
                     e.StatusCode == StatusCodes.BadNoCommunication
-                ) && attempt < maxAttempts)
+                ) &&
+                attempt < maxAttempts)
                 {
                     m_logger.LogError(e, "Failed to connect {Attempt}. Retrying in 1 second...", attempt + 1);
                     await Task.Delay(1000, ct).ConfigureAwait(false);
@@ -435,7 +436,8 @@ namespace Opc.Ua.Gds.Client
                     e.StatusCode == StatusCodes.BadServerHalted ||
                     e.StatusCode == StatusCodes.BadSecureChannelClosed ||
                     e.StatusCode == StatusCodes.BadNoCommunication
-                ) && attempt < maxAttempts)
+                ) &&
+                attempt < maxAttempts)
                 {
                     m_logger.LogError(e, "Failed to connect {Attempt}. Retrying in 1 second...", attempt + 1);
                     await Task.Delay(1000, ct).ConfigureAwait(false);

@@ -684,6 +684,7 @@ namespace Opc.Ua.Sample
         /// Finds the specified node and checks if it is of the expected type.
         /// </summary>
         /// <returns>Returns null if not found or not of the correct type.</returns>
+        [Obsolete("Use FindPredefinedNode<T> instead.")]
         public NodeState FindPredefinedNode(NodeId nodeId, Type expectedType)
         {
             if (nodeId == null)
@@ -702,6 +703,26 @@ namespace Opc.Ua.Sample
             }
 
             return node;
+        }
+
+        /// <summary>
+        /// Finds the specified node and checks if it is of the expected type.
+        /// </summary>
+        /// <typeparam name="T">Node state type</typeparam>
+        /// <returns>Returns null if not found or not of the correct type.</returns>
+        public T FindPredefinedNode<T>(NodeId nodeId) where T : NodeState
+        {
+            if (nodeId == null)
+            {
+                return null;
+            }
+
+            if (!PredefinedNodes.TryGetValue(nodeId, out NodeState node))
+            {
+                return null;
+            }
+
+            return node is T typedNode ? typedNode : null;
         }
 
         /// <summary>
@@ -1765,9 +1786,7 @@ namespace Opc.Ua.Sample
                             false,
                             methodToCall.MethodId))
                         {
-                            method = (MethodState)FindPredefinedNode(
-                                methodToCall.MethodId,
-                                typeof(MethodState));
+                            method = FindPredefinedNode<MethodState>(methodToCall.MethodId);
                         }
 
                         if (method == null)

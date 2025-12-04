@@ -12,7 +12,6 @@
 
 using System;
 using System.Security.Cryptography.X509Certificates;
-using Newtonsoft.Json.Linq;
 
 namespace Opc.Ua
 {
@@ -52,7 +51,7 @@ namespace Opc.Ua
             Certificate = certificate;
             m_token = new X509IdentityToken
             {
-                CertificateData = certificate.RawData,
+                CertificateData = certificate.RawData
             };
         }
 

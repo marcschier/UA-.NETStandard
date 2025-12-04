@@ -57,9 +57,9 @@ namespace Opc.Ua.SourceGeneration
         public WriteTemplateEventHandler OnTemplateWrite { get; set; }
 
         /// <summary>
-        /// Loads the template.
+        /// Load the template.
         /// </summary>
-        public TemplateString Load(Template template, ITemplateContext context)
+        public TemplateString Load(ILoadContext context)
         {
             // check for override.
             if (OnTemplateLoad != null)
@@ -72,28 +72,120 @@ namespace Opc.Ua.SourceGeneration
         }
 
         /// <summary>
-        /// Writes the template.
+        /// Render the template.
         /// </summary>
-        public bool Write(Template template, ITemplateContext context)
+        public bool Render(IWriteContext context)
         {
             // check for override.
             if (OnTemplateWrite != null)
             {
-                return OnTemplateWrite(template, context);
+                return OnTemplateWrite(context);
             }
 
             // use the default function to write the template.
-            return template.WriteTemplate();
+            return context.Template.Render();
         }
+    }
+
+    /// <summary>
+    /// Context
+    /// </summary>
+    internal interface ILoadContext
+    {
+        /// <summary>
+        /// The index of the current target within the list being processed.
+        /// </summary>
+        int Index { get; }
+
+        /// <summary>
+        /// Get template writer
+        /// </summary>
+        ITemplateWriter Out { get; }
+
+        /// <summary>
+        /// The current iteration variable that is the target of the load callback.
+        /// </summary>
+        object Target { get; }
+
+        /// <summary>
+        /// The interpolated template string passed to AddReplacement method.
+        /// </summary>
+        TemplateString TemplateString { get; }
+
+        /// <summary>
+        /// The token that is to be replaced by the current template evaluation.
+        /// </summary>
+        string Token { get; }
     }
 
     /// <summary>
     /// A delegate handle events associated with template.
     /// </summary>
-    internal delegate TemplateString LoadTemplateEventHandler(ITemplateContext context);
+    internal delegate TemplateString LoadTemplateEventHandler(ILoadContext context);
+
+    /// <summary>
+    /// Write context
+    /// </summary>
+    internal interface IWriteContext
+    {
+        /// <summary>
+        /// The current iteration variable that is the target of the write callback
+        /// </summary>
+        object Target { get; }
+
+        /// <summary>
+        /// The index of the current target within the list being processed.
+        /// </summary>
+        int Index { get; }
+
+        /// <summary>
+        /// The template to write
+        /// </summary>
+        Template Template { get; }
+    }
 
     /// <summary>
     /// A delegate handle events associated with template.
     /// </summary>
-    internal delegate bool WriteTemplateEventHandler(Template template, ITemplateContext context);
+    internal delegate bool WriteTemplateEventHandler(IWriteContext context);
+
+    /// <summary>
+    /// Contains the current context to use for serialization.
+    /// </summary>
+    internal sealed record class TemplateContext : ILoadContext, IWriteContext
+    {
+        /// <summary>
+        /// Create the template event handler context
+        /// </summary>
+        public TemplateContext(
+            TemplateWriter writer,
+            string token,
+            TemplateString templateString)
+        {
+            Out = writer;
+            Token = token;
+            TemplateString = templateString;
+            Index = 0;
+        }
+
+        /// <summary>
+        /// Set the template
+        /// </summary>
+        public Template Template { get; set; }
+
+        /// <inheritdoc/>
+        public ITemplateWriter Out { get; }
+
+        /// <inheritdoc/>
+        public string Token { get; }
+
+        /// <inheritdoc/>
+        public TemplateString TemplateString { get; set; }
+
+        /// <inheritdoc/>
+        public int Index { get; set; }
+
+        /// <inheritdoc/>
+        public object Target { get; set; }
+    }
 }

@@ -325,7 +325,7 @@ namespace Opc.Ua.Server
 
             // find ServerNamespaces node and subscribe to StateChanged
 
-            if (FindPredefinedNode(ObjectIds.Server_Namespaces, typeof(NamespacesState))
+            if (FindPredefinedNode<NamespacesState>(ObjectIds.Server_Namespaces)
                 is NamespacesState serverNamespacesNode)
             {
                 serverNamespacesNode.StateChanged += ServerNamespacesChanged;
@@ -372,7 +372,7 @@ namespace Opc.Ua.Server
             if (namespaceMetadataState == null)
             {
                 // find ServerNamespaces node
-                if (FindPredefinedNode(ObjectIds.Server_Namespaces, typeof(NamespacesState))
+                if (FindPredefinedNode<NamespacesState>(ObjectIds.Server_Namespaces)
                     is not NamespacesState serverNamespacesNode)
                 {
                     m_logger.LogError(
@@ -1185,7 +1185,7 @@ namespace Opc.Ua.Server
             try
             {
                 // find ServerNamespaces node
-                if (FindPredefinedNode(ObjectIds.Server_Namespaces, typeof(NamespacesState))
+                if (FindPredefinedNode<NamespacesState>(ObjectIds.Server_Namespaces)
                     is not NamespacesState serverNamespacesNode)
                 {
                     m_logger.LogError("Cannot find ObjectIds.Server_Namespaces node.");

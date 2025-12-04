@@ -152,7 +152,7 @@ namespace Opc.Ua.SourceGeneration
                 LoadTemplate_DataType,
                 WriteTemplate_DataType);
 
-            template.WriteTemplate();
+            template.Render();
         }
 
         /// <summary>
@@ -181,7 +181,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes the import statements.
         /// </summary>
-        private TemplateString LoadTemplate_Imports(ITemplateContext context)
+        private TemplateString LoadTemplate_Imports(ILoadContext context)
         {
             if (context.Target is not string namespaceUri)
             {
@@ -210,7 +210,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes the attributes for a node.
         /// </summary>
-        private TemplateString LoadTemplate_DataType(ITemplateContext context)
+        private TemplateString LoadTemplate_DataType(ILoadContext context)
         {
             // do not publish type declarations in OPC BinarySchema files.
             if (context.Target is TypeDeclaration)
@@ -246,17 +246,17 @@ namespace Opc.Ua.SourceGeneration
         /// Writes a datatype to the stream.
         /// </summary>
         /// <exception cref="InvalidOperationException"></exception>
-        private bool WriteTemplate_DataType(Template template, ITemplateContext context)
+        private bool WriteTemplate_DataType(IWriteContext context)
         {
             if (context.Target is not DataType datatype)
             {
                 return false;
             }
 
-            template.AddReplacement(Tokens.TypeName, datatype.QName.Name);
-            CreateDescription(template, Tokens.Description, datatype.Documentation);
+            context.Template.AddReplacement(Tokens.TypeName, datatype.QName.Name);
+            CreateDescription(context.Template, Tokens.Description, datatype.Documentation);
 
-            template.AddReplacement(
+            context.Template.AddReplacement(
                 Tokens.ArrayDeclaration,
                 SchemaTemplates.Stack_XmlSchema_Array_xml,
                 [datatype],
@@ -272,7 +272,7 @@ namespace Opc.Ua.SourceGeneration
                             complexType.BaseType,
                             complexType.QName));
 
-                    template.AddReplacement(Tokens.BaseType, GetXmlSchemaTypeName(basetype.QName, -1));
+                    context.Template.AddReplacement(Tokens.BaseType, GetXmlSchemaTypeName(basetype.QName, -1));
                 }
 
                 List<FieldType> fields = [];
@@ -285,7 +285,7 @@ namespace Opc.Ua.SourceGeneration
                     }
                 }
 
-                template.AddReplacement(
+                context.Template.AddReplacement(
                     Tokens.ListOfFields,
                     fields,
                     LoadTemplate_Field);
@@ -303,7 +303,7 @@ namespace Opc.Ua.SourceGeneration
                     }
                 }
 
-                template.AddReplacement(
+                context.Template.AddReplacement(
                     Tokens.ListOfValues,
                     values,
                     LoadTemplate_EnumeratedValue);
@@ -311,24 +311,24 @@ namespace Opc.Ua.SourceGeneration
 
             if (datatype is ServiceType serviceType)
             {
-                template.AddReplacement(
+                context.Template.AddReplacement(
                     Tokens.ListOfRequestParameters,
                     serviceType.Request,
                     LoadTemplate_Field);
 
-                template.AddReplacement(
+                context.Template.AddReplacement(
                     Tokens.ListOfResponseParameters,
                     serviceType.Response,
                     LoadTemplate_Field);
             }
 
-            return template.WriteTemplate();
+            return context.Template.Render();
         }
 
         /// <summary>
         /// Writes an array declaration to the stream.
         /// </summary>
-        private bool WriteTemplate_Array(Template template, ITemplateContext context)
+        private bool WriteTemplate_Array(IWriteContext context)
         {
             if (context.Target is not DataType datatype)
             {
@@ -340,16 +340,16 @@ namespace Opc.Ua.SourceGeneration
                 return false;
             }
 
-            template.AddReplacement(Tokens.TypeName, datatype.QName.Name);
+            context.Template.AddReplacement(Tokens.TypeName, datatype.QName.Name);
 
-            return template.WriteTemplate();
+            return context.Template.Render();
         }
 
         /// <summary>
         /// Writes a field in an OPCBinary schema.
         /// </summary>
         /// <exception cref="InvalidOperationException"></exception>
-        private TemplateString LoadTemplate_Field(ITemplateContext context)
+        private TemplateString LoadTemplate_Field(ILoadContext context)
         {
             if (context.Target is not FieldType fieldType)
             {
@@ -399,7 +399,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes an enumerated value in an OPCBinary schema.
         /// </summary>
-        private TemplateString LoadTemplate_EnumeratedValue(ITemplateContext context)
+        private TemplateString LoadTemplate_EnumeratedValue(ILoadContext context)
         {
             if (context.Target is not EnumeratedValue valueType)
             {

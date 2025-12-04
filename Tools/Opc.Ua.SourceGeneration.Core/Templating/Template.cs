@@ -100,9 +100,9 @@ namespace Opc.Ua.SourceGeneration
         }
 
         /// <summary>
-        /// Performs the substitutions specified in the template and writes it.
+        /// Render the template
         /// </summary>
-        public bool WriteTemplate()
+        public bool Render()
         {
             m_writer.TrimLineBreak(2);
             bool written = false;
@@ -141,7 +141,7 @@ namespace Opc.Ua.SourceGeneration
                             context.Target = definition.Targets[j];
 
                             // get the template path name.
-                            TemplateString templateString = definition.Load(this, context);
+                            TemplateString templateString = definition.Load(context);
                             // skip item if no template specified.
                             if (templateString == null)
                             {
@@ -162,7 +162,7 @@ namespace Opc.Ua.SourceGeneration
                                 m_writer,
                                 templateString,
                                 this);
-                            if (definition.Write(template, context))
+                            if (definition.Render(context with { Template = template }))
                             {
                                 writeNewLineBetweenTargets =
                                     templateString.ParsedTemplate.IsMultiLine;

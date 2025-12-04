@@ -11,12 +11,8 @@
 */
 
 using System;
-using System.Linq;
-using System.Runtime.Serialization;
 using System.Security.Cryptography.X509Certificates;
-using System.Xml;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 
 namespace Opc.Ua
 {
@@ -75,7 +71,7 @@ namespace Opc.Ua
         {
             m_token = new IssuedIdentityToken
             {
-                PolicyId = issuedTokenTypeProfileUri,
+                PolicyId = issuedTokenTypeProfileUri
             };
             m_decryptedTokenData = decryptedTokenData.ToArray();
             IssuedTokenTypeProfileUri = m_token.PolicyId;

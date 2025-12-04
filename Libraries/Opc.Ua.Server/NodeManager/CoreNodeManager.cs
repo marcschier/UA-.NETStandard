@@ -1397,8 +1397,8 @@ namespace Opc.Ua.Server
                     ServiceResult error = ReadInitialValue(context, node, monitoredItem);
                     if (ServiceResult.IsBad(error) &&
                         (error.StatusCode == StatusCodes.BadAttributeIdInvalid ||
-                         error.StatusCode == StatusCodes.BadDataEncodingInvalid ||
-                         error.StatusCode == StatusCodes.BadDataEncodingUnsupported))
+                            error.StatusCode == StatusCodes.BadDataEncodingInvalid ||
+                            error.StatusCode == StatusCodes.BadDataEncodingUnsupported))
                     {
                         errors[ii] = error;
                         continue;
@@ -3165,7 +3165,7 @@ namespace Opc.Ua.Server
                 lock (Server.DiagnosticsNodeManager.Lock)
                 {
                     NodeState state = Server.DiagnosticsNodeManager
-                        .FindPredefinedNode(source.NodeId, null);
+                        .FindPredefinedNode<NodeState>(source.NodeId);
 
                     if (state != null)
                     {

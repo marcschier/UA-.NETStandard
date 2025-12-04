@@ -175,7 +175,7 @@ namespace Opc.Ua.SourceGeneration
                 serviceSets,
                 WriteTemplate_ServerApiServiceSet);
 
-            template.WriteTemplate();
+            template.Render();
         }
 
         /// <summary>
@@ -200,7 +200,7 @@ namespace Opc.Ua.SourceGeneration
                 serviceSets,
                 WriteTemplate_ClientApiServiceSet);
 
-            template.WriteTemplate();
+            template.Render();
         }
 
         /// <summary>
@@ -229,7 +229,7 @@ namespace Opc.Ua.SourceGeneration
                 serviceSets,
                 WriteTemplate_EndpointServiceSet);
 
-            template.WriteTemplate();
+            template.Render();
         }
 
         /// <summary>
@@ -264,7 +264,7 @@ namespace Opc.Ua.SourceGeneration
                 serviceTypes,
                 WriteTemplate_ServiceMessage);
 
-            template.WriteTemplate();
+            template.Render();
         }
 
         /// <summary>
@@ -350,7 +350,7 @@ namespace Opc.Ua.SourceGeneration
                 [constants],
                 WriteTemplate_StatusCodeInterning);
 
-            template.WriteTemplate();
+            template.Render();
         }
 
         /// <summary>
@@ -398,13 +398,13 @@ namespace Opc.Ua.SourceGeneration
                 [constants],
                 WriteTemplate_ReflectionHelpers);
 
-            template.WriteTemplate();
+            template.Render();
         }
 
         /// <summary>
         /// Copies the response paramaters into the request object.
         /// </summary>
-        private bool WriteTemplate_EndpointServiceSet(Template template, ITemplateContext context)
+        private bool WriteTemplate_EndpointServiceSet(IWriteContext context)
         {
             if (context.Target is not ServiceSet serviceSet)
             {
@@ -419,46 +419,46 @@ namespace Opc.Ua.SourceGeneration
                 return false;
             }
 
-            template.AddReplacement(Tokens.ServiceSet, serviceSet.Name);
+            context.Template.AddReplacement(Tokens.ServiceSet, serviceSet.Name);
 
-            template.AddReplacement(
+            context.Template.AddReplacement(
                 Tokens.MethodList,
                 CodeTemplates.Endpoints_Method_cs,
                 datatypes,
                 WriteTemplate_EndpointMethod);
 
-            template.AddReplacement(
+            context.Template.AddReplacement(
                 Tokens.AddKnownType,
                 datatypes,
                 LoadTemplate_KnownType);
 
-            return template.WriteTemplate();
+            return context.Template.Render();
         }
 
         /// <summary>
         /// Copies the response paramaters into the request object.
         /// </summary>
-        private bool WriteTemplate_EndpointMethod(Template template, ITemplateContext context)
+        private bool WriteTemplate_EndpointMethod(IWriteContext context)
         {
             if (context.Target is not ServiceType serviceType)
             {
                 return false;
             }
 
-            template.AddReplacement(Tokens.Name, serviceType.Name);
+            context.Template.AddReplacement(Tokens.Name, serviceType.Name);
 
-            template.AddReplacement(
+            context.Template.AddReplacement(
                 Tokens.InvokeServiceAsync,
                 [serviceType],
                 LoadTemplate_InvokeServiceAsyncParameters);
 
-            return template.WriteTemplate();
+            return context.Template.Render();
         }
 
         /// <summary>
         /// Writes an asynchronous method declaration.
         /// </summary>
-        private TemplateString LoadTemplate_InvokeServiceAsyncParameters(ITemplateContext context)
+        private TemplateString LoadTemplate_InvokeServiceAsyncParameters(ILoadContext context)
         {
             if (context.Target is not ServiceType serviceType)
             {
@@ -488,7 +488,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes a synchronous method declaration.
         /// </summary>
-        private TemplateString LoadTemplate_KnownType(ITemplateContext context)
+        private TemplateString LoadTemplate_KnownType(ILoadContext context)
         {
             if (context.Target is not ServiceType serviceType)
             {
@@ -507,7 +507,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Copies the response paramaters into the request object.
         /// </summary>
-        private bool WriteTemplate_ServerApiServiceSet(Template template, ITemplateContext context)
+        private bool WriteTemplate_ServerApiServiceSet(IWriteContext context)
         {
             if (context.Target is not ServiceSet serviceSet)
             {
@@ -521,36 +521,36 @@ namespace Opc.Ua.SourceGeneration
                 return false;
             }
 
-            template.AddReplacement(Tokens.ServiceSet, serviceSet.Name);
+            context.Template.AddReplacement(Tokens.ServiceSet, serviceSet.Name);
 
-            template.AddReplacement(
+            context.Template.AddReplacement(
                 Tokens.ServerApi,
                 CodeTemplates.ServerApi_InterfaceMethod_cs,
                 serviceTypes,
                 WriteTemplate_InterfaceMethod);
 
-            template.AddReplacement(
+            context.Template.AddReplacement(
                 Tokens.ServerStubs,
                 CodeTemplates.ServerApi_Method_cs,
                 serviceTypes,
                 WriteTemplate_ServerApiMethod);
 
-            return template.WriteTemplate();
+            return context.Template.Render();
         }
 
         /// <summary>
         /// Copies the response paramaters into the request object.
         /// </summary>
-        private bool WriteTemplate_InterfaceMethod(Template template, ITemplateContext context)
+        private bool WriteTemplate_InterfaceMethod(IWriteContext context)
         {
             if (context.Target is not ServiceType serviceType)
             {
                 return false;
             }
 
-            template.AddReplacement(Tokens.Name, serviceType.Name);
+            context.Template.AddReplacement(Tokens.Name, serviceType.Name);
 
-            template.AddReplacement(
+            context.Template.AddReplacement(
                 Tokens.ServerMethodAsync,
                 [serviceType],
                 context => LoadTemplate_AsyncParameters(
@@ -558,23 +558,23 @@ namespace Opc.Ua.SourceGeneration
                     isInterface: true,
                     isServerApi: true));
 
-            return template.WriteTemplate();
+            return context.Template.Render();
         }
 
         /// <summary>
         /// Writes a service.
         /// </summary>
-        private bool WriteTemplate_ServerApiMethod(Template template, ITemplateContext context)
+        private bool WriteTemplate_ServerApiMethod(IWriteContext context)
         {
             if (context.Target is not ServiceType serviceType)
             {
                 return false;
             }
 
-            template.AddReplacement(Tokens.Name, serviceType.Name);
-            template.AddReplacement(Tokens.Namespace, kNamespaceConstant);
+            context.Template.AddReplacement(Tokens.Name, serviceType.Name);
+            context.Template.AddReplacement(Tokens.Namespace, kNamespaceConstant);
 
-            template.AddReplacement(
+            context.Template.AddReplacement(
                 Tokens.ServerMethodAsync,
                 [serviceType],
                 context => LoadTemplate_AsyncParameters(
@@ -582,13 +582,13 @@ namespace Opc.Ua.SourceGeneration
                     isInterface: false,
                     isServerApi: true));
 
-            return template.WriteTemplate();
+            return context.Template.Render();
         }
 
         /// <summary>
         /// Writes the client api.
         /// </summary>
-        private bool WriteTemplate_ClientApiServiceSet(Template template, ITemplateContext context)
+        private bool WriteTemplate_ClientApiServiceSet(IWriteContext context)
         {
             if (context.Target is not ServiceSet serviceSet)
             {
@@ -603,53 +603,48 @@ namespace Opc.Ua.SourceGeneration
                 return false;
             }
 
-            template.AddReplacement(Tokens.ServiceSet, serviceSet.Name);
+            context.Template.AddReplacement(Tokens.ServiceSet, serviceSet.Name);
 
-            template.AddReplacement(
+            context.Template.AddReplacement(
                 Tokens.ClientMethod,
                 CodeTemplates.ClientApi_InterfaceMethods_cs,
                 serviceTypes,
-                (template, context) => WriteTemplate_ClientApiMethod(
-                    template,
+                context => WriteTemplate_ClientApiMethod(
                     context,
                     isInterface: true));
 
-            template.AddReplacement(
+            context.Template.AddReplacement(
                 Tokens.ClientApi,
                 CodeTemplates.ClientApi_MethodImplementations_cs,
                 serviceTypes,
-                (template, context) => WriteTemplate_ClientApiMethod(
-                    template,
+                context => WriteTemplate_ClientApiMethod(
                     context,
                     isInterface: false));
 
-            return template.WriteTemplate();
+            return context.Template.Render();
         }
 
         /// <summary>
         /// Writes a service.
         /// </summary>
-        private bool WriteTemplate_ClientApiMethod(
-            Template template,
-            ITemplateContext context,
-            bool isInterface)
+        private bool WriteTemplate_ClientApiMethod(IWriteContext context, bool isInterface)
         {
             if (context.Target is not ServiceType serviceType)
             {
                 return false;
             }
 
-            template.AddReplacement(Tokens.Name, serviceType.Name);
-            template.AddReplacement(Tokens.Namespace, kNamespaceConstant);
+            context.Template.AddReplacement(Tokens.Name, serviceType.Name);
+            context.Template.AddReplacement(Tokens.Namespace, kNamespaceConstant);
 
-            template.AddReplacement(
+            context.Template.AddReplacement(
                 Tokens.ClientMethodSync,
                 [serviceType],
                 context => LoadTemplate_SyncParameters(
                     context,
                     isInterface));
 
-            template.AddReplacement(
+            context.Template.AddReplacement(
                 Tokens.ClientMethodAsync,
                 [serviceType],
                 context => LoadTemplate_AsyncParameters(
@@ -657,38 +652,38 @@ namespace Opc.Ua.SourceGeneration
                     isInterface,
                     isServerApi: false));
 
-            template.AddReplacement(
+            context.Template.AddReplacement(
                 Tokens.ClientMethodBegin,
                 [serviceType],
                 context => LoadTemplate_BeginAsyncParameters(
                     context,
                     isInterface));
 
-            template.AddReplacement(
+            context.Template.AddReplacement(
                 Tokens.ClientMethodEnd,
                 [serviceType],
                 context => LoadTemplate_EndAsyncParameters(
                     context,
                     isInterface));
 
-            template.AddReplacement(
+            context.Template.AddReplacement(
                 Tokens.RequestParameters,
                 [serviceType],
                 LoadTemplate_RequestParameters);
 
-            template.AddReplacement(
+            context.Template.AddReplacement(
                 Tokens.ResponseParameters,
                 [serviceType],
                 LoadTemplate_ResponseParameters);
 
-            return template.WriteTemplate();
+            return context.Template.Render();
         }
 
         /// <summary>
         /// Writes a synchronous method declaration.
         /// </summary>
         private TemplateString LoadTemplate_SyncParameters(
-            ITemplateContext context,
+            ILoadContext context,
             bool isInterface)
         {
             if (context.Target is not ServiceType serviceType)
@@ -725,7 +720,7 @@ namespace Opc.Ua.SourceGeneration
         /// Writes an asynchronous method declaration.
         /// </summary>
         private TemplateString LoadTemplate_AsyncParameters(
-            ITemplateContext context,
+            ILoadContext context,
             bool isInterface,
             bool isServerApi)
         {
@@ -774,7 +769,7 @@ namespace Opc.Ua.SourceGeneration
         /// Writes a begin asynchronous method declaration.
         /// </summary>
         private TemplateString LoadTemplate_BeginAsyncParameters(
-            ITemplateContext context,
+            ILoadContext context,
             bool isInterface)
         {
             if (context.Target is not ServiceType serviceType)
@@ -814,7 +809,7 @@ namespace Opc.Ua.SourceGeneration
         /// Writes an end asynchronous method declaration.
         /// </summary>
         private TemplateString LoadTemplate_EndAsyncParameters(
-            ITemplateContext context,
+            ILoadContext context,
             bool isInterface)
         {
             if (context.Target is not ServiceType serviceType)
@@ -851,7 +846,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Copies the request paramaters into the request object.
         /// </summary>
-        private TemplateString LoadTemplate_RequestParameters(ITemplateContext context)
+        private TemplateString LoadTemplate_RequestParameters(ILoadContext context)
         {
             if (context.Target is not ServiceType serviceType)
             {
@@ -889,7 +884,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Copies the response paramaters into the request object.
         /// </summary>
-        private TemplateString LoadTemplate_ResponseParameters(ITemplateContext context)
+        private TemplateString LoadTemplate_ResponseParameters(ILoadContext context)
         {
             if (context.Target is not ServiceType serviceType)
             {
@@ -972,24 +967,24 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes a service type.
         /// </summary>
-        private bool WriteTemplate_ServiceMessage(Template template, ITemplateContext context)
+        private bool WriteTemplate_ServiceMessage(IWriteContext context)
         {
             if (context.Target is not ServiceType serviceType)
             {
                 return false;
             }
 
-            template.AddReplacement(Tokens.Name, serviceType.Name);
-            template.AddReplacement(Tokens.Namespace, kNamespaceConstant);
-            template.AddReplacement(Tokens.TypesNamespace, kSchemaNamespaceConstant);
+            context.Template.AddReplacement(Tokens.Name, serviceType.Name);
+            context.Template.AddReplacement(Tokens.Namespace, kNamespaceConstant);
+            context.Template.AddReplacement(Tokens.TypesNamespace, kSchemaNamespaceConstant);
 
-            return template.WriteTemplate();
+            return context.Template.Render();
         }
 
         /// <summary>
         /// Writes the status code declaration
         /// </summary>
-        private bool WriteTemplate_StatusCodeDeclaration(Template template, ITemplateContext context)
+        private bool WriteTemplate_StatusCodeDeclaration(IWriteContext context)
         {
             if (context.Target is not Constant constant)
             {
@@ -1009,7 +1004,7 @@ namespace Opc.Ua.SourceGeneration
                     id += 0x40000000;
                     break;
             }
-            template.AddReplacement(Tokens.Identifier, CoreUtils.Format("0x{0:X8}", id));
+            context.Template.AddReplacement(Tokens.Identifier, CoreUtils.Format("0x{0:X8}", id));
 
             string symbolicId = constant.Name;
             if (constant.Identifier != 0)
@@ -1023,35 +1018,35 @@ namespace Opc.Ua.SourceGeneration
                 }
                 symbolicId = CoreUtils.Format("{0}{1}", constant.Severity, name);
             }
-            template.AddReplacement(Tokens.SymbolicId, symbolicId);
+            context.Template.AddReplacement(Tokens.SymbolicId, symbolicId);
 
             string description = constant.Documentation.GetDescription();
-            template.AddReplacement(Tokens.Description, description);
+            context.Template.AddReplacement(Tokens.Description, description);
 
-            return template.WriteTemplate();
+            return context.Template.Render();
         }
 
         /// <summary>
-        /// Write Status code interning template
+        /// Write Status code interning context.Template
         /// </summary>
-        private bool WriteTemplate_StatusCodeInterning(Template template, ITemplateContext context)
+        private bool WriteTemplate_StatusCodeInterning(IWriteContext context)
         {
             if (context.Target is not List<Constant> constants)
             {
                 return false;
             }
-            template.AddReplacement(Tokens.IdType, "global::Opc.Ua.StatusCode");
-            template.AddReplacement(
+            context.Template.AddReplacement(Tokens.IdType, "global::Opc.Ua.StatusCode");
+            context.Template.AddReplacement(
                 Tokens.ListOfIdentifiers,
                 constants,
                 LoadTemplate_StatusCodeIdentifier);
-            return template.WriteTemplate();
+            return context.Template.Render();
         }
 
         /// <summary>
         /// Write identifiers for interning
         /// </summary>
-        private TemplateString LoadTemplate_StatusCodeIdentifier(ITemplateContext context)
+        private TemplateString LoadTemplate_StatusCodeIdentifier(ILoadContext context)
         {
             if (context.Target is Constant constant)
             {
@@ -1076,7 +1071,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes a constant.
         /// </summary>
-        private bool WriteTemplate_AttributeConstant(Template template, ITemplateContext context)
+        private bool WriteTemplate_AttributeConstant(IWriteContext context)
         {
             if (context.Target is not Constant constant)
             {
@@ -1086,53 +1081,53 @@ namespace Opc.Ua.SourceGeneration
             if (string.IsNullOrEmpty(constant.Value))
             {
                 // Other
-                template.AddReplacement(Tokens.IdType, "uint");
-                template.AddReplacement(Tokens.Identifier, constant.Identifier);
+                context.Template.AddReplacement(Tokens.IdType, "uint");
+                context.Template.AddReplacement(Tokens.Identifier, constant.Identifier);
             }
             else
             {
-                template.AddReplacement(Tokens.IdType, "string"); // Never hit
-                template.AddReplacement(
+                context.Template.AddReplacement(Tokens.IdType, "string"); // Never hit
+                context.Template.AddReplacement(
                     Tokens.Identifier,
                     CoreUtils.Format("\"{0}\"", constant.Value)); // TODO: Make string resource
             }
 
-            template.AddReplacement(Tokens.SymbolicId, constant.Name);
+            context.Template.AddReplacement(Tokens.SymbolicId, constant.Name);
             string description = constant.Documentation.GetDescription();
-            template.AddReplacement(Tokens.Description, description);
+            context.Template.AddReplacement(Tokens.Description, description);
 
-            return template.WriteTemplate();
+            return context.Template.Render();
         }
 
         /// <summary>
         /// Write reflection helpers for identifiers.
         /// </summary>
-        private bool WriteTemplate_ReflectionHelpers(Template template, ITemplateContext context)
+        private bool WriteTemplate_ReflectionHelpers(IWriteContext context)
         {
             if (context.Target is not List<Constant> constants)
             {
                 return false;
             }
 
-            template.AddReplacement(Tokens.IdType, "uint");
+            context.Template.AddReplacement(Tokens.IdType, "uint");
 
-            template.AddReplacement(
+            context.Template.AddReplacement(
                 Tokens.ListOfIdentifersToNames,
                 constants,
                 LoadTemplate_IdentifierLookup);
 
-            template.AddReplacement(
+            context.Template.AddReplacement(
                 Tokens.ListOfNamesToIdentifiers,
                 constants,
                 LoadTemplate_IdentifierLookup);
 
-            return template.WriteTemplate();
+            return context.Template.Render();
         }
 
         /// <summary>
         /// Write lookup entries for identifiers.
         /// </summary>
-        private TemplateString LoadTemplate_IdentifierLookup(ITemplateContext context)
+        private TemplateString LoadTemplate_IdentifierLookup(ILoadContext context)
         {
             if (context.Target is Constant constant)
             {
@@ -1194,7 +1189,7 @@ namespace Opc.Ua.SourceGeneration
         /// Writes a set of method parameters.
         /// </summary>
         private static void WriteParameters(
-            ITemplateContext context,
+            ILoadContext context,
             List<string> types,
             List<string> names)
         {

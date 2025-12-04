@@ -103,62 +103,48 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
-        /// <summary>
-        /// Writes the text to the stream.
-        /// </summary>
+        /// <inheritdoc/>
         public void Write(char text)
         {
             WriteWhiteSpaceIfNeeded();
             m_writer.Write(text);
         }
 
-        /// <summary>
-        /// Writes the text to the stream.
-        /// </summary>
+        /// <inheritdoc/>
         public void Write(string text)
         {
             WriteWhiteSpaceIfNeeded();
             m_writer.Write(text);
         }
 
-        /// <summary>
-        /// Formats and then writes the text to the stream.
-        /// </summary>
+        /// <inheritdoc/>
         public void Write(string format, object arg1)
         {
             WriteWhiteSpaceIfNeeded();
             m_writer.Write(format, arg1);
         }
 
-        /// <summary>
-        /// Formats and then writes the text to the stream.
-        /// </summary>
+        /// <inheritdoc/>
         public void Write(string format, object arg1, object arg2)
         {
             WriteWhiteSpaceIfNeeded();
             m_writer.Write(format, arg1, arg2);
         }
 
-        /// <summary>
-        /// Formats and then writes the text to the stream.
-        /// </summary>
+        /// <inheritdoc/>
         public void Write(string format, object arg1, object arg2, object arg3)
         {
             WriteWhiteSpaceIfNeeded();
             m_writer.Write(format, arg1, arg2, arg3);
         }
 
-        /// <summary>
-        /// Writes the text followed by a new line.
-        /// </summary>
+        /// <inheritdoc/>
         public void WriteLine()
         {
             WriteNewLine(2); // do not write more than 2 new lines - make configurable
         }
 
-        /// <summary>
-        /// Writes the text followed by a new line.
-        /// </summary>
+        /// <inheritdoc/>
         public void WriteLine(string text)
         {
             WriteWhiteSpaceIfNeeded();
@@ -166,9 +152,7 @@ namespace Opc.Ua.SourceGeneration
             WriteNewLine(int.MaxValue);
         }
 
-        /// <summary>
-        /// Formats and then writes the text followed by a new line.
-        /// </summary>
+        /// <inheritdoc/>
         public void WriteLine(string text, params object[] args)
         {
             WriteWhiteSpaceIfNeeded();

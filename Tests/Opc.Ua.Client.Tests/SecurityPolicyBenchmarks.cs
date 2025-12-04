@@ -34,9 +34,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Jobs;
 using NUnit.Framework;
-using Opc.Ua.Tests;
 using Assert = NUnit.Framework.Legacy.ClassicAssert;
 
 namespace Opc.Ua.Client.Tests
@@ -126,10 +124,10 @@ namespace Opc.Ua.Client.Tests
     [DisassemblyDiagnoser]
     public class SecurityPolicyBenchmarks : ClientTestFramework
     {
-        private const int MessageCount = 100;
-        private const int SmallMessageNodeCount = 10;
-        private const int MediumMessageNodeCount = 50;
-        private const int LargeMessageNodeCount = 200;
+        private const int kMessageCount = 100;
+        private const int kSmallMessageNodeCount = 10;
+        private const int kMediumMessageNodeCount = 50;
+        private const int kLargeMessageNodeCount = 200;
 
         private IList<NodeId> m_smallTestSet;
         private IList<NodeId> m_mediumTestSet;
@@ -232,22 +230,22 @@ namespace Opc.Ua.Client.Tests
             }
 
             // Get available test nodes
-            var allTestNodes = GetTestSetStatic(Session.NamespaceUris);
+            IList<NodeId> allTestNodes = GetTestSetStatic(Session.NamespaceUris);
 
             // Ensure we have enough nodes for testing
-            if (allTestNodes.Count < LargeMessageNodeCount)
+            if (allTestNodes.Count < kLargeMessageNodeCount)
             {
                 // If not enough static nodes, add simulation nodes
-                var simNodes = GetTestSetSimulation(Session.NamespaceUris);
+                IList<NodeId> simNodes = GetTestSetSimulation(Session.NamespaceUris);
                 allTestNodes = allTestNodes.Concat(simNodes)
-                    .Take(LargeMessageNodeCount)
+                    .Take(kLargeMessageNodeCount)
                     .ToList();
             }
 
             // Create test sets of different sizes
-            m_smallTestSet = allTestNodes.Take(SmallMessageNodeCount).ToList();
-            m_mediumTestSet = allTestNodes.Take(MediumMessageNodeCount).ToList();
-            m_largeTestSet = allTestNodes.Take(LargeMessageNodeCount).ToList();
+            m_smallTestSet = allTestNodes.Take(kSmallMessageNodeCount).ToList();
+            m_mediumTestSet = allTestNodes.Take(kMediumMessageNodeCount).ToList();
+            m_largeTestSet = allTestNodes.Take(kLargeMessageNodeCount).ToList();
 
             // Prepare ReadValueId collections
             m_smallReadValueIds = new ReadValueIdCollection(
@@ -314,7 +312,7 @@ namespace Opc.Ua.Client.Tests
         [Benchmark(Description = "Read 10 nodes x100 iterations")]
         public async Task ReadSmallMessageBurstAsync()
         {
-            for (int i = 0; i < MessageCount; i++)
+            for (int i = 0; i < kMessageCount; i++)
             {
                 await Session.ReadAsync(
                     null,
@@ -355,7 +353,7 @@ namespace Opc.Ua.Client.Tests
         [Benchmark(Description = "Read 50 nodes x100 iterations")]
         public async Task ReadMediumMessageBurstAsync()
         {
-            for (int i = 0; i < MessageCount; i++)
+            for (int i = 0; i < kMessageCount; i++)
             {
                 await Session.ReadAsync(
                     null,
@@ -397,7 +395,7 @@ namespace Opc.Ua.Client.Tests
         [Benchmark(Description = "Read 200 nodes x100 iterations")]
         public async Task ReadLargeMessageBurstAsync()
         {
-            for (int i = 0; i < MessageCount; i++)
+            for (int i = 0; i < kMessageCount; i++)
             {
                 await Session.ReadAsync(
                     null,
@@ -445,7 +443,7 @@ namespace Opc.Ua.Client.Tests
         [Benchmark(Description = "Write 10 nodes x100 iterations")]
         public async Task WriteSmallMessageBurstAsync()
         {
-            for (int i = 0; i < MessageCount; i++)
+            for (int i = 0; i < kMessageCount; i++)
             {
                 var writeValues = new WriteValueCollection(
                     m_smallTestSet.Select(nodeId => new WriteValue
@@ -547,7 +545,7 @@ namespace Opc.Ua.Client.Tests
                 new Variant((uint)0) // subscriptionId
             };
 
-            CallMethodRequestCollection requests = new CallMethodRequestCollection
+            var requests = new CallMethodRequestCollection
             {
                 new CallMethodRequest
                 {
@@ -578,7 +576,7 @@ namespace Opc.Ua.Client.Tests
         [Benchmark(Description = "Create and close session")]
         public async Task CreateCloseSessionAsync()
         {
-            var session = await ClientFixture.ConnectAsync(
+            ISession session = await ClientFixture.ConnectAsync(
                 ServerUrl,
                 SecurityPolicy
             ).ConfigureAwait(false);
@@ -596,7 +594,7 @@ namespace Opc.Ua.Client.Tests
         [Benchmark(Description = "Session lifecycle with read")]
         public async Task SessionLifecycleWithReadAsync()
         {
-            var session = await ClientFixture.ConnectAsync(
+            ISession session = await ClientFixture.ConnectAsync(
                 ServerUrl,
                 SecurityPolicy
             ).ConfigureAwait(false);
@@ -839,7 +837,7 @@ namespace Opc.Ua.Client.Tests
 
                 try
                 {
-                    var session = await ClientFixture.ConnectAsync(
+                    ISession session = await ClientFixture.ConnectAsync(
                         ServerUrl,
                         policyUri
                     ).ConfigureAwait(false);
@@ -847,7 +845,7 @@ namespace Opc.Ua.Client.Tests
                     Assert.NotNull(session, $"Failed to create session with {displayName}");
 
                     // Perform a basic read to verify the connection works
-                    var response = await session.ReadAsync(
+                    ReadResponse response = await session.ReadAsync(
                         null,
                         0,
                         TimestampsToReturn.Both,
@@ -887,7 +885,7 @@ namespace Opc.Ua.Client.Tests
             if (failed > 0)
             {
                 TestContext.Out.WriteLine("\nFailed policies:");
-                foreach (var kvp in results.Where(r => !r.Value))
+                foreach (KeyValuePair<string, bool> kvp in results.Where(r => !r.Value))
                 {
                     TestContext.Out.WriteLine($"  - {kvp.Key}");
                 }

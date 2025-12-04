@@ -786,7 +786,7 @@ namespace Opc.Ua
             // create the stack listener.
             try
             {
-                var messageContext = m_messageContext
+                IServiceMessageContext messageContext = m_messageContext
                     ?? throw new ServiceResultException(StatusCodes.BadServerHalted);
                 var settings = new TransportListenerSettings
                 {

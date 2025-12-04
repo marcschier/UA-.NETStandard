@@ -11,11 +11,8 @@
 */
 
 using System;
-using System.Linq;
-using System.Runtime.Serialization;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 
 namespace Opc.Ua
 {
@@ -280,7 +277,7 @@ namespace Opc.Ua
         {
             return new UserNameIdentityTokenHandler(Utils.Clone(m_token))
             {
-                DecryptedPassword = DecryptedPassword == null ? null : [.. DecryptedPassword],
+                DecryptedPassword = DecryptedPassword == null ? null : [.. DecryptedPassword]
             };
         }
 

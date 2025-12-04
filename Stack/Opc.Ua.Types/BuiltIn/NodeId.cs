@@ -1055,7 +1055,7 @@ namespace Opc.Ua
         /// <summary>
         /// Returns an instance of a null NodeId.
         /// </summary>
-        public static NodeId Null { get; } = new NodeId();
+        public static NodeId Null => new NodeId();
 
         /// <summary>
         /// <para>

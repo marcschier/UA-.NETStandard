@@ -1077,7 +1077,7 @@ namespace Opc.Ua.Client
                 out bool requireEncryption);
 
             // validate the server certificate /certificate chain.
-            var identityToken = identity.TokenHandler;
+            IUserIdentityTokenHandler identityToken = identity.TokenHandler;
             X509Certificate2? serverCertificate = null;
             byte[]? certificateData = m_endpoint.Description.ServerCertificate;
 
@@ -1467,8 +1467,7 @@ namespace Opc.Ua.Client
                 m_endpoint.Description.SecurityMode);
 
             // sign data with user token.
-            using IUserIdentityTokenHandler identityToken =
-                (IUserIdentityTokenHandler)m_identity.TokenHandler.Clone();
+            using var identityToken = (IUserIdentityTokenHandler)m_identity.TokenHandler.Clone();
             identityToken.UpdatePolicy(identityPolicy);
             SignatureData userTokenSignature = identityToken.Sign(
                 dataToSign,
@@ -2320,8 +2319,7 @@ namespace Opc.Ua.Client
                     m_endpoint.Description.SecurityMode);
 
                 // sign data with user token.
-                using IUserIdentityTokenHandler identityToken =
-                    (IUserIdentityTokenHandler)m_identity.TokenHandler.Clone();
+                using var identityToken = (IUserIdentityTokenHandler)m_identity.TokenHandler.Clone();
                 identityToken.UpdatePolicy(identityPolicy);
                 SignatureData userTokenSignature = identityToken.Sign(
                     dataToSign,

@@ -126,7 +126,7 @@ namespace Opc.Ua.Fuzzing
             {
                 if (!throwAll &&
                     (sre.StatusCode == StatusCodes.BadDecodingError ||
-                    sre.StatusCode == StatusCodes.BadEncodingLimitsExceeded))
+                        sre.StatusCode == StatusCodes.BadEncodingLimitsExceeded))
                 {
                     return null;
                 }

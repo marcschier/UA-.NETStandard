@@ -677,7 +677,7 @@ namespace Opc.Ua.Server
                             null);
                     }
                     else if (sre.StatusCode == StatusCodes.BadCertificateUseNotAllowed ||
-                             sre.StatusCode == StatusCodes.BadCertificateIssuerUseNotAllowed)
+                        sre.StatusCode == StatusCodes.BadCertificateIssuerUseNotAllowed)
                     {
                         // create AuditCertificateMismatchEventType
                         auditCertificateEventState = new AuditCertificateMismatchEventState(

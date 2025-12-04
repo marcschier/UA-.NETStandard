@@ -853,9 +853,10 @@ namespace Opc.Ua.Server
         /// Finds the specified and checks if it is of the expected type.
         /// </summary>
         /// <returns>Returns null if not found or not of the correct type.</returns>
+        [Obsolete("Use FindPredefinedNode<T> instead.")]
         public NodeState FindPredefinedNode(NodeId nodeId, Type expectedType)
         {
-            if (nodeId == null)
+            if (NodeId.IsNull(nodeId))
             {
                 return null;
             }
@@ -871,6 +872,26 @@ namespace Opc.Ua.Server
             }
 
             return node;
+        }
+
+        /// <summary>
+        /// Finds the specified and checks if it is of the expected type.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns>Returns null if not found or not of the correct type.</returns>
+        public T FindPredefinedNode<T>(NodeId nodeId) where T : NodeState
+        {
+            if (NodeId.IsNull(nodeId))
+            {
+                return null;
+            }
+
+            if (!PredefinedNodes.TryGetValue(nodeId, out NodeState node))
+            {
+                return null;
+            }
+
+            return node is T typedNode ? typedNode : null;
         }
 
         /// <summary>
@@ -1323,7 +1344,7 @@ namespace Opc.Ua.Server
             }
 
             _ =
-                (ViewState)FindPredefinedNode(view.ViewId, typeof(ViewState))
+                FindPredefinedNode<ViewState>(view.ViewId)
                 ?? throw new ServiceResultException(StatusCodes.BadViewIdUnknown);
 
             if (view.Timestamp != DateTime.MinValue)
@@ -1361,7 +1382,7 @@ namespace Opc.Ua.Server
             NodeId viewId,
             NodeState node)
         {
-            var view = (ViewState)FindPredefinedNode(viewId, typeof(ViewState));
+            ViewState view = FindPredefinedNode<ViewState>(viewId);
 
             return view != null;
         }
@@ -3044,9 +3065,8 @@ namespace Opc.Ua.Server
                             false,
                             methodToCall.MethodId))
                         {
-                            method = (MethodState)FindPredefinedNode(
-                                methodToCall.MethodId,
-                                typeof(MethodState));
+                            method = FindPredefinedNode<MethodState>(
+                                methodToCall.MethodId);
                         }
 
                         if (method == null)

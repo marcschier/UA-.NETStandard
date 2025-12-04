@@ -11,15 +11,6 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Reflection;
-
-#if NET8_0_OR_GREATER
-using System.Collections.Frozen;
-#else
-using System.Collections.ObjectModel;
-using System.Linq;
-#endif
 
 namespace Opc.Ua
 {

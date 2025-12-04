@@ -1789,23 +1789,21 @@ namespace Opc.Ua.Gds.Server
             if (certificateGroup.CertificateTypes.Contains(Ua.ObjectTypeIds.HttpsCertificateType))
             {
                 certificateGroup.Id = m_defaultHttpsGroupId;
-                certificateGroup.DefaultTrustList = (TrustListState)FindPredefinedNode(
+                certificateGroup.DefaultTrustList = FindPredefinedNode<TrustListState>(
                     ExpandedNodeId.ToNodeId(
                         ObjectIds.Directory_CertificateGroups_DefaultHttpsGroup_TrustList,
                         Server.NamespaceUris
-                    ),
-                    typeof(TrustListState));
+                    ));
             }
             else if (certificateGroup.CertificateTypes
                 .Contains(Ua.ObjectTypeIds.UserCertificateType))
             {
                 certificateGroup.Id = m_defaultUserTokenGroupId;
-                certificateGroup.DefaultTrustList = (TrustListState)FindPredefinedNode(
+                certificateGroup.DefaultTrustList = FindPredefinedNode<TrustListState>(
                     ExpandedNodeId.ToNodeId(
                         ObjectIds.Directory_CertificateGroups_DefaultUserTokenGroup_TrustList,
                         Server.NamespaceUris
-                    ),
-                    typeof(TrustListState));
+                    ));
             }
             else if (certificateGroup.CertificateTypes.Any(certificateType =>
                 Utils.IsEqual(
@@ -1843,12 +1841,11 @@ namespace Opc.Ua.Gds.Server
                     false))
             {
                 certificateGroup.Id = m_defaultApplicationGroupId;
-                certificateGroup.DefaultTrustList = (TrustListState)FindPredefinedNode(
+                certificateGroup.DefaultTrustList = FindPredefinedNode<TrustListState>(
                     ExpandedNodeId.ToNodeId(
                         ObjectIds.Directory_CertificateGroups_DefaultApplicationGroup_TrustList,
                         Server.NamespaceUris
-                    ),
-                    typeof(TrustListState));
+                    ));
             }
             else
             {

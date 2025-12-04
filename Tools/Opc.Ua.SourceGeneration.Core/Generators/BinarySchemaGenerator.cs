@@ -150,7 +150,7 @@ namespace Opc.Ua.SourceGeneration
                 LoadTemplate_DataType,
                 WriteTemplate_DataType);
 
-            template.WriteTemplate();
+            template.Render();
         }
 
         /// <summary>
@@ -179,7 +179,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes the import statements.
         /// </summary>
-        private TemplateString LoadTemplate_Imports(ITemplateContext context)
+        private TemplateString LoadTemplate_Imports(ILoadContext context)
         {
             if (context.Target is not string namespaceUri)
             {
@@ -208,7 +208,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes the attributes for a node.
         /// </summary>
-        private TemplateString LoadTemplate_DataType(ITemplateContext context)
+        private TemplateString LoadTemplate_DataType(ILoadContext context)
         {
             // do not publish type declarations in OPC BinarySchema files.
             if (context.Target is TypeDeclaration)
@@ -246,22 +246,22 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes the
         /// </summary>
-        private bool WriteTemplate_DataType(Template template, ITemplateContext context)
+        private bool WriteTemplate_DataType(IWriteContext context)
         {
             if (context.Target is not DataType datatype)
             {
                 return false;
             }
 
-            template.AddReplacement(Tokens.TypeName, datatype.QName.Name);
-            CreateDescription(template, Tokens.Description, datatype.Documentation);
+            context.Template.AddReplacement(Tokens.TypeName, datatype.QName.Name);
+            CreateDescription(context.Template, Tokens.Description, datatype.Documentation);
 
             if (datatype is ComplexType complexType)
             {
                 List<FieldType> fields = [];
                 GetFields(complexType, fields);
 
-                template.AddReplacement(
+                context.Template.AddReplacement(
                     Tokens.ListOfFields,
                     fields,
                     LoadTemplate_Field);
@@ -318,14 +318,14 @@ namespace Opc.Ua.SourceGeneration
                     });
                 }
 
-                template.AddReplacement(
+                context.Template.AddReplacement(
                     Tokens.LengthInBits,
                     lengthInBits);
-                template.AddReplacement(
+                context.Template.AddReplacement(
                     Tokens.IsOptionSet,
                     isOptionSet ? " IsOptionSet=\"true\"" : string.Empty);
 
-                template.AddReplacement(
+                context.Template.AddReplacement(
                     Tokens.ListOfValues,
                     values,
                     LoadTemplate_EnumeratedValue);
@@ -333,25 +333,25 @@ namespace Opc.Ua.SourceGeneration
 
             if (datatype is ServiceType serviceType)
             {
-                template.AddReplacement(
+                context.Template.AddReplacement(
                     Tokens.ListOfRequestParameters,
                     serviceType.Request,
                     LoadTemplate_Field);
 
-                template.AddReplacement(
+                context.Template.AddReplacement(
                     Tokens.ListOfResponseParameters,
                     serviceType.Response,
                     LoadTemplate_Field);
             }
 
-            return template.WriteTemplate();
+            return context.Template.Render();
         }
 
         /// <summary>
         /// Writes a field in an OPCBinary schema.
         /// </summary>
         /// <exception cref="InvalidOperationException"></exception>
-        private TemplateString LoadTemplate_Field(ITemplateContext context)
+        private TemplateString LoadTemplate_Field(ILoadContext context)
         {
             if (context.Target is not FieldType fieldType)
             {
@@ -389,7 +389,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Writes an enumerated value in an OPCBinary schema.
         /// </summary>
-        private TemplateString LoadTemplate_EnumeratedValue(ITemplateContext context)
+        private TemplateString LoadTemplate_EnumeratedValue(ILoadContext context)
         {
             if (context.Target is not EnumeratedValue valueType)
             {
