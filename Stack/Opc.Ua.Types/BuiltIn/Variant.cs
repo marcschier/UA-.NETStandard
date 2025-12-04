@@ -2312,15 +2312,12 @@ namespace Opc.Ua
                             value.GetType().FullName));
                 // convert Guids to Uuids.
                 case BuiltInType.Guid:
-                    var guid = value as Guid?;
-
-                    if (guid != null)
+                    if (value is Guid guid)
                     {
-                        m_value = new Uuid(guid.Value);
+                        m_value = new Uuid(guid);
                         return;
                     }
-
-                    m_value = value;
+                    m_value = (object)value ?? Uuid.Empty;
                     return;
                 // convert encodeables to extension objects.
                 case BuiltInType.ExtensionObject:
@@ -2474,6 +2471,7 @@ namespace Opc.Ua
             // check for null values.
             if (value == null)
             {
+                // m_value = typeInfo.ValueRank < 0 ? TypeInfo.GetDefaultValue(typeInfo.BuiltInType) : null;
                 m_value = null;
                 TypeInfo = typeInfo;
                 return;

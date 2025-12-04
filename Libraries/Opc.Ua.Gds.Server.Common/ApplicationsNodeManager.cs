@@ -158,7 +158,7 @@ namespace Opc.Ua.Gds.Server
 
         private NodeId GetTrustListId(NodeId certificateGroupId)
         {
-            if (NodeId.IsNull(certificateGroupId))
+            if (certificateGroupId.IsNullNodeId)
             {
                 certificateGroupId = m_defaultApplicationGroupId;
             }
@@ -167,10 +167,10 @@ namespace Opc.Ua.Gds.Server
                 certificateGroupId,
                 out ICertificateGroup certificateGroup))
             {
-                return certificateGroup.DefaultTrustList?.NodeId;
+                return certificateGroup.DefaultTrustList?.NodeId ?? default;
             }
 
-            return null;
+            return default;
         }
 
         private bool? GetCertificateStatus(NodeId certificateGroupId, NodeId certificateTypeId)
@@ -179,7 +179,7 @@ namespace Opc.Ua.Gds.Server
                 certificateGroupId,
                 out ICertificateGroup certificateGroup))
             {
-                if (!NodeId.IsNull(certificateTypeId) &&
+                if (!certificateTypeId.IsNullNodeId &&
                     !certificateGroup.CertificateTypes.Contains(certificateTypeId))
                 {
                     return null;
@@ -404,12 +404,12 @@ namespace Opc.Ua.Gds.Server
 
             NodeId typeId = passiveNode.TypeDefinitionId;
 
-            if (!IsNodeIdInNamespace(typeId) || typeId.IdType != IdType.Numeric)
+            if (!IsNodeIdInNamespace(typeId) || !typeId.TryGetIdentifier(out uint numericId))
             {
                 return predefinedNode;
             }
 
-            switch ((uint)typeId.Identifier)
+            switch (numericId)
             {
                 case ObjectTypes.CertificateDirectoryType:
                     if (passiveNode is CertificateDirectoryState)
@@ -618,7 +618,7 @@ namespace Opc.Ua.Gds.Server
 
             applicationId = m_database.RegisterApplication(application);
 
-            if (applicationId != null)
+            if (!applicationId.IsNullNodeId)
             {
                 object[] inputArguments = [application, applicationId];
                 Server.ReportApplicationRegistrationChangedAuditEvent(
@@ -918,7 +918,7 @@ namespace Opc.Ua.Gds.Server
             }
 
             //If CertificateGroupId is null, the CertificateManager shall return the Certificates for all CertificateGroups assigned to the Application.
-            if (certificateGroupId == null)
+            if (certificateGroupId.IsNullNodeId)
             {
                 foreach (KeyValuePair<NodeId, string> certType in m_certTypeMap)
                 {
@@ -1161,7 +1161,7 @@ namespace Opc.Ua.Gds.Server
                     "The ApplicationId does not refer to a valid application.");
             }
 
-            if (NodeId.IsNull(certificateGroupId))
+            if (certificateGroupId.IsNullNodeId)
             {
                 certificateGroupId = ExpandedNodeId.ToNodeId(
                     ObjectIds.Directory_CertificateGroups_DefaultApplicationGroup,
@@ -1177,7 +1177,7 @@ namespace Opc.Ua.Gds.Server
                     "The certificateGroup is not supported.");
             }
 
-            if (!NodeId.IsNull(certificateTypeId))
+            if (!certificateTypeId.IsNullNodeId)
             {
                 if (!certificateGroup.CertificateTypes.Any(certificateType =>
                         Server.TypeTree.IsTypeOf(certificateType, certificateTypeId)))
@@ -1209,7 +1209,7 @@ namespace Opc.Ua.Gds.Server
 
                 buffer.Append("CN=");
 
-                if ((NodeId.IsNull(certificateGroup.Id) ||
+                if ((certificateGroup.Id.IsNullNodeId ||
                     (certificateGroup.Id == m_defaultApplicationGroupId)) &&
                     (application.ApplicationNames.Count > 0))
                 {
@@ -1304,7 +1304,7 @@ namespace Opc.Ua.Gds.Server
                 return result;
             }
 
-            if (NodeId.IsNull(certificateGroupId))
+            if (certificateGroupId.IsNullNodeId)
             {
                 certificateGroupId = ExpandedNodeId.ToNodeId(
                     ObjectIds.Directory_CertificateGroups_DefaultApplicationGroup,
@@ -1321,7 +1321,7 @@ namespace Opc.Ua.Gds.Server
                 return result;
             }
 
-            if (!NodeId.IsNull(certificateTypeId))
+            if (!certificateTypeId.IsNullNodeId)
             {
                 if (!certificateGroup.CertificateTypes.Any(certificateType =>
                         Server.TypeTree.IsTypeOf(certificateType, certificateTypeId)))
@@ -1445,7 +1445,7 @@ namespace Opc.Ua.Gds.Server
                 .Select(pair => pair.Key)
                 .SingleOrDefault();
 
-            if (!NodeId.IsNull(certificateTypeNodeId) &&
+            if (!certificateTypeNodeId.IsNullNodeId &&
                 !certificateGroup.CertificateTypes.Any(certificateType =>
                     Server.TypeTree.IsTypeOf(certificateType, certificateTypeNodeId)))
             {
@@ -1629,14 +1629,14 @@ namespace Opc.Ua.Gds.Server
                     "The ApplicationId does not refer to a valid application.");
             }
 
-            if (NodeId.IsNull(certificateGroupId))
+            if (certificateGroupId.IsNullNodeId)
             {
                 certificateGroupId = m_defaultApplicationGroupId;
             }
 
             trustListId = GetTrustListId(certificateGroupId);
 
-            if (trustListId == null)
+            if (trustListId.IsNullNodeId)
             {
                 return new ServiceResult(
                     StatusCodes.BadNotFound,
@@ -1669,7 +1669,7 @@ namespace Opc.Ua.Gds.Server
                     "The ApplicationId does not refer to a valid application.");
             }
 
-            if (NodeId.IsNull(certificateGroupId))
+            if (certificateGroupId.IsNullNodeId)
             {
                 certificateGroupId = m_defaultApplicationGroupId;
             }

@@ -396,7 +396,7 @@ namespace Opc.Ua.Core.Tests.Types.BuiltIn
 
             const string text = "i=123";
             var nodeIdText = new NodeId(text);
-            Assert.AreEqual(123, nodeIdText.Identifier);
+            Assert.AreEqual(123, nodeIdText.TryGetIdentifier(out uint n1) ? n1 : 0);
             // implicit conversion;
             NodeId inodeIdText = text;
             Assert.AreEqual(nodeIdText, inodeIdText);
@@ -409,31 +409,26 @@ namespace Opc.Ua.Core.Tests.Types.BuiltIn
             _ = nodeIdText == nodeId2;
             _ = nodeIdText > nodeId2;
 
-            var id = new NodeId((object)(uint)123, 123);
+            var id = new NodeId((uint)123, 123);
             Assert.AreEqual(123, id.NamespaceIndex);
-            Assert.AreEqual(123, id.Identifier);
-            id = new NodeId((object)"Test", 123);
+            Assert.AreEqual(123, id.TryGetIdentifier(out uint n2) ? n2 : 0);
+            id = new NodeId("Test", 123);
             Assert.AreEqual(123, id.NamespaceIndex);
-            Assert.AreEqual("Test", id.Identifier);
-            id = new NodeId((object)id2, 123);
+            Assert.AreEqual("Test", id.TryGetIdentifier(out string s1) ? s1 : null);
+            id = new NodeId(id2, 123);
             Assert.AreEqual(123, id.NamespaceIndex);
-            Assert.AreEqual(id2, id.Identifier);
-            id = new NodeId((object)null, 123);
+            Assert.AreEqual(id2, id.TryGetIdentifier(out byte[] o1) ? o1 : null);
+            id = new NodeId(id1, 123);
             Assert.AreEqual(123, id.NamespaceIndex);
-            Assert.AreEqual(null, id.Identifier);
-            id = new NodeId((object)id1, 123);
-            Assert.AreEqual(123, id.NamespaceIndex);
-            Assert.AreEqual(id1, id.Identifier);
+            Assert.AreEqual(id1, id.TryGetIdentifier(out Guid g1) ? g1 : Guid.Empty);
             var guid = Guid.NewGuid();
-            id = new NodeId((object)guid, 123);
+            id = new NodeId(guid, 123);
             Assert.AreEqual(123, id.NamespaceIndex);
-            Assert.AreEqual(guid, id.Identifier);
-            NUnit.Framework.Assert
-                .Throws<ArgumentException>(() => _ = new NodeId((long)7777777, 123));
+            Assert.AreEqual(guid, id.TryGetIdentifier(out Guid g2) ? g2 : Guid.Empty);
 
             ServiceResultException sre = NUnit.Framework.Assert.Throws<ServiceResultException>(() =>
                 _ = NodeId.Create(123, "urn:xyz", new NamespaceTable()));
-            Assert.AreEqual((StatusCode)StatusCodes.BadNodeIdInvalid, (StatusCode)sre.StatusCode);
+            Assert.AreEqual(StatusCodes.BadNodeIdInvalid, sre.StatusCode);
 
             NodeId opaqueId = "!,7B"u8.ToArray();
             NodeId stringId1 = "ns=1;s=Test";
@@ -444,7 +439,7 @@ namespace Opc.Ua.Core.Tests.Types.BuiltIn
             var expandedId1 = new ExpandedNodeId("nsu=urn:xyz;Test");
             Assert.NotNull(expandedId1);
             var nullId = ExpandedNodeId.ToNodeId(null, new NamespaceTable());
-            Assert.IsNull(nullId);
+            Assert.True(nullId.IsNullNodeId);
 
             // create a nodeId from a guid
             var guid1 = Guid.NewGuid();
@@ -460,8 +455,6 @@ namespace Opc.Ua.Core.Tests.Types.BuiltIn
             Assert.False(nodeGuid1.Equals(id2));
             Assert.False(nodeGuid1 == id2);
 
-            NUnit.Framework.Assert
-                .Throws<ArgumentException>(() => _ = new NodeId((object)123, 123));
             NUnit.Framework.Assert.Throws<ServiceResultException>(
                 () => _ = NodeId.Create((uint)123, "urn:xyz", null));
             NUnit.Framework.Assert.Throws<ServiceResultException>(() => _ = NodeId.Parse("ns="));
@@ -477,7 +470,7 @@ namespace Opc.Ua.Core.Tests.Types.BuiltIn
             {
                 NodeId _ = "nsu=http://opcfoundation.org/Tests;s=Test";
             });
-            Assert.IsNull(NodeId.ToExpandedNodeId(null, null));
+            Assert.IsNull(NodeId.ToExpandedNodeId(default, null));
 
             // IsNull
             Assert.True(NodeId.IsNull((ExpandedNodeId)null));
@@ -608,7 +601,7 @@ namespace Opc.Ua.Core.Tests.Types.BuiltIn
             NUnit.Framework.Assert
                 .Throws<ServiceResultException>(() => _ = ExpandedNodeId.Parse("nsu="));
             NUnit.Framework.Assert.Throws<ArgumentException>(() => id = "Test");
-            Assert.IsNull(NodeId.ToExpandedNodeId(null, null));
+            Assert.IsNull(NodeId.ToExpandedNodeId(default, null));
 
             string[] testStrings =
             [
@@ -721,12 +714,12 @@ namespace Opc.Ua.Core.Tests.Types.BuiltIn
                     nodeId = DataGenerator.GetRandomNodeId();
                     break;
             }
-            var nodeIdClone = (NodeId)nodeId.Clone();
-            Assert.AreEqual(nodeId, nodeIdClone);
-            Assert.AreEqual(nodeId.GetHashCode(), nodeIdClone.GetHashCode());
-            Assert.AreEqual(nodeIdClone.GetHashCode(), nodeIdClone.GetHashCode());
+            var nodeIdCopy = nodeId;
+            Assert.AreEqual(nodeId, nodeIdCopy);
+            Assert.AreEqual(nodeId.GetHashCode(), nodeIdCopy.GetHashCode());
+            Assert.AreEqual(nodeIdCopy.GetHashCode(), nodeIdCopy.GetHashCode());
             Assert.AreEqual(nodeId.GetHashCode(), nodeId.GetHashCode());
-            Assert.IsTrue(nodeId.Equals(nodeIdClone));
+            Assert.IsTrue(nodeId.Equals(nodeIdCopy));
             NodeId id = nodeId;
             Assert.False(id < nodeId);
             Assert.False(id > nodeId);
@@ -734,12 +727,11 @@ namespace Opc.Ua.Core.Tests.Types.BuiltIn
 
             var dictionary = new Dictionary<NodeId, string> { { nodeId, "Test" } };
             Assert.IsTrue(dictionary.ContainsKey(nodeId));
-            Assert.IsTrue(dictionary.ContainsKey(nodeIdClone));
-            Assert.IsTrue(dictionary.ContainsKey((NodeId)nodeIdClone.Clone()));
+            Assert.IsTrue(dictionary.ContainsKey(nodeIdCopy));
             Assert.IsTrue(dictionary.TryGetValue(nodeId, out string value));
 
             NUnit.Framework.Assert
-                .Throws<ArgumentException>(() => dictionary.Add(nodeIdClone, "TestClone"));
+                .Throws<ArgumentException>(() => dictionary.Add(nodeIdCopy, "TestClone"));
 
             NodeId nodeId2;
             switch (idType)
@@ -845,7 +837,7 @@ namespace Opc.Ua.Core.Tests.Types.BuiltIn
             NUnit.Framework.Assert.DoesNotThrow(() => dv1.Equals(dv2));
 
             var byteArrayNodeId = new ExpandedNodeId((byte[])null);
-            var expandedNodeId = new ExpandedNodeId((NodeId)null);
+            var expandedNodeId = new ExpandedNodeId(NodeId.Null);
             NUnit.Framework.Assert.DoesNotThrow(() => byteArrayNodeId.Equals(expandedNodeId));
         }
 
@@ -913,47 +905,47 @@ namespace Opc.Ua.Core.Tests.Types.BuiltIn
         {
             // Test numeric identifiers
             Assert.IsTrue(NodeId.TryParse("i=1234", out NodeId result));
-            Assert.AreEqual(1234u, result.Identifier);
+            Assert.AreEqual(1234u, result.TryGetIdentifier(out uint n1) ? n1 : 0);
             Assert.AreEqual(IdType.Numeric, result.IdType);
             Assert.AreEqual(0, result.NamespaceIndex);
 
             Assert.IsTrue(NodeId.TryParse("ns=2;i=1234", out result));
-            Assert.AreEqual(1234u, result.Identifier);
+            Assert.AreEqual(1234u, result.TryGetIdentifier(out uint n2) ? n2 : 0);
             Assert.AreEqual(IdType.Numeric, result.IdType);
             Assert.AreEqual(2, result.NamespaceIndex);
 
             // Test string identifiers
             Assert.IsTrue(NodeId.TryParse("s=HelloWorld", out result));
-            Assert.AreEqual("HelloWorld", result.Identifier);
+            Assert.AreEqual("HelloWorld", result.TryGetIdentifier(out string s1) ? s1 : string.Empty);
             Assert.AreEqual(IdType.String, result.IdType);
             Assert.AreEqual(0, result.NamespaceIndex);
 
             Assert.IsTrue(NodeId.TryParse("ns=2;s=HelloWorld", out result));
-            Assert.AreEqual("HelloWorld", result.Identifier);
+            Assert.AreEqual("HelloWorld", result.TryGetIdentifier(out string s2) ? s2 : string.Empty);
             Assert.AreEqual(IdType.String, result.IdType);
             Assert.AreEqual(2, result.NamespaceIndex);
 
             // Test GUID identifiers
             Assert.IsTrue(NodeId.TryParse("g=af469096-f02a-4563-940b-603958363b81", out result));
-            Assert.AreEqual(new Guid("af469096-f02a-4563-940b-603958363b81"), result.Identifier);
+            Assert.AreEqual(new Guid("af469096-f02a-4563-940b-603958363b81"), result.TryGetIdentifier(out Guid g1) ? g1 : Guid.Empty);
             Assert.AreEqual(IdType.Guid, result.IdType);
             Assert.AreEqual(0, result.NamespaceIndex);
 
             Assert.IsTrue(NodeId.TryParse("ns=2;g=af469096-f02a-4563-940b-603958363b81", out result));
-            Assert.AreEqual(new Guid("af469096-f02a-4563-940b-603958363b81"), result.Identifier);
+            Assert.AreEqual(new Guid("af469096-f02a-4563-940b-603958363b81"), result.TryGetIdentifier(out Guid g2) ? g2 : Guid.Empty);
             Assert.AreEqual(IdType.Guid, result.IdType);
             Assert.AreEqual(2, result.NamespaceIndex);
 
             // Test opaque identifiers (b=01020304 is valid base64 that decodes to specific bytes)
             Assert.IsTrue(NodeId.TryParse("b=01020304", out result));
             byte[] expectedBytes1 = Convert.FromBase64String("01020304");
-            Assert.AreEqual(expectedBytes1, result.Identifier);
+            Assert.AreEqual(expectedBytes1, result.TryGetIdentifier(out byte[] b1) ? b1 : Array.Empty<byte>());
             Assert.AreEqual(IdType.Opaque, result.IdType);
             Assert.AreEqual(0, result.NamespaceIndex);
 
             Assert.IsTrue(NodeId.TryParse("ns=2;b=04030201", out result));
             byte[] expectedBytes2 = Convert.FromBase64String("04030201");
-            Assert.AreEqual(expectedBytes2, result.Identifier);
+            Assert.AreEqual(expectedBytes2, result.TryGetIdentifier(out byte[] b2) ? b2 : Array.Empty<byte>());
             Assert.AreEqual(IdType.Opaque, result.IdType);
             Assert.AreEqual(2, result.NamespaceIndex);
 
@@ -1010,12 +1002,12 @@ namespace Opc.Ua.Core.Tests.Types.BuiltIn
 
             // Test with namespace URI
             Assert.IsTrue(NodeId.TryParse(context, "nsu=http://test.org/;i=1234", out NodeId result));
-            Assert.AreEqual(1234u, result.Identifier);
+            Assert.AreEqual(1234u, result.TryGetIdentifier(out uint n2) ? n2 : 0);
             Assert.AreEqual(2, result.NamespaceIndex);
 
             // Test with namespace index
             Assert.IsTrue(NodeId.TryParse(context, "ns=2;s=Test", out result));
-            Assert.AreEqual("Test", result.Identifier);
+            Assert.AreEqual("Test", result.TryGetIdentifier(out string s1) ? s1 : string.Empty);
             Assert.AreEqual(2, result.NamespaceIndex);
 
             // Test with unknown namespace URI (should fail)

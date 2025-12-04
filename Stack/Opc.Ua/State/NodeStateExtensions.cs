@@ -43,14 +43,11 @@ namespace Opc.Ua
                     continue;
                 }
 
-                if (child is BaseObjectState objectInstance)
+                if (child is BaseObjectState objectInstance &&
+                    values.EventFields[ii].Value is NodeId nodeId &&
+                    !nodeId.IsNullNodeId)
                 {
-                    var nodeId = values.EventFields[ii].Value as NodeId;
-
-                    if (nodeId != null)
-                    {
-                        objectInstance.NodeId = nodeId;
-                    }
+                    objectInstance.NodeId = nodeId;
                 }
             }
         }
@@ -84,18 +81,21 @@ namespace Opc.Ua
                 }
 
                 // extract the NodeId for the event.
-                if (field.BrowsePath.Count == 0 && field.AttributeId == Attributes.NodeId)
+                if (field.BrowsePath.Count == 0 &&
+                    field.AttributeId == Attributes.NodeId &&
+                    value is NodeId nodeId)
                 {
-                    state.NodeId = value as NodeId;
+                    state.NodeId = nodeId;
                     continue;
                 }
 
                 // extract the type definition for the event.
                 if (field.BrowsePath.Count == 1 &&
                     field.AttributeId == Attributes.Value &&
-                    field.BrowsePath[0] == BrowseNames.EventType)
+                    field.BrowsePath[0] == BrowseNames.EventType &&
+                    value is NodeId typeDefinitionId)
                 {
-                    state.TypeDefinitionId = value as NodeId;
+                    state.TypeDefinitionId = typeDefinitionId;
                     continue;
                 }
 
@@ -161,7 +161,7 @@ namespace Opc.Ua
                     }
 
                     // save the node id.
-                    child.NodeId = value as NodeId;
+                    child.NodeId = value is NodeId n ? n : default;
                 }
             }
         }

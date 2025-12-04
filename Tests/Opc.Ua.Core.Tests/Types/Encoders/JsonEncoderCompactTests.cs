@@ -126,25 +126,25 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
         {
             NodeId n0 = decoder.ReadNodeId("D0");
             Assert.AreEqual((int)n0.NamespaceIndex, 0);
-            Assert.AreEqual(2263U, (uint)n0.Identifier);
+            Assert.AreEqual(2263U, n0.TryGetIdentifier(out uint id0) ? id0 : 0);
 
             NodeId n1 = decoder.ReadNodeId("D1");
             Assert.AreEqual(
                 (int)n1.NamespaceIndex,
                 context.NamespaceUris.GetIndex(Get(NamespaceUris, index)));
-            Assert.AreEqual(Get(NumericIds, index), (uint)n1.Identifier);
+            Assert.AreEqual(Get(NumericIds, index), n1.TryGetIdentifier(out uint id1) ? id1 : 0);
 
             NodeId n2 = decoder.ReadNodeId("D2");
             Assert.AreEqual(
                 (int)n2.NamespaceIndex,
                 context.NamespaceUris.GetIndex(Get(NamespaceUris, index + 1)));
-            Assert.AreEqual(Get(StringIds, index), (string)n2.Identifier);
+            Assert.AreEqual(Get(StringIds, index), n2.TryGetIdentifier(out string id3) ? id3 : string.Empty);
 
             NodeId n3 = decoder.ReadNodeId("D3");
             Assert.AreEqual(
                 (int)n3.NamespaceIndex,
                 context.NamespaceUris.GetIndex(Get(NamespaceUris, index + 2)));
-            Assert.AreEqual(Get(GuidIds, index), (Guid)n3.Identifier);
+            Assert.AreEqual(Get(GuidIds, index), n3.TryGetIdentifier(out Guid id4) ? id4 : Guid.Empty);
 
             NodeId n4 = decoder.ReadNodeId("D4");
             Assert.AreEqual(
@@ -152,7 +152,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
                 context.NamespaceUris.GetIndex(Get(NamespaceUris, index + 3)));
             Assert.AreEqual(
                 Utils.ToHexString(Get(OpaqueIds, index)),
-                Utils.ToHexString((byte[])n4.Identifier));
+                Utils.ToHexString(n4.TryGetIdentifier(out byte[] id5) ? id5 : Array.Empty<byte>()));
         }
 
         private static void CheckDecodedExpandedNodeIds(

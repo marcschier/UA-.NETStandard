@@ -1290,39 +1290,27 @@ namespace Opc.Ua
             {
                 WriteInt32("IdType", (int)value.IdType);
             }
-
-            switch (value.IdType)
+            if (value.TryGetIdentifier(out uint numericId))
             {
-                case IdType.Numeric:
-                    WriteUInt32("Id", (uint)value.Identifier);
-                    break;
-                case IdType.String:
-                    WriteString("Id", (string)value.Identifier);
-                    break;
-                case IdType.Guid:
-                    if (value.Identifier is Guid guidIdentifier)
-                    {
-                        WriteGuid("Id", guidIdentifier);
-                    }
-                    else if (value.Identifier is Uuid uuidIdentifier)
-                    {
-                        WriteGuid("Id", uuidIdentifier);
-                    }
-                    else
-                    {
-                        throw new ServiceResultException(
-                            StatusCodes.BadEncodingError,
-                            "Invalid Identifier type to encode as Guid NodeId.");
-                    }
-                    break;
-                case IdType.Opaque:
-                    WriteByteString("Id", (byte[])value.Identifier);
-                    break;
-                default:
-                    throw ServiceResultException.Unexpected(
-                        $"Unexpected Node IdType {value.IdType}");
+                WriteUInt32("Id", numericId);
             }
-
+            else if (value.TryGetIdentifier(out string stringId))
+            {
+                WriteString("Id", stringId);
+            }
+            else if (value.TryGetIdentifier(out Guid guidIdentifier))
+            {
+                WriteGuid("Id", guidIdentifier);
+            }
+            else if (value.TryGetIdentifier(out byte[] opaqueId))
+            {
+                WriteByteString("Id", opaqueId);
+            }
+            else
+            {
+                throw ServiceResultException.Unexpected(
+                    $"Unexpected Node IdType {value.IdType}");
+            }
             if (namespaceUri != null)
             {
                 WriteString("Namespace", namespaceUri);
@@ -1338,7 +1326,7 @@ namespace Opc.Ua
         /// </summary>
         public void WriteNodeId(string fieldName, NodeId value)
         {
-            bool isNull = value == null || NodeId.IsNull(value);
+            bool isNull = value.IsNullNodeId;
 
             if (fieldName != null && isNull && !IncludeDefaultValues)
             {
@@ -1797,7 +1785,7 @@ namespace Opc.Ua
             {
                 if (encodeable != null)
                 {
-                    if (!SuppressArtifacts && !NodeId.IsNull(localTypeId))
+                    if (!SuppressArtifacts && !localTypeId.IsNullNodeId)
                     {
                         WriteNodeId("UaTypeId", localTypeId);
                     }
@@ -1806,7 +1794,7 @@ namespace Opc.Ua
                 }
                 else if (value.Body is JObject json)
                 {
-                    if (!SuppressArtifacts && !NodeId.IsNull(localTypeId))
+                    if (!SuppressArtifacts && !localTypeId.IsNullNodeId)
                     {
                         WriteNodeId("UaTypeId", localTypeId);
                         m_writer.Write(kComma);
@@ -1817,7 +1805,7 @@ namespace Opc.Ua
                 }
                 else if (value.Encoding == ExtensionObjectEncoding.Binary)
                 {
-                    if (!SuppressArtifacts && !NodeId.IsNull(localTypeId))
+                    if (!SuppressArtifacts && !localTypeId.IsNullNodeId)
                     {
                         WriteNodeId("UaTypeId", localTypeId);
                     }
@@ -1827,7 +1815,7 @@ namespace Opc.Ua
                 }
                 else if (value.Encoding == ExtensionObjectEncoding.Xml)
                 {
-                    if (!SuppressArtifacts && !NodeId.IsNull(localTypeId))
+                    if (!SuppressArtifacts && !localTypeId.IsNullNodeId)
                     {
                         WriteNodeId("UaTypeId", localTypeId);
                     }

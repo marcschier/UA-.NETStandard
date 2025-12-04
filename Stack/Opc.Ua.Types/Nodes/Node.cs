@@ -74,7 +74,7 @@ namespace Opc.Ua
 
         private void Initialize()
         {
-            NodeId = null;
+            NodeId = default;
             NodeClass = NodeClass.Unspecified;
             BrowseName = null;
             DisplayName = null;
@@ -328,7 +328,7 @@ namespace Opc.Ua
         {
             var clone = (Node)base.MemberwiseClone();
 
-            clone.NodeId = CoreUtils.Clone(NodeId);
+            clone.NodeId = NodeId;
             clone.NodeClass = (NodeClass)CoreUtils.Clone(NodeClass);
             clone.BrowseName = CoreUtils.Clone(BrowseName);
             clone.DisplayName = CoreUtils.Clone(DisplayName);

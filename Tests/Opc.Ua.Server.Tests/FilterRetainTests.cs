@@ -526,7 +526,7 @@ namespace Opc.Ua.Server.Tests
             var notOutOfServiceState = new SimpleAttributeOperand
             {
                 AttributeId = Attributes.Value,
-                TypeDefinitionId = null,
+                TypeDefinitionId = default,
                 BrowsePath = [.. new QualifiedName[] { BrowseNames.OutOfServiceState }]
             };
 
@@ -539,7 +539,7 @@ namespace Opc.Ua.Server.Tests
             var notSuppressed = new SimpleAttributeOperand
             {
                 AttributeId = Attributes.Value,
-                TypeDefinitionId = null,
+                TypeDefinitionId = default,
                 BrowsePath = [.. new QualifiedName[] { BrowseNames.SuppressedState }]
             };
 
@@ -552,7 +552,7 @@ namespace Opc.Ua.Server.Tests
             var activeState = new SimpleAttributeOperand
             {
                 AttributeId = Attributes.Value,
-                TypeDefinitionId = null,
+                TypeDefinitionId = default,
                 BrowsePath = [.. new QualifiedName[] { BrowseNames.ActiveState }]
             };
 
@@ -576,7 +576,7 @@ namespace Opc.Ua.Server.Tests
                 m_systemContext = new SystemContext(telemetry) { NamespaceUris = new NamespaceTable() };
                 m_systemContext.NamespaceUris.Append(Ua.Namespaces.OpcUa);
                 var typeTable = new TypeTable(m_systemContext.NamespaceUris);
-                typeTable.AddSubtype(ObjectTypeIds.BaseObjectType, null);
+                typeTable.AddSubtype(ObjectTypeIds.BaseObjectType, default);
                 typeTable.AddSubtype(ObjectTypeIds.BaseEventType, ObjectTypeIds.BaseObjectType);
                 typeTable.AddSubtype(ObjectTypeIds.ConditionType, ObjectTypeIds.BaseEventType);
                 typeTable.AddSubtype(

@@ -32,7 +32,7 @@ namespace Opc.Ua
             }
             else
             {
-                referenceDescription.ReferenceTypeId = null;
+                referenceDescription.ReferenceTypeId = default;
             }
 
             if (((int)resultMask & (int)BrowseResultMask.IsForward) != 0)

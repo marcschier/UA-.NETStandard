@@ -289,7 +289,7 @@ namespace Opc.Ua.Client.Tests
                 throw new ArgumentNullException(nameof(nodesToBrowse));
             }
 
-            if (view != null && !NodeId.IsNull(view.ViewId))
+            if (view != null && !view.ViewId.IsNullNodeId)
             {
                 (object viewHandle, IAsyncNodeManager viewManager) =
                     await GetManagerHandleAsync(view.ViewId, cancellationToken)

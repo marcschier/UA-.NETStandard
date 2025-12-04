@@ -676,7 +676,7 @@ namespace Opc.Ua.Server
                 {
                     NodeId sessionId = subscription.SessionId;
 
-                    if (!NodeId.IsNull(sessionId))
+                    if (!sessionId.IsNullNodeId)
                     {
                         // check that the subscription is the owner.
                         if (context != null &&
@@ -989,7 +989,7 @@ namespace Opc.Ua.Server
                     Message = subscription.PublishTimeout()
                 };
 
-                if (subscription.SessionId != null &&
+                if (!subscription.SessionId.IsNullNodeId &&
                     m_statusMessages.TryGetValue(
                         subscription.SessionId,
                         out Queue<StatusMessage> queue))
@@ -1230,7 +1230,8 @@ namespace Opc.Ua.Server
                 throw new ServiceResultException(StatusCodes.BadSubscriptionIdInvalid);
             }
 
-            if (subscription.SessionId != (context as ISessionSystemContext)?.SessionId)
+            NodeId curSession = (context as ISessionSystemContext)?.SessionId ?? default;
+            if (subscription.SessionId != curSession)
             {
                 // user tries to access subscription of different session
                 return StatusCodes.BadUserAccessDenied;
@@ -1372,7 +1373,7 @@ namespace Opc.Ua.Server
                     // check if new and old sessions are different
                     ISession ownerSession = subscription.Session;
                     if (ownerSession != null &&
-                        !NodeId.IsNull(ownerSession.Id) &&
+                        !ownerSession.Id.IsNullNodeId &&
                         ownerSession.Id == context.Session.Id)
                     {
                         result.StatusCode = StatusCodes.BadNothingToDo;
@@ -1499,7 +1500,7 @@ namespace Opc.Ua.Server
                         bool statusQueued = false;
                         lock (m_statusMessagesLock)
                         {
-                            if (!NodeId.IsNull(ownerSession.Id) &&
+                            if (!ownerSession.Id.IsNullNodeId &&
                                 m_statusMessages.TryGetValue(
                                     ownerSession.Id,
                                     out Queue<StatusMessage> queue))

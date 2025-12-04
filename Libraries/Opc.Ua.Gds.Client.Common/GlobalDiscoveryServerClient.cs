@@ -902,12 +902,11 @@ namespace Opc.Ua.Gds.Client
                 ct,
                 application).ConfigureAwait(false);
 
-            if (outputArguments.Count >= 1)
+            if (outputArguments.Count >= 1 && outputArguments[0] is NodeId nodeId)
             {
-                return outputArguments[0] as NodeId;
+                return nodeId;
             }
-
-            return null;
+            return default;
         }
 
         /// <summary>
@@ -1178,12 +1177,12 @@ namespace Opc.Ua.Gds.Client
                 privateKeyFormat,
                 new string(privateKeyPassword)).ConfigureAwait(false);
 
-            if (outputArguments.Count >= 1)
+            if (outputArguments.Count >= 1 && outputArguments[0] is NodeId nodeId)
             {
-                return outputArguments[0] as NodeId;
+                return nodeId;
             }
 
-            return null;
+            return default;
         }
 
         /// <summary>
@@ -1237,12 +1236,12 @@ namespace Opc.Ua.Gds.Client
                 certificateTypeId,
                 certificateRequest).ConfigureAwait(false);
 
-            if (outputArguments.Count >= 1)
+            if (outputArguments.Count >= 1 && outputArguments[0] is NodeId nodeId)
             {
-                return outputArguments[0] as NodeId;
+                return nodeId;
             }
 
-            return null;
+            return default;
         }
 
         /// <summary>
@@ -1374,12 +1373,12 @@ namespace Opc.Ua.Gds.Client
                 applicationId,
                 certificateGroupId).ConfigureAwait(false);
 
-            if (outputArguments.Count >= 1)
+            if (outputArguments.Count >= 1 && outputArguments[0] is NodeId nodeId)
             {
-                return outputArguments[0] as NodeId;
+                return nodeId;
             }
 
-            return null;
+            return default;
         }
 
         /// <summary>

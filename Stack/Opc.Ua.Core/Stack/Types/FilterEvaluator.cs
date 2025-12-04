@@ -379,14 +379,14 @@ namespace Opc.Ua
         /// </summary>
         private static BuiltInType GetBuiltInType(NodeId datatypeId)
         {
-            if (datatypeId == null ||
+            if (datatypeId.IsNullNodeId ||
                 datatypeId.NamespaceIndex != 0 ||
-                datatypeId.IdType != IdType.Numeric)
+                !datatypeId.TryGetIdentifier(out uint numericId))
             {
                 return BuiltInType.Null;
             }
 
-            return (BuiltInType)Enum.ToObject(typeof(BuiltInType), datatypeId.Identifier);
+            return (BuiltInType)Enum.ToObject(typeof(BuiltInType), numericId);
         }
 
         /// <summary>
@@ -2002,13 +2002,10 @@ namespace Opc.Ua
             FilterOperand[] operands = GetOperands(element, 1);
 
             // get the desired type.
-            var typeDefinitionId = GetValue(operands[0]) as NodeId;
-
-            if (typeDefinitionId == null || m_target == null)
+            if (GetValue(operands[0]) is not NodeId typeDefinitionId || m_target == null)
             {
                 return false;
             }
-
             // check the type.
             try
             {
@@ -2035,9 +2032,7 @@ namespace Opc.Ua
             FilterOperand[] operands = GetOperands(element, 1);
 
             // get the desired type.
-            var viewId = GetValue(operands[0]) as NodeId;
-
-            if (viewId == null || m_target == null)
+            if (GetValue(operands[0]) is not NodeId viewId || m_target == null)
             {
                 return false;
             }
@@ -2058,7 +2053,7 @@ namespace Opc.Ua
         /// </summary>
         private bool RelatedTo(ContentFilterElement element)
         {
-            return RelatedTo(element, null);
+            return RelatedTo(element, default);
         }
 
         /// <summary>
@@ -2141,8 +2136,8 @@ namespace Opc.Ua
                     var nestedType = ExtensionObject.ToEncodeable(
                         chainedElement.FilterOperands[0]) as FilterOperand;
 
-                    targetTypeId = GetValue(nestedType) as NodeId;
-                    if (NodeId.IsNull(targetTypeId))
+                    targetTypeId = GetValue(nestedType) is NodeId n ? n : default;
+                    if (targetTypeId.IsNullNodeId)
                     {
                         return false;
                     }
@@ -2152,7 +2147,7 @@ namespace Opc.Ua
                         m_context,
                         intermediateNodeId,
                         sourceTypeId,
-                        null,
+                        default,
                         referenceTypeId,
                         hops.Value,
                         includeTypeDefinitionSubtypes.Value,
@@ -2179,8 +2174,8 @@ namespace Opc.Ua
             }
 
             // get the type of the m_target.
-            targetTypeId = GetValue(operands[1]) as NodeId;
-            if (NodeId.IsNull(targetTypeId))
+            targetTypeId = GetValue(operands[1]) is NodeId n2 ? n2 : default;
+            if (targetTypeId.IsNullNodeId)
             {
                 return false;
             }
@@ -2192,7 +2187,7 @@ namespace Opc.Ua
                     m_context,
                     intermediateNodeId,
                     sourceTypeId,
-                    null,
+                    default,
                     referenceTypeId,
                     hops.Value,
                     includeTypeDefinitionSubtypes.Value,

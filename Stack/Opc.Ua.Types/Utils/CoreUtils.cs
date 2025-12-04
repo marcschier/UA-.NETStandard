@@ -20,6 +20,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Xml;
+using System.Runtime.Serialization;
+
 #if NETFRAMEWORK
 using System.Runtime.InteropServices;
 #endif
@@ -530,6 +532,15 @@ namespace Opc.Ua
                 return true;
             }
 
+            if (value1 is NodeId nodeId1)
+            {
+                return nodeId1.Equals(value2);
+            }
+            if (value2 is NodeId nodeId2)
+            {
+                return nodeId2.Equals(value1);
+            }
+
             // check for null values.
             if (value1 is null)
             {
@@ -1031,6 +1042,30 @@ namespace Opc.Ua
             using var reader = XmlReader.Create(sreader, DefaultXmlReaderSettings());
             doc.XmlResolver = null;
             doc.Load(reader);
+        }
+
+        /// <summary>
+        /// Create a data contract serializer for the specified type with OPC UA surrogates.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static DataContractSerializer CreateDataContractSerializer<T>(
+            IEnumerable<Type> knownTypes = null)
+        {
+            return CreateDataContractSerializer(typeof(T), knownTypes);
+        }
+
+        /// <summary>
+        /// Create a data contract serializer for the specified type with OPC UA surrogates.
+        /// </summary>
+        /// <returns></returns>
+        public static DataContractSerializer CreateDataContractSerializer(
+            Type systemType,
+            IEnumerable<Type> knownTypes = null)
+        {
+            var serializer = new DataContractSerializer(systemType, knownTypes ?? []);
+            serializer.SetSerializationSurrogateProvider(DataContractSurrogates.Instance);
+            return serializer;
         }
 
         /// <summary>

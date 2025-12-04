@@ -334,7 +334,7 @@ namespace Opc.Ua.Server
         {
             var systemContext = context as ServerSystemContext;
 
-            if (m_serverLockHolder != null && m_serverLockHolder != systemContext.SessionId)
+            if (!m_serverLockHolder.IsNullNodeId && m_serverLockHolder != systemContext.SessionId)
             {
                 return StatusCodes.BadSessionIdInvalid;
             }
@@ -355,12 +355,12 @@ namespace Opc.Ua.Server
         {
             var systemContext = context as ServerSystemContext;
 
-            if (m_serverLockHolder != null && m_serverLockHolder != systemContext.SessionId)
+            if (!m_serverLockHolder.IsNullNodeId && m_serverLockHolder != systemContext.SessionId)
             {
                 return StatusCodes.BadSessionIdInvalid;
             }
 
-            m_serverLockHolder = null;
+            m_serverLockHolder = default;
 
             return ServiceResult.Good;
         }
@@ -437,12 +437,12 @@ namespace Opc.Ua.Server
 
             NodeId typeId = passiveNode.TypeDefinitionId;
 
-            if (!IsNodeIdInNamespace(typeId) || typeId.IdType != IdType.Numeric)
+            if (!IsNodeIdInNamespace(typeId) || !typeId.TryGetIdentifier(out uint numericId))
             {
                 return predefinedNode;
             }
 
-            switch ((uint)typeId.Identifier)
+            switch (numericId)
             {
                 case ObjectTypes.ServerType:
                 {
@@ -553,12 +553,14 @@ namespace Opc.Ua.Server
 
             NodeId typeId = instance.TypeDefinitionId;
 
-            if (typeId == null || typeId.IdType != IdType.Numeric || typeId.NamespaceIndex != 0)
+            if (typeId.IsNullNodeId ||
+                typeId.NamespaceIndex != 0 ||
+                typeId.TryGetIdentifier(out uint numericId))
             {
                 return false;
             }
 
-            switch ((uint)typeId.Identifier)
+            switch (numericId)
             {
                 case VariableTypes.ServerDiagnosticsSummaryType:
                 case ObjectTypes.SessionDiagnosticsObjectType:
@@ -783,7 +785,7 @@ namespace Opc.Ua.Server
             SessionSecurityDiagnosticsDataType securityDiagnostics,
             NodeValueSimpleEventHandler updateSecurityCallback)
         {
-            NodeId nodeId = null;
+            NodeId nodeId = default;
 
             lock (Lock)
             {
@@ -792,7 +794,7 @@ namespace Opc.Ua.Server
                 // create a new instance and assign ids.
                 nodeId = CreateNode(
                     systemContext,
-                    null,
+                    default,
                     ReferenceTypeIds.HasComponent,
                     new QualifiedName(diagnostics.SessionName),
                     sessionNode);
@@ -897,7 +899,7 @@ namespace Opc.Ua.Server
                 // release the server lock if it is being held.
                 if (m_serverLockHolder == nodeId)
                 {
-                    m_serverLockHolder = null;
+                    m_serverLockHolder = default;
                 }
             }
 
@@ -912,14 +914,14 @@ namespace Opc.Ua.Server
             SubscriptionDiagnosticsDataType diagnostics,
             NodeValueSimpleEventHandler updateCallback)
         {
-            NodeId nodeId = null;
+            NodeId nodeId = default;
 
             lock (Lock)
             {
                 // check if diagnostics have been enabled.
                 if (!DiagnosticsEnabled)
                 {
-                    return null;
+                    return default;
                 }
 
                 var diagnosticsNode = new SubscriptionDiagnosticsState(null);
@@ -927,7 +929,7 @@ namespace Opc.Ua.Server
                 // create a new instance and assign ids.
                 nodeId = CreateNode(
                     systemContext,
-                    null,
+                    default,
                     ReferenceTypeIds.HasComponent,
                     new QualifiedName(
                         diagnostics.SubscriptionId.ToString(CultureInfo.InvariantCulture)),
@@ -962,7 +964,7 @@ namespace Opc.Ua.Server
 
                 array?.AddReference(ReferenceTypeIds.HasComponent, false, diagnosticsNode.NodeId);
 
-                if (diagnostics.SessionId != null)
+                if (diagnostics.SessionId.IsNullNodeId)
                 {
                     // add reference to session subscription array.
                     diagnosticsNode.AddReference(
@@ -1042,7 +1044,7 @@ namespace Opc.Ua.Server
 
                     NodeId nodeId = CreateNode(
                         SystemContext,
-                        null,
+                        default,
                         ReferenceTypeIds.HasComponent,
                         new QualifiedName(BrowseNames.HistoryServerCapabilities),
                         historyServerCapabilitiesNode);
@@ -1450,7 +1452,8 @@ namespace Opc.Ua.Server
             ISystemContext context,
             int index)
         {
-            if ((sessionId != (context as ISessionSystemContext)?.SessionId) &&
+            NodeId curSession = (context as ISessionSystemContext)?.SessionId ?? default;
+            if ((sessionId != curSession) &&
                 !HasApplicationSecureAdminAccess(context))
             {
                 list[index] = default;
@@ -1474,8 +1477,8 @@ namespace Opc.Ua.Server
             }
             else
             {
-                adminUser = (node.NodeId == (context as ISessionSystemContext)?.SessionId) ||
-                    HasApplicationSecureAdminAccess(context);
+                NodeId curSession = (context as ISessionSystemContext)?.SessionId ?? default;
+                adminUser = node.NodeId == curSession || HasApplicationSecureAdminAccess(context);
             }
 
             if (adminUser)

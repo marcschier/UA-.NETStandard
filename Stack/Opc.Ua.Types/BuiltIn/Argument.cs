@@ -49,7 +49,7 @@ namespace Opc.Ua
         private void Initialize()
         {
             Name = null;
-            DataType = null;
+            DataType = default;
             ValueRank = 0;
             m_arrayDimensions = [];
             Description = null;
@@ -197,7 +197,7 @@ namespace Opc.Ua
             var clone = (Argument)base.MemberwiseClone();
 
             clone.Name = CoreUtils.Clone(Name);
-            clone.DataType = CoreUtils.Clone(DataType);
+            clone.DataType = DataType;
             clone.ValueRank = (int)CoreUtils.Clone(ValueRank);
             clone.m_arrayDimensions = CoreUtils.Clone(m_arrayDimensions);
             clone.Description = CoreUtils.Clone(Description);

@@ -122,9 +122,9 @@ namespace Opc.Ua.SourceGeneration
         public NodesetFileCollection(
             ImmutableArray<(string, NodesetFileOptions)> nodeset2Files,
             IFileSystem fileSystem,
-            ILogger logger)
+            ITelemetryContext telemetry)
         {
-            m_logger = logger;
+            m_logger = telemetry.CreateLogger<NodesetFileCollection>();
             foreach ((string file, NodesetFileOptions options) in nodeset2Files)
             {
                 try
@@ -135,17 +135,20 @@ namespace Opc.Ua.SourceGeneration
                     }
 
                     using Stream istrm = fileSystem.OpenRead(file);
-                    SystemContext systemContext = new(null);
+                    SystemContext systemContext = new(telemetry)
+                    {
+                        NamespaceUris = new NamespaceTable(),
+                        ServerUris = new StringTable()
+                    };
                     var nodeset = UANodeSet.Read(istrm);
                     var collection = new NodeStateCollection();
-
                     try
                     {
                         nodeset.Import(systemContext, collection);
                     }
                     catch (Exception e)
                     {
-                        logger.LogError(e, "NodeSet could not be loaded ({File})", file);
+                        m_logger.LogError(e, "NodeSet could not be loaded ({File})", file);
                         return;
                     }
 
@@ -153,14 +156,14 @@ namespace Opc.Ua.SourceGeneration
                         nodeset.Models.Length == 0 ||
                         string.IsNullOrEmpty(nodeset.Models[0].ModelUri))
                     {
-                        logger.LogError("NodeSet is missing model definition ({File}).", file);
+                        m_logger.LogError("NodeSet is missing model definition ({File}).", file);
                         continue;
                     }
 
                     ModelTableEntry model = nodeset.Models[0];
                     if (!Uri.IsWellFormedUriString(model.ModelUri, UriKind.Absolute))
                     {
-                        logger.LogError(
+                        m_logger.LogError(
                            "NodeSet ModelURI is not valid ({ModelUri}).", model.ModelUri);
                         continue;
                     }
@@ -202,7 +205,7 @@ namespace Opc.Ua.SourceGeneration
                 }
                 catch (Exception ex)
                 {
-                    logger.LogCritical(ex, "Could not parse NodeSet ({File}).", file);
+                    m_logger.LogCritical(ex, "Could not parse NodeSet ({File}).", file);
                 }
             }
         }

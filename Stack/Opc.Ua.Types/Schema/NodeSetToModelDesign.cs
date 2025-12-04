@@ -134,9 +134,12 @@ namespace Opc.Ua.Schema.Model
             {
                 foreach (NodeIdAlias ii in m_nodeset.Aliases)
                 {
-                    m_aliases[ii.Alias] = ImportNodeId(ii.Value, false) ??
+                    m_aliases[ii.Alias] = ImportNodeId(ii.Value, false);
+                    if (m_aliases[ii.Alias].IsNullNodeId)
+                    {
                         throw new InvalidDataException(
                             $"Alias ({ii.Alias}) is not valid.");
+                    }
                 }
             }
 
@@ -144,9 +147,12 @@ namespace Opc.Ua.Schema.Model
             {
                 foreach (UANode node in m_nodeset.Items)
                 {
-                    NodeId nodeId = ImportNodeId(node.NodeId, false) ??
+                    NodeId nodeId = ImportNodeId(node.NodeId, false);
+                    if (nodeId.IsNullNodeId)
+                    {
                         throw new InvalidDataException(
                             $"NodeId ({node.BrowseName}) is not valid.");
+                    }
                     m_index.Add(nodeId, node);
                 }
             }
@@ -478,14 +484,14 @@ namespace Opc.Ua.Schema.Model
                 {
                     NodeId rtid = ImportNodeId(reference.ReferenceType);
 
-                    if (rtid == null || ReferenceTypeIds.HasSubtype != rtid || reference.IsForward)
+                    if (rtid.IsNullNodeId || ReferenceTypeIds.HasSubtype != rtid || reference.IsForward)
                     {
                         continue;
                     }
 
                     NodeId targetId = ImportNodeId(reference.Value);
 
-                    if (targetId == null)
+                    if (targetId.IsNullNodeId)
                     {
                         return default;
                     }
@@ -502,7 +508,7 @@ namespace Opc.Ua.Schema.Model
             NodeId nodeId = ImportNodeId(input.NodeId);
             NodeDesign existing = null;
 
-            if (nodeId == null || m_settings.NodesById.TryGetValue(nodeId, out existing))
+            if (nodeId.IsNullNodeId || m_settings.NodesById.TryGetValue(nodeId, out existing))
             {
                 if (existing is ReferenceTypeDesign rt)
                 {
@@ -529,7 +535,7 @@ namespace Opc.Ua.Schema.Model
             };
             output.SymbolicId = output.SymbolicName;
 
-            if (nodeId.Identifier is uint id)
+            if (nodeId.TryGetIdentifier(out uint id))
             {
                 output.NumericId = id;
                 output.NumericIdSpecified = true;
@@ -714,7 +720,7 @@ namespace Opc.Ua.Schema.Model
         {
             NodeId nodeId = ImportNodeId(subtype.NodeId);
 
-            if (nodeId == null)
+            if (nodeId.IsNullNodeId)
             {
                 return false;
             }
@@ -1221,10 +1227,10 @@ namespace Opc.Ua.Schema.Model
 
             if (input is UAType &&
                 output.SymbolicId.Name.EndsWith(
-                    "_" + nodeId.Identifier, StringComparison.Ordinal))
+                    "_" + nodeId.IdentifierAsString, StringComparison.Ordinal))
             {
                 output.SymbolicName = new XmlQualifiedName(
-                    $"{output.SymbolicName.Name}_{nodeId.Identifier}",
+                    $"{output.SymbolicName.Name}_{nodeId.IdentifierAsString}",
                     output.SymbolicName.Namespace);
             }
 
@@ -1235,24 +1241,23 @@ namespace Opc.Ua.Schema.Model
             output.ReleaseStatus = ImportReleaseStatus(input.ReleaseStatus);
             output.Category = ImportCategories(input.Category);
 
-            if (nodeId.Identifier is uint id)
+            if (nodeId.TryGetIdentifier(out uint id))
             {
                 output.NumericId = id;
                 output.NumericIdSpecified = true;
             }
-            else if (nodeId.Identifier is string stringId)
+            else if (nodeId.TryGetIdentifier(out string stringId))
             {
                 output.StringId = stringId;
                 output.NumericIdSpecified = false;
             }
-            else if (NodeId.IsNull(nodeId))
+            else if (nodeId.IsNullNodeId)
             {
                 m_logger.LogInformation("NodeId is not specified.");
             }
             else
             {
-                m_logger.LogInformation("NodeId {Identifier} is supported.",
-                    nodeId.Identifier);
+                m_logger.LogInformation("NodeId {NodeId} is not supported.", nodeId);
             }
 
             m_settings.NodesByQName[output.SymbolicId] = output;
@@ -1317,7 +1322,7 @@ namespace Opc.Ua.Schema.Model
         {
             if (source.References == null)
             {
-                return null;
+                return default;
             }
 
             foreach (Export.Reference ii in source.References)
@@ -1335,7 +1340,7 @@ namespace Opc.Ua.Schema.Model
                 }
             }
 
-            return null;
+            return default;
         }
 
         private XmlQualifiedName ImportAndFixSymbolicName(UANode input)
@@ -1356,7 +1361,7 @@ namespace Opc.Ua.Schema.Model
 
                 NodeId dataTypeId = FindTarget(input, ReferenceTypes.HasEncoding, true);
 
-                if (dataTypeId == null)
+                if (dataTypeId.IsNullNodeId)
                 {
                     NodeId encodingId = ImportNodeId(input.NodeId);
 
@@ -1364,7 +1369,7 @@ namespace Opc.Ua.Schema.Model
                     {
                         NodeId result = FindTarget(dataType, ReferenceTypes.HasEncoding, false, encodingId);
 
-                        if (result != null)
+                        if (!result.IsNullNodeId)
                         {
                             dataTypeId = ImportNodeId(dataType.NodeId);
 
@@ -1700,7 +1705,7 @@ namespace Opc.Ua.Schema.Model
                     m_settings.NamespaceUris.GetString(nodeId.NamespaceIndex));
             }
 
-            if (parentId == null || !m_index.TryGetValue(parentId, out UANode parent))
+            if (parentId.IsNullNodeId || !m_index.TryGetValue(parentId, out UANode parent))
             {
                 throw new InvalidDataException(
                     $"Parent node ({instance.ParentNodeId}) for {node.NodeId} not found.");
@@ -1709,7 +1714,7 @@ namespace Opc.Ua.Schema.Model
             XmlQualifiedName symbolicId = BuildSymbolicId(parent);
             XmlQualifiedName symbolicName = ImportSymbolicName(node);
 
-            if (nodeId == null)
+            if (nodeId.IsNullNodeId)
             {
                 throw new InvalidDataException(
                     $"Node ({symbolicId.Name}) does not have a valid NodeId.");
@@ -1824,7 +1829,7 @@ namespace Opc.Ua.Schema.Model
                 while (m_symbolicIds.Values.Any(x => x == symbolicId))
                 {
                     symbolicId = new XmlQualifiedName(
-                        $"{symbolicId.Name}_{NodeId.Parse(node.NodeId).Identifier}",
+                        $"{symbolicId.Name}_{NodeId.Parse(node.NodeId).IdentifierAsString}",
                         symbolicId.Namespace);
                 }
 
@@ -1868,7 +1873,7 @@ namespace Opc.Ua.Schema.Model
 
                 NodeId nodeId = ImportNodeId(node.NodeId);
 
-                if (nodeId != null &&
+                if (!nodeId.IsNullNodeId &&
                     m_settings.NodesById.TryGetValue(nodeId, out NodeDesign design))
                 {
                     items.Add(design);
@@ -2138,8 +2143,11 @@ namespace Opc.Ua.Schema.Model
                 return null;
             }
 
-            NodeId referenceTypeId = ImportNodeId(source.ReferenceType, true) ??
+            NodeId referenceTypeId = ImportNodeId(source.ReferenceType, true);
+            if (referenceTypeId.IsNullNodeId)
+            {
                 throw new InvalidDataException($"ReferenceType ({source.ReferenceType}) is not valid.");
+            }
 
             ExpandedNodeId targetId = ImportExpandedNodeId(source.Value);
 
@@ -2175,7 +2183,7 @@ namespace Opc.Ua.Schema.Model
                 ushort namespaceIndex = ImportNamespaceIndex(
                     nodeId.NamespaceIndex,
                     m_settings.NamespaceUris);
-                nodeId = new NodeId(nodeId.Identifier, namespaceIndex);
+                nodeId = nodeId.WithNamespaceIndex(namespaceIndex);
             }
 
             return nodeId;

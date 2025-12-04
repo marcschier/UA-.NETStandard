@@ -184,7 +184,7 @@ namespace MemoryBuffer
                     return null;
                 }
 
-                if (nodeId.Identifier is string id)
+                if (nodeId.TryGetIdentifier(out string id))
                 {
                     // check for a reference to the buffer.
 

@@ -718,6 +718,46 @@ namespace Opc.Ua.SourceGeneration
         }
 
         /// <summary>
+        /// If the data type is a value type in .NET.
+        /// </summary>
+        public static bool IsDotNetValueType(
+            this DataTypeDesign dataType,
+            ValueRank valueRank,
+            bool supportsEqualityOperators)
+        {
+            if (valueRank == ValueRank.Array)
+            {
+                return false;
+            }
+            if (dataType.BasicDataType == BasicDataType.BaseDataType ||
+                valueRank != ValueRank.Scalar)
+            {
+                return false;
+            }
+            switch (dataType.BasicDataType)
+            {
+                case BasicDataType.Boolean:
+                case BasicDataType.SByte:
+                case BasicDataType.Byte:
+                case BasicDataType.Int16:
+                case BasicDataType.UInt16:
+                case BasicDataType.Int32:
+                case BasicDataType.UInt32:
+                case BasicDataType.Int64:
+                case BasicDataType.UInt64:
+                case BasicDataType.Float:
+                case BasicDataType.Double:
+                case BasicDataType.String:
+                case BasicDataType.DateTime:
+                case BasicDataType.Guid:
+                case BasicDataType.NodeId:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
         /// Whether a template parameter is required.
         /// </summary>
         public static string GetDefaultDotNetValue(

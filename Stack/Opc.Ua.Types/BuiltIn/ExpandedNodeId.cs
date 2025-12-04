@@ -56,11 +56,7 @@ namespace Opc.Ua
             }
 
             NamespaceUri = value.NamespaceUri;
-
-            if (value.InnerNodeId != null)
-            {
-                InnerNodeId = new NodeId(value.InnerNodeId);
-            }
+            InnerNodeId = value.InnerNodeId;
         }
 
         /// <summary>
@@ -73,11 +69,7 @@ namespace Opc.Ua
         public ExpandedNodeId(NodeId nodeId)
         {
             Initialize();
-
-            if (nodeId != null)
-            {
-                InnerNodeId = new NodeId(nodeId);
-            }
+            InnerNodeId = nodeId;
         }
 
         /// <summary>
@@ -93,7 +85,9 @@ namespace Opc.Ua
             string namespaceUri,
             uint serverIndex)
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             InnerNodeId = new NodeId(identifier, namespaceIndex);
+#pragma warning restore CS0618 // Type or member is obsolete
             NamespaceUri = namespaceUri;
             ServerIndex = serverIndex;
         }
@@ -111,10 +105,7 @@ namespace Opc.Ua
         {
             Initialize();
 
-            if (nodeId != null)
-            {
-                InnerNodeId = new NodeId(nodeId);
-            }
+            InnerNodeId = nodeId;
 
             if (!string.IsNullOrEmpty(namespaceUri))
             {
@@ -136,10 +127,7 @@ namespace Opc.Ua
         {
             Initialize();
 
-            if (nodeId != null)
-            {
-                InnerNodeId = new NodeId(nodeId);
-            }
+            InnerNodeId = nodeId;
 
             if (!string.IsNullOrEmpty(namespaceUri))
             {
@@ -331,7 +319,7 @@ namespace Opc.Ua
         /// </summary>
         private void Initialize()
         {
-            InnerNodeId = null;
+            InnerNodeId = NodeId.Null;
             NamespaceUri = null;
             ServerIndex = 0;
         }
@@ -343,7 +331,7 @@ namespace Opc.Ua
         {
             get
             {
-                if (InnerNodeId != null)
+                if (!InnerNodeId.IsNullNodeId)
                 {
                     return InnerNodeId.NamespaceIndex;
                 }
@@ -359,7 +347,7 @@ namespace Opc.Ua
         {
             get
             {
-                if (InnerNodeId != null)
+                if (!InnerNodeId.IsNullNodeId)
                 {
                     return InnerNodeId.IdType;
                 }
@@ -379,9 +367,11 @@ namespace Opc.Ua
         {
             get
             {
-                if (InnerNodeId != null)
+                if (!InnerNodeId.IsNullNodeId)
                 {
+#pragma warning disable CS0618 // Type or member is obsolete
                     return InnerNodeId.Identifier;
+#pragma warning restore CS0618 // Type or member is obsolete
                 }
 
                 return null;
@@ -424,7 +414,7 @@ namespace Opc.Ua
                     return false;
                 }
 
-                return NodeId.IsNull(InnerNodeId);
+                return InnerNodeId.IsNullNodeId;
             }
         }
 
@@ -491,8 +481,9 @@ namespace Opc.Ua
         /// </summary>
         public void Format(IFormatProvider formatProvider, StringBuilder buffer)
         {
-            if (InnerNodeId != null)
+            if (!InnerNodeId.IsNullNodeId)
             {
+#pragma warning disable CS0618 // Type or member is obsolete
                 Format(
                     formatProvider,
                     buffer,
@@ -501,6 +492,7 @@ namespace Opc.Ua
                     InnerNodeId.NamespaceIndex,
                     NamespaceUri,
                     ServerIndex);
+#pragma warning restore CS0618 // Type or member is obsolete
             }
             else
             {
@@ -604,13 +596,13 @@ namespace Opc.Ua
             // check for absolute node id.
             if (nodeId.ServerIndex != 0)
             {
-                nodeId.InnerNodeId = new NodeId(nodeId.InnerNodeId.Identifier, 0);
+                nodeId.InnerNodeId = nodeId.InnerNodeId.WithNamespaceIndex(0);
                 nodeId.NamespaceUri = uri;
                 return nodeId;
             }
 
             // local node id.
-            nodeId.InnerNodeId = new NodeId(nodeId.InnerNodeId.Identifier, namespaceIndex);
+            nodeId.InnerNodeId = nodeId.InnerNodeId.WithNamespaceIndex(namespaceIndex);
             nodeId.NamespaceUri = null;
 
             return nodeId;
@@ -948,11 +940,13 @@ namespace Opc.Ua
 
             if (namespaceIndex > 0)
             {
+#pragma warning disable CS0618 // Type or member is obsolete
                 value = new ExpandedNodeId(
                     nodeId.Identifier,
                     (ushort)namespaceIndex,
                     null,
                     (uint)serverIndex);
+#pragma warning restore CS0618 // Type or member is obsolete
             }
             else
             {
@@ -1033,7 +1027,7 @@ namespace Opc.Ua
             // check for null.
             if (obj is null)
             {
-                return -1;
+                return IsNull ? 0 : -1;
             }
 
             // check for reference comparisons.
@@ -1043,17 +1037,19 @@ namespace Opc.Ua
             }
 
             // just compare node ids.
-            if (!IsAbsolute && InnerNodeId != null)
+            if (!IsAbsolute && !InnerNodeId.IsNullNodeId)
             {
                 return InnerNodeId.CompareTo(obj);
             }
 
-            var nodeId = obj as NodeId;
-
-            // check for expanded node ids.
-            var expandedId = obj as ExpandedNodeId;
-
-            if (expandedId != null)
+            if (obj is NodeId nodeId)
+            {
+                if (IsNull && nodeId.IsNullNodeId)
+                {
+                    return 0;
+                }
+            }
+            else if (obj is ExpandedNodeId expandedId)
             {
                 if (IsNull && expandedId.IsNull)
                 {
@@ -1077,15 +1073,19 @@ namespace Opc.Ua
 
                 nodeId = expandedId.InnerNodeId;
             }
+            else
+            {
+                nodeId = NodeId.Null;
+            }
 
             // check for null.
-            if (InnerNodeId != null)
+            if (!InnerNodeId.IsNullNodeId)
             {
                 return InnerNodeId.CompareTo(nodeId);
             }
 
             // compare node ids.
-            return nodeId == null ? 0 : -1;
+            return nodeId.IsNullNodeId ? 0 : -1;
         }
 
         /// <inheritdoc/>
@@ -1130,7 +1130,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            if (InnerNodeId == null || InnerNodeId.IsNullNodeId)
+            if (InnerNodeId.IsNullNodeId)
             {
                 return 0;
             }
@@ -1163,6 +1163,10 @@ namespace Opc.Ua
         {
             if (value1 is null)
             {
+                if (value2 is ExpandedNodeId expandedNodeId)
+                {
+                    return NodeId.IsNull(expandedNodeId);
+                }
                 return value2 is null;
             }
 
@@ -1172,12 +1176,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public static bool operator !=(ExpandedNodeId value1, object value2)
         {
-            if (value1 is null)
-            {
-                return value2 is not null;
-            }
-
-            return value1.CompareTo(value2) != 0;
+            return !(value1 == value2);
         }
 
         /// <inheritdoc/>
@@ -1235,7 +1234,7 @@ namespace Opc.Ua
             // check for null.
             if (nodeId == null)
             {
-                return null;
+                return NodeId.Null;
             }
 
             // return a reference to the internal node id object.
@@ -1245,7 +1244,7 @@ namespace Opc.Ua
             }
 
             // create copy.
-            var localId = new NodeId(nodeId.InnerNodeId);
+            NodeId localId = nodeId.InnerNodeId;
 
             int index = -1;
 
@@ -1256,38 +1255,39 @@ namespace Opc.Ua
 
             if (index < 0)
             {
-                return null;
+                return NodeId.Null;
             }
 
-            localId.SetNamespaceIndex((ushort)index);
-
-            return localId;
+            return localId.WithNamespaceIndex((ushort)index);
         }
 
         /// <summary>
         /// Updates the namespace index.
         /// </summary>
-        internal void SetNamespaceIndex(ushort namespaceIndex)
+        internal ExpandedNodeId SetNamespaceIndex(ushort namespaceIndex)
         {
-            InnerNodeId.SetNamespaceIndex(namespaceIndex);
+            InnerNodeId = InnerNodeId.WithNamespaceIndex(namespaceIndex);
             NamespaceUri = null;
+            return this;
         }
 
         /// <summary>
         /// Updates the namespace uri.
         /// </summary>
-        internal void SetNamespaceUri(string uri)
+        internal ExpandedNodeId SetNamespaceUri(string uri)
         {
-            InnerNodeId.SetNamespaceIndex(0);
+            InnerNodeId = InnerNodeId.WithNamespaceIndex(0);
             NamespaceUri = uri;
+            return this;
         }
 
         /// <summary>
         /// Updates the server index.
         /// </summary>
-        internal void SetServerIndex(uint serverIndex)
+        internal ExpandedNodeId SetServerIndex(uint serverIndex)
         {
             ServerIndex = serverIndex;
+            return this;
         }
 
         /// <summary>
@@ -1298,7 +1298,7 @@ namespace Opc.Ua
         /// <returns>The formatted identifier.</returns>
         public string Format(IServiceMessageContext context, bool useUris = false)
         {
-            if (NodeId.IsNull(InnerNodeId))
+            if (InnerNodeId.IsNullNodeId)
             {
                 return null;
             }
@@ -1354,18 +1354,22 @@ namespace Opc.Ua
         /// <exception cref="ServiceResultException">Thrown if the namespace URI is not in the namespace table.</exception>
         public static NodeId Parse(string text, NamespaceTable namespaceUris)
         {
-            ExpandedNodeId nodeId = Parse(text);
+            ExpandedNodeId expandedNodeId = Parse(text);
 
-            if (!nodeId.IsAbsolute)
+            if (!expandedNodeId.IsAbsolute)
             {
-                return nodeId.InnerNodeId;
+                return expandedNodeId.InnerNodeId;
             }
 
-            return ToNodeId(nodeId, namespaceUris)
-                ?? throw ServiceResultException.Create(
+            NodeId nodeId = ToNodeId(expandedNodeId, namespaceUris);
+            if (nodeId.IsNullNodeId)
+            {
+                throw ServiceResultException.Create(
                     StatusCodes.BadNodeIdInvalid,
                     "NamespaceUri ({0}) is not in the namespace table.",
-                    nodeId.NamespaceUri);
+                    expandedNodeId.NamespaceUri);
+            }
+            return nodeId;
         }
 
         /// <summary>
@@ -1376,7 +1380,7 @@ namespace Opc.Ua
         {
             if (value == null)
             {
-                return null;
+                return NodeId.Null;
             }
 
             if (value.IsAbsolute)

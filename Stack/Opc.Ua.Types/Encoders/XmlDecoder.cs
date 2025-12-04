@@ -1104,7 +1104,7 @@ namespace Opc.Ua
                 if (m_namespaceMappings != null &&
                     m_namespaceMappings.Length > value.NamespaceIndex)
                 {
-                    value.SetNamespaceIndex(m_namespaceMappings[value.NamespaceIndex]);
+                    return value.WithNamespaceIndex(m_namespaceMappings[value.NamespaceIndex]);
                 }
 
                 return value;
@@ -1145,14 +1145,14 @@ namespace Opc.Ua
                     m_namespaceMappings.Length > value.NamespaceIndex &&
                     !value.IsNull)
                 {
-                    value.SetNamespaceIndex(m_namespaceMappings[value.NamespaceIndex]);
+                    value = value.SetNamespaceIndex(m_namespaceMappings[value.NamespaceIndex]);
                 }
 
                 if (m_serverMappings != null &&
                     m_serverMappings.Length > value.ServerIndex &&
                     !value.IsNull)
                 {
-                    value.SetServerIndex(m_serverMappings[value.ServerIndex]);
+                    value = value.SetServerIndex(m_serverMappings[value.ServerIndex]);
                 }
 
                 return value;
@@ -1375,7 +1375,7 @@ namespace Opc.Ua
             // convert to absolute type id.
             var absoluteId = NodeId.ToExpandedNodeId(typeId, Context.NamespaceUris);
 
-            if (!NodeId.IsNull(typeId) && NodeId.IsNull(absoluteId))
+            if (!typeId.IsNullNodeId && NodeId.IsNull(absoluteId))
             {
                 m_logger.LogWarning(
                     "Cannot de-serialize extension objects if the NamespaceUri is not in the NamespaceTable: Type = {Type}",

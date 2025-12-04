@@ -286,7 +286,7 @@ namespace Opc.Ua
             get => m_nodeId;
             set
             {
-                if (!ReferenceEquals(m_nodeId, value))
+                if (m_nodeId != value)
                 {
                     m_changeMasks |= NodeStateChangeMasks.NonValue;
                 }
@@ -845,7 +845,7 @@ namespace Opc.Ua
 
             attributesToSave |= AttributesToSave.NodeClass;
 
-            if (!NodeId.IsNull(m_nodeId))
+            if (!m_nodeId.IsNullNodeId)
             {
                 attributesToSave |= AttributesToSave.NodeId;
             }
@@ -1369,7 +1369,7 @@ namespace Opc.Ua
 
             encoder.WriteEnumerated("NodeClass", NodeClass);
 
-            if (!NodeId.IsNull(m_nodeId))
+            if (!m_nodeId.IsNullNodeId)
             {
                 encoder.WriteNodeId("NodeId", m_nodeId);
             }
@@ -1435,7 +1435,7 @@ namespace Opc.Ua
             {
                 NodeId nodeId = decoder.ReadNodeId("NodeId");
 
-                if (!NodeId.IsNull(nodeId))
+                if (!nodeId.IsNullNodeId)
                 {
                     NodeId = nodeId;
                 }
@@ -1534,7 +1534,7 @@ namespace Opc.Ua
                 {
                     encoder.Push("Reference", Namespaces.OpcUaXsd);
 
-                    if (!NodeId.IsNull(reference.ReferenceTypeId))
+                    if (!reference.ReferenceTypeId.IsNullNodeId)
                     {
                         encoder.WriteNodeId("ReferenceTypeId", reference.ReferenceTypeId);
                     }
@@ -1610,7 +1610,7 @@ namespace Opc.Ua
             {
                 decoder.ReadStartElement();
 
-                NodeId referenceTypeId = null;
+                NodeId referenceTypeId = default;
                 bool isInverse = false;
                 ExpandedNodeId targetId = null;
 
@@ -1784,13 +1784,13 @@ namespace Opc.Ua
         {
             decoder.PushNamespace(Namespaces.OpcUaXsd);
 
-            NodeId nodeId = null;
+            NodeId nodeId = default;
             LocalizedText displayName = null;
             LocalizedText description = null;
             AttributeWriteMask writeMask = AttributeWriteMask.None;
             const AttributeWriteMask userWriteMask = AttributeWriteMask.None;
-            NodeId referenceTypeId = null;
-            NodeId typeDefinitionId = null;
+            NodeId referenceTypeId = default;
+            NodeId typeDefinitionId = default;
 
             if ((attributesToLoad & AttributesToSave.NodeId) != 0)
             {
@@ -1855,8 +1855,7 @@ namespace Opc.Ua
                     nodeClass,
                     browseName,
                     referenceTypeId,
-                    typeDefinitionId)
-                is not BaseInstanceState child)
+                    typeDefinitionId) is not BaseInstanceState child)
             {
                 throw ServiceResultException.Create(
                     StatusCodes.BadDecodingError,
@@ -1926,7 +1925,7 @@ namespace Opc.Ua
 
                     // create the appropriate node.
                     NodeState child =
-                        factory.CreateInstance(context, null, nodeClass, browseName, null, null)
+                        factory.CreateInstance(context, null, nodeClass, browseName, default, default)
                         ?? throw ServiceResultException.Create(
                             StatusCodes.BadDecodingError,
                             "Could not load node '{0}', with NodeClass {1}",
@@ -1995,7 +1994,7 @@ namespace Opc.Ua
 
                     // create the appropriate node.
                     NodeState child =
-                        factory.CreateInstance(context, null, nodeClass, browseName, null, null)
+                        factory.CreateInstance(context, null, nodeClass, browseName, default, default)
                         ?? throw ServiceResultException.Create(
                             StatusCodes.BadDecodingError,
                             "Could not load node '{0}', with NodeClass {1}",
@@ -2412,13 +2411,13 @@ namespace Opc.Ua
             bool isInverse,
             NodeState target)
         {
-            if (NodeId.IsNull(referenceTypeId))
+            if (referenceTypeId.IsNullNodeId)
             {
                 referenceTypeId = ReferenceTypeIds.HasEventSource;
             }
 
             // ensure duplicate references are not left over from the model design.
-            if (!NodeId.IsNull(target.NodeId))
+            if (!target.NodeId.IsNullNodeId)
             {
                 RemoveReference(referenceTypeId, isInverse, target.NodeId);
             }
@@ -2720,7 +2719,7 @@ namespace Opc.Ua
             CallOnBeforeCreate(context);
 
             // override node id.
-            if (nodeId != null)
+            if (!nodeId.IsNullNodeId)
             {
                 NodeId = nodeId;
             }
@@ -2884,7 +2883,7 @@ namespace Opc.Ua
             NodeId oldId = NodeId;
             NodeId newId = context.NodeIdFactory.New(context, this);
 
-            if (!NodeId.IsNull(oldId))
+            if (!oldId.IsNullNodeId)
             {
                 mappingTable[oldId] = newId;
             }
@@ -3022,7 +3021,7 @@ namespace Opc.Ua
                             reference.TargetId,
                             context.NamespaceUris);
 
-                        if (targetId == null)
+                        if (targetId.IsNullNodeId)
                         {
                             references.Add(new NodeStateHierarchyReference(browsePath, reference));
                             continue;
@@ -3088,7 +3087,7 @@ namespace Opc.Ua
                             reference.TargetId,
                             context.NamespaceUris);
 
-                        if (oldId == null)
+                        if (oldId.IsNullNodeId)
                         {
                             continue;
                         }
@@ -3140,15 +3139,15 @@ namespace Opc.Ua
             // get the reference type being browsed.
             NodeId referenceTypeId = browser.ReferenceType;
 
-            if (NodeId.IsNull(referenceTypeId) ||
+            if (referenceTypeId.IsNullNodeId ||
                 browser.ReferenceType == ReferenceTypeIds.References)
             {
-                referenceTypeId = null;
+                referenceTypeId = default;
             }
 
             var children = new List<BaseInstanceState>();
 
-            bool childrenRequired = referenceTypeId == null;
+            bool childrenRequired = referenceTypeId.IsNullNodeId;
 
             // check if any hierarchial reference is being requested.
             if (!childrenRequired &&
@@ -3214,7 +3213,7 @@ namespace Opc.Ua
                 // add any arbitrary references.
                 if (m_references != null)
                 {
-                    if (referenceTypeId == null)
+                    if (referenceTypeId.IsNullNodeId)
                     {
                         foreach (IReference reference in m_references.Keys)
                         {
@@ -4222,7 +4221,7 @@ namespace Opc.Ua
             {
                 child.Parent = this;
 
-                if (NodeId.IsNull(child.ReferenceTypeId))
+                if (child.ReferenceTypeId.IsNullNodeId)
                 {
                     child.ReferenceTypeId = ReferenceTypeIds.HasComponent;
                 }
@@ -4245,10 +4244,10 @@ namespace Opc.Ua
             PropertyState property = new PropertyState<T>(this)
             {
                 ReferenceTypeId = ReferenceTypeIds.HasProperty,
-                ModellingRuleId = null,
+                ModellingRuleId = default,
                 TypeDefinitionId = VariableTypeIds.PropertyType,
                 SymbolicName = propertyName,
-                NodeId = null,
+                NodeId = default,
                 BrowseName = propertyName,
                 DisplayName = propertyName,
                 Description = null,
@@ -4491,7 +4490,7 @@ namespace Opc.Ua
         {
             lock (m_referencesLock)
             {
-                if (m_references == null || referenceTypeId == null || targetId == null)
+                if (m_references == null || referenceTypeId.IsNullNodeId || targetId == null)
                 {
                     return false;
                 }
@@ -4510,7 +4509,7 @@ namespace Opc.Ua
         /// <exception cref="ArgumentNullException"></exception>
         public void AddReference(NodeId referenceTypeId, bool isInverse, ExpandedNodeId targetId)
         {
-            if (NodeId.IsNull(referenceTypeId))
+            if (referenceTypeId.IsNullNodeId)
             {
                 throw new ArgumentNullException(nameof(referenceTypeId));
             }
@@ -4541,7 +4540,7 @@ namespace Opc.Ua
         /// <exception cref="ArgumentNullException"></exception>
         public bool RemoveReference(NodeId referenceTypeId, bool isInverse, ExpandedNodeId targetId)
         {
-            if (NodeId.IsNull(referenceTypeId))
+            if (referenceTypeId.IsNullNodeId)
             {
                 throw new ArgumentNullException(nameof(referenceTypeId));
             }
@@ -4614,7 +4613,7 @@ namespace Opc.Ua
         /// <exception cref="ArgumentNullException"></exception>
         public bool RemoveReferences(NodeId referenceTypeId, bool isInverse)
         {
-            if (NodeId.IsNull(referenceTypeId))
+            if (referenceTypeId.IsNullNodeId)
             {
                 throw new ArgumentNullException(nameof(referenceTypeId));
             }

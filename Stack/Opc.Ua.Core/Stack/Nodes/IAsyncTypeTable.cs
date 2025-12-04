@@ -250,7 +250,7 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public NodeId? FindSuperType(ExpandedNodeId typeId)
+        public NodeId FindSuperType(ExpandedNodeId typeId)
         {
             return m_table.FindSuperTypeAsync(typeId)
                 .AsTask()
@@ -259,7 +259,7 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public NodeId? FindSuperType(NodeId typeId)
+        public NodeId FindSuperType(NodeId typeId)
         {
             return m_table.FindSuperTypeAsync(typeId)
                 .AsTask()

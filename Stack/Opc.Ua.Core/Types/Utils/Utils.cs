@@ -1445,7 +1445,7 @@ namespace Opc.Ua
 
                 try
                 {
-                    var serializer = new DataContractSerializer(typeof(T));
+                    var serializer = CoreUtils.CreateDataContractSerializer<T>();
                     return (T)serializer.ReadObject(reader);
                 }
                 finally
@@ -1487,7 +1487,7 @@ namespace Opc.Ua
                 {
                     try
                     {
-                        var serializer = new DataContractSerializer(typeof(T));
+                        var serializer = CoreUtils.CreateDataContractSerializer<T>();
                         using IDisposable scope = AmbientMessageContext.SetScopedContext(telemetry);
                         serializer.WriteObject(writer, value);
                     }
@@ -1974,7 +1974,7 @@ namespace Opc.Ua
         /// <param name="certificateType">The certificate type to check.</param>
         public static bool IsSupportedCertificateType(NodeId certificateType)
         {
-            if (certificateType.Identifier is not uint identifier)
+            if (!certificateType.TryGetIdentifier(out uint identifier))
             {
                 return false;
             }

@@ -69,7 +69,7 @@ namespace Opc.Ua
             get => m_superTypeId;
             set
             {
-                if (!ReferenceEquals(m_superTypeId, value))
+                if (m_superTypeId != value)
                 {
                     ChangeMasks |= NodeStateChangeMasks.References;
                 }
@@ -114,7 +114,7 @@ namespace Opc.Ua
         {
             base.Export(context, node);
 
-            if (!NodeId.IsNull(SuperTypeId))
+            if (!SuperTypeId.IsNullNodeId)
             {
                 node.ReferenceTable.Add(ReferenceTypeIds.HasSubtype, true, SuperTypeId);
             }
@@ -147,7 +147,7 @@ namespace Opc.Ua
 
             encoder.PushNamespace(Namespaces.OpcUaXsd);
 
-            if (!NodeId.IsNull(m_superTypeId))
+            if (!m_superTypeId.IsNullNodeId)
             {
                 encoder.WriteNodeId("SuperTypeId", m_superTypeId);
             }
@@ -193,7 +193,7 @@ namespace Opc.Ua
         {
             AttributesToSave attributesToSave = base.GetAttributesToSave(context);
 
-            if (!NodeId.IsNull(m_superTypeId))
+            if (!m_superTypeId.IsNullNodeId)
             {
                 attributesToSave |= AttributesToSave.SuperTypeId;
             }
@@ -343,7 +343,7 @@ namespace Opc.Ua
 
             NodeId superTypeId = m_superTypeId;
 
-            if (!NodeId.IsNull(superTypeId) &&
+            if (!superTypeId.IsNullNodeId &&
                 browser.IsRequired(ReferenceTypeIds.HasSubtype, true))
             {
                 browser.Add(ReferenceTypeIds.HasSubtype, true, superTypeId);
@@ -353,7 +353,7 @@ namespace Opc.Ua
 
             // use the type table to find the subtypes.
             if (context.TypeTable != null &&
-                nodeId != null &&
+                !nodeId.IsNullNodeId &&
                 browser.IsRequired(ReferenceTypeIds.HasSubtype, false))
             {
                 IList<NodeId> subtypeIds = context.TypeTable.FindSubTypes(nodeId);

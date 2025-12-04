@@ -129,7 +129,7 @@ namespace Opc.Ua.Security
                     // find the SecuredApplication element in the file.
                     if (data.ToString().Contains("SecuredApplication", StringComparison.Ordinal))
                     {
-                        var serializer = new DataContractSerializer(typeof(SecuredApplication));
+                        var serializer = CoreUtils.CreateDataContractSerializer<SecuredApplication>();
                         using IDisposable scope = AmbientMessageContext.SetScopedContext(m_telemetry);
                         application = serializer.ReadObject(reader) as SecuredApplication;
 
@@ -145,8 +145,7 @@ namespace Opc.Ua.Security
                             FileMode.Open,
                             FileAccess.Read,
                             FileShare.Read);
-                        var serializer = new DataContractSerializer(
-                            typeof(ApplicationConfiguration));
+                        var serializer = CoreUtils.CreateDataContractSerializer<ApplicationConfiguration>();
                         using IDisposable scope =
                             AmbientMessageContext.SetScopedContext(m_telemetry);
                         applicationConfiguration = serializer.ReadObject(
@@ -473,7 +472,7 @@ namespace Opc.Ua.Security
                 Encoding.UTF8,
                 new XmlDictionaryReaderQuotas(),
                 null);
-            var serializer = new DataContractSerializer(type);
+            var serializer = CoreUtils.CreateDataContractSerializer(type);
             using IDisposable scope = AmbientMessageContext.SetScopedContext(m_telemetry);
             return serializer.ReadObject(reader);
         }
@@ -484,7 +483,7 @@ namespace Opc.Ua.Security
         private string SetObject(Type type, object value)
         {
             using var memoryStream = new MemoryStream();
-            var serializer = new DataContractSerializer(value?.GetType() ?? type);
+            var serializer = CoreUtils.CreateDataContractSerializer(value?.GetType() ?? type);
             using IDisposable scope = AmbientMessageContext.SetScopedContext(m_telemetry);
             serializer.WriteObject(memoryStream, value);
 

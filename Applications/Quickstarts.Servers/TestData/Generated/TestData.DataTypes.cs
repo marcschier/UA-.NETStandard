@@ -50,13 +50,13 @@ namespace TestData
         {
             Initialize();
         }
-            
+
         [OnDeserializing]
         private void Initialize(StreamingContext context)
         {
             Initialize();
         }
-            
+
         private void Initialize()
         {
             m_booleanValue = true;
@@ -75,7 +75,7 @@ namespace TestData
             m_guidValue = Uuid.Empty;
             m_byteStringValue = null;
             m_xmlElementValue = null;
-            m_nodeIdValue = null;
+            m_nodeIdValue = default;
             m_expandedNodeIdValue = null;
             m_qualifiedNameValue = null;
             m_localizedTextValue = null;
@@ -309,16 +309,16 @@ namespace TestData
 
         #region IEncodeable Members
         /// <summary cref="IEncodeable.TypeId" />
-        public virtual ExpandedNodeId TypeId => DataTypeIds.ScalarStructureDataType; 
+        public virtual ExpandedNodeId TypeId => DataTypeIds.ScalarStructureDataType;
 
         /// <summary cref="IEncodeable.BinaryEncodingId" />
         public virtual ExpandedNodeId BinaryEncodingId => ObjectIds.ScalarStructureDataType_Encoding_DefaultBinary;
 
         /// <summary cref="IEncodeable.XmlEncodingId" />
         public virtual ExpandedNodeId XmlEncodingId => ObjectIds.ScalarStructureDataType_Encoding_DefaultXml;
-                    
+
         /// <summary cref="IJsonEncodeable.JsonEncodingId" />
-        public virtual ExpandedNodeId JsonEncodingId => ObjectIds.ScalarStructureDataType_Encoding_DefaultJson; 
+        public virtual ExpandedNodeId JsonEncodingId => ObjectIds.ScalarStructureDataType_Encoding_DefaultJson;
 
         /// <summary cref="IEncodeable.Encode(IEncoder)" />
         public virtual void Encode(IEncoder encoder)
@@ -593,13 +593,13 @@ namespace TestData
         {
             Initialize();
         }
-            
+
         [OnDeserializing]
         private void Initialize(StreamingContext context)
         {
             Initialize();
         }
-            
+
         private void Initialize()
         {
             m_booleanValue = new BooleanCollection();
@@ -1176,16 +1176,16 @@ namespace TestData
 
         #region IEncodeable Members
         /// <summary cref="IEncodeable.TypeId" />
-        public virtual ExpandedNodeId TypeId => DataTypeIds.ArrayValueDataType; 
+        public virtual ExpandedNodeId TypeId => DataTypeIds.ArrayValueDataType;
 
         /// <summary cref="IEncodeable.BinaryEncodingId" />
         public virtual ExpandedNodeId BinaryEncodingId => ObjectIds.ArrayValueDataType_Encoding_DefaultBinary;
 
         /// <summary cref="IEncodeable.XmlEncodingId" />
         public virtual ExpandedNodeId XmlEncodingId => ObjectIds.ArrayValueDataType_Encoding_DefaultXml;
-                    
+
         /// <summary cref="IJsonEncodeable.JsonEncodingId" />
-        public virtual ExpandedNodeId JsonEncodingId => ObjectIds.ArrayValueDataType_Encoding_DefaultJson; 
+        public virtual ExpandedNodeId JsonEncodingId => ObjectIds.ArrayValueDataType_Encoding_DefaultJson;
 
         /// <summary cref="IEncodeable.Encode(IEncoder)" />
         public virtual void Encode(IEncoder encoder)
@@ -1460,13 +1460,13 @@ namespace TestData
         {
             Initialize();
         }
-            
+
         [OnDeserializing]
         private void Initialize(StreamingContext context)
         {
             Initialize();
         }
-            
+
         private void Initialize()
         {
             m_booleanDataType = true;
@@ -1485,7 +1485,7 @@ namespace TestData
             m_guidDataType = Uuid.Empty;
             m_byteStringDataType = null;
             m_xmlElementDataType = null;
-            m_nodeIdDataType = null;
+            m_nodeIdDataType = default;
             m_expandedNodeIdDataType = null;
             m_qualifiedNameDataType = null;
             m_localizedTextDataType = null;
@@ -1674,16 +1674,16 @@ namespace TestData
 
         #region IEncodeable Members
         /// <summary cref="IEncodeable.TypeId" />
-        public virtual ExpandedNodeId TypeId => DataTypeIds.UserScalarValueDataType; 
+        public virtual ExpandedNodeId TypeId => DataTypeIds.UserScalarValueDataType;
 
         /// <summary cref="IEncodeable.BinaryEncodingId" />
         public virtual ExpandedNodeId BinaryEncodingId => ObjectIds.UserScalarValueDataType_Encoding_DefaultBinary;
 
         /// <summary cref="IEncodeable.XmlEncodingId" />
         public virtual ExpandedNodeId XmlEncodingId => ObjectIds.UserScalarValueDataType_Encoding_DefaultXml;
-                    
+
         /// <summary cref="IJsonEncodeable.JsonEncodingId" />
-        public virtual ExpandedNodeId JsonEncodingId => ObjectIds.UserScalarValueDataType_Encoding_DefaultJson; 
+        public virtual ExpandedNodeId JsonEncodingId => ObjectIds.UserScalarValueDataType_Encoding_DefaultJson;
 
         /// <summary cref="IEncodeable.Encode(IEncoder)" />
         public virtual void Encode(IEncoder encoder)
@@ -1933,13 +1933,13 @@ namespace TestData
         {
             Initialize();
         }
-            
+
         [OnDeserializing]
         private void Initialize(StreamingContext context)
         {
             Initialize();
         }
-            
+
         private void Initialize()
         {
             m_booleanDataType = new BooleanCollection();
@@ -2411,16 +2411,16 @@ namespace TestData
 
         #region IEncodeable Members
         /// <summary cref="IEncodeable.TypeId" />
-        public virtual ExpandedNodeId TypeId => DataTypeIds.UserArrayValueDataType; 
+        public virtual ExpandedNodeId TypeId => DataTypeIds.UserArrayValueDataType;
 
         /// <summary cref="IEncodeable.BinaryEncodingId" />
         public virtual ExpandedNodeId BinaryEncodingId => ObjectIds.UserArrayValueDataType_Encoding_DefaultBinary;
 
         /// <summary cref="IEncodeable.XmlEncodingId" />
         public virtual ExpandedNodeId XmlEncodingId => ObjectIds.UserArrayValueDataType_Encoding_DefaultXml;
-                    
+
         /// <summary cref="IJsonEncodeable.JsonEncodingId" />
-        public virtual ExpandedNodeId JsonEncodingId => ObjectIds.UserArrayValueDataType_Encoding_DefaultJson; 
+        public virtual ExpandedNodeId JsonEncodingId => ObjectIds.UserArrayValueDataType_Encoding_DefaultJson;
 
         /// <summary cref="IEncodeable.Encode(IEncoder)" />
         public virtual void Encode(IEncoder encoder)
@@ -2670,13 +2670,13 @@ namespace TestData
         {
             Initialize();
         }
-            
+
         [OnDeserializing]
         private void Initialize(StreamingContext context)
         {
             Initialize();
         }
-            
+
         private void Initialize()
         {
             m_x = (double)0;
@@ -2713,16 +2713,16 @@ namespace TestData
 
         #region IEncodeable Members
         /// <summary cref="IEncodeable.TypeId" />
-        public virtual ExpandedNodeId TypeId => DataTypeIds.Vector; 
+        public virtual ExpandedNodeId TypeId => DataTypeIds.Vector;
 
         /// <summary cref="IEncodeable.BinaryEncodingId" />
         public virtual ExpandedNodeId BinaryEncodingId => ObjectIds.Vector_Encoding_DefaultBinary;
 
         /// <summary cref="IEncodeable.XmlEncodingId" />
         public virtual ExpandedNodeId XmlEncodingId => ObjectIds.Vector_Encoding_DefaultXml;
-                    
+
         /// <summary cref="IJsonEncodeable.JsonEncodingId" />
-        public virtual ExpandedNodeId JsonEncodingId => ObjectIds.Vector_Encoding_DefaultJson; 
+        public virtual ExpandedNodeId JsonEncodingId => ObjectIds.Vector_Encoding_DefaultJson;
 
         /// <summary cref="IEncodeable.Encode(IEncoder)" />
         public virtual void Encode(IEncoder encoder)
@@ -2939,7 +2939,7 @@ namespace TestData
 
         #region IEncodeable Members
         /// <summary cref="IEncodeable.TypeId" />
-        public virtual ExpandedNodeId TypeId => DataTypeIds.VectorUnion; 
+        public virtual ExpandedNodeId TypeId => DataTypeIds.VectorUnion;
 
         /// <summary cref="IEncodeable.BinaryEncodingId" />
         public virtual ExpandedNodeId BinaryEncodingId => ObjectIds.VectorUnion_Encoding_DefaultBinary;
@@ -2948,7 +2948,7 @@ namespace TestData
         public virtual ExpandedNodeId XmlEncodingId => ObjectIds.VectorUnion_Encoding_DefaultXml;
 
         /// <summary cref="IJsonEncodeable.JsonEncodingId" />
-        public virtual ExpandedNodeId JsonEncodingId => ObjectIds.VectorUnion_Encoding_DefaultJson; 
+        public virtual ExpandedNodeId JsonEncodingId => ObjectIds.VectorUnion_Encoding_DefaultJson;
 
         /// <summary cref="IEncodeable.Encode(IEncoder)" />
         public virtual void Encode(IEncoder encoder)
@@ -2963,7 +2963,7 @@ namespace TestData
                 case VectorUnionFields.Y: { encoder.WriteDouble("Y", Y); break; }
                 case VectorUnionFields.Z: { encoder.WriteDouble("Z", Z); break; }
             }
-            
+
             encoder.PopNamespace();
         }
 
@@ -2973,7 +2973,7 @@ namespace TestData
             decoder.PushNamespace(TestData.Namespaces.TestData);
 
             SwitchField = (VectorUnionFields)decoder.ReadUInt32(nameof(SwitchField));
-                
+
             switch (SwitchField)
             {
                 default: { break; }
@@ -3116,9 +3116,9 @@ namespace TestData
     #if (!OPCUA_EXCLUDE_VectorWithOptionalFields)
     /// <remarks />
     /// <exclude />
-    
+
     public enum VectorWithOptionalFieldsFields : uint
-    {   
+    {
         None = 0,
         /// <remarks />
         X = 0x1,
@@ -3127,7 +3127,7 @@ namespace TestData
         /// <remarks />
         Z = 0x4
     }
-        
+
     /// <remarks />
     /// <exclude />
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Opc.Ua.ModelCompiler", "1.0.0.0")]
@@ -3188,16 +3188,16 @@ namespace TestData
 
         #region IEncodeable Members
         /// <summary cref="IEncodeable.TypeId" />
-        public virtual ExpandedNodeId TypeId => DataTypeIds.VectorWithOptionalFields; 
+        public virtual ExpandedNodeId TypeId => DataTypeIds.VectorWithOptionalFields;
 
         /// <summary cref="IEncodeable.BinaryEncodingId" />
         public virtual ExpandedNodeId BinaryEncodingId => ObjectIds.VectorWithOptionalFields_Encoding_DefaultBinary;
 
         /// <summary cref="IEncodeable.XmlEncodingId" />
         public virtual ExpandedNodeId XmlEncodingId => ObjectIds.VectorWithOptionalFields_Encoding_DefaultXml;
-            
+
         /// <summary cref="IJsonEncodeable.JsonEncodingId" />
-        public virtual ExpandedNodeId JsonEncodingId => ObjectIds.VectorWithOptionalFields_Encoding_DefaultJson; 
+        public virtual ExpandedNodeId JsonEncodingId => ObjectIds.VectorWithOptionalFields_Encoding_DefaultJson;
 
         /// <summary cref="IEncodeable.Encode(IEncoder)" />
         public virtual void Encode(IEncoder encoder)
@@ -3359,13 +3359,13 @@ namespace TestData
         {
             Initialize();
         }
-            
+
         [OnDeserializing]
         private void Initialize(StreamingContext context)
         {
             Initialize();
         }
-            
+
         private void Initialize()
         {
             m_vector = new Vector();
@@ -3501,16 +3501,16 @@ namespace TestData
 
         #region IEncodeable Members
         /// <summary cref="IEncodeable.TypeId" />
-        public virtual ExpandedNodeId TypeId => DataTypeIds.MultipleVectors; 
+        public virtual ExpandedNodeId TypeId => DataTypeIds.MultipleVectors;
 
         /// <summary cref="IEncodeable.BinaryEncodingId" />
         public virtual ExpandedNodeId BinaryEncodingId => ObjectIds.MultipleVectors_Encoding_DefaultBinary;
 
         /// <summary cref="IEncodeable.XmlEncodingId" />
         public virtual ExpandedNodeId XmlEncodingId => ObjectIds.MultipleVectors_Encoding_DefaultXml;
-                    
+
         /// <summary cref="IJsonEncodeable.JsonEncodingId" />
-        public virtual ExpandedNodeId JsonEncodingId => ObjectIds.MultipleVectors_Encoding_DefaultJson; 
+        public virtual ExpandedNodeId JsonEncodingId => ObjectIds.MultipleVectors_Encoding_DefaultJson;
 
         /// <summary cref="IEncodeable.Encode(IEncoder)" />
         public virtual void Encode(IEncoder encoder)
@@ -3680,13 +3680,13 @@ namespace TestData
         {
             Initialize();
         }
-            
+
         [OnDeserializing]
         private void Initialize(StreamingContext context)
         {
             Initialize();
         }
-            
+
         private void Initialize()
         {
             m_actor = null;
@@ -3723,16 +3723,16 @@ namespace TestData
 
         #region IEncodeable Members
         /// <summary cref="IEncodeable.TypeId" />
-        public virtual ExpandedNodeId TypeId => DataTypeIds.WorkOrderStatusType; 
+        public virtual ExpandedNodeId TypeId => DataTypeIds.WorkOrderStatusType;
 
         /// <summary cref="IEncodeable.BinaryEncodingId" />
         public virtual ExpandedNodeId BinaryEncodingId => ObjectIds.WorkOrderStatusType_Encoding_DefaultBinary;
 
         /// <summary cref="IEncodeable.XmlEncodingId" />
         public virtual ExpandedNodeId XmlEncodingId => ObjectIds.WorkOrderStatusType_Encoding_DefaultXml;
-                    
+
         /// <summary cref="IJsonEncodeable.JsonEncodingId" />
-        public virtual ExpandedNodeId JsonEncodingId => ObjectIds.WorkOrderStatusType_Encoding_DefaultJson; 
+        public virtual ExpandedNodeId JsonEncodingId => ObjectIds.WorkOrderStatusType_Encoding_DefaultJson;
 
         /// <summary cref="IEncodeable.Encode(IEncoder)" />
         public virtual void Encode(IEncoder encoder)
@@ -3887,13 +3887,13 @@ namespace TestData
         {
             Initialize();
         }
-            
+
         [OnDeserializing]
         private void Initialize(StreamingContext context)
         {
             Initialize();
         }
-            
+
         private void Initialize()
         {
             m_iD = Uuid.Empty;
@@ -3951,16 +3951,16 @@ namespace TestData
 
         #region IEncodeable Members
         /// <summary cref="IEncodeable.TypeId" />
-        public virtual ExpandedNodeId TypeId => DataTypeIds.WorkOrderType; 
+        public virtual ExpandedNodeId TypeId => DataTypeIds.WorkOrderType;
 
         /// <summary cref="IEncodeable.BinaryEncodingId" />
         public virtual ExpandedNodeId BinaryEncodingId => ObjectIds.WorkOrderType_Encoding_DefaultBinary;
 
         /// <summary cref="IEncodeable.XmlEncodingId" />
         public virtual ExpandedNodeId XmlEncodingId => ObjectIds.WorkOrderType_Encoding_DefaultXml;
-                    
+
         /// <summary cref="IJsonEncodeable.JsonEncodingId" />
-        public virtual ExpandedNodeId JsonEncodingId => ObjectIds.WorkOrderType_Encoding_DefaultJson; 
+        public virtual ExpandedNodeId JsonEncodingId => ObjectIds.WorkOrderType_Encoding_DefaultJson;
 
         /// <summary cref="IEncodeable.Encode(IEncoder)" />
         public virtual void Encode(IEncoder encoder)

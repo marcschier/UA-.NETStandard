@@ -58,7 +58,7 @@ namespace Opc.Ua
         /// </returns>
         public bool IsTypeOf(IFilterContext context, NodeId typeDefinitionId)
         {
-            return NodeId.IsNull(typeDefinitionId) ||
+            return typeDefinitionId.IsNullNodeId ||
                 context.TypeTree.IsTypeOf(m_typeDefinitionId, typeDefinitionId);
         }
 
@@ -80,7 +80,7 @@ namespace Opc.Ua
             uint attributeId,
             NumericRange indexRange)
         {
-            if (!NodeId.IsNull(typeDefinitionId) &&
+            if (!typeDefinitionId.IsNullNodeId &&
                 !context.TypeTree.IsTypeOf(m_typeDefinitionId, typeDefinitionId))
             {
                 return null;

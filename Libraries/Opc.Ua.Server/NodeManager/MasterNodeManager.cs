@@ -609,7 +609,7 @@ namespace Opc.Ua.Server
             nodeManager = null;
 
             // null node ids have no manager.
-            if (NodeId.IsNull(nodeId))
+            if (nodeId.IsNullNodeId)
             {
                 return null;
             }
@@ -667,7 +667,7 @@ namespace Opc.Ua.Server
             object handle;
 
             // null node ids have no manager.
-            if (NodeId.IsNull(nodeId))
+            if (nodeId.IsNullNodeId)
             {
                 return (null, null);
             }
@@ -1069,7 +1069,7 @@ namespace Opc.Ua.Server
                     return StatusCodes.BadBrowseNameInvalid;
                 }
 
-                if (NodeId.IsNull(element.ReferenceTypeId))
+                if (element.ReferenceTypeId.IsNullNodeId)
                 {
                     element.ReferenceTypeId = ReferenceTypeIds.References;
                     element.IncludeSubtypes = true;
@@ -1131,7 +1131,7 @@ namespace Opc.Ua.Server
             RelativePathElement element = relativePath.Elements[index];
 
             // check for valid reference type.
-            if (!element.IncludeSubtypes && NodeId.IsNull(element.ReferenceTypeId))
+            if (!element.IncludeSubtypes && element.ReferenceTypeId.IsNullNodeId)
             {
                 return;
             }
@@ -1305,7 +1305,7 @@ namespace Opc.Ua.Server
                 throw new ArgumentNullException(nameof(nodesToBrowse));
             }
 
-            if (view != null && !NodeId.IsNull(view.ViewId))
+            if (view != null && !view.ViewId.IsNullNodeId)
             {
                 (object viewHandle, IAsyncNodeManager viewManager) =
                     await GetManagerHandleAsync(view.ViewId, cancellationToken)
@@ -1447,14 +1447,14 @@ namespace Opc.Ua.Server
             for (int i = 0; i < nodesCollection.Count; i++)
             {
                 Type listType = typeof(T);
-                NodeId nodeId = null;
+                NodeId nodeId = default;
 
                 if (listType == typeof(ReadValueId))
                 {
-                    nodeId = (nodesCollection[i] as ReadValueId)?.NodeId;
+                    nodeId = (nodesCollection[i] as ReadValueId)?.NodeId ?? default;
                 }
 
-                if (nodeId == null)
+                if (nodeId.IsNullNodeId)
                 {
                     throw new ArgumentException(
                         "Provided List<T> nodesCollection is of wrong type, T should be type BrowseDescription, ReadValueId or CallMethodRequest",
@@ -1659,7 +1659,7 @@ namespace Opc.Ua.Server
                 return StatusCodes.BadNodeIdUnknown;
             }
 
-            if (!NodeId.IsNull(nodeToBrowse.ReferenceTypeId) &&
+            if (!nodeToBrowse.ReferenceTypeId.IsNullNodeId &&
                 !Server.TypeTree.IsKnown(nodeToBrowse.ReferenceTypeId))
             {
                 return StatusCodes.BadReferenceTypeIdInvalid;
@@ -1702,7 +1702,7 @@ namespace Opc.Ua.Server
             };
 
             // check if reference type left unspecified.
-            if (NodeId.IsNull(cp.ReferenceTypeId))
+            if (cp.ReferenceTypeId.IsNullNodeId)
             {
                 cp.ReferenceTypeId = ReferenceTypeIds.References;
                 cp.IncludeSubtypes = true;
@@ -1831,7 +1831,7 @@ namespace Opc.Ua.Server
             ReferenceDescription description,
             CancellationToken cancellationToken = default)
         {
-            if (targetId == null)
+            if (targetId.IsNullNodeId)
             {
                 throw new ArgumentNullException(nameof(targetId));
             }
@@ -3680,13 +3680,13 @@ namespace Opc.Ua.Server
             }
 
             // check object id.
-            if (NodeId.IsNull(callMethodRequest.ObjectId))
+            if (callMethodRequest.ObjectId.IsNullNodeId)
             {
                 return StatusCodes.BadNodeIdInvalid;
             }
 
             // check method id.
-            if (NodeId.IsNull(callMethodRequest.MethodId))
+            if (callMethodRequest.MethodId.IsNullNodeId)
             {
                 return StatusCodes.BadMethodInvalid;
             }

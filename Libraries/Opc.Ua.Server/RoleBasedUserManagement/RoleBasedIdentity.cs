@@ -198,7 +198,7 @@ namespace Opc.Ua.Server
             Roles = roles;
             foreach (Role role in roles)
             {
-                if (!(role.RoleId?.IsNullNodeId ?? true))
+                if (role != null && !role.RoleId.IsNullNodeId)
                 {
                     GrantedRoleIds.Add(role.RoleId);
                 }

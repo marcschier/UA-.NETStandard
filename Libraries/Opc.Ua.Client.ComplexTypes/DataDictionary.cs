@@ -55,9 +55,9 @@ namespace Opc.Ua.Client.ComplexTypes
         {
             DataTypes = [];
             m_validator = null;
-            TypeSystemId = null;
+            TypeSystemId = default;
             TypeSystemName = null;
-            DictionaryId = null;
+            DictionaryId = default;
             Name = null;
         }
 
@@ -104,7 +104,7 @@ namespace Opc.Ua.Client.ComplexTypes
         /// </summary>
         public string GetSchema(NodeId descriptionId)
         {
-            if (descriptionId != null)
+            if (!descriptionId.IsNullNodeId)
             {
                 if (!DataTypes.TryGetValue(descriptionId, out QualifiedName browseName))
                 {

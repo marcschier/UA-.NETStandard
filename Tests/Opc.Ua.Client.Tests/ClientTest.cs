@@ -437,7 +437,7 @@ namespace Opc.Ua.Client.Tests
             Assert.NotNull(session);
             Session.SessionClosing += SessionClosing;
 
-            var nodeId = new NodeId(VariableIds.ServerStatusType_BuildInfo);
+            var nodeId = VariableIds.ServerStatusType_BuildInfo;
             Node node = await session.ReadNodeAsync(nodeId, CancellationToken.None)
                 .ConfigureAwait(false);
             DataValue value = await session.ReadValueAsync(nodeId, CancellationToken.None)
@@ -472,7 +472,7 @@ namespace Opc.Ua.Client.Tests
             IUserIdentity userIdentity = session.Identity;
             string sessionName = session.SessionName;
 
-            var nodeId = new NodeId(VariableIds.ServerStatusType_BuildInfo);
+            var nodeId = VariableIds.ServerStatusType_BuildInfo;
             Node node = await session.ReadNodeAsync(nodeId, CancellationToken.None)
                 .ConfigureAwait(false);
             DataValue value = await session.ReadValueAsync(nodeId, CancellationToken.None)
@@ -516,7 +516,7 @@ namespace Opc.Ua.Client.Tests
             IUserIdentity userIdentity = session.Identity;
             string sessionName = session.SessionName;
 
-            var nodeId = new NodeId(VariableIds.ServerStatusType_BuildInfo);
+            var nodeId = VariableIds.ServerStatusType_BuildInfo;
             Node node = await session.ReadNodeAsync(nodeId, CancellationToken.None)
                 .ConfigureAwait(false);
             DataValue value = await session.ReadValueAsync(nodeId, CancellationToken.None)

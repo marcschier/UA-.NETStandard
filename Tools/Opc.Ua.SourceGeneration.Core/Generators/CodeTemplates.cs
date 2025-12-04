@@ -2286,7 +2286,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public static readonly TemplateString NodeIdDeclaration_cs = TemplateString.Parse(
             $$"""
-            public static readonly global::Opc.Ua.NodeId {{Tokens.SymbolicName}} =
+            public static global::Opc.Ua.NodeId {{Tokens.SymbolicName}} =>
                 new global::Opc.Ua.NodeId({{Tokens.NamespacePrefix}}.{{Tokens.NodeClass}}s.{{Tokens.SymbolicName}});
 
             """);

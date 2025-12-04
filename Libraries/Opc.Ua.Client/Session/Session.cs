@@ -245,7 +245,7 @@ namespace Opc.Ua.Client
                 ServerUris = ServerUris,
                 TypeTable = TypeTree,
                 PreferredLocales = null,
-                SessionId = null,
+                SessionId = default,
                 UserIdentity = null
             };
         }
@@ -935,7 +935,8 @@ namespace Opc.Ua.Client
             {
                 XmlWriterSettings settings = Utils.DefaultXmlWriterSettings();
                 using var writer = XmlWriter.Create(stream, settings);
-                var serializer = new DataContractSerializer(typeof(SessionConfiguration));
+                DataContractSerializer serializer =
+                    CoreUtils.CreateDataContractSerializer<SessionConfiguration>();
                 using IDisposable scope = AmbientMessageContext.SetScopedContext(MessageContext);
                 serializer.WriteObject(writer, sessionConfiguration);
             }
@@ -959,7 +960,8 @@ namespace Opc.Ua.Client
             XmlWriterSettings settings = Utils.DefaultXmlWriterSettings();
 
             using var writer = XmlWriter.Create(stream, settings);
-            var serializer = new DataContractSerializer(typeof(SubscriptionStateCollection), knownTypes);
+            DataContractSerializer serializer =
+                CoreUtils.CreateDataContractSerializer<SubscriptionStateCollection>(knownTypes);
             using IDisposable scope = AmbientMessageContext.SetScopedContext(MessageContext);
             serializer.WriteObject(writer, subscriptionStateCollection);
         }
@@ -976,7 +978,8 @@ namespace Opc.Ua.Client
             settings.CloseInput = true;
 
             using var reader = XmlReader.Create(stream, settings);
-            var serializer = new DataContractSerializer(typeof(SubscriptionStateCollection), knownTypes);
+            DataContractSerializer serializer =
+                CoreUtils.CreateDataContractSerializer<SubscriptionStateCollection>(knownTypes);
             using IDisposable scope = AmbientMessageContext.SetScopedContext(MessageContext);
             var stateCollection = (SubscriptionStateCollection?)serializer.ReadObject(reader);
             if (stateCollection == null)
@@ -1370,7 +1373,7 @@ namespace Opc.Ua.Client
                 {
                     lock (m_lock)
                     {
-                        SessionCreated(null, null);
+                        SessionCreated(default, default);
                     }
                 }
                 if (closeChannel)
@@ -2199,7 +2202,7 @@ namespace Opc.Ua.Client
                         // raised notification indicating the session is closed.
                         lock (m_lock)
                         {
-                            SessionCreated(null, null);
+                            SessionCreated(default, default);
                         }
                     }
                 }
@@ -3511,7 +3514,7 @@ namespace Opc.Ua.Client
                 }
 
                 // nothing more to do if we were never connected
-                if (NodeId.IsNull(sessionId))
+                if (sessionId.IsNullNodeId)
                 {
                     return;
                 }

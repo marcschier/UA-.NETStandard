@@ -605,7 +605,7 @@ namespace Opc.Ua
             get => m_dataType;
             set
             {
-                if (!ReferenceEquals(m_dataType, value))
+                if (m_dataType != value)
                 {
                     ChangeMasks |= NodeStateChangeMasks.NonValue;
                 }
@@ -925,7 +925,7 @@ namespace Opc.Ua
                 encoder.WriteStatusCode("StatusCode", StatusCode);
             }
 
-            if (!NodeId.IsNull(DataType))
+            if (!DataType.IsNullNodeId)
             {
                 encoder.WriteNodeId("DataType", DataType);
             }
@@ -1075,7 +1075,7 @@ namespace Opc.Ua
                 attributesToSave |= AttributesToSave.StatusCode;
             }
 
-            if (!NodeId.IsNull(m_dataType))
+            if (!m_dataType.IsNullNodeId)
             {
                 attributesToSave |= AttributesToSave.DataType;
             }
@@ -2071,7 +2071,7 @@ namespace Opc.Ua
         protected override void Initialize(ISystemContext context)
         {
             SymbolicName = CoreUtils.Format("{0}_Instance1", BrowseNames.PropertyType);
-            NodeId = null;
+            NodeId = default;
             BrowseName = new QualifiedName(SymbolicName, 1);
             DisplayName = SymbolicName;
             Description = null;
@@ -2184,7 +2184,7 @@ namespace Opc.Ua
         protected override void Initialize(ISystemContext context)
         {
             SymbolicName = CoreUtils.Format("{0}_Instance1", BrowseNames.BaseDataVariableType);
-            NodeId = null;
+            NodeId = default;
             BrowseName = new QualifiedName(SymbolicName, 1);
             DisplayName = SymbolicName;
             Description = null;

@@ -393,7 +393,7 @@ namespace Opc.Ua.Client.ComplexTypes
             var dataTypeNodeId = ExpandedNodeId.ToNodeId(
                 dataTypeId,
                 m_complexTypeResolver.NamespaceUris);
-            if (!NodeId.IsNull(dataTypeNodeId))
+            if (!dataTypeNodeId.IsNullNodeId)
             {
                 CollectAllDataTypeDefinitions(dataTypeNodeId, dataTypeDefinitions);
             }
@@ -404,7 +404,7 @@ namespace Opc.Ua.Client.ComplexTypes
                 NodeId nodeId,
                 NodeIdDictionary<DataTypeDefinition> collect)
             {
-                if (NodeId.IsNull(nodeId))
+                if (nodeId.IsNullNodeId)
                 {
                     return;
                 }
@@ -538,7 +538,7 @@ namespace Opc.Ua.Client.ComplexTypes
                                 NodeId nodeId = dictionary.DataTypes
                                     .FirstOrDefault(d => d.Value.Name == item.Name)
                                     .Key;
-                                if (nodeId == null)
+                                if (nodeId.IsNullNodeId)
                                 {
                                     m_logger.LogError(
                                         Utils.TraceMasks.Error,
@@ -1360,7 +1360,7 @@ namespace Opc.Ua.Client.ComplexTypes
                     field.IsOptional,
                     ct)
                     .ConfigureAwait(false);
-                if (superType?.IsNullNodeId == false)
+                if (!superType.IsNullNodeId)
                 {
                     field.DataType = superType;
                     return await GetFieldTypeAsync(field, allowSubTypes, ct).ConfigureAwait(false);
@@ -1398,9 +1398,9 @@ namespace Opc.Ua.Client.ComplexTypes
             {
                 superType = await m_complexTypeResolver.FindSuperTypeAsync(superType, ct)
                     .ConfigureAwait(false);
-                if (superType?.IsNullNodeId != false)
+                if (superType.IsNullNodeId)
                 {
-                    return null;
+                    return default;
                 }
                 if (superType.NamespaceIndex == 0)
                 {
@@ -1412,7 +1412,7 @@ namespace Opc.Ua.Client.ComplexTypes
                     }
                     if (superType == DataTypeIds.Enumeration)
                     {
-                        return null;
+                        return default;
                     }
                     else if (superType == DataTypeIds.Structure)
                     {
@@ -1430,12 +1430,12 @@ namespace Opc.Ua.Client.ComplexTypes
                         {
                             return superType;
                         }
-                        return null;
+                        return default;
                     }
                     // end search if a valid BuiltInType is found. Treat type as opaque.
-                    else if (superType.IdType == IdType.Numeric &&
-                        (uint)superType.Identifier >= (uint)BuiltInType.Boolean &&
-                        (uint)superType.Identifier <= (uint)BuiltInType.DiagnosticInfo)
+                    else if (superType.TryGetIdentifier(out uint id) &&
+                        id >= (uint)BuiltInType.Boolean &&
+                        id <= (uint)BuiltInType.DiagnosticInfo)
                     {
                         return superType;
                     }
@@ -1446,7 +1446,7 @@ namespace Opc.Ua.Client.ComplexTypes
                     }
                 }
             }
-            return null;
+            return default;
         }
 
         /// <summary>

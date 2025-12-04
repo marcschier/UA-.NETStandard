@@ -70,7 +70,7 @@ namespace Opc.Ua.SourceGeneration
             return new NodesetFileCollection(
                 [.. nodeset2Files.Select(f => (f.Item1.Path, f.Item2))],
                 fileSystem,
-                telemetry.CreateLogger<NodesetFileCollection>());
+                telemetry);
         }
 
         /// <summary>

@@ -51,7 +51,7 @@ namespace Opc.Ua
         public static NodeSet Read(Stream istrm)
         {
             using var reader = XmlReader.Create(istrm, CoreUtils.DefaultXmlReaderSettings());
-            var serializer = new DataContractSerializer(typeof(NodeSet));
+            var serializer = CoreUtils.CreateDataContractSerializer<NodeSet>();
             return serializer.ReadObject(reader) as NodeSet;
         }
 
@@ -65,7 +65,7 @@ namespace Opc.Ua
 
             try
             {
-                var serializer = new DataContractSerializer(typeof(NodeSet));
+                var serializer = CoreUtils.CreateDataContractSerializer<NodeSet>();
                 serializer.WriteObject(writer, this);
             }
             finally
@@ -113,7 +113,7 @@ namespace Opc.Ua
                 throw new ArgumentNullException(nameof(node));
             }
 
-            if (NodeId.IsNull(node.NodeId))
+            if (node.NodeId.IsNullNodeId)
             {
                 throw new ArgumentException("A non-null NodeId must be specified.");
             }
@@ -407,7 +407,7 @@ namespace Opc.Ua
         /// <exception cref="ArgumentNullException"><paramref name="nodeId"/> is <c>null</c>.</exception>
         public Node Find(NodeId nodeId, NamespaceTable namespaceUris)
         {
-            if (nodeId == null)
+            if (nodeId.IsNullNodeId)
             {
                 throw new ArgumentNullException(nameof(nodeId));
             }
@@ -434,7 +434,7 @@ namespace Opc.Ua
             }
 
             // create translated node identifier.
-            var localId = new NodeId(nodeId.Identifier, (ushort)nsIndex);
+            NodeId localId = nodeId.WithNamespaceIndex((ushort)nsIndex);
 
             // look up node.
             if (m_nodes.TryGetValue(localId, out Node node))
@@ -550,26 +550,20 @@ namespace Opc.Ua
                 return copy;
             }
 
-            var nodeId = value as NodeId;
-
-            if (nodeId != null)
+            switch (value)
             {
-                return Import(nodeId, namespaceUris);
+                case NodeId nodeId:
+                    if (!nodeId.IsNullNodeId)
+                    {
+                        return Import(nodeId, namespaceUris);
+                    }
+                    break;
+                case ExpandedNodeId expandedNodeId:
+                    return Import(expandedNodeId, namespaceUris, serverUris);
+                case ExtensionObject extension when ExtensionObject.ToEncodeable(extension) is Argument argument:
+                    argument.DataType = Import(argument.DataType, namespaceUris);
+                    break;
             }
-
-            var expandedNodeId = value as ExpandedNodeId;
-
-            if (expandedNodeId != null)
-            {
-                return Import(expandedNodeId, namespaceUris, serverUris);
-            }
-
-            if (value is ExtensionObject extension &&
-                ExtensionObject.ToEncodeable(extension) is Argument argument)
-            {
-                argument.DataType = Import(argument.DataType, namespaceUris);
-            }
-
             return value;
         }
 
@@ -709,7 +703,7 @@ namespace Opc.Ua
                 throw new ArgumentNullException(nameof(sourceNamespaceUris));
             }
 
-            if (NodeId.IsNull(nodeId))
+            if (nodeId.IsNullNodeId)
             {
                 return nodeId;
             }
@@ -730,7 +724,7 @@ namespace Opc.Ua
                 namespaceIndex = (ushort)index;
             }
 
-            return new NodeId(nodeId.Identifier, namespaceIndex);
+            return nodeId.WithNamespaceIndex(namespaceIndex);
         }
 
         /// <summary>
@@ -854,7 +848,7 @@ namespace Opc.Ua
                 }
 
                 return new ExpandedNodeId(
-                    new NodeId(nodeId.Identifier, 0),
+                    nodeId.InnerNodeId.WithNamespaceIndex(0),
                     namespaceUri,
                     (uint)index);
             }
@@ -873,7 +867,7 @@ namespace Opc.Ua
                 namespaceIndex = (ushort)index;
             }
 
-            return new NodeId(nodeId.Identifier, namespaceIndex);
+            return nodeId.InnerNodeId.WithNamespaceIndex(namespaceIndex);
         }
 
         private NamespaceTable m_namespaceUris;

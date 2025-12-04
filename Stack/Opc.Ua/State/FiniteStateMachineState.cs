@@ -121,12 +121,13 @@ namespace Opc.Ua
 
             NodeId value = CurrentState.Id.Value;
 
-            if (ElementNamespaceIndex != value.NamespaceIndex || value.IdType != IdType.Numeric)
+            if (ElementNamespaceIndex != value.NamespaceIndex ||
+                !value.TryGetIdentifier(out uint numericId))
             {
                 return 0;
             }
 
-            return (uint)value.Identifier;
+            return numericId;
         }
 
         /// <summary>
@@ -268,7 +269,7 @@ namespace Opc.Ua
             if (stateId == 0)
             {
                 variable.Value = null;
-                variable.Id.Value = null;
+                variable.Id.Value = default;
 
                 variable.Number?.Value = 0;
 
@@ -314,7 +315,7 @@ namespace Opc.Ua
             if (transitionId == 0)
             {
                 variable.Value = null;
-                variable.Id.Value = null;
+                variable.Id.Value = default;
 
                 variable.TransitionTime?.Value = DateTime.MinValue;
 

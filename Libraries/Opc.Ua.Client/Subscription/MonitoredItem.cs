@@ -168,7 +168,7 @@ namespace Opc.Ua.Client
         public NodeId StartNodeId
         {
             get => State.StartNodeId;
-            set => State = State with { StartNodeId = value ?? NodeId.Null };
+            set => State = State with { StartNodeId = value };
         }
 
         /// <summary>
@@ -884,12 +884,15 @@ namespace Opc.Ua.Client
             CancellationToken ct = default)
         {
             // get event type.
-            var eventTypeId = GetFieldValue(
+            if (GetFieldValue(
                 eventFields,
                 ObjectTypes.BaseEventType,
-                BrowseNames.EventType) as NodeId;
+                BrowseNames.EventType) is not NodeId eventTypeId)
+            {
+                return null;
+            }
 
-            if (eventTypeId != null &&
+            if (!eventTypeId.IsNullNodeId &&
                 Subscription != null &&
                 Subscription.Session != null)
             {

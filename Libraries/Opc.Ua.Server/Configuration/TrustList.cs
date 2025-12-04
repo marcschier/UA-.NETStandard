@@ -144,16 +144,16 @@ namespace Opc.Ua.Server
 
             lock (m_lock)
             {
-                if (m_sessionId != null)
+                if (!m_sessionId.IsNullNodeId)
                 {
                     // to avoid deadlocks, last open always wins
-                    m_sessionId = null;
+                    m_sessionId = default;
                     m_strm = null;
                     m_node.OpenCount.Value = 0;
                 }
 
                 m_readMode = mode == OpenFileMode.Read;
-                m_sessionId = (context as ISessionSystemContext)?.SessionId;
+                m_sessionId = (context as ISessionSystemContext)?.SessionId ?? default;
                 fileHandle = ++m_fileHandle;
 
                 var trustList = new TrustListDataType { SpecifiedLists = (uint)masks };
@@ -327,7 +327,7 @@ namespace Opc.Ua.Server
                     return StatusCodes.BadInvalidArgument;
                 }
 
-                m_sessionId = null;
+                m_sessionId = default;
                 m_strm = null;
                 m_node.OpenCount.Value = 0;
             }
@@ -449,7 +449,7 @@ namespace Opc.Ua.Server
                 }
                 finally
                 {
-                    m_sessionId = null;
+                    m_sessionId = default;
                     m_strm = null;
                     m_node.LastUpdateTime.Value = DateTime.UtcNow;
                     m_node.OpenCount.Value = 0;
@@ -491,7 +491,7 @@ namespace Opc.Ua.Server
             ServiceResult result = StatusCodes.Good;
             lock (m_lock)
             {
-                if (m_sessionId != null)
+                if (!m_sessionId.IsNullNodeId)
                 {
                     result = StatusCodes.BadInvalidState;
                 }
@@ -567,7 +567,7 @@ namespace Opc.Ua.Server
             ServiceResult result = StatusCodes.Good;
             lock (m_lock)
             {
-                if (m_sessionId != null)
+                if (!m_sessionId.IsNullNodeId)
                 {
                     result = StatusCodes.BadInvalidState;
                 }

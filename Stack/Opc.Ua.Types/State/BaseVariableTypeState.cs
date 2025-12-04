@@ -116,7 +116,7 @@ namespace Opc.Ua
             get => m_dataType;
             set
             {
-                if (!ReferenceEquals(m_dataType, value))
+                if (m_dataType != value)
                 {
                     ChangeMasks |= NodeStateChangeMasks.NonValue;
                 }
@@ -238,7 +238,7 @@ namespace Opc.Ua
                 encoder.WriteVariant("Value", WrappedValue);
             }
 
-            if (!NodeId.IsNull(DataType))
+            if (!DataType.IsNullNodeId)
             {
                 encoder.WriteNodeId("DataType", DataType);
             }
@@ -307,7 +307,7 @@ namespace Opc.Ua
                 attributesToSave |= AttributesToSave.Value;
             }
 
-            if (!NodeId.IsNull(m_dataType))
+            if (!m_dataType.IsNullNodeId)
             {
                 attributesToSave |= AttributesToSave.DataType;
             }

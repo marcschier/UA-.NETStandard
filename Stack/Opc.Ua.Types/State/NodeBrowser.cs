@@ -142,7 +142,7 @@ namespace Opc.Ua
         /// </summary>
         public virtual bool IsRequired(NodeId referenceType, bool isInverse)
         {
-            if (NodeId.IsNull(referenceType))
+            if (referenceType.IsNullNodeId)
             {
                 return false;
             }
@@ -161,7 +161,7 @@ namespace Opc.Ua
             }
 
             // check for no filter or exact match.
-            if (NodeId.IsNull(ReferenceType) || referenceType == ReferenceType)
+            if (ReferenceType.IsNullNodeId || referenceType == ReferenceType)
             {
                 return true;
             }

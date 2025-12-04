@@ -284,7 +284,7 @@ namespace Opc.Ua
             foreach (Node nodeToImport in nodeSet.Nodes)
             {
                 // ignore empty nodes.
-                if (nodeToImport == null || NodeId.IsNull(nodeToImport.NodeId))
+                if (nodeToImport == null || nodeToImport.NodeId.IsNullNodeId)
                 {
                     continue;
                 }
@@ -307,7 +307,7 @@ namespace Opc.Ua
                 foreach (ReferenceNode reference in node.References)
                 {
                     // ignore invalid references.
-                    if (NodeId.IsNull(reference.ReferenceTypeId) ||
+                    if (reference.ReferenceTypeId.IsNullNodeId ||
                         NodeId.IsNull(reference.TargetId))
                     {
                         continue;
@@ -350,7 +350,7 @@ namespace Opc.Ua
             foreach (Node node in importedNodes)
             {
                 // ignore invalid nodes.
-                if (node == null || NodeId.IsNull(node.NodeId))
+                if (node == null || node.NodeId.IsNullNodeId)
                 {
                     continue;
                 }
@@ -372,7 +372,7 @@ namespace Opc.Ua
                                 reference.TargetId,
                                 NamespaceUris);
 
-                            if (targetId == null)
+                            if (targetId.IsNullNodeId)
                             {
                                 continue;
                             }
@@ -502,7 +502,7 @@ namespace Opc.Ua
                 foreach (ReferenceNode reference in node.References.OfType<ReferenceNode>())
                 {
                     // ignore invalid references.
-                    if (NodeId.IsNull(reference.ReferenceTypeId) ||
+                    if (reference.ReferenceTypeId.IsNullNodeId ||
                         NodeId.IsNull(reference.TargetId))
                     {
                         continue;
@@ -624,7 +624,7 @@ namespace Opc.Ua
         /// <param name="node">The node.</param>
         private void InternalAdd(ILocalNode node)
         {
-            if (node == null || node.NodeId == null)
+            if (node == null || node.NodeId.IsNullNodeId)
             {
                 return;
             }
@@ -638,7 +638,7 @@ namespace Opc.Ua
         /// <param name="node">The node.</param>
         private void InternalRemove(ILocalNode node)
         {
-            if (node == null || node.NodeId == null)
+            if (node == null || node.NodeId.IsNullNodeId)
             {
                 return;
             }
@@ -699,7 +699,7 @@ namespace Opc.Ua
             // convert to locale node id.
             var localId = ExpandedNodeId.ToNodeId(nodeId, NamespaceUris);
 
-            if (localId == null)
+            if (localId.IsNullNodeId)
             {
                 return null;
             }

@@ -988,7 +988,7 @@ namespace Opc.Ua.Server.Tests
                         BrowsePath = [.. new QualifiedName[] { "EventType" }]
                     },
                     new LiteralOperand {
-                        Value = new Variant(new NodeId(ObjectTypeIds.BaseEventType)) }
+                        Value = new Variant(ObjectTypeIds.BaseEventType) }
                 ]);
 
             return new MonitoredItemCreateRequest

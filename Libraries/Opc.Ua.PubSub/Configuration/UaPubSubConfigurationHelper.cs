@@ -56,7 +56,8 @@ namespace Opc.Ua.PubSub.Configuration
             settings.CloseOutput = true;
 
             using var writer = XmlWriter.Create(ostrm, settings);
-            var serializer = new DataContractSerializer(typeof(PubSubConfigurationDataType));
+            DataContractSerializer serializer =
+                CoreUtils.CreateDataContractSerializer<PubSubConfigurationDataType>();
             using IDisposable scope = AmbientMessageContext.SetScopedContext(telemetry);
             serializer.WriteObject(writer, pubSubConfiguration);
         }
@@ -74,7 +75,8 @@ namespace Opc.Ua.PubSub.Configuration
             try
             {
                 using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-                var serializer = new DataContractSerializer(typeof(PubSubConfigurationDataType));
+                DataContractSerializer serializer =
+                    CoreUtils.CreateDataContractSerializer<PubSubConfigurationDataType>();
                 using IDisposable scope = AmbientMessageContext.SetScopedContext(telemetry);
                 return (PubSubConfigurationDataType)serializer.ReadObject(stream);
             }

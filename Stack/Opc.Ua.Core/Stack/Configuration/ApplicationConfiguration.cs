@@ -52,7 +52,7 @@ namespace Opc.Ua
             using var reader = XmlReader.Create(
                 new StringReader(element.OuterXml),
                 Utils.DefaultXmlReaderSettings());
-            var serializer = new DataContractSerializer(typeof(ConfigurationLocation));
+            var serializer = CoreUtils.CreateDataContractSerializer<ConfigurationLocation>();
             return serializer.ReadObject(reader) as ConfigurationLocation;
         }
     }
@@ -282,8 +282,7 @@ namespace Opc.Ua
             using var stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
             try
             {
-                var serializer = new DataContractSerializer(systemType);
-
+                DataContractSerializer serializer = CoreUtils.CreateDataContractSerializer(systemType);
                 using IDisposable scope = AmbientMessageContext.SetScopedContext(telemetry);
                 var configuration = serializer.ReadObject(stream) as ApplicationConfiguration;
                 configuration.Initialize(telemetry);
@@ -464,7 +463,7 @@ namespace Opc.Ua
             ApplicationConfiguration configuration;
             try
             {
-                var serializer = new DataContractSerializer(systemType);
+                var serializer = CoreUtils.CreateDataContractSerializer(systemType);
                 using IDisposable scope = AmbientMessageContext.SetScopedContext(telemetry);
                 configuration = (ApplicationConfiguration)serializer.ReadObject(stream);
                 configuration.Initialize(telemetry);
@@ -533,7 +532,7 @@ namespace Opc.Ua
 
             using Stream ostrm = File.Open(filePath, FileMode.Create, FileAccess.ReadWrite);
             using var writer = XmlWriter.Create(ostrm, settings);
-            var serializer = new DataContractSerializer(GetType());
+            var serializer = CoreUtils.CreateDataContractSerializer(GetType());
             using IDisposable scope = AmbientMessageContext.SetScopedContext(m_telemetry);
             serializer.WriteObject(writer, this);
         }

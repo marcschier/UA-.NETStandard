@@ -1051,7 +1051,7 @@ namespace Opc.Ua.Test
         {
             NodeId typeId = GetRandomNodeId();
 
-            if (NodeId.IsNull(typeId))
+            if (typeId.IsNullNodeId)
             {
                 return ExtensionObject.Null;
             }

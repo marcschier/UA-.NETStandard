@@ -17,10 +17,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
-using System.Diagnostics.CodeAnalysis;
 using Opc.Ua.Types;
 
 namespace Opc.Ua
@@ -49,48 +50,62 @@ namespace Opc.Ua
     /// </list>
     /// <br/></para>
     /// <note>
-    /// <b>Important:</b> Keep in mind that the actual ID's of nodes should be unique such that no two
-    /// nodes within an address-space share the same ID's.
+    /// <b>Important:</b> Keep in mind that the actual ID's of nodes should be
+    /// unique such that no two nodes within an address-space share the same ID's.
     /// </note>
     /// <para>
-    /// The NodeId can be assigned to a particular namespace index. This index is merely just a number and does
-    /// not represent some index within a collection that this node has any knowledge of. The assumption is
-    /// that the host of this object will manage that directly.
+    /// The NodeId can be assigned to a particular namespace index. This index is
+    /// merely just a number and does not represent some index within a collection
+    /// that this node has any knowledge of. The assumption is that the host of
+    /// this object will manage that directly.
     /// <br/></para>
+    /// <para>
+    /// <b>The Node id is not data contract serializable.
+    /// Use <see cref="SerializableNodeId"/> as part of your contracts</b>
+    /// </para>
     /// </remarks>
-    [DataContract(Namespace = Namespaces.OpcUaXsd)]
-    public class NodeId : IComparable, IFormattable, IEquatable<NodeId>, ICloneable
+    public readonly struct NodeId :
+        IComparable,
+        IFormattable,
+        IEquatable<NodeId>,
+        IEquatable<uint>,
+        IEquatable<string>,
+        IEquatable<Guid>,
+        IEquatable<byte[]>
     {
         /// <summary>
-        /// Initializes the object with default values.
+        /// The index of the namespace URI in the server's namespace array.
         /// </summary>
-        /// <remarks>
-        /// Creates a new instance of the class which will have the default values. The actual
-        /// Node Id will need to be defined as this constructor does not specify the id.
-        /// </remarks>
-        public NodeId()
-        {
-            Initialize();
-        }
+        public ushort NamespaceIndex { get; }
 
         /// <summary>
-        /// Creates a deep copy of the value.
+        /// The type of node identifier used.
         /// </summary>
         /// <remarks>
-        /// Creates a new NodeId by copying the properties of the node specified in the parameter.
+        /// Returns the type of Id, whether it is:
+        /// <list type="bullet">
+        /// <item><see cref="uint"/></item>
+        /// <item><see cref="Guid"/></item>
+        /// <item><see cref="string"/></item>
+        /// <item><see cref="byte"/>[]</item>
+        /// </list>
         /// </remarks>
-        /// <param name="value">The NodeId object whose properties will be copied.</param>
-        /// <exception cref="ArgumentNullException">Thrown when <i>value</i> is null</exception>
-        public NodeId(NodeId value)
-        {
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
+        /// <seealso cref="IdType"/>
+        public IdType IdType { get; }
 
-            NamespaceIndex = value.NamespaceIndex;
-            IdType = value.IdType;
-            m_identifier = CoreUtils.Clone(value.m_identifier);
+        /// <summary>
+        /// Returns an instance of a null NodeId.
+        /// </summary>
+        public static NodeId Null => default;
+
+        /// <summary>
+        /// Create null node id.
+        /// </summary>
+        private NodeId(IdType idType = IdType.Numeric)
+        {
+            NamespaceIndex = 0;
+            IdType = idType;
+            m_identifier = null;
         }
 
         /// <summary>
@@ -111,12 +126,13 @@ namespace Opc.Ua
         /// Initializes a numeric node identifier with a namespace index.
         /// </summary>
         /// <remarks>
-        /// Creates a new NodeId that will use a numeric (unsigned int) for its Id, but also
-        /// specifies which namespace this node should belong to.
+        /// Creates a new NodeId that will use a numeric (unsigned int) for its Id,
+        /// but also specifies which namespace this node should belong to.
         /// </remarks>
         /// <param name="value">The new (numeric) Id for the node being created</param>
-        /// <param name="namespaceIndex">The index of the namespace that this node should belong to</param>
-        /// <seealso cref="SetNamespaceIndex"/>
+        /// <param name="namespaceIndex">The index of the namespace that this
+        /// node should belong to</param>
+        /// <seealso cref="WithNamespaceIndex"/>
         public NodeId(uint value, ushort namespaceIndex)
         {
             NamespaceIndex = namespaceIndex;
@@ -132,7 +148,8 @@ namespace Opc.Ua
         /// specifies if the Id is a URI, and which namespace this node belongs to.
         /// </remarks>
         /// <param name="value">The new (string) Id for the node being created</param>
-        /// <param name="namespaceIndex">The index of the namespace that this node belongs to</param>
+        /// <param name="namespaceIndex">The index of the namespace that this
+        /// node belongs to</param>
         public NodeId(string value, ushort namespaceIndex)
         {
             NamespaceIndex = namespaceIndex;
@@ -161,7 +178,8 @@ namespace Opc.Ua
         /// Creates a new node whose Id will be a <see cref="Guid"/>.
         /// </remarks>
         /// <param name="value">The new Guid value of this nodes Id.</param>
-        /// <param name="namespaceIndex">The index of the namespace that this node belongs to</param>
+        /// <param name="namespaceIndex">The index of the namespace that this
+        /// node belongs to</param>
         public NodeId(Guid value, ushort namespaceIndex)
         {
             NamespaceIndex = namespaceIndex;
@@ -175,18 +193,21 @@ namespace Opc.Ua
         /// <remarks>
         /// Creates a new node whose Id will be a series of <see cref="byte"/>.
         /// </remarks>
-        /// <param name="value">An array of <see cref="byte"/> that will become this Node's ID</param>
+        /// <param name="value">An array of <see cref="byte"/> that will become
+        /// this Node's ID</param>
         public NodeId(byte[] value)
         {
             NamespaceIndex = 0;
             IdType = IdType.Opaque;
-            m_identifier = null;
-
             if (value != null)
             {
                 byte[] copy = new byte[value.Length];
                 Array.Copy(value, copy, value.Length);
                 m_identifier = copy;
+            }
+            else
+            {
+                m_identifier = null;
             }
         }
 
@@ -194,22 +215,26 @@ namespace Opc.Ua
         /// Initializes an opaque node identifier with a namespace index.
         /// </summary>
         /// <remarks>
-        /// Creates a new node whose Id will be a series of <see cref="byte"/>, while specifying
-        /// the index of the namespace that this node belongs to.
+        /// Creates a new node whose Id will be a series of <see cref="byte"/>,
+        /// while specifying the index of the namespace that this node belongs to.
         /// </remarks>
-        /// <param name="value">An array of <see cref="byte"/> that will become this Node's ID</param>
-        /// <param name="namespaceIndex">The index of the namespace that this node belongs to</param>
+        /// <param name="value">An array of <see cref="byte"/> that will become
+        /// this Node's ID</param>
+        /// <param name="namespaceIndex">The index of the namespace that this
+        /// node belongs to</param>
         public NodeId(byte[] value, ushort namespaceIndex)
         {
             NamespaceIndex = namespaceIndex;
             IdType = IdType.Opaque;
-            m_identifier = null;
-
             if (value != null)
             {
                 byte[] copy = new byte[value.Length];
                 Array.Copy(value, copy, value.Length);
                 m_identifier = copy;
+            }
+            else
+            {
+                m_identifier = null;
             }
         }
 
@@ -222,11 +247,7 @@ namespace Opc.Ua
         /// <param name="text">The string id of this new node</param>
         public NodeId(string text)
         {
-            NodeId nodeId = Parse(text);
-
-            NamespaceIndex = nodeId.NamespaceIndex;
-            IdType = nodeId.IdType;
-            m_identifier = nodeId.Identifier;
+            this = Parse(text);
         }
 
         /// <summary>
@@ -236,61 +257,32 @@ namespace Opc.Ua
         /// Throws an exception if the identifier type is not supported.
         /// </remarks>
         /// <param name="value">The identifier</param>
-        /// <param name="namespaceIndex">The index of the namespace that qualifies the node</param>
+        /// <param name="namespaceIndex">The index of the namespace that
+        /// qualifies the node</param>
+        [Obsolete("Use concrete constructor with typed identifier values instead.")]
         public NodeId(object value, ushort namespaceIndex)
         {
+            switch (value)
+            {
+                case uint:
+                    this = SetIdentifier(IdType.Numeric, value);
+                    break;
+                case null or string:
+                    this = SetIdentifier(IdType.String, value);
+                    break;
+                case Guid:
+                    this = SetIdentifier(IdType.Guid, value);
+                    break;
+                case Uuid uuid:
+                    this = SetIdentifier(IdType.Guid, (Guid)uuid);
+                    break;
+                case byte[]:
+                    this = SetIdentifier(IdType.Opaque, value);
+                    break;
+                default:
+                    throw new ArgumentException("Identifier type not supported.", nameof(value));
+            }
             NamespaceIndex = namespaceIndex;
-
-            if (value is uint)
-            {
-                SetIdentifier(IdType.Numeric, value);
-                return;
-            }
-
-            if (value is null or string)
-            {
-                SetIdentifier(IdType.String, value);
-                return;
-            }
-
-            if (value is Guid)
-            {
-                SetIdentifier(IdType.Guid, value);
-                return;
-            }
-
-            if (value is Uuid uuid)
-            {
-                SetIdentifier(IdType.Guid, (Guid)uuid);
-                return;
-            }
-
-            if (value is byte[])
-            {
-                SetIdentifier(IdType.Opaque, value);
-                return;
-            }
-
-            throw new ArgumentException("Identifier type not supported.", nameof(value));
-        }
-
-        /// <summary>
-        /// Initializes the object during deserialization.
-        /// </summary>
-        [OnDeserializing]
-        private void Initialize(StreamingContext context)
-        {
-            Initialize();
-        }
-
-        /// <summary>
-        /// Initializes the object during deserialization.
-        /// </summary>
-        private void Initialize()
-        {
-            NamespaceIndex = 0;
-            IdType = IdType.Numeric;
-            m_identifier = null;
         }
 
         /// <summary>
@@ -300,7 +292,8 @@ namespace Opc.Ua
         /// <param name="text">The text to parse.</param>
         /// <param name="options">The options to use when parsing a NodeId.</param>
         /// <returns>The NodeId.</returns>
-        /// <exception cref="ServiceResultException">Thrown if the namespace URI is not in the namespace table.</exception>
+        /// <exception cref="ServiceResultException">Thrown if the namespace
+        /// URI is not in the namespace table.</exception>
         public static NodeId Parse(
             IServiceMessageContext context,
             string text,
@@ -461,7 +454,7 @@ namespace Opc.Ua
         /// <exception cref="ServiceResultException"></exception>
         public string Format(IServiceMessageContext context, bool useNamespaceUri = false)
         {
-            if (m_identifier == null)
+            if (IsNullNodeId)
             {
                 return null;
             }
@@ -499,19 +492,19 @@ namespace Opc.Ua
             {
                 case IdType.Numeric:
                     buffer.Append("i=")
-                        .Append((uint)m_identifier);
+                        .Append(NumericIdentifier);
                     break;
                 case IdType.Guid:
                     buffer.Append("g=")
-                        .Append(((Guid)m_identifier).ToString());
+                        .Append(GuidIdentifier);
                     break;
                 case IdType.Opaque:
                     buffer.Append("b=")
-                        .Append(Convert.ToBase64String((byte[])m_identifier));
+                        .Append(Convert.ToBase64String(OpqaueIdentifer));
                     break;
                 case IdType.String:
                     buffer.Append("s=")
-                        .Append(m_identifier.ToString());
+                        .Append(StringIdentifier);
                     break;
                 default:
                     throw ServiceResultException.Unexpected(
@@ -529,26 +522,81 @@ namespace Opc.Ua
         /// <param name="namespaceTable">The table to use for the URI lookup.</param>
         /// <returns>A local NodeId</returns>
         /// <exception cref="ServiceResultException">Thrown when the namespace cannot be found</exception>
+        [Obsolete("Use typed NodeId.Create() method instead.")]
         public static NodeId Create(
             object identifier,
             string namespaceUri,
             NamespaceTable namespaceTable)
         {
-            int index = -1;
+            int index = GetNamespaceIndex(namespaceUri, namespaceTable);
+            return new NodeId(identifier, (ushort)index);
+        }
 
-            if (namespaceTable != null)
-            {
-                index = namespaceTable.GetIndex(namespaceUri);
-            }
+        /// <summary>
+        /// Converts a string identifier and a namespaceUri to a local NodeId using the namespaceTable.
+        /// </summary>
+        /// <param name="identifier">The identifier for the node.</param>
+        /// <param name="namespaceUri">The URI to look up.</param>
+        /// <param name="namespaceTable">The table to use for the URI lookup.</param>
+        /// <returns>A local NodeId</returns>
+        /// <exception cref="ServiceResultException">Thrown when the namespace cannot be found</exception>
+        public static NodeId Create(
+            string identifier,
+            string namespaceUri,
+            NamespaceTable namespaceTable)
+        {
+            int index = GetNamespaceIndex(namespaceUri, namespaceTable);
+            return new NodeId(identifier, (ushort)index);
+        }
 
-            if (index < 0)
-            {
-                throw ServiceResultException.Create(
-                    StatusCodes.BadNodeIdInvalid,
-                    "NamespaceUri ({0}) is not in the namespace table.",
-                    namespaceUri);
-            }
+        /// <summary>
+        /// Converts a numeric identifier and a namespaceUri to a local NodeId using the namespaceTable.
+        /// </summary>
+        /// <param name="identifier">The identifier for the node.</param>
+        /// <param name="namespaceUri">The URI to look up.</param>
+        /// <param name="namespaceTable">The table to use for the URI lookup.</param>
+        /// <returns>A local NodeId</returns>
+        /// <exception cref="ServiceResultException">Thrown when the namespace cannot be found</exception>
+        public static NodeId Create(
+            uint identifier,
+            string namespaceUri,
+            NamespaceTable namespaceTable)
+        {
+            int index = GetNamespaceIndex(namespaceUri, namespaceTable);
+            return new NodeId(identifier, (ushort)index);
+        }
 
+        /// <summary>
+        /// Converts a byte array identifier and a namespaceUri to a local NodeId using the namespaceTable.
+        /// </summary>
+        /// <param name="identifier">The identifier for the node.</param>
+        /// <param name="namespaceUri">The URI to look up.</param>
+        /// <param name="namespaceTable">The table to use for the URI lookup.</param>
+        /// <returns>A local NodeId</returns>
+        /// <exception cref="ServiceResultException">Thrown when the namespace cannot be found</exception>
+        public static NodeId Create(
+            byte[] identifier,
+            string namespaceUri,
+            NamespaceTable namespaceTable)
+        {
+            int index = GetNamespaceIndex(namespaceUri, namespaceTable);
+            return new NodeId(identifier, (ushort)index);
+        }
+
+        /// <summary>
+        /// Converts a Guid identifier and a namespaceUri to a local NodeId using the namespaceTable.
+        /// </summary>
+        /// <param name="identifier">The identifier for the node.</param>
+        /// <param name="namespaceUri">The URI to look up.</param>
+        /// <param name="namespaceTable">The table to use for the URI lookup.</param>
+        /// <returns>A local NodeId</returns>
+        /// <exception cref="ServiceResultException">Thrown when the namespace cannot be found</exception>
+        public static NodeId Create(
+            Guid identifier,
+            string namespaceUri,
+            NamespaceTable namespaceTable)
+        {
+            int index = GetNamespaceIndex(namespaceUri, namespaceTable);
             return new NodeId(identifier, (ushort)index);
         }
 
@@ -771,40 +819,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Checks if the node id represents a 'Null' node id.
-        /// </summary>
-        /// <remarks>
-        /// Returns a true/false value to indicate if the specified NodeId is null.
-        /// </remarks>
-        /// <param name="nodeId">The NodeId to validate</param>
-        public static bool IsNull([NotNullWhen(false)] NodeId nodeId)
-        {
-            if (nodeId == null)
-            {
-                return true;
-            }
-
-            return nodeId.IsNullNodeId;
-        }
-
-        /// <summary>
-        /// Checks if the node id represents a 'Null' node id.
-        /// </summary>
-        /// <remarks>
-        /// Returns a true/false to indicate if the specified <see cref="ExpandedNodeId"/> is null.
-        /// </remarks>
-        /// <param name="nodeId">The ExpandedNodeId to validate</param>
-        public static bool IsNull([NotNullWhen(false)] ExpandedNodeId nodeId)
-        {
-            if (nodeId == null)
-            {
-                return true;
-            }
-
-            return nodeId.IsNull;
-        }
-
-        /// <summary>
         /// Parses a node id string and returns a node id object.
         /// </summary>
         /// <remarks>
@@ -966,7 +980,11 @@ namespace Opc.Ua
                         return false;
                     }
 
-                    if (!ushort.TryParse(text[3..index], NumberStyles.None, CultureInfo.InvariantCulture, out namespaceIndex))
+                    if (!ushort.TryParse(
+                        text[3..index],
+                        NumberStyles.None,
+                        CultureInfo.InvariantCulture,
+                        out namespaceIndex))
                     {
                         error = NodeIdParseError.InvalidNamespaceIndex;
                         return false;
@@ -1053,11 +1071,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Returns an instance of a null NodeId.
-        /// </summary>
-        public static NodeId Null => new NodeId();
-
-        /// <summary>
         /// <para>
         /// Formats a NodeId as a string.
         /// <br/></para>
@@ -1071,7 +1084,7 @@ namespace Opc.Ua
         /// ns=1;s=hello123
         /// <br/></para>
         /// </summary>
-        private string Format(IFormatProvider formatProvider)
+        internal string Format(IFormatProvider formatProvider)
         {
             var buffer = new StringBuilder();
             Format(formatProvider, buffer);
@@ -1084,6 +1097,33 @@ namespace Opc.Ua
         private void Format(IFormatProvider formatProvider, StringBuilder buffer)
         {
             Format(formatProvider, buffer, m_identifier, IdType, NamespaceIndex);
+        }
+
+        /// <summary>
+        /// Formats the NodeId as a string and appends it to the buffer.
+        /// </summary>
+        public static void Format(StringBuilder buffer, NodeId nodeId)
+        {
+            Format(
+                CultureInfo.InvariantCulture,
+                buffer,
+                nodeId);
+        }
+
+        /// <summary>
+        /// Formats the NodeId as a string and appends it to the buffer.
+        /// </summary>
+        public static void Format(
+            IFormatProvider formatProvider,
+            StringBuilder buffer,
+            NodeId nodeId)
+        {
+            Format(
+                formatProvider,
+                buffer,
+                nodeId.m_identifier,
+                nodeId.IdType,
+                nodeId.NamespaceIndex);
         }
 
         /// <summary>
@@ -1172,7 +1212,7 @@ namespace Opc.Ua
         /// to retrieve the namespace from that the specified NodeId belongs to</param>
         public static ExpandedNodeId ToExpandedNodeId(NodeId nodeId, NamespaceTable namespaceTable)
         {
-            if (nodeId == null)
+            if (nodeId.IsNullNodeId)
             {
                 return null;
             }
@@ -1195,65 +1235,92 @@ namespace Opc.Ua
         /// <summary>
         /// Updates the namespace index.
         /// </summary>
-        internal void SetNamespaceIndex(ushort value)
+        public NodeId WithNamespaceIndex(ushort value)
         {
-            ValidateImmutableNodeIdIsNotModified();
-            NamespaceIndex = value;
+            if (IsNullNodeId)
+            {
+                // Makes no sense to update a null node with nspace index
+                return this;
+            }
+            return IdType switch
+            {
+                IdType.String => new NodeId(StringIdentifier, value),
+                IdType.Guid => new NodeId(GuidIdentifier, value),
+                IdType.Opaque => new NodeId(OpqaueIdentifer, value),
+                _ => new NodeId(NumericIdentifier, value)
+            };
+        }
+
+        /// <summary>
+        /// Updates the namespace index.
+        /// </summary>
+        [Obsolete("NodeId is a readonly struct You must store the returned value. " +
+            "Use WithNamespaceIndex to use clearer semantics.")]
+        public NodeId SetNamespaceIndex(ushort value)
+        {
+            return WithNamespaceIndex(value);
+        }
+
+        /// <summary>
+        /// Updates the identifier.
+        /// </summary>
+        public NodeId WithIdentifier(uint value)
+        {
+            return new NodeId(value, NamespaceIndex);
+        }
+
+        /// <summary>
+        /// Updates the identifier.
+        /// </summary>
+        public NodeId WithIdentifier(string value)
+        {
+            return new NodeId(value, NamespaceIndex);
+        }
+
+        /// <summary>
+        /// Updates the identifier.
+        /// </summary>
+        public NodeId WithIdentifier(byte[] value)
+        {
+            return new NodeId(CoreUtils.Clone(value), NamespaceIndex);
+        }
+
+        /// <summary>
+        /// Updates the identifier.
+        /// </summary>
+        public NodeId WithIdentifier(Guid value)
+        {
+            return new NodeId(value, NamespaceIndex);
         }
 
         /// <summary>
         /// Updates the identifier.
         /// </summary>
         /// <exception cref="ServiceResultException"></exception>
-        internal void SetIdentifier(IdType idType, object value)
+        [Obsolete("NodeId is a readonly struct You must store the returned value. " +
+            "Better create NodeId with typed identifier values instead.")]
+        internal NodeId SetIdentifier(IdType idType, object value)
         {
-            ValidateImmutableNodeIdIsNotModified();
-            IdType = idType;
-
-            m_identifier = idType switch
+            return value switch
             {
-                IdType.Opaque => CoreUtils.Clone(value),
-                IdType.Guid => (Guid)value,
-                IdType.Numeric or IdType.String => value,
+                uint numeric => WithIdentifier(numeric),
+                byte[] bytes => WithIdentifier(bytes),
+                string str => WithIdentifier(str),
+                Guid guid => WithIdentifier(guid),
+                null => new NodeId(idType),
                 _ => throw ServiceResultException.Unexpected(
-                    $"Unexpected IdType value {idType}.")
+                    $"Unexpected value type {value.GetType()}.")
             };
-        }
-
-        /// <summary>
-        /// Updates the identifier.
-        /// </summary>
-        internal void SetIdentifier(string value, IdType idType)
-        {
-            ValidateImmutableNodeIdIsNotModified();
-
-            IdType = idType;
-            SetIdentifier(IdType.String, value);
         }
 
         /// <inheritdoc/>
         public int CompareTo(object obj)
         {
-            // check for null.
-            if (obj is null)
-            {
-                return -1;
-            }
-
-            // check for reference comparisons.
-            if (ReferenceEquals(this, obj))
-            {
-                return 0;
-            }
-
-            ushort namespaceIndex = NamespaceIndex;
-            IdType idType = IdType;
+            ushort namespaceIndex;
+            IdType idType;
             object id;
 
-            // check for expanded node ids.
-            var nodeId = obj as NodeId;
-
-            if (nodeId is not null)
+            if (obj is NodeId nodeId)
             {
                 if (IsNullNodeId && nodeId.IsNullNodeId)
                 {
@@ -1262,7 +1329,7 @@ namespace Opc.Ua
 
                 namespaceIndex = nodeId.NamespaceIndex;
                 idType = nodeId.IdType;
-                id = nodeId.Identifier;
+                id = nodeId.m_identifier;
             }
             else
             {
@@ -1272,7 +1339,7 @@ namespace Opc.Ua
                 // check for numeric constants.
                 if (uid != null || iid != null)
                 {
-                    if (namespaceIndex != 0 || idType != IdType.Numeric)
+                    if (NamespaceIndex != 0 || IdType != IdType.Numeric)
                     {
                         return -1;
                     }
@@ -1291,8 +1358,7 @@ namespace Opc.Ua
                         id2 = uid.Value;
                     }
 
-                    uint id1 = (m_identifier as uint?) ?? 0U;
-
+                    uint id1 = NumericIdentifier;
                     if (id1 == id2)
                     {
                         return 0;
@@ -1310,7 +1376,7 @@ namespace Opc.Ua
                         return -1;
                     }
 
-                    if (IsNullNodeId && expandedId.InnerNodeId?.IsNullNodeId != false)
+                    if (IsNullNodeId && expandedId.InnerNodeId.IsNullNodeId)
                     {
                         return 0;
                     }
@@ -1325,11 +1391,12 @@ namespace Opc.Ua
                     var uuid2 = obj as Uuid?;
                     if (guid2 != null || uuid2 != null)
                     {
-                        if (namespaceIndex != 0 || idType != IdType.Guid)
+                        if (NamespaceIndex != 0 || IdType != IdType.Guid)
                         {
                             return -1;
                         }
 
+                        namespaceIndex = 0;
                         idType = IdType.Guid;
                         id = m_identifier;
                     }
@@ -1449,35 +1516,25 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public static bool operator >(NodeId value1, NodeId value2)
         {
-            if (value1 is not null)
-            {
-                return value1.CompareTo(value2) > 0;
-            }
-
-            return false;
+            return value1.CompareTo(value2) > 0;
         }
 
         /// <inheritdoc/>
         public static bool operator <(NodeId value1, NodeId value2)
         {
-            if (value1 is not null)
-            {
-                return value1.CompareTo(value2) < 0;
-            }
-
-            return true;
+            return value1.CompareTo(value2) < 0;
         }
 
         /// <inheritdoc/>
         public static bool operator >=(NodeId left, NodeId right)
         {
-            return right is null || right.CompareTo(left) <= 0;
+            return right.CompareTo(left) <= 0;
         }
 
         /// <inheritdoc/>
         public static bool operator <=(NodeId left, NodeId right)
         {
-            return left is null || left.CompareTo(right) <= 0;
+            return left.CompareTo(right) <= 0;
         }
 
         /// <inheritdoc/>
@@ -1492,69 +1549,100 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public virtual object Clone()
-        {
-            return MemberwiseClone();
-        }
-
-        /// <summary>
-        /// Makes a deep copy of the object.
-        /// </summary>
-        /// <remarks>
-        /// Returns a copy of this object.
-        /// </remarks>
-        public new object MemberwiseClone()
-        {
-            // this object cannot be altered after it is created so no new allocation is necessary.
-            return this;
-        }
-
-        /// <inheritdoc/>
         public override bool Equals(object obj)
         {
+            if (obj is NodeId nodeId)
+            {
+                return Equals(nodeId);
+            }
             return CompareTo(obj) == 0;
         }
 
         /// <inheritdoc/>
         public bool Equals(NodeId other)
         {
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-
-            if (IsNullNodeId && (other == null || other.IsNullNodeId))
-            {
-                return true;
-            }
-
-            if (other == null)
-            {
-                return false;
-            }
-
-            // check for different namespace.
             if (other.NamespaceIndex != NamespaceIndex)
             {
                 return false;
             }
-
+            bool isNull1 = IsNullNodeId;
+            bool isNull2 = other.IsNullNodeId;
+            if (isNull1 || isNull2)
+            {
+                return isNull1 == isNull2;
+            }
             if (other.IdType != IdType)
             {
                 return false;
             }
+            switch (IdType)
+            {
+                case IdType.Numeric:
+                    return NumericIdentifier == other.NumericIdentifier;
+                case IdType.String:
+                    return string.Equals(
+                        StringIdentifier,
+                        other.StringIdentifier,
+                        StringComparison.Ordinal);
+                case IdType.Guid:
+                    return GuidIdentifier == other.GuidIdentifier;
+                case IdType.Opaque:
+                    return OpqaueIdentifer.SequenceEqual(other.OpqaueIdentifer);
+            }
+            return false;
+        }
 
-            return CompareTo(other.IdType, other.Identifier) == 0;
+        /// <inheritdoc/>
+        public bool Equals(uint other)
+        {
+            if (NamespaceIndex != 0 || IdType != IdType.Numeric)
+            {
+                return false;
+            }
+            return NumericIdentifier == other;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(Guid other)
+        {
+            if (NamespaceIndex != 0 || IdType != IdType.Guid)
+            {
+                return false;
+            }
+            return GuidIdentifier == other;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(byte[] other)
+        {
+            if (NamespaceIndex != 0 || IdType != IdType.Opaque)
+            {
+                return false;
+            }
+            if (other == null)
+            {
+                return IsNullNodeId;
+            }
+            return OpqaueIdentifer.SequenceEqual(other);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(string other)
+        {
+            if (NamespaceIndex != 0 || IdType != IdType.String)
+            {
+                return false;
+            }
+            if (other == null)
+            {
+                return IsNullNodeId;
+            }
+            return string.Equals(StringIdentifier, other, StringComparison.Ordinal);
         }
 
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            if (m_identifier == null)
-            {
-                return 0;
-            }
-
             if (IsNullNodeId)
             {
                 return 0;
@@ -1565,27 +1653,24 @@ namespace Opc.Ua
             hashCode.Add(IdType);
             switch (IdType)
             {
-                case IdType.Numeric:
-                    hashCode.Add((uint)m_identifier);
-                    break;
                 case IdType.String:
-                    hashCode.Add((string)m_identifier);
+                    hashCode.Add(StringIdentifier);
                     break;
                 case IdType.Guid:
-                    hashCode.Add((Guid)m_identifier);
+                    hashCode.Add(GuidIdentifier);
                     break;
                 case IdType.Opaque:
 #if NET6_0_OR_GREATER
-                    hashCode.AddBytes((byte[])m_identifier);
+                    hashCode.AddBytes(OpqaueIdentifer);
 #else
-                    foreach (byte id in (byte[])m_identifier)
+                    foreach (byte id in OpqaueIdentifer)
                     {
                         hashCode.Add(id);
                     }
 #endif
                     break;
                 default:
-                    hashCode.Add(m_identifier);
+                    hashCode.Add(NumericIdentifier);
                     break;
             }
             return hashCode.ToHashCode();
@@ -1594,69 +1679,94 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public static bool operator ==(NodeId value1, object value2)
         {
-            if (value1 is null)
-            {
-                return value2 is null;
-            }
-
             return value1.CompareTo(value2) == 0;
         }
 
         /// <inheritdoc/>
         public static bool operator !=(NodeId value1, object value2)
         {
-            if (value1 is null)
-            {
-                return value2 is not null;
-            }
-
             return value1.CompareTo(value2) != 0;
         }
 
-        /// <summary>
-        /// The node identifier formatted as a URI.
-        /// </summary>
-        /// <remarks>
-        /// The node identifier formatted as a URI.
-        /// </remarks>
-        [DataMember(Name = "Identifier", Order = 1)]
-        internal string IdentifierText
+        /// <inheritdoc/>
+        public static bool operator ==(NodeId value1, NodeId value2)
         {
-            get => Format(CultureInfo.InvariantCulture);
-            set
-            {
-                ValidateImmutableNodeIdIsNotModified();
+            return value1.Equals(value2);
+        }
 
-                NodeId nodeId = Parse(value);
+        /// <inheritdoc/>
+        public static bool operator !=(NodeId value1, NodeId value2)
+        {
+            return !value1.Equals(value2);
+        }
 
-                NamespaceIndex = nodeId.NamespaceIndex;
-                IdType = nodeId.IdType;
-                m_identifier = nodeId.Identifier;
-            }
+        /// <inheritdoc/>
+        public static bool operator ==(NodeId value1, uint value2)
+        {
+            return value1.Equals(value2);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(NodeId value1, uint value2)
+        {
+            return !value1.Equals(value2);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(NodeId value1, byte[] value2)
+        {
+            return value1.Equals(value2);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(NodeId value1, byte[] value2)
+        {
+            return !value1.Equals(value2);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(NodeId value1, Guid value2)
+        {
+            return value1.Equals(value2);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(NodeId value1, Guid value2)
+        {
+            return !value1.Equals(value2);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(NodeId value1, string value2)
+        {
+            return value1.Equals(value2);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(NodeId value1, string value2)
+        {
+            return !value1.Equals(value2);
         }
 
         /// <summary>
-        /// The index of the namespace URI in the server's namespace array.
+        /// Identifier as bytes
         /// </summary>
-        /// <remarks>
-        /// The index of the namespace URI in the server's namespace array.
-        /// </remarks>
-        public ushort NamespaceIndex { get; private set; }
+        internal byte[] OpqaueIdentifer => (byte[])m_identifier;
 
         /// <summary>
-        /// The type of node identifier used.
+        /// Identifier as string
         /// </summary>
-        /// <remarks>
-        /// Returns the type of Id, whether it is:
-        /// <list type="bullet">
-        /// <item><see cref="uint"/></item>
-        /// <item><see cref="Guid"/></item>
-        /// <item><see cref="string"/></item>
-        /// <item><see cref="byte"/>[]</item>
-        /// </list>
-        /// </remarks>
-        /// <seealso cref="IdType"/>
-        public IdType IdType { get; private set; }
+        internal string StringIdentifier => (string)m_identifier;
+
+        /// <summary>
+        /// Identifier as numberic
+        /// </summary>
+        internal uint NumericIdentifier => m_identifier == null ? 0 : (uint)m_identifier;
+
+        /// <summary>
+        /// Identifier as Guid
+        /// </summary>
+        internal Guid GuidIdentifier => m_identifier == null ? Guid.Empty : (Guid)m_identifier;
 
         /// <summary>
         /// The node identifier.
@@ -1665,193 +1775,102 @@ namespace Opc.Ua
         /// Returns the Id in its native format, i.e. UInt, GUID, String etc.
         /// </remarks>
         /// <exception cref="ServiceResultException"></exception>
-        public object Identifier
+        [Obsolete("Use TryGetIdentifier<T> to get strongly typed identifier values or " +
+            "consider using IdentifierAsString if you want to stringify the identifier.")]
+        public object Identifier => IdType switch
         {
-            get
-            {
-                if (m_identifier == null)
-                {
-                    switch (IdType)
-                    {
-                        case IdType.Numeric:
-                            return (uint)0;
-                        case IdType.Guid:
-                            return Guid.Empty;
-                        case IdType.String:
-                        case IdType.Opaque:
-                            break;
-                        default:
-#pragma warning disable CA1065 // Do not raise exceptions in unexpected locations
-                            throw ServiceResultException.Unexpected(
-                                $"Unexpected IdType value {IdType}.");
-#pragma warning restore CA1065 // Do not raise exceptions in unexpected locations
-                    }
-                }
+            IdType.Numeric => NumericIdentifier,
+            IdType.String => StringIdentifier,
+            IdType.Guid => GuidIdentifier,
+            IdType.Opaque => OpqaueIdentifer,
+            _ => throw ServiceResultException.Unexpected(
+                $"Unexpected IdType value {IdType}.")
+        };
 
-                return m_identifier;
+        /// <summary>
+        /// Returns a string version of just the identifier
+        /// </summary>
+        /// <exception cref="ServiceResultException"></exception>
+        public string IdentifierAsString => IdType switch
+        {
+            IdType.Numeric => NumericIdentifier.ToString(CultureInfo.InvariantCulture),
+            IdType.String => StringIdentifier,
+            IdType.Guid => GuidIdentifier.ToString(),
+            IdType.Opaque => Convert.ToBase64String(OpqaueIdentifer),
+            _ => throw ServiceResultException.Unexpected(
+                $"Unexpected IdType value {IdType}.")
+        };
+
+        /// <summary>
+        /// Try get the numeric node identifier.
+        /// </summary>
+        public bool TryGetIdentifier(out uint identifier)
+        {
+            if (IdType == IdType.Numeric)
+            {
+                identifier = NumericIdentifier;
+                return true;
             }
+            identifier = default;
+            return false;
+        }
+
+        /// <summary>
+        /// Try get the opque node identifier.
+        /// </summary>
+        public bool TryGetIdentifier(out byte[] identifier)
+        {
+            if (IdType == IdType.Opaque)
+            {
+                identifier = OpqaueIdentifer;
+                return true;
+            }
+            identifier = default;
+            return false;
+        }
+
+        /// <summary>
+        /// Try get the string node identifier.
+        /// </summary>
+        public bool TryGetIdentifier(out string identifier)
+        {
+            if (IdType == IdType.String)
+            {
+                identifier = StringIdentifier;
+                return true;
+            }
+            identifier = default;
+            return false;
+        }
+
+        /// <summary>
+        /// Try get the Guid node identifier.
+        /// </summary>
+        public bool TryGetIdentifier(out Guid identifier)
+        {
+            if (IdType == IdType.Guid)
+            {
+                identifier = GuidIdentifier;
+                return true;
+            }
+            identifier = default;
+            return false;
         }
 
         /// <summary>
         /// Whether the object represents a Null NodeId.
+        /// see https://reference.opcfoundation.org/Core/Part3/v105/docs/8.2.4
         /// </summary>
-        /// <remarks>
-        /// Whether the NodeId represents a Null NodeId.
-        /// </remarks>
         /// <exception cref="ServiceResultException"></exception>
-        public bool IsNullNodeId
+        public bool IsNullNodeId => IdType switch
         {
-            get
-            {
-                // non-zero namespace means it can't be null.
-                if (NamespaceIndex != 0)
-                {
-                    return false;
-                }
-
-                // the definition of a null identifier depends on the identifier type.
-                if (m_identifier != null)
-                {
-                    switch (IdType)
-                    {
-                        case IdType.Numeric:
-                            if (!m_identifier.Equals((uint)0))
-                            {
-                                return false;
-                            }
-
-                            break;
-                        case IdType.String:
-                            if (!string.IsNullOrEmpty((string)m_identifier))
-                            {
-                                return false;
-                            }
-
-                            break;
-                        case IdType.Guid:
-                            if (!m_identifier.Equals(Guid.Empty))
-                            {
-                                return false;
-                            }
-
-                            break;
-                        case IdType.Opaque:
-                            if (((byte[])m_identifier).Length > 0)
-                            {
-                                return false;
-                            }
-
-                            break;
-                        default:
-#pragma warning disable CA1065 // Do not raise exceptions in unexpected locations
-                            throw ServiceResultException.Unexpected(
-                                $"Unexpected IdType value {IdType}.");
-#pragma warning restore CA1065 // Do not raise exceptions in unexpected locations
-                    }
-                }
-
-                // must be null.
-                return true;
-            }
-        }
-
-#if UNUSED
-        /// <summary>
-        /// Compares two node identifiers.
-        /// </summary>
-        private static int CompareIdentifiers(IdType idType1, object id1, IdType idType2, object id2)
-        {
-            if (id1 == null && id2 == null)
-            {
-                return 0;
-            }
-
-            if (idType1 != idType2)
-            {
-                return idType1.CompareTo(idType2);
-            }
-
-            if (id1 == null || id2 == null)
-            {
-                object nonNull = id1;
-
-                if (id1 == null)
-                {
-                    nonNull = id2;
-                }
-
-                switch (idType1)
-                {
-                    case IdType.Numeric:
-                        if (nonNull is uint integer && integer == 0)
-                        {
-                            return 0;
-                        }
-
-                        break;
-
-                    case IdType.Guid:
-                        if (nonNull is Guid guid && guid == Guid.Empty)
-                        {
-                            return 0;
-                        }
-
-                        break;
-
-                    case IdType.String:
-                        if (nonNull is string text && text.Length == 0)
-                        {
-                            return 0;
-                        }
-
-                        break;
-
-                    case IdType.Opaque:
-                        if (nonNull is byte[] bytes && bytes.Length == 0)
-                        {
-                            return 0;
-                        }
-
-                        break;
-                }
-
-                return (id1 == null) ? -1 : +1;
-            }
-
-            if (id1 is byte[] bytes1)
-            {
-                if (id2 is not byte[] bytes2)
-                {
-                    return +1;
-                }
-
-                if (bytes1.Length != bytes2.Length)
-                {
-                    return bytes1.Length.CompareTo(bytes2.Length);
-                }
-
-                for (int ii = 0; ii < bytes1.Length; ii++)
-                {
-                    int result = bytes1[ii].CompareTo(bytes2[ii]);
-
-                    if (result != 0)
-                    {
-                        return result;
-                    }
-                }
-
-                // both arrays are equal.
-                return 0;
-            }
-
-            if (id1 is IComparable comparable1)
-            {
-                return comparable1.CompareTo(id2);
-            }
-
-            return string.CompareOrdinal(id1.ToString(), id2.ToString());
-        }
-#endif
+            _ when NamespaceIndex != 0 => false, // null identifiers allowed in ns != 0
+            IdType.Numeric => NumericIdentifier == 0,
+            IdType.String => string.IsNullOrEmpty(StringIdentifier),
+            IdType.Guid => GuidIdentifier == Guid.Empty,
+            IdType.Opaque => OpqaueIdentifer == null || OpqaueIdentifer.Length == 0,
+            _ => false
+        };
 
         /// <summary>
         /// Helper to determine if the identifier of specified type is greater/less.
@@ -1866,7 +1885,7 @@ namespace Opc.Ua
             {
                 case IdType.Numeric:
                 {
-                    uint id1 = (uint)m_identifier;
+                    uint id1 = NumericIdentifier;
                     uint id2 = (uint)id;
 
                     if (id1 == id2)
@@ -1878,7 +1897,7 @@ namespace Opc.Ua
                 }
                 case IdType.String:
                 {
-                    string id1 = (string)m_identifier;
+                    string id1 = StringIdentifier;
                     string id2 = (string)id;
                     return string.CompareOrdinal(id1, id2);
                 }
@@ -1906,7 +1925,7 @@ namespace Opc.Ua
                 }
                 case IdType.Opaque:
                 {
-                    byte[] id1 = (byte[])m_identifier;
+                    byte[] id1 = OpqaueIdentifer;
                     byte[] id2 = (byte[])id;
 
                     if (CoreUtils.IsEqual(id1, id2))
@@ -1984,33 +2003,24 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Validate that an immutable NodeId is not overwritten.
+        /// Get namespace index for id or throw if not found.
         /// </summary>
-        /// <exception cref="InvalidOperationException"></exception>
-        [Conditional("IMMUTABLENULLNODEID")]
-        private static void ValidateImmutableNodeIdIsNotModified()
+        /// <exception cref="ServiceResultException"></exception>
+        private static int GetNamespaceIndex(string namespaceUri, NamespaceTable namespaceTable)
         {
-#if IMMUTABLENULLNODEID
-            if (this is ImmutableNodeId)
+            int index = namespaceTable == null ? -1 : namespaceTable.GetIndex(namespaceUri);
+            if (index < 0)
             {
-                throw new InvalidOperationException("Cannot modify the immutable NodeId.Null.");
+                throw ServiceResultException.Create(
+                    StatusCodes.BadNodeIdInvalid,
+                    "NamespaceUri ({0}) is not in the namespace table.",
+                    namespaceUri);
             }
-#endif
+            return index;
         }
 
-        private object m_identifier;
+        private readonly object m_identifier;
     }
-
-#if IMMUTABLENULLNODEID
-
-    /// <summary>
-    /// A NodeId class as helper to catch if the immutable NodeId.Null is being modified.
-    /// </summary>
-    internal class ImmutableNodeId : NodeId
-    {
-        internal ImmutableNodeId() { }
-    }
-#endif
 
     /// <summary>
     /// A collection of NodeIds.
@@ -2018,41 +2028,20 @@ namespace Opc.Ua
     /// <remarks>
     /// Provides a strongly-typed collection of <see cref="NodeId"/>.
     /// </remarks>
-    [CollectionDataContract(
-        Name = "ListOfNodeId",
-        Namespace = Namespaces.OpcUaXsd,
-        ItemName = "NodeId")]
     public class NodeIdCollection : List<NodeId>, ICloneable
     {
-        /// <summary>
-        /// Initializes an empty collection.
-        /// </summary>
-        /// <remarks>
-        /// Initializes an empty collection.
-        /// </remarks>
+        /// <inheritdoc/>
         public NodeIdCollection()
         {
         }
 
-        /// <summary>
-        /// Initializes the collection from another collection.
-        /// </summary>
-        /// <remarks>
-        /// Creates a new collection based on the referenced collection.
-        /// </remarks>
-        /// <param name="collection">The existing collection to use as the basis of creating this collection</param>
+        /// <inheritdoc/>
         public NodeIdCollection(IEnumerable<NodeId> collection)
             : base(collection)
         {
         }
 
-        /// <summary>
-        /// Initializes the collection with the specified capacity.
-        /// </summary>
-        /// <remarks>
-        /// Creates a new collection while specifying the max size of the collection.
-        /// </remarks>
-        /// <param name="capacity">The max. capacity of the collection</param>
+        /// <inheritdoc/>
         public NodeIdCollection(int capacity)
             : base(capacity)
         {
@@ -2061,12 +2050,6 @@ namespace Opc.Ua
         /// <summary>
         /// Converts an array to a collection.
         /// </summary>
-        /// <remarks>
-        /// A quick-use method that will take an array of <see cref="NodeId"/> objects and will
-        /// return them within a <see cref="NodeIdCollection"/>.
-        /// </remarks>
-        /// <param name="values">An array of <see cref="NodeId"/> to add to the collection</param>
-        /// <returns>A <see cref="NodeIdCollection"/> containing the <see cref="NodeId"/>'s added via the parameters</returns>
         public static NodeIdCollection ToNodeIdCollection(NodeId[] values)
         {
             if (values != null)
@@ -2077,13 +2060,7 @@ namespace Opc.Ua
             return [];
         }
 
-        /// <summary>
-        /// Converts an array to a collection.
-        /// </summary>
-        /// <remarks>
-        /// Converts an array to a collection.
-        /// </remarks>
-        /// <param name="values">An array of <see cref="NodeId"/> objects to compare</param>
+        /// <inheritdoc/>
         public static implicit operator NodeIdCollection(NodeId[] values)
         {
             return ToNodeIdCollection(values);
@@ -2095,19 +2072,14 @@ namespace Opc.Ua
             return MemberwiseClone();
         }
 
-        /// <summary>
-        /// Creates a deep copy of the collection.
-        /// </summary>
-        /// <remarks>
-        /// Creates a deep copy of the collection.
-        /// </remarks>
+        /// <inheritdoc/>
         public new object MemberwiseClone()
         {
             var clone = new NodeIdCollection(Count);
 
             foreach (NodeId element in this)
             {
-                clone.Add(CoreUtils.Clone(element));
+                clone.Add(element);
             }
 
             return clone;
@@ -2143,28 +2115,123 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public bool Equals(NodeId x, NodeId y)
         {
-            if (ReferenceEquals(x, y))
-            {
-                return true;
-            }
-
-            if (x is null || y is null)
-            {
-                return false;
-            }
-
             return x == y;
         }
 
         /// <inheritdoc/>
         public int GetHashCode(NodeId nodeId)
         {
-            if (nodeId is null)
-            {
-                return 0;
-            }
-
             return nodeId.GetHashCode();
+        }
+    }
+
+    /// <summary>
+    /// Helper to allow data contract serialization of NodeId
+    /// </summary>
+    [DataContract(Namespace = Namespaces.OpcUaXsd)]
+    public class SerializableNodeId
+    {
+        /// <summary>
+        /// Create new null initialized node id
+        /// </summary>
+        public SerializableNodeId()
+        {
+            NodeId = default;
+        }
+
+        /// <summary>
+        /// Create initialized node id
+        /// </summary>
+        public SerializableNodeId(NodeId nodeId)
+        {
+            NodeId = nodeId;
+        }
+
+        /// <summary>
+        /// The serialized node id
+        /// </summary>
+        public NodeId NodeId { get; private set; }
+
+        /// <summary>
+        /// The node identifier formatted as a URI.
+        /// </summary>
+        /// <remarks>
+        /// The node identifier formatted as a URI.
+        /// </remarks>
+        [DataMember(Name = "Identifier", Order = 1)]
+        internal string IdentifierText
+        {
+            get => NodeId.Format(CultureInfo.InvariantCulture);
+            set => NodeId = NodeId.Parse(value);
+        }
+
+        /// <inheritdoc/>
+        public static implicit operator SerializableNodeId(NodeId nodeId)
+        {
+            return new SerializableNodeId(nodeId);
+        }
+
+        /// <inheritdoc/>
+        public static implicit operator NodeId(SerializableNodeId nodeId)
+        {
+            return nodeId.NodeId;
+        }
+
+        /// <inheritdoc/>
+        public static explicit operator string(SerializableNodeId nodeId)
+        {
+            return nodeId.IdentifierText;
+        }
+
+        /// <inheritdoc/>
+        public static explicit operator SerializableNodeId(string nodeId)
+        {
+            return new SerializableNodeId { IdentifierText = nodeId };
+        }
+    }
+
+    /// <summary>
+    /// A collection of NodeIds.
+    /// </summary>
+    [CollectionDataContract(
+        Name = "ListOfNodeId",
+        Namespace = Namespaces.OpcUaXsd,
+        ItemName = "NodeId")]
+    public class SerializableNodeIdCollection : List<SerializableNodeId>
+    {
+        /// <inheritdoc/>
+        public SerializableNodeIdCollection()
+        {
+        }
+
+        /// <inheritdoc/>
+        public SerializableNodeIdCollection(IEnumerable<SerializableNodeId> collection)
+            : base(collection)
+        {
+        }
+
+        /// <inheritdoc/>
+        public SerializableNodeIdCollection(int capacity)
+            : base(capacity)
+        {
+        }
+
+        /// <inheritdoc/>
+        public static implicit operator SerializableNodeIdCollection(SerializableNodeId[] values)
+        {
+            return values == null ? [] : [..values];
+        }
+
+        /// <inheritdoc/>
+        public static implicit operator NodeIdCollection(SerializableNodeIdCollection values)
+        {
+            return values == null ? null : new(values.Select(n => n.NodeId));
+        }
+
+        /// <inheritdoc/>
+        public static implicit operator SerializableNodeIdCollection(NodeIdCollection values)
+        {
+            return values == null ? null : new(values.Select(n => (SerializableNodeId)n));
         }
     }
 
@@ -2232,5 +2299,44 @@ namespace Opc.Ua
         /// Invalid namespace index
         /// </summary>
         InvalidNamespaceIndex
+    }
+
+    /// <summary>
+    /// Node id extensions
+    /// </summary>
+    public static class NodeIdExtensions
+    {
+        extension(NodeId)
+        {
+            /// <summary>
+            /// Checks if the node id represents a 'Null' node id.
+            /// </summary>
+            /// <remarks>
+            /// Returns a true/false value to indicate if the specified NodeId is null.
+            /// </remarks>
+            /// <param name="nodeId">The NodeId to validate</param>
+            [Obsolete("Use NodeId.IsNullNodeId property instead.")]
+            public static bool IsNull([NotNullWhen(false)] NodeId nodeId)
+            {
+                return nodeId.IsNullNodeId;
+            }
+
+            /// <summary>
+            /// Checks if the node id represents a 'Null' node id.
+            /// </summary>
+            /// <remarks>
+            /// Returns a true/false to indicate if the specified <see cref="ExpandedNodeId"/> is null.
+            /// </remarks>
+            /// <param name="nodeId">The ExpandedNodeId to validate</param>
+            public static bool IsNull([NotNullWhen(false)] ExpandedNodeId nodeId)
+            {
+                if (nodeId == null)
+                {
+                    return true;
+                }
+
+                return nodeId.IsNull;
+            }
+        }
     }
 }

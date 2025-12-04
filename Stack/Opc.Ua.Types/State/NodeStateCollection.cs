@@ -76,7 +76,7 @@ namespace Opc.Ua
             XmlWriterSettings settings = CoreUtils.DefaultXmlWriterSettings();
             settings.CloseOutput = true;
             using var writer = XmlWriter.Create(ostrm, settings);
-            var serializer = new DataContractSerializer(typeof(NodeSet));
+            var serializer = CoreUtils.CreateDataContractSerializer<NodeSet>();
             serializer.WriteObject(writer, nodeSet);
         }
 
@@ -506,7 +506,7 @@ namespace Opc.Ua
         {
             NodeState child;
             if (m_types != null &&
-                !NodeId.IsNull(typeDefinitionId) &&
+                !typeDefinitionId.IsNullNodeId &&
                 m_types.TryGetValue(typeDefinitionId, out Type type))
             {
                 child = Activator.CreateInstance(type, parent) as NodeState;
@@ -565,7 +565,7 @@ namespace Opc.Ua
         /// <exception cref="ArgumentNullException"></exception>
         public void RegisterType(NodeId typeDefinitionId, Type type)
         {
-            if (NodeId.IsNull(typeDefinitionId))
+            if (typeDefinitionId.IsNullNodeId)
             {
                 throw new ArgumentNullException(nameof(typeDefinitionId));
             }
@@ -582,7 +582,7 @@ namespace Opc.Ua
         /// <exception cref="ArgumentNullException"></exception>
         public void UnRegisterType(NodeId typeDefinitionId)
         {
-            if (NodeId.IsNull(typeDefinitionId))
+            if (typeDefinitionId.IsNullNodeId)
             {
                 throw new ArgumentNullException(nameof(typeDefinitionId));
             }

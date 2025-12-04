@@ -712,7 +712,7 @@ namespace Opc.Ua
             X509Certificate2 certificate,
             NodeId certificateType)
         {
-            if (certificateType == null)
+            if (certificateType.IsNullNodeId)
             {
                 return true;
             }
@@ -905,14 +905,15 @@ namespace Opc.Ua
         // TODO: remove if not used
         private static string EncodeCertificateType(NodeId certificateType)
         {
-            if (certificateType == null)
+            if (certificateType.IsNullNodeId)
             {
                 return null;
             }
 
             foreach (KeyValuePair<uint, string> supportedCertificateType in s_supportedCertificateTypes)
             {
-                if (supportedCertificateType.Key == (uint)certificateType.Identifier)
+                if (certificateType.TryGetIdentifier(out uint numericId) &&
+                    supportedCertificateType.Key == numericId)
                 {
                     return supportedCertificateType.Value;
                 }
@@ -929,7 +930,7 @@ namespace Opc.Ua
         {
             if (certificateType == null)
             {
-                return null;
+                return default;
             }
 
             foreach (KeyValuePair<uint, string> supportedCertificateType in s_supportedCertificateTypes)
@@ -940,7 +941,7 @@ namespace Opc.Ua
                 }
             }
 
-            return null;
+            return default;
         }
     }
 

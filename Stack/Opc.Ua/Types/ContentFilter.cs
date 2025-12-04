@@ -739,8 +739,11 @@ namespace Opc.Ua
 
                     if (operands.Count > 1 && operands[1] is LiteralOperand literalOperand)
                     {
-                        INode node = nodeTable.Find(literalOperand.Value.Value as NodeId);
-
+                        if (literalOperand.Value.Value is not NodeId nodeIdValue)
+                        {
+                            nodeIdValue = default;
+                        }
+                        INode node = nodeTable.Find(nodeIdValue);
                         if (node != null)
                         {
                             referenceType = CoreUtils.Format("{0}", node);
@@ -1223,10 +1226,19 @@ namespace Opc.Ua
         /// <returns>LiteralOperand as a displayable string.</returns>
         public override string ToString(INodeTable nodeTable)
         {
-            ExpandedNodeId nodeId = Value.Value as ExpandedNodeId ??
-                (ExpandedNodeId)(Value.Value as NodeId);
+            if (Value.Value is not NodeId nodeId)
+            {
+                if (Value.Value is ExpandedNodeId expandedNodeId)
+                {
+                    nodeId = (NodeId)expandedNodeId;
+                }
+                else
+                {
+                    nodeId = default;
+                }
+            }
 
-            if (nodeId != null)
+            if (!nodeId.IsNullNodeId)
             {
                 INode node = nodeTable.Find(nodeId);
 

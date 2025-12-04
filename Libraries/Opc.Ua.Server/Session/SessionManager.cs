@@ -191,7 +191,7 @@ namespace Opc.Ua.Server
                 }
 
                 // can assign a simple identifier if secured.
-                authenticationToken = null;
+                authenticationToken = default;
                 if (!string.IsNullOrEmpty(context.ChannelContext.SecureChannelId) &&
                     context.ChannelContext.EndpointDescription
                         .SecurityMode != MessageSecurityMode.None)
@@ -201,7 +201,7 @@ namespace Opc.Ua.Server
                 }
 
                 // must assign a hard-to-guess id if not secured.
-                if (authenticationToken == null)
+                if (authenticationToken.IsNullNodeId)
                 {
                     byte[] token = Nonce.CreateRandomNonceData(32);
                     authenticationToken = new NodeId(token);

@@ -40,7 +40,7 @@ namespace Opc.Ua
 
             if (source != null)
             {
-                if (!NodeId.IsNull(source.NodeId))
+                if (!source.NodeId.IsNullNodeId)
                 {
                     m_sourceNode = new PropertyState<NodeId>(this)
                     {

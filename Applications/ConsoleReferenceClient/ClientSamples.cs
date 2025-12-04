@@ -506,7 +506,7 @@ namespace Quickstarts
 
                 var eventMonitoredItem = new MonitoredItem(subscription.DefaultItem)
                 {
-                    StartNodeId = new NodeId(ObjectIds.Server),
+                    StartNodeId = ObjectIds.Server,
                     AttributeId = Attributes.EventNotifier,
                     DisplayName = "Event Variable",
                     SamplingInterval = itemSamplingInterval,
@@ -539,7 +539,7 @@ namespace Quickstarts
                 };
                 var desiredEventType = new LiteralOperand
                 {
-                    Value = new Variant(new NodeId(ObjectTypeIds.ExclusiveLevelAlarmType))
+                    Value = new Variant(ObjectTypeIds.ExclusiveLevelAlarmType)
                 };
 
                 whereClause.Push(FilterOperator.Equals, [existingEventType, desiredEventType]);
@@ -725,7 +725,7 @@ namespace Quickstarts
         /// <param name="browseDescription">An optional BrowseDescription to use.</param>
         public async Task<ReferenceDescriptionCollection> ManagedBrowseFullAddressSpaceAsync(
             IUAClient uaClient,
-            NodeId startingNode = null,
+            NodeId startingNode = default,
             BrowseDescription browseDescription = null,
             CancellationToken ct = default)
         {
@@ -758,7 +758,7 @@ namespace Quickstarts
                 }
             }
 
-            var nodesToBrowse = new List<NodeId> { startingNode ?? ObjectIds.RootFolder };
+            var nodesToBrowse = new List<NodeId> { startingNode.IsNullNodeId ? ObjectIds.RootFolder : startingNode };
 
             const int kMaxReferencesPerNode = 1000;
 
@@ -901,7 +901,7 @@ namespace Quickstarts
         /// <param name="browseDescription">An optional BrowseDescription to use.</param>
         public async Task<ReferenceDescriptionCollection> BrowseFullAddressSpaceAsync(
             IUAClient uaClient,
-            NodeId startingNode = null,
+            NodeId startingNode = default,
             BrowseDescription browseDescription = null,
             CancellationToken ct = default)
         {
@@ -914,7 +914,7 @@ namespace Quickstarts
                 browseDescription
                 ?? new BrowseDescription
                 {
-                    NodeId = startingNode ?? ObjectIds.RootFolder,
+                    NodeId = startingNode.IsNullNodeId ? ObjectIds.RootFolder : startingNode,
                     BrowseDirection = BrowseDirection.Forward,
                     ReferenceTypeId = ReferenceTypeIds.HierarchicalReferences,
                     IncludeSubtypes = true,
@@ -923,7 +923,7 @@ namespace Quickstarts
                 };
             BrowseDescriptionCollection browseDescriptionCollection
                 = CreateBrowseDescriptionCollectionFromNodeId(
-                [.. new NodeId[] { startingNode ?? ObjectIds.RootFolder }],
+                [.. new NodeId[] { startingNode.IsNullNodeId ? ObjectIds.RootFolder : startingNode }],
                 browseTemplate);
 
             // Browse

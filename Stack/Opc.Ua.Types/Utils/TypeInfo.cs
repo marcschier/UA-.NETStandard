@@ -270,7 +270,7 @@ namespace Opc.Ua
 
             NodeId dataTypeId = GetDataTypeId(typeInfo);
 
-            if (NodeId.IsNull(dataTypeId))
+            if (dataTypeId.IsNullNodeId)
             {
                 if (type.GetTypeInfo().IsEnum ||
                     (type.IsArray && type.GetElementType().GetTypeInfo().IsEnum))
@@ -445,13 +445,13 @@ namespace Opc.Ua
         /// <returns>An <see cref="BuiltInType"/> for  <paramref name="datatypeId"/></returns>
         public static BuiltInType GetBuiltInType(NodeId datatypeId)
         {
-            if (datatypeId == null ||
+            if (datatypeId.IsNullNodeId ||
                 datatypeId.NamespaceIndex != 0 ||
-                datatypeId.IdType != IdType.Numeric)
+                !datatypeId.TryGetIdentifier(out uint id))
             {
                 return BuiltInType.Null;
             }
-            switch ((uint)datatypeId.Identifier)
+            switch (id)
             {
                 // subtype of DateTime
                 case DataTypes.UtcTime:
@@ -492,9 +492,7 @@ namespace Opc.Ua
                 case DataTypes.UriString:
                     return BuiltInType.String;
                 default:
-                    var builtInType = (BuiltInType)Enum.ToObject(
-                        typeof(BuiltInType),
-                        datatypeId.Identifier);
+                    var builtInType = (BuiltInType)Enum.ToObject(typeof(BuiltInType), id);
                     if (builtInType is > BuiltInType.DiagnosticInfo and not BuiltInType.Enumeration)
                     {
                         return BuiltInType.Null;
@@ -582,11 +580,11 @@ namespace Opc.Ua
         {
             NodeId typeId = datatypeId;
 
-            while (!NodeId.IsNull(typeId))
+            while (!typeId.IsNullNodeId)
             {
-                if (typeId.NamespaceIndex == 0 && typeId.IdType == IdType.Numeric)
+                if (typeId.NamespaceIndex == 0 && typeId.TryGetIdentifier(out uint numericId))
                 {
-                    var id = (BuiltInType)(int)(uint)typeId.Identifier;
+                    var id = (BuiltInType)(int)numericId;
 
                     if (id is > BuiltInType.Null and <= BuiltInType.Enumeration and not BuiltInType.DiagnosticInfo)
                     {
@@ -621,12 +619,11 @@ namespace Opc.Ua
         {
             NodeId typeId = datatypeId;
 
-            while (!NodeId.IsNull(typeId))
+            while (!typeId.IsNullNodeId)
             {
-                if (typeId.NamespaceIndex == 0 && typeId.IdType == IdType.Numeric)
+                if (typeId.NamespaceIndex == 0 && typeId.TryGetIdentifier(out uint numericId))
                 {
-                    var id = (BuiltInType)(int)(uint)typeId.Identifier;
-
+                    var id = (BuiltInType)(int)numericId;
                     if (id is > BuiltInType.Null and <= BuiltInType.Enumeration and not BuiltInType.DiagnosticInfo)
                     {
                         return id;
@@ -945,12 +942,12 @@ namespace Opc.Ua
             }
 
             // check for special predefined types.
-            if (expectedDataTypeId.IdType == IdType.Numeric &&
-                expectedDataTypeId.NamespaceIndex == 0)
+            if (expectedDataTypeId.NamespaceIndex == 0 &&
+                expectedDataTypeId.TryGetIdentifier(out uint numericId))
             {
                 BuiltInType actualType = typeInfo.BuiltInType;
 
-                switch ((uint)expectedDataTypeId.Identifier)
+                switch (numericId)
                 {
                     case DataTypes.Number:
                         switch (actualType)
@@ -1435,7 +1432,8 @@ namespace Opc.Ua
         /// Returns the type info for the provided value.
         /// </summary>
         /// <param name="value">The value.</param>
-        /// <returns><see cref="TypeInfo"/> instance storing information about the <paramref name="value"/> type.</returns>
+        /// <returns><see cref="TypeInfo"/> instance storing information about
+        /// the <paramref name="value"/> type.</returns>
         public static TypeInfo Construct(object value)
         {
             if (value == null)
@@ -1458,7 +1456,8 @@ namespace Opc.Ua
         /// Returns the type info for the specified system type.
         /// </summary>
         /// <param name="systemType">The specified system (framework) type.</param>
-        /// <returns><see cref="TypeInfo"/> instance storing information equivalent to the <paramref name="systemType"/> type.</returns>
+        /// <returns><see cref="TypeInfo"/> instance storing information equivalent
+        /// to the <paramref name="systemType"/> type.</returns>
         public static TypeInfo Construct(Type systemType)
         {
             // check for null.
@@ -1721,14 +1720,12 @@ namespace Opc.Ua
                 return null;
             }
 
-            if (dataType == null ||
-                dataType.IdType != IdType.Numeric ||
-                dataType.NamespaceIndex != 0)
+            if (dataType.IsNullNodeId ||
+                dataType.NamespaceIndex != 0 ||
+                !dataType.TryGetIdentifier(out uint id))
             {
                 return GetDefaultValueInternal(dataType, typeTree);
             }
-
-            uint id = (uint)dataType.Identifier;
 
             if (id <= DataTypes.DiagnosticInfo)
             {
@@ -3274,72 +3271,100 @@ namespace Opc.Ua
             /// <summary>
             /// A boolean logic value (true or false).
             /// </summary>
-            public static readonly TypeInfo Boolean = new(BuiltInType.Boolean, ValueRanks.Scalar);
+            public static readonly TypeInfo Boolean = new(
+                BuiltInType.Boolean,
+                ValueRanks.Scalar);
 
             /// <summary>
             /// An 8 bit signed integer value.
             /// </summary>
-            public static readonly TypeInfo SByte = new(BuiltInType.SByte, ValueRanks.Scalar);
+            public static readonly TypeInfo SByte = new(
+                BuiltInType.SByte,
+                ValueRanks.Scalar);
 
             /// <summary>
             /// An 8 bit unsigned integer value.
             /// </summary>
-            public static readonly TypeInfo Byte = new(BuiltInType.Byte, ValueRanks.Scalar);
+            public static readonly TypeInfo Byte = new(
+                BuiltInType.Byte,
+                ValueRanks.Scalar);
 
             /// <summary>
             /// A 16 bit signed integer value.
             /// </summary>
-            public static readonly TypeInfo Int16 = new(BuiltInType.Int16, ValueRanks.Scalar);
+            public static readonly TypeInfo Int16 = new(
+                BuiltInType.Int16,
+                ValueRanks.Scalar);
 
             /// <summary>
             /// A 16 bit signed integer value.
             /// </summary>
-            public static readonly TypeInfo UInt16 = new(BuiltInType.UInt16, ValueRanks.Scalar);
+            public static readonly TypeInfo UInt16 = new(
+                BuiltInType.UInt16,
+                ValueRanks.Scalar);
 
             /// <summary>
             /// A 32 bit signed integer value.
             /// </summary>
-            public static readonly TypeInfo Int32 = new(BuiltInType.Int32, ValueRanks.Scalar);
+            public static readonly TypeInfo Int32 = new(
+                BuiltInType.Int32,
+                ValueRanks.Scalar);
 
             /// <summary>
             /// A 32 bit unsigned integer value.
             /// </summary>
-            public static readonly TypeInfo UInt32 = new(BuiltInType.UInt32, ValueRanks.Scalar);
+            public static readonly TypeInfo UInt32 = new(
+                BuiltInType.UInt32,
+                ValueRanks.Scalar);
 
             /// <summary>
             /// A 64 bit signed integer value.
             /// </summary>
-            public static readonly TypeInfo Int64 = new(BuiltInType.Int64, ValueRanks.Scalar);
+            public static readonly TypeInfo Int64 = new(
+                BuiltInType.Int64,
+                ValueRanks.Scalar);
 
             /// <summary>
             /// A 64 bit unsigned integer value.
             /// </summary>
-            public static readonly TypeInfo UInt64 = new(BuiltInType.UInt64, ValueRanks.Scalar);
+            public static readonly TypeInfo UInt64 = new(
+                BuiltInType.UInt64,
+                ValueRanks.Scalar);
 
             /// <summary>
             /// An IEEE single precision (32 bit) floating point value.
             /// </summary>
-            public static readonly TypeInfo Float = new(BuiltInType.Float, ValueRanks.Scalar);
+            public static readonly TypeInfo Float = new(
+                BuiltInType.Float,
+                ValueRanks.Scalar);
 
             /// <summary>
             /// An IEEE double precision (64 bit) floating point value.
             /// </summary>
-            public static readonly TypeInfo Double = new(BuiltInType.Double, ValueRanks.Scalar);
+            public static readonly TypeInfo Double = new(
+                BuiltInType.Double,
+                ValueRanks.Scalar);
 
             /// <summary>
             /// A sequence of Unicode characters.
             /// </summary>
-            public static readonly TypeInfo String = new(BuiltInType.String, ValueRanks.Scalar);
+            public static readonly TypeInfo String = new(
+                BuiltInType.String,
+                ValueRanks.Scalar);
 
             /// <summary>
             /// An instance in time.
             /// </summary>
-            public static readonly TypeInfo DateTime = new(BuiltInType.DateTime, ValueRanks.Scalar);
+            public static readonly TypeInfo DateTime = new(
+                BuiltInType.DateTime,
+                ValueRanks.Scalar);
 
             /// <summary>
             /// A 128-bit globally unique identifier.
             /// </summary>
-            public static readonly TypeInfo Guid = new(BuiltInType.Guid, ValueRanks.Scalar);
+            public static readonly TypeInfo Guid = new(
+                BuiltInType.Guid,
+                ValueRanks.Scalar);
 
             /// <summary>
             /// A sequence of bytes.
@@ -3358,7 +3383,9 @@ namespace Opc.Ua
             /// <summary>
             /// An identifier for a node in the address space of a UA server.
             /// </summary>
-            public static readonly TypeInfo NodeId = new(BuiltInType.NodeId, ValueRanks.Scalar);
+            public static readonly TypeInfo NodeId = new(
+                BuiltInType.NodeId,
+                ValueRanks.Scalar);
 
             /// <summary>
             /// A node id that stores the namespace URI instead of the namespace index.
@@ -3405,7 +3432,9 @@ namespace Opc.Ua
             /// <summary>
             /// Any of the other built-in types.
             /// </summary>
-            public static readonly TypeInfo Variant = new(BuiltInType.Variant, ValueRanks.Scalar);
+            public static readonly TypeInfo Variant = new(
+                BuiltInType.Variant,
+                ValueRanks.Scalar);
 
             /// <summary>
             /// A diagnostic information associated with a result code.

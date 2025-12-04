@@ -209,8 +209,8 @@ namespace TestData
                     if (node is ConditionState condition &&
                         !ReferenceEquals(condition.Parent, conditionsFolder))
                     {
-                        condition.AddNotifier(SystemContext, null, true, conditionsFolder);
-                        conditionsFolder.AddNotifier(SystemContext, null, false, condition);
+                        condition.AddNotifier(SystemContext, default, true, conditionsFolder);
+                        conditionsFolder.AddNotifier(SystemContext, default, false, condition);
                     }
                 }
 
@@ -303,12 +303,12 @@ namespace TestData
             {
                 NodeId typeId = passiveNode.TypeDefinitionId;
 
-                if (!IsNodeIdInNamespace(typeId) || typeId.IdType != IdType.Numeric)
+                if (!IsNodeIdInNamespace(typeId) || !typeId.TryGetIdentifier(out uint typeIdNumeric))
                 {
                     return predefinedNode;
                 }
 
-                switch ((uint)typeId.Identifier)
+                switch (typeIdNumeric)
                 {
                     case ObjectTypes.TestSystemConditionType:
                     {
@@ -443,12 +443,12 @@ namespace TestData
             {
                 NodeId typeId = variableNode.TypeDefinitionId;
 
-                if (!IsNodeIdInNamespace(typeId) || typeId.IdType != IdType.Numeric)
+                if (!IsNodeIdInNamespace(typeId) || !typeId.TryGetIdentifier(out uint typeIdNumeric))
                 {
                     return predefinedNode;
                 }
 
-                switch ((uint)typeId.Identifier)
+                switch (typeIdNumeric)
                 {
                     case VariableTypes.ScalarStructureVariableType:
                     {

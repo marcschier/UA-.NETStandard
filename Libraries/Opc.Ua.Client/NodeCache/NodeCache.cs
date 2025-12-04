@@ -368,7 +368,7 @@ namespace Opc.Ua.Client
         {
             var localId = ExpandedNodeId.ToNodeId(nodeId, m_context.NamespaceUris);
 
-            if (localId == null)
+            if (localId.IsNullNodeId)
             {
                 return null;
             }
@@ -948,7 +948,7 @@ namespace Opc.Ua.Client
             }
 
             // null expected datatype matches everything.
-            if (NodeId.IsNull(expectedTypeId))
+            if (expectedTypeId.IsNullNodeId)
             {
                 return true;
             }

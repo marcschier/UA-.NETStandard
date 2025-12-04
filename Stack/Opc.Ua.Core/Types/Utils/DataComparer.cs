@@ -455,26 +455,10 @@ namespace Opc.Ua.Test
         /// False or ServiceResultException in case of unequal values.</returns>
         public bool CompareNodeId(NodeId value1, NodeId value2)
         {
-            if (NodeId.IsNull(value1) && NodeId.IsNull(value2))
-            {
-                return true;
-            }
-
-            if (value1 == null || value2 == null)
-            {
-                if (value1 != value2)
-                {
-                    return ReportError(value1, value2);
-                }
-
-                return true;
-            }
-
             if (value1 != value2)
             {
                 return ReportError(value1, value2);
             }
-
             return true;
         }
 

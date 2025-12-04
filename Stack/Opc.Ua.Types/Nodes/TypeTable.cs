@@ -44,7 +44,7 @@ namespace Opc.Ua
 
             var localId = ExpandedNodeId.ToNodeId(typeId, m_namespaceUris);
 
-            if (localId == null)
+            if (localId.IsNullNodeId)
             {
                 return false;
             }
@@ -58,7 +58,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public bool IsKnown(NodeId typeId)
         {
-            if (NodeId.IsNull(typeId))
+            if (typeId.IsNullNodeId)
             {
                 return false;
             }
@@ -79,7 +79,7 @@ namespace Opc.Ua
 
             var localId = ExpandedNodeId.ToNodeId(typeId, m_namespaceUris);
 
-            if (localId == null)
+            if (localId.IsNullNodeId)
             {
                 return NodeId.Null;
             }
@@ -103,7 +103,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public NodeId FindSuperType(NodeId typeId)
         {
-            if (typeId == null)
+            if (typeId.IsNullNodeId)
             {
                 return NodeId.Null;
             }
@@ -148,7 +148,7 @@ namespace Opc.Ua
 
             var localId = ExpandedNodeId.ToNodeId(typeId, m_namespaceUris);
 
-            if (localId == null)
+            if (localId.IsNullNodeId)
             {
                 return subtypes;
             }
@@ -185,14 +185,14 @@ namespace Opc.Ua
 
             var startId = ExpandedNodeId.ToNodeId(subTypeId, m_namespaceUris);
 
-            if (startId == null)
+            if (startId.IsNullNodeId)
             {
                 return false;
             }
 
             var targetId = ExpandedNodeId.ToNodeId(superTypeId, m_namespaceUris);
 
-            if (targetId == null)
+            if (targetId.IsNullNodeId)
             {
                 return false;
             }
@@ -212,7 +212,7 @@ namespace Opc.Ua
         public bool IsTypeOf(NodeId subTypeId, NodeId superTypeId)
         {
             // check for null.
-            if (subTypeId == null || superTypeId == null)
+            if (subTypeId.IsNullNodeId || superTypeId.IsNullNodeId)
             {
                 return false;
             }
@@ -254,14 +254,14 @@ namespace Opc.Ua
             // check for empty name.
             if (QualifiedName.IsNull(browseName))
             {
-                return null;
+                return default;
             }
 
             lock (m_lock)
             {
                 if (!m_referenceTypes.TryGetValue(browseName, out TypeInfo typeInfo))
                 {
-                    return null;
+                    return default;
                 }
 
                 return typeInfo.NodeId;
@@ -279,14 +279,14 @@ namespace Opc.Ua
 
             var localId = ExpandedNodeId.ToNodeId(encodingId, m_namespaceUris);
 
-            if (localId == null)
+            if (localId.IsNullNodeId)
             {
                 return false;
             }
 
             var localTypeId = ExpandedNodeId.ToNodeId(datatypeId, m_namespaceUris);
 
-            if (localTypeId == null)
+            if (localTypeId.IsNullNodeId)
             {
                 return false;
             }
@@ -353,7 +353,7 @@ namespace Opc.Ua
             }
 
             // null expected datatype matches everything.
-            if (NodeId.IsNull(expectedTypeId))
+            if (expectedTypeId.IsNullNodeId)
             {
                 return true;
             }
@@ -406,7 +406,7 @@ namespace Opc.Ua
         {
             var localId = ExpandedNodeId.ToNodeId(encodingId, m_namespaceUris);
 
-            if (localId == null)
+            if (localId.IsNullNodeId)
             {
                 return NodeId.Null;
             }
@@ -457,7 +457,7 @@ namespace Opc.Ua
         public void Add(ILocalNode node)
         {
             // ignore null.
-            if (node == null || NodeId.IsNull(node.NodeId))
+            if (node == null || node.NodeId.IsNullNodeId)
             {
                 return;
             }
@@ -475,7 +475,7 @@ namespace Opc.Ua
                 return;
             }
 
-            NodeId localsuperTypeId = null;
+            NodeId localsuperTypeId = default;
 
             // find the supertype.
             ExpandedNodeId superTypeId = node.References
@@ -485,7 +485,7 @@ namespace Opc.Ua
             {
                 localsuperTypeId = ExpandedNodeId.ToNodeId(superTypeId, m_namespaceUris);
 
-                if (localsuperTypeId == null)
+                if (localsuperTypeId.IsNullNodeId)
                 {
                     throw ServiceResultException.Create(
                         StatusCodes.BadNodeIdInvalid,
@@ -498,7 +498,7 @@ namespace Opc.Ua
                 // lookup the supertype.
                 TypeInfo superTypeInfo = null;
 
-                if (localsuperTypeId != null &&
+                if (!localsuperTypeId.IsNullNodeId &&
                     !m_nodes.TryGetValue(localsuperTypeId, out superTypeInfo))
                 {
                     throw ServiceResultException.Create(
@@ -599,7 +599,7 @@ namespace Opc.Ua
         {
             var localId = ExpandedNodeId.ToNodeId(encodingId, m_namespaceUris);
 
-            if (localId == null)
+            if (localId.IsNullNodeId)
             {
                 return false;
             }
@@ -645,7 +645,7 @@ namespace Opc.Ua
                 // lookup the supertype.
                 TypeInfo superTypeInfo = null;
 
-                if (!NodeId.IsNull(superTypeId) &&
+                if (!superTypeId.IsNullNodeId &&
                     !m_nodes.TryGetValue(superTypeId, out superTypeInfo))
                 {
                     throw ServiceResultException.Create(
@@ -699,7 +699,7 @@ namespace Opc.Ua
 
             var localId = ExpandedNodeId.ToNodeId(typeId, m_namespaceUris);
 
-            if (localId == null)
+            if (localId.IsNullNodeId)
             {
                 return;
             }
@@ -794,7 +794,7 @@ namespace Opc.Ua
             /// <param name="subtypeId">The subtype identifier.</param>
             public void RemoveSubType(NodeId subtypeId)
             {
-                if (subtypeId != null && SubTypes != null)
+                if (!subtypeId.IsNullNodeId && SubTypes != null)
                 {
                     SubTypes.Remove(subtypeId);
 

@@ -239,7 +239,7 @@ namespace Opc.Ua.Server
             ManagerHandle = null;
             SubscriptionId = 0;
             Id = 0;
-            NodeId = null;
+            NodeId = default;
             AttributeId = 0;
             m_indexRange = null;
             m_parsedIndexRange = NumericRange.Empty;
@@ -1115,7 +1115,7 @@ namespace Opc.Ua.Server
             bool passedFilter = filter.WhereClause.Evaluate(context, instance);
 
             ConditionState alarmCondition = null;
-            NodeId conditionId = null;
+            NodeId conditionId = default;
             if (instance is InstanceStateSnapshot instanceStateSnapshot)
             {
                 alarmCondition = instanceStateSnapshot.Handle as ConditionState;
@@ -1132,7 +1132,7 @@ namespace Opc.Ua.Server
             bool canSend = passedFilter;
 
             // ConditionId is valid only if FilteredRetain is set for the alarm condition
-            if (conditionId != null && alarmCondition != null)
+            if (!conditionId.IsNullNodeId && alarmCondition != null)
             {
                 HashSet<string> conditionIds = GetFilteredRetainConditionIds();
 

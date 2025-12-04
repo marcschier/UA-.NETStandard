@@ -31,7 +31,7 @@ namespace Opc.Ua
             }
 
             // check if the level state machine needs an initial state.
-            if (LimitState.CurrentState.Id.Value != null)
+            if (!LimitState.CurrentState.Id.Value.IsNullNodeId)
             {
                 base.SetActiveState(context, true);
                 return;

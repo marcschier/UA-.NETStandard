@@ -532,13 +532,11 @@ namespace Opc.Ua
         {
             byte encodingByte = SafeReadByte();
 
-            var value = new NodeId();
-
-            ReadNodeIdBody(encodingByte, value);
+            ReadNodeIdBody(encodingByte, out NodeId value);
 
             if (m_namespaceMappings != null && m_namespaceMappings.Length > value.NamespaceIndex)
             {
-                value.SetNamespaceIndex(m_namespaceMappings[value.NamespaceIndex]);
+                return value.WithNamespaceIndex(m_namespaceMappings[value.NamespaceIndex]);
             }
 
             return value;
@@ -548,38 +546,40 @@ namespace Opc.Ua
         public ExpandedNodeId ReadExpandedNodeId(string fieldName)
         {
             byte encodingByte = SafeReadByte();
+            var expandedNodeId = new ExpandedNodeId();
 
-            var value = new ExpandedNodeId();
-
-            var body = new NodeId();
-            ReadNodeIdBody(encodingByte, body);
-            value.InnerNodeId = body;
+            ReadNodeIdBody(encodingByte, out NodeId body);
+            expandedNodeId.InnerNodeId = body;
 
             // read the namespace uri if present.
             if ((encodingByte & 0x80) != 0)
             {
                 string namespaceUri = ReadString(null);
-                value.SetNamespaceUri(namespaceUri);
+                expandedNodeId = expandedNodeId.SetNamespaceUri(namespaceUri);
             }
 
             // read the server index if present.
             if ((encodingByte & 0x40) != 0)
             {
                 uint serverIndex = SafeReadUInt32();
-                value.SetServerIndex(serverIndex);
+                expandedNodeId = expandedNodeId.SetServerIndex(serverIndex);
             }
 
-            if (m_namespaceMappings != null && m_namespaceMappings.Length > value.NamespaceIndex)
+            if (m_namespaceMappings != null &&
+                m_namespaceMappings.Length > expandedNodeId.NamespaceIndex)
             {
-                value.SetNamespaceIndex(m_namespaceMappings[value.NamespaceIndex]);
+                expandedNodeId = expandedNodeId.SetNamespaceIndex(
+                    m_namespaceMappings[expandedNodeId.NamespaceIndex]);
             }
 
-            if (m_serverMappings != null && m_serverMappings.Length > value.ServerIndex)
+            if (m_serverMappings != null &&
+                m_serverMappings.Length > expandedNodeId.ServerIndex)
             {
-                value.SetServerIndex(m_serverMappings[value.NamespaceIndex]);
+                expandedNodeId = expandedNodeId.SetServerIndex(
+                    m_serverMappings[expandedNodeId.NamespaceIndex]);
             }
 
-            return value;
+            return expandedNodeId;
         }
 
         /// <inheritdoc/>
@@ -1925,33 +1925,33 @@ namespace Opc.Ua
         /// Reads the body of a node id.
         /// </summary>
         /// <exception cref="ServiceResultException"></exception>
-        private void ReadNodeIdBody(byte encodingByte, NodeId value)
+        private void ReadNodeIdBody(byte encodingByte, out NodeId value)
         {
+            ushort namespaceIndex;
             switch ((NodeIdEncodingBits)(encodingByte & 0x3F))
             {
                 case NodeIdEncodingBits.TwoByte:
-                    value.SetNamespaceIndex(0);
-                    value.SetIdentifier(IdType.Numeric, (uint)SafeReadByte());
+                    value = new NodeId(SafeReadByte());
                     break;
                 case NodeIdEncodingBits.FourByte:
-                    value.SetNamespaceIndex(SafeReadByte());
-                    value.SetIdentifier(IdType.Numeric, (uint)SafeReadUInt16());
+                    namespaceIndex = SafeReadByte();
+                    value = new NodeId(SafeReadUInt16(), namespaceIndex);
                     break;
                 case NodeIdEncodingBits.Numeric:
-                    value.SetNamespaceIndex(SafeReadUInt16());
-                    value.SetIdentifier(IdType.Numeric, SafeReadUInt32());
+                    namespaceIndex = SafeReadUInt16();
+                    value = new NodeId(SafeReadUInt32(), namespaceIndex);
                     break;
                 case NodeIdEncodingBits.String:
-                    value.SetNamespaceIndex(SafeReadUInt16());
-                    value.SetIdentifier(IdType.String, ReadString(null));
+                    namespaceIndex = SafeReadUInt16();
+                    value = new NodeId(ReadString(null), namespaceIndex);
                     break;
                 case NodeIdEncodingBits.Guid:
-                    value.SetNamespaceIndex(SafeReadUInt16());
-                    value.SetIdentifier(IdType.Guid, (Guid)ReadGuid(null));
+                    namespaceIndex = SafeReadUInt16();
+                    value = new NodeId((Guid)ReadGuid(null), namespaceIndex);
                     break;
                 case NodeIdEncodingBits.ByteString:
-                    value.SetNamespaceIndex(SafeReadUInt16());
-                    value.SetIdentifier(IdType.Opaque, ReadByteString(null));
+                    namespaceIndex = SafeReadUInt16();
+                    value = new NodeId(ReadByteString(null), namespaceIndex);
                     break;
                 default:
                     throw ServiceResultException.Create(
@@ -1975,7 +1975,7 @@ namespace Opc.Ua
             // convert to absolute node id.
             extension.TypeId = NodeId.ToExpandedNodeId(typeId, Context.NamespaceUris);
 
-            if (!NodeId.IsNull(typeId) && NodeId.IsNull(extension.TypeId))
+            if (!typeId.IsNullNodeId && NodeId.IsNull(extension.TypeId))
             {
                 m_logger.LogWarning(
                     "Cannot deserialize extension objects if the NamespaceUri is not in the NamespaceTable: Type = {Type}",

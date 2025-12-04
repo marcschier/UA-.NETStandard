@@ -88,7 +88,7 @@ namespace Quickstarts.ReferenceServer
         {
             if (node is BaseInstanceState instance &&
                 instance.Parent != null &&
-                instance.Parent.NodeId.Identifier is string id)
+                instance.Parent.NodeId.TryGetIdentifier(out string id))
             {
                 return new NodeId(
                     id + "_" + instance.SymbolicName,
@@ -4025,7 +4025,7 @@ namespace Quickstarts.ReferenceServer
             variable.ValuePrecision = new PropertyState<double>(variable);
             variable.Definition = new PropertyState<string>(variable);
 
-            variable.Create(SystemContext, null, variable.BrowseName, null, true);
+            variable.Create(SystemContext, default, variable.BrowseName, null, true);
 
             variable.SymbolicName = name;
             variable.ReferenceTypeId = ReferenceTypes.Organizes;
@@ -4219,7 +4219,7 @@ namespace Quickstarts.ReferenceServer
                 UserWriteMask = AttributeWriteMask.None
             };
 
-            variable.Create(SystemContext, null, variable.BrowseName, null, true);
+            variable.Create(SystemContext, default, variable.BrowseName, null, true);
 
             variable.SymbolicName = name;
             variable.ReferenceTypeId = ReferenceTypes.Organizes;
@@ -4263,7 +4263,7 @@ namespace Quickstarts.ReferenceServer
                 UserWriteMask = AttributeWriteMask.None
             };
 
-            variable.Create(SystemContext, null, variable.BrowseName, null, true);
+            variable.Create(SystemContext, default, variable.BrowseName, null, true);
 
             variable.SymbolicName = name;
             variable.ReferenceTypeId = ReferenceTypes.Organizes;
@@ -4302,7 +4302,7 @@ namespace Quickstarts.ReferenceServer
             string name,
             params string[] enumNames)
         {
-            return CreateMultiStateValueDiscreteItemVariable(parent, path, name, null, enumNames);
+            return CreateMultiStateValueDiscreteItemVariable(parent, path, name, default, enumNames);
         }
 
         /// <summary>
@@ -4324,11 +4324,11 @@ namespace Quickstarts.ReferenceServer
                 UserWriteMask = AttributeWriteMask.None
             };
 
-            variable.Create(SystemContext, null, variable.BrowseName, null, true);
+            variable.Create(SystemContext, default, variable.BrowseName, null, true);
 
             variable.SymbolicName = name;
             variable.ReferenceTypeId = ReferenceTypes.Organizes;
-            variable.DataType = nodeId ?? DataTypeIds.UInt32;
+            variable.DataType = nodeId.IsNullNodeId ? DataTypeIds.UInt32 : nodeId;
             variable.ValueRank = ValueRanks.Scalar;
             variable.AccessLevel = AccessLevels.CurrentReadOrWrite;
             variable.UserAccessLevel = AccessLevels.CurrentReadOrWrite;

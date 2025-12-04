@@ -154,24 +154,13 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
                 randomData = DataGenerator.GetRandom(builtInType);
                 // filter a few random special cases to skip
                 // as they test for unsupported objects
-                switch (builtInType)
+                if (randomData is NodeId nodeId)
                 {
-                    case BuiltInType.NodeId:
-                        var nodeId = (NodeId)randomData;
-                        if (nodeId.IdType == IdType.Opaque &&
-                            ((byte[])nodeId.Identifier).Length == 0)
-                        {
-                            getRandom = true;
-                        }
-                        break;
-                    case BuiltInType.ExpandedNodeId:
-                        var expandedNodeId = (ExpandedNodeId)randomData;
-                        if (expandedNodeId.IdType == IdType.Opaque &&
-                            ((byte[])expandedNodeId.Identifier).Length == 0)
-                        {
-                            getRandom = true;
-                        }
-                        break;
+                    getRandom = nodeId.IsNullNodeId;
+                }
+                else if (randomData is ExpandedNodeId expandedNodeId)
+                {
+                    getRandom = expandedNodeId.InnerNodeId.IsNullNodeId;
                 }
             }
             EncodeDecode(

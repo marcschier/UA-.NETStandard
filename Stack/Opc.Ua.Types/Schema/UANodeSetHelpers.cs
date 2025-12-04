@@ -192,7 +192,7 @@ namespace Opc.Ua.Export
                 throw new ArgumentNullException(nameof(node));
             }
 
-            if (NodeId.IsNull(node.NodeId))
+            if (node.NodeId.IsNullNodeId)
             {
                 throw new ArgumentException("A non-null NodeId must be specified.");
             }
@@ -260,8 +260,7 @@ namespace Opc.Ua.Export
                         DesignToolOnly = node.DesignToolOnly
                     };
 
-                    if (o.MethodDeclarationId != null &&
-                        !o.MethodDeclarationId.IsNullNodeId &&
+                    if (!o.MethodDeclarationId.IsNullNodeId &&
                         o.MethodDeclarationId != o.NodeId)
                     {
                         value.MethodDeclarationId = Export(
@@ -421,7 +420,7 @@ namespace Opc.Ua.Export
             INodeBrowser browser = node.CreateBrowser(
                 context,
                 null,
-                null,
+                default,
                 true,
                 BrowseDirection.Both,
                 null,
@@ -619,7 +618,7 @@ namespace Opc.Ua.Export
                 {
                     var o = (UAVariable)node;
 
-                    NodeId typeDefinitionId = null;
+                    NodeId typeDefinitionId = default;
 
                     if (node.References != null)
                     {
@@ -880,7 +879,7 @@ namespace Opc.Ua.Export
         /// </summary>
         private string Export(NodeId source, NamespaceTable namespaceUris)
         {
-            if (NodeId.IsNull(source))
+            if (source.IsNullNodeId)
             {
                 return string.Empty;
             }
@@ -888,7 +887,7 @@ namespace Opc.Ua.Export
             if (source.NamespaceIndex > 0)
             {
                 ushort namespaceIndex = ExportNamespaceIndex(source.NamespaceIndex, namespaceUris);
-                source = new NodeId(source.Identifier, namespaceIndex);
+                source = source.WithNamespaceIndex(namespaceIndex);
             }
 
             return source.ToString();
@@ -923,7 +922,7 @@ namespace Opc.Ua.Export
             if (nodeId.NamespaceIndex > 0)
             {
                 ushort namespaceIndex = ImportNamespaceIndex(nodeId.NamespaceIndex, namespaceUris);
-                nodeId = new NodeId(nodeId.Identifier, namespaceIndex);
+                nodeId = nodeId.WithNamespaceIndex(namespaceIndex);
             }
 
             return nodeId;
@@ -1102,7 +1101,7 @@ namespace Opc.Ua.Export
                             output.AllowSubTypes = false;
                         }
 
-                        if (NodeId.IsNull(field.DataType))
+                        if (field.DataType.IsNullNodeId)
                         {
                             output.DataType = Export(DataTypeIds.BaseDataType, namespaceUris);
                         }

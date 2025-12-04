@@ -2243,10 +2243,19 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
+            var dataType = field.Value.Parent as DataTypeDesign;
+
             // string path = field.Key.Replace('_', '.');
             string path = field.Key;
 
-            context.Out.WriteLine("if (!global::Opc.Ua.CoreUtils.IsEqual(m_value.{0}, newValue.{0}))", path);
+            if (dataType.IsDotNetValueType(field.Value.ValueRank, true))
+            {
+                context.Out.WriteLine("if (m_value.{0} != newValue.{0})", path);
+            }
+            else
+            {
+                context.Out.WriteLine("if (!global::Opc.Ua.CoreUtils.IsEqual(m_value.{0}, newValue.{0}))", path);
+            }
             context.Out.WriteLine("{");
             context.Out.WriteLine("    UpdateChildVariableStatus(m_variable.{0}, ref statusCode, ref timestamp);", path);
             context.Out.WriteLine("}");
@@ -2785,7 +2794,8 @@ namespace Opc.Ua.SourceGeneration
 
             if (dataType.IsUnion)
             {
-                context.Out.WriteLine($$"""case {{dataType.ClassName}}Fields.{{field.Name}}: { """);
+                context.Out.WriteLine($$"""case {{dataType.ClassName}}Fields.{{field.Name}}:""");
+                context.Out.WriteLine("{");
             }
 
             if (field.IsOptional)
@@ -2793,11 +2803,22 @@ namespace Opc.Ua.SourceGeneration
                 context.Out.WriteLine($"if ((EncodingMask & (uint){dataType.ClassName}Fields.{field.Name}) != 0) ");
             }
 
-            context.Out.WriteLine("if (!global::Opc.Ua.CoreUtils.IsEqual({0}, value.{0})) return false;", field.GetChildFieldName());
+            if (dataType.IsDotNetValueType(field.ValueRank, true))
+            {
+                context.Out.WriteLine("if ({0} != value.{0})", field.GetChildFieldName());
+            }
+            else
+            {
+                context.Out.WriteLine("if (!global::Opc.Ua.CoreUtils.IsEqual({0}, value.{0}))", field.GetChildFieldName());
+            }
+            context.Out.WriteLine("{");
+            context.Out.WriteLine("    return false;");
+            context.Out.WriteLine("}");
 
             if (dataType.IsUnion)
             {
-                context.Out.WriteLine(" break; }");
+                context.Out.WriteLine("break;");
+                context.Out.WriteLine("}");
             }
 
             return null;
@@ -3513,7 +3534,7 @@ namespace Opc.Ua.SourceGeneration
         {
             foreach (NodeState node in source)
             {
-                if (!NodeId.IsNull(node.NodeId))
+                if (!node.NodeId.IsNullNodeId)
                 {
                     if (!string.IsNullOrEmpty(node.NodeSetDocumentation) ||
                         node.Categories?.Count > 0)
@@ -3577,8 +3598,7 @@ namespace Opc.Ua.SourceGeneration
 
             foreach (BaseInstanceState child in children)
             {
-                if (child.NodeId.IdType == IdType.Numeric &&
-                    (uint)child.NodeId.Identifier == 0)
+                if (child.NodeId.TryGetIdentifier(out uint numericId) && numericId == 0)
                 {
                     parent.RemoveChild(child);
                     continue;

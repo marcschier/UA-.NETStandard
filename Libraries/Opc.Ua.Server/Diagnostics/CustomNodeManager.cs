@@ -327,7 +327,7 @@ namespace Opc.Ua.Server
         protected virtual bool IsNodeIdInNamespace(NodeId nodeId)
         {
             // nulls are never a valid node.
-            if (NodeId.IsNull(nodeId))
+            if (nodeId.IsNullNodeId)
             {
                 return false;
             }
@@ -397,7 +397,7 @@ namespace Opc.Ua.Server
 
                 NodeState parent = null;
 
-                if (parentId != null)
+                if (!parentId.IsNullNodeId)
                 {
                     if (!PredefinedNodes.TryGetValue(parentId, out parent))
                     {
@@ -410,7 +410,7 @@ namespace Opc.Ua.Server
                     parent.AddChild(instance);
                 }
 
-                instance.Create(contextToUse, null, browseName, null, true);
+                instance.Create(contextToUse, default, browseName, null, true);
                 AddPredefinedNode(contextToUse, instance);
 
                 return instance.NodeId;
@@ -447,7 +447,7 @@ namespace Opc.Ua.Server
         /// </summary>
         public NodeState FindNodeInAddressSpace(NodeId nodeId)
         {
-            if (nodeId == null)
+            if (nodeId.IsNullNodeId)
             {
                 return null;
             }
@@ -816,7 +816,7 @@ namespace Opc.Ua.Server
         /// </summary>
         protected void AddTypesToTypeTree(BaseTypeState type)
         {
-            if (!NodeId.IsNull(type.SuperTypeId) && !Server.TypeTree.IsKnown(type.SuperTypeId))
+            if (!type.SuperTypeId.IsNullNodeId && !Server.TypeTree.IsKnown(type.SuperTypeId))
             {
                 AddTypesToTypeTree(type.SuperTypeId);
             }
@@ -856,7 +856,7 @@ namespace Opc.Ua.Server
         [Obsolete("Use FindPredefinedNode<T> instead.")]
         public NodeState FindPredefinedNode(NodeId nodeId, Type expectedType)
         {
-            if (NodeId.IsNull(nodeId))
+            if (nodeId.IsNullNodeId)
             {
                 return null;
             }
@@ -881,12 +881,17 @@ namespace Opc.Ua.Server
         /// <returns>Returns null if not found or not of the correct type.</returns>
         public T FindPredefinedNode<T>(NodeId nodeId) where T : NodeState
         {
-            if (NodeId.IsNull(nodeId))
+            if (nodeId.IsNullNodeId)
             {
                 return null;
             }
 
             if (!PredefinedNodes.TryGetValue(nodeId, out NodeState node))
+            {
+                return null;
+            }
+
+            if (typeof(T) != null && !typeof(T).IsInstanceOfType(node))
             {
                 return null;
             }
@@ -1097,7 +1102,7 @@ namespace Opc.Ua.Server
                         ((uint)values[1]));
                 }
 
-                metadata.DataType = (NodeId)values[2];
+                metadata.DataType = values[2] is NodeId nodeId ? nodeId : default;
 
                 if (values[3] != null)
                 {
@@ -1477,7 +1482,7 @@ namespace Opc.Ua.Server
             }
 
             // look up the type definition.
-            NodeId typeDefinition = null;
+            NodeId typeDefinition = default;
 
             if (target is BaseInstanceState instance)
             {
@@ -4039,8 +4044,8 @@ namespace Opc.Ua.Server
             IEventMonitoredItem monitoredItem,
             IFilterTarget filterTarget)
         {
-            NodeId eventTypeId = null;
-            NodeId sourceNodeId = null;
+            NodeId eventTypeId = default;
+            NodeId sourceNodeId = default;
             var baseEventState = filterTarget as BaseEventState;
 
             if (baseEventState == null && filterTarget is InstanceStateSnapshot snapshot)
@@ -4051,8 +4056,8 @@ namespace Opc.Ua.Server
 
             if (baseEventState != null)
             {
-                eventTypeId = baseEventState.EventType?.Value;
-                sourceNodeId = baseEventState.SourceNode?.Value;
+                eventTypeId = baseEventState.EventType?.Value ?? default;
+                sourceNodeId = baseEventState.SourceNode?.Value ?? default;
             }
 
             var operationContext = new OperationContext(monitoredItem);
@@ -4240,7 +4245,7 @@ namespace Opc.Ua.Server
             if (filterToUse.AggregateConfiguration.UseServerCapabilitiesDefaults)
             {
                 filterToUse.AggregateConfiguration = Server.AggregateManager
-                    .GetDefaultConfiguration(null);
+                    .GetDefaultConfiguration(default);
             }
 
             return StatusCodes.Good;

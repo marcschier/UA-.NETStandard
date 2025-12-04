@@ -1352,9 +1352,8 @@ namespace Opc.Ua.Schema.Model
 
                 if (hasNumericId || hasStringId)
                 {
-                    var nodeId = new NodeId(
-                        hasNumericId ? node.NumericId : node.StringId,
-                        namespaceUris.GetIndexOrAppend(node.SymbolicId.Namespace));
+                    NodeId nodeId = hasNumericId ? new NodeId(node.NumericId) : new NodeId(node.StringId);
+                    nodeId = nodeId.WithNamespaceIndex(namespaceUris.GetIndexOrAppend(node.SymbolicId.Namespace));
 
                     index[nodeId] = node;
 
@@ -2356,7 +2355,18 @@ namespace Opc.Ua.Schema.Model
             {
                 if (m_symbolicIdToNodeId.TryGetValue(node.SymbolicId, out NodeId nodeId))
                 {
-                    id = nodeId.Identifier;
+                    if (nodeId.TryGetIdentifier(out uint numeric))
+                    {
+                        id = numeric;
+                    }
+                    else if (nodeId.TryGetIdentifier(out string stringId))
+                    {
+                        id = stringId;
+                    }
+                    else
+                    {
+                        id = assignedIds.FindUnusedId(node.SymbolicId.Namespace, isImplicitlyDefined);
+                    }
                 }
                 else
                 {
@@ -3315,7 +3325,7 @@ namespace Opc.Ua.Schema.Model
 
         private static void CollectInstances(SystemContext context, List<NodeState> list, NodeState node)
         {
-            if (NodeId.IsNull(node.NodeId))
+            if (node.NodeId.IsNullNodeId)
             {
                 return;
             }
@@ -4920,7 +4930,7 @@ namespace Opc.Ua.Schema.Model
                     return Objects.ModellingRule_ExposesItsArray;
             }
 
-            return null;
+            return default;
         }
 
         /// <summary>
@@ -5012,7 +5022,7 @@ namespace Opc.Ua.Schema.Model
             return null;
         }
 
-        private static NodeId ConstructNodeId(NodeDesign node, NamespaceTable namespaceUris)
+        private NodeId ConstructNodeId(NodeDesign node, NamespaceTable namespaceUris)
         {
             int index;
 
@@ -5046,6 +5056,12 @@ namespace Opc.Ua.Schema.Model
             }
 
             index = namespaceUris.GetIndex(node.SymbolicId.Namespace);
+            if (node.NumericId == 0)
+            {
+                // TODO: Handle this.
+                m_logger.LogInformation("Node with SymbolicId {Name} has no NumericId or StringId.", node.SymbolicId.Name);
+                return new NodeId(node.SymbolicId.Name, (ushort)index);
+            }
             return new NodeId(node.NumericId, (ushort)index);
         }
 
@@ -6294,7 +6310,7 @@ namespace Opc.Ua.Schema.Model
                 return;
             }
 
-            root.ModellingRuleId = null;
+            root.ModellingRuleId = default;
 
             var design = root.Handle as NodeDesign;
 
@@ -6703,7 +6719,7 @@ namespace Opc.Ua.Schema.Model
                 {
                     if (root is DataTypeDesign or ViewDesign or ReferenceTypeDesign)
                     {
-                        child.ModellingRuleId = null;
+                        child.ModellingRuleId = default;
                         state.AddChild(child);
                     }
                     else if (explicitOnly)
@@ -6749,7 +6765,7 @@ namespace Opc.Ua.Schema.Model
             return state;
         }
 
-        private static BaseObjectTypeState CreateNodeState(ObjectTypeDesign root, NamespaceTable namespaceUris)
+        private BaseObjectTypeState CreateNodeState(ObjectTypeDesign root, NamespaceTable namespaceUris)
         {
             var state = new BaseObjectTypeState
             {
@@ -6762,7 +6778,7 @@ namespace Opc.Ua.Schema.Model
             }
             else
             {
-                state.SuperTypeId = null;
+                state.SuperTypeId = default;
             }
 
             state.IsAbstract = root.IsAbstract;
@@ -6816,7 +6832,7 @@ namespace Opc.Ua.Schema.Model
             }
             else
             {
-                state.SuperTypeId = null;
+                state.SuperTypeId = default;
             }
 
             VariableDesign mergedInstance = null;
@@ -6848,7 +6864,7 @@ namespace Opc.Ua.Schema.Model
             return state;
         }
 
-        private static ReferenceTypeState CreateNodeState(ReferenceTypeDesign root, NamespaceTable namespaceUris)
+        private ReferenceTypeState CreateNodeState(ReferenceTypeDesign root, NamespaceTable namespaceUris)
         {
             var state = new ReferenceTypeState
             {
@@ -6861,7 +6877,7 @@ namespace Opc.Ua.Schema.Model
             }
             else
             {
-                state.SuperTypeId = null;
+                state.SuperTypeId = default;
             }
 
             state.IsAbstract = root.IsAbstract;
@@ -6892,7 +6908,7 @@ namespace Opc.Ua.Schema.Model
             }
             else
             {
-                state.SuperTypeId = null;
+                state.SuperTypeId = default;
             }
 
             state.IsAbstract = root.IsAbstract;
@@ -7280,7 +7296,7 @@ namespace Opc.Ua.Schema.Model
                 {
                     string namespaceUri = m_defaultNamespace;
 
-                    if (argument[ii].DataType.Identifier is not string name)
+                    if (!argument[ii].DataType.TryGetIdentifier(out string name))
                     {
                         continue;
                     }

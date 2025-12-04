@@ -148,7 +148,7 @@ namespace Opc.Ua
                     {
                         // undefined certificate type as RsaSha256
                         id = ApplicationCertificates.FirstOrDefault(
-                            certId => certId.CertificateType == null);
+                            certId => certId.CertificateType.IsNullNodeId);
                     }
                     else if (certType == ObjectTypeIds.ApplicationCertificateType)
                     {
@@ -185,14 +185,14 @@ namespace Opc.Ua
             var securityPolicies = new StringCollection { SecurityPolicies.None };
             foreach (CertificateIdentifier applicationCertificate in m_applicationCertificates)
             {
-                if (applicationCertificate.CertificateType == null)
+                if (applicationCertificate.CertificateType.IsNullNodeId)
                 {
                     securityPolicies.Add(SecurityPolicies.Basic256Sha256);
                     securityPolicies.Add(SecurityPolicies.Aes128_Sha256_RsaOaep);
                     securityPolicies.Add(SecurityPolicies.Aes256_Sha256_RsaPss);
                     continue;
                 }
-                if (applicationCertificate.CertificateType.Identifier is uint identifier)
+                if (!applicationCertificate.CertificateType.TryGetIdentifier(out uint identifier))
                 {
                     switch (identifier)
                     {

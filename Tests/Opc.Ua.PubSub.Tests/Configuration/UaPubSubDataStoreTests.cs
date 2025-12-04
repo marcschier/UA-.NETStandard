@@ -82,7 +82,7 @@ namespace Opc.Ua.PubSub.Tests.Configuration
 
             //Assert
             NUnit.Framework.Assert
-                .Throws<ArgumentException>(() => dataStore.WritePublishedDataItem(null));
+                .Throws<ArgumentException>(() => dataStore.WritePublishedDataItem(default));
         }
 
         [Test(Description = "Validate WritePublishedDataItem call with invalid Attribute")]
@@ -122,7 +122,7 @@ namespace Opc.Ua.PubSub.Tests.Configuration
 
             //Assert
             NUnit.Framework.Assert
-                .Throws<ArgumentException>(() => dataStore.ReadPublishedDataItem(null));
+                .Throws<ArgumentException>(() => dataStore.ReadPublishedDataItem(default));
         }
 
         [Test(Description = "Validate ReadPublishedDataItem call with invalid Attribute")]

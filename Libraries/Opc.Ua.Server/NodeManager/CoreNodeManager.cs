@@ -210,7 +210,7 @@ namespace Opc.Ua.Server
         {
             lock (DataLock)
             {
-                if (NodeId.IsNull(nodeId))
+                if (nodeId.IsNullNodeId)
                 {
                     return null;
                 }
@@ -355,7 +355,7 @@ namespace Opc.Ua.Server
 
                     // silently ignore bad values.
                     if (reference == null ||
-                        NodeId.IsNull(reference.ReferenceTypeId) ||
+                        reference.ReferenceTypeId.IsNullNodeId ||
                         NodeId.IsNull(reference.TargetId))
                     {
                         continue;
@@ -453,7 +453,7 @@ namespace Opc.Ua.Server
             }
 
             // check reference type filter.
-            if (!NodeId.IsNull(referenceTypeId) && reference.ReferenceTypeId != referenceTypeId)
+            if (!referenceTypeId.IsNullNodeId && reference.ReferenceTypeId != referenceTypeId)
             {
                 return includeSubtypes &&
                     Server.TypeTree.IsTypeOf(reference.ReferenceTypeId, referenceTypeId);
@@ -1953,12 +1953,12 @@ namespace Opc.Ua.Server
             NodeId referenceTypeId,
             bool isInverse)
         {
-            if (sourceId == null)
+            if (sourceId.IsNullNodeId)
             {
                 throw new ArgumentNullException(nameof(sourceId));
             }
 
-            if (referenceTypeId == null)
+            if (referenceTypeId.IsNullNodeId)
             {
                 throw new ArgumentNullException(nameof(referenceTypeId));
             }
@@ -2004,12 +2004,12 @@ namespace Opc.Ua.Server
             bool isInverse,
             QualifiedName browseName)
         {
-            if (sourceId == null)
+            if (sourceId.IsNullNodeId)
             {
                 throw new ArgumentNullException(nameof(sourceId));
             }
 
-            if (referenceTypeId == null)
+            if (referenceTypeId.IsNullNodeId)
             {
                 throw new ArgumentNullException(nameof(referenceTypeId));
             }
@@ -2018,7 +2018,7 @@ namespace Opc.Ua.Server
             {
                 if (GetManagerHandle(sourceId) is not ILocalNode source)
                 {
-                    return null;
+                    return default;
                 }
 
                 foreach (ReferenceNode reference in source.References.OfType<ReferenceNode>())
@@ -2047,7 +2047,7 @@ namespace Opc.Ua.Server
                     }
                 }
 
-                return null;
+                return default;
             }
         }
 
@@ -2063,7 +2063,7 @@ namespace Opc.Ua.Server
                 return targets[0];
             }
 
-            return null;
+            return default;
         }
 
         /// <summary>
@@ -2138,7 +2138,7 @@ namespace Opc.Ua.Server
         /// <exception cref="ArgumentNullException"><paramref name="nodeId"/> is <c>null</c>.</exception>
         public void RegisterSource(NodeId nodeId, object source, object handle, bool isEventSource)
         {
-            if (nodeId == null)
+            if (nodeId.IsNullNodeId)
             {
                 throw new ArgumentNullException(nameof(nodeId));
             }
@@ -2848,7 +2848,7 @@ namespace Opc.Ua.Server
         /// <exception cref="ServiceResultException"></exception>
         public void DeleteNode(NodeId nodeId, bool deleteChildren, bool silent)
         {
-            if (nodeId == null)
+            if (nodeId.IsNullNodeId)
             {
                 throw new ArgumentNullException(nameof(nodeId));
             }
@@ -3274,7 +3274,7 @@ namespace Opc.Ua.Server
                 throw new ArgumentNullException(nameof(sourceHandle));
             }
 
-            if (referenceTypeId == null)
+            if (referenceTypeId.IsNullNodeId)
             {
                 throw new ArgumentNullException(nameof(referenceTypeId));
             }
@@ -3361,7 +3361,7 @@ namespace Opc.Ua.Server
                     return null;
                 }
 
-                return GetLocalNode(new NodeId(nodeId.Identifier, (ushort)namespaceIndex));
+                return GetLocalNode(nodeId.InnerNodeId.WithNamespaceIndex((ushort)namespaceIndex));
             }
 
             return GetLocalNode((NodeId)nodeId);

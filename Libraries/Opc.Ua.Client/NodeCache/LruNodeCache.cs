@@ -263,7 +263,7 @@ namespace Opc.Ua.Client
                                 r.ReferenceTypeId == refTypeId ||
                                 (includeSubtypes && IsTypeOf(r.ReferenceTypeId, refTypeId))))
                         .Select(r => ToNodeId(r.NodeId))
-                        .Where(n => !NodeId.IsNull(n))
+                        .Where(n => !n.IsNullNodeId)
                 ];
             }
         }
@@ -290,7 +290,7 @@ namespace Opc.Ua.Client
             }
             foreach (NodeId nodeId in nodeIds)
             {
-                if (NodeId.IsNull(nodeId))
+                if (nodeId.IsNullNodeId)
                 {
                     continue;
                 }
@@ -352,7 +352,7 @@ namespace Opc.Ua.Client
                                 r.ReferenceTypeId == refTypeId ||
                                 (includeSubtypes && IsTypeOf(r.ReferenceTypeId, refTypeId))))
                         .Select(r => ToNodeId(r.NodeId))
-                        .Where(n => !NodeId.IsNull(n))
+                        .Where(n => !n.IsNullNodeId)
                 ];
             }
         }
@@ -394,7 +394,7 @@ namespace Opc.Ua.Client
                     .GetResult();
             }
             subTypeId = GetSuperTypeFromReferences(references);
-            return !NodeId.IsNull(subTypeId) && IsTypeOf(subTypeId, superTypeId);
+            return !subTypeId.IsNullNodeId && IsTypeOf(subTypeId, superTypeId);
         }
 
         /// <inheritdoc/>
@@ -418,11 +418,11 @@ namespace Opc.Ua.Client
             CancellationToken ct)
         {
             NodeId typeId = datatypeId;
-            while (!NodeId.IsNull(typeId))
+            while (!typeId.IsNullNodeId)
             {
-                if (typeId.NamespaceIndex == 0 && typeId.IdType == IdType.Numeric)
+                if (typeId.NamespaceIndex == 0 && typeId.TryGetIdentifier(out uint numericId))
                 {
-                    var id = (BuiltInType)(int)(uint)typeId.Identifier;
+                    var id = (BuiltInType)(int)numericId;
                     if (id is > BuiltInType.Null and <= BuiltInType.Enumeration and not BuiltInType.DiagnosticInfo)
                     {
                         return id;
@@ -445,7 +445,7 @@ namespace Opc.Ua.Client
                 found = null;
                 while (true)
                 {
-                    if (NodeId.IsNull(nodeId))
+                    if (nodeId.IsNullNodeId)
                     {
                         // Nothing can be found since there is nothing to start
                         return null;
@@ -467,7 +467,7 @@ namespace Opc.Ua.Client
                         if (target.BrowseName == browseName)
                         {
                             nodeId = ToNodeId(target.NodeId);
-                            if (!NodeId.IsNull(nodeId))
+                            if (!nodeId.IsNullNodeId)
                             {
                                 found = target;
                             }
@@ -502,7 +502,7 @@ namespace Opc.Ua.Client
             NodeId nodeId,
             CancellationToken ct)
         {
-            Debug.Assert(!NodeId.IsNull(nodeId));
+            Debug.Assert(!nodeId.IsNullNodeId);
             return m_refs.GetOrAddAsync(
                 nodeId,
                 static async (nodeId, context) =>
@@ -608,8 +608,8 @@ namespace Opc.Ua.Client
         /// </summary>
         private bool IsTypeHierarchyLoaded(IEnumerable<NodeId> typeIds)
         {
-            var types = new Queue<NodeId>(typeIds.Where(nodeId => !NodeId.IsNull(nodeId)));
-            while (types.TryDequeue(out NodeId? typeId))
+            var types = new Queue<NodeId>(typeIds.Where(nodeId => !nodeId.IsNullNodeId));
+            while (types.TryDequeue(out NodeId typeId))
             {
                 if (!m_refs.TryGet(typeId, out List<ReferenceDescription>? references))
                 {
@@ -674,15 +674,15 @@ namespace Opc.Ua.Client
             }
 
             /// <inheritdoc/>
-            public bool Equals(NodeId? x, NodeId? y)
+            public bool Equals(NodeId x, NodeId y)
             {
-                return ReferenceEquals(x, y) || x == y;
+                return x == y;
             }
 
             /// <inheritdoc/>
             public int GetHashCode(NodeId obj)
             {
-                return (obj?.GetHashCode()) ?? 0;
+                return obj.GetHashCode();
             }
         }
 

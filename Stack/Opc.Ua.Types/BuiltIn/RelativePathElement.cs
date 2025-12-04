@@ -37,7 +37,7 @@ namespace Opc.Ua
 
         private void Initialize()
         {
-            ReferenceTypeId = null;
+            ReferenceTypeId = default;
             IsInverse = true;
             IncludeSubtypes = true;
             TargetName = null;
@@ -152,7 +152,7 @@ namespace Opc.Ua
         {
             var clone = (RelativePathElement)base.MemberwiseClone();
 
-            clone.ReferenceTypeId = CoreUtils.Clone(ReferenceTypeId);
+            clone.ReferenceTypeId = ReferenceTypeId;
             clone.IsInverse = (bool)CoreUtils.Clone(IsInverse);
             clone.IncludeSubtypes = (bool)CoreUtils.Clone(IncludeSubtypes);
             clone.TargetName = CoreUtils.Clone(TargetName);

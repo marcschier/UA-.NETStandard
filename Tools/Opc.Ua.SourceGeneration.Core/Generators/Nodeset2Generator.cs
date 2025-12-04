@@ -199,11 +199,11 @@ namespace Opc.Ua.SourceGeneration
 
                 if (nid.IdType == IdType.Numeric)
                 {
-                    writer.Write($"{nodeStates.Key},{nid.Identifier},{nodeStates.Value.NodeClass}");
+                    writer.Write($"{nodeStates.Key},{nid.IdentifierAsString},{nodeStates.Value.NodeClass}");
                 }
                 else if (nid.IdType == IdType.String)
                 {
-                    writer.Write($"{nodeStates.Key},\"{nid.Identifier}\",{nodeStates.Value.NodeClass}");
+                    writer.Write($"{nodeStates.Key},\"{nid.IdentifierAsString}\",{nodeStates.Value.NodeClass}");
                 }
 
                 if (restrictions != null)
@@ -225,12 +225,14 @@ namespace Opc.Ua.SourceGeneration
                     {
                         NodeDesign role = m_nodes
                             .FirstOrDefault(x =>
-                                x.NumericId == (uint)permission.RoleId.Identifier &&
+                                permission.RoleId.TryGetIdentifier(out uint numericId) &&
+                                x.NumericId == numericId &&
                                 x.SymbolicId.Namespace == Namespaces.OpcUa);
 
                         role ??= m_nodes
                             .FirstOrDefault(x =>
-                                x.NumericId == (uint)permission.RoleId.Identifier &&
+                                permission.RoleId.TryGetIdentifier(out uint numericId) &&
+                                x.NumericId == numericId &&
                                 x.SymbolicId.Namespace != Namespaces.OpcUa &&
                                 x is InstanceDesign instance &&
                                 instance.TypeDefinition ==
@@ -287,11 +289,11 @@ namespace Opc.Ua.SourceGeneration
 
                 if (nid.IdType == IdType.Numeric)
                 {
-                    writer.WriteLine($"{ii.Key},{nid.Identifier},{ii.Value.NodeClass}");
+                    writer.WriteLine($"{ii.Key},{nid.IdentifierAsString},{ii.Value.NodeClass}");
                 }
                 else if (nid.IdType == IdType.String)
                 {
-                    writer.WriteLine($"{ii.Key},\"{nid.Identifier}\",{ii.Value.NodeClass}");
+                    writer.WriteLine($"{ii.Key},\"{nid.IdentifierAsString}\",{ii.Value.NodeClass}");
                 }
             }
         }
@@ -302,7 +304,7 @@ namespace Opc.Ua.SourceGeneration
             NodeState node,
             string parentPath)
         {
-            if (NodeId.IsNull(node.NodeId))
+            if (node.NodeId.IsNullNodeId)
             {
                 return;
             }
@@ -324,7 +326,7 @@ namespace Opc.Ua.SourceGeneration
             NodeState node,
             string parentPath)
         {
-            if (NodeId.IsNull(node.NodeId))
+            if (node.NodeId.IsNullNodeId)
             {
                 return;
             }
@@ -346,7 +348,7 @@ namespace Opc.Ua.SourceGeneration
             BaseInstanceState node,
             string parentPath)
         {
-            if (NodeId.IsNull(node.NodeId))
+            if (node.NodeId.IsNullNodeId)
             {
                 return;
             }

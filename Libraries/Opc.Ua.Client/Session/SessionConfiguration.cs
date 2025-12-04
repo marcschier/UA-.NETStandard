@@ -183,7 +183,8 @@ namespace Opc.Ua.Client
             // secure settings
             XmlReaderSettings settings = Utils.DefaultXmlReaderSettings();
             using var reader = XmlReader.Create(stream, settings);
-            var serializer = new DataContractSerializer(typeof(SessionConfiguration));
+            DataContractSerializer serializer =
+                CoreUtils.CreateDataContractSerializer<SessionConfiguration>();
             using IDisposable scope = AmbientMessageContext.SetScopedContext(telemetry);
             return (SessionConfiguration?)serializer.ReadObject(reader);
         }

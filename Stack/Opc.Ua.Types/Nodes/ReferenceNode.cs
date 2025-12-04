@@ -56,7 +56,7 @@ namespace Opc.Ua
 
         private void Initialize()
         {
-            ReferenceTypeId = null;
+            ReferenceTypeId = default;
             IsInverse = true;
             TargetId = null;
         }
@@ -157,7 +157,7 @@ namespace Opc.Ua
         {
             var clone = (ReferenceNode)base.MemberwiseClone();
 
-            clone.ReferenceTypeId = CoreUtils.Clone(ReferenceTypeId);
+            clone.ReferenceTypeId = ReferenceTypeId;
             clone.IsInverse = (bool)CoreUtils.Clone(IsInverse);
             clone.TargetId = CoreUtils.Clone(TargetId);
 
@@ -233,9 +233,9 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public int CompareTo(ReferenceNode obj)
         {
-            if (ReferenceTypeId is null)
+            if (ReferenceTypeId.IsNullNodeId)
             {
-                return obj?.ReferenceTypeId is null ? 0 : -1;
+                return obj?.ReferenceTypeId.IsNullNodeId == true ? 0 : -1;
             }
 
             int result = ReferenceTypeId.CompareTo(obj.ReferenceTypeId);

@@ -37,8 +37,8 @@ namespace Opc.Ua
 
         private void Initialize()
         {
-            DefaultEncodingId = null;
-            BaseDataType = null;
+            DefaultEncodingId = default;
+            BaseDataType = default;
             StructureType = StructureType.Structure;
             m_fields = [];
         }
@@ -165,8 +165,8 @@ namespace Opc.Ua
         {
             var clone = (StructureDefinition)base.MemberwiseClone();
 
-            clone.DefaultEncodingId = CoreUtils.Clone(DefaultEncodingId);
-            clone.BaseDataType = CoreUtils.Clone(BaseDataType);
+            clone.DefaultEncodingId = DefaultEncodingId;
+            clone.BaseDataType = BaseDataType;
             clone.StructureType = (StructureType)CoreUtils.Clone(StructureType);
             clone.m_fields = CoreUtils.Clone(m_fields);
 

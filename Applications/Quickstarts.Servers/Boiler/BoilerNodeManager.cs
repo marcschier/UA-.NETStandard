@@ -120,7 +120,7 @@ namespace Boiler
 
             string name = Utils.Format("Boiler #{0}", unitNumber);
 
-            boiler.Create(context, null, new QualifiedName(name, m_namespaceIndex), null, true);
+            boiler.Create(context, default, new QualifiedName(name, m_namespaceIndex), null, true);
 
             NodeState folder = FindPredefinedNode<NodeState>(
                 ExpandedNodeId.ToNodeId(ObjectIds.Boilers, Server.NamespaceUris));
@@ -202,12 +202,12 @@ namespace Boiler
 
             NodeId typeId = passiveNode.TypeDefinitionId;
 
-            if (!IsNodeIdInNamespace(typeId) || typeId.IdType != IdType.Numeric)
+            if (!IsNodeIdInNamespace(typeId) || !typeId.TryGetIdentifier(out uint typeIdNumeric))
             {
                 return predefinedNode;
             }
 
-            switch ((uint)typeId.Identifier)
+            switch (typeIdNumeric)
             {
                 case ObjectTypes.BoilerType:
                     if (passiveNode is BoilerState)

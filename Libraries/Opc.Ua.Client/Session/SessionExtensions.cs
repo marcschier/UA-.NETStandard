@@ -386,7 +386,7 @@ namespace Opc.Ua.Client
 
             // no encodings available if there was a problem reading the
             // data type for the node.
-            if (NodeId.IsNull(variable.DataType))
+            if (variable.DataType.IsNullNodeId)
             {
                 return [];
             }

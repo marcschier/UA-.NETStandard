@@ -727,7 +727,7 @@ namespace Opc.Ua
             IList<object> inputArguments,
             IList<object> outputArguments)
         {
-            return Call(context, null, inputArguments, outputArguments);
+            return Call(context, default, inputArguments, outputArguments);
         }
 
         /// <summary>
@@ -739,7 +739,7 @@ namespace Opc.Ua
             IList<object> outputArguments,
             CancellationToken cancellationToken = default)
         {
-            return CallAsync(context, null, inputArguments, outputArguments, cancellationToken);
+            return CallAsync(context, default, inputArguments, outputArguments, cancellationToken);
         }
 
         /// <summary>
@@ -806,7 +806,7 @@ namespace Opc.Ua
                     cancellationToken).ConfigureAwait(false);
             }
 
-            return Call(context, null, inputArguments, outputArguments);
+            return Call(context, default, inputArguments, outputArguments);
         }
 
         /// <summary>

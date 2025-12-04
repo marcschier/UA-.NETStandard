@@ -38,7 +38,7 @@ namespace Opc.Ua
 
         private void Initialize()
         {
-            ReferenceTypeId = null;
+            ReferenceTypeId = default;
             IsForward = true;
             NodeId = null;
             BrowseName = null;
@@ -195,7 +195,7 @@ namespace Opc.Ua
         {
             var clone = (ReferenceDescription)base.MemberwiseClone();
 
-            clone.ReferenceTypeId = CoreUtils.Clone(ReferenceTypeId);
+            clone.ReferenceTypeId = ReferenceTypeId;
             clone.IsForward = (bool)CoreUtils.Clone(IsForward);
             clone.NodeId = CoreUtils.Clone(NodeId);
             clone.BrowseName = CoreUtils.Clone(BrowseName);

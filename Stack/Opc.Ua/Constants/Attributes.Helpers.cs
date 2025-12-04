@@ -192,7 +192,7 @@ namespace Opc.Ua
                     return DataTypeIds.UInt32;
                 default:
                     ThrowIfOutOfRange(attributeId);
-                    return null;
+                    return default;
             }
         }
 

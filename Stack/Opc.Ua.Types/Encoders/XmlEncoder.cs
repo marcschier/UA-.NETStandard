@@ -581,28 +581,28 @@ namespace Opc.Ua
         /// </summary>
         public void WriteNodeId(string fieldName, NodeId value)
         {
-            if (BeginField(fieldName, value == null, true))
+            WriteNodeId(fieldName, value, false);
+        }
+
+        private void WriteNodeId(string fieldName, NodeId value, bool isArrayElement)
+        {
+            if (BeginField(fieldName, value.IsNullNodeId, true, isArrayElement))
             {
                 PushNamespace(Namespaces.OpcUaXsd);
 
-                if (value != null)
+                ushort namespaceIndex = value.NamespaceIndex;
+
+                if (!value.IsNullNodeId && m_namespaceMappings != null && m_namespaceMappings.Length > namespaceIndex)
                 {
-                    ushort namespaceIndex = value.NamespaceIndex;
-
-                    if (m_namespaceMappings != null && m_namespaceMappings.Length > namespaceIndex)
-                    {
-                        namespaceIndex = m_namespaceMappings[namespaceIndex];
-                    }
-
-                    var buffer = new StringBuilder();
-                    NodeId.Format(
-                        CultureInfo.InvariantCulture,
-                        buffer,
-                        value.Identifier,
-                        value.IdType,
-                        namespaceIndex);
-                    WriteString("Identifier", buffer.ToString());
+                    namespaceIndex = m_namespaceMappings[namespaceIndex];
                 }
+
+                var buffer = new StringBuilder();
+                NodeId.Format(
+                    CultureInfo.InvariantCulture,
+                    buffer,
+                    value.WithNamespaceIndex(namespaceIndex));
+                WriteString("Identifier", buffer.ToString());
 
                 PopNamespace();
 
@@ -615,37 +615,43 @@ namespace Opc.Ua
         /// </summary>
         public void WriteExpandedNodeId(string fieldName, ExpandedNodeId value)
         {
-            if (BeginField(fieldName, value == null, true))
+            WriteExpandedNodeId(fieldName, value, false);
+        }
+
+        /// <summary>
+        /// Writes an ExpandedNodeId to the stream.
+        /// </summary>
+        private void WriteExpandedNodeId(string fieldName, ExpandedNodeId value, bool isArrayElement)
+        {
+            value = value ?? ExpandedNodeId.Null;
+            if (BeginField(fieldName, NodeId.IsNull(value), true, isArrayElement))
             {
                 PushNamespace(Namespaces.OpcUaXsd);
 
-                if (value != null)
+                ushort namespaceIndex = value.NamespaceIndex;
+
+                if (!NodeId.IsNull(value) && m_namespaceMappings != null && m_namespaceMappings.Length > namespaceIndex)
                 {
-                    ushort namespaceIndex = value.NamespaceIndex;
-
-                    if (m_namespaceMappings != null && m_namespaceMappings.Length > namespaceIndex)
-                    {
-                        namespaceIndex = m_namespaceMappings[namespaceIndex];
-                    }
-
-                    uint serverIndex = value.ServerIndex;
-
-                    if (m_serverMappings != null && m_serverMappings.Length > serverIndex)
-                    {
-                        serverIndex = m_serverMappings[serverIndex];
-                    }
-
-                    var buffer = new StringBuilder();
-                    ExpandedNodeId.Format(
-                        CultureInfo.InvariantCulture,
-                        buffer,
-                        value.Identifier,
-                        value.IdType,
-                        namespaceIndex,
-                        value.NamespaceUri,
-                        serverIndex);
-                    WriteString("Identifier", buffer.ToString());
+                    namespaceIndex = m_namespaceMappings[namespaceIndex];
                 }
+
+                uint serverIndex = value.ServerIndex;
+
+                if (!NodeId.IsNull(value) && m_serverMappings != null && m_serverMappings.Length > serverIndex)
+                {
+                    serverIndex = m_serverMappings[serverIndex];
+                }
+
+                var buffer = new StringBuilder();
+                ExpandedNodeId.Format(
+                    CultureInfo.InvariantCulture,
+                    buffer,
+                    value.Identifier,
+                    value.IdType,
+                    namespaceIndex,
+                    value.NamespaceUri,
+                    serverIndex);
+                WriteString("Identifier", buffer.ToString());
 
                 PopNamespace();
 
@@ -866,7 +872,7 @@ namespace Opc.Ua
 
                 var localTypeId = ExpandedNodeId.ToNodeId(typeId, Context.NamespaceUris);
 
-                if (NodeId.IsNull(localTypeId) && !NodeId.IsNull(typeId))
+                if (localTypeId.IsNullNodeId && !NodeId.IsNull(typeId))
                 {
                     if (encodeable != null)
                     {
@@ -1478,7 +1484,7 @@ namespace Opc.Ua
                 {
                     for (int ii = 0; ii < values.Count; ii++)
                     {
-                        WriteNodeId("NodeId", values[ii]);
+                        WriteNodeId("NodeId", values[ii], true);
                     }
                 }
 
@@ -1508,7 +1514,7 @@ namespace Opc.Ua
                 {
                     for (int ii = 0; ii < values.Count; ii++)
                     {
-                        WriteExpandedNodeId("ExpandedNodeId", values[ii]);
+                        WriteExpandedNodeId("ExpandedNodeId", values[ii], true);
                     }
                 }
 
