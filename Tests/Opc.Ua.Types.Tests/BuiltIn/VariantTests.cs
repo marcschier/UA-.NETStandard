@@ -1,5 +1,5 @@
 /* ========================================================================
- * Copyright (c) 2005-2018 The OPC Foundation, Inc. All rights reserved.
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
  *
  * OPC Foundation MIT License 1.00
  *
@@ -46,19 +46,6 @@ namespace Opc.Ua.Types.Tests.BuiltIn
     [Parallelizable]
     public class VariantTests
     {
-        [DatapointSource]
-        public static readonly BuiltInType[] BuiltInTypes =
-#if NET8_0_OR_GREATER && !NET_STANDARD_TESTS
-        [
-            .. Enum.GetValues<BuiltInType>()
-#else
-        [
-            .. Enum.GetValues(typeof(BuiltInType))
-                .Cast<BuiltInType>()
-#endif
-                .Where(b => b is > BuiltInType.Null and < BuiltInType.DataValue)
-        ];
-
         /// <summary>
         /// Variant constructor.
         /// </summary>
