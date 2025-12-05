@@ -1102,7 +1102,7 @@ namespace Opc.Ua.Server.Tests
             ITelemetryContext telemetry = NUnitTelemetryContext.Create();
 
             // start Ref server in provisioning mode
-            var fixture = new ServerFixture<ReferenceServer>
+            var fixture = new ServerFixture<ReferenceServer>(t => new ReferenceServer(t))
             {
                 AllNodeManagers = false,
                 OperationLimits = false,

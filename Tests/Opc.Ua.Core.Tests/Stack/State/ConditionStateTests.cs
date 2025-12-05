@@ -142,7 +142,7 @@ namespace Opc.Ua.Core.Tests.Stack.State
             var alarm = new AlarmConditionState(m_telemetry, null);
             alarm.Create(m_context, new NodeId(1), "Alarm", null, true);
             alarm.SuppressedState = new TwoStateVariableState(alarm);
-            alarm.SuppressedState.Create(m_context, null, BrowseNames.SuppressedState, null, false);
+            alarm.SuppressedState.Create(m_context, default, BrowseNames.SuppressedState, null, false);
 
             var beforeTime = DateTime.UtcNow;
             alarm.SetSuppressedState(m_context, true);
@@ -188,7 +188,7 @@ namespace Opc.Ua.Core.Tests.Stack.State
             var condition = new AcknowledgeableConditionState(null);
             condition.Create(m_context, new NodeId(1), "AckCondition", null, true);
             condition.ConfirmedState = new TwoStateVariableState(condition);
-            condition.ConfirmedState.Create(m_context, null, BrowseNames.ConfirmedState, null, false);
+            condition.ConfirmedState.Create(m_context, default, BrowseNames.ConfirmedState, null, false);
 
             var beforeTime = DateTime.UtcNow;
             condition.SetConfirmedState(m_context, true);
@@ -212,7 +212,7 @@ namespace Opc.Ua.Core.Tests.Stack.State
             var alarm = new AlarmConditionState(m_telemetry, null);
             alarm.Create(m_context, new NodeId(1), "Alarm", null, true);
             alarm.ShelvingState = new ShelvedStateMachineState(alarm);
-            alarm.ShelvingState.Create(m_context, null, BrowseNames.ShelvingState, null, false);
+            alarm.ShelvingState.Create(m_context, default, BrowseNames.ShelvingState, null, false);
             alarm.ShelvingState.UnshelveTime = new PropertyState<double>(alarm.ShelvingState);
 
             var beforeTime = DateTime.UtcNow;
@@ -264,7 +264,7 @@ namespace Opc.Ua.Core.Tests.Stack.State
         {
             // Arrange
             var condition = new ConditionState(null);
-            condition.Create(m_context, null, new QualifiedName("TestCondition"), null, true);
+            condition.Create(m_context, default, new QualifiedName("TestCondition"), null, true);
 
             // Initially disabled
             condition.SetEnableState(m_context, false);
@@ -276,7 +276,7 @@ namespace Opc.Ua.Core.Tests.Stack.State
 
             // Assert - Enabled state should be true
             Assert.That(condition.EnabledState.Id.Value, Is.True);
-            
+
             // The default implementation should call UpdateRetainState which uses GetRetainState
             // For base ConditionState with no branches, GetRetainState returns false when enabled
             Assert.That(condition.Retain.Value, Is.False);
@@ -290,7 +290,7 @@ namespace Opc.Ua.Core.Tests.Stack.State
         {
             // Arrange
             var condition = new TestConditionStateWithRetain(null);
-            condition.Create(m_context, null, new QualifiedName("TestCondition"), null, true);
+            condition.Create(m_context, default, new QualifiedName("TestCondition"), null, true);
 
             // Enable the condition and set retain to true
             condition.SetEnableState(m_context, true);
@@ -314,7 +314,7 @@ namespace Opc.Ua.Core.Tests.Stack.State
         {
             // Arrange
             var condition = new TestConditionStateWithCustomRetain(null);
-            condition.Create(m_context, null, new QualifiedName("TestCondition"), null, true);
+            condition.Create(m_context, default, new QualifiedName("TestCondition"), null, true);
 
             // Initially disabled
             condition.SetEnableState(m_context, false);

@@ -1196,7 +1196,7 @@ namespace Opc.Ua.Client
                         Id,
                         triggeringItemId,
                         linksToAdd,
-                        null,
+                        [],
                         ct).ConfigureAwait(false);
 
                     m_logger.LogInformation(
