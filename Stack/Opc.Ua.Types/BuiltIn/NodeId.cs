@@ -2145,7 +2145,9 @@ namespace Opc.Ua
     /// <summary>
     /// Helper to allow data contract serialization of NodeId
     /// </summary>
-    [DataContract(Namespace = Namespaces.OpcUaXsd)]
+    [DataContract(
+        Name = "NodeId",
+        Namespace = Namespaces.OpcUaXsd)]
     public class SerializableNodeId
     {
         /// <summary>

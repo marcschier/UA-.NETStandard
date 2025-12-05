@@ -187,7 +187,7 @@ namespace Opc.Ua.Client
                 IList<NodeId> nodesToBrowse,
                 uint maxResultsToReturn,
                 BrowseDirection browseDirection,
-                NodeId? referenceTypeId,
+                NodeId referenceTypeId,
                 bool includeSubtypes,
                 uint nodeClassMask,
                 CancellationToken ct = default)
@@ -198,7 +198,7 @@ namespace Opc.Ua.Client
                 View = view,
                 MaxReferencesReturned = maxResultsToReturn,
                 BrowseDirection = browseDirection,
-                ReferenceTypeId = referenceTypeId ?? NodeId.Null,
+                ReferenceTypeId = referenceTypeId,
                 IncludeSubtypes = includeSubtypes,
                 NodeClassMask = (int)nodeClassMask
             });
