@@ -1,5 +1,5 @@
 /* ========================================================================
- * Copyright (c) 2005-2020 The OPC Foundation, Inc. All rights reserved.
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
  *
  * OPC Foundation MIT License 1.00
  *
@@ -67,6 +67,7 @@ namespace Opc.Ua.Server.Tests
         public bool UseTracing { get; }
         public bool DurableSubscriptionsEnabled { get; set; }
         public bool UseSamplingGroupsInReferenceNodeManager { get; set; }
+        public bool ProvisioningMode { get; set; }
         public ActivityListener ActivityListener { get; private set; }
 
         public ServerFixture(
@@ -270,6 +271,11 @@ namespace Opc.Ua.Server.Tests
                 server is ReferenceServer referenceServer)
             {
                 Quickstarts.Servers.Utils.UseSamplingGroupsInReferenceNodeManager(referenceServer);
+            }
+            if (ProvisioningMode &&
+                server is ReferenceServer provisioningReferenceServer)
+            {
+                Quickstarts.Servers.Utils.EnableProvisioningMode(provisioningReferenceServer);
             }
             await Application.StartAsync(server).ConfigureAwait(false);
             Server = server;
