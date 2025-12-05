@@ -192,7 +192,7 @@ namespace Opc.Ua
                     securityPolicies.Add(SecurityPolicies.Aes256_Sha256_RsaPss);
                     continue;
                 }
-                if (!applicationCertificate.CertificateType.TryGetIdentifier(out uint identifier))
+                if (applicationCertificate.CertificateType.TryGetIdentifier(out uint identifier))
                 {
                     switch (identifier)
                     {
