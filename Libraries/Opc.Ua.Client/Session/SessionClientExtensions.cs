@@ -225,7 +225,7 @@ namespace Opc.Ua.Client
                     [nodeId],
                     0,
                     BrowseDirection.Both,
-                    null,
+                    default,
                     true,
                     0,
                     ct)
@@ -255,7 +255,7 @@ namespace Opc.Ua.Client
                 nodeIds,
                 0,
                 BrowseDirection.Both,
-                null,
+                default,
                 true,
                 0,
                 ct);

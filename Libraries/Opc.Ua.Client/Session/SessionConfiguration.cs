@@ -87,6 +87,8 @@ namespace Opc.Ua.Client
     [KnownType(typeof(X509IdentityToken))]
     [KnownType(typeof(IssuedIdentityToken))]
     [KnownType(typeof(UserIdentity))]
+    [KnownType(typeof(NodeId))]
+    [KnownType(typeof(SerializableNodeId))]
     public record class SessionState : SessionOptions
     {
         /// <summary>
@@ -114,13 +116,13 @@ namespace Opc.Ua.Client
         /// The session id assigned by the server.
         /// </summary>
         [DataMember(IsRequired = true, Order = 30)]
-        public NodeId SessionId { get; init; } = NodeId.Null;
+        public SerializableNodeId SessionId { get; init; } = new();
 
         /// <summary>
         /// The authentication token used by the server to identify the session.
         /// </summary>
         [DataMember(IsRequired = true, Order = 40)]
-        public NodeId AuthenticationToken { get; init; } = NodeId.Null;
+        public SerializableNodeId AuthenticationToken { get; init; } = new();
 
         /// <summary>
         /// The last server nonce received.
