@@ -36,6 +36,8 @@ using System.Xml;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using Opc.Ua.Types;
+using Opc.Ua.Export;
+
 
 #if NET8_0_OR_GREATER
 using System.Collections.Frozen;
@@ -258,17 +260,24 @@ namespace Opc.Ua
         /// Returns the data type id that describes a value.
         /// </summary>
         /// <param name="value">The value instance to check the data type.</param>
+        /// <param name="namespaceTable">The namespace table.</param>
         /// <returns>An data type identifier for a node in a server's address space.</returns>
-        public static NodeId GetDataTypeId(object value)
+        public static NodeId GetDataTypeId(object value, NamespaceTable namespaceTable = null)
         {
-            if (value == null)
+            if (value is null)
             {
                 return NodeId.Null;
             }
 
-            NodeId dataTypeId = GetDataTypeId(value.GetType());
+            if (value is IEncodeable encodable && encodable.TypeId != null)
+            {
+                namespaceTable ??= AmbientMessageContext.CurrentContext?.NamespaceUris;
+                return ExpandedNodeId.ToNodeId(encodable.TypeId, namespaceTable);
+            }
 
-            if (dataTypeId == NodeId.Null && value is Matrix matrix)
+            NodeId dataTypeId = GetDataTypeId(value.GetType(), namespaceTable);
+
+            if (dataTypeId.IsNullNodeId && value is Matrix matrix)
             {
                 return GetDataTypeId(matrix.TypeInfo);
             }
@@ -280,8 +289,9 @@ namespace Opc.Ua
         /// Returns the data type id that describes a value.
         /// </summary>
         /// <param name="type">The framework type.</param>
+        /// <param name="namespaceTable">The namespace table.</param>
         /// <returns>An data type identifier for a node in a server's address space.</returns>
-        public static NodeId GetDataTypeId(Type type)
+        public static NodeId GetDataTypeId(Type type, NamespaceTable namespaceTable = null)
         {
             TypeInfo typeInfo = Construct(type);
 
@@ -307,7 +317,8 @@ namespace Opc.Ua
                     var instance = Activator.CreateInstance(type) as IEncodeable;
                     if (instance?.TypeId != null)
                     {
-                        return ExpandedNodeId.ToNodeId(instance.TypeId, null);
+                        namespaceTable ??= AmbientMessageContext.CurrentContext?.NamespaceUris;
+                        return ExpandedNodeId.ToNodeId(instance.TypeId, namespaceTable);
                     }
                 }
                 catch (MissingMethodException)

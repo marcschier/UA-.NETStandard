@@ -784,7 +784,7 @@ namespace Opc.Ua
             base.Initialize(context);
 
             Value = default;
-            DataType = TypeInfo.GetDataTypeId(typeof(T));
+            DataType = TypeInfo.GetDataTypeId(typeof(T), context.NamespaceUris);
             ValueRank = TypeInfo.GetValueRank(typeof(T));
         }
 
@@ -887,7 +887,7 @@ namespace Opc.Ua
             base.Initialize(context);
 
             Value = default;
-            DataType = TypeInfo.GetDataTypeId(typeof(T));
+            DataType = TypeInfo.GetDataTypeId(typeof(T), context.NamespaceUris);
             ValueRank = TypeInfo.GetValueRank(typeof(T));
         }
 

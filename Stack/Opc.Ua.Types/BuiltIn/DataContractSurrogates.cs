@@ -65,15 +65,15 @@ namespace Opc.Ua
         {
             if (targetType == typeof(NodeId))
             {
-                return obj is SerializableNodeId s ? s.NodeId : NodeId.Null;
+                return obj is SerializableNodeId s ? s.NodeId : obj;
             }
             if (targetType == typeof(NodeIdCollection))
             {
                 return obj is SerializableNodeIdCollection n ? (NodeIdCollection)n : obj;
             }
-            if (targetType == typeof(Guid) && obj is Uuid uuid)
+            if (targetType == typeof(Guid))
             {
-                return (Guid)uuid;
+                return obj is Uuid u ? (Guid)u : obj;
             }
             return obj;
         }
@@ -81,15 +81,39 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public object GetObjectToSerialize(object obj, Type targetType)
         {
+            if (targetType == typeof(SerializableNodeId))
+            {
+                if (obj is SerializableNodeId s)
+                {
+                    return s;
+                }
+                targetType = obj?.GetType() ?? targetType;
+            }
             if (targetType == typeof(NodeId))
             {
                 return new SerializableNodeId(obj is NodeId n ? n : NodeId.Null);
+            }
+            if (targetType == typeof(SerializableNodeIdCollection) )
+            {
+                if (obj is SerializableNodeIdCollection s)
+                {
+                    return s;
+                }
+                targetType = obj?.GetType() ?? targetType;
             }
             if (targetType == typeof(NodeIdCollection))
             {
                 return obj is NodeIdCollection n ? (SerializableNodeIdCollection)n : obj;
             }
-            if (targetType == typeof(Guid))
+            if (targetType == typeof(Uuid))
+            {
+                if (obj is Uuid u)
+                {
+                    return u;
+                }
+                targetType = obj?.GetType() ?? targetType;
+            }
+            if (targetType == typeof(Guid) || targetType == typeof(Uuid))
             {
                 return obj is Guid g ? new Uuid(g) : Uuid.Empty;
             }

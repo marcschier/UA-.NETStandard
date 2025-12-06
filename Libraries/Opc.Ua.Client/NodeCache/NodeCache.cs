@@ -954,7 +954,7 @@ namespace Opc.Ua.Client
             }
 
             // get the actual datatype.
-            NodeId actualTypeId = TypeInfo.GetDataTypeId(value);
+            NodeId actualTypeId = TypeInfo.GetDataTypeId(value, m_context.NamespaceUris);
 
             // value is valid if the expected datatype is same as or a supertype of the actual datatype
             // for example: expected datatype of 'Integer' matches an actual datatype of 'UInt32'.

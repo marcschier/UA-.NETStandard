@@ -642,7 +642,8 @@ namespace Opc.Ua
                 default:
                     // check data type.
                     if (attributeId != Attributes.Value &&
-                        Attributes.GetDataTypeId(attributeId) != TypeInfo.GetDataTypeId(value))
+                        Attributes.GetDataTypeId(attributeId) !=
+                            TypeInfo.GetDataTypeId(value, null)) // TODO: Pass message context
                     {
                         return StatusCodes.BadTypeMismatch;
                     }

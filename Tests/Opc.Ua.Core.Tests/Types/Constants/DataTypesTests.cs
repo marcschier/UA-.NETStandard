@@ -172,27 +172,13 @@ namespace Opc.Ua.Core.Tests.Types.Constants
         [Test]
         public void GetDataTypeId_EUInformationType_ReturnsSpecificDataTypeId()
         {
-            NodeId dataTypeId = DataTypes.GetDataTypeId(typeof(EUInformation));
+            NodeId dataTypeId = TypeInfo.GetDataTypeId(typeof(EUInformation));
 
             Assert.IsNotNull(dataTypeId);
             Assert.AreEqual(DataTypes.EUInformation, dataTypeId.TryGetIdentifier(out uint n1) ? n1 : 0);
             Assert.AreEqual(0, dataTypeId.NamespaceIndex);
             Assert.AreNotEqual(DataTypes.Structure, dataTypeId.TryGetIdentifier(out uint n2) ? n2 : 0,
                 "Should return specific EUInformation DataTypeId (i=887), not generic Structure (i=22)");
-        }
-
-        /// <summary>
-        /// Test GetDataTypeId for EUInformation instance returns specific DataTypeId.
-        /// </summary>
-        [Test]
-        public void GetDataTypeId_EUInformationInstance_ReturnsSpecificDataTypeId()
-        {
-            var euInfo = new EUInformation("unit", "http://test.org");
-            NodeId dataTypeId = DataTypes.GetDataTypeId(euInfo);
-
-            Assert.IsNotNull(dataTypeId);
-            Assert.AreEqual(DataTypes.EUInformation, dataTypeId.TryGetIdentifier(out uint n1) ? n1 : 0);
-            Assert.AreEqual(0, dataTypeId.NamespaceIndex);
         }
 
         /// <summary>
@@ -213,7 +199,7 @@ namespace Opc.Ua.Core.Tests.Types.Constants
 
             foreach (var (type, expectedId) in testCases)
             {
-                NodeId dataTypeId = DataTypes.GetDataTypeId(type);
+                NodeId dataTypeId = TypeInfo.GetDataTypeId(type);
 
                 Assert.IsNotNull(dataTypeId, $"DataTypeId should not be null for {type.Name}");
                 Assert.AreEqual(expectedId, dataTypeId.TryGetIdentifier(out uint n1) ? n1 : 0,

@@ -241,13 +241,16 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
         /// <summary>
         /// Helper to fill type with default values or random Data.
         /// </summary>
-        public void FillStructWithValues(BaseComplexType structType, bool randomValues)
+        public void FillStructWithValues(
+            BaseComplexType structType,
+            bool randomValues,
+            NamespaceTable namespaceUris)
         {
             int index = 0;
             foreach (ComplexTypePropertyInfo property in structType.GetPropertyEnumerator())
             {
                 BuiltInType builtInType = TypeInfo.GetBuiltInType(
-                    TypeInfo.GetDataTypeId(property.PropertyType));
+                    TypeInfo.GetDataTypeId(property.PropertyType, namespaceUris));
                 object newObj = randomValues
                     ? DataGenerator.GetRandom(builtInType)
                     : TypeInfo.GetDefaultValue(builtInType);

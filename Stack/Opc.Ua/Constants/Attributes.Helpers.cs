@@ -57,24 +57,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Returns the browse names for all attributes.
-        /// </summary>
-        [Obsolete("Use BrowseNames property instead.")]
-        public static string[] GetBrowseNames()
-        {
-            return [.. BrowseNames];
-        }
-
-        /// <summary>
-        /// Returns the ids for all attributes.
-        /// </summary>
-        [Obsolete("Use Identifiers property instead.")]
-        public static IEnumerable<uint> GetIdentifiers()
-        {
-            return [.. Identifiers];
-        }
-
-        /// <summary>
         /// Returns the ids for all attributes which are valid for the at least one of
         /// the node classes specified by the mask.
         /// </summary>

@@ -37,7 +37,7 @@ namespace Opc.Ua
         /// <summary>
         /// Initializes the object with value and access level.
         /// </summary>
-        public VariableAttributes(object value, byte accessLevel)
+        public VariableAttributes(object value, byte accessLevel, NamespaceTable namespaceUris)
         {
             Initialize();
 
@@ -54,7 +54,7 @@ namespace Opc.Ua
             }
             else
             {
-                DataType = TypeInfo.GetDataTypeId(value);
+                DataType = TypeInfo.GetDataTypeId(value, namespaceUris);
                 ValueRank = TypeInfo.GetValueRank(value);
             }
         }

@@ -1272,6 +1272,7 @@ namespace Opc.Ua
 
             if (index < 0)
             {
+                // TODO: Should throw because the value will likely not be tested for null
                 return NodeId.Null;
             }
 

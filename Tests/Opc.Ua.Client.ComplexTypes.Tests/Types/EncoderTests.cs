@@ -98,7 +98,7 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
             (nodeId, complexType) = TypeDictionary[structureType];
             object emittedType = Activator.CreateInstance(complexType);
             var baseType = emittedType as BaseComplexType;
-            FillStructWithValues(baseType, true);
+            FillStructWithValues(baseType, true, NameSpaceUris);
             EncodeDecodeComplexType(
                 EncoderContext,
                 memoryStreamType,
@@ -153,7 +153,7 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
                 emittedType);
             TestContext.Out.WriteLine(
                 $"Optional Field: {structureFieldParameter.BuiltInType} is null, all other fields have random values.");
-            FillStructWithValues(baseType, true);
+            FillStructWithValues(baseType, true, NameSpaceUris);
             baseType[structureFieldParameter.Name] = null;
             EncodeDecodeComplexType(
                 EncoderContext,
@@ -234,7 +234,7 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
             (nodeId, complexType) = TypeDictionary[structureType];
             object emittedType = Activator.CreateInstance(complexType);
             var baseType = emittedType as BaseComplexType;
-            FillStructWithValues(baseType, true);
+            FillStructWithValues(baseType, true, NameSpaceUris);
 
             var extensionObject = new ExtensionObject(emittedType);
 

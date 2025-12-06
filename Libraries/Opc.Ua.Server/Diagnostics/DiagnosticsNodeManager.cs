@@ -964,7 +964,7 @@ namespace Opc.Ua.Server
 
                 array?.AddReference(ReferenceTypeIds.HasComponent, false, diagnosticsNode.NodeId);
 
-                if (diagnostics.SessionId.IsNullNodeId)
+                if (!diagnostics.SessionId.IsNullNodeId)
                 {
                     // add reference to session subscription array.
                     diagnosticsNode.AddReference(
