@@ -936,7 +936,7 @@ namespace Opc.Ua.Client
                 XmlWriterSettings settings = Utils.DefaultXmlWriterSettings();
                 using var writer = XmlWriter.Create(stream, settings);
                 DataContractSerializer serializer =
-                    CoreUtils.CreateDataContractSerializer<SessionConfiguration>();
+                    CoreUtils.CreateDataContractSerializer<SessionConfiguration>(MessageContext);
                 using IDisposable scope = AmbientMessageContext.SetScopedContext(MessageContext);
                 serializer.WriteObject(writer, sessionConfiguration);
             }
@@ -961,7 +961,9 @@ namespace Opc.Ua.Client
 
             using var writer = XmlWriter.Create(stream, settings);
             DataContractSerializer serializer =
-                CoreUtils.CreateDataContractSerializer<SubscriptionStateCollection>(knownTypes);
+                CoreUtils.CreateDataContractSerializer<SubscriptionStateCollection>(
+                    MessageContext,
+                    knownTypes);
             using IDisposable scope = AmbientMessageContext.SetScopedContext(MessageContext);
             serializer.WriteObject(writer, subscriptionStateCollection);
         }
@@ -979,7 +981,9 @@ namespace Opc.Ua.Client
 
             using var reader = XmlReader.Create(stream, settings);
             DataContractSerializer serializer =
-                CoreUtils.CreateDataContractSerializer<SubscriptionStateCollection>(knownTypes);
+                CoreUtils.CreateDataContractSerializer<SubscriptionStateCollection>(
+                    MessageContext,
+                    knownTypes);
             using IDisposable scope = AmbientMessageContext.SetScopedContext(MessageContext);
             var stateCollection = (SubscriptionStateCollection?)serializer.ReadObject(reader);
             if (stateCollection == null)
@@ -3657,7 +3661,8 @@ namespace Opc.Ua.Client
                 }
                 if (error.StatusCode == StatusCodes.BadSessionIdInvalid ||
                     error.StatusCode == StatusCodes.BadSecureChannelIdInvalid ||
-                    error.StatusCode == StatusCodes.BadSecureChannelClosed)
+                    error.StatusCode == StatusCodes.BadSecureChannelClosed ||
+                    error.StatusCode == StatusCodes.BadRequestTimeout)
                 {
                     OnKeepAliveError(error);
                     return;

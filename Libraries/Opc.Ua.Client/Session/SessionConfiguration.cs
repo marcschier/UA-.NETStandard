@@ -87,8 +87,6 @@ namespace Opc.Ua.Client
     [KnownType(typeof(X509IdentityToken))]
     [KnownType(typeof(IssuedIdentityToken))]
     [KnownType(typeof(UserIdentity))]
-    [KnownType(typeof(NodeId))]
-    [KnownType(typeof(SerializableNodeId))]
     public record class SessionState : SessionOptions
     {
         /// <summary>
@@ -185,9 +183,9 @@ namespace Opc.Ua.Client
             // secure settings
             XmlReaderSettings settings = Utils.DefaultXmlReaderSettings();
             using var reader = XmlReader.Create(stream, settings);
+            using IDisposable scope = AmbientMessageContext.SetScopedContext(telemetry);
             DataContractSerializer serializer =
                 CoreUtils.CreateDataContractSerializer<SessionConfiguration>();
-            using IDisposable scope = AmbientMessageContext.SetScopedContext(telemetry);
             return (SessionConfiguration?)serializer.ReadObject(reader);
         }
     }

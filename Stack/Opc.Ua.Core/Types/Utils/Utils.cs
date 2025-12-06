@@ -1504,8 +1504,8 @@ namespace Opc.Ua
                 {
                     try
                     {
-                        var serializer = CoreUtils.CreateDataContractSerializer<T>();
                         using IDisposable scope = AmbientMessageContext.SetScopedContext(telemetry);
+                        var serializer = CoreUtils.CreateDataContractSerializer<T>();
                         serializer.WriteObject(writer, value);
                     }
                     finally

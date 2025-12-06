@@ -320,8 +320,9 @@ namespace Opc.Ua
             using var stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
             try
             {
-                DataContractSerializer serializer = CoreUtils.CreateDataContractSerializer(systemType);
                 using IDisposable scope = AmbientMessageContext.SetScopedContext(telemetry);
+                DataContractSerializer serializer = CoreUtils.CreateDataContractSerializer(
+                    systemType);
                 var configuration = serializer.ReadObject(stream) as ApplicationConfiguration;
                 configuration.Initialize(telemetry);
 
@@ -501,8 +502,9 @@ namespace Opc.Ua
             ApplicationConfiguration configuration;
             try
             {
-                var serializer = CoreUtils.CreateDataContractSerializer(systemType);
                 using IDisposable scope = AmbientMessageContext.SetScopedContext(telemetry);
+                DataContractSerializer serializer = CoreUtils.CreateDataContractSerializer(
+                    systemType);
                 configuration = (ApplicationConfiguration)serializer.ReadObject(stream);
                 configuration.Initialize(telemetry);
             }
@@ -570,8 +572,8 @@ namespace Opc.Ua
 
             using Stream ostrm = File.Open(filePath, FileMode.Create, FileAccess.ReadWrite);
             using var writer = XmlWriter.Create(ostrm, settings);
-            var serializer = CoreUtils.CreateDataContractSerializer(GetType());
             using IDisposable scope = AmbientMessageContext.SetScopedContext(m_telemetry);
+            var serializer = CoreUtils.CreateDataContractSerializer(GetType());
             serializer.WriteObject(writer, this);
         }
 

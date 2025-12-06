@@ -2132,7 +2132,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public bool Equals(NodeId x, NodeId y)
         {
-            return x == y;
+            return x.Equals(y);
         }
 
         /// <inheritdoc/>

@@ -28,6 +28,7 @@
  * ======================================================================*/
 
 using System;
+using System.Collections;
 using System.Linq;
 using System.Runtime.Serialization;
 
@@ -39,9 +40,25 @@ namespace Opc.Ua
     public sealed class DataContractSurrogates : ISerializationSurrogateProvider
     {
         /// <summary>
-        /// A static instance of the surrogate provider.
+        /// Known types
         /// </summary>
-        public static DataContractSurrogates Instance { get; } = new DataContractSurrogates();
+        public static Type[] KnownTypes =>
+        [
+            typeof(Uuid),
+            typeof(NodeId),
+            typeof(NodeIdCollection),
+            typeof(SerializableNodeId),
+            typeof(SerializableNodeIdCollection)
+        ];
+
+        /// <summary>
+        /// Create surrogate provider
+        /// </summary>
+        /// <param name="messageContext"></param>
+        public DataContractSurrogates(IServiceMessageContext messageContext)
+        {
+            m_messageContext = messageContext;
+        }
 
         /// <inheritdoc/>
         public object GetDeserializedObject(object obj, Type targetType)
@@ -96,5 +113,7 @@ namespace Opc.Ua
             }
             return type;
         }
+
+        private IServiceMessageContext m_messageContext;
     }
 }

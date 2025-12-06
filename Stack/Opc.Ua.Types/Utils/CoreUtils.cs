@@ -1067,9 +1067,10 @@ namespace Opc.Ua
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         public static DataContractSerializer CreateDataContractSerializer<T>(
+            IServiceMessageContext messageContext = null,
             IEnumerable<Type> knownTypes = null)
         {
-            return CreateDataContractSerializer(typeof(T), knownTypes);
+            return CreateDataContractSerializer(typeof(T), messageContext, knownTypes);
         }
 
         /// <summary>
@@ -1078,10 +1079,13 @@ namespace Opc.Ua
         /// <returns></returns>
         public static DataContractSerializer CreateDataContractSerializer(
             Type systemType,
+            IServiceMessageContext messageContext = null,
             IEnumerable<Type> knownTypes = null)
         {
-            var serializer = new DataContractSerializer(systemType, knownTypes ?? []);
-            serializer.SetSerializationSurrogateProvider(DataContractSurrogates.Instance);
+            var serializer = new DataContractSerializer(systemType,
+                DataContractSurrogates.KnownTypes.Concat(knownTypes ?? []));
+            serializer.SetSerializationSurrogateProvider(
+                new DataContractSurrogates(messageContext ?? AmbientMessageContext.CurrentContext));
             return serializer;
         }
 

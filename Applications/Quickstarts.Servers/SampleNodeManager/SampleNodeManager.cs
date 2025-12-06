@@ -912,7 +912,7 @@ namespace Opc.Ua.Sample
                         ((uint)values[1]));
                 }
 
-                metadata.DataType = (NodeId)values[2];
+                metadata.DataType = values[2] is NodeId nodeId ? nodeId : default;
 
                 if (values[3] != null)
                 {

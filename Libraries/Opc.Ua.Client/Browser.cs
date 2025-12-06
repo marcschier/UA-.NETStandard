@@ -722,9 +722,9 @@ namespace Opc.Ua.Client
             // secure settings
             XmlReaderSettings settings = Utils.DefaultXmlReaderSettings();
             using var reader = XmlReader.Create(stream, settings);
+            using IDisposable scope = AmbientMessageContext.SetScopedContext(telemetry);
             DataContractSerializer serializer =
                 CoreUtils.CreateDataContractSerializer<BrowserOptions>();
-            using IDisposable scope = AmbientMessageContext.SetScopedContext(telemetry);
             var options = (BrowserOptions?)serializer.ReadObject(reader);
             return new Browser(telemetry, options);
         }
