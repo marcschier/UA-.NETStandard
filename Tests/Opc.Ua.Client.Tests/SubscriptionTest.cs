@@ -214,7 +214,7 @@ namespace Opc.Ua.Client.Tests
                     await subscription.RepublishAsync(subscription.SequenceNumber + 100)
                     .ConfigureAwait(false));
             Assert.AreEqual(
-                (StatusCode)StatusCodes.BadMessageNotAvailable,
+                StatusCodes.BadMessageNotAvailable,
                 (StatusCode)sre.StatusCode,
                 $"Expected BadMessageNotAvailable, but received {sre.Message}");
 
@@ -711,7 +711,7 @@ namespace Opc.Ua.Client.Tests
                         session1.ReadValueAsync<ServerStatusDataType>(
                             VariableIds.Server_ServerStatus));
                     Assert.AreEqual(
-                        (StatusCode)StatusCodes.BadSecureChannelIdInvalid,
+                        StatusCodes.BadSecureChannelIdInvalid,
                         (StatusCode)sre.StatusCode,
                         sre.Message);
                 }
@@ -1350,7 +1350,7 @@ namespace Opc.Ua.Client.Tests
                 NUnit.Framework.Assert.ThrowsAsync<ServiceResultException>(() =>
                     subscription.RepublishAsync(subscription.SequenceNumber + 100));
             Assert.AreEqual(
-                (StatusCode)StatusCodes.BadMessageNotAvailable,
+                StatusCodes.BadMessageNotAvailable,
                 (StatusCode)sre.StatusCode);
 
             subscription.RemoveItems(list);

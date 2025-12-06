@@ -1021,7 +1021,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
                     .Throws<ServiceResultException>(() =>
                         decoder.ReadDataValue("DataValue"));
                 Assert.AreEqual(
-                    (StatusCode)StatusCodes.BadDecodingError,
+                    StatusCodes.BadDecodingError,
                     (StatusCode)sre.StatusCode,
                     sre.Message);
             }
@@ -1111,7 +1111,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
                         decoder.ReadDataValue("DataValue"));
 
                 Assert.AreEqual(
-                    (StatusCode)StatusCodes.BadDecodingError,
+                    StatusCodes.BadDecodingError,
                     (StatusCode)sre.StatusCode,
                     sre.Message);
             }
@@ -1200,7 +1200,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
                 decoder.ReadArray(builtInType.ToString(), matrix.TypeInfo.ValueRank, builtInType));
 
             Assert.AreEqual(
-                (StatusCode)StatusCodes.BadEncodingLimitsExceeded,
+                StatusCodes.BadEncodingLimitsExceeded,
                 (StatusCode)sre.StatusCode,
                 sre.Message);
         }

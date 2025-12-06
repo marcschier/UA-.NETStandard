@@ -531,7 +531,7 @@ namespace Opc.Ua.Server.Tests
                         true).ConfigureAwait(false);
                 });
                 Assert.AreEqual(
-                    (StatusCode)StatusCodes.BadNoSubscription,
+                    StatusCodes.BadNoSubscription,
                     (StatusCode)sre.StatusCode);
             }
         }
@@ -642,7 +642,7 @@ namespace Opc.Ua.Server.Tests
                 m_requestHeader,
                 acknowledgements).ConfigureAwait(false);
 
-            Assert.AreEqual((StatusCode)StatusCodes.Good, publishResponse.ResponseHeader.ServiceResult);
+            Assert.AreEqual(StatusCodes.Good, publishResponse.ResponseHeader.ServiceResult);
             ServerFixtureUtils.ValidateResponse(publishResponse.ResponseHeader);
             ServerFixtureUtils.ValidateDiagnosticInfos(
                 publishResponse.DiagnosticInfos,
@@ -661,7 +661,7 @@ namespace Opc.Ua.Server.Tests
                     m_requestHeader,
                     acknowledgements).ConfigureAwait(false);
 
-                Assert.AreEqual((StatusCode)StatusCodes.Good, publishResponse.ResponseHeader.ServiceResult);
+                Assert.AreEqual(StatusCodes.Good, publishResponse.ResponseHeader.ServiceResult);
                 ServerFixtureUtils.ValidateResponse(publishResponse.ResponseHeader);
                 ServerFixtureUtils.ValidateDiagnosticInfos(
                     publishResponse.DiagnosticInfos,
@@ -683,7 +683,7 @@ namespace Opc.Ua.Server.Tests
 
             serverTestServices.SecureChannelContext = m_secureChannelContext;
 
-            Assert.AreEqual((StatusCode)StatusCodes.BadUserAccessDenied, callResponse.Results[0].StatusCode);
+            Assert.AreEqual(StatusCodes.BadUserAccessDenied, callResponse.Results[0].StatusCode);
             ServerFixtureUtils.ValidateResponse(callResponse.ResponseHeader, callResponse.Results, nodesToCall);
             ServerFixtureUtils.ValidateDiagnosticInfos(
                 callResponse.DiagnosticInfos,
@@ -697,7 +697,7 @@ namespace Opc.Ua.Server.Tests
                 m_requestHeader,
                 acknowledgements).ConfigureAwait(false);
 
-            Assert.AreEqual((StatusCode)StatusCodes.Good, publishResponse.ResponseHeader.ServiceResult);
+            Assert.AreEqual(StatusCodes.Good, publishResponse.ResponseHeader.ServiceResult);
             ServerFixtureUtils.ValidateResponse(publishResponse.ResponseHeader);
             ServerFixtureUtils.ValidateDiagnosticInfos(
                 publishResponse.DiagnosticInfos,
@@ -735,7 +735,7 @@ namespace Opc.Ua.Server.Tests
                 m_requestHeader,
                 acknowledgements).ConfigureAwait(false);
 
-            Assert.AreEqual((StatusCode)StatusCodes.Good, publishResponse.ResponseHeader.ServiceResult);
+            Assert.AreEqual(StatusCodes.Good, publishResponse.ResponseHeader.ServiceResult);
             ServerFixtureUtils.ValidateResponse(publishResponse.ResponseHeader);
             ServerFixtureUtils.ValidateDiagnosticInfos(
                 publishResponse.DiagnosticInfos,
@@ -761,7 +761,7 @@ namespace Opc.Ua.Server.Tests
                     m_requestHeader,
                     acknowledgements).ConfigureAwait(false);
 
-                Assert.AreEqual((StatusCode)StatusCodes.Good, publishResponse.ResponseHeader.ServiceResult);
+                Assert.AreEqual(StatusCodes.Good, publishResponse.ResponseHeader.ServiceResult);
                 ServerFixtureUtils.ValidateResponse(publishResponse.ResponseHeader);
                 ServerFixtureUtils.ValidateDiagnosticInfos(
                     publishResponse.DiagnosticInfos,
@@ -788,7 +788,7 @@ namespace Opc.Ua.Server.Tests
                 m_requestHeader,
                 acknowledgements).ConfigureAwait(false);
 
-            Assert.AreEqual((StatusCode)StatusCodes.Good, publishResponse.ResponseHeader.ServiceResult);
+            Assert.AreEqual(StatusCodes.Good, publishResponse.ResponseHeader.ServiceResult);
             ServerFixtureUtils.ValidateResponse(publishResponse.ResponseHeader);
             ServerFixtureUtils.ValidateDiagnosticInfos(
                 publishResponse.DiagnosticInfos,

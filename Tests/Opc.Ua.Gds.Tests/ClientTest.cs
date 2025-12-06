@@ -1201,7 +1201,7 @@ namespace Opc.Ua.Gds.Tests
                             .GetCertificateGroupsAsync(application.ApplicationRecord.ApplicationId));
                     Assert.NotNull(sre);
                     Assert.AreEqual(
-                        (StatusCode)StatusCodes.BadUserAccessDenied,
+                        StatusCodes.BadUserAccessDenied,
                         (StatusCode)sre.StatusCode,
                         sre.Result.ToString());
                 }
@@ -1243,7 +1243,7 @@ namespace Opc.Ua.Gds.Tests
                             .GetCertificateGroupsAsync(testApplication.ApplicationRecord.ApplicationId));
                     Assert.NotNull(sre);
                     Assert.AreEqual(
-                        (StatusCode)StatusCodes.BadUserAccessDenied,
+                        StatusCodes.BadUserAccessDenied,
                         (StatusCode)sre.StatusCode,
                         sre.Result.ToString());
                 }
@@ -1316,7 +1316,7 @@ namespace Opc.Ua.Gds.Tests
                                 certificateRequest));
                     Assert.NotNull(sre);
                     Assert.AreEqual(
-                        (StatusCode)StatusCodes.BadUserAccessDenied,
+                        StatusCodes.BadUserAccessDenied,
                         (StatusCode)sre.StatusCode,
                         sre.Result.ToString());
                 }
@@ -1429,7 +1429,7 @@ namespace Opc.Ua.Gds.Tests
                                 testApplication.PrivateKeyPassword));
                     Assert.NotNull(sre);
                     Assert.AreEqual(
-                        (StatusCode)StatusCodes.BadUserAccessDenied,
+                        StatusCodes.BadUserAccessDenied,
                         (StatusCode)sre.StatusCode,
                         sre.Result.ToString());
                 }
@@ -1544,7 +1544,7 @@ namespace Opc.Ua.Gds.Tests
                     .GetCertificateGroupsAsync(application.ApplicationRecord.ApplicationId));
             Assert.NotNull(sre);
             Assert.AreEqual(
-                (StatusCode)StatusCodes.BadUserAccessDenied,
+                StatusCodes.BadUserAccessDenied,
                 (StatusCode)sre.StatusCode,
                 sre.Result.ToString());
         }

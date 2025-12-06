@@ -340,7 +340,7 @@ namespace Opc.Ua.Core.Tests.Types.UtilsTests
             ServiceResultException sre = NUnit.Framework.Assert.Throws<ServiceResultException>(() =>
                 RelativePath.Parse(path, typeTable, currentTable, targetTable).Format(typeTable));
             Assert.AreEqual(
-                (StatusCode)StatusCodes.BadIndexRangeInvalid,
+                StatusCodes.BadIndexRangeInvalid,
                 (StatusCode)sre.StatusCode);
         }
 
