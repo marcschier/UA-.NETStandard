@@ -376,12 +376,12 @@ namespace Opc.Ua.Client.Tests
                 .ReturnsAsync(new AddReferencesResponse
                 {
                     Results = new StatusCodeCollection(
-                    [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 10)])
+                    [.. Enumerable.Repeat(StatusCodes.Good, 10)])
                 })
                 .ReturnsAsync(new AddReferencesResponse
                 {
                     Results = new StatusCodeCollection(
-                    [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 5)])
+                    [.. Enumerable.Repeat(StatusCodes.Good, 5)])
                 });
 
             AddReferencesResponse response = await sessionMock.AddReferencesAsync(
@@ -417,12 +417,12 @@ namespace Opc.Ua.Client.Tests
                 .ReturnsAsync(new AddReferencesResponse
                 {
                     Results = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 10)])
+                        [.. Enumerable.Repeat(StatusCodes.Good, 10)])
                 })
                 .ReturnsAsync(new AddReferencesResponse
                 {
                     Results = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Bad, 5)]),
+                        [.. Enumerable.Repeat(StatusCodes.Bad, 5)]),
                     ResponseHeader = new ResponseHeader
                     {
                         ServiceResult = StatusCodes.Bad
@@ -2303,12 +2303,12 @@ namespace Opc.Ua.Client.Tests
                 .ReturnsAsync(new DeleteMonitoredItemsResponse
                 {
                     Results = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 10)])
+                        [.. Enumerable.Repeat(StatusCodes.Good, 10)])
                 })
                 .ReturnsAsync(new DeleteMonitoredItemsResponse
                 {
                     Results = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 5)])
+                        [.. Enumerable.Repeat(StatusCodes.Good, 5)])
                 });
 
             DeleteMonitoredItemsResponse response = await sessionMock.DeleteMonitoredItemsAsync(
@@ -2344,12 +2344,12 @@ namespace Opc.Ua.Client.Tests
                 .ReturnsAsync(new DeleteMonitoredItemsResponse
                 {
                     Results = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 10)])
+                        [.. Enumerable.Repeat(StatusCodes.Good, 10)])
                 })
                 .ReturnsAsync(new DeleteMonitoredItemsResponse
                 {
                     Results = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Bad, 5)]),
+                        [.. Enumerable.Repeat(StatusCodes.Bad, 5)]),
                     ResponseHeader = new ResponseHeader
                     {
                         ServiceResult = StatusCodes.Bad
@@ -2477,12 +2477,12 @@ namespace Opc.Ua.Client.Tests
                 .ReturnsAsync(new DeleteNodesResponse
                 {
                     Results = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 10)])
+                        [.. Enumerable.Repeat(StatusCodes.Good, 10)])
                 })
                 .ReturnsAsync(new DeleteNodesResponse
                 {
                     Results = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 5)])
+                        [.. Enumerable.Repeat(StatusCodes.Good, 5)])
                 });
 
             DeleteNodesResponse response = await sessionMock.DeleteNodesAsync(
@@ -2517,12 +2517,12 @@ namespace Opc.Ua.Client.Tests
                 .ReturnsAsync(new DeleteNodesResponse
                 {
                     Results = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 10)])
+                        [.. Enumerable.Repeat(StatusCodes.Good, 10)])
                 })
                 .ReturnsAsync(new DeleteNodesResponse
                 {
                     Results = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Bad, 5)]),
+                        [.. Enumerable.Repeat(StatusCodes.Bad, 5)]),
                     ResponseHeader = new ResponseHeader
                     {
                         ServiceResult = StatusCodes.Bad
@@ -2672,12 +2672,12 @@ namespace Opc.Ua.Client.Tests
                 .ReturnsAsync(new DeleteReferencesResponse
                 {
                     Results = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 10)])
+                        [.. Enumerable.Repeat(StatusCodes.Good, 10)])
                 })
                 .ReturnsAsync(new DeleteReferencesResponse
                 {
                     Results = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 5)])
+                        [.. Enumerable.Repeat(StatusCodes.Good, 5)])
                 });
 
             DeleteReferencesResponse response = await sessionMock.DeleteReferencesAsync(
@@ -2713,12 +2713,12 @@ namespace Opc.Ua.Client.Tests
                 .ReturnsAsync(new DeleteReferencesResponse
                 {
                     Results = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 10)])
+                        [.. Enumerable.Repeat(StatusCodes.Good, 10)])
                 })
                 .ReturnsAsync(new DeleteReferencesResponse
                 {
                     Results = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Bad, 5)]),
+                        [.. Enumerable.Repeat(StatusCodes.Bad, 5)]),
                     ResponseHeader = new ResponseHeader
                     {
                         ServiceResult = StatusCodes.Bad
@@ -4446,12 +4446,12 @@ namespace Opc.Ua.Client.Tests
                 .ReturnsAsync(new SetMonitoringModeResponse
                 {
                     Results = new StatusCodeCollection(
-                    [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 10)])
+                    [.. Enumerable.Repeat(StatusCodes.Good, 10)])
                 })
                 .ReturnsAsync(new SetMonitoringModeResponse
                 {
                     Results = new StatusCodeCollection(
-                    [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 5)])
+                    [.. Enumerable.Repeat(StatusCodes.Good, 5)])
                 });
 
             SetMonitoringModeResponse response = await sessionMock.SetMonitoringModeAsync(
@@ -4490,12 +4490,12 @@ namespace Opc.Ua.Client.Tests
                 .ReturnsAsync(new SetMonitoringModeResponse
                 {
                     Results = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 10)])
+                        [.. Enumerable.Repeat(StatusCodes.Good, 10)])
                 })
                 .ReturnsAsync(new SetMonitoringModeResponse
                 {
                     Results = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Bad, 5)]),
+                        [.. Enumerable.Repeat(StatusCodes.Bad, 5)]),
                     ResponseHeader = new ResponseHeader
                     {
                         ServiceResult = StatusCodes.Bad
@@ -4754,19 +4754,19 @@ namespace Opc.Ua.Client.Tests
                 .ReturnsAsync(new SetTriggeringResponse
                 {
                     AddResults = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 10)])
+                        [.. Enumerable.Repeat(StatusCodes.Good, 10)])
                 })
                 .ReturnsAsync(new SetTriggeringResponse
                 {
                     AddResults = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 5)]),
+                        [.. Enumerable.Repeat(StatusCodes.Good, 5)]),
                     RemoveResults = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 5)])
+                        [.. Enumerable.Repeat(StatusCodes.Good, 5)])
                 })
                 .ReturnsAsync(new SetTriggeringResponse
                 {
                     RemoveResults = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 10)])
+                        [.. Enumerable.Repeat(StatusCodes.Good, 10)])
                 });
 
             SetTriggeringResponse response = await sessionMock.SetTriggeringAsync(
@@ -4808,7 +4808,7 @@ namespace Opc.Ua.Client.Tests
                 .ReturnsAsync(new SetTriggeringResponse
                 {
                     AddResults = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 10)])
+                        [.. Enumerable.Repeat(StatusCodes.Good, 10)])
                 })
                 .ReturnsAsync(new SetTriggeringResponse
                 {
@@ -5394,12 +5394,12 @@ namespace Opc.Ua.Client.Tests
                 .ReturnsAsync(new WriteResponse
                 {
                     Results = new StatusCodeCollection(
-                    [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 10)])
+                    [.. Enumerable.Repeat(StatusCodes.Good, 10)])
                 })
                 .ReturnsAsync(new WriteResponse
                 {
                     Results = new StatusCodeCollection(
-                    [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 5)])
+                    [.. Enumerable.Repeat(StatusCodes.Good, 5)])
                 });
 
             WriteResponse response = await sessionMock.WriteAsync(
@@ -5435,12 +5435,12 @@ namespace Opc.Ua.Client.Tests
                 .ReturnsAsync(new WriteResponse
                 {
                     Results = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Good, 10)])
+                        [.. Enumerable.Repeat(StatusCodes.Good, 10)])
                 })
                 .ReturnsAsync(new WriteResponse
                 {
                     Results = new StatusCodeCollection(
-                        [.. Enumerable.Repeat((StatusCode)StatusCodes.Bad, 5)]),
+                        [.. Enumerable.Repeat(StatusCodes.Bad, 5)]),
                     ResponseHeader = new ResponseHeader
                     {
                         ServiceResult = StatusCodes.Bad

@@ -115,7 +115,7 @@ namespace Opc.Ua.Client.ComplexTypes.Tests
                             .LoadDataTypeSystem(ObjectIds.ObjectAttributes_Encoding_DefaultJson)
                             .ConfigureAwait(false);
                     });
-            Assert.AreEqual((StatusCode)StatusCodes.BadNodeIdInvalid, (StatusCode)sre.StatusCode);
+            Assert.AreEqual(StatusCodes.BadNodeIdInvalid, (StatusCode)sre.StatusCode);
             System.Collections.Generic.IReadOnlyDictionary<NodeId, DataDictionary> typeSystem
                 = await nodeResolver
                 .LoadDataTypeSystem()

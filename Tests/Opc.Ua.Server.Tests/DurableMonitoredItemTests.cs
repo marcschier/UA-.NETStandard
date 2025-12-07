@@ -1223,7 +1223,7 @@ namespace Opc.Ua.Server.Tests
                 DiagnosticInfo publishErrorResult = result2.FirstOrDefault();
                 Assert.That(
                     publishErrorResult.InnerStatusCode,
-                    Is.EqualTo((StatusCode)StatusCodes.Good));
+                    Is.EqualTo(StatusCodes.Good));
             }
             else
             {
@@ -1301,7 +1301,7 @@ namespace Opc.Ua.Server.Tests
             DiagnosticInfo publishErrorResult = result2.FirstOrDefault();
             Assert.That(
                 publishErrorResult.InnerStatusCode,
-                Is.EqualTo((StatusCode)StatusCodes.Good));
+                Is.EqualTo(StatusCodes.Good));
         }
 
         [Test]

@@ -1198,7 +1198,7 @@ namespace Opc.Ua
             X509Certificate2 certificate,
             CancellationToken ct = default)
         {
-            return Task.FromResult((StatusCode)StatusCodes.BadNotSupported);
+            return Task.FromResult(StatusCodes.BadNotSupported);
         }
 
         /// <inheritdoc/>

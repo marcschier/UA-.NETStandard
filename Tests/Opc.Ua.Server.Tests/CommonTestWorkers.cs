@@ -250,7 +250,7 @@ namespace Opc.Ua.Server.Tests
                             null,
                             0,
                             browseDescriptionCollection.Take(0).ToArray()).ConfigureAwait(false));
-                Assert.AreEqual((StatusCode)StatusCodes.BadNothingToDo, (StatusCode)sre.StatusCode);
+                Assert.AreEqual(StatusCodes.BadNothingToDo, (StatusCode)sre.StatusCode);
             }
 
             while (browseDescriptionCollection.Count > 0)
@@ -268,7 +268,7 @@ namespace Opc.Ua.Server.Tests
                                 0,
                                 browseDescriptionCollection).ConfigureAwait(false));
                     Assert.AreEqual(
-                        (StatusCode)StatusCodes.BadTooManyOperations,
+                        StatusCodes.BadTooManyOperations,
                         (StatusCode)sre.StatusCode);
 
                     // Test if server responds with BadTooManyOperations
@@ -284,7 +284,7 @@ namespace Opc.Ua.Server.Tests
                             0,
                             tempBrowsePath).ConfigureAwait(false));
                     Assert.AreEqual(
-                        (StatusCode)StatusCodes.BadTooManyOperations,
+                        StatusCodes.BadTooManyOperations,
                         (StatusCode)sre.StatusCode);
                 }
 
@@ -434,7 +434,7 @@ namespace Opc.Ua.Server.Tests
                                 requestHeader,
                                 browsePaths).ConfigureAwait(false));
                     Assert.AreEqual(
-                        (StatusCode)StatusCodes.BadTooManyOperations,
+                        StatusCodes.BadTooManyOperations,
                         (StatusCode)sre.StatusCode);
                 }
                 BrowsePathCollection browsePathSnippet =
@@ -515,7 +515,7 @@ namespace Opc.Ua.Server.Tests
                     id,
                     TimestampsToReturn.Neither,
                     itemsToCreate).ConfigureAwait(false));
-            Assert.AreEqual((StatusCode)StatusCodes.BadNothingToDo, (StatusCode)sre.StatusCode);
+            Assert.AreEqual(StatusCodes.BadNothingToDo, (StatusCode)sre.StatusCode);
 
             // add item
             uint handleCounter = 1;
@@ -794,7 +794,7 @@ namespace Opc.Ua.Server.Tests
                 requestHeader,
                 subscriptionIds,
                 sendInitialData).ConfigureAwait(false);
-            Assert.AreEqual((StatusCode)StatusCodes.Good, transferResponse.ResponseHeader.ServiceResult);
+            Assert.AreEqual(StatusCodes.Good, transferResponse.ResponseHeader.ServiceResult);
             Assert.AreEqual(subscriptionIds.Count, transferResponse.Results.Count);
             ServerFixtureUtils.ValidateResponse(transferResponse.ResponseHeader, transferResponse.Results, subscriptionIds);
             ServerFixtureUtils.ValidateDiagnosticInfos(
@@ -809,7 +809,7 @@ namespace Opc.Ua.Server.Tests
                 if (expectAccessDenied)
                 {
                     Assert.AreEqual(
-                        (StatusCode)StatusCodes.BadUserAccessDenied,
+                        StatusCodes.BadUserAccessDenied,
                         transferResult.StatusCode);
                 }
                 else
@@ -829,7 +829,7 @@ namespace Opc.Ua.Server.Tests
             PublishResponse publishResponse = await services.PublishAsync(
                 requestHeader,
                 acknowledgements).ConfigureAwait(false);
-            Assert.AreEqual((StatusCode)StatusCodes.Good, publishResponse.ResponseHeader.ServiceResult);
+            Assert.AreEqual(StatusCodes.Good, publishResponse.ResponseHeader.ServiceResult);
             ServerFixtureUtils.ValidateResponse(publishResponse.ResponseHeader);
             ServerFixtureUtils.ValidateDiagnosticInfos(
                 publishResponse.DiagnosticInfos,
@@ -851,7 +851,7 @@ namespace Opc.Ua.Server.Tests
 
             requestHeader.Timestamp = DateTime.UtcNow;
             DeleteSubscriptionsResponse deleteResponse = await services.DeleteSubscriptionsAsync(requestHeader, subscriptionIds).ConfigureAwait(false);
-            Assert.AreEqual((StatusCode)StatusCodes.Good, deleteResponse.ResponseHeader.ServiceResult);
+            Assert.AreEqual(StatusCodes.Good, deleteResponse.ResponseHeader.ServiceResult);
         }
 
         /// <summary>

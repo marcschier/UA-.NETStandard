@@ -358,7 +358,7 @@ namespace Opc.Ua.Gds.Tests
                 .ThrowsAsync<ServiceResultException>(() =>
                     m_pushClient.PushClient.RemoveCertificateAsync(m_caCert.Thumbprint, false));
             Assert.AreEqual(
-                (StatusCode)StatusCodes.BadInvalidArgument,
+                StatusCodes.BadInvalidArgument,
                 (StatusCode)serviceResultException.StatusCode,
                 serviceResultException.Message);
             TrustListDataType afterRemoveTrustList = await m_pushClient.PushClient.ReadTrustListAsync().ConfigureAwait(false);
