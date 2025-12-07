@@ -836,7 +836,7 @@ namespace Opc.Ua
                 }
             }
 
-            if (NodeId.IsNull(nodeId))
+            if (nodeId.IsNull)
             {
                 return nodeId;
             }

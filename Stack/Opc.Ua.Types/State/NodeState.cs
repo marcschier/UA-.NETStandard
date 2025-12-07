@@ -1561,7 +1561,7 @@ namespace Opc.Ua
                         encoder.WriteBoolean("IsInverse", reference.IsInverse);
                     }
 
-                    if (!NodeId.IsNull(reference.TargetId))
+                    if (!reference.TargetId.IsNull)
                     {
                         encoder.WriteExpandedNodeId("TargetId", reference.TargetId);
                     }
@@ -4507,7 +4507,7 @@ namespace Opc.Ua
         {
             lock (m_referencesLock)
             {
-                if (m_references == null || referenceTypeId.IsNullNodeId || targetId == null)
+                if (m_references == null || referenceTypeId.IsNullNodeId || targetId.IsNull)
                 {
                     return false;
                 }
@@ -4531,7 +4531,7 @@ namespace Opc.Ua
                 throw new ArgumentNullException(nameof(referenceTypeId));
             }
 
-            if (NodeId.IsNull(targetId))
+            if (targetId.IsNull)
             {
                 throw new ArgumentNullException(nameof(targetId));
             }
@@ -4562,7 +4562,7 @@ namespace Opc.Ua
                 throw new ArgumentNullException(nameof(referenceTypeId));
             }
 
-            if (NodeId.IsNull(targetId))
+            if (targetId.IsNull)
             {
                 throw new ArgumentNullException(nameof(targetId));
             }

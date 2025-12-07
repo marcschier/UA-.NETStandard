@@ -457,7 +457,7 @@ namespace Opc.Ua
                 return m_body.GetHashCode();
             }
 
-            if (TypeId != null)
+            if (!TypeId.IsNull)
             {
                 return TypeId.GetHashCode();
             }
@@ -556,7 +556,7 @@ namespace Opc.Ua
                     return string.Format(formatProvider, "{0}", body);
                 }
 
-                if (!NodeId.IsNull(TypeId))
+                if (!TypeId.IsNull)
                 {
                     return string.Format(formatProvider, "{{{0}}}", TypeId);
                 }

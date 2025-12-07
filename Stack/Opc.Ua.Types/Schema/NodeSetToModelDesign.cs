@@ -458,7 +458,7 @@ namespace Opc.Ua.Schema.Model
 
         private T FindNode<T>(ExpandedNodeId targetId) where T : NodeDesign
         {
-            if (targetId == null)
+            if (targetId.IsNull)
             {
                 return default;
             }
@@ -1296,7 +1296,7 @@ namespace Opc.Ua.Schema.Model
 
         private UANode FindNode(UANodeSet nodeset, ExpandedNodeId targetId)
         {
-            if (targetId == null)
+            if (targetId.IsNull)
             {
                 return null;
             }
@@ -1318,7 +1318,7 @@ namespace Opc.Ua.Schema.Model
             UANode source,
             NodeId referenceTypeId,
             bool isInverse,
-            ExpandedNodeId targetId = null)
+            ExpandedNodeId targetId = default)
         {
             if (source.References == null)
             {
@@ -1331,7 +1331,7 @@ namespace Opc.Ua.Schema.Model
 
                 if (reference.ReferenceTypeId == referenceTypeId && reference.IsInverse == isInverse)
                 {
-                    if (targetId != null && reference.TargetId != targetId)
+                    if (!targetId.IsNull && reference.TargetId != targetId)
                     {
                         continue;
                     }
@@ -2238,10 +2238,10 @@ namespace Opc.Ua.Schema.Model
                     namespaceUri = m_settings.NamespaceUris.GetString(namespaceIndex);
                 }
 
-                return new ExpandedNodeId(nodeId.Identifier, 0, namespaceUri, serverIndex);
+                return nodeId.WithNamespaceUri(namespaceUri).WithServerIndex(serverIndex);
             }
 
-            return new ExpandedNodeId(nodeId.Identifier, namespaceIndex, null, 0);
+            return nodeId.WithNamespaceIndex(namespaceIndex).WithServerIndex(0);
         }
 
         /// <summary>

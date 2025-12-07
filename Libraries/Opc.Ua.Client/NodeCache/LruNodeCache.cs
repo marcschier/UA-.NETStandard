@@ -71,7 +71,7 @@ namespace Opc.Ua.Client
                     .WithAtomicGetOrAdd()
                     .AsAsyncCache()
                     .WithCapacity(capacity)
-                    .WithKeyComparer(Comparers.Instance)
+                    .WithKeyComparer(NodeIdComparer.Instance)
                     .WithExpireAfterAccess(cacheExpiry.Value);
             BitFaster.Caching.Lru.Builder.AtomicAsyncConcurrentLruBuilder<
                 NodeId,
@@ -80,14 +80,14 @@ namespace Opc.Ua.Client
                 .WithAtomicGetOrAdd()
                 .AsAsyncCache()
                 .WithCapacity(capacity)
-                .WithKeyComparer(Comparers.Instance)
+                .WithKeyComparer(NodeIdComparer.Instance)
                 .WithExpireAfterAccess(cacheExpiry.Value);
             BitFaster.Caching.Lru.Builder.AtomicAsyncConcurrentLruBuilder<NodeId, DataValue> valuesBuilder =
                 new ConcurrentLruBuilder<NodeId, DataValue>()
                     .WithAtomicGetOrAdd()
                     .AsAsyncCache()
                     .WithCapacity(capacity)
-                    .WithKeyComparer(Comparers.Instance)
+                    .WithKeyComparer(NodeIdComparer.Instance)
                     .WithExpireAfterAccess(cacheExpiry.Value);
             if (withMetrics)
             {
@@ -514,7 +514,7 @@ namespace Opc.Ua.Client
                     foreach (ReferenceDescription? reference in references)
                     {
                         // transform absolute identifiers.
-                        if (reference.NodeId?.IsAbsolute == true)
+                        if (reference.NodeId.IsAbsolute)
                         {
                             reference.NodeId = ExpandedNodeId.ToNodeId(
                                 reference.NodeId,
@@ -649,41 +649,6 @@ namespace Opc.Ua.Client
             return expandedNodeId.IsAbsolute
                 ? NodeId.Null
                 : ExpandedNodeId.ToNodeId(expandedNodeId, NamespaceUris);
-        }
-
-        /// <summary>
-        /// Node id comparer
-        /// </summary>
-        internal class Comparers : IEqualityComparer<ExpandedNodeId>, IEqualityComparer<NodeId>
-        {
-            /// <summary>
-            /// Get singleton comparer
-            /// </summary>
-            public static Comparers Instance { get; } = new Comparers();
-
-            /// <inheritdoc/>
-            public bool Equals(ExpandedNodeId? x, ExpandedNodeId? y)
-            {
-                return ReferenceEquals(x, y) || x == y;
-            }
-
-            /// <inheritdoc/>
-            public int GetHashCode(ExpandedNodeId obj)
-            {
-                return obj.GetHashCode();
-            }
-
-            /// <inheritdoc/>
-            public bool Equals(NodeId x, NodeId y)
-            {
-                return x == y;
-            }
-
-            /// <inheritdoc/>
-            public int GetHashCode(NodeId obj)
-            {
-                return obj.GetHashCode();
-            }
         }
 
         private readonly IAsyncCache<NodeId, INode> m_nodes;

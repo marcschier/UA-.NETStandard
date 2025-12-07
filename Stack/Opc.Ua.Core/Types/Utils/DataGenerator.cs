@@ -1229,14 +1229,14 @@ namespace Opc.Ua.Test
                 null,
                 NodeId.Null,
                 new NodeId(Guid.Empty),
-                new NodeId(string.Empty),
+                new NodeId(string.Empty, 0),
                 new NodeId([])),
             new(
                 typeof(ExpandedNodeId),
                 null,
                 ExpandedNodeId.Null,
                 new ExpandedNodeId(Guid.Empty),
-                new ExpandedNodeId(string.Empty),
+                new ExpandedNodeId(string.Empty, 0),
                 new ExpandedNodeId([])
             ),
             new(typeof(QualifiedName), null, QualifiedName.Null),

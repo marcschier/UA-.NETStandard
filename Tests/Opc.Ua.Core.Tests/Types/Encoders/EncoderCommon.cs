@@ -1366,7 +1366,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
 
             public DynamicEncodeable GetDynamicEncodeableForEncoding(ExpandedNodeId typeId)
             {
-                if (typeId != null &&
+                if (!typeId.IsNull &&
                     m_dynamicEncodeables.TryGetValue(
                         typeId,
                         out DynamicEncodeable dynamicEncodeable))

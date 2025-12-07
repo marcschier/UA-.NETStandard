@@ -488,14 +488,9 @@ namespace Opc.Ua.Test
         /// False or ServiceResultException in case of unequal values.</returns>
         public bool CompareExpandedNodeId(ExpandedNodeId value1, ExpandedNodeId value2)
         {
-            if (NodeId.IsNull(value1) && NodeId.IsNull(value2))
+            if (value1.IsNull && value2.IsNull)
             {
                 return true;
-            }
-
-            if (value1 == null || value2 == null)
-            {
-                return value1 == value2;
             }
 
             if (value1 != value2)

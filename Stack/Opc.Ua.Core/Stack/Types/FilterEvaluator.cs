@@ -1385,7 +1385,9 @@ namespace Opc.Ua
             switch (sourceType)
             {
                 case BuiltInType.NodeId:
-                    return (NodeId)value;
+                    return value is NodeId n ?
+                        n :
+                        value is SerializableNodeId s ? s.NodeId : NodeId.Null;
                 case BuiltInType.ExpandedNodeId:
                     return (NodeId)(ExpandedNodeId)value;
                 case BuiltInType.String:

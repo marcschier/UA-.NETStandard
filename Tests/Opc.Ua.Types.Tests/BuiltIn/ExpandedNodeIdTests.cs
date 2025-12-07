@@ -86,11 +86,11 @@ namespace Opc.Ua.Types.Tests.BuiltIn
 
             // string
             const string text = "i=123";
-            var nodeIdText = new ExpandedNodeId(text);
-            Assert.AreEqual(123, nodeIdText.Identifier);
+            var nodeIdText = ExpandedNodeId.Parse(text);
+            Assert.AreEqual(123, nodeIdText.TryGetIdentifier(out uint n1) ? n1 : 0);
 
-            // implicit conversion;
-            ExpandedNodeId inodeIdText = text;
+            // explicit conversion;
+            ExpandedNodeId inodeIdText = (ExpandedNodeId)text;
             Assert.AreEqual(nodeIdText, inodeIdText);
 
             // implicit conversion;
@@ -112,51 +112,57 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             _ = new ExpandedNodeId(0, 123);
             _ = new ExpandedNodeId(guid1, 123);
 
-            id = "ns=1;s=Test";
+            id = ExpandedNodeId.Parse("ns=1;s=Test");
             ExpandedNodeId nodeId = NodeId.Parse("ns=1;s=Test");
             Assert.AreEqual(1, nodeId.NamespaceIndex);
-            Assert.AreEqual("Test", nodeId.Identifier);
+            Assert.AreEqual("Test", nodeId.IdentifierAsString);
+            Assert.AreEqual("Test", nodeId.TryGetIdentifier(out string s1) ? s1 : null);
             Assert.AreEqual("ns=1;s=Test", nodeId.ToString());
             Assert.AreEqual(nodeId, id);
             Assert.True(nodeId == id);
 
-            id = "s=Test";
+            id = (ExpandedNodeId)"s=Test";
             nodeId = NodeId.Parse("s=Test");
             Assert.AreEqual(0, nodeId.NamespaceIndex);
-            Assert.AreEqual("Test", nodeId.Identifier);
+            Assert.AreEqual("Test", nodeId.IdentifierAsString);
+            Assert.AreEqual("Test", nodeId.TryGetIdentifier(out string s4) ? s4 : null);
             Assert.AreEqual("s=Test", nodeId.ToString());
             Assert.AreEqual(nodeId, id);
             Assert.True(nodeId == id);
 
             const string namespaceUri = "http://opcfoundation.org/Namespace";
 
-            id = new ExpandedNodeId((uint)123, 321, namespaceUri, 2);
+            id = new ExpandedNodeId(123, namespaceUri, 2).WithNamespaceIndex(321);
             Assert.AreEqual(2, id.ServerIndex);
-            Assert.AreEqual(123, (uint)id.Identifier);
+            Assert.AreEqual(123, id.TryGetIdentifier(out uint n2) ? n2 : 0);
             Assert.AreEqual(321, id.NamespaceIndex);
-            Assert.AreEqual(namespaceUri, id.NamespaceUri);
-            Assert.AreEqual($"svr=2;nsu={namespaceUri};ns=321;i=123", id.ToString());
+            Assert.IsNull(id.NamespaceUri);
+            Assert.AreEqual($"svr=2;ns=321;i=123", id.ToString());
 
-            id = new ExpandedNodeId("Test", 123, namespaceUri, 1);
-            nodeId = new ExpandedNodeId(byteid2, 123, namespaceUri, 0);
-            _ = new ExpandedNodeId(null, 123, namespaceUri, 1);
-            nodeId2 = new ExpandedNodeId(guid1, 123, namespaceUri, 1);
+            id = new ExpandedNodeId(123, namespaceUri, 2);
+            Assert.AreEqual(2, id.ServerIndex);
+            Assert.AreEqual(123, id.TryGetIdentifier(out uint n3) ? n3 : 0);
+            Assert.AreEqual(0, id.NamespaceIndex);
+            Assert.AreEqual(namespaceUri, id.NamespaceUri);
+            Assert.AreEqual($"svr=2;nsu={namespaceUri};i=123", id.ToString());
+
+            id = new ExpandedNodeId("Test", namespaceUri, 1);
+            nodeId = new ExpandedNodeId(byteid2, namespaceUri, 0);
+            nodeId2 = new ExpandedNodeId(guid1, namespaceUri, 1);
             Assert.AreNotEqual(nodeId, nodeId2);
             Assert.AreNotEqual(nodeId.GetHashCode(), nodeId2.GetHashCode());
 
             const string teststring = "nsu=http://opcfoundation.org/Namespace;s=Test";
-            nodeId = teststring;
+            nodeId = (ExpandedNodeId)teststring;
             nodeId2 = ExpandedNodeId.Parse(teststring);
             Assert.AreEqual(nodeId, nodeId2);
             Assert.AreEqual(teststring, nodeId2.ToString());
 
             NUnit.Framework.Assert
-                .Throws<ArgumentException>(() => _ = new ExpandedNodeId(123, 123, namespaceUri, 1));
-            NUnit.Framework.Assert
                 .Throws<ServiceResultException>(() => _ = ExpandedNodeId.Parse("ns="));
             NUnit.Framework.Assert
                 .Throws<ServiceResultException>(() => _ = ExpandedNodeId.Parse("nsu="));
-            NUnit.Framework.Assert.Throws<ArgumentException>(() => id = "Test");
+            NUnit.Framework.Assert.Throws<ArgumentException>(() => id = (ExpandedNodeId)"Test");
             Assert.IsNull(NodeId.ToExpandedNodeId(default, null));
 
             string[] testStrings =
@@ -175,7 +181,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             {
                 id = ExpandedNodeId.Parse(testString);
                 Assert.AreEqual(testString, id.ToString());
-                id = testString;
+                id = (ExpandedNodeId)testString;
                 Assert.AreEqual(testString, id.ToString());
             }
         }
@@ -185,52 +191,53 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         {
             // Test numeric identifiers
             Assert.IsTrue(ExpandedNodeId.TryParse("i=1234", out ExpandedNodeId result));
-            Assert.AreEqual(1234u, result.Identifier);
+            Assert.AreEqual(1234u, result.TryGetIdentifier(out uint n1) ? n1 : 0);
             Assert.AreEqual(IdType.Numeric, result.IdType);
             Assert.AreEqual(0, result.NamespaceIndex);
 
             Assert.IsTrue(ExpandedNodeId.TryParse("ns=2;i=1234", out result));
-            Assert.AreEqual(1234u, result.Identifier);
+            Assert.AreEqual(1234u, result.TryGetIdentifier(out uint n2) ? n2 : 0);
             Assert.AreEqual(IdType.Numeric, result.IdType);
             Assert.AreEqual(2, result.NamespaceIndex);
 
             // Test string identifiers
             Assert.IsTrue(ExpandedNodeId.TryParse("s=HelloWorld", out result));
-            Assert.AreEqual("HelloWorld", result.Identifier);
+            Assert.AreEqual("HelloWorld", result.TryGetIdentifier(out string s1) ? s1 : 0);
             Assert.AreEqual(IdType.String, result.IdType);
             Assert.AreEqual(0, result.NamespaceIndex);
 
             Assert.IsTrue(ExpandedNodeId.TryParse("ns=2;s=HelloWorld", out result));
-            Assert.AreEqual("HelloWorld", result.Identifier);
+            Assert.AreEqual("HelloWorld", result.TryGetIdentifier(out string s2) ? s2 : null);
             Assert.AreEqual(IdType.String, result.IdType);
             Assert.AreEqual(2, result.NamespaceIndex);
 
             // Test with namespace URI
             Assert.IsTrue(ExpandedNodeId.TryParse("nsu=http://opcfoundation.org/UA/;s=Test", out result));
-            Assert.AreEqual("Test", result.Identifier);
+            Assert.AreEqual("Test", result.TryGetIdentifier(out string s3) ? s3 : null);
             Assert.AreEqual(IdType.String, result.IdType);
             Assert.AreEqual("http://opcfoundation.org/UA/", result.NamespaceUri);
 
             // Test with server index
             Assert.IsTrue(ExpandedNodeId.TryParse("svr=1;i=1234", out result));
-            Assert.AreEqual(1234u, result.Identifier);
+            Assert.AreEqual(1234u, result.TryGetIdentifier(out uint n3) ? n3 : 0);
             Assert.AreEqual(1u, result.ServerIndex);
 
             // Test with both server index and namespace URI
             Assert.IsTrue(ExpandedNodeId.TryParse("svr=1;nsu=http://test.org/;s=Test", out result));
-            Assert.AreEqual("Test", result.Identifier);
+            Assert.AreEqual("Test", result.TryGetIdentifier(out string s6) ? s6 : null);
             Assert.AreEqual(1u, result.ServerIndex);
             Assert.AreEqual("http://test.org/", result.NamespaceUri);
 
             // Test GUID identifiers
             Assert.IsTrue(ExpandedNodeId.TryParse("g=af469096-f02a-4563-940b-603958363b81", out result));
-            Assert.AreEqual(new Guid("af469096-f02a-4563-940b-603958363b81"), result.Identifier);
+            Assert.AreEqual(new Guid("af469096-f02a-4563-940b-603958363b81"),
+                result.TryGetIdentifier(out Guid g1) ? g1 : 0);
             Assert.AreEqual(IdType.Guid, result.IdType);
 
             // Test opaque identifiers (b=01020304 is valid base64 that decodes to specific bytes)
             Assert.IsTrue(ExpandedNodeId.TryParse("b=01020304", out result));
             byte[] expectedOpaqueBytes = Convert.FromBase64String("01020304");
-            Assert.AreEqual(expectedOpaqueBytes, result.Identifier);
+            Assert.AreEqual(expectedOpaqueBytes, result.TryGetIdentifier(out byte[] o1) ? o1 : null);
             Assert.AreEqual(IdType.Opaque, result.IdType);
 
             // Test null and empty
@@ -282,23 +289,23 @@ namespace Opc.Ua.Types.Tests.BuiltIn
 
             // Test with namespace URI
             Assert.IsTrue(ExpandedNodeId.TryParse(context, "nsu=http://test.org/;i=1234", out ExpandedNodeId result));
-            Assert.AreEqual(1234u, result.Identifier);
+            Assert.AreEqual(1234u, result.TryGetIdentifier(out uint n3) ? n3 : 0);
             Assert.AreEqual(2, result.NamespaceIndex);
 
             // Test with namespace index
             Assert.IsTrue(ExpandedNodeId.TryParse(context, "ns=2;s=Test", out result));
-            Assert.AreEqual("Test", result.Identifier);
+            Assert.AreEqual("Test", result.TryGetIdentifier(out string s1) ? s1 : null);
             Assert.AreEqual(2, result.NamespaceIndex);
 
             // Test with server URI - ServerUris table starts at index 0
             Assert.IsTrue(ExpandedNodeId.TryParse(context, "svu=urn:server1;i=1234", out result));
-            Assert.AreEqual(1234u, result.Identifier);
+            Assert.AreEqual(1234u, result.TryGetIdentifier(out uint n1) ? n1 : 0);
             Assert.AreEqual(0u, result.ServerIndex);  // First item in ServerUris is at index 0
 
             // Test with unknown namespace URI - ExpandedNodeId can store URIs not in the table
             // So this should succeed and create an ExpandedNodeId with the namespace URI
             Assert.IsTrue(ExpandedNodeId.TryParse(context, "nsu=http://unknown.org/;i=1234", out result));
-            Assert.AreEqual(1234u, result.Identifier);
+            Assert.AreEqual(1234u, result.TryGetIdentifier(out uint n2) ? n2 : 0);
             Assert.AreEqual("http://unknown.org/", result.NamespaceUri);
 
             // Test with unknown server URI (should fail because ServerIndex must be resolved)

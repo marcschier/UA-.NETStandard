@@ -563,36 +563,35 @@ namespace Opc.Ua
         public ExpandedNodeId ReadExpandedNodeId(string fieldName)
         {
             byte encodingByte = SafeReadByte();
-            var expandedNodeId = new ExpandedNodeId();
 
             ReadNodeIdBody(encodingByte, out NodeId body);
-            expandedNodeId.InnerNodeId = body;
+            var expandedNodeId = new ExpandedNodeId(body);
 
             // read the namespace uri if present.
             if ((encodingByte & 0x80) != 0)
             {
                 string namespaceUri = ReadString(null);
-                expandedNodeId = expandedNodeId.SetNamespaceUri(namespaceUri);
+                expandedNodeId = expandedNodeId.WithNamespaceUri(namespaceUri);
             }
 
             // read the server index if present.
             if ((encodingByte & 0x40) != 0)
             {
                 uint serverIndex = SafeReadUInt32();
-                expandedNodeId = expandedNodeId.SetServerIndex(serverIndex);
+                expandedNodeId = expandedNodeId.WithServerIndex(serverIndex);
             }
 
             if (m_namespaceMappings != null &&
                 m_namespaceMappings.Length > expandedNodeId.NamespaceIndex)
             {
-                expandedNodeId = expandedNodeId.SetNamespaceIndex(
+                expandedNodeId = expandedNodeId.WithNamespaceIndex(
                     m_namespaceMappings[expandedNodeId.NamespaceIndex]);
             }
 
             if (m_serverMappings != null &&
                 m_serverMappings.Length > expandedNodeId.ServerIndex)
             {
-                expandedNodeId = expandedNodeId.SetServerIndex(
+                expandedNodeId = expandedNodeId.WithServerIndex(
                     m_serverMappings[expandedNodeId.NamespaceIndex]);
             }
 
@@ -728,7 +727,7 @@ namespace Opc.Ua
         public IEncodeable ReadEncodeable(
             string fieldName,
             Type systemType,
-            ExpandedNodeId encodeableTypeId = null)
+            ExpandedNodeId encodeableTypeId = default)
         {
             if (systemType == null)
             {
@@ -743,7 +742,7 @@ namespace Opc.Ua
                     systemType.FullName);
             }
 
-            if (encodeableTypeId != null)
+            if (!encodeableTypeId.IsNull)
             {
                 // set type identifier for custom complex data types before decode.
 
@@ -1277,7 +1276,7 @@ namespace Opc.Ua
         public Array ReadEncodeableArray(
             string fieldName,
             Type systemType,
-            ExpandedNodeId encodeableTypeId = null)
+            ExpandedNodeId encodeableTypeId = default)
         {
             int length = ReadArrayLength();
 
@@ -1322,7 +1321,7 @@ namespace Opc.Ua
             int valueRank,
             BuiltInType builtInType,
             Type systemType = null,
-            ExpandedNodeId encodeableTypeId = null)
+            ExpandedNodeId encodeableTypeId = default)
         {
             if (valueRank == ValueRanks.OneDimension)
             {
@@ -1567,7 +1566,7 @@ namespace Opc.Ua
             ref Type systemType,
             ExpandedNodeId encodeableTypeId)
         {
-            if (encodeableTypeId != null && systemType == null)
+            if (!encodeableTypeId.IsNull && systemType == null)
             {
                 systemType = Context.Factory.GetSystemType(encodeableTypeId);
             }
@@ -1992,7 +1991,7 @@ namespace Opc.Ua
             // convert to absolute node id.
             extension.TypeId = NodeId.ToExpandedNodeId(typeId, Context.NamespaceUris);
 
-            if (!typeId.IsNullNodeId && NodeId.IsNull(extension.TypeId))
+            if (!typeId.IsNullNodeId && extension.TypeId.IsNull)
             {
                 m_logger.LogWarning(
                     "Cannot deserialize extension objects if the NamespaceUri is not in the NamespaceTable: Type = {Type}",

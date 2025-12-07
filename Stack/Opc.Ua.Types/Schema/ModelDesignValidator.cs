@@ -1352,7 +1352,7 @@ namespace Opc.Ua.Schema.Model
 
                 if (hasNumericId || hasStringId)
                 {
-                    NodeId nodeId = hasNumericId ? new NodeId(node.NumericId) : new NodeId(node.StringId);
+                    NodeId nodeId = hasNumericId ? new NodeId(node.NumericId) : new NodeId(node.StringId, 0);
                     nodeId = nodeId.WithNamespaceIndex(namespaceUris.GetIndexOrAppend(node.SymbolicId.Namespace));
 
                     index[nodeId] = node;

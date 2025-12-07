@@ -325,7 +325,7 @@ namespace Opc.Ua
                 {
                     // ignore invalid references.
                     if (reference.ReferenceTypeId.IsNullNodeId ||
-                        NodeId.IsNull(reference.TargetId))
+                        reference.TargetId.IsNull)
                     {
                         continue;
                     }
@@ -333,7 +333,7 @@ namespace Opc.Ua
                     // ignore missing targets.
                     ExpandedNodeId targetId = reference.TargetId;
 
-                    if (NodeId.IsNull(targetId))
+                    if (targetId.IsNull)
                     {
                         continue;
                     }
@@ -469,7 +469,7 @@ namespace Opc.Ua
                 targetNode.BrowseName = reference.BrowseName;
                 targetNode.DisplayName = reference.DisplayName;
 
-                if (!NodeId.IsNull(reference.TypeDefinition))
+                if (!reference.TypeDefinition.IsNull)
                 {
                     targetNode.ReferenceTable
                         .Add(ReferenceTypeIds.HasTypeDefinition, false, reference.TypeDefinition);
@@ -520,7 +520,7 @@ namespace Opc.Ua
                 {
                     // ignore invalid references.
                     if (reference.ReferenceTypeId.IsNullNodeId ||
-                        NodeId.IsNull(reference.TargetId))
+                        reference.TargetId.IsNull)
                     {
                         continue;
                     }
@@ -669,7 +669,7 @@ namespace Opc.Ua
         /// <param name="node">The node.</param>
         private void InternalAdd(RemoteNode node)
         {
-            if (node == null || node.NodeId == null)
+            if (node == null || node.NodeId.IsNull)
             {
                 return;
             }
@@ -683,7 +683,7 @@ namespace Opc.Ua
         /// <param name="node">The node.</param>
         private void InternalRemove(RemoteNode node)
         {
-            if (node == null || node.NodeId == null)
+            if (node == null || node.NodeId.IsNull)
             {
                 return;
             }
@@ -697,7 +697,7 @@ namespace Opc.Ua
         /// <param name="nodeId">The node identifier.</param>
         private INode InternalFind(ExpandedNodeId nodeId)
         {
-            if (nodeId == null)
+            if (nodeId.IsNull)
             {
                 return null;
             }

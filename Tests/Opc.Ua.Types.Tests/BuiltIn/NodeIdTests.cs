@@ -66,7 +66,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             Assert.False(nodeId2 > inodeId2);
 
             const string text = "i=123";
-            var nodeIdText = new NodeId(text);
+            var nodeIdText = NodeId.Parse(text);
             Assert.True(nodeIdText.TryGetIdentifier(out uint t1));
             Assert.AreEqual(123, t1);
             // implicit conversion;
@@ -113,11 +113,11 @@ namespace Opc.Ua.Types.Tests.BuiltIn
 
             NodeId opaqueId = "!,7B"u8.ToArray();
             NodeId stringId1 = "ns=1;s=Test";
-            var stringId2 = new NodeId("ns=1;s=Test");
+            var stringId2 = NodeId.Parse("ns=1;s=Test");
             Assert.AreEqual(stringId1, stringId2);
-            NUnit.Framework.Assert.Throws<ArgumentException>(() => new NodeId("Test"));
-            NUnit.Framework.Assert.Throws<ArgumentException>(() => new NodeId("nsu=urn:xyz;Test"));
-            var expandedId1 = new ExpandedNodeId("nsu=urn:xyz;Test");
+            NUnit.Framework.Assert.Throws<ArgumentException>(() => NodeId.Parse("Test"));
+            NUnit.Framework.Assert.Throws<ArgumentException>(() => NodeId.Parse("nsu=urn:xyz;Test"));
+            var expandedId1 = ExpandedNodeId.Parse("nsu=urn:xyz;Test");
             Assert.NotNull(expandedId1);
             var nullId = ExpandedNodeId.ToNodeId(null, new NamespaceTable());
             Assert.IsTrue(nullId.IsNullNodeId);
@@ -154,13 +154,13 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             Assert.IsNull(NodeId.ToExpandedNodeId(default, null));
 
             // IsNull
-            Assert.True(NodeId.IsNull((ExpandedNodeId)null));
-            Assert.True(NodeId.IsNull(new ExpandedNodeId(Guid.Empty)));
-            Assert.True(NodeId.IsNull(ExpandedNodeId.Null));
-            Assert.True(NodeId.IsNull(new ExpandedNodeId([])));
-            Assert.True(NodeId.IsNull(new ExpandedNodeId(string.Empty, 0)));
-            Assert.True(NodeId.IsNull(new ExpandedNodeId(0)));
-            Assert.False(NodeId.IsNull(new ExpandedNodeId(1)));
+            Assert.True(new ExpandedNodeId(NodeId.Null).IsNull);
+            Assert.True(new ExpandedNodeId(Guid.Empty).IsNull);
+            Assert.True(ExpandedNodeId.Null.IsNull);
+            Assert.True(new ExpandedNodeId([]).IsNull);
+            Assert.True(new ExpandedNodeId(string.Empty, 0).IsNull);
+            Assert.True(new ExpandedNodeId(0).IsNull);
+            Assert.False(new ExpandedNodeId(1).IsNull);
 
             string[] testStrings =
             [
@@ -195,7 +195,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
                 NodeId.Null,
                 new(0),
                 new(Guid.Empty),
-                new(string.Empty),
+                new(string.Empty, 0),
                 new([])
             };
 
@@ -259,7 +259,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
                     nodeId = new NodeId(0, 0);
                     break;
                 case IdType.String:
-                    nodeId = new NodeId(string.Empty);
+                    nodeId = NodeId.Parse(string.Empty);
                     break;
                 case IdType.Guid:
                     nodeId = new NodeId(Guid.Empty);
@@ -282,14 +282,14 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             Assert.AreEqual(nodeId, new NodeId(Guid.Empty));
             Assert.AreEqual(nodeId, new NodeId([]));
             Assert.AreEqual(nodeId, new NodeId((byte[])null));
-            Assert.AreEqual(nodeId, new NodeId((string)null));
+            Assert.AreEqual(nodeId, NodeId.Parse((string)null));
 
             Assert.True(nodeId.Equals(NodeId.Null));
             Assert.True(nodeId.Equals(new NodeId(0, 0)));
             Assert.True(nodeId.Equals(new NodeId(Guid.Empty)));
             Assert.True(nodeId.Equals(new NodeId([])));
             Assert.True(nodeId.Equals(new NodeId((byte[])null)));
-            Assert.True(nodeId.Equals(new NodeId((string)null)));
+            Assert.True(nodeId.Equals(NodeId.Parse((string)null)));
 
             var nodeIdBasedDataValue = new DataValue(new Variant(nodeId));
 

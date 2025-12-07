@@ -751,6 +751,7 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.DateTime:
                 case BasicDataType.Guid:
                 case BasicDataType.NodeId:
+                case BasicDataType.ExpandedNodeId:
                     return true;
                 default:
                     return false;
@@ -909,7 +910,7 @@ namespace Opc.Ua.SourceGeneration
                     if (decodedValue is not Guid guidValue ||
                         guidValue == Guid.Empty)
                     {
-                        return "global::Opc.Ua.Guid.Empty";
+                        return "global::System.Guid.Empty";
                     }
                     return CoreUtils.Format(
                         "global::System.Guid.Parse(\"{0}\")",
@@ -943,7 +944,7 @@ namespace Opc.Ua.SourceGeneration
                         absoluteId);
                 case BasicDataType.ExpandedNodeId:
                     if (decodedValue is not ExpandedNodeId expandedNodeId ||
-                        NodeId.IsNull(expandedNodeId))
+                        expandedNodeId.IsNull)
                     {
                         return "global::Opc.Ua.ExpandedNodeId.Null";
                     }

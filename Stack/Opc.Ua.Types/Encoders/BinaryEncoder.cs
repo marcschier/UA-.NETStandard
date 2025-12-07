@@ -690,7 +690,7 @@ namespace Opc.Ua
         public void WriteExpandedNodeId(string fieldName, ExpandedNodeId value)
         {
             // write a null node id.
-            if (value == null)
+            if (value.IsNull)
             {
                 WriteUInt16(null, 0);
                 return;
@@ -952,7 +952,7 @@ namespace Opc.Ua
 
             var localTypeId = ExpandedNodeId.ToNodeId(typeId, Context.NamespaceUris);
 
-            if (localTypeId.IsNullNodeId && !NodeId.IsNull(typeId))
+            if (localTypeId.IsNullNodeId && !typeId.IsNull)
             {
                 if (encodeable != null)
                 {
@@ -2318,7 +2318,7 @@ namespace Opc.Ua
                     break;
                 case NodeIdEncodingBits.ByteString:
                     WriteUInt16(null, namespaceIndex);
-                    WriteByteString(null, nodeId.OpqaueIdentifer);
+                    WriteByteString(null, nodeId.OpaqueIdentifer);
                     break;
                 default:
                     throw ServiceResultException.Unexpected(

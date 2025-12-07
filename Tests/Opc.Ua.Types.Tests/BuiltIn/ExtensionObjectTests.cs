@@ -68,7 +68,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             Assert.Null(Ua.ExtensionObject.ToArray(null, typeof(object)));
             Assert.Null(Ua.ExtensionObject.ToList<object>(null));
             // constructor by ExpandedNodeId
-            extensionObject = new ExtensionObject((ExpandedNodeId)null);
+            extensionObject = new ExtensionObject(ExpandedNodeId.Null);
             Assert.AreEqual(0, extensionObject.GetHashCode());
             NUnit.Framework.Assert
                 .Throws<ArgumentNullException>(() => new ExtensionObject(extensionObject_null));

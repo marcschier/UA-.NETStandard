@@ -3347,7 +3347,7 @@ namespace Opc.Ua.Server
         /// </summary>
         public ILocalNode GetLocalNode(ExpandedNodeId nodeId)
         {
-            if (nodeId == null)
+            if (nodeId.IsNull)
             {
                 return null;
             }
@@ -3653,7 +3653,7 @@ namespace Opc.Ua.Server
                 {
                     ExpandedNodeId typeDefinitionId = metadata.TypeDefinition;
 
-                    if (typeDefinitionId == null)
+                    if (typeDefinitionId.IsNull)
                     {
                         return StatusCodes.BadDeadbandFilterInvalid;
                     }

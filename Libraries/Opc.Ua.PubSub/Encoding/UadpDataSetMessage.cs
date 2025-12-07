@@ -799,12 +799,14 @@ namespace Opc.Ua.PubSub.Encoding
                                 valueToEncode as LocalizedText);
                             break;
                         case BuiltInType.NodeId:
-                            binaryEncoder.WriteNodeId("NodeId", valueToEncode is NodeId n ? n : default);
+                            binaryEncoder.WriteNodeId(
+                                "NodeId",
+                                valueToEncode is NodeId n ? n : default);
                             break;
                         case BuiltInType.ExpandedNodeId:
                             binaryEncoder.WriteExpandedNodeId(
                                 "ExpandedNodeId",
-                                valueToEncode as ExpandedNodeId);
+                                valueToEncode is ExpandedNodeId e ? e : default);
                             break;
                         case BuiltInType.StatusCode:
                             binaryEncoder.WriteStatusCode("StatusCode", (StatusCode)valueToEncode);

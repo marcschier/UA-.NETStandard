@@ -54,7 +54,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public bool IsKnown(ExpandedNodeId typeId)
         {
-            if (NodeId.IsNull(typeId) || typeId.ServerIndex != 0)
+            if (typeId.IsNull || typeId.ServerIndex != 0)
             {
                 return false;
             }
@@ -89,7 +89,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public NodeId FindSuperType(ExpandedNodeId typeId)
         {
-            if (NodeId.IsNull(typeId) || typeId.ServerIndex != 0)
+            if (typeId.IsNull || typeId.ServerIndex != 0)
             {
                 return NodeId.Null;
             }
@@ -158,7 +158,7 @@ namespace Opc.Ua
         {
             var subtypes = new List<NodeId>();
 
-            if (typeId == null)
+            if (typeId.IsNull)
             {
                 return subtypes;
             }
@@ -184,12 +184,12 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public bool IsTypeOf(ExpandedNodeId subTypeId, ExpandedNodeId superTypeId)
         {
-            if (NodeId.IsNull(subTypeId) || subTypeId.ServerIndex != 0)
+            if (subTypeId.IsNull || subTypeId.ServerIndex != 0)
             {
                 return false;
             }
 
-            if (NodeId.IsNull(superTypeId) || superTypeId.ServerIndex != 0)
+            if (superTypeId.IsNull || superTypeId.ServerIndex != 0)
             {
                 return false;
             }
@@ -289,7 +289,7 @@ namespace Opc.Ua
         public bool IsEncodingOf(ExpandedNodeId encodingId, ExpandedNodeId datatypeId)
         {
             // check for invalid ids.
-            if (NodeId.IsNull(encodingId) || NodeId.IsNull(datatypeId))
+            if (encodingId.IsNull || datatypeId.IsNull)
             {
                 return false;
             }
@@ -498,7 +498,7 @@ namespace Opc.Ua
             ExpandedNodeId superTypeId = node.References
                 .FindTarget(ReferenceTypeIds.HasSubtype, true, false, null, 0);
 
-            if (superTypeId != null)
+            if (!superTypeId.IsNull)
             {
                 localsuperTypeId = ExpandedNodeId.ToNodeId(superTypeId, m_namespaceUris);
 
@@ -709,7 +709,7 @@ namespace Opc.Ua
         /// <param name="typeId">The type identifier.</param>
         public void Remove(ExpandedNodeId typeId)
         {
-            if (NodeId.IsNull(typeId) || typeId.ServerIndex != 0)
+            if (typeId.IsNull || typeId.ServerIndex != 0)
             {
                 return;
             }

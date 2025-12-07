@@ -1367,7 +1367,7 @@ namespace Opc.Ua
         /// </summary>
         public void WriteExpandedNodeId(string fieldName, ExpandedNodeId value)
         {
-            bool isNull = NodeId.IsNull(value);
+            bool isNull = value.IsNull;
 
             if (fieldName != null && isNull && !IncludeDefaultValues)
             {
@@ -1777,7 +1777,7 @@ namespace Opc.Ua
 
             PushStructure(fieldName);
 
-            ExpandedNodeId typeId = !NodeId.IsNull(value.TypeId)
+            ExpandedNodeId typeId = !value.TypeId.IsNull
                 ? value.TypeId
                 : encodeable?.TypeId ?? NodeId.Null;
             var localTypeId = ExpandedNodeId.ToNodeId(typeId, Context.NamespaceUris);

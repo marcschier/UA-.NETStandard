@@ -575,7 +575,7 @@ namespace Opc.Ua
             var hits = new List<IReference>();
 
             // check for null.
-            if (NodeId.IsNull(targetId))
+            if (targetId.IsNull)
             {
                 return hits;
             }
@@ -986,7 +986,7 @@ namespace Opc.Ua
                 return false;
             }
 
-            if (NodeId.IsNull(key.TargetId))
+            if (key.TargetId.IsNull)
             {
                 if (throwOnError)
                 {

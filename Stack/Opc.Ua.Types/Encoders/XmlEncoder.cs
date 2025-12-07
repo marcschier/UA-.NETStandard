@@ -625,21 +625,20 @@ namespace Opc.Ua
         /// </summary>
         private void WriteExpandedNodeId(string fieldName, ExpandedNodeId value, bool isArrayElement)
         {
-            value = value ?? ExpandedNodeId.Null;
-            if (BeginField(fieldName, NodeId.IsNull(value), true, isArrayElement))
+            if (BeginField(fieldName, value.IsNull, true, isArrayElement))
             {
                 PushNamespace(Namespaces.OpcUaXsd);
 
                 ushort namespaceIndex = value.NamespaceIndex;
 
-                if (!NodeId.IsNull(value) && m_namespaceMappings != null && m_namespaceMappings.Length > namespaceIndex)
+                if (!value.IsNull && m_namespaceMappings != null && m_namespaceMappings.Length > namespaceIndex)
                 {
                     namespaceIndex = m_namespaceMappings[namespaceIndex];
                 }
 
                 uint serverIndex = value.ServerIndex;
 
-                if (!NodeId.IsNull(value) && m_serverMappings != null && m_serverMappings.Length > serverIndex)
+                if (!value.IsNull && m_serverMappings != null && m_serverMappings.Length > serverIndex)
                 {
                     serverIndex = m_serverMappings[serverIndex];
                 }
@@ -648,7 +647,7 @@ namespace Opc.Ua
                 ExpandedNodeId.Format(
                     CultureInfo.InvariantCulture,
                     buffer,
-                    value.Identifier,
+                    value.IdentifierAsString,
                     value.IdType,
                     namespaceIndex,
                     value.NamespaceUri,
@@ -874,7 +873,7 @@ namespace Opc.Ua
 
                 var localTypeId = ExpandedNodeId.ToNodeId(typeId, Context.NamespaceUris);
 
-                if (localTypeId.IsNullNodeId && !NodeId.IsNull(typeId))
+                if (localTypeId.IsNullNodeId && !typeId.IsNull)
                 {
                     if (encodeable != null)
                     {

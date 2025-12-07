@@ -953,7 +953,7 @@ namespace Opc.Ua.Export
             NamespaceTable namespaceUris,
             StringTable serverUris)
         {
-            if (NodeId.IsNull(source))
+            if (source.IsNull)
             {
                 return string.Empty;
             }
@@ -976,7 +976,7 @@ namespace Opc.Ua.Export
             }
 
             uint serverIndex = ExportServerIndex(source.ServerIndex, serverUris);
-            source = new ExpandedNodeId(source.Identifier, namespaceIndex, null, serverIndex);
+            source = source.WithNamespaceIndex(namespaceIndex).WithServerIndex(serverIndex);
             return source.ToString();
         }
 
@@ -1027,10 +1027,10 @@ namespace Opc.Ua.Export
                     namespaceUri = namespaceUris.GetString(namespaceIndex);
                 }
 
-                return new ExpandedNodeId(nodeId.Identifier, 0, namespaceUri, serverIndex);
+                return nodeId.WithNamespaceUri(namespaceUri).WithServerIndex(serverIndex);
             }
 
-            return new ExpandedNodeId(nodeId.Identifier, namespaceIndex, null, 0);
+            return nodeId.WithNamespaceIndex(namespaceIndex).WithServerIndex(0);
         }
 
         /// <summary>

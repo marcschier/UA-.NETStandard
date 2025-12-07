@@ -2337,11 +2337,13 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                     // check dataValues values
                     string fieldName = fieldEncoded.FieldMetaData.Name;
 
-                    var encodedExpandedNodeId = dataValueEncoded.Value as ExpandedNodeId;
-                    var decodedExpandedNodeId = dataValueDecoded.Value as ExpandedNodeId;
-                    if (encodedExpandedNodeId != null &&
+                    var encodedExpandedNodeId =
+                        dataValueEncoded.Value is ExpandedNodeId ee ? ee : default;
+                    var decodedExpandedNodeId =
+                        dataValueDecoded.Value is ExpandedNodeId de ? de : default;
+                    if (!encodedExpandedNodeId.IsNull &&
                         !encodedExpandedNodeId.IsAbsolute &&
-                        decodedExpandedNodeId != null &&
+                        !decodedExpandedNodeId.IsNull &&
                         decodedExpandedNodeId.IsAbsolute)
                     {
                         dataValueDecoded.Value = ExpandedNodeId.ToNodeId(
@@ -3086,12 +3088,12 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                                                         ExpandedNodeId.Format(
                                                             CultureInfo.InvariantCulture,
                                                             stringBuilder,
-                                                            expandedNodeId.Identifier,
+                                                            expandedNodeId.IdentifierAsString,
                                                             expandedNodeId.IdType,
                                                             namespaceIndex,
                                                             string.Empty,
                                                             expandedNodeId.ServerIndex);
-                                                        dataValue.Value = new ExpandedNodeId(
+                                                        dataValue.Value = ExpandedNodeId.Parse(
                                                             stringBuilder.ToString());
                                                     }
                                                     Assert.IsTrue(

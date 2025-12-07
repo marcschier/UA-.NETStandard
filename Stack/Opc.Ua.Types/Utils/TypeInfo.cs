@@ -269,7 +269,7 @@ namespace Opc.Ua
                 return NodeId.Null;
             }
 
-            if (value is IEncodeable encodable && encodable.TypeId != null)
+            if (value is IEncodeable encodable && !encodable.TypeId.IsNull)
             {
                 namespaceTable ??= AmbientMessageContext.CurrentContext?.NamespaceUris;
                 return ExpandedNodeId.ToNodeId(encodable.TypeId, namespaceTable);
@@ -677,19 +677,19 @@ namespace Opc.Ua
         /// <returns>The system type for the <paramref name="datatypeId"/>.</returns>
         public static Type GetSystemType(ExpandedNodeId datatypeId, IEncodeableTypeLookup factory)
         {
-            if (datatypeId == null)
+            if (datatypeId.IsNull)
             {
                 return null;
             }
 
             if (datatypeId.NamespaceIndex != 0 ||
-                datatypeId.IdType != IdType.Numeric ||
-                datatypeId.IsAbsolute)
+                datatypeId.IsAbsolute ||
+                !datatypeId.TryGetIdentifier(out uint numericId))
             {
                 return factory.GetSystemType(datatypeId);
             }
 
-            switch ((uint)datatypeId.Identifier)
+            switch (numericId)
             {
                 case DataTypes.Boolean:
                     return typeof(bool);

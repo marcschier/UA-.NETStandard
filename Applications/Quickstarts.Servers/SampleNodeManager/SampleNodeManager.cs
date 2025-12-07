@@ -572,7 +572,7 @@ namespace Opc.Ua.Sample
                     IReference reference = references[ii];
 
                     // nothing to do with external nodes.
-                    if (reference.TargetId == null || reference.TargetId.IsAbsolute)
+                    if (reference.TargetId.IsNull || reference.TargetId.IsAbsolute)
                     {
                         continue;
                     }

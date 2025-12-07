@@ -52,7 +52,11 @@ namespace Opc.Ua
             typeof(NodeId),
             typeof(NodeIdCollection),
             typeof(SerializableNodeId),
-            typeof(SerializableNodeIdCollection)
+            typeof(SerializableNodeIdCollection),
+            typeof(ExpandedNodeId),
+            typeof(ExpandedNodeIdCollection),
+            typeof(SerializableExpandedNodeId),
+            typeof(SerializableExpandedNodeIdCollection)
         ];
 
         /// <summary>
@@ -82,6 +86,18 @@ namespace Opc.Ua
             {
                 return obj is SerializableNodeIdCollection value ?
                     (NodeIdCollection)value :
+                    obj;
+            }
+            if (targetType == typeof(ExpandedNodeId))
+            {
+                return obj is SerializableExpandedNodeId value ?
+                    value.ExpandedNodeId :
+                    obj;
+            }
+            if (targetType == typeof(ExpandedNodeIdCollection))
+            {
+                return obj is SerializableExpandedNodeIdCollection value ?
+                    (ExpandedNodeIdCollection)value :
                     obj;
             }
             if (targetType == typeof(Guid))
@@ -131,6 +147,35 @@ namespace Opc.Ua
                     new SerializableNodeIdCollection(value) :
                     obj;
             }
+            if (targetType == typeof(SerializableExpandedNodeId))
+            {
+                if (obj is SerializableExpandedNodeId value)
+                {
+                    return value;
+                }
+                targetType = obj?.GetType() ?? targetType;
+            }
+            if (targetType == typeof(ExpandedNodeId))
+            {
+                return new SerializableExpandedNodeId(
+                    obj is ExpandedNodeId value ?
+                    value :
+                    ExpandedNodeId.Null);
+            }
+            if (targetType == typeof(SerializableExpandedNodeIdCollection))
+            {
+                if (obj is SerializableExpandedNodeIdCollection value)
+                {
+                    return value;
+                }
+                targetType = obj?.GetType() ?? targetType;
+            }
+            if (targetType == typeof(ExpandedNodeIdCollection))
+            {
+                return obj is ExpandedNodeIdCollection value ?
+                    new SerializableExpandedNodeIdCollection(value) :
+                    obj;
+            }
             if (targetType == typeof(Uuid))
             {
                 if (obj is Uuid value)
@@ -170,6 +215,14 @@ namespace Opc.Ua
             if (type == typeof(NodeIdCollection))
             {
                 return typeof(SerializableNodeIdCollection);
+            }
+            if (type == typeof(ExpandedNodeId))
+            {
+                return typeof(SerializableExpandedNodeId);
+            }
+            if (type == typeof(ExpandedNodeIdCollection))
+            {
+                return typeof(SerializableExpandedNodeIdCollection);
             }
             if (type == typeof(Guid))
             {
