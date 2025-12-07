@@ -327,7 +327,7 @@ namespace Opc.Ua
             get => m_browseName;
             set
             {
-                if (!ReferenceEquals(m_browseName, value))
+                if (m_browseName != value)
                 {
                     m_changeMasks |= NodeStateChangeMasks.NonValue;
                 }
@@ -854,7 +854,7 @@ namespace Opc.Ua
 
             if (!string.IsNullOrEmpty(SymbolicName))
             {
-                if (m_browseName == null || SymbolicName != m_browseName.Name)
+                if (SymbolicName != m_browseName.Name)
                 {
                     attributesToSave |= AttributesToSave.SymbolicName;
                 }
@@ -874,7 +874,7 @@ namespace Opc.Ua
 
             if (!LocalizedText.IsNullOrEmpty(m_displayName))
             {
-                if (m_browseName == null ||
+                if (m_browseName.IsNullQn ||
                     !string.IsNullOrEmpty(m_displayName.Locale) ||
                     m_displayName.Text != m_browseName.Name)
                 {
@@ -975,7 +975,7 @@ namespace Opc.Ua
                 m_browseName = decoder.ReadQualifiedName(null);
             }
 
-            if (string.IsNullOrEmpty(SymbolicName) && m_browseName != null)
+            if (string.IsNullOrEmpty(SymbolicName) && !m_browseName.IsNullQn)
             {
                 SymbolicName = m_browseName.Name;
             }
@@ -990,7 +990,7 @@ namespace Opc.Ua
                 m_displayName = decoder.ReadLocalizedText(null);
             }
 
-            if (LocalizedText.IsNullOrEmpty(m_displayName) && m_browseName != null)
+            if (LocalizedText.IsNullOrEmpty(m_displayName) && !m_browseName.IsNullQn)
             {
                 m_displayName = m_browseName.Name;
             }
@@ -1093,7 +1093,7 @@ namespace Opc.Ua
                 attributesToLoad &= ~AttributesToSave.BrowseName;
             }
 
-            if (string.IsNullOrEmpty(symbolicName) && browseName != null)
+            if (string.IsNullOrEmpty(symbolicName) && !browseName.IsNullQn)
             {
                 symbolicName = browseName.Name;
             }
@@ -1166,7 +1166,7 @@ namespace Opc.Ua
                 attributesToLoad &= ~AttributesToSave.BrowseName;
             }
 
-            if (string.IsNullOrEmpty(symbolicName) && browseName != null)
+            if (string.IsNullOrEmpty(symbolicName) && !browseName.IsNullQn)
             {
                 symbolicName = browseName.Name;
             }
@@ -1398,7 +1398,7 @@ namespace Opc.Ua
 
             if (!LocalizedText.IsNullOrEmpty(m_displayName))
             {
-                if (m_browseName == null ||
+                if (m_browseName.IsNullQn ||
                     !string.IsNullOrEmpty(m_displayName.Locale) ||
                     m_browseName.Name != m_displayName.Text)
                 {
@@ -1473,7 +1473,7 @@ namespace Opc.Ua
                 DisplayName = decoder.ReadLocalizedText("DisplayName");
             }
 
-            if (LocalizedText.IsNullOrEmpty(m_displayName) && m_browseName != null)
+            if (LocalizedText.IsNullOrEmpty(m_displayName) && !m_browseName.IsNullQn)
             {
                 DisplayName = m_browseName.Name;
             }
@@ -1821,7 +1821,7 @@ namespace Opc.Ua
                 attributesToLoad &= ~AttributesToSave.DisplayName;
             }
 
-            if (LocalizedText.IsNullOrEmpty(displayName) && browseName != null)
+            if (LocalizedText.IsNullOrEmpty(displayName) && !browseName.IsNullQn)
             {
                 displayName = browseName.Name;
             }
@@ -2069,7 +2069,7 @@ namespace Opc.Ua
                 displayName = decoder.ReadLocalizedText("DisplayName");
             }
 
-            if (LocalizedText.IsNullOrEmpty(displayName) && browseName != null)
+            if (LocalizedText.IsNullOrEmpty(displayName) && !browseName.IsNullQn)
             {
                 displayName = browseName.Name;
             }

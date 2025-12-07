@@ -915,14 +915,14 @@ namespace Opc.Ua.Client.Tests
             {
                 new ReferenceDescription
                 {
-                    NodeId = new ExpandedNodeId("ns=2;s=TestNode1"),
+                    NodeId = ExpandedNodeId.Parse("ns=2;s=TestNode1"),
                     BrowseName = "TestBrowseName1",
                     DisplayName = "TestDisplayName1",
                     NodeClass = NodeClass.Variable
                 },
                 new ReferenceDescription
                 {
-                    NodeId = new ExpandedNodeId("ns=2;s=TestNode2"),
+                    NodeId = ExpandedNodeId.Parse("ns=2;s=TestNode2"),
                     BrowseName = "TestBrowseName2",
                     DisplayName = "TestDisplayName2",
                     NodeClass = NodeClass.Variable
@@ -987,14 +987,14 @@ namespace Opc.Ua.Client.Tests
             {
                 new ReferenceDescription
                 {
-                    NodeId = new ExpandedNodeId("ns=2;s=TestNode1"),
+                    NodeId = ExpandedNodeId.Parse("ns=2;s=TestNode1"),
                     BrowseName = "TestBrowseName1",
                     DisplayName = "TestDisplayName1",
                     NodeClass = NodeClass.Variable
                 },
                 new ReferenceDescription
                 {
-                    NodeId = new ExpandedNodeId("ns=2;s=TestNode2"),
+                    NodeId = ExpandedNodeId.Parse("ns=2;s=TestNode2"),
                     BrowseName = "TestBrowseName2",
                     DisplayName = "TestDisplayName2",
                     NodeClass = NodeClass.Variable
@@ -1070,7 +1070,7 @@ namespace Opc.Ua.Client.Tests
             var nodeId = NodeId.Parse("ns=2;s=TestNode");
             var reference = new ReferenceDescription
             {
-                NodeId = new ExpandedNodeId("ns=2;s=TestNode1"),
+                NodeId = ExpandedNodeId.Parse("ns=2;s=TestNode1"),
                 BrowseName = "TestBrowseName1",
                 DisplayName = "TestDisplayName1",
                 NodeClass = NodeClass.Variable
@@ -1112,7 +1112,7 @@ namespace Opc.Ua.Client.Tests
             var nodeId = NodeId.Parse("ns=2;s=TestNode");
             var reference = new ReferenceDescription
             {
-                NodeId = new ExpandedNodeId("ns=2;s=TestNode1"),
+                NodeId = ExpandedNodeId.Parse("ns=2;s=TestNode1"),
                 BrowseName = "TestBrowseName1",
                 DisplayName = "TestDisplayName1",
                 NodeClass = NodeClass.Variable

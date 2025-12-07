@@ -356,7 +356,7 @@ namespace Opc.Ua.Server
                     // silently ignore bad values.
                     if (reference == null ||
                         reference.ReferenceTypeId.IsNullNodeId ||
-                        NodeId.IsNull(reference.TargetId))
+                        reference.TargetId.IsNull)
                     {
                         continue;
                     }
@@ -2471,7 +2471,7 @@ namespace Opc.Ua.Server
                 return;
             }
 
-            if (!NodeId.IsNull(existingTypeId))
+            if (!existingTypeId.IsNull)
             {
                 if (m_nodes.TypeTree.IsTypeOf(existingTypeId, typeDefinitionId))
                 {
@@ -2927,7 +2927,7 @@ namespace Opc.Ua.Server
                 // check need to connect subtypes to the supertype if they are being deleted.
                 ExpandedNodeId supertypeId = Server.TypeTree.FindSuperType(node.NodeId);
 
-                if (!NodeId.IsNull(supertypeId))
+                if (!supertypeId.IsNull)
                 {
                     Server.TypeTree.Remove(node.NodeId);
                 }
@@ -3285,7 +3285,7 @@ namespace Opc.Ua.Server
                 throw new ArgumentNullException(nameof(referenceTypeId));
             }
 
-            if (targetId == null)
+            if (targetId.IsNull)
             {
                 throw new ArgumentNullException(nameof(targetId));
             }
@@ -3575,7 +3575,7 @@ namespace Opc.Ua.Server
         {
             lock (DataLock)
             {
-                if (nodeId == null || nodeId.IsAbsolute)
+                if (nodeId.IsNull || nodeId.IsAbsolute)
                 {
                     return null;
                 }

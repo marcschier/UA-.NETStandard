@@ -2920,8 +2920,7 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                                                         expandedNodeId1.NamespaceUri))
                                                 {
                                                     // replace the namespaceUri with namespaceIndex to match the encoded value
-                                                    ExpandedNodeId expandedNodeId = Utils.Clone(
-                                                        expandedNodeId1);
+                                                    ExpandedNodeId expandedNodeId = expandedNodeId1;
                                                     Assert.IsNotNull(
                                                         expandedNodeId,
                                                         "Decoded 'ExpandedNodeId' Field: {0} should not be null",
@@ -2942,12 +2941,12 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                                                     ExpandedNodeId.Format(
                                                         CultureInfo.InvariantCulture,
                                                         stringBuilder,
-                                                        expandedNodeId.Identifier,
+                                                        expandedNodeId.IdentifierAsString,
                                                         expandedNodeId.IdType,
                                                         namespaceIndex,
                                                         string.Empty,
                                                         expandedNodeId.ServerIndex);
-                                                    decodedFieldValue = new ExpandedNodeId(
+                                                    decodedFieldValue = ExpandedNodeId.Parse(
                                                         stringBuilder.ToString());
                                                 }
                                                 // by convention array decoders always return the Array type
@@ -3065,8 +3064,7 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                                                             expandedNodeId2.NamespaceUri))
                                                     {
                                                         // replace the namespaceUri with namespaceIndex to match the encoded value
-                                                        ExpandedNodeId expandedNodeId = Utils.Clone(
-                                                            expandedNodeId2);
+                                                        ExpandedNodeId expandedNodeId = expandedNodeId2;
                                                         Assert.IsNotNull(
                                                             expandedNodeId,
                                                             "Decoded 'ExpandedNodeId' Field: {0} should not be null",

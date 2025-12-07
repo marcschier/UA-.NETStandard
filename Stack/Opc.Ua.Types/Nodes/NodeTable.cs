@@ -186,7 +186,7 @@ namespace Opc.Ua
                     continue;
                 }
 
-                if (browseName == null)
+                if (browseName.IsNullQn)
                 {
                     return target;
                 }

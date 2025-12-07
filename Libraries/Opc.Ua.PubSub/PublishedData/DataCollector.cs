@@ -174,9 +174,7 @@ namespace Opc.Ua.PubSub.PublishedData
                                     /*If an entry of the PublishedData references one of the ExtensionFields, the substituteValue shall contain the
                                     * QualifiedName of the ExtensionFields entry.
                                     * All other fields of this PublishedVariableDataType array element shall be null*/
-                                    var extensionFieldName = publishedVariable.SubstituteValue
-                                        .Value as QualifiedName;
-                                    if (extensionFieldName != null)
+                                    if (publishedVariable.SubstituteValue.Value is QualifiedName extensionFieldName)
                                     {
                                         KeyValuePair extensionField = publishedDataSet
                                             .ExtensionFields

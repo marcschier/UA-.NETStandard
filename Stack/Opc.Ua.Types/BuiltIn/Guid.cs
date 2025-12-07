@@ -108,7 +108,8 @@ namespace Opc.Ua
         IFormattable,
         IEquatable<Uuid>,
         IEquatable<Guid>,
-        ICloneable
+        ICloneable,
+        ISurrogateFor<Guid>
     {
         /// <summary>
         /// Initializes the object with a string.
@@ -312,7 +313,9 @@ namespace Opc.Ua
         Name = "ListOfGuid",
         Namespace = Namespaces.OpcUaXsd,
         ItemName = "Guid")]
-    public class UuidCollection : List<Uuid>, ICloneable
+    public class UuidCollection : List<Uuid>,
+        ISurrogateFor<GuidCollection>,
+        ICloneable
     {
         /// <inheritdoc/>
         public UuidCollection()
@@ -337,52 +340,31 @@ namespace Opc.Ua
         {
         }
 
-        /// <summary>
-        /// Converts an array to a collection.
-        /// </summary>
-        /// <param name="values">The array of <see cref="Uuid"/>
-        /// values to return as a collection</param>
-        public static UuidCollection ToUuidCollection(Uuid[] values)
+        /// <inheritdoc/>
+        public GuidCollection Value => (GuidCollection)this;
+
+        /// <inheritdoc/>
+        public static implicit operator UuidCollection(Guid[] values)
         {
-            return values != null ? [.. values] : [];
+            return values != null ? [.. values.Select(g => new Uuid(g))] : [];
+        }
+
+        /// <inheritdoc/>
+        public static implicit operator UuidCollection(GuidCollection values)
+        {
+            return values != null ? [.. values.Select(g => new Uuid(g))] : [];
         }
 
         /// <inheritdoc/>
         public static implicit operator UuidCollection(Uuid[] values)
         {
-            return ToUuidCollection(values);
-        }
-
-        /// <summary>
-        /// Converts an array to a collection.
-        /// </summary>
-        /// <param name="values">The array of <see cref="Uuid"/>
-        /// values to return as a collection</param>
-        public static UuidCollection ToUuidCollection(Guid[] values)
-        {
-            return values != null ? [.. values] : [];
-        }
-
-        /// <inheritdoc/>
-        public static implicit operator UuidCollection(Guid[] values)
-        {
-            return ToUuidCollection(values);
-        }
-
-        /// <summary>
-        /// Converts an array to a collection.
-        /// </summary>
-        /// <param name="values">The array of <see cref="Uuid"/>
-        /// values to return as a collection</param>
-        public static GuidCollection ToGuidCollection(UuidCollection values)
-        {
             return values != null ? [.. values.Select(g => g.Value)] : [];
         }
 
         /// <inheritdoc/>
-        public static explicit operator GuidCollection(UuidCollection values)
+        public static implicit operator GuidCollection(UuidCollection values)
         {
-            return ToGuidCollection(values);
+            return values != null ? [.. values.Select(g => g.Value)] : [];
         }
 
         /// <inheritdoc/>

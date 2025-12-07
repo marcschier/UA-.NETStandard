@@ -1205,7 +1205,7 @@ namespace TestData
             encoder.WriteDoubleArray("DoubleValue", DoubleValue);
             encoder.WriteStringArray("StringValue", StringValue);
             encoder.WriteDateTimeArray("DateTimeValue", DateTimeValue);
-            encoder.WriteGuidArray("GuidValue", GuidValue);
+            encoder.WriteGuidArray("GuidValue", (GuidCollection)GuidValue);
             encoder.WriteByteStringArray("ByteStringValue", ByteStringValue);
             encoder.WriteXmlElementArray("XmlElementValue", XmlElementValue);
             encoder.WriteNodeIdArray("NodeIdValue", NodeIdValue);
@@ -1241,7 +1241,7 @@ namespace TestData
             DoubleValue = decoder.ReadDoubleArray("DoubleValue");
             StringValue = decoder.ReadStringArray("StringValue");
             DateTimeValue = decoder.ReadDateTimeArray("DateTimeValue");
-            GuidValue = decoder.ReadGuidArray("GuidValue");
+            GuidValue = (UuidCollection)decoder.ReadGuidArray("GuidValue");
             ByteStringValue = decoder.ReadByteStringArray("ByteStringValue");
             XmlElementValue = decoder.ReadXmlElementArray("XmlElementValue");
             NodeIdValue = decoder.ReadNodeIdArray("NodeIdValue");
@@ -2440,7 +2440,7 @@ namespace TestData
             encoder.WriteDoubleArray("DoubleDataType", DoubleDataType);
             encoder.WriteStringArray("StringDataType", StringDataType);
             encoder.WriteDateTimeArray("DateTimeDataType", DateTimeDataType);
-            encoder.WriteGuidArray("GuidDataType", GuidDataType);
+            encoder.WriteGuidArray("GuidDataType", (GuidCollection)GuidDataType);
             encoder.WriteByteStringArray("ByteStringDataType", ByteStringDataType);
             encoder.WriteXmlElementArray("XmlElementDataType", XmlElementDataType);
             encoder.WriteNodeIdArray("NodeIdDataType", NodeIdDataType);
@@ -2471,7 +2471,7 @@ namespace TestData
             DoubleDataType = decoder.ReadDoubleArray("DoubleDataType");
             StringDataType = decoder.ReadStringArray("StringDataType");
             DateTimeDataType = decoder.ReadDateTimeArray("DateTimeDataType");
-            GuidDataType = decoder.ReadGuidArray("GuidDataType");
+            GuidDataType = (UuidCollection)decoder.ReadGuidArray("GuidDataType");
             ByteStringDataType = decoder.ReadByteStringArray("ByteStringDataType");
             XmlElementDataType = decoder.ReadXmlElementArray("XmlElementDataType");
             NodeIdDataType = decoder.ReadNodeIdArray("NodeIdDataType");

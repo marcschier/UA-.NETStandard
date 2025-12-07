@@ -1068,7 +1068,7 @@ namespace Opc.Ua.Export
 
             var definition = new DataTypeDefinition();
 
-            if (outputRedundantNames || dataType.BrowseName != null)
+            if (outputRedundantNames || !dataType.BrowseName.IsNullQn)
             {
                 definition.Name = Export(dataType.BrowseName, namespaceUris);
             }

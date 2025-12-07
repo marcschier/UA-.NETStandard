@@ -172,7 +172,7 @@ namespace Opc.Ua
             clone.ReferenceTypeId = ReferenceTypeId;
             clone.IsInverse = (bool)CoreUtils.Clone(IsInverse);
             clone.IncludeSubtypes = (bool)CoreUtils.Clone(IncludeSubtypes);
-            clone.TargetName = CoreUtils.Clone(TargetName);
+            clone.TargetName = TargetName;
 
             return clone;
         }

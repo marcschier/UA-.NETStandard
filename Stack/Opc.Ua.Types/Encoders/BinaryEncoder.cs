@@ -765,12 +765,6 @@ namespace Opc.Ua
         /// </summary>
         public void WriteQualifiedName(string fieldName, QualifiedName value)
         {
-            // check for null.
-            if (value == null)
-            {
-                value = new QualifiedName();
-            }
-
             ushort namespaceIndex = value.NamespaceIndex;
 
             if (m_namespaceMappings != null && m_namespaceMappings.Length > namespaceIndex)

@@ -440,7 +440,7 @@ namespace Opc.Ua.Client
             CancellationToken ct)
         {
             INode? found = null;
-            foreach (QualifiedName? browseName in browsePath)
+            foreach (QualifiedName browseName in browsePath)
             {
                 found = null;
                 while (true)

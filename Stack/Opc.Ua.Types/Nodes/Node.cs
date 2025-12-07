@@ -347,7 +347,7 @@ namespace Opc.Ua
 
             clone.NodeId = NodeId;
             clone.NodeClass = (NodeClass)CoreUtils.Clone(NodeClass);
-            clone.BrowseName = CoreUtils.Clone(BrowseName);
+            clone.BrowseName = BrowseName;
             clone.DisplayName = CoreUtils.Clone(DisplayName);
             clone.Description = CoreUtils.Clone(Description);
             clone.WriteMask = (uint)CoreUtils.Clone(WriteMask);

@@ -96,7 +96,7 @@ namespace Opc.Ua.Client
             CancellationToken ct = default)
         {
             // check for null.
-            if (NodeId.IsNull(nodeId))
+            if (nodeId.IsNull)
             {
                 return null;
             }
@@ -392,7 +392,7 @@ namespace Opc.Ua.Client
                         if (!m_nodes.Exists(reference.NodeId))
                         {
                             // transform absolute identifiers.
-                            if (reference.NodeId != null && reference.NodeId.IsAbsolute)
+                            if (!reference.NodeId.IsNull && reference.NodeId.IsAbsolute)
                             {
                                 reference.NodeId = ExpandedNodeId.ToNodeId(
                                     reference.NodeId,
@@ -812,11 +812,11 @@ namespace Opc.Ua.Client
         }
 
         /// <inheritdoc/>
-        public ValueTask<QualifiedName?> FindReferenceTypeNameAsync(
+        public ValueTask<QualifiedName> FindReferenceTypeNameAsync(
             NodeId referenceTypeId,
             CancellationToken ct = default)
         {
-            QualifiedName? typeName;
+            QualifiedName typeName;
             m_cacheLock.EnterReadLock();
             try
             {
@@ -826,7 +826,7 @@ namespace Opc.Ua.Client
             {
                 m_cacheLock.ExitReadLock();
             }
-            return new ValueTask<QualifiedName?>(typeName);
+            return new ValueTask<QualifiedName>(typeName);
         }
 
         /// <inheritdoc/>
@@ -1191,7 +1191,7 @@ namespace Opc.Ua.Client
             ExpandedNodeId nodeId,
             CancellationToken ct = default)
         {
-            if (NodeId.IsNull(nodeId))
+            if (nodeId.IsNull)
             {
                 return string.Empty;
             }
@@ -1215,7 +1215,7 @@ namespace Opc.Ua.Client
             ReferenceDescription reference,
             CancellationToken ct = default)
         {
-            if (reference == null || NodeId.IsNull(reference.NodeId))
+            if (reference == null || reference.NodeId.IsNull)
             {
                 return string.Empty;
             }

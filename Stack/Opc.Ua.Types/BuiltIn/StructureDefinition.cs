@@ -207,7 +207,7 @@ namespace Opc.Ua
                 throw new ArgumentNullException(nameof(context));
             }
 
-            if (dataEncoding?.Name == BrowseNames.DefaultJson)
+            if (dataEncoding.Name == BrowseNames.DefaultJson)
             {
                 DefaultEncodingId = ExpandedNodeId.ToNodeId(typeId, context.NamespaceUris);
                 return;
@@ -219,7 +219,7 @@ namespace Opc.Ua
             if (systemType != null &&
                 Activator.CreateInstance(systemType) is IEncodeable encodeable)
             {
-                if (dataEncoding == null || dataEncoding.Name == BrowseNames.DefaultBinary)
+                if (dataEncoding.IsNullQn || dataEncoding.Name == BrowseNames.DefaultBinary)
                 {
                     DefaultEncodingId = ExpandedNodeId.ToNodeId(
                         encodeable.BinaryEncodingId,

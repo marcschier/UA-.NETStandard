@@ -718,7 +718,7 @@ namespace TestData
                 DoubleValue = m_generator.GetRandomArray<double>(false, 10, false),
                 StringValue = m_generator.GetRandomArray<string>(false, 10, false),
                 DateTimeValue = m_generator.GetRandomArray<DateTime>(false, 10, false),
-                GuidValue = m_generator.GetRandomArray<Guid>(false, 10, false),
+                GuidValue = (UuidCollection)m_generator.GetRandomArray<Guid>(false, 10, false),
                 ByteStringValue = m_generator.GetRandomArray<byte[]>(false, 10, false),
                 XmlElementValue = m_generator.GetRandomArray<XmlElement>(false, 10, false),
                 NodeIdValue = m_generator.GetRandomArray<NodeId>(false, 10, false),

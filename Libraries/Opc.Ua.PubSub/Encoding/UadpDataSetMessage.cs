@@ -791,7 +791,7 @@ namespace Opc.Ua.PubSub.Encoding
                         case BuiltInType.QualifiedName:
                             binaryEncoder.WriteQualifiedName(
                                 "QualifiedName",
-                                valueToEncode as QualifiedName);
+                                valueToEncode is QualifiedName qn ? qn : default);
                             break;
                         case BuiltInType.LocalizedText:
                             binaryEncoder.WriteLocalizedText(

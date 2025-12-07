@@ -317,7 +317,7 @@ namespace Opc.Ua.Gds.Tests
             {
                 var testApplicationRecord = (ApplicationRecordDataType)application.ApplicationRecord
                     .MemberwiseClone();
-                testApplicationRecord.ApplicationId = new NodeId(
+                testApplicationRecord.ApplicationId = NodeId.Parse(
                     "s=" + m_appTestDataGenerator.DataGenerator.GetRandomString("en"));
                 await NUnit.Framework.Assert.ThatAsync(
                     () => m_gdsClient.GDSClient.UpdateApplicationAsync(testApplicationRecord),

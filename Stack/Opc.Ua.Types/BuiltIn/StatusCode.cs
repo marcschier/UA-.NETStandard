@@ -139,7 +139,6 @@ namespace Opc.Ua
     /// </list>
     /// <br/></para>
     /// </remarks>
-    [DataContract(Name = "StatusCode", Namespace = Namespaces.OpcUaXsd)]
     [Serializable]
     public readonly struct StatusCode :
         IFormattable,
@@ -173,13 +172,16 @@ namespace Opc.Ua
         /// <param name="symbolicId">The symbol for the status code</param>
         public StatusCode(uint code, string symbolicId)
         {
-            if (symbolicId == null && TryGetInternedStatusCode(code, out StatusCode s))
+            if (symbolicId == null &&
+                TryGetInternedStatusCode(code, out StatusCode s))
             {
                 this = s;
             }
             else
             {
-                SymbolicId = symbolicId != null ? string.Intern(symbolicId) : null;
+                SymbolicId = symbolicId != null ?
+                    string.Intern(symbolicId) :
+                    null;
             }
             Code = code; // Set code again which could be containing more than code bits
         }
@@ -188,9 +190,9 @@ namespace Opc.Ua
         /// Initializes the object from an exception.
         /// </summary>
         /// <remarks>
-        /// Initializes the object from an exception and a numeric code. The numeric code
-        /// will be determined from the Exception if possible, otherwise the value passed in
-        /// will be used.
+        /// Initializes the object from an exception and a numeric code.
+        /// The numeric code will be determined from the Exception if possible,
+        /// otherwise the value passed in will be used.
         /// </remarks>
         /// <param name="e">The exception to convert to a status code</param>
         /// <param name="defaultCode">The default code to apply if the routine cannot
@@ -213,13 +215,13 @@ namespace Opc.Ua
         /// Initializes the object from an exception.
         /// </summary>
         /// <remarks>
-        /// Initializes the object from an exception and a numeric code. The numeric code
-        /// will be determined from the Exception if possible, otherwise the value passed in
-        /// will be used.
+        /// Initializes the object from an exception and a numeric code.
+        /// The numeric code will be determined from the Exception if possible,
+        /// otherwise the value passed in will be used.
         /// </remarks>
         /// <param name="e">The exception to convert to a status code</param>
-        /// <param name="defaultCode">The default code to apply if the routine cannot
-        /// determine the code from the Exception</param>
+        /// <param name="defaultCode">The default code to apply if the routine
+        /// cannot determine the code from the Exception</param>
         public StatusCode(Exception e, StatusCode defaultCode)
         {
             if (e is ServiceResultException sre)
@@ -235,11 +237,11 @@ namespace Opc.Ua
         /// <summary>
         /// The entire 32-bit status value.
         /// </summary>
-        [DataMember(Name = "Code", Order = 1, IsRequired = false)]
         public uint Code { get; }
 
         /// <summary>
-        /// Returns a copy of the status code with the Code but current symbolic id.
+        /// Returns a copy of the status code with the Code but
+        /// current symbolic id.
         /// </summary>
         public StatusCode SetCode(uint code)
         {
@@ -261,7 +263,8 @@ namespace Opc.Ua
         /// Returns a copy of the status code with the Code bits set.
         /// </summary>
         /// <param name="bits">The value for the Code bits.</param>
-        /// <returns>The status code with the Code bits set to the specified values.</returns>
+        /// <returns>The status code with the Code bits set to the
+        /// specified values.</returns>
         public StatusCode SetCodeBits(uint bits)
         {
             uint code = Code;
@@ -271,11 +274,13 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Returns a copy of the status code with the Code bits set to the code bits of the
-        /// provided status code.
+        /// Returns a copy of the status code with the Code bits set
+        /// to the code bits of the provided status code.
         /// </summary>
-        /// <param name="statusCode">The code bits of this status code.</param>
-        /// <returns>The status code with the Code bits set to the specified values.</returns>
+        /// <param name="statusCode">The code bits of this status code.
+        /// </param>
+        /// <returns>The status code with the Code bits set to the
+        /// specified values.</returns>
         public StatusCode SetCodeBits(StatusCode statusCode)
         {
             uint code = Code;
@@ -296,7 +301,8 @@ namespace Opc.Ua
         /// Returns a copy of the status code with the Flag bits set.
         /// </summary>
         /// <param name="bits">The value for the Flag bits.</param>
-        /// <returns>The status code with the Flag bits set to the specified values.</returns>
+        /// <returns>The status code with the Flag bits set to the
+        /// specified values.</returns>
         public StatusCode SetFlagBits(uint bits)
         {
             uint code = Code;
@@ -324,17 +330,15 @@ namespace Opc.Ua
         /// <summary>
         /// Set to indicate that the structure of the data value has changed.
         /// </summary>
-        /// <remarks>
-        /// Set to indicate that the structure of the data value has changed.
-        /// </remarks>
-        [XmlIgnore]
         public bool StructureChanged => (Code & kStructureChangedBit) != 0;
 
         /// <summary>
         /// Returns a copy of the status code with the StructureChanged bit set.
         /// </summary>
-        /// <param name="structureChanged">The value for the StructureChanged bit.</param>
-        /// <returns>The status code with the StructureChanged bit set to the specified value.</returns>
+        /// <param name="structureChanged">The value for the StructureChanged
+        /// bit.</param>
+        /// <returns>The status code with the StructureChanged bit set to
+        /// the specified value.</returns>
         public StatusCode SetStructureChanged(bool structureChanged)
         {
             uint code = Code;
@@ -350,19 +354,19 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Set to indicate that the semantics associated with the data value have changed.
+        /// Set to indicate that the semantics associated with the data
+        /// value have changed.
         /// </summary>
-        /// <remarks>
-        /// Set to indicate that the semantics associated with the data value have changed.
-        /// </remarks>
-        [XmlIgnore]
         public bool SemanticsChanged => (Code & kSemanticsChangedBit) != 0;
 
         /// <summary>
-        /// Returns a copy of the status code with the SemanticsChanged bit set.
+        /// Returns a copy of the status code with the SemanticsChanged
+        /// bit set.
         /// </summary>
-        /// <param name="semanticsChanged">The value for the SemanticsChanged bit.</param>
-        /// <returns>The status code with the SemanticsChanged bit set to the specified value.</returns>
+        /// <param name="semanticsChanged">The value for the SemanticsChanged
+        /// bit.</param>
+        /// <returns>The status code with the SemanticsChanged bit set to
+        /// the specified value.</returns>
         public StatusCode SetSemanticsChanged(bool semanticsChanged)
         {
             uint code = Code;
@@ -380,13 +384,13 @@ namespace Opc.Ua
         /// <summary>
         /// The bits that indicate the meaning of the status code
         /// </summary>
-        [XmlIgnore]
         public bool HasDataValueInfo => (Code & kDataValueInfoType) != 0;
 
         /// <summary>
         /// Sets the HasDataValueInfo bits.
         /// </summary>
-        /// <returns>The status code with the bits set to specify data value</returns>
+        /// <returns>The status code with the bits set to specify
+        /// data value</returns>
         public StatusCode SetHasDataValueInfo(bool value)
         {
             uint code = Code;
@@ -406,19 +410,20 @@ namespace Opc.Ua
         /// The limit bits, indicating Hi/Lo etc.
         /// </summary>
         /// <remarks>
-        /// Requires the data value info type bit to be present. Otherwise always
-        /// returns false.
+        /// Requires the data value info type bit to be present.
+        /// Otherwise always returns false.
         /// </remarks>
         /// <seealso cref="LimitBits"/>
-        [XmlIgnore]
         public LimitBits LimitBits => (LimitBits)(Code & kLimitBits);
 
         /// <summary>
         /// Returns a copy of the status code with the limit bits set.
         /// </summary>
-        /// <remarks>Always adds the data value info type bit no matter.</remarks>
+        /// <remarks>Always adds the data value info type bit no matter.
+        /// </remarks>
         /// <param name="bits">The value for the limits bits</param>
-        /// <returns>The status code with the limit bits set to the specified values.</returns>
+        /// <returns>The status code with the limit bits set to the
+        /// specified values.</returns>
         public StatusCode SetLimitBits(LimitBits bits)
         {
             uint code = Code;
@@ -432,19 +437,22 @@ namespace Opc.Ua
         /// Specifies if there is an overflow or not
         /// </summary>
         /// <remarks>
-        /// Requires the data value info type bit to be present. Otherwise always
-        /// returns false.
+        /// Requires the data value info type bit to be present.
+        /// Otherwise always returns false.
         /// </remarks>
-        [XmlIgnore]
-        public bool Overflow => ((Code & kDataValueInfoType) != 0) && ((Code & kOverflowBit) != 0);
+        public bool Overflow =>
+            ((Code & kDataValueInfoType) != 0) && ((Code & kOverflowBit) != 0);
 
         /// <summary>
-        /// Returns a copy of the status code with the overflow bit set or unsets it if false
-        /// is passed.
+        /// Returns a copy of the status code with the overflow bit set
+        /// or unsets it if false is passed.
         /// </summary>
-        /// <remarks>Always adds the data value info type bit no matter.</remarks>
+        /// <remarks>
+        /// Always adds the data value info type bit no matter.
+        /// </remarks>
         /// <param name="overflow">The value for the overflow bit.</param>
-        /// <returns>The status code with the overflow bit set to the specified value.</returns>
+        /// <returns>The status code with the overflow bit set to the
+        /// specified value.</returns>
         public StatusCode SetOverflow(bool overflow)
         {
             uint code = Code;
@@ -465,14 +473,15 @@ namespace Opc.Ua
         /// The aggregate bits.
         /// </summary>
         /// <seealso cref="AggregateBits"/>
-        [XmlIgnore]
-        public AggregateBits AggregateBits => (AggregateBits)(Code & kAggregateBits);
+        public AggregateBits AggregateBits =>
+            (AggregateBits)(Code & kAggregateBits);
 
         /// <summary>
         /// Returns a copy of the status code with the aggregate bits set.
         /// </summary>
         /// <param name="bits">The bits to set.</param>
-        /// <returns>The status code with the aggregate bits set to the specified values.</returns>
+        /// <returns>The status code with the aggregate bits set to the
+        /// specified values.</returns>
         public StatusCode SetAggregateBits(AggregateBits bits)
         {
             uint code = Code;
@@ -571,11 +580,17 @@ namespace Opc.Ua
             }
             else
             {
-                buffer.AppendFormat(CultureInfo.InvariantCulture, "{0:X8}", 0xFFFF0000 & Code);
+                buffer.AppendFormat(
+                    CultureInfo.InvariantCulture,
+                    "{0:X8}",
+                    0xFFFF0000 & Code);
             }
             if ((0x0000FFFF & Code) != 0)
             {
-                buffer.AppendFormat(CultureInfo.InvariantCulture, " [Flags: {0:X4}]", 0x0000FFFF & Code);
+                buffer.AppendFormat(
+                    CultureInfo.InvariantCulture,
+                    " [Flags: {0:X4}]",
+                    0x0000FFFF & Code);
             }
 
             return buffer.ToString();
@@ -726,7 +741,9 @@ namespace Opc.Ua
         [Obsolete("Use SymbolicId property directly.")]
         public static string LookupSymbolicId(uint code)
         {
-            return TryGetInternedStatusCode(code, out StatusCode s) ? s.SymbolicId : null;
+            return TryGetInternedStatusCode(code, out StatusCode s) ?
+                s.SymbolicId :
+                null;
         }
 
         /// <summary>
@@ -746,7 +763,9 @@ namespace Opc.Ua
         /// <param name="code"></param>
         /// <param name="statusCode"></param>
         /// <returns></returns>
-        public static bool TryGetInternedStatusCode(uint code, out StatusCode statusCode)
+        public static bool TryGetInternedStatusCode(
+            uint code,
+            out StatusCode statusCode)
         {
             return s_statusCodes.TryGetValue(code & 0xFFFF0000, out statusCode);
         }
@@ -906,10 +925,6 @@ namespace Opc.Ua
     /// <summary>
     /// A collection of StatusCodes.
     /// </summary>
-    [CollectionDataContract(
-        Name = "ListOfStatusCode",
-        Namespace = Namespaces.OpcUaXsd,
-        ItemName = "StatusCode")]
     public class StatusCodeCollection : List<StatusCode>, ICloneable
     {
         /// <summary>
@@ -977,4 +992,196 @@ namespace Opc.Ua
             return new StatusCodeCollection(this);
         }
     }
+
+
+    /// <summary>
+    /// Helper to allow data contract serialization of StatusCode
+    /// </summary>
+    [DataContract(
+        Name = "StatusCode",
+        Namespace = Namespaces.OpcUaXsd)]
+    public class SerializableStatusCode :
+        IEquatable<StatusCode>,
+        IEquatable<SerializableStatusCode>,
+        ISurrogateFor<StatusCode>
+    {
+        /// <summary>
+        /// Create new null initialized status code
+        /// </summary>
+        public SerializableStatusCode()
+        {
+            Value = default;
+        }
+
+        /// <summary>
+        /// Create initialized status code
+        /// </summary>
+        public SerializableStatusCode(StatusCode value)
+        {
+            Value = value;
+        }
+
+        /// <summary>
+        /// The serialized node id
+        /// </summary>
+        public StatusCode Value { get; private set; }
+
+        /// <summary>
+        /// The entire 32-bit status value.
+        /// </summary>
+        [DataMember(Name = "Code", Order = 1, IsRequired = false)]
+        public uint Code
+        {
+            get => Value.Code;
+            set => Value = new StatusCode(value);
+        }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return obj switch
+            {
+                SerializableStatusCode s => Equals(s),
+                StatusCode n => Equals(n),
+                _ => Value.Equals(obj)
+            };
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(StatusCode obj)
+        {
+            return Value.Equals(obj);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(SerializableStatusCode obj)
+        {
+            return Value.Equals(obj?.Value ?? default);
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            return Value.GetHashCode();
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(
+            SerializableStatusCode left,
+            SerializableStatusCode right)
+        {
+            return EqualityComparer<SerializableStatusCode>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(
+            SerializableStatusCode left,
+            SerializableStatusCode right)
+        {
+            return !(left == right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(
+            SerializableStatusCode left,
+            StatusCode right)
+        {
+            return EqualityComparer<SerializableStatusCode>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(
+            SerializableStatusCode left,
+            StatusCode right)
+        {
+            return !(left == right);
+        }
+
+        /// <inheritdoc/>
+        public static implicit operator SerializableStatusCode(StatusCode value)
+        {
+            return new SerializableStatusCode(value);
+        }
+
+        /// <inheritdoc/>
+        public static implicit operator StatusCode(SerializableStatusCode value)
+        {
+            return value.Value;
+        }
+
+        /// <inheritdoc/>
+        public static explicit operator uint(SerializableStatusCode value)
+        {
+            return value.Code;
+        }
+
+        /// <inheritdoc/>
+        public static explicit operator SerializableStatusCode(uint value)
+        {
+            return new SerializableStatusCode { Code = value };
+        }
+    }
+
+    /// <summary>
+    /// A collection of StatusCodes.
+    /// </summary>
+    [CollectionDataContract(
+        Name = "ListOfStatusCode",
+        Namespace = Namespaces.OpcUaXsd,
+        ItemName = "StatusCode")]
+    public class SerializableStatusCodeCollection : List<SerializableStatusCode>,
+        ISurrogateFor<StatusCodeCollection>
+    {
+        /// <inheritdoc/>
+        public SerializableStatusCodeCollection()
+        {
+        }
+
+        /// <inheritdoc/>
+        public SerializableStatusCodeCollection(
+            IEnumerable<SerializableStatusCode> collection)
+            : base(collection)
+        {
+        }
+
+        /// <inheritdoc/>
+        public SerializableStatusCodeCollection(
+            IEnumerable<StatusCode> collection)
+            : this(collection.Select(n => new SerializableStatusCode(n)))
+        {
+        }
+
+        /// <inheritdoc/>
+        public SerializableStatusCodeCollection(int capacity)
+            : base(capacity)
+        {
+        }
+
+        /// <inheritdoc/>
+        public StatusCodeCollection Value => new(this.Select(n => n.Value));
+
+        /// <inheritdoc/>
+        public static implicit operator SerializableStatusCodeCollection(
+            SerializableStatusCode[] values)
+        {
+            return values == null ? [] : [.. values];
+        }
+
+        /// <inheritdoc/>
+        public static explicit operator StatusCodeCollection(
+            SerializableStatusCodeCollection values)
+        {
+            return values == null ? null : new(values.Select(n => n.Value));
+        }
+
+        /// <inheritdoc/>
+        public static explicit operator SerializableStatusCodeCollection(
+            StatusCodeCollection values)
+        {
+            return values == null ?
+                null :
+                new SerializableStatusCodeCollection(values);
+        }
+    }
+
 }

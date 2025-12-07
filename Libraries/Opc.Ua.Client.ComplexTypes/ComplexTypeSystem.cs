@@ -1155,7 +1155,7 @@ namespace Opc.Ua.Client.ComplexTypes
         /// </summary>
         private void AddEncodeableType(ExpandedNodeId nodeId, Type type)
         {
-            if (NodeId.IsNull(nodeId) || type == null)
+            if (nodeId.IsNull || type == null)
             {
                 return;
             }

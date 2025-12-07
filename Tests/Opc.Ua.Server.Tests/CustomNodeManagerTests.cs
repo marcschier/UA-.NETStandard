@@ -37,7 +37,9 @@ namespace Opc.Ua.Server.Tests
 
                 var baseObject = new BaseObjectState(null);
                 var nodeHandle = new NodeHandle(
-                    new NodeId((string)CommonTestWorkers.NodeIdTestSetStatic[0].Identifier, 0),
+                    CommonTestWorkers.NodeIdTestSetStatic[0]
+                        .WithNamespaceIndex(0)
+                        .InnerNodeId,
                     baseObject);
 
                 //Act
@@ -79,10 +81,10 @@ namespace Opc.Ua.Server.Tests
                 int index = server.CurrentInstance.NamespaceUris.GetIndex(ns);
 
                 var baseObject = new DataItemState(null);
-                var nodeId = new NodeId(
-                    (string)CommonTestWorkers.NodeIdTestSetStatic[0].Identifier,
-                    (ushort)index);
-
+                NodeId nodeId =
+                    CommonTestWorkers.NodeIdTestSetStatic[0]
+                    .WithNamespaceIndex((ushort)index)
+                    .InnerNodeId;
                 baseObject.NodeId = nodeId;
 
                 //single threaded test

@@ -1192,7 +1192,7 @@ namespace Opc.Ua.Client
                     maxMessageSize,
                     ct).ConfigureAwait(false);
             }
-            if (NodeId.IsNull(response?.SessionId))
+            if (response is null || response.SessionId.IsNullNodeId)
             {
                 throw ServiceResultException.Unexpected(
                     "Create response returned null session id");

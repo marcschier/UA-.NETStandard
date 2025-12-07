@@ -254,7 +254,7 @@ namespace Opc.Ua.Client
         public QualifiedName Encoding
         {
             get => State.Encoding;
-            set => State = State with { Encoding = value ?? QualifiedName.Null };
+            set => State = State with { Encoding = value };
         }
 
         /// <summary>

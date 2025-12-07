@@ -3797,9 +3797,8 @@ namespace Opc.Ua.SourceGeneration
                 if (child.SymbolicName == new XmlQualifiedName(BrowseNames.DefaultInstanceBrowseName, Namespaces.OpcUa))
                 {
                     var variable = (VariableDesign)child;
-                    var qname = variable.DecodedValue as QualifiedName;
 
-                    if (qname != null)
+                    if (variable.DecodedValue is QualifiedName qname)
                     {
                         browseNames[qname.Name] = qname.Name;
                     }

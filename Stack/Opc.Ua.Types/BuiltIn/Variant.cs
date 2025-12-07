@@ -389,7 +389,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="ExpandedNodeId"/> value of the Variant</param>
         public Variant(ExpandedNodeId value)
         {
-            m_value = value;
+            m_value = new SerializableExpandedNodeId(value);
             TypeInfo = TypeInfo.Scalars.ExpandedNodeId;
         }
 
@@ -676,7 +676,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="NodeId"/>-array value of the Variant</param>
         public Variant(NodeId[] value)
         {
-            m_value = value;
+            m_value = value == null ? null : new SerializableNodeIdCollection(value);
             TypeInfo = TypeInfo.Arrays.NodeId;
         }
 
@@ -689,7 +689,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="ExpandedNodeId"/>-array value of the Variant</param>
         public Variant(ExpandedNodeId[] value)
         {
-            m_value = value;
+            m_value = value == null ? null : new SerializableExpandedNodeIdCollection(value);
             TypeInfo = TypeInfo.Arrays.ExpandedNodeId;
         }
 
@@ -1848,7 +1848,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="NodeId"/> value to set this Variant to</param>
         public void Set(NodeId value)
         {
-            m_value = value;
+            m_value = new SerializableNodeId(value);
             TypeInfo = TypeInfo.Scalars.NodeId;
         }
 
@@ -1861,7 +1861,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="ExpandedNodeId"/> value to set this Variant to</param>
         public void Set(ExpandedNodeId value)
         {
-            m_value = value;
+            m_value = new SerializableExpandedNodeId(value);
             TypeInfo = TypeInfo.Scalars.ExpandedNodeId;
         }
 
@@ -2160,7 +2160,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="NodeId"/>-array value to set this Variant to</param>
         public void Set(NodeId[] value)
         {
-            m_value = value;
+            m_value = value == null ? null : new SerializableNodeIdCollection(value);
             TypeInfo = TypeInfo.Arrays.NodeId;
         }
 
@@ -2173,7 +2173,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="ExpandedNodeId"/>-array value to set this Variant to</param>
         public void Set(ExpandedNodeId[] value)
         {
-            m_value = value;
+            m_value = value == null ? null : new SerializableExpandedNodeIdCollection(value);
             TypeInfo = TypeInfo.Arrays.ExpandedNodeId;
         }
 

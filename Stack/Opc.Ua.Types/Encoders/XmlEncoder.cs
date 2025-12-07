@@ -732,18 +732,26 @@ namespace Opc.Ua
         /// </summary>
         public void WriteQualifiedName(string fieldName, QualifiedName value)
         {
-            if (BeginField(fieldName, value == null, true))
+            WriteQualifiedName(fieldName, value, false);    
+        }
+
+        /// <summary>
+        /// Writes an QualifiedName to the stream.
+        /// </summary>
+        private void WriteQualifiedName(string fieldName, QualifiedName value, bool isArrayElement)
+        {
+            if (BeginField(fieldName, value.IsNullQn, true, isArrayElement))
             {
                 PushNamespace(Namespaces.OpcUaXsd);
 
                 ushort namespaceIndex = value.NamespaceIndex;
 
-                if (m_namespaceMappings != null && m_namespaceMappings.Length > namespaceIndex)
+                if (!value.IsNullQn && m_namespaceMappings != null && m_namespaceMappings.Length > namespaceIndex)
                 {
                     namespaceIndex = m_namespaceMappings[namespaceIndex];
                 }
 
-                if (value != null)
+                if (!value.IsNullQn)
                 {
                     WriteUInt16("NamespaceIndex", namespaceIndex);
                     WriteString("Name", value.Name);
@@ -1575,7 +1583,7 @@ namespace Opc.Ua
                 {
                     for (int ii = 0; ii < values.Count; ii++)
                     {
-                        WriteQualifiedName("QualifiedName", values[ii]);
+                        WriteQualifiedName("QualifiedName", values[ii], true);
                     }
                 }
 

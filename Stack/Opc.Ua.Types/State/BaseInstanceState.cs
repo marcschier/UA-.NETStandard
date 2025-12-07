@@ -185,7 +185,7 @@ namespace Opc.Ua
 
             if (node.DisplayName == null)
             {
-                if (node.BrowseName != null)
+                if (!node.BrowseName.IsNullQn)
                 {
                     return node.BrowseName.Name;
                 }

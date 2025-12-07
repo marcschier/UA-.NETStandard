@@ -1414,8 +1414,8 @@ namespace Opc.Ua
                 byte[] b => CompareTo(b),
                 ExpandedNodeId e => CompareTo(e),
                 NodeId nodeId => CompareTo(nodeId),
-                SerializableNodeId s => CompareTo(s.NodeId),
-                SerializableExpandedNodeId se => CompareTo(se.ExpandedNodeId),
+                SerializableNodeId s => CompareTo(s.Value),
+                SerializableExpandedNodeId se => CompareTo(se.Value),
                 _ => -1,
             };
         }
@@ -1468,8 +1468,8 @@ namespace Opc.Ua
                 string s => Equals(s),
                 ExpandedNodeId expandedNodeId => Equals(expandedNodeId),
                 NodeId n => Equals(n),
-                SerializableNodeId s => Equals(s.NodeId),
-                SerializableExpandedNodeId se => Equals(se.ExpandedNodeId),
+                SerializableNodeId s => Equals(s.Value),
+                SerializableExpandedNodeId se => Equals(se.Value),
                 _ => base.Equals(obj)
             };
         }
@@ -1946,14 +1946,15 @@ namespace Opc.Ua
         Namespace = Namespaces.OpcUaXsd)]
     public class SerializableNodeId :
         IEquatable<NodeId>,
-        IEquatable<SerializableNodeId>
+        IEquatable<SerializableNodeId>,
+        ISurrogateFor<NodeId>
     {
         /// <summary>
         /// Create new null initialized node id
         /// </summary>
         public SerializableNodeId()
         {
-            NodeId = default;
+            Value = default;
         }
 
         /// <summary>
@@ -1961,13 +1962,13 @@ namespace Opc.Ua
         /// </summary>
         public SerializableNodeId(NodeId nodeId)
         {
-            NodeId = nodeId;
+            Value = nodeId;
         }
 
         /// <summary>
         /// The serialized node id
         /// </summary>
-        public NodeId NodeId { get; private set; }
+        public NodeId Value { get; private set; }
 
         /// <summary>
         /// The node identifier formatted as a URI.
@@ -1975,8 +1976,8 @@ namespace Opc.Ua
         [DataMember(Name = "Identifier", Order = 1)]
         internal string IdentifierText
         {
-            get => NodeId.Format(CultureInfo.InvariantCulture);
-            set => NodeId = NodeId.Parse(value);
+            get => Value.Format(CultureInfo.InvariantCulture);
+            set => Value = NodeId.Parse(value);
         }
 
         /// <inheritdoc/>
@@ -1986,26 +1987,26 @@ namespace Opc.Ua
             {
                 SerializableNodeId s => Equals(s),
                 NodeId n => Equals(n),
-                _ => NodeId.Equals(obj)
+                _ => Value.Equals(obj)
             };
         }
 
         /// <inheritdoc/>
         public bool Equals(NodeId obj)
         {
-            return NodeId.Equals(obj);
+            return Value.Equals(obj);
         }
 
         /// <inheritdoc/>
         public bool Equals(SerializableNodeId obj)
         {
-            return NodeId.Equals(obj?.NodeId ?? default);
+            return Value.Equals(obj?.Value ?? default);
         }
 
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return NodeId.GetHashCode();
+            return Value.GetHashCode();
         }
 
         /// <inheritdoc/>
@@ -2041,7 +2042,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public static implicit operator NodeId(SerializableNodeId nodeId)
         {
-            return nodeId.NodeId;
+            return nodeId.Value;
         }
 
         /// <inheritdoc/>
@@ -2064,7 +2065,9 @@ namespace Opc.Ua
         Name = "ListOfNodeId",
         Namespace = Namespaces.OpcUaXsd,
         ItemName = "NodeId")]
-    public class SerializableNodeIdCollection : List<SerializableNodeId>
+    public class SerializableNodeIdCollection :
+        List<SerializableNodeId>,
+        ISurrogateFor<NodeIdCollection>
     {
         /// <inheritdoc/>
         public SerializableNodeIdCollection()
@@ -2090,6 +2093,9 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
+        public NodeIdCollection Value => (NodeIdCollection)this;
+
+        /// <inheritdoc/>
         public static implicit operator SerializableNodeIdCollection(
             SerializableNodeId[] values)
         {
@@ -2100,7 +2106,7 @@ namespace Opc.Ua
         public static explicit operator NodeIdCollection(
             SerializableNodeIdCollection values)
         {
-            return values == null ? null : new(values.Select(n => n.NodeId));
+            return values == null ? null : new(values.Select(n => n.Value));
         }
 
         /// <inheritdoc/>

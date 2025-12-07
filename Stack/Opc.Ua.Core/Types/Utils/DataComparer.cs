@@ -589,16 +589,6 @@ namespace Opc.Ua.Test
         /// False or ServiceResultException in case of unequal values.</returns>
         public bool CompareQualifiedName(QualifiedName value1, QualifiedName value2)
         {
-            if (value1 == null)
-            {
-                return value2 == null || value2 == QualifiedName.Null;
-            }
-
-            if (value2 == null)
-            {
-                return value1 == QualifiedName.Null;
-            }
-
             if (!value1.Equals(value2))
             {
                 return ReportError(value1, value1);

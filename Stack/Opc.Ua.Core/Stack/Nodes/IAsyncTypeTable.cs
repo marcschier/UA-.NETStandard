@@ -135,7 +135,7 @@ namespace Opc.Ua
         /// <param name="ct">Cancellation token to cancel operation with</param>
         /// <returns>A name qualified with a namespace for the reference
         /// <paramref name="referenceTypeId"/>. </returns>
-        ValueTask<QualifiedName?> FindReferenceTypeNameAsync(
+        ValueTask<QualifiedName> FindReferenceTypeNameAsync(
             NodeId referenceTypeId,
             CancellationToken ct = default);
 
@@ -330,7 +330,7 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public QualifiedName? FindReferenceTypeName(NodeId referenceTypeId)
+        public QualifiedName FindReferenceTypeName(NodeId referenceTypeId)
         {
             return m_table.FindReferenceTypeNameAsync(referenceTypeId)
                 .AsTask()

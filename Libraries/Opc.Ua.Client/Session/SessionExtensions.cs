@@ -336,7 +336,7 @@ namespace Opc.Ua.Client
                     continue;
                 }
 
-                if (NodeId.IsNull(results[ii].Targets[0].TargetId))
+                if (results[ii].Targets[0].TargetId.IsNull)
                 {
                     errors[ii] = ServiceResult.Create(
                         StatusCodes.BadUnexpectedError,

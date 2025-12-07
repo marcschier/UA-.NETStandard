@@ -46,7 +46,6 @@ namespace Opc.Ua
         IEquatable<NodeId>,
         IFormattable
     {
-
         /// <summary>
         /// Returns an instance of a null ExpandedNodeId.
         /// </summary>
@@ -367,7 +366,7 @@ namespace Opc.Ua
         /// <summary>
         /// Updates the namespace index.
         /// </summary>
-        internal ExpandedNodeId WithNamespaceIndex(ushort namespaceIndex)
+        public ExpandedNodeId WithNamespaceIndex(ushort namespaceIndex)
         {
             return new ExpandedNodeId(
                 InnerNodeId.WithNamespaceIndex(namespaceIndex),
@@ -378,7 +377,7 @@ namespace Opc.Ua
         /// <summary>
         /// Updates the namespace uri.
         /// </summary>
-        internal ExpandedNodeId WithNamespaceUri(string uri)
+        public ExpandedNodeId WithNamespaceUri(string uri)
         {
             return new ExpandedNodeId(
                 InnerNodeId.WithNamespaceIndex(0),
@@ -389,7 +388,7 @@ namespace Opc.Ua
         /// <summary>
         /// Updates the server index.
         /// </summary>
-        internal ExpandedNodeId WithServerIndex(uint serverIndex)
+        public ExpandedNodeId WithServerIndex(uint serverIndex)
         {
             return new ExpandedNodeId(
                 InnerNodeId,
@@ -400,7 +399,7 @@ namespace Opc.Ua
         /// <summary>
         /// Updates the server index.
         /// </summary>
-        internal ExpandedNodeId WithInnerNode(NodeId innerNodeId)
+        public ExpandedNodeId WithInnerNode(NodeId innerNodeId)
         {
             return new ExpandedNodeId(
                 innerNodeId,
@@ -1425,8 +1424,10 @@ namespace Opc.Ua
         /// <summary>
         /// Converts an array to a collection.
         /// </summary>
-        /// <param name="values">An array of <see cref="ExpandedNodeId"/> values to return as a collection</param>
-        public static implicit operator ExpandedNodeIdCollection(ExpandedNodeId[] values)
+        /// <param name="values">An array of <see cref="ExpandedNodeId"/>
+        /// values to return as a collection</param>
+        public static implicit operator ExpandedNodeIdCollection(
+            ExpandedNodeId[] values)
         {
             return values == null ? [] : [.. values];
         }
@@ -1452,6 +1453,7 @@ namespace Opc.Ua
             return clone;
         }
     }
+
     /// <summary>
     /// Node id comparer
     /// </summary>
@@ -1483,14 +1485,15 @@ namespace Opc.Ua
         Namespace = Namespaces.OpcUaXsd)]
     public class SerializableExpandedNodeId :
         IEquatable<ExpandedNodeId>,
-        IEquatable<SerializableExpandedNodeId>
+        IEquatable<SerializableExpandedNodeId>,
+        ISurrogateFor<ExpandedNodeId>
     {
         /// <summary>
         /// Create initialized expanded node id
         /// </summary>
         public SerializableExpandedNodeId()
         {
-            ExpandedNodeId = default;
+            Value = default;
         }
 
         /// <summary>
@@ -1498,13 +1501,13 @@ namespace Opc.Ua
         /// </summary>
         public SerializableExpandedNodeId(ExpandedNodeId expandedNodeId)
         {
-            ExpandedNodeId = expandedNodeId;
+            Value = expandedNodeId;
         }
 
         /// <summary>
         /// The serialized node id
         /// </summary>
-        public ExpandedNodeId ExpandedNodeId { get; private set; }
+        public ExpandedNodeId Value { get; private set; }
 
         /// <summary>
         /// The node identifier formatted as a URI.
@@ -1512,8 +1515,8 @@ namespace Opc.Ua
         [DataMember(Name = "Identifier", Order = 1, IsRequired = true)]
         internal string IdentifierText
         {
-            get => ExpandedNodeId.Format(CultureInfo.InvariantCulture);
-            set => ExpandedNodeId = ExpandedNodeId.Parse(value);
+            get => Value.Format(CultureInfo.InvariantCulture);
+            set => Value = ExpandedNodeId.Parse(value);
         }
 
         /// <inheritdoc/>
@@ -1523,26 +1526,26 @@ namespace Opc.Ua
             {
                 SerializableExpandedNodeId s => Equals(s),
                 ExpandedNodeId n => Equals(n),
-                _ => ExpandedNodeId.Equals(obj)
+                _ => Value.Equals(obj)
             };
         }
 
         /// <inheritdoc/>
         public bool Equals(ExpandedNodeId obj)
         {
-            return ExpandedNodeId.Equals(obj);
+            return Value.Equals(obj);
         }
 
         /// <inheritdoc/>
         public bool Equals(SerializableExpandedNodeId obj)
         {
-            return ExpandedNodeId.Equals(obj?.ExpandedNodeId ?? default);
+            return Value.Equals(obj?.Value ?? default);
         }
 
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return ExpandedNodeId.GetHashCode();
+            return Value.GetHashCode();
         }
 
         /// <inheritdoc/>
@@ -1588,7 +1591,7 @@ namespace Opc.Ua
         public static implicit operator ExpandedNodeId(
             SerializableExpandedNodeId expandedNodeId)
         {
-            return expandedNodeId.ExpandedNodeId;
+            return expandedNodeId.Value;
         }
 
         /// <inheritdoc/>
@@ -1619,6 +1622,7 @@ namespace Opc.Ua
     )]
     public class SerializableExpandedNodeIdCollection :
         List<SerializableExpandedNodeId>,
+        ISurrogateFor<ExpandedNodeIdCollection>,
         ICloneable
     {
         /// <inheritdoc/>
@@ -1647,6 +1651,9 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
+        public ExpandedNodeIdCollection Value => (ExpandedNodeIdCollection)this;
+
+        /// <inheritdoc/>
         public static implicit operator SerializableExpandedNodeIdCollection(
             SerializableExpandedNodeId[] values)
         {
@@ -1657,7 +1664,7 @@ namespace Opc.Ua
         public static explicit operator ExpandedNodeIdCollection(
             SerializableExpandedNodeIdCollection values)
         {
-            return values == null ? null : new(values.Select(n => n.ExpandedNodeId));
+            return values == null ? null : new(values.Select(n => n.Value));
         }
 
         /// <inheritdoc/>
@@ -1682,7 +1689,7 @@ namespace Opc.Ua
 
             foreach (SerializableExpandedNodeId element in this)
             {
-                clone.Add(new SerializableExpandedNodeId(element.ExpandedNodeId));
+                clone.Add(new SerializableExpandedNodeId(element.Value));
             }
 
             return clone;

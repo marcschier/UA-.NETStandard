@@ -1387,7 +1387,7 @@ namespace Opc.Ua
                 case BuiltInType.NodeId:
                     return value is NodeId n ?
                         n :
-                        value is SerializableNodeId s ? s.NodeId : NodeId.Null;
+                        value is SerializableNodeId s ? s.Value : NodeId.Null;
                 case BuiltInType.ExpandedNodeId:
                     return (NodeId)(ExpandedNodeId)value;
                 case BuiltInType.String:
