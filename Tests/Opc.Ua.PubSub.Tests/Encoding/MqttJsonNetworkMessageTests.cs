@@ -499,7 +499,7 @@ namespace Opc.Ua.PubSub.Tests.Encoding
             {
                 uaNetworkMessage.DataSetClassId = dataSetClassId.ToString();
                 uaNetworkMessage.DataSetMessages[0].DataSet.DataSetMetaData.DataSetClassId
-                    = (Uuid)dataSetClassId;
+                    = (Guid)dataSetClassId;
             }
 
             bool hasDataSetWriterId =
@@ -1845,7 +1845,7 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                 kNamespaceIndexAllTypes,
                 metaDataType.Fields);
             metadata.Description = new LocalizedText("Description text");
-            metadata.DataSetClassId = new Uuid();
+            metadata.DataSetClassId = Guid.Empty;
 
             _ = hasMetaData ? metadata : null;
 
@@ -1863,8 +1863,8 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                     ? new LocalizedText(metaDataDescription)
                     : metaDataDescription;
             jsonNetworkMessage.DataSetMetaData.DataSetClassId = hasMetaDataDataSetClassId
-                ? new Uuid(Guid.NewGuid())
-                : Uuid.Empty;
+                ? Guid.NewGuid()
+                : Guid.Empty;
             jsonNetworkMessage.DataSetMetaData.ConfigurationVersion
                 = hasMetaDataConfigurationVersion
                 ? new ConfigurationVersionDataType { MajorVersion = 1, MinorVersion = 1 }
@@ -2607,7 +2607,7 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                         fieldMetaData.TypeId));
             }
 
-            if (jsonDataSetMetaData.DataSetClassId == Uuid.Empty)
+            if (jsonDataSetMetaData.DataSetClassId == Guid.Empty)
             {
                 return MetaDataFailOptions.MetaData_DataSetClassId;
             }

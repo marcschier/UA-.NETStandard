@@ -131,8 +131,8 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             Assert.True(nodeGuid1.Equals(id1));
             Assert.True(nodeGuid1 == id1);
             Assert.True(nodeGuid1 == (NodeId)id1);
-            Assert.True(nodeGuid1.Equals((Uuid)id1));
-            Assert.True(nodeGuid1 == (Uuid)id1);
+            Assert.True(nodeGuid1.Equals((Guid)id1));
+            Assert.True(nodeGuid1 == (Guid)id1);
             Assert.False(nodeGuid1.Equals(id2));
             Assert.False(nodeGuid1 == id2);
 

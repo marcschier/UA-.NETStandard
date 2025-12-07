@@ -363,11 +363,6 @@ namespace Opc.Ua.Test
 
                 if (value != null)
                 {
-                    if (expectedType == BuiltInType.Guid && value is Guid guidValue)
-                    {
-                        value = new Uuid(guidValue);
-                    }
-
                     output.SetValue(value, indexes);
                 }
             }
@@ -411,7 +406,7 @@ namespace Opc.Ua.Test
                 case BuiltInType.DateTime:
                     return GetRandomDateTime();
                 case BuiltInType.Guid:
-                    return GetRandomUuid();
+                    return GetRandomGuid();
                 case BuiltInType.ByteString:
                     return GetRandomByteString();
                 case BuiltInType.XmlElement:
@@ -502,7 +497,7 @@ namespace Opc.Ua.Test
                 case BuiltInType.DateTime:
                     return GetRandomArray<DateTime>(useBoundaryValues, length, fixedLength);
                 case BuiltInType.Guid:
-                    return GetRandomArray<Uuid>(useBoundaryValues, length, fixedLength);
+                    return GetRandomArray<Guid>(useBoundaryValues, length, fixedLength);
                 case BuiltInType.ByteString:
                     return GetRandomArray<byte[]>(useBoundaryValues, length, fixedLength);
                 case BuiltInType.XmlElement:
@@ -835,14 +830,6 @@ namespace Opc.Ua.Test
         }
 
         /// <inheritdoc/>
-        public Uuid GetRandomUuid()
-        {
-            byte[] bytes = new byte[16];
-            m_random.NextBytes(bytes, 0, bytes.Length);
-            return new Uuid(new Guid(bytes));
-        }
-
-        /// <inheritdoc/>
         public byte[] GetRandomByteString()
         {
             int length = m_random.NextInt32(MaxStringLength);
@@ -1031,7 +1018,7 @@ namespace Opc.Ua.Test
                 case BuiltInType.DateTime:
                     return new Variant(GetRandomArray<DateTime>(true, length, true));
                 case BuiltInType.Guid:
-                    return new Variant(GetRandomArray<Uuid>(true, length, true));
+                    return new Variant(GetRandomArray<Guid>(true, length, true));
                 case BuiltInType.ByteString:
                     return new Variant(GetRandomArray<byte[]>(true, length, true));
                 case BuiltInType.XmlElement:
@@ -1235,7 +1222,6 @@ namespace Opc.Ua.Test
                 new DateTime(2001, 9, 11, 9, 15, 0, DateTimeKind.Local)
             ),
             new(typeof(Guid), Guid.Empty),
-            new(typeof(Uuid), Uuid.Empty),
             new(typeof(byte[]), null, Array.Empty<byte>()),
             new(typeof(XmlElement), null),
             new(
@@ -1374,14 +1360,7 @@ namespace Opc.Ua.Test
         private object GetRandom(Type expectedType)
         {
             BuiltInType builtInType = TypeInfo.Construct(expectedType).BuiltInType;
-            object value = GetRandom(builtInType);
-
-            if (builtInType == BuiltInType.Guid && expectedType == typeof(Guid))
-            {
-                return (Guid)(Uuid)value;
-            }
-
-            return value;
+            return GetRandom(builtInType);
         }
 
         /// <summary>

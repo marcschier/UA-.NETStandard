@@ -780,7 +780,7 @@ namespace Opc.Ua.PubSub.Encoding
                                 Convert.ToDateTime(valueToEncode, formatProvider));
                             break;
                         case BuiltInType.Guid:
-                            binaryEncoder.WriteGuid("GUID", (Uuid)valueToEncode);
+                            binaryEncoder.WriteGuid("GUID", (Guid)valueToEncode);
                             break;
                         case BuiltInType.String:
                             binaryEncoder.WriteString("String", valueToEncode as string);

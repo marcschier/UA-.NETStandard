@@ -157,11 +157,6 @@ namespace Opc.Ua
         /// <summary>
         /// Writes a GUID to the stream.
         /// </summary>
-        void WriteGuid(string fieldName, Uuid value);
-
-        /// <summary>
-        /// Writes a GUID to the stream.
-        /// </summary>
         void WriteGuid(string fieldName, Guid value);
 
         /// <summary>
@@ -305,11 +300,6 @@ namespace Opc.Ua
         /// Writes a UTC date/time array to the stream.
         /// </summary>
         void WriteDateTimeArray(string fieldName, IList<DateTime> values);
-
-        /// <summary>
-        /// Writes a GUID array to the stream.
-        /// </summary>
-        void WriteGuidArray(string fieldName, IList<Uuid> values);
 
         /// <summary>
         /// Writes a GUID array to the stream.

@@ -75,7 +75,7 @@ namespace Opc.Ua.SourceGeneration
                 switch (datatype.Name)
                 {
                     case "Guid":
-                        return "new global::Opc.Ua.UuidCollection()";
+                        return "new global::Opc.Ua.GuidCollection()";
                     default:
                         return CoreUtils.Format("new {0}Collection()", datatype.Name);
                 }
@@ -115,7 +115,7 @@ namespace Opc.Ua.SourceGeneration
                 case "XmlElement":
                     return "null";
                 case "Guid":
-                    return "global::Opc.Ua.Uuid.Empty";
+                    return "global::System.Guid.Empty";
                 case "DateTime":
                     return "global::System.DateTime.MinValue";
                 case "StatusCode":
@@ -200,7 +200,7 @@ namespace Opc.Ua.SourceGeneration
                         case "DateTime":
                             return "global::System.DateTime";
                         case "Guid":
-                            return "global::Opc.Ua.Uuid";
+                            return "global::System.Guid";
                         case "ByteString":
                             return !nullable ? "byte[]" : "byte[]?";
                     }
@@ -208,7 +208,7 @@ namespace Opc.Ua.SourceGeneration
                 switch (qname.Name)
                 {
                     case "Guid":
-                        typeName = "global::Opc.Ua.Uuid";
+                        typeName = "global::System.Guid";
                         break;
                 }
             }
@@ -887,9 +887,14 @@ namespace Opc.Ua.SourceGeneration
                     {
                         return "null";
                     }
-                    return CoreUtils.Format("\"{0}\"", stringValue); // TODO: Make string resource
+                    if (stringValue.Length == 0)
+                    {
+                        return "string.Empty";
+                    }
+                    return CoreUtils.Format("\"{0}\"", stringValue);
                 case BasicDataType.DateTime:
-                    if (decodedValue is not DateTime dateTimeValue)
+                    if (decodedValue is not DateTime dateTimeValue ||
+                        dateTimeValue == DateTime.MinValue)
                     {
                         return "global::System.DateTime.MinValue";
                     }
@@ -897,60 +902,88 @@ namespace Opc.Ua.SourceGeneration
                         "global::System.DateTime.ParseExact(\"{0:yyyy-MM-dd HH:mm:ss}\", \"yyyy-MM-dd HH:mm:ss\", global::System.Globalization.CultureInfo.InvariantCulture)",
                         dateTimeValue);
                 case BasicDataType.Guid:
-                    if (decodedValue is not Uuid uuidValue)
+                    if (decodedValue is Uuid uuid)
                     {
-                        return "global::Opc.Ua.Uuid.Empty";
+                        decodedValue = uuid.Value;
                     }
-                    return CoreUtils.Format("new Uuid(\"{0}\")", uuidValue);
+                    if (decodedValue is not Guid guidValue ||
+                        guidValue == Guid.Empty)
+                    {
+                        return "global::Opc.Ua.Guid.Empty";
+                    }
+                    return CoreUtils.Format(
+                        "global::System.Guid.Parse(\"{0}\")",
+                        guidValue);
                 case BasicDataType.ByteString:
                     if (decodedValue is not byte[] byteStringValue)
                     {
                         return "null";
                     }
-                    return CoreUtils.Format("CoreUtils.FromHexString(\"{0}\")", CoreUtils.ToHexString(byteStringValue));
+                    return CoreUtils.Format(
+                        "CoreUtils.FromHexString(\"{0}\")",
+                        CoreUtils.ToHexString(byteStringValue));
                 case BasicDataType.NodeId:
-                    if (decodedValue is not NodeId nodeId)
+                    if (decodedValue is not NodeId nodeId ||
+                        nodeId.IsNullNodeId)
                     {
                         return "global::Opc.Ua.NodeId.Null";
                     }
-
-                    if (nodeId.NamespaceIndex == 0 || nodeId.NamespaceIndex >= namespaces.Length)
+                    if (nodeId.NamespaceIndex == 0 ||
+                        nodeId.NamespaceIndex >= namespaces.Length)
                     {
-                        return CoreUtils.Format("global::Opc.Ua.NodeId.Parse(\"{0}\")", nodeId); // TODO: Make string resource
+                        return CoreUtils.Format(
+                            "global::Opc.Ua.NodeId.Parse(\"{0}\")",
+                            nodeId);
                     }
-
-                    var absoluteId = new ExpandedNodeId(nodeId, namespaces[nodeId.NamespaceIndex].Value);
-                    return CoreUtils.Format("ExpandedNodeId.Parse(\"{0}\", context.NamespaceUris)", absoluteId); // TODO: Make string resource
+                    var absoluteId = new ExpandedNodeId(
+                        nodeId,
+                        namespaces[nodeId.NamespaceIndex].Value);
+                    return CoreUtils.Format(
+                        "ExpandedNodeId.Parse(\"{0}\", context.NamespaceUris)",
+                        absoluteId);
                 case BasicDataType.ExpandedNodeId:
-                    if (decodedValue is not ExpandedNodeId expandedNodeId)
+                    if (decodedValue is not ExpandedNodeId expandedNodeId ||
+                        NodeId.IsNull(expandedNodeId))
                     {
                         return "global::Opc.Ua.ExpandedNodeId.Null";
                     }
-                    return CoreUtils.Format("global::Opc.Ua.ExpandedNodeId.Parse(\"{0}\")", expandedNodeId); // TODO: Make string resource
+                    return CoreUtils.Format(
+                        "global::Opc.Ua.ExpandedNodeId.Parse(\"{0}\")",
+                        expandedNodeId);
                 case BasicDataType.QualifiedName:
-                    if (decodedValue is not QualifiedName qualifiedName)
+                    if (decodedValue is not QualifiedName qualifiedName ||
+                        QualifiedName.IsNull(qualifiedName))
                     {
                         return "global::Opc.Ua.QualifiedName.Null";
                     }
-                    return CoreUtils.Format("global::Opc.Ua.QualifiedName.Parse(\"{0}\")", qualifiedName); // TODO: Make string resource
+                    return CoreUtils.Format(
+                        "global::Opc.Ua.QualifiedName.Parse(\"{0}\")",
+                        qualifiedName);
                 case BasicDataType.LocalizedText:
-                    if (decodedValue is not LocalizedText localizedText)
+                    if (decodedValue is not LocalizedText localizedText ||
+                        LocalizedText.IsNullOrEmpty(localizedText))
                     {
                         return "global::Opc.Ua.LocalizedText.Null";
                     }
-                    return CoreUtils.Format("new global::Opc.Ua.LocalizedText(\"{0}\", \"{1}\")", localizedText.Locale, localizedText.Text); // TODO: Make string resource
+                    return CoreUtils.Format(
+                        "new global::Opc.Ua.LocalizedText(\"{0}\", \"{1}\")",
+                        localizedText.Locale,
+                        localizedText.Text);
                 case BasicDataType.StatusCode:
-                    if (decodedValue is not StatusCode statusCode)
+                    if (decodedValue is not StatusCode statusCode ||
+                        statusCode.Code == 0)
                     {
                         return "global::Opc.Ua.StatusCodes.Good";
                     }
                     return CoreUtils.Format("(StatusCode){0}", statusCode);
                 case BasicDataType.Enumeration:
-                    if (dataType.SymbolicId == new XmlQualifiedName("Enumeration", Namespaces.OpcUa))
+                    if (dataType.SymbolicId ==
+                        new XmlQualifiedName("Enumeration", Namespaces.OpcUa))
                     {
                         return "0";
                     }
-                    if (dataType.BaseTypeNode.SymbolicId == new XmlQualifiedName("OptionSet", Namespaces.OpcUa))
+                    if (dataType.BaseTypeNode.SymbolicId ==
+                        new XmlQualifiedName("OptionSet", Namespaces.OpcUa))
                     {
                         return $"new {dataType.SymbolicName.Name}()";
                     }
@@ -962,7 +995,10 @@ namespace Opc.Ua.SourceGeneration
                     {
                         return CoreUtils.Format("{0}.None", dataType.SymbolicName.Name);
                     }
-                    return CoreUtils.Format("{0}.{1}", dataType.SymbolicName.Name, dataType.Fields[0].Name);
+                    return CoreUtils.Format(
+                        "{0}.{1}",
+                        dataType.SymbolicName.Name,
+                        dataType.Fields[0].Name);
                 case BasicDataType.DataValue:
                     return "new global::Opc.Ua.DataValue()";
                 case BasicDataType.Structure:
@@ -1002,11 +1038,7 @@ namespace Opc.Ua.SourceGeneration
                 namespaces,
                 nullable: isOptional);
 
-            if (typeName == "global::System.Guid")
-            {
-                typeName = "global::Opc.Ua.Uuid";
-            }
-            else if (typeName is "global::Opc.Ua.IEncodeable")
+            if (typeName is "global::Opc.Ua.IEncodeable")
             {
                 typeName = "global::Opc.Ua.ExtensionObject";
             }
@@ -1179,11 +1211,6 @@ namespace Opc.Ua.SourceGeneration
                     namespaces,
                     nullable);
 
-                if (typeName == "global::System.Guid")
-                {
-                    return "global::Opc.Ua.Uuid";
-                }
-
                 if (typeName is "object" or "object?")
                 {
                     return "global::Opc.Ua.Variant";
@@ -1244,7 +1271,7 @@ namespace Opc.Ua.SourceGeneration
                         case BasicDataType.DateTime:
                             return "global::Opc.Ua.DateTimeCollection";
                         case BasicDataType.Guid:
-                            return "global::Opc.Ua.UuidCollection";
+                            return "global::Opc.Ua.GuidCollection";
                         case BasicDataType.ByteString:
                             return "global::Opc.Ua.ByteStringCollection";
                         case BasicDataType.XmlElement:

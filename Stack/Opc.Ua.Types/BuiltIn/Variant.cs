@@ -342,19 +342,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a Uuid value.
-        /// </summary>
-        /// <remarks>
-        /// Creates a new variant with a <see cref="Uuid"/> value
-        /// </remarks>
-        /// <param name="value">The <see cref="Uuid"/> value of the Variant</param>
-        public Variant(Uuid value)
-        {
-            m_value = value;
-            TypeInfo = TypeInfo.Scalars.Guid;
-        }
-
-        /// <summary>
         /// Initializes the object with a byte[] value.
         /// </summary>
         /// <remarks>
@@ -389,7 +376,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="NodeId"/> value of the Variant</param>
         public Variant(NodeId value)
         {
-            m_value = value;
+            m_value = new SerializableNodeId(value);
             TypeInfo = TypeInfo.Scalars.NodeId;
         }
 
@@ -2327,14 +2314,14 @@ namespace Opc.Ua
                         CoreUtils.Format(
                             "The type '{0}' cannot be stored in a Variant object.",
                             value.GetType().FullName));
-                // convert Guids to Uuids.
+                // convert Guids to Uuids for serialization.
                 case BuiltInType.Guid:
                     if (value is Guid guid)
                     {
                         m_value = new Uuid(guid);
                         return;
                     }
-                    m_value = (object)value ?? Uuid.Empty;
+                    m_value = (object)value ?? Guid.Empty;
                     return;
                 // convert encodeables to extension objects.
                 case BuiltInType.ExtensionObject:

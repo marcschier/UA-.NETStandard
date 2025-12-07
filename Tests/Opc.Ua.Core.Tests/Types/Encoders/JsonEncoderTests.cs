@@ -320,21 +320,21 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
             { BuiltInType.DateTime, DateTime.MaxValue, Quotes("9999-12-31T23:59:59Z"), null },
             {
                 BuiltInType.Guid,
-                Uuid.Empty,
+                Guid.Empty,
                 null,
                 null,
                 null,
                 Quotes("00000000-0000-0000-0000-000000000000") },
             {
                 BuiltInType.Guid,
-                Uuid.Empty,
+                Guid.Empty,
                 Quotes("00000000-0000-0000-0000-000000000000"),
                 null,
                 null,
                 Quotes("00000000-0000-0000-0000-000000000000"),
                 true
             },
-            { BuiltInType.Guid, new Uuid(s_nodeIdGuid), Quotes($"{s_nodeIdGuid}"), null },
+            { BuiltInType.Guid, s_nodeIdGuid, Quotes($"{s_nodeIdGuid}"), null },
             { BuiltInType.NodeId, NodeId.Null, null, null, null, Quotes(string.Empty) },
             {
                 BuiltInType.NodeId,

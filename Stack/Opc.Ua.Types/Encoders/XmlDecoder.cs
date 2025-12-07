@@ -362,7 +362,7 @@ namespace Opc.Ua
                         case "Guid":
                         {
                             typeInfo = TypeInfo.Arrays.Guid;
-                            UuidCollection collection = ReadGuidArray(typeName);
+                            GuidCollection collection = ReadGuidArray(typeName);
                             return collection?.ToArray();
                         }
                         case "ByteString":
@@ -986,9 +986,9 @@ namespace Opc.Ua
         /// Reads a GUID from the stream.
         /// </summary>
         /// <exception cref="ServiceResultException"></exception>
-        public Uuid ReadGuid(string fieldName)
+        public Guid ReadGuid(string fieldName)
         {
-            var value = new Uuid();
+            Guid value = Guid.Empty;
 
             if (BeginField(fieldName, true))
             {
@@ -998,7 +998,7 @@ namespace Opc.Ua
 
                 try
                 {
-                    value.GuidString = guidString;
+                    value = Guid.Parse(guidString);
                 }
                 catch (FormatException fe)
                 {
@@ -1981,9 +1981,9 @@ namespace Opc.Ua
         /// Reads a GUID array from the stream.
         /// </summary>
         /// <exception cref="ServiceResultException"></exception>
-        public UuidCollection ReadGuidArray(string fieldName)
+        public GuidCollection ReadGuidArray(string fieldName)
         {
-            var values = new UuidCollection();
+            var values = new GuidCollection();
 
             if (BeginField(fieldName, true, out bool isNil))
             {
@@ -2832,7 +2832,7 @@ namespace Opc.Ua
                     }
                     case BuiltInType.Guid:
                     {
-                        UuidCollection collection = ReadGuidArray(fieldName);
+                        GuidCollection collection = ReadGuidArray(fieldName);
                         return collection?.ToArray();
                     }
                     case BuiltInType.ByteString:

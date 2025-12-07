@@ -608,14 +608,14 @@ namespace Quickstarts.ConsoleReferencePublisher
             // Define  publishedDataSetSimple.DataSetMetaData
             publishedDataSetSimple.DataSetMetaData = new DataSetMetaDataType
             {
-                DataSetClassId = Uuid.Empty,
+                DataSetClassId = Guid.Empty,
                 Name = publishedDataSetSimple.Name,
                 Fields =
                 [
                     new FieldMetaData
                     {
                         Name = "BoolToggle",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         BuiltInType = (byte)DataTypes.Boolean,
                         DataType = DataTypeIds.Boolean,
                         ValueRank = ValueRanks.Scalar
@@ -623,7 +623,7 @@ namespace Quickstarts.ConsoleReferencePublisher
                     new FieldMetaData
                     {
                         Name = "Int32",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         BuiltInType = (byte)DataTypes.Int32,
                         DataType = DataTypeIds.Int32,
                         ValueRank = ValueRanks.Scalar
@@ -631,7 +631,7 @@ namespace Quickstarts.ConsoleReferencePublisher
                     new FieldMetaData
                     {
                         Name = "Int32Fast",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         BuiltInType = (byte)DataTypes.Int32,
                         DataType = DataTypeIds.Int32,
                         ValueRank = ValueRanks.Scalar
@@ -639,7 +639,7 @@ namespace Quickstarts.ConsoleReferencePublisher
                     new FieldMetaData
                     {
                         Name = "DateTime",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         BuiltInType = (byte)DataTypes.DateTime,
                         DataType = DataTypeIds.DateTime,
                         ValueRank = ValueRanks.Scalar
@@ -693,14 +693,14 @@ namespace Quickstarts.ConsoleReferencePublisher
             // Define  publishedDataSetAllTypes.DataSetMetaData
             publishedDataSetAllTypes.DataSetMetaData = new DataSetMetaDataType
             {
-                DataSetClassId = Uuid.Empty,
+                DataSetClassId = Guid.Empty,
                 Name = publishedDataSetAllTypes.Name,
                 Fields =
                 [
                     new FieldMetaData
                     {
                         Name = "BoolToggle",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         BuiltInType = (byte)DataTypes.Boolean,
                         DataType = DataTypeIds.Boolean,
                         ValueRank = ValueRanks.Scalar
@@ -708,7 +708,7 @@ namespace Quickstarts.ConsoleReferencePublisher
                     new FieldMetaData
                     {
                         Name = "Byte",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         BuiltInType = (byte)DataTypes.Byte,
                         DataType = DataTypeIds.Byte,
                         ValueRank = ValueRanks.Scalar
@@ -716,7 +716,7 @@ namespace Quickstarts.ConsoleReferencePublisher
                     new FieldMetaData
                     {
                         Name = "Int16",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         BuiltInType = (byte)DataTypes.Int16,
                         DataType = DataTypeIds.Int16,
                         ValueRank = ValueRanks.Scalar
@@ -724,7 +724,7 @@ namespace Quickstarts.ConsoleReferencePublisher
                     new FieldMetaData
                     {
                         Name = "Int32",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         BuiltInType = (byte)DataTypes.Int32,
                         DataType = DataTypeIds.Int32,
                         ValueRank = ValueRanks.Scalar
@@ -732,7 +732,7 @@ namespace Quickstarts.ConsoleReferencePublisher
                     new FieldMetaData
                     {
                         Name = "SByte",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         BuiltInType = (byte)DataTypes.SByte,
                         DataType = DataTypeIds.SByte,
                         ValueRank = ValueRanks.Scalar
@@ -740,7 +740,7 @@ namespace Quickstarts.ConsoleReferencePublisher
                     new FieldMetaData
                     {
                         Name = "UInt16",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         BuiltInType = (byte)DataTypes.UInt16,
                         DataType = DataTypeIds.UInt16,
                         ValueRank = ValueRanks.Scalar
@@ -748,7 +748,7 @@ namespace Quickstarts.ConsoleReferencePublisher
                     new FieldMetaData
                     {
                         Name = "UInt32",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         BuiltInType = (byte)DataTypes.UInt32,
                         DataType = DataTypeIds.UInt32,
                         ValueRank = ValueRanks.Scalar
@@ -756,7 +756,7 @@ namespace Quickstarts.ConsoleReferencePublisher
                     new FieldMetaData
                     {
                         Name = "UInt64",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         BuiltInType = (byte)DataTypes.UInt64,
                         DataType = DataTypeIds.UInt64,
                         ValueRank = ValueRanks.Scalar
@@ -764,7 +764,7 @@ namespace Quickstarts.ConsoleReferencePublisher
                     new FieldMetaData
                     {
                         Name = "Float",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         BuiltInType = (byte)DataTypes.Float,
                         DataType = DataTypeIds.Float,
                         ValueRank = ValueRanks.Scalar
@@ -772,7 +772,7 @@ namespace Quickstarts.ConsoleReferencePublisher
                     new FieldMetaData
                     {
                         Name = "Double",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         BuiltInType = (byte)DataTypes.Double,
                         DataType = DataTypeIds.Double,
                         ValueRank = ValueRanks.Scalar
@@ -780,7 +780,7 @@ namespace Quickstarts.ConsoleReferencePublisher
                     new FieldMetaData
                     {
                         Name = "String",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         BuiltInType = (byte)DataTypes.String,
                         DataType = DataTypeIds.String,
                         ValueRank = ValueRanks.Scalar
@@ -788,7 +788,7 @@ namespace Quickstarts.ConsoleReferencePublisher
                     new FieldMetaData
                     {
                         Name = "ByteString",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         BuiltInType = (byte)DataTypes.ByteString,
                         DataType = DataTypeIds.ByteString,
                         ValueRank = ValueRanks.Scalar
@@ -796,7 +796,7 @@ namespace Quickstarts.ConsoleReferencePublisher
                     new FieldMetaData
                     {
                         Name = "Guid",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         BuiltInType = (byte)DataTypes.Guid,
                         DataType = DataTypeIds.Guid,
                         ValueRank = ValueRanks.Scalar
@@ -804,7 +804,7 @@ namespace Quickstarts.ConsoleReferencePublisher
                     new FieldMetaData
                     {
                         Name = "DateTime",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         BuiltInType = (byte)DataTypes.DateTime,
                         DataType = DataTypeIds.DateTime,
                         ValueRank = ValueRanks.Scalar
@@ -812,7 +812,7 @@ namespace Quickstarts.ConsoleReferencePublisher
                     new FieldMetaData
                     {
                         Name = "UInt32Array",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         BuiltInType = (byte)DataTypes.UInt32,
                         DataType = DataTypeIds.UInt32,
                         ValueRank = ValueRanks.OneDimension

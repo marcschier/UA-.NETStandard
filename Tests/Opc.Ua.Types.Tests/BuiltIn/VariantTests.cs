@@ -52,8 +52,8 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         [Test]
         public void VariantConstructor()
         {
-            var uuid = new Uuid(Guid.NewGuid());
-            var variant1 = new Variant(uuid);
+            var guid = Guid.NewGuid();
+            var variant1 = new Variant(guid);
             Assert.AreEqual(BuiltInType.Guid, variant1.TypeInfo.BuiltInType);
         }
 

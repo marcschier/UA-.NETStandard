@@ -34,7 +34,7 @@ using System.Xml;
 namespace Opc.Ua
 {
     /// <summary>
-    /// Defines functions used to dencode objects from a stream.
+    /// Defines functions used to decode objects from a stream.
     /// </summary>
     public interface IDecoder : IDisposable
     {
@@ -61,7 +61,7 @@ namespace Opc.Ua
         void SetMappingTables(NamespaceTable namespaceUris, StringTable serverUris);
 
         /// <summary>
-        /// Decodes an object from a buffer.
+        /// Decodes a message.
         /// </summary>
         IEncodeable DecodeMessage(Type expectedType);
 
@@ -143,7 +143,7 @@ namespace Opc.Ua
         /// <summary>
         /// Reads a GUID from the stream.
         /// </summary>
-        Uuid ReadGuid(string fieldName);
+        Guid ReadGuid(string fieldName);
 
         /// <summary>
         /// Reads a byte string from the stream.
@@ -285,7 +285,7 @@ namespace Opc.Ua
         /// <summary>
         /// Reads a GUID array from the stream.
         /// </summary>
-        UuidCollection ReadGuidArray(string fieldName);
+        GuidCollection ReadGuidArray(string fieldName);
 
         /// <summary>
         /// Reads a byte string array from the stream.

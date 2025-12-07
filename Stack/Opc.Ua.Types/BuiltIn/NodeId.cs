@@ -290,9 +290,6 @@ namespace Opc.Ua
                 case Guid:
                     this = SetIdentifier(IdType.Guid, value);
                     break;
-                case Uuid uuid:
-                    this = SetIdentifier(IdType.Guid, (Guid)uuid);
-                    break;
                 case byte[]:
                     this = SetIdentifier(IdType.Opaque, value);
                     break;
@@ -1405,7 +1402,7 @@ namespace Opc.Ua
                 else // if (obj != null)
                 {
                     var guid2 = obj as Guid?;
-                    var uuid2 = obj as Uuid?;
+                    var uuid2 = obj as Uuid;
                     if (guid2 != null || uuid2 != null)
                     {
                         if (NamespaceIndex != 0 || IdType != IdType.Guid)
@@ -2148,7 +2145,9 @@ namespace Opc.Ua
     [DataContract(
         Name = "NodeId",
         Namespace = Namespaces.OpcUaXsd)]
-    public class SerializableNodeId
+    public class SerializableNodeId :
+        IEquatable<NodeId>,
+        IEquatable<SerializableNodeId>
     {
         /// <summary>
         /// Create new null initialized node id
@@ -2182,6 +2181,53 @@ namespace Opc.Ua
         {
             get => NodeId.Format(CultureInfo.InvariantCulture);
             set => NodeId = NodeId.Parse(value);
+        }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return obj switch
+            {
+                SerializableNodeId s => Equals(s),
+                NodeId n => Equals(n),
+                _ => NodeId.Equals(obj)
+            };
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(NodeId obj)
+        {
+            return NodeId.Equals(obj);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(SerializableNodeId obj)
+        {
+            return NodeId.Equals(obj?.NodeId ?? default);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(SerializableNodeId left, SerializableNodeId right)
+        {
+            return EqualityComparer<SerializableNodeId>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(SerializableNodeId left, SerializableNodeId right)
+        {
+            return !(left == right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(SerializableNodeId left, NodeId right)
+        {
+            return EqualityComparer<SerializableNodeId>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(SerializableNodeId left, NodeId right)
+        {
+            return !(left == right);
         }
 
         /// <inheritdoc/>
@@ -2230,6 +2276,12 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
+        public SerializableNodeIdCollection(IEnumerable<NodeId> collection)
+            : this(collection.Select(n => new SerializableNodeId(n)))
+        {
+        }
+
+        /// <inheritdoc/>
         public SerializableNodeIdCollection(int capacity)
             : base(capacity)
         {
@@ -2242,15 +2294,15 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public static implicit operator NodeIdCollection(SerializableNodeIdCollection values)
+        public static explicit operator NodeIdCollection(SerializableNodeIdCollection values)
         {
             return values == null ? null : new(values.Select(n => n.NodeId));
         }
 
         /// <inheritdoc/>
-        public static implicit operator SerializableNodeIdCollection(NodeIdCollection values)
+        public static explicit operator SerializableNodeIdCollection(NodeIdCollection values)
         {
-            return values == null ? null : new(values.Select(n => (SerializableNodeId)n));
+            return values == null ? null : new SerializableNodeIdCollection(values);
         }
     }
 

@@ -1100,22 +1100,6 @@ namespace Opc.Ua
         /// <summary>
         /// Writes a GUID to the stream.
         /// </summary>
-        public void WriteGuid(string fieldName, Uuid value)
-        {
-            if (fieldName != null && !IncludeDefaultValues && value == Uuid.Empty)
-            {
-                return;
-            }
-
-            WriteSimpleField(
-                fieldName,
-                value.ToString(),
-                EscapeOptions.Quotes | EscapeOptions.NoValueEscape);
-        }
-
-        /// <summary>
-        /// Writes a GUID to the stream.
-        /// </summary>
         public void WriteGuid(string fieldName, Guid value)
         {
             if (fieldName != null && !IncludeDefaultValues && value == Guid.Empty)
@@ -2334,33 +2318,6 @@ namespace Opc.Ua
         /// Writes a GUID array to the stream.
         /// </summary>
         /// <exception cref="ServiceResultException"></exception>
-        public void WriteGuidArray(string fieldName, IList<Uuid> values)
-        {
-            if (CheckForSimpleFieldNull(fieldName, values))
-            {
-                return;
-            }
-
-            PushArray(fieldName);
-
-            // check the length.
-            if (Context.MaxArrayLength > 0 && Context.MaxArrayLength < values.Count)
-            {
-                throw new ServiceResultException(StatusCodes.BadEncodingLimitsExceeded);
-            }
-
-            for (int ii = 0; ii < values.Count; ii++)
-            {
-                WriteGuid(null, values[ii]);
-            }
-
-            PopArray();
-        }
-
-        /// <summary>
-        /// Writes a GUID array to the stream.
-        /// </summary>
-        /// <exception cref="ServiceResultException"></exception>
         public void WriteGuidArray(string fieldName, IList<Guid> values)
         {
             if (CheckForSimpleFieldNull(fieldName, values))
@@ -2858,7 +2815,7 @@ namespace Opc.Ua
                         WriteDateTimeArray(fieldName, (DateTime[])array);
                         return;
                     case BuiltInType.Guid:
-                        WriteGuidArray(fieldName, (Uuid[])array);
+                        WriteGuidArray(fieldName, (Guid[])array);
                         return;
                     case BuiltInType.ByteString:
                         WriteByteStringArray(fieldName, (byte[][])array);
@@ -3321,7 +3278,7 @@ namespace Opc.Ua
                             WriteDateTime(null, (DateTime)value);
                             return;
                         case BuiltInType.Guid:
-                            WriteGuid(null, (Uuid)value);
+                            WriteGuid(null, (Guid)value);
                             return;
                         case BuiltInType.ByteString:
                             WriteByteString(null, (byte[])value);

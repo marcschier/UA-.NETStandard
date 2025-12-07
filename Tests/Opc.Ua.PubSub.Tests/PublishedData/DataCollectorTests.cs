@@ -145,35 +145,35 @@ namespace Opc.Ua.PubSub.Tests.PublishedData
             // Define  publishedDataSetSimple.DataSetMetaData
             publishedDataSetSimple.DataSetMetaData = new DataSetMetaDataType
             {
-                DataSetClassId = new Uuid(Guid.Empty),
+                DataSetClassId = Guid.Empty,
                 Name = publishedDataSetSimple.Name,
                 Fields =
                 [
                     new FieldMetaData
                     {
                         Name = "BoolToggle",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         DataType = DataTypeIds.Boolean,
                         ValueRank = ValueRanks.Scalar
                     },
                     new FieldMetaData
                     {
                         Name = "Int32",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         DataType = DataTypeIds.Int32,
                         ValueRank = ValueRanks.Scalar
                     },
                     new FieldMetaData
                     {
                         Name = "Int32Fast",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         DataType = DataTypeIds.Int32,
                         ValueRank = ValueRanks.Scalar
                     },
                     new FieldMetaData
                     {
                         Name = "DateTime",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         DataType = DataTypeIds.DateTime,
                         ValueRank = ValueRanks.Scalar
                     }
@@ -241,35 +241,35 @@ namespace Opc.Ua.PubSub.Tests.PublishedData
             // Define  publishedDataSetSimple.DataSetMetaData
             publishedDataSetSimple.DataSetMetaData = new DataSetMetaDataType
             {
-                DataSetClassId = new Uuid(Guid.Empty),
+                DataSetClassId = Guid.Empty,
                 Name = publishedDataSetSimple.Name,
                 Fields =
                 [
                     new FieldMetaData
                     {
                         Name = "BoolToggle",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         DataType = DataTypeIds.Boolean,
                         ValueRank = ValueRanks.Scalar
                     },
                     new FieldMetaData
                     {
                         Name = "Int32",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         DataType = DataTypeIds.Int32,
                         ValueRank = ValueRanks.Scalar
                     },
                     new FieldMetaData
                     {
                         Name = "Int32Fast",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         DataType = DataTypeIds.Int32,
                         ValueRank = ValueRanks.Scalar
                     },
                     new FieldMetaData
                     {
                         Name = "DateTime",
-                        DataSetFieldId = new Uuid(Guid.NewGuid()),
+                        DataSetFieldId = Guid.NewGuid(),
                         DataType = DataTypeIds.DateTime,
                         ValueRank = ValueRanks.Scalar
                     }

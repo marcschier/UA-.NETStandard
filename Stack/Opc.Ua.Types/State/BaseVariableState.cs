@@ -321,13 +321,13 @@ namespace Opc.Ua
                 // check for array of uuids.
                 if (typeof(Guid).GetTypeInfo().IsAssignableFrom(elementType.GetTypeInfo()))
                 {
-                    if (value is IList<Uuid> uuids)
+                    if (value is IList<Guid> uuids)
                     {
                         var guids = new Guid[uuids.Count];
 
                         for (int ii = 0; ii < uuids.Count; ii++)
                         {
-                            guids[ii] = (Guid)uuids[ii];
+                            guids[ii] = uuids[ii];
                         }
 
                         return guids;
@@ -353,7 +353,7 @@ namespace Opc.Ua
 
             if (typeof(Guid).GetTypeInfo().IsAssignableFrom(typeof(T).GetTypeInfo()))
             {
-                var uuid = value as Uuid?;
+                var uuid = value as Guid?;
 
                 if (uuid != null)
                 {

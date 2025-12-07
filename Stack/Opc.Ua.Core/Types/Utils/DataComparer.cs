@@ -314,7 +314,7 @@ namespace Opc.Ua.Test
         /// <param name="value2">Second Value.</param>
         /// <returns>True in case of equal values.
         /// False or ServiceResultException in case of unequal values.</returns>
-        public bool CompareUuid(Uuid value1, Uuid value2)
+        public bool CompareGuid(Guid value1, Guid value2)
         {
             if (value1 != value2)
             {
@@ -717,9 +717,9 @@ namespace Opc.Ua.Test
                 {
                     return CompareDateTime((DateTime)value1.Value, (DateTime)value2.Value);
                 }
-                if (systemType == typeof(Uuid))
+                if (systemType == typeof(Guid))
                 {
-                    return CompareUuid((Uuid)value1.Value, (Uuid)value2.Value);
+                    return CompareGuid((Guid)value1.Value, (Guid)value2.Value);
                 }
                 if (systemType == typeof(byte[]))
                 {
@@ -845,9 +845,9 @@ namespace Opc.Ua.Test
                         (DateTime[])value2.Value,
                         CompareDateTime);
                 }
-                if (systemType == typeof(Uuid[]))
+                if (systemType == typeof(Guid[]))
                 {
-                    return CompareArray((Uuid[])value1.Value, (Uuid[])value2.Value, CompareUuid);
+                    return CompareArray((Guid[])value1.Value, (Guid[])value2.Value, CompareGuid);
                 }
                 if (systemType == typeof(byte[][]))
                 {

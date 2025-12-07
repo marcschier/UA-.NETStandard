@@ -414,10 +414,10 @@ namespace Opc.Ua
                     {
 #if NET8_0_OR_GREATER
                         SpanId = BitConverter.ToUInt64(spanId),
-                        TraceId = (Uuid)new Guid(traceId)
+                        TraceId = new Guid(traceId)
 #else
                         SpanId = BitConverter.ToUInt64(spanId.ToArray(), 0),
-                        TraceId = (Uuid)new Guid(traceId.ToArray())
+                        TraceId = new Guid(traceId.ToArray())
 #endif
                     })
                 };

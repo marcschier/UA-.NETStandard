@@ -708,21 +708,21 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public Uuid ReadGuid(string fieldName)
+        public Guid ReadGuid(string fieldName)
         {
             if (!ReadField(fieldName, out object token))
             {
-                return Uuid.Empty;
+                return Guid.Empty;
             }
 
             if (token is not string value)
             {
-                return Uuid.Empty;
+                return Guid.Empty;
             }
 
             try
             {
-                return new Uuid(value);
+                return Guid.Parse(value);
             }
             catch (FormatException fe)
             {
@@ -1871,9 +1871,9 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public UuidCollection ReadGuidArray(string fieldName)
+        public GuidCollection ReadGuidArray(string fieldName)
         {
-            var values = new UuidCollection();
+            var values = new GuidCollection();
 
             if (!ReadArrayField(fieldName, out List<object> token))
             {
@@ -1885,7 +1885,7 @@ namespace Opc.Ua
                 try
                 {
                     m_stack.Push(token[ii]);
-                    Uuid element = ReadGuid(null);
+                    Guid element = ReadGuid(null);
                     values.Add(element);
                 }
                 finally
@@ -2510,7 +2510,7 @@ namespace Opc.Ua
                             break;
                         case BuiltInType.Guid:
                             matrix = new Matrix(
-                                elements.Cast<Uuid>().ToArray(),
+                                elements.Cast<Guid>().ToArray(),
                                 builtInType,
                                 [.. dimensions]);
                             break;

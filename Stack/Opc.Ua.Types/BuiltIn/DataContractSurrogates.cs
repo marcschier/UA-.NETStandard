@@ -35,16 +35,20 @@ using System.Runtime.Serialization;
 namespace Opc.Ua
 {
     /// <summary>
-    /// Surrogates for data contract serializer
+    /// Surrogates for data contract serializer. Used to swap types that
+    /// are not directly supported by the serializer for types that are.
     /// </summary>
-    public sealed class DataContractSurrogates : ISerializationSurrogateProvider
+    public class DataContractSurrogates : ISerializationSurrogateProvider
     {
         /// <summary>
         /// Known types
         /// </summary>
         public static Type[] KnownTypes =>
         [
+            typeof(Guid),
+            typeof(GuidCollection),
             typeof(Uuid),
+            typeof(UuidCollection),
             typeof(NodeId),
             typeof(NodeIdCollection),
             typeof(SerializableNodeId),
@@ -57,23 +61,40 @@ namespace Opc.Ua
         /// <param name="messageContext"></param>
         public DataContractSurrogates(IServiceMessageContext messageContext)
         {
-            m_messageContext = messageContext;
+            MessageContext = messageContext;
         }
+
+        /// <summary>
+        /// Access to message context passed to provider.
+        /// </summary>
+        public IServiceMessageContext MessageContext { get; }
 
         /// <inheritdoc/>
         public object GetDeserializedObject(object obj, Type targetType)
         {
             if (targetType == typeof(NodeId))
             {
-                return obj is SerializableNodeId s ? s.NodeId : obj;
+                return obj is SerializableNodeId value ?
+                    value.NodeId :
+                    obj;
             }
             if (targetType == typeof(NodeIdCollection))
             {
-                return obj is SerializableNodeIdCollection n ? (NodeIdCollection)n : obj;
+                return obj is SerializableNodeIdCollection value ?
+                    (NodeIdCollection)value :
+                    obj;
             }
             if (targetType == typeof(Guid))
             {
-                return obj is Uuid u ? (Guid)u : obj;
+                return obj is Uuid value ?
+                    value.Value :
+                    obj;
+            }
+            if (targetType == typeof(GuidCollection))
+            {
+                return obj is UuidCollection value ?
+                    (GuidCollection)value :
+                    obj;
             }
             return obj;
         }
@@ -83,39 +104,58 @@ namespace Opc.Ua
         {
             if (targetType == typeof(SerializableNodeId))
             {
-                if (obj is SerializableNodeId s)
+                if (obj is SerializableNodeId value)
                 {
-                    return s;
+                    return value;
                 }
                 targetType = obj?.GetType() ?? targetType;
             }
             if (targetType == typeof(NodeId))
             {
-                return new SerializableNodeId(obj is NodeId n ? n : NodeId.Null);
+                return new SerializableNodeId(
+                    obj is NodeId value ?
+                    value :
+                    NodeId.Null);
             }
-            if (targetType == typeof(SerializableNodeIdCollection) )
+            if (targetType == typeof(SerializableNodeIdCollection))
             {
-                if (obj is SerializableNodeIdCollection s)
+                if (obj is SerializableNodeIdCollection value)
                 {
-                    return s;
+                    return value;
                 }
                 targetType = obj?.GetType() ?? targetType;
             }
             if (targetType == typeof(NodeIdCollection))
             {
-                return obj is NodeIdCollection n ? (SerializableNodeIdCollection)n : obj;
+                return obj is NodeIdCollection value ?
+                    new SerializableNodeIdCollection(value) :
+                    obj;
             }
             if (targetType == typeof(Uuid))
             {
-                if (obj is Uuid u)
+                if (obj is Uuid value)
                 {
-                    return u;
+                    return value;
                 }
                 targetType = obj?.GetType() ?? targetType;
             }
-            if (targetType == typeof(Guid) || targetType == typeof(Uuid))
+            if (targetType == typeof(Guid))
             {
-                return obj is Guid g ? new Uuid(g) : Uuid.Empty;
+                return obj is Guid value ? new Uuid(value) : obj;
+            }
+            if (targetType == typeof(UuidCollection))
+            {
+                if (obj is UuidCollection value)
+                {
+                    return value;
+                }
+                targetType = obj?.GetType() ?? targetType;
+            }
+            if (targetType == typeof(GuidCollection))
+            {
+                return obj is GuidCollection value ?
+                    new UuidCollection(value) :
+                    obj;
             }
             return obj;
         }
@@ -135,9 +175,11 @@ namespace Opc.Ua
             {
                 return typeof(Uuid);
             }
+            if (type == typeof(GuidCollection))
+            {
+                return typeof(UuidCollection);
+            }
             return type;
         }
-
-        private IServiceMessageContext m_messageContext;
     }
 }

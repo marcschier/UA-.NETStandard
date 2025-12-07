@@ -325,11 +325,7 @@ namespace Opc.Ua
             {
                 return BuiltInType.DateTime;
             }
-            if (systemType == typeof(Guid))
-            {
-                return BuiltInType.Guid;
-            }
-            if (systemType == typeof(Uuid))
+            if (systemType == typeof(Guid) || systemType == typeof(Uuid))
             {
                 return BuiltInType.Guid;
             }
