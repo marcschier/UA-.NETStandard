@@ -286,6 +286,10 @@ namespace Opc.Ua
             { typeof(GuidCollection), typeof(UuidCollection) },
             { typeof(StatusCode), typeof(SerializableStatusCode) },
             { typeof(StatusCodeCollection), typeof(SerializableStatusCodeCollection) },
+            { typeof(QualifiedName), typeof(SerializableQualifiedName) },
+            { typeof(QualifiedNameCollection), typeof(SerializableQualifiedNameCollection) },
+            { typeof(Variant), typeof(SerializableVariant) },
+            { typeof(VariantCollection), typeof(SerializableVariantCollection) },
         };
     }
 }
