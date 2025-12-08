@@ -31,85 +31,23 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Security.Cryptography;
 
 namespace Opc.Ua
 {
     /// <summary>
-    /// A list of guids.
-    /// </summary>
-    public class GuidCollection : List<Guid>, ICloneable
-    {
-        /// <inheritdoc/>
-        public GuidCollection()
-        {
-        }
-
-        /// <inheritdoc/>
-        public GuidCollection(IEnumerable<Guid> collection)
-            : base(collection)
-        {
-        }
-
-        /// <inheritdoc/>
-        public GuidCollection(int capacity)
-            : base(capacity)
-        {
-        }
-
-        /// <summary>
-        /// Converts an array to a collection.
-        /// </summary>
-        /// <param name="values">The array of <see cref="Guid"/>
-        /// values to return as a collection</param>
-        public static GuidCollection ToGuidCollection(Guid[] values)
-        {
-            if (values != null)
-            {
-                return [.. values];
-            }
-
-            return [];
-        }
-
-        /// <summary>
-        /// Converts an array to a collection.
-        /// </summary>
-        /// <param name="values">The array of <see cref="Guid"/>
-        /// values to return as a collection</param>
-        public static implicit operator GuidCollection(Guid[] values)
-        {
-            return ToGuidCollection(values);
-        }
-
-        /// <inheritdoc/>
-        public virtual object Clone()
-        {
-            return MemberwiseClone();
-        }
-
-        /// <inheritdoc/>
-        public new object MemberwiseClone()
-        {
-            return new GuidCollection(this);
-        }
-    }
-
-    /// <summary>
     /// A wrapper for a GUID used during object serialization.
     /// </summary>
     /// <remarks>
-    /// This class provides a wrapper around the <see cref="Guid"/>
+    /// This class provides a wrapper around the <see cref="System.Guid"/>
     /// object, allowing it to be serialized  and encoded/decoded
     /// to/from an underlying stream.
     /// </remarks>x
-    [DataContract(Name = "Guid", Namespace = Namespaces.OpcUaXsd)]
-    public sealed class Uuid :
+    public readonly struct Uuid :
         IComparable,
         IFormattable,
         IEquatable<Uuid>,
-        IEquatable<Guid>,
-        ICloneable,
-        ISurrogateFor<Guid>
+        IEquatable<Guid>
     {
         /// <summary>
         /// Initializes the object with a string.
@@ -118,7 +56,7 @@ namespace Opc.Ua
         /// into a Guid</param>
         public Uuid(string text)
         {
-            Value = new Guid(text);
+            Guid = new Guid(text);
         }
 
         /// <summary>
@@ -127,41 +65,18 @@ namespace Opc.Ua
         /// <param name="guid">The Guid to wrap</param>
         public Uuid(Guid guid)
         {
-            Value = guid;
+            Guid = guid;
         }
 
         /// <summary>
         /// A constant containing an empty GUID.
         /// </summary>
-        public static Uuid Empty { get; } = new Uuid(Guid.Empty);
-
-        /// <summary>
-        /// The GUID serialized as a string.
-        /// </summary>
-        /// <remarks>
-        /// The GUID serialized as a string.
-        /// </remarks>
-        [DataMember(Name = "String", Order = 1)]
-        public string GuidString
-        {
-            get => Value.ToString();
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                {
-                    Value = Guid.Empty;
-                }
-                else
-                {
-                    Value = new Guid(value);
-                }
-            }
-        }
+        public static readonly Uuid Empty;
 
         /// <summary>
         /// The wrapped guid value.
         /// </summary>
-        public Guid Value { get; private set; }
+        public Guid Guid { get; }
 
         /// <summary>
         /// Converts Uuid to a Guid structure.
@@ -169,13 +84,13 @@ namespace Opc.Ua
         /// <param name="guid">The Guid to convert to a Uuid</param>
         public static implicit operator Guid(Uuid guid)
         {
-            return guid.Value;
+            return guid.Guid;
         }
 
         /// <summary>
         /// Converts Guid to a Uuid.
         /// </summary>
-        /// <param name="guid">The <see cref="Guid"/> to convert
+        /// <param name="guid">The <see cref="System.Guid"/> to convert
         /// to a <see cref="Uuid"/></param>
         public static implicit operator Uuid(Guid guid)
         {
@@ -244,29 +159,25 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public bool Equals(Uuid other)
         {
-            if (other is null)
-            {
-                return false;
-            }
-            return Value.Equals(other.Value);
+            return Guid.Equals(other.Guid);
         }
 
         /// <inheritdoc/>
         public bool Equals(Guid other)
         {
-            return Value.Equals(other);
+            return Guid.Equals(other);
         }
 
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return Value.GetHashCode();
+            return Guid.GetHashCode();
         }
 
         /// <inheritdoc/>
         public override string ToString()
         {
-            return Value.ToString();
+            return Guid.ToString();
         }
 
         /// <inheritdoc/>
@@ -275,13 +186,13 @@ namespace Opc.Ua
             // check for uuids.
             if (obj is Uuid uuidValue)
             {
-                return uuidValue.Value.CompareTo(Value);
+                return uuidValue.Guid.CompareTo(Guid);
             }
 
             // compare guids.
             if (obj is Guid guidValue)
             {
-                return Value.CompareTo(guidValue);
+                return Guid.CompareTo(guidValue);
             }
 
             return +1;
@@ -290,47 +201,17 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public string ToString(string format, IFormatProvider formatProvider)
         {
-            return Value.ToString(format);
-        }
-
-        /// <inheritdoc/>
-        public object Clone()
-        {
-            return MemberwiseClone();
-        }
-
-        /// <inheritdoc/>
-        public new object MemberwiseClone()
-        {
-            return new Uuid(Value);
+            return Guid.ToString(format);
         }
     }
 
     /// <summary>
     /// A collection of Uuids.
     /// </summary>
-    [CollectionDataContract(
-        Name = "ListOfGuid",
-        Namespace = Namespaces.OpcUaXsd,
-        ItemName = "Guid")]
-    public class UuidCollection : List<Uuid>,
-        ISurrogateFor<GuidCollection>,
-        ICloneable
+    public class UuidCollection : List<Uuid>, ICloneable
     {
         /// <inheritdoc/>
         public UuidCollection()
-        {
-        }
-
-        /// <inheritdoc/>
-        public UuidCollection(GuidCollection collection)
-            : base(collection.Select(g => new Uuid(g)))
-        {
-        }
-
-        /// <inheritdoc/>
-        public UuidCollection(IEnumerable<Guid> collection)
-            : base(collection.Select(g => new Uuid(g)))
         {
         }
 
@@ -347,16 +228,7 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public GuidCollection Value => [.. this.Select(n => n.Value)];
-
-        /// <inheritdoc/>
         public static implicit operator UuidCollection(Guid[] values)
-        {
-            return values != null ? [.. values.Select(g => new Uuid(g))] : [];
-        }
-
-        /// <inheritdoc/>
-        public static implicit operator UuidCollection(GuidCollection values)
         {
             return values != null ? [.. values.Select(g => new Uuid(g))] : [];
         }
@@ -364,14 +236,111 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public static implicit operator UuidCollection(Uuid[] values)
         {
-            return values != null ? [.. values.Select(g => g.Value)] : [];
+            return values != null ? [.. values.Select(g => g.Guid)] : [];
         }
 
         /// <inheritdoc/>
-        public static implicit operator GuidCollection(UuidCollection values)
+        public static implicit operator Guid[](UuidCollection values)
         {
-            return values != null ? [.. values.Select(g => g.Value)] : [];
+            return values != null ? [.. values.Select(g => g.Guid)] : [];
         }
+
+        /// <inheritdoc/>
+        public virtual object Clone()
+        {
+            return MemberwiseClone();
+        }
+
+        /// <inheritdoc/>
+        public new object MemberwiseClone()
+        {
+            return new UuidCollection((IEnumerable<Uuid>)this);
+        }
+    }
+
+    /// <summary>
+    /// A wrapper for a GUID used during object serialization.
+    /// </summary>
+    /// <remarks>
+    /// This class provides a wrapper around the <see cref="Uuid"/>
+    /// object, allowing it to be serialized  and encoded/decoded
+    /// to/from an underlying stream.
+    /// </remarks>x
+    [DataContract(Name = "Guid", Namespace = Namespaces.OpcUaXsd)]
+    public sealed class SerializableUuid :
+        ISurrogateFor<Uuid>
+    {
+        /// <inheritdoc/>
+        public SerializableUuid()
+        {
+            Value = default;
+        }
+
+        /// <inheritdoc/>
+        public SerializableUuid(Uuid guid)
+        {
+            Value = guid;
+        }
+
+        /// <summary>
+        /// The GUID serialized as a string.
+        /// </summary>
+        /// <remarks>
+        /// The GUID serialized as a string.
+        /// </remarks>
+        [DataMember(Name = "String", Order = 1)]
+        public string GuidString
+        {
+            get => Value.ToString();
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    Value = Uuid.Empty;
+                }
+                else
+                {
+                    Value = new Uuid(value);
+                }
+            }
+        }
+
+        /// <summary>
+        /// The wrapped guid value.
+        /// </summary>
+        public Uuid Value { get; private set; }
+    }
+
+    /// <summary>
+    /// A collection of Uuids.
+    /// </summary>
+    [CollectionDataContract(
+        Name = "ListOfGuid",
+        Namespace = Namespaces.OpcUaXsd,
+        ItemName = "Guid")]
+    public class SerializableUuidCollection : List<SerializableUuid>,
+        ISurrogateFor<UuidCollection>,
+        ICloneable
+    {
+        /// <inheritdoc/>
+        public SerializableUuidCollection()
+        {
+        }
+
+        /// <inheritdoc/>
+        public SerializableUuidCollection(UuidCollection collection)
+            : base(collection.Select(g => new SerializableUuid(g)))
+        {
+        }
+
+        /// <inheritdoc/>
+        public SerializableUuidCollection(int capacity)
+            : base(capacity)
+        {
+        }
+
+        /// <inheritdoc/>
+        public UuidCollection Value => [.. this.Select(n => n.Value)];
 
         /// <inheritdoc/>
         public virtual object Clone()

@@ -1409,7 +1409,7 @@ namespace Opc.Ua
                 int n => n < 0 ? -1 : CompareTo((uint)n),
                 uint n => CompareTo(n),
                 Guid g => CompareTo(g),
-                Uuid g => CompareTo(g.Value),
+                Uuid g => CompareTo(g.Guid),
                 string s => CompareTo(s),
                 byte[] b => CompareTo(b),
                 ExpandedNodeId e => CompareTo(e),

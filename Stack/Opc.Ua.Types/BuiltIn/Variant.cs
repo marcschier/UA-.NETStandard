@@ -582,7 +582,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="Uuid"/>-array value of the Variant</param>
         public Variant(Uuid[] value)
         {
-            Value = value?.Select(u => u.Value).ToArray();
+            Value = value;
             TypeInfo = TypeInfo.Arrays.Guid;
         }
 
@@ -1198,7 +1198,7 @@ namespace Opc.Ua
         /// </summary>
         public static implicit operator Variant(Uuid value)
         {
-            return new Variant(value.Value);
+            return new Variant(value.Guid);
         }
 
         /// <summary>
