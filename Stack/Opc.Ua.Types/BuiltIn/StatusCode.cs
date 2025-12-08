@@ -1001,30 +1001,30 @@ namespace Opc.Ua
         Name = "StatusCode",
         Namespace = Namespaces.OpcUaXsd)]
     public class SerializableStatusCode :
+        ISurrogateFor<StatusCode>,
         IEquatable<StatusCode>,
-        IEquatable<SerializableStatusCode>,
-        ISurrogateFor<StatusCode>
+        IEquatable<SerializableStatusCode>
     {
-        /// <summary>
-        /// Create new null initialized status code
-        /// </summary>
+        /// <inheritdoc/>
         public SerializableStatusCode()
         {
             Value = default;
         }
 
-        /// <summary>
-        /// Create initialized status code
-        /// </summary>
+        /// <inheritdoc/>
         public SerializableStatusCode(StatusCode value)
         {
             Value = value;
         }
 
-        /// <summary>
-        /// The serialized node id
-        /// </summary>
+        /// <inheritdoc/>
         public StatusCode Value { get; private set; }
+
+        /// <inheritdoc/>
+        public object GetValue()
+        {
+            return Value!;
+        }
 
         /// <summary>
         /// The entire 32-bit status value.
@@ -1159,6 +1159,12 @@ namespace Opc.Ua
 
         /// <inheritdoc/>
         public StatusCodeCollection Value => [.. this.Select(n => n.Value)];
+
+        /// <inheritdoc/>
+        public object GetValue()
+        {
+            return Value;
+        }
 
         /// <inheritdoc/>
         public static implicit operator SerializableStatusCodeCollection(

@@ -1484,30 +1484,30 @@ namespace Opc.Ua
         Name = "ExpandedNodeId",
         Namespace = Namespaces.OpcUaXsd)]
     public class SerializableExpandedNodeId :
+        ISurrogateFor<ExpandedNodeId>,
         IEquatable<ExpandedNodeId>,
-        IEquatable<SerializableExpandedNodeId>,
-        ISurrogateFor<ExpandedNodeId>
+        IEquatable<SerializableExpandedNodeId>
     {
-        /// <summary>
-        /// Create initialized expanded node id
-        /// </summary>
+        /// <inheritdoc/>
         public SerializableExpandedNodeId()
         {
             Value = default;
         }
 
-        /// <summary>
-        /// Create initialized expanded id
-        /// </summary>
-        public SerializableExpandedNodeId(ExpandedNodeId expandedNodeId)
+        /// <inheritdoc/>
+        public SerializableExpandedNodeId(ExpandedNodeId value)
         {
-            Value = expandedNodeId;
+            Value = value;
         }
 
-        /// <summary>
-        /// The serialized node id
-        /// </summary>
+        /// <inheritdoc/>
         public ExpandedNodeId Value { get; private set; }
+
+        /// <inheritdoc/>
+        public object GetValue()
+        {
+            return Value;
+        }
 
         /// <summary>
         /// The node identifier formatted as a URI.
@@ -1651,6 +1651,12 @@ namespace Opc.Ua
 
         /// <inheritdoc/>
         public ExpandedNodeIdCollection Value => [.. this.Select(n => n.Value)];
+
+        /// <inheritdoc/>
+        public object GetValue()
+        {
+            return Value;
+        }
 
         /// <inheritdoc/>
         public static implicit operator SerializableExpandedNodeIdCollection(

@@ -556,18 +556,13 @@ namespace Opc.Ua
     public class SerializableQualifiedName :
         ISurrogateFor<QualifiedName>
     {
-        /// <summary>
-        /// Create serializable qualified name
-        /// </summary>
+        /// <inheritdoc/>
         public SerializableQualifiedName()
         {
             Value = default;
         }
 
-        /// <summary>
-        /// Create serializable qualified name
-        /// </summary>
-        /// <param name="value"></param>
+        /// <inheritdoc/>
         public SerializableQualifiedName(QualifiedName value)
         {
             Value = value;
@@ -575,6 +570,12 @@ namespace Opc.Ua
 
         /// <inheritdoc/>
         public QualifiedName Value { get; private set; }
+
+        /// <inheritdoc/>
+        public object GetValue()
+        {
+            return Value!;
+        }
 
         /// <summary>
         /// Namespace index
@@ -594,18 +595,6 @@ namespace Opc.Ua
         {
             get => Value.Name;
             set => Value = Value.WithName(value);
-        }
-
-        /// <inheritdoc/>
-        public virtual object Clone()
-        {
-            return MemberwiseClone();
-        }
-
-        /// <inheritdoc/>
-        public new object MemberwiseClone()
-        {
-            return new SerializableQualifiedName(Value);
         }
     }
 
@@ -647,6 +636,12 @@ namespace Opc.Ua
 
         /// <inheritdoc/>
         public QualifiedNameCollection Value => [.. this.Select(n => n.Value)];
+
+        /// <inheritdoc/>
+        public object GetValue()
+        {
+            return Value;
+        }
 
         /// <inheritdoc/>
         public static implicit operator SerializableQualifiedNameCollection(

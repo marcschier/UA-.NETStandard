@@ -1945,30 +1945,30 @@ namespace Opc.Ua
         Name = "NodeId",
         Namespace = Namespaces.OpcUaXsd)]
     public class SerializableNodeId :
+        ISurrogateFor<NodeId>,
         IEquatable<NodeId>,
-        IEquatable<SerializableNodeId>,
-        ISurrogateFor<NodeId>
+        IEquatable<SerializableNodeId>
     {
-        /// <summary>
-        /// Create new null initialized node id
-        /// </summary>
+        /// <inheritdoc/>
         public SerializableNodeId()
         {
             Value = default;
         }
 
-        /// <summary>
-        /// Create initialized node id
-        /// </summary>
-        public SerializableNodeId(NodeId nodeId)
+        /// <inheritdoc/>
+        public SerializableNodeId(NodeId value)
         {
-            Value = nodeId;
+            Value = value;
         }
 
-        /// <summary>
-        /// The serialized node id
-        /// </summary>
+        /// <inheritdoc/>
         public NodeId Value { get; private set; }
+
+        /// <inheritdoc/>
+        public object GetValue()
+        {
+            return Value!;
+        }
 
         /// <summary>
         /// The node identifier formatted as a URI.
@@ -2094,6 +2094,12 @@ namespace Opc.Ua
 
         /// <inheritdoc/>
         public NodeIdCollection Value => [.. this.Select(n => n.Value)];
+
+        /// <inheritdoc/>
+        public object GetValue()
+        {
+            return Value;
+        }
 
         /// <inheritdoc/>
         public static implicit operator SerializableNodeIdCollection(

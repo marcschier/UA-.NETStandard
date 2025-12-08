@@ -2391,37 +2391,34 @@ namespace Opc.Ua
         Name = "Variant",
         Namespace = Namespaces.OpcUaXsd)]
     public class SerializableVariant :
+        ISurrogateFor<Variant>,
         IEquatable<Variant>,
-        IEquatable<SerializableVariant>,
-        ISurrogateFor<Variant>
+        IEquatable<SerializableVariant>
     {
-        /// <summary>
-        /// Create new null initialized Variant
-        /// </summary>
+        /// <inheritdoc/>
         public SerializableVariant()
         {
             Value = default;
         }
 
-        /// <summary>
-        /// Create initialized value
-        /// </summary>
+        /// <inheritdoc/>
         public SerializableVariant(Variant value)
         {
             Value = value;
         }
 
-        /// <summary>
-        /// The serialized value
-        /// </summary>
+        /// <inheritdoc/>
         public Variant Value { get; private set; }
 
+        /// <inheritdoc/>
+        public object GetValue()
+        {
+            return Value!;
+        }
+
         /// <summary>
-        /// The value stored in the object.
-        /// </summary>
-        /// <remarks>
         /// The value stored within the Variant object.
-        /// </remarks>
+        /// </summary>
         /// <exception cref="ServiceResultException"></exception>
         [DataMember(Name = "Value", Order = 1)]
         internal XmlElement XmlEncodedValue
@@ -2603,6 +2600,12 @@ namespace Opc.Ua
 
         /// <inheritdoc/>
         public VariantCollection Value => [.. this.Select(n => n.Value)];
+
+        /// <inheritdoc/>
+        public object GetValue()
+        {
+            return Value;
+        }
 
         /// <inheritdoc/>
         public static implicit operator SerializableVariantCollection(

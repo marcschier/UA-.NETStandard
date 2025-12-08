@@ -104,43 +104,48 @@ namespace Opc.Ua
     /// </remarks>x
     [DataContract(Name = "Guid", Namespace = Namespaces.OpcUaXsd)]
     public sealed class Uuid :
+        ISurrogateFor<Guid>,
         IComparable,
         IFormattable,
         IEquatable<Uuid>,
         IEquatable<Guid>,
-        ICloneable,
-        ISurrogateFor<Guid>
+        ICloneable
     {
-        /// <summary>
-        /// Initializes the object with a string.
-        /// </summary>
-        /// <param name="text">The string that will be turned
-        /// into a Guid</param>
-        public Uuid(string text)
+        /// <inheritdoc/>
+        public Uuid()
         {
-            Value = new Guid(text);
+            Value = default;
         }
 
-        /// <summary>
-        /// Initializes the object with a Guid.
-        /// </summary>
-        /// <param name="guid">The Guid to wrap</param>
-        public Uuid(Guid guid)
+        /// <inheritdoc/>
+        public Uuid(string text)
+            : this(new Guid(text))
         {
-            Value = guid;
+        }
+
+        /// <inheritdoc/>
+        public Uuid(Guid value)
+        {
+            Value = value;
         }
 
         /// <summary>
         /// A constant containing an empty GUID.
         /// </summary>
-        public static Uuid Empty { get; } = new Uuid(Guid.Empty);
+        public static Uuid Empty { get; } = new Uuid();
+
+        /// <inheritdoc/>
+        public Guid Value { get; private set; }
+
+        /// <inheritdoc/>
+        public object GetValue()
+        {
+            return Value!;
+        }
 
         /// <summary>
         /// The GUID serialized as a string.
         /// </summary>
-        /// <remarks>
-        /// The GUID serialized as a string.
-        /// </remarks>
         [DataMember(Name = "String", Order = 1)]
         public string GuidString
         {
@@ -157,11 +162,6 @@ namespace Opc.Ua
                 }
             }
         }
-
-        /// <summary>
-        /// The wrapped guid value.
-        /// </summary>
-        public Guid Value { get; private set; }
 
         /// <summary>
         /// Converts Uuid to a Guid structure.
@@ -348,6 +348,12 @@ namespace Opc.Ua
 
         /// <inheritdoc/>
         public GuidCollection Value => [.. this.Select(n => n.Value)];
+
+        /// <inheritdoc/>
+        public object GetValue()
+        {
+            return Value;
+        }
 
         /// <inheritdoc/>
         public static implicit operator UuidCollection(Guid[] values)

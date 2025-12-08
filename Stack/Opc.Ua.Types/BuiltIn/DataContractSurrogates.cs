@@ -36,10 +36,22 @@ using System.Runtime.Serialization;
 namespace Opc.Ua
 {
     /// <summary>
+    /// Surrogate marker interface
+    /// </summary>
+    public interface ISurrogate
+    {
+        /// <summary>
+        /// Get the value being surrogated
+        /// </summary>
+        /// <returns></returns>
+        object GetValue();
+    }
+
+    /// <summary>
     /// Denotes a surrogate for a specific type.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface ISurrogateFor<out T>
+    public interface ISurrogateFor<out T> : ISurrogate
     {
         /// <summary>
         /// Which value is surrogated
@@ -79,9 +91,9 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public object GetDeserializedObject(object obj, Type targetType)
         {
-            if (obj is ISurrogateFor<object> surrogate)
+            if (obj is ISurrogate surrogate)
             {
-                return surrogate.Value!;
+                return surrogate.GetValue();
             }
 
             // Not a surrogated type or null (default)
@@ -92,7 +104,7 @@ namespace Opc.Ua
         public object GetObjectToSerialize(object obj, Type targetType)
         {
             // Fast path for already surrogated objects.
-            if (obj is ISurrogateFor<object> surrogate)
+            if (obj is ISurrogate surrogate)
             {
                 return surrogate; // Surrogate already - serialize as is
             }
