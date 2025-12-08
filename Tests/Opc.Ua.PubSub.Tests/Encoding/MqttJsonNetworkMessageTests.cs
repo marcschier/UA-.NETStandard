@@ -2555,7 +2555,7 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                 "DataSetMetaData.Name was not decoded correctly, Encoded: {0} Decoded: {1}",
                 jsonNetworkMessage.DataSetMetaData.Name,
                 dataSetMetaData.Name);
-            if (jsonDataSetMetaData.Description == null)
+            if (jsonDataSetMetaData.Description.IsNullOrEmpty)
             {
                 return MetaDataFailOptions.MetaData_Description;
             }

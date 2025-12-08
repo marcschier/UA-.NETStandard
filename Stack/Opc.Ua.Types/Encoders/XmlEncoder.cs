@@ -732,7 +732,7 @@ namespace Opc.Ua
         /// </summary>
         public void WriteQualifiedName(string fieldName, QualifiedName value)
         {
-            WriteQualifiedName(fieldName, value, false);    
+            WriteQualifiedName(fieldName, value, false);
         }
 
         /// <summary>
@@ -768,11 +768,19 @@ namespace Opc.Ua
         /// </summary>
         public void WriteLocalizedText(string fieldName, LocalizedText value)
         {
-            if (BeginField(fieldName, value == null, true))
+            WriteLocalizedText(fieldName, value, false);
+        }
+
+        /// <summary>
+        /// Writes an LocalizedText to the stream.
+        /// </summary>
+        private void WriteLocalizedText(string fieldName, LocalizedText value, bool isArrayElement)
+        {
+            if (BeginField(fieldName, value.IsNullOrEmpty, true, isArrayElement))
             {
                 PushNamespace(Namespaces.OpcUaXsd);
 
-                if (value != null)
+                if (!value.IsNullOrEmpty)
                 {
                     if (!string.IsNullOrEmpty(value.Locale))
                     {
@@ -1613,7 +1621,7 @@ namespace Opc.Ua
                 {
                     for (int ii = 0; ii < values.Count; ii++)
                     {
-                        WriteLocalizedText("LocalizedText", values[ii]);
+                        WriteLocalizedText("LocalizedText", values[ii], true);
                     }
                 }
 

@@ -106,12 +106,12 @@ namespace Opc.Ua.Server
             }
             // translate localized text.
             LocalizedText translatedText;
-            if (LocalizedText.IsNullOrEmpty(result.LocalizedText))
+            if (result.LocalizedText.IsNullOrEmpty)
             {
                 // extract any additional arguments from the translation info.
                 object[] args = null;
 
-                if (result.LocalizedText != null && result.LocalizedText.TranslationInfo != null)
+                if (result.LocalizedText.TranslationInfo != null)
                 {
                     TranslationInfo info = result.LocalizedText.TranslationInfo;
 
@@ -323,7 +323,7 @@ namespace Opc.Ua.Server
             // check for exact match.
             if (preferredLocales != null && preferredLocales.Count > 0)
             {
-                if (defaultText != null &&
+                if (!defaultText.IsNullOrEmpty &&
                     !isMultilanguageRequested &&
                     preferredLocales[0] == defaultText.Locale)
                 {
@@ -333,7 +333,7 @@ namespace Opc.Ua.Server
                 // MultiLanguageText requested, specified numer of locales was found in the default text.
                 if (isMultilanguageRequested &&
                     preferredLocales.Count > 1 &&
-                    defaultText?.Translations?.Count == preferredLocales.Count - 1)
+                    defaultText.Translations?.Count == preferredLocales.Count - 1)
                 {
                     return defaultText;
                 }
@@ -349,12 +349,12 @@ namespace Opc.Ua.Server
             {
 #if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
                 Dictionary<string, string> translations =
-                    defaultText?.Translations != null
+                    defaultText.Translations != null
                         ? new Dictionary<string, string>(defaultText.Translations)
                         : [];
 #else
                 Dictionary<string, string> translations =
-                    defaultText?.Translations != null
+                    defaultText.Translations != null
                         ? new Dictionary<string, string>(
                             defaultText.Translations.ToDictionary(s => s.Key, s => s.Value))
                         : [];
@@ -477,7 +477,7 @@ namespace Opc.Ua.Server
                 }
 
                 // construct translated localized text.
-                return new LocalizedText(culture.Name, formattedText) { TranslationInfo = info };
+                return new LocalizedText(culture.Name, formattedText, info);
             }
         }
 
@@ -491,7 +491,7 @@ namespace Opc.Ua.Server
             LocalizedText localizedText,
             IList<string> preferredLocales)
         {
-            return localizedText?.FilterByPreferredLocales(preferredLocales);
+            return localizedText.FilterByPreferredLocales(preferredLocales);
         }
 
         /// <summary>

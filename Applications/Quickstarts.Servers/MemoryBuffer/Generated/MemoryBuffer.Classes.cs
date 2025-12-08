@@ -275,7 +275,7 @@ namespace MemoryBuffer
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }

@@ -32,9 +32,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Opc.Ua
 {
@@ -79,23 +81,35 @@ namespace Opc.Ua
     /// Welcome<br/>
     /// </para>
     /// </example>
-    [DataContract(Namespace = Namespaces.OpcUaXsd)]
-    public class LocalizedText : ICloneable, IFormattable
+    public readonly struct LocalizedText :
+        IEquatable<LocalizedText>,
+        IFormattable
     {
         /// <summary>
-        /// Initializes the object with the default values.
+        /// Returns an instance of a null LocalizedText.
         /// </summary>
-        private LocalizedText()
+        public static readonly LocalizedText Null;
+
+        /// <summary>
+        /// Returns true if the text is a null or empty string.
+        /// </summary>
+        public bool IsNullOrEmpty => m_translation == null && string.IsNullOrEmpty(m_text);
+
+        /// <summary>
+        /// Create localized text
+        /// </summary>
+        /// <param name="translation"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public LocalizedText(LocalizedTextTranslation translation)
         {
-            XmlEncodedLocale = null;
-            XmlEncodedText = null;
+            this = translation.AsMultiLanguage;
         }
 
         /// <summary>
         /// Formats the text with the arguments using the specified locale.
         /// </summary>
         public LocalizedText(string key, string locale, string text, params object[] args)
-            : this(new TranslationInfo(key, locale, text, args))
+            : this(LocalizedTextTranslation.Create(key, locale, text, args))
         {
         }
 
@@ -103,101 +117,18 @@ namespace Opc.Ua
         /// Creates text from a TranslationInfo object.
         /// </summary>
         public LocalizedText(TranslationInfo translationInfo)
+            : this(LocalizedTextTranslation.Create(translationInfo))
         {
-            if (translationInfo == null)
-            {
-                throw new ArgumentNullException(nameof(translationInfo));
-            }
-
-            XmlEncodedLocale = translationInfo.Locale;
-            XmlEncodedText = translationInfo.Text;
-            TranslationInfo = translationInfo;
-
-            if (TranslationInfo.Args == null || TranslationInfo.Args.Length == 0)
-            {
-                return;
-            }
-
-            CultureInfo culture = CultureInfo.InvariantCulture;
-
-            if (!string.IsNullOrEmpty(XmlEncodedLocale))
-            {
-                try
-                {
-                    culture = new CultureInfo(XmlEncodedLocale);
-                }
-                catch
-                {
-                    culture = CultureInfo.InvariantCulture;
-                }
-            }
-
-            try
-            {
-                XmlEncodedText = string.Format(culture, TranslationInfo.Text, TranslationInfo.Args);
-            }
-            catch
-            {
-                XmlEncodedText = TranslationInfo.Text;
-            }
-            m_translations = DecodeMulLocale();
         }
 
         /// <summary>
-        /// Creates a deep copy of the value.
+        /// Creates text from a TranslationInfo object.
         /// </summary>
-        /// <param name="value">The text to create an instance from</param>
-        /// <exception cref="ArgumentNullException">Thrown when the value is null</exception>
-        public LocalizedText(LocalizedText value)
+        public LocalizedText(string locale, string text, TranslationInfo translationInfo)
+            : this(LocalizedTextTranslation.Create(translationInfo))
         {
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
-            XmlEncodedLocale = value.XmlEncodedLocale;
-            XmlEncodedText = value.XmlEncodedText;
-            m_translations = DecodeMulLocale();
-        }
-
-        /// <summary>
-        /// Initializes the object with a text and the default locale.
-        /// </summary>
-        /// <param name="text">The plain text stored within this object</param>
-        public LocalizedText(string text)
-        {
-            XmlEncodedLocale = null;
-            XmlEncodedText = text;
-        }
-
-        /// <summary>
-        /// Initializes the object with a locale and text.
-        /// </summary>
-        /// <param name="locale">The locale code applicable for the specified text</param>
-        /// <param name="text">The text to store</param>
-        public LocalizedText(string locale, string text)
-        {
-            XmlEncodedLocale = locale;
-            XmlEncodedText = text;
-            m_translations = DecodeMulLocale();
-        }
-
-        /// <summary>
-        /// Initializes the locale with a key, locale and text.
-        /// </summary>
-        /// <param name="key">A key used to look up the text for different locales</param>
-        /// <param name="locale">The locale for the text provides</param>
-        /// <param name="text">The localized text</param>
-        public LocalizedText(string key, string locale, string text)
-        {
-            XmlEncodedLocale = locale;
-            XmlEncodedText = text;
-
-            if (!string.IsNullOrEmpty(key))
-            {
-                TranslationInfo = new TranslationInfo(key, locale, text);
-            }
-            m_translations = DecodeMulLocale();
+            m_locale = locale;
+            m_text = text;
         }
 
         /// <summary>
@@ -207,8 +138,8 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="translations">key = locale, value = text</param>
         public LocalizedText(IReadOnlyDictionary<string, string> translations)
+            : this(LocalizedTextTranslation.Create(null, translations))
         {
-            Translations = translations;
         }
 
         /// <summary>
@@ -219,172 +150,115 @@ namespace Opc.Ua
         /// <param name="key">A key used to look up the text for different locales</param>
         /// <param name="translations">key = locale, value = text</param>
         public LocalizedText(string key, IReadOnlyDictionary<string, string> translations)
+            : this(LocalizedTextTranslation.Create(key, translations))
         {
-            Translations = translations;
-
-            if (!string.IsNullOrEmpty(key))
-            {
-                TranslationInfo = new TranslationInfo(key, XmlEncodedLocale, XmlEncodedText);
-            }
         }
 
-        /// <inheritdoc/>
-        [DataMember(Name = "Locale", Order = 1)]
-        internal string XmlEncodedLocale { get; set; }
+        /// <summary>
+        /// Create a very simple localized text with default locale
+        /// </summary>
+        /// <param name="text">The plain text stored within this object</param>
+        public LocalizedText(string text)
+        {
+            m_translation = null;
+            m_locale = null;
+            m_text = text;
+        }
 
-        /// <inheritdoc/>
-        [DataMember(Name = "Text", Order = 2)]
-        internal string XmlEncodedText { get; set; }
+        /// <summary>
+        /// Initializes the object with a locale and text.
+        /// </summary>
+        /// <param name="locale">The locale code applicable for the specified text</param>
+        /// <param name="text">The text to store</param>
+        /// <param name="translation">The translation information</param>
+        public LocalizedText(string locale, string text, LocalizedTextTranslation translation = null)
+        {
+            m_text = text;
+            m_locale = locale;
+            m_translation = translation ?? LocalizedTextTranslation.Create(locale, text);
+        }
+
+        /// <summary>
+        /// Initializes the locale with a key, locale and text.
+        /// </summary>
+        /// <param name="key">A key used to look up the text for different locales</param>
+        /// <param name="locale">The locale for the text provides</param>
+        /// <param name="text">The localized text</param>
+        public LocalizedText(string key, string locale, string text)
+        {
+            m_text = text;
+            m_locale = locale;
+            m_translation = LocalizedTextTranslation.Create(key, locale, text);
+        }
 
         /// <summary>
         /// The locale used to create the text.
         /// </summary>
-        public string Locale => XmlEncodedLocale;
+        public string Locale => m_translation?.GetLocale() ?? m_locale;
 
         /// <summary>
         /// The localized text.
         /// </summary>
-        public string Text => XmlEncodedText;
+        public string Text => m_translation?.FormatText() ?? m_text;
 
         /// <summary>
-        /// <para>The decoded translations if the Localized Text is a mul locale.</para>
-        /// <para>
-        /// If the LocalizedText is not a mul locale, this property will return a dictionary
-        /// with one entry from the Text and Locale properties. If the translations property
-        /// is set a mul locale will be created.
-        /// </para>
-        /// <para>Key = locale, value = text.</para>
+        /// Translations
         /// </summary>
-        public IReadOnlyDictionary<string, string> Translations
-        {
-            get
-            {
-                if (m_translations == null && XmlEncodedLocale != null)
-                {
-                    return new ReadOnlyDictionary<string, string>(
-                        new Dictionary<string, string> { { XmlEncodedLocale, XmlEncodedText } });
-                }
-                return m_translations;
-            }
-            set
-            {
-                if (value == null || value.Count == 0)
-                {
-                    m_translations = null;
-                    return;
-                }
-                // if the dictionary contains only one entry, use the first entry as the locale and text.
-                if (value.Count == 1)
-                {
-                    foreach (KeyValuePair<string, string> kvp in value)
-                    {
-                        XmlEncodedLocale = kvp.Key;
-                        XmlEncodedText = kvp.Value;
-                        m_translations = null;
-                        return;
-                    }
-                }
-                // Encode the dictionary to a mul locale.
-                m_translations = value;
-                XmlEncodedLocale = kMulLocale;
-                XmlEncodedText = EncodeMulLocale(m_translations);
-            }
-        }
-
-        /// <summary>
-        /// A key that can be used to look to the localized text in different locales.
-        /// </summary>
-        /// <remarks>
-        /// This value is used within a process to facilite localization. It is not transmitted on the wire.
-        /// </remarks>
-        public string Key
-        {
-            get
-            {
-                if (TranslationInfo != null)
-                {
-                    return TranslationInfo.Key;
-                }
-
-                return null;
-            }
-            set
-            {
-                if (TranslationInfo != null)
-                {
-                    TranslationInfo.Key = value;
-                    return;
-                }
-
-                TranslationInfo = new TranslationInfo(value, XmlEncodedLocale, XmlEncodedText);
-            }
-        }
+        public IReadOnlyDictionary<string, string> Translations => m_translation?.Translations;
 
         /// <summary>
         /// The information required to translate the text into other locales.
         /// </summary>
-        public TranslationInfo TranslationInfo { get; set; }
+        public TranslationInfo TranslationInfo => m_translation?.TranslationInfo;
 
         /// <summary>
         /// Returns true if this LocalizedText uses the "mul" special locale.
         /// </summary>
-        public bool IsMultiLanguage
-            => string.Equals(XmlEncodedLocale, kMulLocale, StringComparison.OrdinalIgnoreCase);
+        public bool IsMultiLanguage => LocalizedTextTranslation.IsMultiLanguage(m_locale);
 
-        /// <summary>
-        /// Returns true if the objects are equal.
-        /// </summary>
-        /// <param name="obj">The object to compare to this</param>
+        /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(this, obj))
+            return obj switch
             {
-                return true;
-            }
-
-            if (obj is not LocalizedText ltext)
-            {
-                return false;
-            }
-
-            if (ltext.XmlEncodedLocale != XmlEncodedLocale &&
-                !(string.IsNullOrEmpty(ltext.XmlEncodedLocale) &&
-                    string.IsNullOrEmpty(XmlEncodedLocale)))
-            {
-                return false;
-            }
-
-            return ltext.XmlEncodedText == XmlEncodedText;
+                LocalizedText ltext => Equals(ltext),
+                string str => Equals(str),
+                _ => base.Equals(obj)
+            };
         }
 
-        /// <summary>
-        /// Returns true if the objects are equal.
-        /// </summary>
-        /// <param name="value1">The first value to compare</param>
-        /// <param name="value2">The second value to compare</param>
+        /// <inheritdoc/>
+        public bool Equals(LocalizedText ltext)
+        {
+            if (ltext.Locale != Locale &&
+                !(string.IsNullOrEmpty(ltext.Locale) &&
+                    string.IsNullOrEmpty(Locale)))
+            {
+                return false;
+            }
+            return ltext.Text == Text;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(string ltext)
+        {
+            if (!string.IsNullOrEmpty(Locale))
+            {
+                return false;
+            }
+            return ltext == Text;
+        }
+
+        /// <inheritdoc/>
         public static bool operator ==(LocalizedText value1, LocalizedText value2)
         {
-            if (value1 is not null)
-            {
-                return value1.Equals(value2);
-            }
-
-            return value2 is null;
+            return value1.Equals(value2);
         }
 
-        /// <summary>
-        /// Returns true if the objects are not equal.
-        /// </summary>
-        /// <param name="value1">The first value to compare</param>
-        /// <param name="value2">The second value to compare</param>
+        /// <inheritdoc/>
         public static bool operator !=(LocalizedText value1, LocalizedText value2)
         {
-            if (value1 is not null)
-            {
-                return !value1.Equals(value2);
-            }
-
-            return value2 is not null;
+            return !value1.Equals(value2);
         }
 
         /// <summary>
@@ -393,16 +267,14 @@ namespace Opc.Ua
         public override int GetHashCode()
         {
             var hash = new HashCode();
-            if (XmlEncodedText != null)
+            if (Text != null)
             {
-                hash.Add(XmlEncodedText);
+                hash.Add(Text);
             }
-
-            if (XmlEncodedLocale != null)
+            if (Locale != null)
             {
-                hash.Add(XmlEncodedLocale);
+                hash.Add(Locale);
             }
-
             return hash.ToHashCode();
         }
 
@@ -424,25 +296,10 @@ namespace Opc.Ua
         {
             if (format == null)
             {
-                return string.Format(formatProvider, "{0}", XmlEncodedText);
+                return string.Format(formatProvider, "{0}", Text);
             }
 
             throw new FormatException(CoreUtils.Format("Invalid format string: '{0}'.", format));
-        }
-
-        /// <inheritdoc/>
-        public virtual object Clone()
-        {
-            return MemberwiseClone();
-        }
-
-        /// <summary>
-        /// Makes a deep copy of the object.
-        /// </summary>
-        public new object MemberwiseClone()
-        {
-            // this object cannot be altered after it is created so no new allocation is necessary.
-            return this;
         }
 
         /// <summary>
@@ -464,24 +321,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Returns an instance of a null LocalizedText.
-        /// </summary>
-        public static LocalizedText Null { get; } = new LocalizedText();
-
-        /// <summary>
-        /// Returns true if the text is a null or empty string.
-        /// </summary>
-        public static bool IsNullOrEmpty(LocalizedText value)
-        {
-            if (value == null)
-            {
-                return true;
-            }
-
-            return string.IsNullOrEmpty(value.XmlEncodedText);
-        }
-
-        /// <summary>
         /// Returns a LocalizedText filtered by the preferred locales according to OPC UA Part 4
         /// rules for 'mul' and 'qst'. (https://reference.opcfoundation.org/Core/Part4/v105/docs/5.4)
         /// </summary>
@@ -490,110 +329,290 @@ namespace Opc.Ua
         /// <returns>A LocalizedText containing translations as specified by the rules.</returns>
         public LocalizedText FilterByPreferredLocales(IList<string> preferredLocales)
         {
-            if (preferredLocales == null || preferredLocales.Count == 0 || XmlEncodedLocale == null)
-            {
-                return this;
-            }
+            return m_translation == null
+                ? this
+                : m_translation.FilterByPreferredLocales(this, preferredLocales);
+        }
 
-            KeyValuePair<string, string> defaultKVP;
-            bool isMultilanguageRequested = preferredLocales[0]
-                .ToLowerInvariant() is "mul" or "qst";
+        private readonly string m_text;
+        private readonly string m_locale;
+        private readonly LocalizedTextTranslation m_translation;
+    }
 
-            // If not a multi-language request, return the best match or fallback
-            if (!isMultilanguageRequested)
-            {
-                if (!IsMultiLanguage)
-                {
-                    // nothing to do for single locale text
-                    return this;
-                }
-
-                // Try to find the first matching locale
-                foreach (string locale in preferredLocales)
-                {
-                    if (Translations.TryGetValue(locale, out string text))
-                    {
-                        return new LocalizedText(locale, text);
-                    }
-                }
-                // return the first available locale
-                defaultKVP = Translations.First();
-                return new LocalizedText(defaultKVP.Key, defaultKVP.Value);
-            }
-
-            // Multi-language request: 'mul' or 'qst'
-            if (preferredLocales.Count == 1)
-            {
-                return this;
-            }
-            if (!IsMultiLanguage)
-            {
-                // nothing to do for single locale text
-                return this;
-            }
-
-            var translations = new ReadOnlyDictionary<string, string>(
-                Translations.Where(t => preferredLocales.Contains(t.Key))
-                    .ToDictionary(s => s.Key, s => s.Value));
-
-            // If matching locales are found return those
-            if (translations.Count > 0)
-            {
-                return new LocalizedText(translations);
-            }
-            defaultKVP = Translations.First();
-
-            return new LocalizedText(defaultKVP.Key, defaultKVP.Value);
+    /// <summary>
+    /// Translation information for a LocalizedText.
+    /// </summary>
+    public class LocalizedTextTranslation
+    {
+        /// <summary>
+        /// Formats the text with the arguments using the specified locale.
+        /// Creates a translation info object. Translations are empty
+        /// </summary>
+        public static LocalizedTextTranslation Create(
+            string key,
+            string locale,
+            string text,
+            params object[] args)
+        {
+            return Create(new TranslationInfo(key, locale, text, args));
         }
 
         /// <summary>
-        /// Ecodes the translations to a JSON string according to the format specified
-        /// in https://reference.opcfoundation.org/Core/Part3/v105/docs/8.5
+        /// Creates text from a TranslationInfo object.
         /// </summary>
-        /// <exception cref="ArgumentNullException"><paramref name="translations"/> is
-        /// <c>null</c>.</exception>
-        /// <exception cref="ArgumentException">Translations dictionary is empty
-        /// </exception>
-        private static string EncodeMulLocale(IReadOnlyDictionary<string, string> translations)
+        /// <exception cref="ArgumentNullException"><paramref name="translationInfo"/>
+        /// is <c>null</c>.</exception>
+        public static LocalizedTextTranslation Create(TranslationInfo translationInfo)
         {
-            if (translations == null)
+            if (translationInfo == null)
             {
-                throw new ArgumentNullException(nameof(translations));
+                throw new ArgumentNullException(nameof(translationInfo));
             }
 
-            if (translations.Count == 0)
+            // If the translation info uses the "mul" locale, decode it into a
+            // translations dictionary to use during formatting.
+            string locale = translationInfo.Locale;
+            string text = translationInfo.Text;
+            return new LocalizedTextTranslation(DecodeMulLocale(locale, text), translationInfo);
+        }
+
+        /// <summary>
+        /// Initializes the object with a locale and text.
+        /// </summary>
+        /// <param name="locale">The locale code applicable for the specified text</param>
+        /// <param name="text">The text to store</param>
+        public static LocalizedTextTranslation Create(string locale, string text)
+        {
+            ReadOnlyDictionary<string, string> translations = DecodeMulLocale(locale, text);
+            return translations == null ? null : new LocalizedTextTranslation(translations);
+        }
+
+        /// <summary>
+        /// Initializes the locale with a key, locale and text.
+        /// </summary>
+        /// <param name="key">A key used to look up the text for different locales</param>
+        /// <param name="locale">The locale for the text provides</param>
+        /// <param name="text">The localized text</param>
+        public static LocalizedTextTranslation Create(string key, string locale, string text)
+        {
+            return new LocalizedTextTranslation(
+                DecodeMulLocale(locale, text),
+                new TranslationInfo(key, locale, text));
+        }
+
+        /// <summary>
+        /// Create a LocalizedText object from a dictionary of translations.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="translations"></param>
+        /// <returns></returns>
+        public static LocalizedTextTranslation Create(
+            string key,
+            IReadOnlyDictionary<string, string> translations)
+        {
+            if (translations == null || translations.Count == 0)
             {
-                throw new ArgumentException(
-                    "The translations dictionary must not be empty.",
+                return null;
+            }
+            if (!string.IsNullOrEmpty(key))
+            {
+                return new LocalizedTextTranslation(
+                    translations, new TranslationInfo(key, null, null));
+            }
+            return new LocalizedTextTranslation(translations);
+        }
+
+        /// <summary>
+        /// Creates a translation object from a dictionary of translations.
+        /// Either one of the arguments must not be null or empty.
+        /// </summary>
+        /// <param name="translations">key = locale, value = text</param>
+        /// <param name="translationInfo">The optional translation info></param>
+        /// <exception cref="ArgumentException">Thrown if both arguments are null
+        /// or empty.</exception>"
+        private LocalizedTextTranslation(
+            IReadOnlyDictionary<string, string> translations,
+            TranslationInfo translationInfo = null)
+        {
+            if (translationInfo == null &&
+                (translations == null || translations.Count == 0))
+            {
+                throw new ArgumentException("At least one translation must be provided.",
                     nameof(translations));
             }
+            TranslationInfo = translationInfo;
+            m_translations = translations;
+        }
 
-            var t = new List<string[]>();
-            foreach (KeyValuePair<string, string> kvp in translations)
+        /// <summary>
+        /// The information required to format the text.
+        /// </summary>
+        internal TranslationInfo TranslationInfo { get; }
+
+        /// <summary>
+        /// Translations
+        /// </summary>
+        internal IReadOnlyDictionary<string, string> Translations => m_translations;
+
+        /// <summary>
+        /// Get locale
+        /// </summary>
+        internal string GetLocale()
+        {
+            return TranslationInfo?.Locale;
+        }
+
+        /// <summary>
+        /// Format the translation info text with args and locale
+        /// </summary>
+        /// <returns></returns>
+        internal string FormatText(string locale = null)
+        {
+            if (TranslationInfo == null)
             {
-                t.Add([kvp.Key, kvp.Value]);
+                return null;
             }
-            return JsonSerializer.Serialize(
-                new Dictionary<string, List<string[]>> { { kMulLocaleDictionaryKey, t } });
+
+            if (TranslationInfo.Args == null || TranslationInfo.Args.Length == 0)
+            {
+                return TranslationInfo.Text;
+            }
+
+            string text = TranslationInfo.Text;
+            locale ??= TranslationInfo.Locale;
+            if (m_translations != null &&
+                m_translations.TryGetValue(TranslationInfo.Locale, out string localizedText))
+            {
+                text = localizedText;
+            }
+
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return text;
+            }
+
+            CultureInfo culture = CultureInfo.InvariantCulture;
+            if (!string.IsNullOrEmpty(TranslationInfo.Locale))
+            {
+                try
+                {
+                    culture = new CultureInfo(TranslationInfo.Locale);
+                }
+                catch
+                {
+                    culture = CultureInfo.InvariantCulture;
+                }
+            }
+            try
+            {
+                return string.Format(culture, text, TranslationInfo.Args);
+            }
+            catch
+            {
+                return text;
+            }
+        }
+
+        /// <summary>
+        /// Returns a LocalizedText filtered by the preferred locales according to OPC UA Part 4
+        /// rules for 'mul' and 'qst'. (https://reference.opcfoundation.org/Core/Part4/v105/docs/5.4)
+        /// </summary>
+        /// <param name="localizedText">The text to filter</param>
+        /// <param name="preferredLocales">The list of preferred locales, possibly including 'mul'
+        /// or 'qst' as the first entry.</param>
+        /// <returns>A LocalizedText containing translations as specified by the rules.</returns>
+        public LocalizedText FilterByPreferredLocales(
+            LocalizedText localizedText,
+            IList<string> preferredLocales)
+        {
+            if (preferredLocales == null || preferredLocales.Count == 0)
+            {
+                return localizedText;
+            }
+
+            KeyValuePair<string, string> defaultKVP;
+            if (preferredLocales[0].ToLowerInvariant() is "mul" or "qst")
+            {
+                // If multi locale or qst is requested, return all translations
+                // Encoded as "mul" locale
+                return localizedText.IsMultiLanguage ? localizedText : AsMultiLanguage;
+            }
+
+            if (m_translations == null || m_translations.Count == 0)
+            {
+                // No translations - return what we have
+                return localizedText;
+            }
+
+            // Try to find the first matching locale
+            foreach (string locale in preferredLocales)
+            {
+                if (m_translations.ContainsKey(locale))
+                {
+                    return new LocalizedText(locale, FormatText(locale));
+                }
+            }
+            // Return the default locale (first entry)
+            defaultKVP = m_translations.First();
+            return new LocalizedText(defaultKVP.Key, FormatText(defaultKVP.Key));
+        }
+
+        /// <summary>
+        /// Check for multi language locale
+        /// </summary>
+        /// <param name="locale"></param>
+        /// <returns></returns>
+        public static bool IsMultiLanguage(string locale)
+        {
+            return string.Equals(locale, kMulLocale, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Encodes the translations to a JSON string according to the format specified
+        /// in https://reference.opcfoundation.org/Core/Part3/v105/docs/8.5
+        /// </summary>
+        public LocalizedText AsMultiLanguage
+        {
+            get
+            {
+                var t = new List<string[]>();
+                if (m_translations == null || m_translations.Count == 0)
+                {
+                    // Get from translation info
+                    if (TranslationInfo == null)
+                    {
+                        return LocalizedText.Null;
+                    }
+                    t.Add([TranslationInfo.Locale ?? "en-US", TranslationInfo.Text ?? string.Empty]);
+                }
+                else
+                {
+                    foreach (KeyValuePair<string, string> kvp in m_translations)
+                    {
+                        t.Add([kvp.Key, kvp.Value]);
+                    }
+                }
+                return new LocalizedText(kMulLocale, JsonSerializer.Serialize(
+                    new Dictionary<string, List<string[]>> { { kMulLocaleDictionaryKey, t } }), this);
+            }
         }
 
         /// <summary>
         /// If this is a "mul" locale, returns a dictionary of locale/text pairs from the JSON Text.
         /// Otherwise, returns null.
+        /// The expected JSON structure is defined in https://reference.opcfoundation.org/Core/Part3/v105/docs/8.5
         /// </summary>
-        private ReadOnlyDictionary<string, string> DecodeMulLocale()
+        private static ReadOnlyDictionary<string, string> DecodeMulLocale(string encodedLocale, string encodedText)
         {
-            if (!IsMultiLanguage || string.IsNullOrWhiteSpace(XmlEncodedText))
+            if (!IsMultiLanguage(encodedLocale) || string.IsNullOrWhiteSpace(encodedText))
             {
                 return null;
             }
-
             var result = new Dictionary<string, string>();
             try
             {
-                // The expected JSON structure is defined in https://reference.opcfoundation.org/Core/Part3/v105/docs/8.5
                 Dictionary<string, List<string[]>> json =
-                    JsonSerializer.Deserialize<Dictionary<string, List<string[]>>>(XmlEncodedText);
+                    JsonSerializer.Deserialize<Dictionary<string, List<string[]>>>(encodedText);
                 if (json.TryGetValue(kMulLocaleDictionaryKey, out List<string[]> tValue))
                 {
                     foreach (string[] pair in tValue)
@@ -615,17 +634,15 @@ namespace Opc.Ua
             {
                 // TODO: Need to wire a logger here
                 ILogger logger = AmbientMessageContext.Telemetry.CreateLogger<LocalizedText>();
-                logger.LogDebug("Failed to parse mul locale JSON text: {Text}", XmlEncodedText);
+                logger.LogDebug("Failed to parse mul locale JSON text: {Text}", encodedText);
                 return null; // Return null if parsing fails
             }
-
             return new ReadOnlyDictionary<string, string>(result);
         }
 
         private const string kMulLocale = "mul";
         private const string kMulLocaleDictionaryKey = "t";
-
-        private IReadOnlyDictionary<string, string> m_translations;
+        private readonly IReadOnlyDictionary<string, string> m_translations;
     }
 
     /// <summary>
@@ -634,32 +651,20 @@ namespace Opc.Ua
     /// <remarks>
     /// A strongly-typed collection of LocalizedText objects.
     /// </remarks>
-    [CollectionDataContract(
-        Name = "ListOfLocalizedText",
-        Namespace = Namespaces.OpcUaXsd,
-        ItemName = "LocalizedText")]
     public class LocalizedTextCollection : List<LocalizedText>, ICloneable
     {
-        /// <summary>
-        /// Initializes an empty collection.
-        /// </summary>
+        /// <inheritdoc/>
         public LocalizedTextCollection()
         {
         }
 
-        /// <summary>
-        /// Initializes the collection from another collection.
-        /// </summary>
-        /// <param name="collection">The collection to copy into this new instance</param>
+        /// <inheritdoc/>
         public LocalizedTextCollection(IEnumerable<LocalizedText> collection)
             : base(collection)
         {
         }
 
-        /// <summary>
-        /// Initializes the collection with the specified capacity.
-        /// </summary>
-        /// <param name="capacity">The max capacity of this collection</param>
+        /// <inheritdoc/>
         public LocalizedTextCollection(int capacity)
             : base(capacity)
         {
@@ -694,9 +699,7 @@ namespace Opc.Ua
             return MemberwiseClone();
         }
 
-        /// <summary>
-        /// Creates a deep copy of the collection.
-        /// </summary>
+        /// <inheritdoc/>
         public new object MemberwiseClone()
         {
             var clone = new LocalizedTextCollection(Count);
@@ -709,4 +712,166 @@ namespace Opc.Ua
             return clone;
         }
     }
+
+    /// <summary>
+    /// Helper to allow data contract serialization of LocalizedText
+    /// </summary>
+    [DataContract(
+        Name = "LocalizedText",
+        Namespace = Namespaces.OpcUaXsd)]
+    public class SerializableLocalizedText :
+        IEquatable<LocalizedText>,
+        IEquatable<SerializableLocalizedText>,
+        ISurrogateFor<LocalizedText>
+    {
+        /// <summary>
+        /// Create initialized localized text
+        /// </summary>
+        public SerializableLocalizedText()
+        {
+            Value = default;
+        }
+
+        /// <summary>
+        /// Create initialized localized text
+        /// </summary>
+        public SerializableLocalizedText(LocalizedText value)
+        {
+            Value = value;
+        }
+
+        /// <inheritdoc/>
+        public LocalizedText Value { get; private set; }
+
+        /// <inheritdoc/>
+        [DataMember(Name = "Locale", Order = 1)]
+        internal string XmlEncodedLocale
+        {
+            get => Value.Locale;
+            set => Value = new LocalizedText(value, XmlEncodedText);
+        }
+
+        /// <inheritdoc/>
+        [DataMember(Name = "Text", Order = 2)]
+        internal string XmlEncodedText
+        {
+            get => Value.Text;
+            set => Value = new LocalizedText(XmlEncodedLocale, value);
+        }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return obj switch
+            {
+                SerializableLocalizedText s => Equals(s),
+                LocalizedText n => Equals(n),
+                _ => Value.Equals(obj)
+            };
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(LocalizedText obj)
+        {
+            return Value.Equals(obj);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(SerializableLocalizedText obj)
+        {
+            return Value.Equals(obj?.Value ?? default);
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            return Value.GetHashCode();
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(SerializableLocalizedText left, SerializableLocalizedText right)
+        {
+            return left is null ? right is null : left.Equals(right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(SerializableLocalizedText left, SerializableLocalizedText right)
+        {
+            return !(left == right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(SerializableLocalizedText left, LocalizedText right)
+        {
+            return left is null ? right.IsNullOrEmpty : left.Equals(right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(SerializableLocalizedText left, LocalizedText right)
+        {
+            return !(left == right);
+        }
+
+        /// <inheritdoc/>
+        public static implicit operator SerializableLocalizedText(
+            LocalizedText value)
+        {
+            return new SerializableLocalizedText(value);
+        }
+
+        /// <inheritdoc/>
+        public static implicit operator LocalizedText(
+            SerializableLocalizedText value)
+        {
+            return value.Value;
+        }
+    }
+
+    /// <summary>
+    /// A collection of SerializableLocalizedText objects.
+    /// </summary>
+    [CollectionDataContract(
+        Name = "ListOfLocalizedText",
+        Namespace = Namespaces.OpcUaXsd,
+        ItemName = "LocalizedText")]
+    public class SerializableLocalizedTextCollection :
+        List<SerializableLocalizedText>,
+        ISurrogateFor<LocalizedTextCollection>
+    {
+        /// <inheritdoc/>
+        public SerializableLocalizedTextCollection()
+        {
+        }
+
+        /// <inheritdoc/>
+        public SerializableLocalizedTextCollection(
+            LocalizedTextCollection collection)
+            : this(collection.Select(n => new SerializableLocalizedText(n)))
+        {
+        }
+
+        /// <inheritdoc/>
+        public SerializableLocalizedTextCollection(
+            IEnumerable<SerializableLocalizedText> collection)
+            : base(collection)
+        {
+        }
+
+        /// <inheritdoc/>
+        public SerializableLocalizedTextCollection(int capacity)
+            : base(capacity)
+        {
+        }
+
+        /// <inheritdoc/>
+        public LocalizedTextCollection Value => [.. this.Select(n => n.Value)];
+
+        /// <inheritdoc/>
+        public static implicit operator SerializableLocalizedTextCollection(
+            SerializableLocalizedText[] values)
+        {
+            return values == null ? [] : [.. values];
+        }
+    }
+
 }

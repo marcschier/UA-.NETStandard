@@ -1141,7 +1141,7 @@ namespace Opc.Ua
                 DiscoveryUrls = discoveryUrls
             };
 
-            if (!LocalizedText.IsNullOrEmpty(applicationName))
+            if (!applicationName.IsNullOrEmpty)
             {
                 copy.ApplicationName = applicationName;
             }

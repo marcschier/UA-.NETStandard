@@ -682,7 +682,7 @@ namespace Opc.Ua.Bindings
         /// </summary>
         protected static void WriteErrorMessageBody(BinaryEncoder encoder, ServiceResult error)
         {
-            string reason = error.LocalizedText?.Text;
+            string reason = error.LocalizedText.Text;
 
             // check that length is not exceeded.
             if (reason != null &&

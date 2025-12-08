@@ -464,15 +464,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Returns true if the value is null.
-        /// </summary>
-        /// <param name="value">The qualified name to check</param>
-        public static bool IsNull([NotNullWhen(false)] QualifiedName value)
-        {
-            return value.IsNullQn;
-        }
-
-        /// <summary>
         /// Converts a string to a qualified name.
         /// </summary>
         /// <param name="value">The string to turn into a fully qualified name</param>

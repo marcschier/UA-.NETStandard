@@ -1936,8 +1936,7 @@ namespace Opc.Ua
 
             object firstOperand = GetValue(operands[0]);
             string lhs;
-            var firstOperandLocalizedText = firstOperand as LocalizedText;
-            if (firstOperandLocalizedText != null)
+            if (firstOperand is LocalizedText firstOperandLocalizedText)
             {
                 lhs = firstOperandLocalizedText.Text;
             }
@@ -1948,8 +1947,7 @@ namespace Opc.Ua
 
             object secondOperand = GetValue(operands[1]);
             string rhs;
-            var secondOperandLocalizedText = secondOperand as LocalizedText;
-            if (secondOperandLocalizedText != null)
+            if (secondOperand is LocalizedText secondOperandLocalizedText)
             {
                 rhs = secondOperandLocalizedText.Text;
             }

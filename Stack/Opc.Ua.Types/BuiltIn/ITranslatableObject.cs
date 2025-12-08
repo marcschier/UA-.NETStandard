@@ -34,7 +34,8 @@ namespace Opc.Ua
     /// <summary>
     /// An interface to an object that can translate itself.
     /// </summary>
-    public interface ITranslatableObject
+    /// <typeparam name="T"></typeparam>
+    public interface ITranslatableObject<T>
     {
         /// <summary>
         /// Returns a copy of the object with translateable strings replaced.
@@ -46,7 +47,7 @@ namespace Opc.Ua
         /// The copy is not necessarily a deep copy and may reference components of the original object.
         /// The original object is not changed.
         /// </remarks>
-        ITranslatableObject Translate(ITranslationManager manager, IList<string> preferredLocales);
+        T Translate(ITranslationManager manager, IList<string> preferredLocales);
     }
 
     /// <summary>
@@ -97,20 +98,6 @@ namespace Opc.Ua
         /// </summary>
         public TranslationInfo()
         {
-        }
-
-        /// <summary>
-        /// Creates an object from a key and a LocalizedText.
-        /// </summary>
-        public TranslationInfo(string key, LocalizedText text)
-        {
-            Key = key;
-
-            if (text != null)
-            {
-                Text = text.Text;
-                Locale = text.Locale;
-            }
         }
 
         /// <summary>

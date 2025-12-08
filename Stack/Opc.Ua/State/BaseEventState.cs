@@ -68,7 +68,7 @@ namespace Opc.Ua
                     };
                 }
 
-                if (!QualifiedName.IsNull(source.BrowseName))
+                if (!source.BrowseName.IsNullQn)
                 {
                     m_sourceName = new PropertyState<string>(this)
                     {

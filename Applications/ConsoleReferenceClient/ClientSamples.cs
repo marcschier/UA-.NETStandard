@@ -1338,7 +1338,7 @@ namespace Quickstarts
                         StartNodeId = item.NodeId,
                         AttributeId = Attributes.Value,
                         SamplingInterval = samplingInterval,
-                        DisplayName = item.DisplayName?.Text ?? item.BrowseName.Name ?? "unknown",
+                        DisplayName = item.DisplayName.Text ?? item.BrowseName.Name ?? "unknown",
                         QueueSize = queueSize,
                         DiscardOldest = true,
                         MonitoringMode = MonitoringMode.Reporting

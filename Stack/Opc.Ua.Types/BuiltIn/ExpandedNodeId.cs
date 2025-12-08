@@ -1478,7 +1478,7 @@ namespace Opc.Ua
     }
 
     /// <summary>
-    /// Helper to allow data contract serialization of ExpadedNodeId
+    /// Helper to allow data contract serialization of ExpandedNodeId
     /// </summary>
     [DataContract(
         Name = "ExpandedNodeId",
@@ -1497,16 +1497,14 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Create initialized expanded id
+        /// Create initialized expanded node id
         /// </summary>
-        public SerializableExpandedNodeId(ExpandedNodeId expandedNodeId)
+        public SerializableExpandedNodeId(ExpandedNodeId value)
         {
-            Value = expandedNodeId;
+            Value = value;
         }
 
-        /// <summary>
-        /// The serialized node id
-        /// </summary>
+        /// <inheritdoc/>
         public ExpandedNodeId Value { get; private set; }
 
         /// <summary>
@@ -1582,32 +1580,32 @@ namespace Opc.Ua
 
         /// <inheritdoc/>
         public static implicit operator SerializableExpandedNodeId(
-            ExpandedNodeId expandedNodeId)
+            ExpandedNodeId value)
         {
-            return new SerializableExpandedNodeId(expandedNodeId);
+            return new SerializableExpandedNodeId(value);
         }
 
         /// <inheritdoc/>
         public static implicit operator ExpandedNodeId(
-            SerializableExpandedNodeId expandedNodeId)
+            SerializableExpandedNodeId value)
         {
-            return expandedNodeId.Value;
+            return value.Value;
         }
 
         /// <inheritdoc/>
         public static explicit operator string(
-            SerializableExpandedNodeId expandedNodeId)
+            SerializableExpandedNodeId value)
         {
-            return expandedNodeId.IdentifierText;
+            return value.IdentifierText;
         }
 
         /// <inheritdoc/>
         public static explicit operator SerializableExpandedNodeId(
-            string expandedNodeId)
+            string value)
         {
             return new SerializableExpandedNodeId
             {
-                IdentifierText = expandedNodeId
+                IdentifierText = value
             };
         }
     }

@@ -354,7 +354,7 @@ namespace Opc.Ua.Export
                     var o = (ReferenceTypeState)node;
                     var value = new UAReferenceType { IsAbstract = o.IsAbstract };
 
-                    if (!Ua.LocalizedText.IsNullOrEmpty(o.InverseName))
+                    if (!o.InverseName.IsNullOrEmpty)
                     {
                         value.InverseName = Export([o.InverseName]);
                     }
@@ -383,7 +383,7 @@ namespace Opc.Ua.Export
                 exportedNode.DisplayName = null;
             }
 
-            if (node.Description != null && !string.IsNullOrEmpty(node.Description.Text))
+            if (!string.IsNullOrEmpty(node.Description.Text))
             {
                 exportedNode.Description = Export([node.Description]);
             }
@@ -773,8 +773,11 @@ namespace Opc.Ua.Export
 
             importedNode.NodeId = ImportNodeId(node.NodeId, context.NamespaceUris, false);
             importedNode.BrowseName = ImportQualifiedName(node.BrowseName, context.NamespaceUris);
-            importedNode.DisplayName = Import(node.DisplayName) ??
-                new Ua.LocalizedText(importedNode.BrowseName.Name);
+            importedNode.DisplayName = Import(node.DisplayName);
+            if (importedNode.DisplayName.IsNullOrEmpty)
+            {
+                importedNode.DisplayName = new Ua.LocalizedText(importedNode.BrowseName.Name);
+            }
 
             importedNode.Description = Import(node.Description);
             importedNode.NodeSetDocumentation = node.Documentation;
@@ -1038,7 +1041,7 @@ namespace Opc.Ua.Export
         /// </summary>
         private string Export(QualifiedName source, NamespaceTable namespaceUris)
         {
-            if (QualifiedName.IsNull(source))
+            if (source.IsNullQn)
             {
                 return string.Empty;
             }
@@ -1159,7 +1162,7 @@ namespace Opc.Ua.Export
                     {
                         var output = new DataTypeField { Name = field.Name };
 
-                        if (field.DisplayName != null && output.Name != field.DisplayName.Text)
+                        if (!field.DisplayName.IsNullOrEmpty && output.Name != field.DisplayName.Text)
                         {
                             output.DisplayName = Export([field.DisplayName]);
                         }
@@ -1404,7 +1407,7 @@ namespace Opc.Ua.Export
 
             for (int ii = 0; ii < input.Length; ii++)
             {
-                if (input[ii] != null)
+                if (!input[ii].IsNullOrEmpty)
                 {
                     var text = new LocalizedText
                     {

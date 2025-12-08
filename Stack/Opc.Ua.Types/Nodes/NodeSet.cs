@@ -767,7 +767,7 @@ namespace Opc.Ua
                 throw new ArgumentNullException(nameof(sourceNamespaceUris));
             }
 
-            if (QualifiedName.IsNull(qname))
+            if (qname.IsNullQn)
             {
                 return qname;
             }

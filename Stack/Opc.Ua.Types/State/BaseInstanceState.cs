@@ -183,7 +183,7 @@ namespace Opc.Ua
                 return "(null)";
             }
 
-            if (node.DisplayName == null)
+            if (node.DisplayName.IsNullOrEmpty)
             {
                 if (!node.BrowseName.IsNullQn)
                 {

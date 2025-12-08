@@ -262,7 +262,7 @@ namespace Opc.Ua
                 throw new FormatException(CoreUtils.Format("Invalid format string: '{0}'.", format));
             }
 
-            if (!QualifiedName.IsNull(m_browseName))
+            if (!m_browseName.IsNullQn)
             {
                 return string.Format(formatProvider, "[{0}]{1}", NodeClass, m_displayName);
             }
@@ -345,7 +345,7 @@ namespace Opc.Ua
             get => m_displayName;
             set
             {
-                if (!ReferenceEquals(m_displayName, value))
+                if (m_displayName != value)
                 {
                     m_changeMasks |= NodeStateChangeMasks.NonValue;
                 }
@@ -363,7 +363,7 @@ namespace Opc.Ua
             get => m_description;
             set
             {
-                if (!ReferenceEquals(m_description, value))
+                if (m_description != value)
                 {
                     m_changeMasks |= NodeStateChangeMasks.NonValue;
                 }
@@ -867,12 +867,12 @@ namespace Opc.Ua
                 attributesToSave |= AttributesToSave.NodeId;
             }
 
-            if (!QualifiedName.IsNull(m_browseName))
+            if (!m_browseName.IsNullQn)
             {
                 attributesToSave |= AttributesToSave.BrowseName;
             }
 
-            if (!LocalizedText.IsNullOrEmpty(m_displayName))
+            if (!m_displayName.IsNullOrEmpty)
             {
                 if (m_browseName.IsNullQn ||
                     !string.IsNullOrEmpty(m_displayName.Locale) ||
@@ -882,7 +882,7 @@ namespace Opc.Ua
                 }
             }
 
-            if (!LocalizedText.IsNullOrEmpty(m_description))
+            if (!m_description.IsNullOrEmpty)
             {
                 attributesToSave |= AttributesToSave.Description;
             }
@@ -990,7 +990,7 @@ namespace Opc.Ua
                 m_displayName = decoder.ReadLocalizedText(null);
             }
 
-            if (LocalizedText.IsNullOrEmpty(m_displayName) && !m_browseName.IsNullQn)
+            if (m_displayName.IsNullOrEmpty && !m_browseName.IsNullQn)
             {
                 m_displayName = m_browseName.Name;
             }
@@ -1391,12 +1391,12 @@ namespace Opc.Ua
                 encoder.WriteNodeId("NodeId", m_nodeId);
             }
 
-            if (!QualifiedName.IsNull(m_browseName))
+            if (!m_browseName.IsNullQn)
             {
                 encoder.WriteQualifiedName("BrowseName", m_browseName);
             }
 
-            if (!LocalizedText.IsNullOrEmpty(m_displayName))
+            if (!m_displayName.IsNullOrEmpty)
             {
                 if (m_browseName.IsNullQn ||
                     !string.IsNullOrEmpty(m_displayName.Locale) ||
@@ -1406,7 +1406,7 @@ namespace Opc.Ua
                 }
             }
 
-            if (!LocalizedText.IsNullOrEmpty(m_description))
+            if (!m_description.IsNullOrEmpty)
             {
                 encoder.WriteLocalizedText("Description", m_description);
             }
@@ -1462,7 +1462,7 @@ namespace Opc.Ua
             {
                 QualifiedName browseName = decoder.ReadQualifiedName("BrowseName");
 
-                if (!QualifiedName.IsNull(browseName))
+                if (!browseName.IsNullQn)
                 {
                     BrowseName = browseName;
                 }
@@ -1473,7 +1473,7 @@ namespace Opc.Ua
                 DisplayName = decoder.ReadLocalizedText("DisplayName");
             }
 
-            if (LocalizedText.IsNullOrEmpty(m_displayName) && !m_browseName.IsNullQn)
+            if (m_displayName.IsNullOrEmpty && !m_browseName.IsNullQn)
             {
                 DisplayName = m_browseName.Name;
             }
@@ -1821,7 +1821,7 @@ namespace Opc.Ua
                 attributesToLoad &= ~AttributesToSave.DisplayName;
             }
 
-            if (LocalizedText.IsNullOrEmpty(displayName) && !browseName.IsNullQn)
+            if (displayName.IsNullOrEmpty && !browseName.IsNullQn)
             {
                 displayName = browseName.Name;
             }
@@ -2069,7 +2069,7 @@ namespace Opc.Ua
                 displayName = decoder.ReadLocalizedText("DisplayName");
             }
 
-            if (LocalizedText.IsNullOrEmpty(displayName) && !browseName.IsNullQn)
+            if (displayName.IsNullOrEmpty && !browseName.IsNullQn)
             {
                 displayName = browseName.Name;
             }
@@ -2742,7 +2742,7 @@ namespace Opc.Ua
             }
 
             // set defaults for names.
-            if (!QualifiedName.IsNull(browseName))
+            if (!browseName.IsNullQn)
             {
                 SymbolicName = browseName.Name;
                 BrowseName = browseName;
@@ -2750,7 +2750,7 @@ namespace Opc.Ua
             }
 
             // override display name.
-            if (displayName != null)
+            if (!displayName.IsNullOrEmpty)
             {
                 DisplayName = displayName;
             }
@@ -3882,11 +3882,13 @@ namespace Opc.Ua
 
                     return result;
                 case Attributes.Description:
-                    var description = value as LocalizedText;
-
-                    if (description == null && value != null)
+                    if (value is not LocalizedText description)
                     {
-                        return StatusCodes.BadTypeMismatch;
+                        if (value != null)
+                        {
+                            return StatusCodes.BadTypeMismatch;
+                        }
+                        description = LocalizedText.Null;
                     }
 
                     if ((WriteMask & AttributeWriteMask.Description) == 0)
@@ -4205,7 +4207,7 @@ namespace Opc.Ua
             ISystemContext context,
             QualifiedName browseName)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -4221,7 +4223,7 @@ namespace Opc.Ua
         /// <exception cref="ArgumentException"></exception>
         public virtual void ReplaceChild(ISystemContext context, BaseInstanceState child)
         {
-            if (child == null || QualifiedName.IsNull(child.BrowseName))
+            if (child == null || child.BrowseName.IsNullQn)
             {
                 throw new ArgumentException("Cannot replace child without a browse name.");
             }
@@ -4749,7 +4751,7 @@ namespace Opc.Ua
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }

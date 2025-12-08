@@ -66,4 +66,40 @@ namespace Opc.Ua
             }
         }
     }
+
+    /// <summary>
+    /// QualifiedName extensions
+    /// </summary>
+    public static class QualifiedNameExtensions
+    {
+        extension(QualifiedName)
+        {
+            /// <summary>
+            /// Returns true if the text is a null or empty string.
+            /// </summary>
+            [Obsolete("Use QualifiedName.IsNullQn property instead.")]
+            public static bool IsNull([NotNullWhen(false)] QualifiedName value)
+            {
+                return value.IsNullQn;
+            }
+        }
+    }
+
+    /// <summary>
+    /// LocalizedText extensions
+    /// </summary>
+    public static class LocalizedTextExtensions
+    {
+        extension(LocalizedText)
+        {
+            /// <summary>
+            /// Returns true if the text is a null or empty string.
+            /// </summary>
+            [Obsolete("Use LocalizedText.IsNullOrEmpty property instead.")]
+            public static bool IsNullOrEmpty(LocalizedText value)
+            {
+                return value.IsNullOrEmpty;
+            }
+        }
+    }
 }

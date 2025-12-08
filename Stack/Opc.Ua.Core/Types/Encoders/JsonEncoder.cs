@@ -1453,7 +1453,7 @@ namespace Opc.Ua
         /// </summary>
         public void WriteQualifiedName(string fieldName, QualifiedName value)
         {
-            bool isNull = QualifiedName.IsNull(value);
+            bool isNull = value.IsNullQn;
 
             if (fieldName != null && isNull && !IncludeDefaultValues)
             {
@@ -1485,7 +1485,7 @@ namespace Opc.Ua
         /// </summary>
         public void WriteLocalizedText(string fieldName, LocalizedText value)
         {
-            bool isNull = LocalizedText.IsNullOrEmpty(value);
+            bool isNull = value.IsNullOrEmpty;
 
             if (fieldName != null && isNull && !IncludeDefaultValues)
             {

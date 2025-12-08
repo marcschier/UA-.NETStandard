@@ -753,6 +753,7 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.NodeId:
                 case BasicDataType.ExpandedNodeId:
                 case BasicDataType.QualifiedName:
+                case BasicDataType.LocalizedText:
                 case BasicDataType.StatusCode:
                     // case BasicDataType.SVariant:
                     return true;
@@ -956,7 +957,7 @@ namespace Opc.Ua.SourceGeneration
                         expandedNodeId);
                 case BasicDataType.QualifiedName:
                     if (decodedValue is not QualifiedName qualifiedName ||
-                        QualifiedName.IsNull(qualifiedName))
+                        qualifiedName.IsNullQn)
                     {
                         return "global::Opc.Ua.QualifiedName.Null";
                     }
@@ -965,7 +966,7 @@ namespace Opc.Ua.SourceGeneration
                         qualifiedName);
                 case BasicDataType.LocalizedText:
                     if (decodedValue is not LocalizedText localizedText ||
-                        LocalizedText.IsNullOrEmpty(localizedText))
+                        localizedText.IsNullOrEmpty)
                     {
                         return "global::Opc.Ua.LocalizedText.Null";
                     }

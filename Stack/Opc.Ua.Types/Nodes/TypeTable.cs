@@ -269,7 +269,7 @@ namespace Opc.Ua
         public NodeId FindReferenceType(QualifiedName browseName)
         {
             // check for empty name.
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return default;
             }
@@ -567,7 +567,7 @@ namespace Opc.Ua
                 // add reference type.
                 if (((int)node.NodeClass & (int)NodeClass.ReferenceType) != 0)
                 {
-                    if (!QualifiedName.IsNull(typeInfo.BrowseName))
+                    if (!typeInfo.BrowseName.IsNullQn)
                     {
                         m_referenceTypes.Remove(typeInfo.BrowseName);
                     }
@@ -695,7 +695,7 @@ namespace Opc.Ua
                 }
 
                 // add reference type.
-                if (!QualifiedName.IsNull(browseName))
+                if (!browseName.IsNullQn)
                 {
                     typeInfo.BrowseName = browseName;
                     m_referenceTypes[browseName] = typeInfo;
@@ -748,7 +748,7 @@ namespace Opc.Ua
                 }
 
                 // remove reference type.
-                if (!QualifiedName.IsNull(typeInfo.BrowseName))
+                if (!typeInfo.BrowseName.IsNullQn)
                 {
                     m_referenceTypes.Remove(typeInfo.BrowseName);
                 }

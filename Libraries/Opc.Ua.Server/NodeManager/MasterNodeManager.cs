@@ -1064,7 +1064,7 @@ namespace Opc.Ua.Server
             {
                 RelativePathElement element = relativePath.Elements[ii];
 
-                if (element == null || QualifiedName.IsNull(relativePath.Elements[ii].TargetName))
+                if (element == null || relativePath.Elements[ii].TargetName.IsNullQn)
                 {
                     return StatusCodes.BadBrowseNameInvalid;
                 }
@@ -1137,7 +1137,7 @@ namespace Opc.Ua.Server
             }
 
             // check for valid target name.
-            if (QualifiedName.IsNull(element.TargetName))
+            if (element.TargetName.IsNullQn)
             {
                 throw new ServiceResultException(StatusCodes.BadBrowseNameInvalid);
             }
@@ -2745,7 +2745,7 @@ namespace Opc.Ua.Server
                     }
 
                     // the data encoding has no meaning for event subscriptions.
-                    if (!QualifiedName.IsNull(itemToCreate.ItemToMonitor.DataEncoding))
+                    if (!itemToCreate.ItemToMonitor.DataEncoding.IsNullQn)
                     {
                         errors[ii] = StatusCodes.BadDataEncodingInvalid;
                         continue;

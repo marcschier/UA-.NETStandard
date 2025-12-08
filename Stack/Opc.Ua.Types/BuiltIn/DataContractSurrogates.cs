@@ -143,6 +143,8 @@ namespace Opc.Ua
             { typeof(QualifiedNameCollection), typeof(SerializableQualifiedNameCollection) },
             { typeof(Variant), typeof(SerializableVariant) },
             { typeof(VariantCollection), typeof(SerializableVariantCollection) },
+            { typeof(LocalizedText), typeof(SerializableLocalizedText) },
+            { typeof(LocalizedTextCollection), typeof(SerializableLocalizedTextCollection) },
         };
     }
 }

@@ -1224,7 +1224,7 @@ namespace Opc.Ua
             {
                 for (int jj = 0; jj < names.Count; jj++)
                 {
-                    if (LocalizedText.IsNullOrEmpty(names[jj]))
+                    if (names[jj].IsNullOrEmpty)
                     {
                         continue;
                     }
@@ -1246,7 +1246,7 @@ namespace Opc.Ua
 
                 for (int jj = 0; jj < names.Count; jj++)
                 {
-                    if (LocalizedText.IsNullOrEmpty(names[jj]))
+                    if (names[jj].IsNullOrEmpty)
                     {
                         continue;
                     }

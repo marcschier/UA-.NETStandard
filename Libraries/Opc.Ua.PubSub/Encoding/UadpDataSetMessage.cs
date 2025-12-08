@@ -796,7 +796,7 @@ namespace Opc.Ua.PubSub.Encoding
                         case BuiltInType.LocalizedText:
                             binaryEncoder.WriteLocalizedText(
                                 "LocalizedText",
-                                valueToEncode as LocalizedText);
+                                valueToEncode is LocalizedText text ? text : default);
                             break;
                         case BuiltInType.NodeId:
                             binaryEncoder.WriteNodeId(
