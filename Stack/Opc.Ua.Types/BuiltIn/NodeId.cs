@@ -2075,14 +2075,14 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public SerializableNodeIdCollection(IEnumerable<SerializableNodeId> collection)
-            : base(collection)
+        public SerializableNodeIdCollection(NodeIdCollection collection)
+            : this(collection.Select(n => new SerializableNodeId(n)))
         {
         }
 
         /// <inheritdoc/>
-        public SerializableNodeIdCollection(IEnumerable<NodeId> collection)
-            : this(collection.Select(n => new SerializableNodeId(n)))
+        public SerializableNodeIdCollection(IEnumerable<SerializableNodeId> collection)
+            : base(collection)
         {
         }
 
@@ -2093,29 +2093,13 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public NodeIdCollection Value => (NodeIdCollection)this;
+        public NodeIdCollection Value => [.. this.Select(n => n.Value)];
 
         /// <inheritdoc/>
         public static implicit operator SerializableNodeIdCollection(
             SerializableNodeId[] values)
         {
             return values == null ? [] : [..values];
-        }
-
-        /// <inheritdoc/>
-        public static explicit operator NodeIdCollection(
-            SerializableNodeIdCollection values)
-        {
-            return values == null ? null : new(values.Select(n => n.Value));
-        }
-
-        /// <inheritdoc/>
-        public static explicit operator SerializableNodeIdCollection(
-            NodeIdCollection values)
-        {
-            return values == null ?
-                null :
-                new SerializableNodeIdCollection(values);
         }
     }
 
@@ -2183,40 +2167,5 @@ namespace Opc.Ua
         /// Invalid namespace index
         /// </summary>
         InvalidNamespaceIndex
-    }
-
-    /// <summary>
-    /// Node id extensions
-    /// </summary>
-    public static class NodeIdExtensions
-    {
-        extension(NodeId)
-        {
-            /// <summary>
-            /// Checks if the node id represents a 'Null' node id.
-            /// </summary>
-            /// <remarks>
-            /// Returns a true/false value to indicate if the specified NodeId is null.
-            /// </remarks>
-            /// <param name="nodeId">The NodeId to validate</param>
-            [Obsolete("Use NodeId.IsNullNodeId property instead.")]
-            public static bool IsNull([NotNullWhen(false)] NodeId nodeId)
-            {
-                return nodeId.IsNullNodeId;
-            }
-
-            /// <summary>
-            /// Checks if the node id represents a 'Null' node id.
-            /// </summary>
-            /// <remarks>
-            /// Returns a true/false to indicate if the specified <see cref="ExpandedNodeId"/> is null.
-            /// </remarks>
-            /// <param name="nodeId">The ExpandedNodeId to validate</param>
-            [Obsolete("Use ExpandedNodeId.IsNull property instead.")]
-            public static bool IsNull([NotNullWhen(false)] ExpandedNodeId nodeId)
-            {
-                return nodeId.IsNull;
-            }
-        }
     }
 }

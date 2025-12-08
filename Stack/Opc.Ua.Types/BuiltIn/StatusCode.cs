@@ -1139,15 +1139,15 @@ namespace Opc.Ua
 
         /// <inheritdoc/>
         public SerializableStatusCodeCollection(
-            IEnumerable<SerializableStatusCode> collection)
-            : base(collection)
+            StatusCodeCollection collection)
+            : this(collection.Select(n => new SerializableStatusCode(n)))
         {
         }
 
         /// <inheritdoc/>
         public SerializableStatusCodeCollection(
-            IEnumerable<StatusCode> collection)
-            : this(collection.Select(n => new SerializableStatusCode(n)))
+            IEnumerable<SerializableStatusCode> collection)
+            : base(collection)
         {
         }
 
@@ -1158,7 +1158,7 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public StatusCodeCollection Value => new(this.Select(n => n.Value));
+        public StatusCodeCollection Value => [.. this.Select(n => n.Value)];
 
         /// <inheritdoc/>
         public static implicit operator SerializableStatusCodeCollection(
@@ -1166,22 +1166,5 @@ namespace Opc.Ua
         {
             return values == null ? [] : [.. values];
         }
-
-        /// <inheritdoc/>
-        public static explicit operator StatusCodeCollection(
-            SerializableStatusCodeCollection values)
-        {
-            return values == null ? null : new(values.Select(n => n.Value));
-        }
-
-        /// <inheritdoc/>
-        public static explicit operator SerializableStatusCodeCollection(
-            StatusCodeCollection values)
-        {
-            return values == null ?
-                null :
-                new SerializableStatusCodeCollection(values);
-        }
     }
-
 }

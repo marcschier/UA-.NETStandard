@@ -627,15 +627,15 @@ namespace Opc.Ua
 
         /// <inheritdoc/>
         public SerializableQualifiedNameCollection(
-            IEnumerable<SerializableQualifiedName> collection)
-            : base(collection)
+            QualifiedNameCollection collection)
+            : this(collection.Select(n => new SerializableQualifiedName(n)))
         {
         }
 
         /// <inheritdoc/>
         public SerializableQualifiedNameCollection(
-            IEnumerable<QualifiedName> collection)
-            : this(collection.Select(n => new SerializableQualifiedName(n)))
+            IEnumerable<SerializableQualifiedName> collection)
+            : base(collection)
         {
         }
 
@@ -646,29 +646,13 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public QualifiedNameCollection Value => (QualifiedNameCollection)this;
+        public QualifiedNameCollection Value => [.. this.Select(n => n.Value)];
 
         /// <inheritdoc/>
         public static implicit operator SerializableQualifiedNameCollection(
             SerializableQualifiedName[] values)
         {
             return values == null ? [] : [.. values];
-        }
-
-        /// <inheritdoc/>
-        public static explicit operator QualifiedNameCollection(
-            SerializableQualifiedNameCollection values)
-        {
-            return values == null ? null : new(values.Select(n => n.Value));
-        }
-
-        /// <inheritdoc/>
-        public static explicit operator SerializableQualifiedNameCollection(
-            QualifiedNameCollection values)
-        {
-            return values == null ?
-                null :
-                new SerializableQualifiedNameCollection(values);
         }
     }
 }

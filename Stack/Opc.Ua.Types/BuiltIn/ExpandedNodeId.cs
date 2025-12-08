@@ -1622,11 +1622,17 @@ namespace Opc.Ua
     )]
     public class SerializableExpandedNodeIdCollection :
         List<SerializableExpandedNodeId>,
-        ISurrogateFor<ExpandedNodeIdCollection>,
-        ICloneable
+        ISurrogateFor<ExpandedNodeIdCollection>
     {
         /// <inheritdoc/>
         public SerializableExpandedNodeIdCollection()
+        {
+        }
+
+        /// <inheritdoc/>
+        public SerializableExpandedNodeIdCollection(
+            ExpandedNodeIdCollection collection)
+            : this(collection.Select(n => new SerializableExpandedNodeId(n)))
         {
         }
 
@@ -1638,61 +1644,19 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public SerializableExpandedNodeIdCollection(
-            IEnumerable<ExpandedNodeId> collection)
-            : this(collection.Select(n => new SerializableExpandedNodeId(n)))
-        {
-        }
-
-        /// <inheritdoc/>
         public SerializableExpandedNodeIdCollection(int capacity)
             : base(capacity)
         {
         }
 
         /// <inheritdoc/>
-        public ExpandedNodeIdCollection Value => (ExpandedNodeIdCollection)this;
+        public ExpandedNodeIdCollection Value => [.. this.Select(n => n.Value)];
 
         /// <inheritdoc/>
         public static implicit operator SerializableExpandedNodeIdCollection(
             SerializableExpandedNodeId[] values)
         {
             return values == null ? [] : [.. values];
-        }
-
-        /// <inheritdoc/>
-        public static explicit operator ExpandedNodeIdCollection(
-            SerializableExpandedNodeIdCollection values)
-        {
-            return values == null ? null : new(values.Select(n => n.Value));
-        }
-
-        /// <inheritdoc/>
-        public static explicit operator SerializableExpandedNodeIdCollection(
-            ExpandedNodeIdCollection values)
-        {
-            return values == null ?
-                null :
-                new SerializableExpandedNodeIdCollection(values);
-        }
-
-        /// <inheritdoc/>
-        public virtual object Clone()
-        {
-            return MemberwiseClone();
-        }
-
-        /// <inheritdoc/>
-        public new object MemberwiseClone()
-        {
-            var clone = new SerializableExpandedNodeIdCollection(Count);
-
-            foreach (SerializableExpandedNodeId element in this)
-            {
-                clone.Add(new SerializableExpandedNodeId(element.Value));
-            }
-
-            return clone;
         }
     }
 }

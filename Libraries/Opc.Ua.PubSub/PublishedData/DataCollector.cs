@@ -221,10 +221,9 @@ namespace Opc.Ua.PubSub.PublishedData
                                                 ShouldBringToConstraints(
                                                     (uint)strFieldValue.Length))
                                             {
-                                                variant.Value = strFieldValue[
+                                                dataValue.Value = new Variant(strFieldValue[
                                                     ..(int)field.FieldMetaData.MaxStringLength
-                                                ];
-                                                dataValue.Value = variant;
+                                                ]);
                                             }
                                         }
                                         else if (field.FieldMetaData.ValueRank == ValueRanks
@@ -260,8 +259,7 @@ namespace Opc.Ua.PubSub.PublishedData
                                                 Array.Resize(
                                                     ref byteArray,
                                                     (int)field.FieldMetaData.MaxStringLength);
-                                                variant.Value = byteArray;
-                                                dataValue.Value = variant;
+                                                dataValue.Value = new Variant(byteArray);
                                             }
                                         }
                                         else if (field.FieldMetaData.ValueRank == ValueRanks

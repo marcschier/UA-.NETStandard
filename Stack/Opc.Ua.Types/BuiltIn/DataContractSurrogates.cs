@@ -44,7 +44,7 @@ namespace Opc.Ua
         /// <summary>
         /// Which value is surrogated
         /// </summary>
-        public T Value { get; }
+        T Value { get; }
     }
 
     /// <summary>
@@ -79,190 +79,43 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public object GetDeserializedObject(object obj, Type targetType)
         {
-            if (typeof(ISurrogateFor<>)
-                .MakeGenericType(targetType)
-                .IsAssignableFrom(obj.GetType()))
+            if (obj is ISurrogateFor<object> surrogate)
             {
-                return obj.GetType()
-                    .GetProperty(nameof(ISurrogateFor<>.Value))!
-                    .GetValue(obj);
+                return surrogate.Value!;
             }
-            if (targetType == typeof(NodeId))
-            {
-                return obj is SerializableNodeId value ?
-                    value.Value :
-                    obj;
-            }
-            if (targetType == typeof(NodeIdCollection))
-            {
-                return obj is SerializableNodeIdCollection value ?
-                    (NodeIdCollection)value :
-                    obj;
-            }
-            if (targetType == typeof(ExpandedNodeId))
-            {
-                return obj is SerializableExpandedNodeId value ?
-                    value.Value :
-                    obj;
-            }
-            if (targetType == typeof(ExpandedNodeIdCollection))
-            {
-                return obj is SerializableExpandedNodeIdCollection value ?
-                    (ExpandedNodeIdCollection)value :
-                    obj;
-            }
-            if (targetType == typeof(StatusCode))
-            {
-                return obj is SerializableStatusCode value ?
-                    value.Value :
-                    obj;
-            }
-            if (targetType == typeof(StatusCodeCollection))
-            {
-                return obj is SerializableStatusCodeCollection value ?
-                    (StatusCodeCollection)value :
-                    obj;
-            }
-            if (targetType == typeof(Guid))
-            {
-                return obj is Uuid value ?
-                    value.Value :
-                    obj;
-            }
-            if (targetType == typeof(GuidCollection))
-            {
-                return obj is UuidCollection value ?
-                    (GuidCollection)value :
-                    obj;
-            }
+
+            // Not a surrogated type or null (default)
             return obj;
         }
 
         /// <inheritdoc/>
         public object GetObjectToSerialize(object obj, Type targetType)
         {
-         //  if (typeof(ISurrogateFor<>)
-         //      .MakeGenericType(targetType)
-         //      .IsAssignableFrom(obj.GetType()))
-         //  {
-         //      return obj.GetType()
-         //          .GetProperty(nameof(ISurrogateFor<>.Value))!
-         //          .GetValue(obj);
-         //  }
-            if (targetType == typeof(SerializableNodeId))
+            // Fast path for already surrogated objects.
+            if (obj is ISurrogateFor<object> surrogate)
             {
-                if (obj is SerializableNodeId value)
+                return surrogate; // Surrogate already - serialize as is
+            }
+            if (!SurrogateMappings.TryGetValue(targetType, out Type surrogateType))
+            {
+                // Not a surrogated type
+                return obj;
+            }
+            // Create surrogate instance - all surrogates have a constructor
+            // that takes the original object it is surrogate for or a default
+            // constructor to create a null instance.
+            try
+            {
+                if (obj is null)
                 {
-                    return value;
+                    return Activator.CreateInstance(surrogateType);
                 }
-                targetType = obj?.GetType() ?? targetType;
+                return Activator.CreateInstance(surrogateType, [obj]);
             }
-            if (targetType == typeof(NodeId))
+            catch
             {
-                return new SerializableNodeId(
-                    obj is NodeId value ?
-                    value :
-                    NodeId.Null);
+                return obj;
             }
-            if (targetType == typeof(SerializableNodeIdCollection))
-            {
-                if (obj is SerializableNodeIdCollection value)
-                {
-                    return value;
-                }
-                targetType = obj?.GetType() ?? targetType;
-            }
-            if (targetType == typeof(NodeIdCollection))
-            {
-                return obj is NodeIdCollection value ?
-                    new SerializableNodeIdCollection(value) :
-                    obj;
-            }
-            if (targetType == typeof(SerializableExpandedNodeId))
-            {
-                if (obj is SerializableExpandedNodeId value)
-                {
-                    return value;
-                }
-                targetType = obj?.GetType() ?? targetType;
-            }
-            if (targetType == typeof(ExpandedNodeId))
-            {
-                return new SerializableExpandedNodeId(
-                    obj is ExpandedNodeId value ?
-                    value :
-                    ExpandedNodeId.Null);
-            }
-            if (targetType == typeof(SerializableExpandedNodeIdCollection))
-            {
-                if (obj is SerializableExpandedNodeIdCollection value)
-                {
-                    return value;
-                }
-                targetType = obj?.GetType() ?? targetType;
-            }
-            if (targetType == typeof(ExpandedNodeIdCollection))
-            {
-                return obj is ExpandedNodeIdCollection value ?
-                    new SerializableExpandedNodeIdCollection(value) :
-                    obj;
-            }
-            if (targetType == typeof(Uuid))
-            {
-                if (obj is Uuid value)
-                {
-                    return value;
-                }
-                targetType = obj?.GetType() ?? targetType;
-            }
-            if (targetType == typeof(Guid))
-            {
-                return obj is Guid value ? new Uuid(value) : obj;
-            }
-            if (targetType == typeof(UuidCollection))
-            {
-                if (obj is UuidCollection value)
-                {
-                    return value;
-                }
-                targetType = obj?.GetType() ?? targetType;
-            }
-            if (targetType == typeof(GuidCollection))
-            {
-                return obj is GuidCollection value ?
-                    new UuidCollection(value) :
-                    obj;
-            }
-            if (targetType == typeof(SerializableStatusCode))
-            {
-                if (obj is SerializableStatusCode value)
-                {
-                    return value;
-                }
-                targetType = obj?.GetType() ?? targetType;
-            }
-            if (targetType == typeof(StatusCode))
-            {
-                return new SerializableStatusCode(
-                    obj is StatusCode value ?
-                    value :
-                    default);
-            }
-            if (targetType == typeof(SerializableStatusCodeCollection))
-            {
-                if (obj is SerializableStatusCodeCollection value)
-                {
-                    return value;
-                }
-                targetType = obj?.GetType() ?? targetType;
-            }
-            if (targetType == typeof(StatusCodeCollection))
-            {
-                return obj is StatusCodeCollection value ?
-                    new SerializableStatusCodeCollection(value) :
-                    obj;
-            }
-            return obj;
         }
 
         /// <inheritdoc/>
@@ -274,7 +127,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Surrogate mappings
+        /// Surrogate mappings (Could get from assembly)
         /// </summary>
         public static readonly Dictionary<Type, Type> SurrogateMappings = new()
         {

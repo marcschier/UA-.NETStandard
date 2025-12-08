@@ -752,6 +752,9 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.Guid:
                 case BasicDataType.NodeId:
                 case BasicDataType.ExpandedNodeId:
+                case BasicDataType.QualifiedName:
+                case BasicDataType.StatusCode:
+                    // case BasicDataType.SVariant:
                     return true;
                 default:
                     return false;

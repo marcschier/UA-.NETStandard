@@ -323,14 +323,20 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public UuidCollection(IEnumerable<Uuid> collection)
-            : base(collection)
+        public UuidCollection(GuidCollection collection)
+            : base(collection.Select(g => new Uuid(g)))
         {
         }
 
         /// <inheritdoc/>
         public UuidCollection(IEnumerable<Guid> collection)
-            : this(collection.Select(g => new Uuid(g)))
+            : base(collection.Select(g => new Uuid(g)))
+        {
+        }
+
+        /// <inheritdoc/>
+        public UuidCollection(IEnumerable<Uuid> collection)
+            : base(collection)
         {
         }
 
@@ -341,7 +347,7 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public GuidCollection Value => (GuidCollection)this;
+        public GuidCollection Value => [.. this.Select(n => n.Value)];
 
         /// <inheritdoc/>
         public static implicit operator UuidCollection(Guid[] values)
@@ -376,7 +382,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public new object MemberwiseClone()
         {
-            return new UuidCollection(this);
+            return new UuidCollection((IEnumerable<Uuid>)this);
         }
     }
 }

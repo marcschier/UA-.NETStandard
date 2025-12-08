@@ -114,13 +114,13 @@ namespace Opc.Ua.Client
         /// The session id assigned by the server.
         /// </summary>
         [DataMember(IsRequired = true, Order = 30)]
-        public SerializableNodeId SessionId { get; init; } = new();
+        public NodeId SessionId { get; init; }
 
         /// <summary>
         /// The authentication token used by the server to identify the session.
         /// </summary>
         [DataMember(IsRequired = true, Order = 40)]
-        public SerializableNodeId AuthenticationToken { get; init; } = new();
+        public NodeId AuthenticationToken { get; init; }
 
         /// <summary>
         /// The last server nonce received.

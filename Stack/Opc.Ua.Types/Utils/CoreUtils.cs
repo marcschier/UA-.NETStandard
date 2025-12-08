@@ -286,7 +286,17 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Returns a deep copy of the value.
+        /// Returns a struct as is because structs are never deep copied
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public static T Clone<T>(in T value)
+            where T : struct
+        {
+            return value;
+        }
+
+        /// <summary>
+        /// Returns a deep copy of the reference type value.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         public static T Clone<T>(T value)
@@ -313,15 +323,13 @@ namespace Opc.Ua
             {
                 return value;
             }
-
-            // strings are special a reference type that does not need to be copied.
-            if (type == typeof(string))
+            // nothing to do for other value types.
+            if (type.GetTypeInfo().IsValueType)
             {
                 return value;
             }
-
-            // Guid are special a reference type that does not need to be copied.
-            if (type == typeof(Guid))
+            // strings are special a reference type that does not need to be copied.
+            if (type == typeof(string))
             {
                 return value;
             }
@@ -368,17 +376,9 @@ namespace Opc.Ua
             }
 
             // use ICloneable if supported
-            // must be checked before value type due to some
-            // structs implementing ICloneable
             if (value is ICloneable cloneable)
             {
                 return cloneable.Clone();
-            }
-
-            // nothing to do for other value types.
-            if (type.GetTypeInfo().IsValueType)
-            {
-                return value;
             }
 
             // copy XmlNode.
@@ -446,8 +446,19 @@ namespace Opc.Ua
         /// Checks if two T values are equal based on IEquatable compare.
         /// </summary>
         /// <typeparam name="T"></typeparam>
+        public static bool IsEqual<T>(in T value1, in T value2)
+            where T : struct, IEquatable<T>
+        {
+            // use IEquatable comparer
+            return value1.Equals(value2);
+        }
+
+        /// <summary>
+        /// Checks if two T values are equal based on IEquatable compare.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
         public static bool IsEqual<T>(T value1, T value2)
-            where T : IEquatable<T>
+            where T : class, IEquatable<T>
         {
             // check for reference equality.
             if (ReferenceEquals(value1, value2))

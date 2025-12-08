@@ -47,8 +47,8 @@ namespace Opc.Ua
     /// <b>LocalizedText</b>.
     /// <br/></para>
     /// <para>
-    /// This class provides a wrapper for posting text that is qualified with the locale that it is
-    /// intended for.
+    /// This class provides a wrapper for posting text that is qualified with the locale
+    /// that it is intended for.
     /// <br/></para>
     /// </remarks>
     /// <example>
@@ -82,9 +82,6 @@ namespace Opc.Ua
     [DataContract(Namespace = Namespaces.OpcUaXsd)]
     public class LocalizedText : ICloneable, IFormattable
     {
-        private const string kMulLocale = "mul";
-        private const string kMulLocaleDictionaryKey = "t";
-
         /// <summary>
         /// Initializes the object with the default values.
         /// </summary>
@@ -624,6 +621,9 @@ namespace Opc.Ua
 
             return new ReadOnlyDictionary<string, string>(result);
         }
+
+        private const string kMulLocale = "mul";
+        private const string kMulLocaleDictionaryKey = "t";
 
         private IReadOnlyDictionary<string, string> m_translations;
     }

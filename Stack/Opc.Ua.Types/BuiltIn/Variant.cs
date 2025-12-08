@@ -283,7 +283,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="Guid"/> value of the Variant</param>
         public Variant(Guid value)
         {
-            Value = new Uuid(value);
+            Value = value;
             TypeInfo = TypeInfo.Scalars.Guid;
         }
 
@@ -582,7 +582,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="Uuid"/>-array value of the Variant</param>
         public Variant(Uuid[] value)
         {
-            Value = value;
+            Value = value?.Select(u => u.Value).ToArray();
             TypeInfo = TypeInfo.Arrays.Guid;
         }
 
@@ -621,7 +621,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="NodeId"/>-array value of the Variant</param>
         public Variant(NodeId[] value)
         {
-            Value = value == null ? null : new SerializableNodeIdCollection(value);
+            Value = value;
             TypeInfo = TypeInfo.Arrays.NodeId;
         }
 
@@ -1196,12 +1196,9 @@ namespace Opc.Ua
         /// <summary>
         /// Converts a Uuid value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a Uuid value to an Variant object.
-        /// </remarks>
         public static implicit operator Variant(Uuid value)
         {
-            return new Variant(value);
+            return new Variant(value.Value);
         }
 
         /// <summary>
@@ -2586,15 +2583,15 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public SerializableVariantCollection(
-            IEnumerable<SerializableVariant> collection)
-            : base(collection)
+        public SerializableVariantCollection(VariantCollection collection)
+            : this(collection.Select(n => new SerializableVariant(n)))
         {
         }
 
         /// <inheritdoc/>
-        public SerializableVariantCollection(IEnumerable<Variant> collection)
-            : this(collection.Select(n => new SerializableVariant(n)))
+        public SerializableVariantCollection(
+            IEnumerable<SerializableVariant> collection)
+            : base(collection)
         {
         }
 
@@ -2605,27 +2602,13 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public VariantCollection Value => (VariantCollection)this;
+        public VariantCollection Value => [.. this.Select(n => n.Value)];
 
         /// <inheritdoc/>
         public static implicit operator SerializableVariantCollection(
             SerializableVariant[] values)
         {
             return values == null ? [] : [.. values];
-        }
-
-        /// <inheritdoc/>
-        public static explicit operator VariantCollection(
-            SerializableVariantCollection values)
-        {
-            return values == null ? null : new(values.Select(n => n.Value));
-        }
-
-        /// <inheritdoc/>
-        public static explicit operator SerializableVariantCollection(
-            VariantCollection values)
-        {
-            return values == null ? null : new(values);
         }
     }
 }
