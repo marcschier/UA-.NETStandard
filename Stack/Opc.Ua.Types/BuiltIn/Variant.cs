@@ -38,6 +38,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Xml;
 using Opc.Ua.Types;
+using static Opc.Ua.TypeInfo;
 
 namespace Opc.Ua
 {
@@ -57,7 +58,6 @@ namespace Opc.Ua
     /// <br/></para>
     /// </remarks>
     public readonly struct Variant :
-        ICloneable,
         IFormattable,
         IEquatable<Variant>
     {
@@ -71,96 +71,8 @@ namespace Opc.Ua
         /// <param name="value">The Variant value to copy.</param>
         public Variant(Variant value)
         {
-            m_value = CoreUtils.Clone(value.m_value);
+            Value = CoreUtils.Clone(value.Value);
             TypeInfo = value.TypeInfo;
-        }
-
-        /// <summary>
-        /// Constructs a Variant
-        /// </summary>
-        /// <param name="value">The value to store.</param>
-        /// <param name="typeInfo">The type information for the value.</param>
-        public Variant(object value, TypeInfo typeInfo)
-        {
-            m_value = null;
-            TypeInfo = typeInfo;
-
-            // check for null values.
-            if (value == null)
-            {
-                // m_value = typeInfo.ValueRank < 0 ? TypeInfo.GetDefaultValue(typeInfo.BuiltInType) : null;
-                Check(m_value, TypeInfo);
-                return;
-            }
-
-            // handle scalar values.
-            if (typeInfo.ValueRank < 0)
-            {
-                this = SetScalar(value, typeInfo);
-                Check(m_value, TypeInfo);
-                return;
-            }
-
-            var array = value as Array;
-
-            // handle one dimensional arrays.
-            if (typeInfo.ValueRank <= 1)
-            {
-                // handle arrays.
-                if (array != null)
-                {
-                    SetArray(array, typeInfo);
-                    Check(m_value, TypeInfo);
-                    return;
-                }
-
-                // handle lists.
-
-                if (value is IList list)
-                {
-                    SetList(list, typeInfo);
-                    Check(m_value, TypeInfo);
-                    return;
-                }
-            }
-
-            // handle multidimensional array.
-            if (array != null)
-            {
-                m_value = new Matrix(array, typeInfo.BuiltInType);
-                TypeInfo = typeInfo;
-                Check(m_value, TypeInfo);
-                return;
-            }
-
-            // handle matrix.
-
-            if (value is Matrix matrix)
-            {
-                m_value = matrix;
-                TypeInfo = matrix.TypeInfo;
-                Check(m_value, TypeInfo);
-                return;
-            }
-
-            // not supported.
-            throw new ServiceResultException(
-                StatusCodes.BadNotSupported,
-                CoreUtils.Format(
-                    "Arrays of the type '{0}' cannot be stored in a Variant object.",
-                    value.GetType().FullName));
-        }
-
-        /// <summary>
-        /// Constructs a Variant
-        /// </summary>
-        /// <param name="value">The value to store.</param>
-        /// <param name="typeInfo">The type information for the value.</param>
-        public Variant(Array value, TypeInfo typeInfo)
-        {
-            m_value = null;
-            TypeInfo = typeInfo;
-            SetArray(value, typeInfo);
         }
 
         /// <summary>
@@ -180,9 +92,7 @@ namespace Opc.Ua
         /// </summary>
         public Variant(Array value)
         {
-            m_value = value;
-            TypeInfo = TypeInfo.Construct(value);
-            SetArray(value, TypeInfo);
+            this = new Variant(value, TypeInfo.Construct(value));
         }
 
         /// <summary>
@@ -191,7 +101,7 @@ namespace Opc.Ua
         /// <param name="value">The value to store within the variant</param>
         public Variant(Matrix value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = value.TypeInfo;
         }
 
@@ -204,7 +114,7 @@ namespace Opc.Ua
         /// <param name="value">The value of the variant</param>
         public Variant(bool value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Scalars.Boolean;
         }
 
@@ -217,7 +127,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="sbyte"/> value of the Variant</param>
         public Variant(sbyte value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Scalars.SByte;
         }
 
@@ -230,7 +140,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="byte"/> value of the Variant</param>
         public Variant(byte value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Scalars.Byte;
         }
 
@@ -243,7 +153,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="short"/> value of the Variant</param>
         public Variant(short value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Scalars.Int16;
         }
 
@@ -256,7 +166,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="ushort"/> value of the Variant</param>
         public Variant(ushort value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Scalars.UInt16;
         }
 
@@ -269,7 +179,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="int"/> value of the Variant</param>
         public Variant(int value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Scalars.Int32;
         }
 
@@ -282,7 +192,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="uint"/> value of the Variant</param>
         public Variant(uint value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Scalars.UInt32;
         }
 
@@ -295,7 +205,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="long"/> value of the Variant</param>
         public Variant(long value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Scalars.Int64;
         }
 
@@ -308,7 +218,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="ulong"/> value of the Variant</param>
         public Variant(ulong value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Scalars.UInt64;
         }
 
@@ -321,7 +231,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="float"/> value of the Variant</param>
         public Variant(float value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Scalars.Float;
         }
 
@@ -334,7 +244,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="double"/> value of the Variant</param>
         public Variant(double value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Scalars.Double;
         }
 
@@ -347,7 +257,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="string"/> value of the Variant</param>
         public Variant(string value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Scalars.String;
         }
 
@@ -360,7 +270,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="DateTime"/> value of the Variant</param>
         public Variant(DateTime value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Scalars.DateTime;
         }
 
@@ -373,7 +283,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="Guid"/> value of the Variant</param>
         public Variant(Guid value)
         {
-            m_value = new Uuid(value);
+            Value = new Uuid(value);
             TypeInfo = TypeInfo.Scalars.Guid;
         }
 
@@ -386,7 +296,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="byte"/>-array value of the Variant</param>
         public Variant(byte[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Scalars.ByteString;
         }
 
@@ -399,7 +309,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="XmlElement"/> value of the Variant</param>
         public Variant(XmlElement value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Scalars.XmlElement;
         }
 
@@ -412,7 +322,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="NodeId"/> value of the Variant</param>
         public Variant(NodeId value)
         {
-            m_value = new SerializableNodeId(value);
+            Value = value;
             TypeInfo = TypeInfo.Scalars.NodeId;
         }
 
@@ -425,7 +335,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="ExpandedNodeId"/> value of the Variant</param>
         public Variant(ExpandedNodeId value)
         {
-            m_value = new SerializableExpandedNodeId(value);
+            Value = value;
             TypeInfo = TypeInfo.Scalars.ExpandedNodeId;
         }
 
@@ -438,7 +348,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="StatusCode"/> value of the Variant</param>
         public Variant(StatusCode value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Scalars.StatusCode;
         }
 
@@ -451,7 +361,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="QualifiedName"/> value of the Variant</param>
         public Variant(QualifiedName value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Scalars.QualifiedName;
         }
 
@@ -464,7 +374,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="LocalizedText"/> value of the Variant</param>
         public Variant(LocalizedText value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Scalars.LocalizedText;
         }
 
@@ -477,7 +387,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="ExtensionObject"/> value of the Variant</param>
         public Variant(ExtensionObject value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Scalars.ExtensionObject;
         }
 
@@ -490,7 +400,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="DataValue"/> value of the Variant</param>
         public Variant(DataValue value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Scalars.DataValue;
         }
 
@@ -503,7 +413,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="bool"/>-array value of the Variant</param>
         public Variant(bool[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.Boolean;
         }
 
@@ -516,7 +426,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="sbyte"/>-array value of the Variant</param>
         public Variant(sbyte[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.SByte;
         }
 
@@ -529,7 +439,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="short"/>-array value of the Variant</param>
         public Variant(short[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.Int16;
         }
 
@@ -542,7 +452,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="ushort"/>-array value of the Variant</param>
         public Variant(ushort[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.UInt16;
         }
 
@@ -555,7 +465,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="int"/>-array value of the Variant</param>
         public Variant(int[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.Int32;
         }
 
@@ -568,7 +478,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="uint"/>-array value of the Variant</param>
         public Variant(uint[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.UInt32;
         }
 
@@ -581,7 +491,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="long"/>-array value of the Variant</param>
         public Variant(long[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.Int64;
         }
 
@@ -594,7 +504,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="ulong"/>-array value of the Variant</param>
         public Variant(ulong[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.UInt64;
         }
 
@@ -607,7 +517,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="float"/>-array value of the Variant</param>
         public Variant(float[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.Float;
         }
 
@@ -620,7 +530,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="double"/>-array value of the Variant</param>
         public Variant(double[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.Double;
         }
 
@@ -633,7 +543,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="string"/>-array value of the Variant</param>
         public Variant(string[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.String;
         }
 
@@ -646,7 +556,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="DateTime"/>-array value of the Variant</param>
         public Variant(DateTime[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.DateTime;
         }
 
@@ -659,7 +569,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="Guid"/>-array value of the Variant</param>
         public Variant(Guid[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.Guid;
         }
 
@@ -672,7 +582,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="Uuid"/>-array value of the Variant</param>
         public Variant(Uuid[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.Guid;
         }
 
@@ -685,7 +595,7 @@ namespace Opc.Ua
         /// <param name="value">The 2-d <see cref="byte"/>-array value of the Variant</param>
         public Variant(byte[][] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.ByteString;
         }
 
@@ -698,7 +608,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="XmlElement"/>-array value of the Variant</param>
         public Variant(XmlElement[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.XmlElement;
         }
 
@@ -711,7 +621,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="NodeId"/>-array value of the Variant</param>
         public Variant(NodeId[] value)
         {
-            m_value = value == null ? null : new SerializableNodeIdCollection(value);
+            Value = value == null ? null : new SerializableNodeIdCollection(value);
             TypeInfo = TypeInfo.Arrays.NodeId;
         }
 
@@ -724,7 +634,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="ExpandedNodeId"/>-array value of the Variant</param>
         public Variant(ExpandedNodeId[] value)
         {
-            m_value = value == null ? null : new SerializableExpandedNodeIdCollection(value);
+            Value = value == null ? null : new SerializableExpandedNodeIdCollection(value);
             TypeInfo = TypeInfo.Arrays.ExpandedNodeId;
         }
 
@@ -737,7 +647,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="StatusCode"/>-array value of the Variant</param>
         public Variant(StatusCode[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.StatusCode;
         }
 
@@ -750,7 +660,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="QualifiedName"/>-array value of the Variant</param>
         public Variant(QualifiedName[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.QualifiedName;
         }
 
@@ -763,7 +673,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="LocalizedText"/>-array value of the Variant</param>
         public Variant(LocalizedText[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.LocalizedText;
         }
 
@@ -776,7 +686,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="ExtensionObject"/>-array value of the Variant</param>
         public Variant(ExtensionObject[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.ExtensionObject;
         }
 
@@ -789,7 +699,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="DataValue"/>-array value of the Variant</param>
         public Variant(DataValue[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.DataValue;
         }
 
@@ -802,8 +712,242 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="Variant"/>-array value of the Variant</param>
         public Variant(Variant[] value)
         {
-            m_value = value;
+            Value = value;
             TypeInfo = TypeInfo.Arrays.Variant;
+        }
+
+        /// <summary>
+        /// Constructs a Variant
+        /// </summary>
+        /// <param name="value">The value to store.</param>
+        /// <param name="typeInfo">The type information for the value.</param>
+        public Variant(object value, TypeInfo typeInfo)
+        {
+            Value = value is ICloneable clonable ? clonable.Clone() : value;
+            TypeInfo = typeInfo;
+
+            // check for null values.
+            if (Value == null)
+            {
+                // m_value = typeInfo.ValueRank < 0 ? TypeInfo.GetDefaultValue(typeInfo.BuiltInType) : null;
+            }
+            // handle scalar values.
+            else if (typeInfo.ValueRank < 0)
+            {
+                switch (typeInfo.BuiltInType)
+                {
+                    // handle special types that can be converted to something the variant supports.
+                    case BuiltInType.Null:
+                        // check for enumerated value.
+                        if (Value.GetType().GetTypeInfo().IsEnum)
+                        {
+                            this = Set(Convert.ToInt32(Value, CultureInfo.InvariantCulture));
+                            break;
+                        }
+
+                        // check for matrix
+                        if (Value is Matrix m)
+                        {
+                            TypeInfo = m.TypeInfo;
+                            break;
+                        }
+                        // not supported.
+                        throw new ServiceResultException(
+                            StatusCodes.BadNotSupported,
+                            CoreUtils.Format(
+                                "The type '{0}' cannot be stored in a Variant object.",
+                                Value.GetType().FullName));
+                    // convert encodeables to extension objects.
+                    case BuiltInType.ExtensionObject:
+                        if (Value is IEncodeable encodeable)
+                        {
+                            Value = new ExtensionObject(encodeable);
+                            break;
+                        }
+                        break;
+                    case BuiltInType.Variant:
+                        Value = ((Variant)Value).Value;
+                        TypeInfo = TypeInfo.Construct(Value);
+                        break;
+                    // just save the value.
+                    case > BuiltInType.Null and <= BuiltInType.Enumeration:
+                        break;
+                    default:
+                        throw ServiceResultException.Unexpected(
+                            $"Unexpected BuiltInType {typeInfo.BuiltInType}");
+                }
+            }
+            // handle one dimensional arrays.
+            else if (typeInfo.ValueRank <= 1)
+            {
+                // Convert list types to arrays
+                if (Value is not Array array)
+                {
+                    // Convert list types to arrays
+                    if (Value is IList list)
+                    {
+                        array = TypeInfo.CreateArray(typeInfo.BuiltInType, list.Count);
+                        for (int ii = 0; ii < list.Count; ii++)
+                        {
+                            array.SetValue(list[ii], ii);
+                        }
+                        Value = array;
+                    }
+                    else
+                    {
+                        Value = array = TypeInfo.CreateArray(typeInfo.BuiltInType, 0);
+                    }
+                }
+
+                switch (typeInfo.BuiltInType)
+                {
+                    // handle special types that can be converted to something the variant supports.
+                    case BuiltInType.Null:
+                        // check for enumerated value.
+                        if (!array.GetType().GetElementType().GetTypeInfo().IsEnum)
+                        {
+                            // not supported.
+                            throw new ServiceResultException(
+                                StatusCodes.BadNotSupported,
+                                CoreUtils.Format(
+                                    "The type '{0}' cannot be stored in a Variant object.",
+                                    array.GetType().FullName));
+                        }
+                        int[] values = new int[array.Length];
+                        for (int ii = 0; ii < array.Length; ii++)
+                        {
+                            values[ii] = Convert.ToInt32(
+                                array.GetValue(ii),
+                                CultureInfo.InvariantCulture);
+                        }
+                        Value = values;
+                        break;
+                    // convert encodeables to extension objects.
+                    case BuiltInType.ExtensionObject:
+                        if (array is IEncodeable[] encodeables)
+                        {
+                            var extensions = new ExtensionObject[encodeables.Length];
+                            for (int ii = 0; ii < encodeables.Length; ii++)
+                            {
+                                extensions[ii] = new ExtensionObject(encodeables[ii]);
+                            }
+                            Value = extensions;
+                        }
+                        break;
+                    // convert objects to variants objects.
+                    case BuiltInType.Variant:
+                        if (array is object[] objects)
+                        {
+                            var variants = new Variant[objects.Length];
+                            for (int ii = 0; ii < objects.Length; ii++)
+                            {
+                                variants[ii] = new Variant(objects[ii]);
+                            }
+                            Value = variants;
+                        }
+                        break;
+                    // just save the value.
+                    case >= BuiltInType.Null and <= BuiltInType.Enumeration:
+                        break;
+                    default:
+                        throw ServiceResultException.Unexpected(
+                            $"Unexpected BuiltInType {typeInfo.BuiltInType}");
+                }
+            }
+            else
+            {
+                // handle multidimensional array.
+                if (Value is Array array)
+                {
+                    Value = new Matrix(array, typeInfo.BuiltInType);
+                }
+                // handle matrix.
+                if (Value is not Matrix matrix)
+                {
+                    // not supported.
+                    throw new ServiceResultException(
+                        StatusCodes.BadNotSupported,
+                        CoreUtils.Format(
+                            "Arrays of the type '{0}' cannot be stored in a Variant object.",
+                            Value.GetType().FullName));
+                }
+                Value = matrix;
+                TypeInfo = matrix.TypeInfo;
+            }
+            DebugCheck(Value, TypeInfo);
+        }
+
+        /// <summary>
+        /// Constructs a Variant
+        /// </summary>
+        /// <param name="array">The value to store.</param>
+        /// <param name="typeInfo">The type information for the value.</param>
+        public Variant(Array array, TypeInfo typeInfo)
+        {
+            Value = array;
+            TypeInfo = typeInfo;
+
+            if (typeInfo.ValueRank > 1)
+            {
+                this = new Variant(new Matrix(array, typeInfo.BuiltInType));
+                return;
+            }
+
+            switch (typeInfo.BuiltInType)
+            {
+                // handle special types that can be converted to something the variant supports.
+                case BuiltInType.Null:
+                    // check for enumerated value.
+                    if (!array.GetType().GetElementType().GetTypeInfo().IsEnum)
+                    {
+                        // not supported.
+                        throw new ServiceResultException(
+                            StatusCodes.BadNotSupported,
+                            CoreUtils.Format(
+                                "The type '{0}' cannot be stored in a Variant object.",
+                                array.GetType().FullName));
+                    }
+                    int[] values = new int[array.Length];
+                    for (int ii = 0; ii < array.Length; ii++)
+                    {
+                        values[ii] = Convert.ToInt32(
+                            array.GetValue(ii),
+                            CultureInfo.InvariantCulture);
+                    }
+                    Value = values;
+                    break;
+                // convert encodeables to extension objects.
+                case BuiltInType.ExtensionObject:
+                    if (array is IEncodeable[] encodeables)
+                    {
+                        var extensions = new ExtensionObject[encodeables.Length];
+                        for (int ii = 0; ii < encodeables.Length; ii++)
+                        {
+                            extensions[ii] = new ExtensionObject(encodeables[ii]);
+                        }
+                        Value = extensions;
+                    }
+                    break;
+                // convert objects to variants objects.
+                case BuiltInType.Variant:
+                    if (array is object[] objects)
+                    {
+                        var variants = new Variant[objects.Length];
+                        for (int ii = 0; ii < objects.Length; ii++)
+                        {
+                            variants[ii] = new Variant(objects[ii]);
+                        }
+                        Value = variants;
+                    }
+                    break;
+                // just save the value.
+                case >= BuiltInType.Null and <= BuiltInType.Enumeration:
+                    Value = CoreUtils.Clone(array);
+                    break;
+                default:
+                    throw ServiceResultException.Unexpected(
+                        $"Unexpected BuiltInType {typeInfo.BuiltInType}");
+            }
         }
 
         /// <summary>
@@ -815,7 +959,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="object"/>-array value of the Variant</param>
         public Variant(object[] value)
         {
-            m_value = null;
+            Value = null;
             TypeInfo = TypeInfo.Arrays.Variant;
             if (value != null)
             {
@@ -824,7 +968,7 @@ namespace Opc.Ua
                 {
                     anyValues[ii] = new Variant(value[ii]);
                 }
-                m_value = anyValues;
+                Value = anyValues;
             }
         }
 
@@ -839,13 +983,13 @@ namespace Opc.Ua
         /// <summary>
         /// Returns if the Variant is a Null value.
         /// </summary>
-        public readonly bool IsNull => m_value == null;
+        public bool IsNull => Value == null;
 
         /// <summary>
         /// The value stored -as <see cref="object"/>- within
         /// the Variant object.
         /// </summary>
-        public object Value => m_value;
+        public object Value { get; }
 
         /// <summary>
         /// The type information for the matrix.
@@ -860,128 +1004,17 @@ namespace Opc.Ua
         /// <param name="format">(Unused) Always pass a NULL value</param>
         /// <param name="formatProvider">The format-provider to
         /// use. If unsure, pass an empty string or null</param>
-        public readonly string ToString(string format, IFormatProvider formatProvider)
+        public string ToString(string format, IFormatProvider formatProvider)
         {
             if (format == null)
             {
                 var buffer = new StringBuilder();
-                AppendFormat(buffer, m_value, formatProvider);
+                AppendFormat(buffer, Value, formatProvider);
                 return buffer.ToString();
             }
 
             throw new FormatException(
                 CoreUtils.Format("Invalid format string: '{0}'.", format));
-        }
-
-        /// <summary>
-        /// Append a ByteString as a hex string.
-        /// </summary>
-        private static void AppendByteString(
-            StringBuilder buffer,
-            byte[] bytes,
-            IFormatProvider formatProvider)
-        {
-            if (bytes != null)
-            {
-                for (int ii = 0; ii < bytes.Length; ii++)
-                {
-                    buffer.AppendFormat(formatProvider, "{0:X2}", bytes[ii]);
-                }
-            }
-            else
-            {
-                buffer.Append("(null)");
-            }
-        }
-
-        /// <summary>
-        /// Formats a value as a string.
-        /// </summary>
-        private readonly void AppendFormat(
-            StringBuilder buffer,
-            object value,
-            IFormatProvider formatProvider)
-        {
-            // check for null.
-            if (value == null || TypeInfo == null)
-            {
-                buffer.Append("(null)");
-                return;
-            }
-
-            // convert byte string to hexstring.
-            if (TypeInfo.BuiltInType == BuiltInType.ByteString && TypeInfo.ValueRank < 0)
-            {
-                byte[] bytes = (byte[])value;
-                AppendByteString(buffer, bytes, formatProvider);
-                return;
-            }
-
-            // convert XML element to string.
-            if (TypeInfo.BuiltInType == BuiltInType.XmlElement && TypeInfo.ValueRank < 0)
-            {
-                var xml = (XmlElement)value;
-                buffer.AppendFormat(formatProvider, "{0}", xml.OuterXml);
-                return;
-            }
-
-            // recusrively write individual elements of an array.
-
-            if (value is Array array && TypeInfo.ValueRank <= 1)
-            {
-                buffer.Append('{');
-
-                if (TypeInfo.BuiltInType == BuiltInType.ByteString)
-                {
-                    if (array.Length > 0)
-                    {
-                        byte[] bytes = (byte[])array.GetValue(0);
-                        AppendByteString(buffer, bytes, formatProvider);
-                    }
-
-                    for (int ii = 1; ii < array.Length; ii++)
-                    {
-                        buffer.Append('|');
-                        byte[] bytes = (byte[])array.GetValue(ii);
-                        AppendByteString(buffer, bytes, formatProvider);
-                    }
-                }
-                else
-                {
-                    if (array.Length > 0)
-                    {
-                        AppendFormat(buffer, array.GetValue(0), formatProvider);
-                    }
-
-                    for (int ii = 1; ii < array.Length; ii++)
-                    {
-                        buffer.Append('|');
-                        AppendFormat(buffer, array.GetValue(ii), formatProvider);
-                    }
-                }
-                buffer.Append('}');
-                return;
-            }
-
-            // let the object format itself.
-            buffer.AppendFormat(formatProvider, "{0}", value);
-        }
-
-        /// <inheritdoc/>
-        public readonly object Clone()
-        {
-            return MemberwiseClone();
-        }
-
-        /// <summary>
-        /// Makes a deep copy of the object.
-        /// </summary>
-        /// <remarks>
-        /// Makes a deep copy of the object.
-        /// </remarks>
-        public new readonly object MemberwiseClone()
-        {
-            return new Variant(CoreUtils.Clone(Value));
         }
 
         /// <summary>
@@ -1551,7 +1584,7 @@ namespace Opc.Ua
         /// </summary>
         public readonly bool Equals(Variant other)
         {
-            return CoreUtils.IsEqual(m_value, other.m_value);
+            return CoreUtils.IsEqual(Value, other.Value);
         }
 
         /// <summary>
@@ -1566,7 +1599,7 @@ namespace Opc.Ua
 
             if (variant != null)
             {
-                return CoreUtils.IsEqual(m_value, variant.Value.m_value);
+                return CoreUtils.IsEqual(Value, variant.Value.Value);
             }
 
             return false;
@@ -1577,9 +1610,9 @@ namespace Opc.Ua
         /// </summary>
         public override readonly int GetHashCode()
         {
-            if (m_value != null)
+            if (Value != null)
             {
-                return m_value.GetHashCode();
+                return Value.GetHashCode();
             }
 
             return 0;
@@ -2171,186 +2204,101 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Stores a scalar value in the variant.
+        /// Append a ByteString as a hex string.
         /// </summary>
-        /// <exception cref="ServiceResultException"></exception>
-        private Variant SetScalar(object value, TypeInfo typeInfo)
+        private static void AppendByteString(
+            StringBuilder buffer,
+            byte[] bytes,
+            IFormatProvider formatProvider)
         {
-            switch (typeInfo.BuiltInType)
+            if (bytes != null)
             {
-                // handle special types that can be converted to something the variant supports.
-                case BuiltInType.Null:
-                    // check for enumerated value.
-                    if (value.GetType().GetTypeInfo().IsEnum)
-                    {
-                        return Set(Convert.ToInt32(value, CultureInfo.InvariantCulture));
-                    }
-
-                    // check for matrix
-
-                    if (value is Matrix matrix)
-                    {
-                        return new Variant(matrix, typeInfo);
-                    }
-
-                    // not supported.
-                    throw new ServiceResultException(
-                        StatusCodes.BadNotSupported,
-                        CoreUtils.Format(
-                            "The type '{0}' cannot be stored in a Variant object.",
-                            value.GetType().FullName));
-                // convert Guids to Uuids for serialization.
-                case BuiltInType.Guid:
-                    if (value is Guid guid)
-                    {
-                        m_value = new Uuid(guid);
-                        return;
-                    }
-                    m_value = (object)value ?? Guid.Empty;
-                    return;
-                // convert encodeables to extension objects.
-                case BuiltInType.ExtensionObject:
-                    if (value is IEncodeable encodeable)
-                    {
-                        return new Variant(new ExtensionObject(encodeable));
-                    }
-
-                    return new Variant(value, typeInfo);
-                // convert encodeables to extension objects.
-                case BuiltInType.Variant:
-                    m_value = ((Variant)value).Value;
-                    TypeInfo = TypeInfo.Construct(m_value);
-                    return;
-                // just save the value.
-                case >= BuiltInType.Null and <= BuiltInType.Enumeration:
-                    m_value = value;
-                    return;
-                default:
-                    throw ServiceResultException.Unexpected(
-                        $"Unexpected BuiltInType {typeInfo.BuiltInType}");
+                for (int ii = 0; ii < bytes.Length; ii++)
+                {
+                    buffer.AppendFormat(formatProvider, "{0:X2}", bytes[ii]);
+                }
+            }
+            else
+            {
+                buffer.Append("(null)");
             }
         }
 
         /// <summary>
-        /// Stores a on dimensional array value in the variant.
+        /// Formats a value as a string.
         /// </summary>
-        /// <exception cref="ServiceResultException"></exception>
-        private void SetArray(Array array, TypeInfo typeInfo)
+        private readonly void AppendFormat(
+            StringBuilder buffer,
+            object value,
+            IFormatProvider formatProvider)
         {
-            TypeInfo = typeInfo;
-
-            switch (typeInfo.BuiltInType)
+            // check for null.
+            if (value == null || TypeInfo == null)
             {
-                // handle special types that can be converted to something the variant supports.
-                case BuiltInType.Null:
-                {
-                    // check for enumerated value.
-                    if (array.GetType().GetElementType().GetTypeInfo().IsEnum)
-                    {
-                        int[] values = new int[array.Length];
-
-                        for (int ii = 0; ii < array.Length; ii++)
-                        {
-                            values[ii] = Convert.ToInt32(
-                                array.GetValue(ii),
-                                CultureInfo.InvariantCulture);
-                        }
-
-                        m_value = values;
-                        return;
-                    }
-
-                    // not supported.
-                    throw new ServiceResultException(
-                        StatusCodes.BadNotSupported,
-                        CoreUtils.Format(
-                            "The type '{0}' cannot be stored in a Variant object.",
-                            array.GetType().FullName));
-                }
-                // convert Guids to Uuids.
-                case BuiltInType.Guid:
-                    if (array is Guid[] guids)
-                    {
-                        Set(guids);
-                        return;
-                    }
-
-                    m_value = array;
-                    return;
-                // convert encodeables to extension objects.
-                case BuiltInType.ExtensionObject:
-                {
-                    if (array is IEncodeable[] encodeables)
-                    {
-                        var extensions = new ExtensionObject[encodeables.Length];
-
-                        for (int ii = 0; ii < encodeables.Length; ii++)
-                        {
-                            extensions[ii] = new ExtensionObject(encodeables[ii]);
-                        }
-
-                        m_value = extensions;
-                        return;
-                    }
-
-                    m_value = array;
-                    return;
-                }
-                // convert objects to variants objects.
-                case BuiltInType.Variant:
-                {
-                    if (array is object[] objects)
-                    {
-                        var variants = new Variant[objects.Length];
-
-                        for (int ii = 0; ii < objects.Length; ii++)
-                        {
-                            variants[ii] = new Variant(objects[ii]);
-                        }
-
-                        m_value = variants;
-                        return;
-                    }
-
-                    m_value = array;
-                    return;
-                }
-                // just save the value.
-                case >= BuiltInType.Null and <= BuiltInType.Enumeration:
-                    m_value = array;
-                    return;
-                default:
-                    throw ServiceResultException.Unexpected(
-                        $"Unexpected BuiltInType {typeInfo.BuiltInType}");
-            }
-        }
-
-        /// <summary>
-        /// Initializes the object with a collection.
-        /// </summary>
-        private void SetList(IList value, TypeInfo typeInfo)
-        {
-            TypeInfo = typeInfo;
-
-            Array array = TypeInfo.CreateArray(typeInfo.BuiltInType, value.Count);
-
-            for (int ii = 0; ii < value.Count; ii++)
-            {
-                if (typeInfo.BuiltInType == BuiltInType.ExtensionObject &&
-                    value[ii] is IEncodeable encodeable)
-                {
-                    array.SetValue(new ExtensionObject(encodeable), ii);
-                    continue;
-                }
-
-                array.SetValue(value[ii], ii);
+                buffer.Append("(null)");
+                return;
             }
 
-            SetArray(array, typeInfo);
+            // convert byte string to hexstring.
+            if (TypeInfo.BuiltInType == BuiltInType.ByteString && TypeInfo.ValueRank < 0)
+            {
+                byte[] bytes = (byte[])value;
+                AppendByteString(buffer, bytes, formatProvider);
+                return;
+            }
+
+            // convert XML element to string.
+            if (TypeInfo.BuiltInType == BuiltInType.XmlElement && TypeInfo.ValueRank < 0)
+            {
+                var xml = (XmlElement)value;
+                buffer.AppendFormat(formatProvider, "{0}", xml.OuterXml);
+                return;
+            }
+
+            // recusrively write individual elements of an array.
+
+            if (value is Array array && TypeInfo.ValueRank <= 1)
+            {
+                buffer.Append('{');
+
+                if (TypeInfo.BuiltInType == BuiltInType.ByteString)
+                {
+                    if (array.Length > 0)
+                    {
+                        byte[] bytes = (byte[])array.GetValue(0);
+                        AppendByteString(buffer, bytes, formatProvider);
+                    }
+
+                    for (int ii = 1; ii < array.Length; ii++)
+                    {
+                        buffer.Append('|');
+                        byte[] bytes = (byte[])array.GetValue(ii);
+                        AppendByteString(buffer, bytes, formatProvider);
+                    }
+                }
+                else
+                {
+                    if (array.Length > 0)
+                    {
+                        AppendFormat(buffer, array.GetValue(0), formatProvider);
+                    }
+
+                    for (int ii = 1; ii < array.Length; ii++)
+                    {
+                        buffer.Append('|');
+                        AppendFormat(buffer, array.GetValue(ii), formatProvider);
+                    }
+                }
+                buffer.Append('}');
+                return;
+            }
+
+            // let the object format itself.
+            buffer.AppendFormat(formatProvider, "{0}", value);
         }
 
         [Conditional("DEBUG")]
-        private static void Check(object value, TypeInfo typeInfo)
+        private static void DebugCheck(object value, TypeInfo typeInfo)
         {
             // no sanity check possible for null values
             if (value == null)
@@ -2376,21 +2324,19 @@ namespace Opc.Ua
             }
 
             System.Diagnostics.Debug.Assert(
-                sanityCheck.BuiltInType == TypeInfo.BuiltInType,
+                sanityCheck.BuiltInType == typeInfo.BuiltInType,
                 CoreUtils.Format(
                     "{0} != {1}",
                     sanityCheck.BuiltInType,
                     typeInfo.BuiltInType));
 
             System.Diagnostics.Debug.Assert(
-                sanityCheck.ValueRank == TypeInfo.ValueRank,
+                sanityCheck.ValueRank == typeInfo.ValueRank,
                 CoreUtils.Format(
                     "{0} != {1}",
                     sanityCheck.ValueRank,
                     typeInfo.ValueRank));
         }
-
-        private object m_value;
     }
 
     /// <summary>

@@ -28,10 +28,7 @@
  * ======================================================================*/
 
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Opc.Ua.Test;
 using Opc.Ua.Tests;

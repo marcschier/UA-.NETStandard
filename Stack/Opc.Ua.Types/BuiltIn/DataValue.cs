@@ -100,7 +100,7 @@ namespace Opc.Ua
                 throw new ArgumentNullException(nameof(value));
             }
 
-            m_value.Value = CoreUtils.Clone(value.m_value.Value);
+            m_value = value.m_value;
             StatusCode = value.StatusCode;
             SourceTimestamp = value.SourceTimestamp;
             SourcePicoseconds = value.SourcePicoseconds;
@@ -349,7 +349,7 @@ namespace Opc.Ua
         public object Value
         {
             get => m_value.Value;
-            set => m_value.Value = value;
+            set => m_value = new Variant(value);
         }
 
         /// <summary>
