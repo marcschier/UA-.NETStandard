@@ -151,7 +151,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             {
                 NodeId _ = "nsu=http://opcfoundation.org/Tests;s=Test";
             });
-            Assert.IsNull(NodeId.ToExpandedNodeId(default, null));
+            Assert.IsTrue(NodeId.ToExpandedNodeId(default, null).IsNull);
 
             // IsNull
             Assert.True(new ExpandedNodeId(NodeId.Null).IsNull);

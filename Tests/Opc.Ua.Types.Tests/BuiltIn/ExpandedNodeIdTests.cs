@@ -102,9 +102,9 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             Assert.True(nodeIdText == inodeIdText2);
             Assert.False(nodeIdText > inodeIdText);
 
-            Assert.True(nodeIdText < nodeId2);
+            Assert.True(nodeIdText > nodeId2);
             Assert.False(nodeIdText == nodeId2);
-            Assert.False(nodeIdText > nodeId2);
+            Assert.False(nodeIdText < nodeId2);
 
             _ = new ExpandedNodeId(123, 123);
             _ = new ExpandedNodeId("Test", 123);
@@ -162,8 +162,9 @@ namespace Opc.Ua.Types.Tests.BuiltIn
                 .Throws<ServiceResultException>(() => _ = ExpandedNodeId.Parse("ns="));
             NUnit.Framework.Assert
                 .Throws<ServiceResultException>(() => _ = ExpandedNodeId.Parse("nsu="));
-            NUnit.Framework.Assert.Throws<ArgumentException>(() => id = (ExpandedNodeId)"Test");
-            Assert.IsNull(NodeId.ToExpandedNodeId(default, null));
+            NUnit.Framework.Assert
+                .Throws<ServiceResultException>(() => id = (ExpandedNodeId)"Test");
+            Assert.IsTrue(NodeId.ToExpandedNodeId(default, null).IsNull);
 
             string[] testStrings =
             [
