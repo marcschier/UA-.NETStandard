@@ -35,6 +35,8 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Xml.Serialization;
 using Opc.Ua.Types;
+using System.Text.Json.Serialization;
+
 #if NET8_0_OR_GREATER
 using System.Collections.Frozen;
 #else
@@ -169,6 +171,7 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="code">The numeric code to apply to this status code</param>
         /// <param name="symbolicId">The symbol for the status code</param>
+        [JsonConstructor]
         public StatusCode(uint code, string symbolicId)
         {
             if (symbolicId == null &&

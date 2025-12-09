@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Security.Cryptography;
+using System.Text.Json.Serialization;
 
 namespace Opc.Ua
 {
@@ -71,6 +72,7 @@ namespace Opc.Ua
         /// Initializes the object with a Guid.
         /// </summary>
         /// <param name="guid">The Guid to wrap</param>
+        [JsonConstructor]
         public Uuid(Guid guid)
         {
             Guid = guid;

@@ -36,6 +36,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Xml;
 using Opc.Ua.Types;
 
@@ -707,6 +708,7 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="value">The value to store.</param>
         /// <param name="typeInfo">The type information for the value.</param>
+        [JsonConstructor]
         public Variant(object value, TypeInfo typeInfo)
         {
             Value = value is ICloneable clonable ? clonable.Clone() : value;
@@ -1011,17 +1013,20 @@ namespace Opc.Ua
         /// <summary>
         /// Returns if the Variant is a Null value.
         /// </summary>
+        [JsonIgnore]
         public bool IsNull => Value == null;
 
         /// <summary>
         /// The value stored -as <see cref="object"/>- within
         /// the Variant object.
         /// </summary>
+        [JsonPropertyName("Value")]
         public object Value { get; }
 
         /// <summary>
         /// The type information for the matrix.
         /// </summary>
+        [JsonPropertyName("TypeInfo")]
         public TypeInfo TypeInfo { get; }
 
         /// <summary>

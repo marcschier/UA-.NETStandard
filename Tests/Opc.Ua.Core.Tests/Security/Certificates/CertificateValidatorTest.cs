@@ -1588,7 +1588,7 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
                             await certValidator.ValidateAsync(cert, CancellationToken.None).ConfigureAwait(false));
                 Assert.AreEqual(
                     StatusCodes.BadCertificatePolicyCheckFailed,
-                    (StatusCode)serviceResultException.StatusCode,
+                    serviceResultException.StatusCode,
                     serviceResultException.Message);
                 Assert.NotNull(serviceResultException.InnerResult);
                 ServiceResult innerResult = serviceResultException.InnerResult.InnerResult;

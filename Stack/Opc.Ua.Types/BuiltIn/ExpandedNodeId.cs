@@ -33,6 +33,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Text.Json.Serialization;
 using Opc.Ua.Types;
 
 namespace Opc.Ua
@@ -262,6 +263,7 @@ namespace Opc.Ua
         /// node belongs to</param>
         /// <param name="serverIndex">The server index</param>
         [Obsolete("Use concrete constructor with typed identifier values instead.")]
+        [JsonConstructor]
         public ExpandedNodeId(
             object identifier,
             ushort namespaceIndex,

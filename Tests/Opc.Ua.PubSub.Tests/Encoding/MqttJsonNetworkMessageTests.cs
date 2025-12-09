@@ -72,7 +72,6 @@ namespace Opc.Ua.PubSub.Tests.Encoding
             NonMetadata = MessageType | DataSetMetaData,
 
             MetaData_Name,
-            MetaData_Description,
             MetaData_Fields,
             MetaData_DataSetClassId,
             MetaData_ConfigurationVersion
@@ -1909,12 +1908,6 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                             MetaDataFailOptions.MetaData_Name,
                             "ValidateMissingDataSetMetaDataDefinitions should fail due to missing MetaData.Name reason.");
                         break;
-                    case MetaDataFailOptions.MetaData_Description:
-                        Assert.AreEqual(
-                            failOptions,
-                            MetaDataFailOptions.MetaData_Description,
-                            "ValidateMissingDataSetMetaDataDefinitions should fail due to missing MetaData.Description reason.");
-                        break;
                     case MetaDataFailOptions.MetaData_DataSetClassId:
                         Assert.AreEqual(
                             failOptions,
@@ -2555,10 +2548,7 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                 "DataSetMetaData.Name was not decoded correctly, Encoded: {0} Decoded: {1}",
                 jsonNetworkMessage.DataSetMetaData.Name,
                 dataSetMetaData.Name);
-            if (jsonDataSetMetaData.Description.IsNullOrEmpty)
-            {
-                return MetaDataFailOptions.MetaData_Description;
-            }
+
             Assert.AreEqual(
                 jsonNetworkMessage.DataSetMetaData.Description,
                 dataSetMetaData.Description,

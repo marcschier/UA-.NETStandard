@@ -3259,7 +3259,12 @@ namespace Opc.Ua.SourceGeneration
                     return false;
                 }
 
-                bool isRequired = field.DataTypeNode.IsDotNetValueType(field.ValueRank);
+                // BUG: If fields are marked as required and some that are not required they are
+                // required to be in lexical order after required fields inside the xml document
+                // that is parsed or else we get an exception. Despite order value. So, make all
+                // fields not required for data contracts and work harder to get rid of data
+                // contract serialization.
+                const bool isRequired = false; // field.DataTypeNode.IsDotNetValueType(field.ValueRank);
                 bool emitDefaultValue = !field.DataTypeNode.IsDotNetReferenceType(field.ValueRank);
 
                 context.Template.AddReplacement(

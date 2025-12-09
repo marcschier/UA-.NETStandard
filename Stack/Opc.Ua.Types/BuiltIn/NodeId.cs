@@ -35,6 +35,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Text.Json.Serialization;
 using Opc.Ua.Types;
 
 namespace Opc.Ua
@@ -249,6 +250,7 @@ namespace Opc.Ua
         /// <param name="namespaceIndex">The index of the namespace that
         /// qualifies the node</param>
         [Obsolete("Use concrete constructor with typed identifier values instead.")]
+        [JsonConstructor]
         public NodeId(object value, ushort namespaceIndex)
         {
             switch (value)
