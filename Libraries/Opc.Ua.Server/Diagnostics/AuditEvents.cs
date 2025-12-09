@@ -954,7 +954,7 @@ namespace Opc.Ua.Server
                 // raise an audit event.
                 var e = new AuditCreateSessionEventState(null);
 
-                TranslationInfo message = null;
+                TranslationInfo message = default;
                 if (exception == null)
                 {
                     message = new TranslationInfo(
@@ -1046,7 +1046,7 @@ namespace Opc.Ua.Server
 
                 var e = new AuditActivateSessionEventState(null);
 
-                TranslationInfo message = null;
+                TranslationInfo message = default;
                 if (exception == null)
                 {
                     message = new TranslationInfo(
@@ -1331,7 +1331,7 @@ namespace Opc.Ua.Server
             {
                 var e = new CertificateUpdatedAuditEventState(null);
 
-                TranslationInfo message = null;
+                TranslationInfo message = default;
                 if (exception == null)
                 {
                     message = new TranslationInfo(
@@ -1600,7 +1600,7 @@ namespace Opc.Ua.Server
             {
                 // raise an audit event.
                 var e = new AuditOpenSecureChannelEventState(null);
-                TranslationInfo message = null;
+                TranslationInfo message = default;
                 if (exception == null)
                 {
                     message = new TranslationInfo(
@@ -1738,7 +1738,7 @@ namespace Opc.Ua.Server
                 // raise an audit event.
                 var e = new AuditChannelEventState(null);
 
-                TranslationInfo message = null;
+                TranslationInfo message = default;
                 if (exception == null)
                 {
                     message = new TranslationInfo(

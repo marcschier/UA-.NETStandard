@@ -501,7 +501,7 @@ namespace Opc.Ua.Server
                     metadata.DisplayName = target.DisplayName;
 
                     // check if the display name can be localized.
-                    if (!string.IsNullOrEmpty(metadata.DisplayName.TranslationInfo?.Key))
+                    if (!string.IsNullOrEmpty(metadata.DisplayName.TranslationInfo.Key))
                     {
                         metadata.DisplayName = Server.ResourceManager.Translate(
                             context.PreferredLocales,

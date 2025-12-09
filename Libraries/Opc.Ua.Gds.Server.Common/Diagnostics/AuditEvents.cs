@@ -119,7 +119,7 @@ namespace Opc.Ua.Gds.Server.Diagnostics
             {
                 var e = new CertificateRequestedAuditEventState(null);
 
-                TranslationInfo message = null;
+                TranslationInfo message = default;
                 if (exception == null)
                 {
                     message = new TranslationInfo(
