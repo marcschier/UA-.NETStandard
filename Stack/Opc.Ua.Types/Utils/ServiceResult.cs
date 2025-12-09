@@ -489,7 +489,7 @@ namespace Opc.Ua
         /// </summary>
         public static ServiceResult Create(StatusCode code, TranslationInfo translation)
         {
-            if (translation == null)
+            if (translation.IsNull)
             {
                 return new ServiceResult(code);
             }
@@ -512,7 +512,7 @@ namespace Opc.Ua
                 defaultCode = sre.StatusCode;
             }
 
-            if (translation == null)
+            if (translation.IsNull)
             {
                 return new ServiceResult(e, defaultCode);
             }

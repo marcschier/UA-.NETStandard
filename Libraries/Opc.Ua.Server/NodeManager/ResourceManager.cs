@@ -111,7 +111,7 @@ namespace Opc.Ua.Server
                 // extract any additional arguments from the translation info.
                 object[] args = null;
 
-                if (result.LocalizedText.TranslationInfo != null)
+                if (!result.LocalizedText.TranslationInfo.IsNull)
                 {
                     TranslationInfo info = result.LocalizedText.TranslationInfo;
 
@@ -308,17 +308,16 @@ namespace Opc.Ua.Server
             LocalizedText defaultText,
             TranslationInfo info)
         {
-            defaultText = FilterByPreferredLocales(defaultText, preferredLocales);
+            // check for trivial case.
+            if (string.IsNullOrEmpty(info.Text) && string.IsNullOrEmpty(info.Key))
+            {
+                return defaultText.FilterByPreferredLocales(preferredLocales);
+            }
 
+            defaultText = defaultText.WithTranslationInfo(info);
             bool isMultilanguageRequested =
                 preferredLocales?.Count > 0 &&
                 preferredLocales[0].ToLowerInvariant() is "mul" or "qst";
-
-            // check for trivial case.
-            if (info == null || (string.IsNullOrEmpty(info.Text) && string.IsNullOrEmpty(info.Key)))
-            {
-                return defaultText;
-            }
 
             // check for exact match.
             if (preferredLocales != null && preferredLocales.Count > 0)
@@ -335,7 +334,7 @@ namespace Opc.Ua.Server
                     preferredLocales.Count > 1 &&
                     defaultText.Translations?.Count == preferredLocales.Count - 1)
                 {
-                    return defaultText;
+                    return defaultText.AsMultiLanguage();
                 }
 
                 if (preferredLocales[0] == info.Locale)
@@ -369,21 +368,6 @@ namespace Opc.Ua.Server
                             if (table.Translations
                                 .TryGetValue(info.Key ?? info.Text, out string translation))
                             {
-                                // format translated text.
-                                if (info.Args?.Length > 0)
-                                {
-                                    try
-                                    {
-                                        translation = string.Format(
-                                            table.Locale,
-                                            translation,
-                                            info.Args);
-                                    }
-                                    catch
-                                    {
-                                    }
-                                }
-
                                 translations[table.Locale.Name] = translation;
                             }
                         }
@@ -400,30 +384,17 @@ namespace Opc.Ua.Server
                                 [preferredLocales[i]],
                                 info.Key ?? info.Text,
                                 out CultureInfo culture);
-
                             if (translation != null)
                             {
-                                // format translated text.
-                                if (info.Args?.Length > 0)
-                                {
-                                    try
-                                    {
-                                        translation = string.Format(
-                                            culture,
-                                            translation,
-                                            info.Args);
-                                    }
-                                    catch
-                                    {
-                                    }
-                                }
-
                                 translations[preferredLocales[i]] = translation;
                             }
                         }
                     }
                 }
-                return new LocalizedText(translations);
+                return defaultText
+                    .WithTranslations(translations)
+                    .FilterByPreferredLocales(preferredLocales)
+                    .AsMultiLanguage();
             }
             // single locale requested.
             else
@@ -442,56 +413,13 @@ namespace Opc.Ua.Server
                     // use the default if no translation available.
                     if (translatedText == null)
                     {
-                        return defaultText;
-                    }
-
-                    // get a culture to use for formatting
-                    if (culture == null &&
-                        info.Args?.Length > 0 &&
-                        !string.IsNullOrEmpty(info.Locale))
-                    {
-                        try
-                        {
-                            culture = new CultureInfo(info.Locale);
-                        }
-                        catch
-                        {
-                            culture = CultureInfo.InvariantCulture;
-                        }
-                    }
-                }
-
-                // format translated text.
-                string formattedText = translatedText;
-
-                if (info.Args?.Length > 0)
-                {
-                    try
-                    {
-                        formattedText = string.Format(culture, translatedText, info.Args);
-                    }
-                    catch
-                    {
-                        formattedText = translatedText;
+                        return defaultText.FilterByPreferredLocales(preferredLocales);
                     }
                 }
 
                 // construct translated localized text.
-                return new LocalizedText(culture.Name, formattedText, info);
+                return new LocalizedText(culture.Name, translatedText, info);
             }
-        }
-
-        /// <summary>
-        /// Filter text by preferred locales.
-        /// </summary>
-        /// <param name="localizedText"></param>
-        /// <param name="preferredLocales"></param>
-        /// <returns></returns>
-        protected virtual LocalizedText FilterByPreferredLocales(
-            LocalizedText localizedText,
-            IList<string> preferredLocales)
-        {
-            return localizedText.FilterByPreferredLocales(preferredLocales);
         }
 
         /// <summary>
