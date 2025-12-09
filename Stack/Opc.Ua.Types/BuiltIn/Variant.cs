@@ -620,7 +620,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="ExpandedNodeId"/>-array value of the Variant</param>
         public Variant(ExpandedNodeId[] value)
         {
-            Value = value == null ? null : new SerializableExpandedNodeIdCollection(value);
+            Value = value;
             TypeInfo = TypeInfo.Arrays.ExpandedNodeId;
         }
 
@@ -2340,6 +2340,10 @@ namespace Opc.Ua
     /// <summary>
     /// A collection of Variant objects.
     /// </summary>
+    [CollectionDataContract(
+        Name = "ListOfVariant",
+        Namespace = Namespaces.OpcUaXsd,
+        ItemName = "Variant")]
     public class VariantCollection : List<Variant>, ICloneable
     {
         /// <inheritdoc/>
@@ -2561,58 +2565,6 @@ namespace Opc.Ua
         public static explicit operator SerializableVariant(XmlElement value)
         {
             return new SerializableVariant { XmlEncodedValue = value };
-        }
-    }
-
-    /// <summary>
-    /// A collection of Variants.
-    /// </summary>
-    [CollectionDataContract(
-        Name = "ListOfVariant",
-        Namespace = Namespaces.OpcUaXsd,
-        ItemName = "Variant")]
-    public class SerializableVariantCollection :
-        List<SerializableVariant>,
-        ISurrogateFor<VariantCollection>
-    {
-        /// <inheritdoc/>
-        public SerializableVariantCollection()
-        {
-        }
-
-        /// <inheritdoc/>
-        public SerializableVariantCollection(VariantCollection collection)
-            : this(collection.Select(n => new SerializableVariant(n)))
-        {
-        }
-
-        /// <inheritdoc/>
-        public SerializableVariantCollection(
-            IEnumerable<SerializableVariant> collection)
-            : base(collection)
-        {
-        }
-
-        /// <inheritdoc/>
-        public SerializableVariantCollection(int capacity)
-            : base(capacity)
-        {
-        }
-
-        /// <inheritdoc/>
-        public VariantCollection Value => [.. this.Select(n => n.Value)];
-
-        /// <inheritdoc/>
-        public object GetValue()
-        {
-            return Value;
-        }
-
-        /// <inheritdoc/>
-        public static implicit operator SerializableVariantCollection(
-            SerializableVariant[] values)
-        {
-            return values == null ? [] : [.. values];
         }
     }
 }

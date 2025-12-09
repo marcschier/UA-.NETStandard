@@ -492,6 +492,10 @@ namespace Opc.Ua
     /// <remarks>
     /// A strongly-typed collection of QualifiedName objects.
     /// </remarks>
+    [CollectionDataContract(
+        Name = "ListOfQualifiedName",
+        Namespace = Namespaces.OpcUaXsd,
+        ItemName = "QualifiedName")]
     public class QualifiedNameCollection : List<QualifiedName>, ICloneable
     {
         /// <inheritdoc/>
@@ -585,59 +589,6 @@ namespace Opc.Ua
         {
             get => Value.Name;
             set => Value = Value.WithName(value);
-        }
-    }
-
-    /// <summary>
-    /// A collection of qualified names.
-    /// </summary>
-    [CollectionDataContract(
-        Name = "ListOfQualifiedName",
-        Namespace = Namespaces.OpcUaXsd,
-        ItemName = "QualifiedName")]
-    public class SerializableQualifiedNameCollection :
-        List<SerializableQualifiedName>,
-        ISurrogateFor<QualifiedNameCollection>
-    {
-        /// <inheritdoc/>
-        public SerializableQualifiedNameCollection()
-        {
-        }
-
-        /// <inheritdoc/>
-        public SerializableQualifiedNameCollection(
-            QualifiedNameCollection collection)
-            : this(collection.Select(n => new SerializableQualifiedName(n)))
-        {
-        }
-
-        /// <inheritdoc/>
-        public SerializableQualifiedNameCollection(
-            IEnumerable<SerializableQualifiedName> collection)
-            : base(collection)
-        {
-        }
-
-        /// <inheritdoc/>
-        public SerializableQualifiedNameCollection(int capacity)
-            : base(capacity)
-        {
-        }
-
-        /// <inheritdoc/>
-        public QualifiedNameCollection Value => [.. this.Select(n => n.Value)];
-
-        /// <inheritdoc/>
-        public object GetValue()
-        {
-            return Value;
-        }
-
-        /// <inheritdoc/>
-        public static implicit operator SerializableQualifiedNameCollection(
-            SerializableQualifiedName[] values)
-        {
-            return values == null ? [] : [.. values];
         }
     }
 }

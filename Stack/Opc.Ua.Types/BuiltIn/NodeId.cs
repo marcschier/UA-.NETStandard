@@ -1836,6 +1836,10 @@ namespace Opc.Ua
     /// <remarks>
     /// Provides a strongly-typed collection of <see cref="NodeId"/>.
     /// </remarks>
+    [CollectionDataContract(
+        Name = "ListOfNodeId",
+        Namespace = Namespaces.OpcUaXsd,
+        ItemName = "NodeId")]
     public class NodeIdCollection : List<NodeId>, ICloneable
     {
         /// <inheritdoc/>
@@ -1944,10 +1948,7 @@ namespace Opc.Ua
     [DataContract(
         Name = "NodeId",
         Namespace = Namespaces.OpcUaXsd)]
-    public class SerializableNodeId :
-        ISurrogateFor<NodeId>,
-        IEquatable<NodeId>,
-        IEquatable<SerializableNodeId>
+    public class SerializableNodeId : ISurrogateFor<NodeId>
     {
         /// <inheritdoc/>
         public SerializableNodeId()
@@ -1979,85 +1980,8 @@ namespace Opc.Ua
             get => Value.Format(CultureInfo.InvariantCulture);
             set => Value = NodeId.Parse(value);
         }
-
-        /// <inheritdoc/>
-        public override bool Equals(object obj)
-        {
-            return obj switch
-            {
-                SerializableNodeId s => Equals(s),
-                NodeId n => Equals(n),
-                _ => Value.Equals(obj)
-            };
-        }
-
-        /// <inheritdoc/>
-        public bool Equals(NodeId obj)
-        {
-            return Value.Equals(obj);
-        }
-
-        /// <inheritdoc/>
-        public bool Equals(SerializableNodeId obj)
-        {
-            return Value.Equals(obj?.Value ?? default);
-        }
-
-        /// <inheritdoc/>
-        public override int GetHashCode()
-        {
-            return Value.GetHashCode();
-        }
-
-        /// <inheritdoc/>
-        public static bool operator ==(SerializableNodeId left, SerializableNodeId right)
-        {
-            return EqualityComparer<SerializableNodeId>.Default.Equals(left, right);
-        }
-
-        /// <inheritdoc/>
-        public static bool operator !=(SerializableNodeId left, SerializableNodeId right)
-        {
-            return !(left == right);
-        }
-
-        /// <inheritdoc/>
-        public static bool operator ==(SerializableNodeId left, NodeId right)
-        {
-            return EqualityComparer<SerializableNodeId>.Default.Equals(left, right);
-        }
-
-        /// <inheritdoc/>
-        public static bool operator !=(SerializableNodeId left, NodeId right)
-        {
-            return !(left == right);
-        }
-
-        /// <inheritdoc/>
-        public static implicit operator SerializableNodeId(NodeId nodeId)
-        {
-            return new SerializableNodeId(nodeId);
-        }
-
-        /// <inheritdoc/>
-        public static implicit operator NodeId(SerializableNodeId nodeId)
-        {
-            return nodeId.Value;
-        }
-
-        /// <inheritdoc/>
-        public static explicit operator string(SerializableNodeId nodeId)
-        {
-            return nodeId.IdentifierText;
-        }
-
-        /// <inheritdoc/>
-        public static explicit operator SerializableNodeId(string nodeId)
-        {
-            return new SerializableNodeId { IdentifierText = nodeId };
-        }
     }
-
+#if FALSE
     /// <summary>
     /// A collection of NodeIds.
     /// </summary>
@@ -2066,7 +1990,8 @@ namespace Opc.Ua
         Namespace = Namespaces.OpcUaXsd,
         ItemName = "NodeId")]
     public class SerializableNodeIdCollection :
-        List<SerializableNodeId>,
+        List<NodeId>,
+        ICollection<NodeId>,
         ISurrogateFor<NodeIdCollection>
     {
         /// <inheritdoc/>
@@ -2093,12 +2018,45 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public NodeIdCollection Value => [.. this.Select(n => n.Value)];
+        public NodeIdCollection Value =>
+            [.. ((IEnumerable<SerializableNodeId>)this).Select(n => n.Value)];
 
         /// <inheritdoc/>
         public object GetValue()
         {
             return Value;
+        }
+
+        /// <inheritdoc/>
+        public void Add(NodeId item)
+        {
+            Add(new SerializableNodeId(item));
+        }
+
+        /// <inheritdoc/>
+        public bool IsReadOnly => false;
+
+        /// <inheritdoc/>
+        public bool Contains(NodeId item)
+        {
+            return false;
+        }
+
+        /// <inheritdoc/>
+        public void CopyTo(NodeId[] array, int arrayIndex)
+        {
+        }
+
+        /// <inheritdoc/>
+        public bool Remove(NodeId item)
+        {
+            return false;
+        }
+
+        /// <inheritdoc/>
+        IEnumerator<NodeId> IEnumerable<NodeId>.GetEnumerator()
+        {
+            return Value.GetEnumerator();
         }
 
         /// <inheritdoc/>
@@ -2108,6 +2066,7 @@ namespace Opc.Ua
             return values == null ? [] : [..values];
         }
     }
+#endif
 
     /// <summary>
     /// Node id parse errors
