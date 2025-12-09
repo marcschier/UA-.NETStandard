@@ -114,7 +114,7 @@ namespace Opc.Ua
         {
             if (translation != null)
             {
-                this = translation.GetAsMultiLanguage();
+                this = translation.AsMultiLanguage();
             }
         }
 
@@ -225,15 +225,19 @@ namespace Opc.Ua
         /// <summary>
         /// Returns true if this LocalizedText uses the "mul" special locale.
         /// </summary>
-        public bool IsMultiLanguage => LocalizedTextTranslation.IsMultiLanguage(m_locale);
+        public bool IsMultiLanguage
+            => LocalizedTextTranslation.IsMultiLanguage(m_locale);
 
         /// <summary>
         /// Convert this to multi-language format
         /// </summary>
-        public LocalizedText AsMultiLanguage => IsMultiLanguage ?
-            this :
-            m_translation?.GetAsMultiLanguage(true) ??
+        public LocalizedText AsMultiLanguage()
+        {
+            return IsMultiLanguage ?
+                this :
+                m_translation?.AsMultiLanguage(true) ??
                 LocalizedTextTranslation.EncodeAsMulLocale(this);
+        }
 
         /// <inheritdoc/>
         public override bool Equals(object obj)
@@ -554,7 +558,7 @@ namespace Opc.Ua
             {
                 // If multi locale or qst is requested, return all translations
                 // Encoded as "mul" locale
-                return localizedText.AsMultiLanguage;
+                return localizedText.AsMultiLanguage();
             }
 
             if (m_translations == null || m_translations.Count == 0)
@@ -590,7 +594,7 @@ namespace Opc.Ua
         /// Encodes the translations to a JSON string according to the format specified
         /// in https://reference.opcfoundation.org/Core/Part3/v105/docs/8.5
         /// </summary>
-        public LocalizedText GetAsMultiLanguage(bool force = false)
+        public LocalizedText AsMultiLanguage(bool force = false)
         {
             var t = new List<string[]>();
             if (m_translations == null || m_translations.Count == 0)

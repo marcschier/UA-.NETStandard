@@ -716,9 +716,11 @@ namespace Opc.Ua
             if (Value == null)
             {
                 // m_value = typeInfo.ValueRank < 0 ? TypeInfo.GetDefaultValue(typeInfo.BuiltInType) : null;
+                return;
             }
+
             // handle scalar values.
-            else if (typeInfo.ValueRank < 0)
+            if (typeInfo.ValueRank < 0)
             {
                 switch (typeInfo.BuiltInType)
                 {
@@ -769,29 +771,52 @@ namespace Opc.Ua
                         throw ServiceResultException.Unexpected(
                             $"Unexpected BuiltInType {typeInfo.BuiltInType}");
                 }
+                DebugCheck(Value, TypeInfo);
+                return;
             }
-            // handle one dimensional arrays.
-            else if (typeInfo.ValueRank <= 1)
+
+            // Convert list types to arrays
+            if (Value is not Array)
             {
-                // Convert list types to arrays
+                // Convert enumerable types to arrays
+                switch (Value)
+                {
+                    case ICollection collection when collection.Count == 0:
+                        // Fast path for empty arrays
+                        Value = TypeInfo.CreateArray(typeInfo.BuiltInType, 0);
+                        DebugCheck(Value, TypeInfo);
+                        return;
+                    case IEnumerable enumerable:
+                        if (enumerable is not IList list)
+                        {
+                            list = new List<object>(enumerable.Cast<object>());
+                        }
+                        var items = Array.CreateInstance(list[0].GetType(), list.Count);
+                        for (int i = 0; i < list.Count; i++)
+                        {
+                            items.SetValue(list[i], i);
+                        }
+                        Value = items;
+                        break;
+                }
+            }
+
+            // handle one dimensional arrays.
+            if (typeInfo.ValueRank <= 1)
+            {
+                if (Value is Matrix matrix)
+                {
+                    Value = matrix.ToArray();
+                }
                 if (Value is not Array array)
                 {
-                    // Convert list types to arrays
-                    if (Value is IList list)
-                    {
-                        array = TypeInfo.CreateArray(typeInfo.BuiltInType, list.Count);
-                        for (int ii = 0; ii < list.Count; ii++)
-                        {
-                            array.SetValue(list[ii], ii);
-                        }
-                        Value = array;
-                    }
-                    else
-                    {
-                        Value = array = TypeInfo.CreateArray(typeInfo.BuiltInType, 0);
-                    }
+                    // not supported.
+                    throw new ServiceResultException(
+                        StatusCodes.BadNotSupported,
+                        CoreUtils.Format(
+                            "The type '{0}' cannot be stored as Array in a Variant object.",
+                            Value.GetType().FullName));
                 }
-
                 switch (typeInfo.BuiltInType)
                 {
                     // handle special types that can be converted to something the variant supports.
@@ -853,9 +878,8 @@ namespace Opc.Ua
                             $"Unexpected BuiltInType {typeInfo.BuiltInType}");
                 }
             }
-            else
+            else // handle multidimensional array.
             {
-                // handle multidimensional array.
                 if (Value is Array array)
                 {
                     Value = new Matrix(array, typeInfo.BuiltInType);
@@ -870,7 +894,6 @@ namespace Opc.Ua
                             "Arrays of the type '{0}' cannot be stored in a Variant object.",
                             Value.GetType().FullName));
                 }
-                Value = matrix;
                 TypeInfo = matrix.TypeInfo;
             }
             DebugCheck(Value, TypeInfo);
@@ -2294,19 +2317,23 @@ namespace Opc.Ua
                 return;
             }
 
-            System.Diagnostics.Debug.Assert(
-                sanityCheck.BuiltInType == typeInfo.BuiltInType,
-                CoreUtils.Format(
-                    "{0} != {1}",
-                    sanityCheck.BuiltInType,
-                    typeInfo.BuiltInType));
+            if (sanityCheck.BuiltInType != typeInfo.BuiltInType)
+            {
+                System.Diagnostics.Debug.Fail(
+                    CoreUtils.Format(
+                        "{0} != {1}",
+                        sanityCheck.BuiltInType,
+                        typeInfo.BuiltInType));
+            }
 
-            System.Diagnostics.Debug.Assert(
-                sanityCheck.ValueRank == typeInfo.ValueRank,
-                CoreUtils.Format(
-                    "{0} != {1}",
-                    sanityCheck.ValueRank,
-                    typeInfo.ValueRank));
+            if (sanityCheck.ValueRank != typeInfo.ValueRank)
+            {
+                System.Diagnostics.Debug.Fail(
+                    CoreUtils.Format(
+                        "{0} != {1}",
+                        sanityCheck.ValueRank,
+                        typeInfo.ValueRank));
+            }
         }
     }
 
