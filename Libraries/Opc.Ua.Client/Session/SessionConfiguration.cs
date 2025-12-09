@@ -180,12 +180,11 @@ namespace Opc.Ua.Client
         /// </summary>
         public static SessionConfiguration? Create(Stream stream, ITelemetryContext telemetry)
         {
-            // secure settings
-            XmlReaderSettings settings = Utils.DefaultXmlReaderSettings();
-            using var reader = XmlReader.Create(stream, settings);
             using IDisposable scope = AmbientMessageContext.SetScopedContext(telemetry);
             DataContractSerializer serializer =
                 CoreUtils.CreateDataContractSerializer<SessionConfiguration>();
+            // secure settings
+            using var reader = XmlReader.Create(stream, Utils.DefaultXmlReaderSettings());
             return (SessionConfiguration?)serializer.ReadObject(reader);
         }
     }

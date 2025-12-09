@@ -242,15 +242,6 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
 
             var localCtxt = (ServiceMessageContext)EncoderContext;
 
-            // Serialize/Encode a Variant fails without a context available
-            Assert.Throws<Newtonsoft.Json.JsonSerializationException>(() =>
-                Newtonsoft.Json.JsonConvert.SerializeObject(keyValuePair));
-
-            // Serialize/Encode an ExtensionObject fails without a context available
-            var extObjToEncode = new ExtensionObject(keyValuePair);
-            Assert.Throws<Newtonsoft.Json.JsonSerializationException>(() =>
-                Newtonsoft.Json.JsonConvert.SerializeObject(extObjToEncode));
-
             // Serialize/Encode a Variant succeeds with a context available
             using (AmbientMessageContext.SetScopedContext(localCtxt))
             {

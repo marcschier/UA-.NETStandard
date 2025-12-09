@@ -933,11 +933,10 @@ namespace Opc.Ua.Client
             Snapshot(out SessionConfiguration sessionConfiguration);
             if (stream != null)
             {
-                XmlWriterSettings settings = Utils.DefaultXmlWriterSettings();
-                using var writer = XmlWriter.Create(stream, settings);
                 DataContractSerializer serializer =
                     CoreUtils.CreateDataContractSerializer<SessionConfiguration>(MessageContext);
                 using IDisposable scope = AmbientMessageContext.SetScopedContext(MessageContext);
+                using var writer = XmlWriter.Create(stream, Utils.DefaultXmlWriterSettings());
                 serializer.WriteObject(writer, sessionConfiguration);
             }
             return sessionConfiguration;
@@ -957,14 +956,13 @@ namespace Opc.Ua.Client
                 subscription.Snapshot(out SubscriptionState state);
                 subscriptionStateCollection.Add(state);
             }
-            XmlWriterSettings settings = Utils.DefaultXmlWriterSettings();
 
-            using var writer = XmlWriter.Create(stream, settings);
             DataContractSerializer serializer =
                 CoreUtils.CreateDataContractSerializer<SubscriptionStateCollection>(
                     MessageContext,
                     knownTypes);
             using IDisposable scope = AmbientMessageContext.SetScopedContext(MessageContext);
+            using var writer = XmlWriter.Create(stream, Utils.DefaultXmlWriterSettings());
             serializer.WriteObject(writer, subscriptionStateCollection);
         }
 
@@ -976,15 +974,15 @@ namespace Opc.Ua.Client
         {
             using Activity? activity = m_telemetry.StartActivity();
             // secure settings
-            XmlReaderSettings settings = Utils.DefaultXmlReaderSettings();
-            settings.CloseInput = true;
 
-            using var reader = XmlReader.Create(stream, settings);
             DataContractSerializer serializer =
                 CoreUtils.CreateDataContractSerializer<SubscriptionStateCollection>(
                     MessageContext,
                     knownTypes);
             using IDisposable scope = AmbientMessageContext.SetScopedContext(MessageContext);
+            XmlReaderSettings settings = Utils.DefaultXmlReaderSettings();
+            settings.CloseInput = true;
+            using var reader = XmlReader.Create(stream, settings);
             var stateCollection = (SubscriptionStateCollection?)serializer.ReadObject(reader);
             if (stateCollection == null)
             {

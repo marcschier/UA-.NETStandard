@@ -2247,7 +2247,7 @@ namespace Opc.Ua.SourceGeneration
             // string path = field.Key.Replace('_', '.');
             string path = field.Key;
 
-            if (dataType.IsDotNetValueType(field.Value.ValueRank, true))
+            if (dataType.IsDotNetEqualityComparable(field.Value.ValueRank))
             {
                 context.Out.WriteLine("if (m_value.{0} != newValue.{0})", path);
             }
@@ -2802,7 +2802,7 @@ namespace Opc.Ua.SourceGeneration
                 context.Out.WriteLine($"if ((EncodingMask & (uint){dataType.ClassName}Fields.{field.Name}) != 0) ");
             }
 
-            if (dataType.IsDotNetValueType(field.ValueRank, true))
+            if (dataType.IsDotNetEqualityComparable(field.ValueRank))
             {
                 context.Out.WriteLine("if ({0} != value.{0})", field.GetChildFieldName());
             }
@@ -3259,8 +3259,8 @@ namespace Opc.Ua.SourceGeneration
                     return false;
                 }
 
-                bool valueType = field.DataTypeNode.IsDotNetValueType(field.ValueRank, true);
-                const bool emitDefaultValue = true;
+                bool isRequired = field.DataTypeNode.IsDotNetValueType(field.ValueRank);
+                bool emitDefaultValue = !field.DataTypeNode.IsDotNetReferenceType(field.ValueRank);
 
                 context.Template.AddReplacement(
                     Tokens.Description,
@@ -3273,7 +3273,7 @@ namespace Opc.Ua.SourceGeneration
                     m_model.Namespaces,
                     nullable: true));
                 context.Template.AddReplacement(Tokens.FieldName, field.GetChildFieldName());
-                context.Template.AddReplacement(Tokens.IsRequired, valueType ? "true" : "false");
+                context.Template.AddReplacement(Tokens.IsRequired, isRequired ? "true" : "false");
                 context.Template.AddReplacement(Tokens.EmitDefaultValue, emitDefaultValue ? "true" : "false");
                 context.Template.AddReplacement(Tokens.FieldIndex, CoreUtils.Format("{0}", context.Index + 1));
                 context.Template.AddReplacement(Tokens.DefaultValue, field.DataTypeNode.GetDefaultDotNetValue(

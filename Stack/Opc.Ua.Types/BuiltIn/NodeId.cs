@@ -1211,7 +1211,7 @@ namespace Opc.Ua
 
                 if (uri != null)
                 {
-                    expandedId.WithNamespaceUri(uri);
+                    return expandedId.WithNamespaceUri(uri);
                 }
             }
 

@@ -521,58 +521,6 @@ namespace Opc.Ua.SourceGeneration
         }
 
         /// <summary>
-        /// Returns checks if the field is a reference type.
-        /// </summary>
-        public static bool IsDotNetReferenceType(
-            this TypeDictionaryValidator validator,
-            FieldType fieldType)
-        {
-            DataType datatype = validator.ResolveType(fieldType.DataType);
-
-            if (datatype == null || string.IsNullOrEmpty(datatype.Name))
-            {
-                return false;
-            }
-
-            if (fieldType.ValueRank >= 0)
-            {
-                return true;
-            }
-
-            if (datatype is EnumeratedType)
-            {
-                return false;
-            }
-
-            if (datatype.QName.Namespace != Namespaces.OpcUaBuiltInTypes)
-            {
-                return true;
-            }
-
-            switch (datatype.Name)
-            {
-                case "Boolean":
-                case "SByte":
-                case "Byte":
-                case "Int16":
-                case "UInt16":
-                case "Int32":
-                case "UInt32":
-                case "Int64":
-                case "UInt64":
-                case "Float":
-                case "Double":
-                case "Guid":
-                case "DateTime":
-                case "StatusCode":
-                case "Variant":
-                    return false;
-                default:
-                    return true;
-            }
-        }
-
-        /// <summary>
         /// Returns the NodeClass of a Node
         /// </summary>
         public static string GetNodeClassString(this NodeDesign node)
@@ -718,19 +666,48 @@ namespace Opc.Ua.SourceGeneration
         }
 
         /// <summary>
+        /// Whether this is a reference type and implicitly nullable
+        /// </summary>
+        public static bool IsDotNetReferenceType(
+            this DataTypeDesign dataType,
+            ValueRank valueRank)
+        {
+            return !IsDotNetValueType(dataType, valueRank);
+        }
+
+        /// <summary>
+        /// Whether the data type supports equality comparison in .NET.
+        /// </summary>
+        public static bool IsDotNetEqualityComparable(
+            this DataTypeDesign dataType,
+            ValueRank valueRank)
+        {
+            if (IsDotNetValueType(dataType, valueRank))
+            {
+                return true;
+            }
+            if (valueRank == ValueRank.Scalar)
+            {
+                switch (dataType.BasicDataType)
+                {
+                    case BasicDataType.String:
+                        // Use equality for strings
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
         /// If the data type is a value type in .NET.
         /// </summary>
         public static bool IsDotNetValueType(
             this DataTypeDesign dataType,
-            ValueRank valueRank,
-            bool supportsEqualityOperators)
+            ValueRank valueRank)
         {
-            if (valueRank == ValueRank.Array)
-            {
-                return false;
-            }
-            if (dataType.BasicDataType == BasicDataType.BaseDataType ||
-                valueRank != ValueRank.Scalar)
+            if (valueRank != ValueRank.Scalar)
             {
                 return false;
             }
@@ -747,7 +724,6 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.UInt64:
                 case BasicDataType.Float:
                 case BasicDataType.Double:
-                case BasicDataType.String:
                 case BasicDataType.DateTime:
                 case BasicDataType.Guid:
                 case BasicDataType.NodeId:
@@ -755,7 +731,7 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.QualifiedName:
                 case BasicDataType.LocalizedText:
                 case BasicDataType.StatusCode:
-                    // case BasicDataType.SVariant:
+                // case BasicDataType.BaseDataType: // Variant
                     return true;
                 default:
                     return false;
@@ -1093,7 +1069,6 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.Enumeration:
                     return false;
             }
-
             return true;
         }
 
@@ -1171,7 +1146,6 @@ namespace Opc.Ua.SourceGeneration
                             namespaces,
                             nullable); // Should it always be non nullable?
                     }
-
                     return datatype.SymbolicName.Name;
                 case BasicDataType.UserDefined:
                     string typeName;
@@ -1194,7 +1168,6 @@ namespace Opc.Ua.SourceGeneration
                     // is passed.
                     return typeName; // !nullable ? typeName : typeName + "?";
             }
-
             return !nullable ? "object" : "object?";
         }
 
