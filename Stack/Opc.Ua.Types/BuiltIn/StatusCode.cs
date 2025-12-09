@@ -924,6 +924,10 @@ namespace Opc.Ua
     /// <summary>
     /// A collection of StatusCodes.
     /// </summary>
+    [CollectionDataContract(
+        Name = "ListOfStatusCode",
+        Namespace = Namespaces.OpcUaXsd,
+        ItemName = "StatusCode")]
     public class StatusCodeCollection : List<StatusCode>, ICloneable
     {
         /// <summary>
@@ -1029,51 +1033,6 @@ namespace Opc.Ua
         {
             get => Value.Code;
             set => Value = new StatusCode(value);
-        }
-    }
-
-    /// <summary>
-    /// A collection of StatusCodes.
-    /// </summary>
-    [CollectionDataContract(
-        Name = "ListOfStatusCode",
-        Namespace = Namespaces.OpcUaXsd,
-        ItemName = "StatusCode")]
-    public class SerializableStatusCodeCollection : List<SerializableStatusCode>,
-        ISurrogateFor<StatusCodeCollection>
-    {
-        /// <inheritdoc/>
-        public SerializableStatusCodeCollection()
-        {
-        }
-
-        /// <inheritdoc/>
-        public SerializableStatusCodeCollection(
-            StatusCodeCollection collection)
-            : this(collection.Select(n => new SerializableStatusCode(n)))
-        {
-        }
-
-        /// <inheritdoc/>
-        public SerializableStatusCodeCollection(
-            IEnumerable<SerializableStatusCode> collection)
-            : base(collection)
-        {
-        }
-
-        /// <inheritdoc/>
-        public SerializableStatusCodeCollection(int capacity)
-            : base(capacity)
-        {
-        }
-
-        /// <inheritdoc/>
-        public StatusCodeCollection Value => [.. this.Select(n => n.Value)];
-
-        /// <inheritdoc/>
-        public object GetValue()
-        {
-            return Value;
         }
     }
 }

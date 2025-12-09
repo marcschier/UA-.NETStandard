@@ -150,19 +150,12 @@ namespace Opc.Ua
         public static readonly Dictionary<Type, Type> SurrogateMappings = new()
         {
             { typeof(NodeId), typeof(SerializableNodeId) },
-            { typeof(NodeIdCollection), typeof(SerializableNodeIdCollection) },
             { typeof(ExpandedNodeId), typeof(SerializableExpandedNodeId) },
-            { typeof(ExpandedNodeIdCollection), typeof(SerializableExpandedNodeIdCollection) },
             { typeof(Uuid), typeof(SerializableUuid) },
-            { typeof(UuidCollection), typeof(SerializableUuidCollection) },
             { typeof(StatusCode), typeof(SerializableStatusCode) },
-            { typeof(StatusCodeCollection), typeof(SerializableStatusCodeCollection) },
             { typeof(QualifiedName), typeof(SerializableQualifiedName) },
-            { typeof(QualifiedNameCollection), typeof(SerializableQualifiedNameCollection) },
             { typeof(Variant), typeof(SerializableVariant) },
-            { typeof(VariantCollection), typeof(SerializableVariantCollection) },
             { typeof(LocalizedText), typeof(SerializableLocalizedText) },
-            { typeof(LocalizedTextCollection), typeof(SerializableLocalizedTextCollection) },
         };
     }
 }

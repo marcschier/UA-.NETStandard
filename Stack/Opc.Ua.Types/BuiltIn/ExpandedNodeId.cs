@@ -1387,6 +1387,10 @@ namespace Opc.Ua
     /// <summary>
     /// List of expanded node ids
     /// </summary>
+    [CollectionDataContract(
+        Name = "ListOfExpandedNodeId",
+        Namespace = Namespaces.OpcUaXsd,
+        ItemName = "ExpandedNodeId")]
     public class ExpandedNodeIdCollection : List<ExpandedNodeId>, ICloneable
     {
         /// <summary>
@@ -1609,60 +1613,6 @@ namespace Opc.Ua
             {
                 IdentifierText = expandedNodeId
             };
-        }
-    }
-
-    /// <summary>
-    /// A collection of SerializableExpandedNodeId objects.
-    /// </summary>
-    [CollectionDataContract(
-        Name = "ListOfExpandedNodeId",
-        Namespace = Namespaces.OpcUaXsd,
-        ItemName = "ExpandedNodeId"
-    )]
-    public class SerializableExpandedNodeIdCollection :
-        List<SerializableExpandedNodeId>,
-        ISurrogateFor<ExpandedNodeIdCollection>
-    {
-        /// <inheritdoc/>
-        public SerializableExpandedNodeIdCollection()
-        {
-        }
-
-        /// <inheritdoc/>
-        public SerializableExpandedNodeIdCollection(
-            ExpandedNodeIdCollection collection)
-            : this(collection.Select(n => new SerializableExpandedNodeId(n)))
-        {
-        }
-
-        /// <inheritdoc/>
-        public SerializableExpandedNodeIdCollection(
-            IEnumerable<SerializableExpandedNodeId> collection)
-            : base(collection)
-        {
-        }
-
-        /// <inheritdoc/>
-        public SerializableExpandedNodeIdCollection(int capacity)
-            : base(capacity)
-        {
-        }
-
-        /// <inheritdoc/>
-        public ExpandedNodeIdCollection Value => [.. this.Select(n => n.Value)];
-
-        /// <inheritdoc/>
-        public object GetValue()
-        {
-            return Value;
-        }
-
-        /// <inheritdoc/>
-        public static implicit operator SerializableExpandedNodeIdCollection(
-            SerializableExpandedNodeId[] values)
-        {
-            return values == null ? [] : [.. values];
         }
     }
 }

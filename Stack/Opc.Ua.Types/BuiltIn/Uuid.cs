@@ -255,6 +255,10 @@ namespace Opc.Ua
     /// <summary>
     /// A collection of Uuids.
     /// </summary>
+    [CollectionDataContract(
+        Name = "ListOfGuid",
+        Namespace = Namespaces.OpcUaXsd,
+        ItemName = "Guid")]
     public class UuidCollection : List<Uuid>, ICloneable
     {
         /// <inheritdoc/>
@@ -365,55 +369,6 @@ namespace Opc.Ua
         public object GetValue()
         {
             return Value;
-        }
-    }
-
-    /// <summary>
-    /// A collection of Uuids.
-    /// </summary>
-    [CollectionDataContract(
-        Name = "ListOfGuid",
-        Namespace = Namespaces.OpcUaXsd,
-        ItemName = "Guid")]
-    public class SerializableUuidCollection : List<SerializableUuid>,
-        ISurrogateFor<UuidCollection>,
-        ICloneable
-    {
-        /// <inheritdoc/>
-        public SerializableUuidCollection()
-        {
-        }
-
-        /// <inheritdoc/>
-        public SerializableUuidCollection(UuidCollection collection)
-            : base(collection.Select(g => new SerializableUuid(g)))
-        {
-        }
-
-        /// <inheritdoc/>
-        public SerializableUuidCollection(int capacity)
-            : base(capacity)
-        {
-        }
-
-        /// <inheritdoc/>
-        public UuidCollection Value => [.. this.Select(n => n.Value)];
-
-        /// <inheritdoc/>
-        public object GetValue()
-        {
-            return Value;
-        }
-        /// <inheritdoc/>
-        public virtual object Clone()
-        {
-            return MemberwiseClone();
-        }
-
-        /// <inheritdoc/>
-        public new object MemberwiseClone()
-        {
-            return new UuidCollection((IEnumerable<Uuid>)this);
         }
     }
 }

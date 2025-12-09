@@ -690,11 +690,12 @@ namespace Opc.Ua
     }
 
     /// <summary>
-    /// A collection of LocalizedText objects.
-    /// </summary>
-    /// <remarks>
     /// A strongly-typed collection of LocalizedText objects.
-    /// </remarks>
+    /// </summary>
+    [CollectionDataContract(
+        Name = "ListOfLocalizedText",
+        Namespace = Namespaces.OpcUaXsd,
+        ItemName = "LocalizedText")]
     public class LocalizedTextCollection : List<LocalizedText>, ICloneable
     {
         /// <inheritdoc/>
@@ -876,58 +877,4 @@ namespace Opc.Ua
             return value.Value;
         }
     }
-
-    /// <summary>
-    /// A collection of SerializableLocalizedText objects.
-    /// </summary>
-    [CollectionDataContract(
-        Name = "ListOfLocalizedText",
-        Namespace = Namespaces.OpcUaXsd,
-        ItemName = "LocalizedText")]
-    public class SerializableLocalizedTextCollection :
-        List<SerializableLocalizedText>,
-        ISurrogateFor<LocalizedTextCollection>
-    {
-        /// <inheritdoc/>
-        public SerializableLocalizedTextCollection()
-        {
-        }
-
-        /// <inheritdoc/>
-        public SerializableLocalizedTextCollection(
-            LocalizedTextCollection collection)
-            : this(collection.Select(n => new SerializableLocalizedText(n)))
-        {
-        }
-
-        /// <inheritdoc/>
-        public SerializableLocalizedTextCollection(
-            IEnumerable<SerializableLocalizedText> collection)
-            : base(collection)
-        {
-        }
-
-        /// <inheritdoc/>
-        public SerializableLocalizedTextCollection(int capacity)
-            : base(capacity)
-        {
-        }
-
-        /// <inheritdoc/>
-        public LocalizedTextCollection Value => [.. this.Select(n => n.Value)];
-
-        /// <inheritdoc/>
-        public object GetValue()
-        {
-            return Value;
-        }
-
-        /// <inheritdoc/>
-        public static implicit operator SerializableLocalizedTextCollection(
-            SerializableLocalizedText[] values)
-        {
-            return values == null ? [] : [.. values];
-        }
-    }
-
 }
