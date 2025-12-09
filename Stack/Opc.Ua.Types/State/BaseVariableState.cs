@@ -1651,7 +1651,7 @@ namespace Opc.Ua
             }
 
             // apply data encoding.
-            if (!QualifiedName.IsNull(dataEncoding))
+            if (!dataEncoding.IsNullQn)
             {
                 var messageContext = new ServiceMessageContext(context.Telemetry)
                 {
@@ -2283,7 +2283,7 @@ namespace Opc.Ua
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }

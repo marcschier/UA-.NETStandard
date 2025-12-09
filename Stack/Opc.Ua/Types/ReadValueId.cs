@@ -86,7 +86,7 @@ namespace Opc.Ua
                     return StatusCodes.BadIndexRangeNoData;
                 }
 
-                if (!QualifiedName.IsNull(valueId.DataEncoding))
+                if (!valueId.DataEncoding.IsNullQn)
                 {
                     return StatusCodes.BadDataEncodingInvalid;
                 }

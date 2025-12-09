@@ -483,7 +483,7 @@ namespace Opc.Ua
         /// <summary>
         /// Writes a GUID to the stream.
         /// </summary>
-        public void WriteGuid(string fieldName, Guid value)
+        public void WriteGuid(string fieldName, Uuid value)
         {
             if (BeginField(fieldName, false, false))
             {
@@ -732,7 +732,7 @@ namespace Opc.Ua
         /// </summary>
         public void WriteQualifiedName(string fieldName, QualifiedName value)
         {
-            WriteQualifiedName(fieldName, value, false);    
+            WriteQualifiedName(fieldName, value, false);
         }
 
         /// <summary>
@@ -768,11 +768,19 @@ namespace Opc.Ua
         /// </summary>
         public void WriteLocalizedText(string fieldName, LocalizedText value)
         {
-            if (BeginField(fieldName, value == null, true))
+            WriteLocalizedText(fieldName, value, false);
+        }
+
+        /// <summary>
+        /// Writes an LocalizedText to the stream.
+        /// </summary>
+        private void WriteLocalizedText(string fieldName, LocalizedText value, bool isArrayElement)
+        {
+            if (BeginField(fieldName, value.IsNullOrEmpty, true, isArrayElement))
             {
                 PushNamespace(Namespaces.OpcUaXsd);
 
-                if (value != null)
+                if (!value.IsNullOrEmpty)
                 {
                     if (!string.IsNullOrEmpty(value.Locale))
                     {
@@ -1357,7 +1365,7 @@ namespace Opc.Ua
         /// Writes a GUID array to the stream.
         /// </summary>
         /// <exception cref="ServiceResultException"></exception>
-        public void WriteGuidArray(string fieldName, IList<Guid> values)
+        public void WriteGuidArray(string fieldName, IList<Uuid> values)
         {
             if (BeginField(fieldName, values == null, true, true))
             {
@@ -1613,7 +1621,7 @@ namespace Opc.Ua
                 {
                     for (int ii = 0; ii < values.Count; ii++)
                     {
-                        WriteLocalizedText("LocalizedText", values[ii]);
+                        WriteLocalizedText("LocalizedText", values[ii], true);
                     }
                 }
 
@@ -1880,7 +1888,7 @@ namespace Opc.Ua
                             WriteDateTime("DateTime", (DateTime)value);
                             return;
                         case BuiltInType.Guid:
-                            WriteGuid("Guid", (Guid)value);
+                            WriteGuid("Guid", (Uuid)value);
                             return;
                         case BuiltInType.ByteString:
                             WriteByteString("ByteString", (byte[])value);
@@ -1973,7 +1981,7 @@ namespace Opc.Ua
                             WriteDateTimeArray("ListOfDateTime", (DateTime[])value);
                             return;
                         case BuiltInType.Guid:
-                            WriteGuidArray("ListOfGuid", (Guid[])value);
+                            WriteGuidArray("ListOfGuid", (Uuid[])value);
                             return;
                         case BuiltInType.ByteString:
                             WriteByteStringArray("ListOfByteString", (byte[][])value);
@@ -2213,7 +2221,7 @@ namespace Opc.Ua
                             WriteDateTimeArray(fieldName, (DateTime[])array);
                             return;
                         case BuiltInType.Guid:
-                            WriteGuidArray(fieldName, (Guid[])array);
+                            WriteGuidArray(fieldName, (Uuid[])array);
                             return;
                         case BuiltInType.ByteString:
                             WriteByteStringArray(fieldName, (byte[][])array);

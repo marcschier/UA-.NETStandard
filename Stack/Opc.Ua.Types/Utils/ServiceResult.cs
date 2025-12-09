@@ -238,7 +238,7 @@ namespace Opc.Ua
 
             // check if no new information provided.
             if (code.Code == innerResult.Code &&
-                localizedText == null &&
+                localizedText.IsNullOrEmpty &&
                 additionalInfo == null)
             {
                 StatusCode = innerResult.Code;
@@ -336,7 +336,7 @@ namespace Opc.Ua
                 LocalizedText = sre.Result.LocalizedText;
                 InnerResult = sre.Result.InnerResult;
 
-                if (LocalizedText.IsNullOrEmpty(LocalizedText))
+                if (LocalizedText.IsNullOrEmpty)
                 {
                     LocalizedText = defaultLocalizedText;
                 }
@@ -768,7 +768,7 @@ namespace Opc.Ua
                 }
             }
 
-            if (!LocalizedText.IsNullOrEmpty(LocalizedText))
+            if (!LocalizedText.IsNullOrEmpty)
             {
                 buffer.AppendFormat(CultureInfo.InvariantCulture, " '{0}'", LocalizedText);
             }

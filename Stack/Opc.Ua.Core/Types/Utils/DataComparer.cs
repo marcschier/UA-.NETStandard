@@ -314,7 +314,7 @@ namespace Opc.Ua.Test
         /// <param name="value2">Second Value.</param>
         /// <returns>True in case of equal values.
         /// False or ServiceResultException in case of unequal values.</returns>
-        public bool CompareGuid(Guid value1, Guid value2)
+        public bool CompareGuid(Uuid value1, Uuid value2)
         {
             if (value1 != value2)
             {
@@ -605,16 +605,6 @@ namespace Opc.Ua.Test
         /// False or ServiceResultException in case of unequal values.</returns>
         public bool CompareLocalizedText(LocalizedText value1, LocalizedText value2)
         {
-            if (value1 == null)
-            {
-                return value2 == null || value2 == LocalizedText.Null;
-            }
-
-            if (value2 == null)
-            {
-                return value1 == LocalizedText.Null;
-            }
-
             if (!value1.Equals(value2))
             {
                 return ReportError(value1, value1);
@@ -702,9 +692,9 @@ namespace Opc.Ua.Test
                 {
                     return CompareDateTime((DateTime)value1.Value, (DateTime)value2.Value);
                 }
-                if (systemType == typeof(Guid))
+                if (systemType == typeof(Uuid))
                 {
-                    return CompareGuid((Guid)value1.Value, (Guid)value2.Value);
+                    return CompareGuid((Uuid)value1.Value, (Uuid)value2.Value);
                 }
                 if (systemType == typeof(byte[]))
                 {
@@ -830,9 +820,9 @@ namespace Opc.Ua.Test
                         (DateTime[])value2.Value,
                         CompareDateTime);
                 }
-                if (systemType == typeof(Guid[]))
+                if (systemType == typeof(Uuid[]))
                 {
-                    return CompareArray((Guid[])value1.Value, (Guid[])value2.Value, CompareGuid);
+                    return CompareArray((Uuid[])value1.Value, (Uuid[])value2.Value, CompareGuid);
                 }
                 if (systemType == typeof(byte[][]))
                 {

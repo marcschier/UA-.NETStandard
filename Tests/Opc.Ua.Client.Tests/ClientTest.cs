@@ -1692,7 +1692,7 @@ namespace Opc.Ua.Client.Tests
                     BitConverter.TryWriteBytes(spanIdBytes, spanContext.SpanId);
 #else
                     byte[] spanIdBytes = BitConverter.GetBytes(spanContext.SpanId);
-                    byte[] traceIdBytes = ((Guid)spanContext.TraceId).ToByteArray();
+                    byte[] traceIdBytes = spanContext.TraceId.ToByteArray();
 #endif
                     var traceId = ActivityTraceId.CreateFromBytes(traceIdBytes);
                     var spanId = ActivitySpanId.CreateFromBytes(spanIdBytes);

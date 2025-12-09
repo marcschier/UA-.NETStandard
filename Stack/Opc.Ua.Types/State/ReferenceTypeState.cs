@@ -108,7 +108,7 @@ namespace Opc.Ua
             get => m_inverseName;
             set
             {
-                if (!ReferenceEquals(m_inverseName, value))
+                if (m_inverseName != value)
                 {
                     ChangeMasks |= NodeStateChangeMasks.NonValue;
                 }
@@ -161,7 +161,7 @@ namespace Opc.Ua
 
             encoder.PushNamespace(Namespaces.OpcUaXsd);
 
-            if (!LocalizedText.IsNullOrEmpty(m_inverseName))
+            if (!m_inverseName.IsNullOrEmpty)
             {
                 encoder.WriteLocalizedText("InverseName", m_inverseName);
             }
@@ -207,7 +207,7 @@ namespace Opc.Ua
         {
             AttributesToSave attributesToSave = base.GetAttributesToSave(context);
 
-            if (!LocalizedText.IsNullOrEmpty(m_inverseName))
+            if (!m_inverseName.IsNullOrEmpty)
             {
                 attributesToSave |= AttributesToSave.InverseName;
             }
@@ -312,7 +312,7 @@ namespace Opc.Ua
 
                     if (ServiceResult.IsGood(result))
                     {
-                        if (inverseName == null)
+                        if (inverseName.IsNullOrEmpty)
                         {
                             result = StatusCodes.BadAttributeIdInvalid;
                         }
@@ -357,11 +357,14 @@ namespace Opc.Ua
             switch (attributeId)
             {
                 case Attributes.InverseName:
-                    var inverseName = value as LocalizedText;
 
-                    if (inverseName == null && value != null)
+                    if (value is not LocalizedText inverseName)
                     {
-                        return StatusCodes.BadTypeMismatch;
+                        if (value != null)
+                        {
+                            return StatusCodes.BadTypeMismatch;
+                        }
+                        inverseName = LocalizedText.Null;
                     }
 
                     if ((WriteMask & AttributeWriteMask.InverseName) == 0)

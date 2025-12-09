@@ -168,5 +168,6 @@ namespace Opc.Ua.SourceGeneration
         public static string ListOfResourceDeclarations => nameof(ListOfResourceDeclarations);
         public static string AccessModifier => nameof(AccessModifier);
         public static string IdentifierReflection => nameof(IdentifierReflection);
+        public static string EqualityComparer => nameof(EqualityComparer);
     }
 }

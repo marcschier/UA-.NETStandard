@@ -1109,7 +1109,7 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
             // all app certs are trusted
             foreach (X509Certificate2 appCert in m_appSelfSignedCerts)
             {
-                string password = Guid.NewGuid().ToString()[..8];
+                string password = Uuid.NewUuid().ToString()[..8];
                 TestContext.Out.WriteLine("Password: {0}", password);
                 byte[] pemDataBlob = PEMWriter.ExportPrivateKeyAsPEM(appCert, password);
                 string pemString = Encoding.UTF8.GetString(pemDataBlob);

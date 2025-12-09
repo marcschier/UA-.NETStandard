@@ -400,7 +400,7 @@ namespace Opc.Ua
             if (AutoReportStateChanges)
             {
                 // create a new event instance.
-                EventId.Value = Guid.NewGuid().ToByteArray();
+                EventId.Value = Uuid.NewUuid().ToByteArray();
                 Time.Value = DateTime.UtcNow;
                 ReceiveTime.Value = Time.Value;
 

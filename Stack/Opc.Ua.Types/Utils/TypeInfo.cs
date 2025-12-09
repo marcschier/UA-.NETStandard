@@ -718,7 +718,7 @@ namespace Opc.Ua
                 case DataTypes.DateTime:
                     return typeof(DateTime);
                 case DataTypes.Guid:
-                    return typeof(Guid);
+                    return typeof(Uuid);
                 case DataTypes.ByteString:
                     return typeof(byte[]);
                 case DataTypes.XmlElement:
@@ -1281,7 +1281,7 @@ namespace Opc.Ua
                     case BuiltInType.DateTime:
                         return typeof(DateTime);
                     case BuiltInType.Guid:
-                        return typeof(Guid);
+                        return typeof(Uuid);
                     case BuiltInType.ByteString:
                         return typeof(byte[]);
                     case BuiltInType.XmlElement:
@@ -1347,7 +1347,7 @@ namespace Opc.Ua
                     case BuiltInType.DateTime:
                         return typeof(DateTime[]);
                     case BuiltInType.Guid:
-                        return typeof(Guid[]);
+                        return typeof(Uuid[]);
                     case BuiltInType.ByteString:
                         return typeof(byte[][]);
                     case BuiltInType.XmlElement:
@@ -1414,7 +1414,7 @@ namespace Opc.Ua
                     case BuiltInType.DateTime:
                         return typeof(DateTime).MakeArrayType(valueRank);
                     case BuiltInType.Guid:
-                        return typeof(Guid).MakeArrayType(valueRank);
+                        return typeof(Uuid).MakeArrayType(valueRank);
                     case BuiltInType.ByteString:
                         return typeof(byte[]).MakeArrayType(valueRank);
                     case BuiltInType.XmlElement:
@@ -1687,7 +1687,7 @@ namespace Opc.Ua
                 case BuiltInType.DateTime:
                     return DateTime.MinValue;
                 case BuiltInType.Guid:
-                    return Guid.Empty;
+                    return Uuid.Empty;
                 case BuiltInType.ByteString:
                 case BuiltInType.XmlElement:
                     return null;
@@ -1851,7 +1851,7 @@ namespace Opc.Ua
                     case BuiltInType.DateTime:
                         return new DateTime[length];
                     case BuiltInType.Guid:
-                        return new Guid[length];
+                        return new Uuid[length];
                     case BuiltInType.ByteString:
                         return new byte[length][];
                     case BuiltInType.XmlElement:
@@ -1921,7 +1921,7 @@ namespace Opc.Ua
                     case BuiltInType.DateTime:
                         return Array.CreateInstance(typeof(DateTime), dimensions);
                     case BuiltInType.Guid:
-                        return Array.CreateInstance(typeof(Guid), dimensions);
+                        return Array.CreateInstance(typeof(Uuid), dimensions);
                     case BuiltInType.ByteString:
                         return Array.CreateInstance(typeof(byte[]), dimensions);
                     case BuiltInType.XmlElement:
@@ -2795,7 +2795,7 @@ namespace Opc.Ua
                         (DateTime)value,
                         XmlDateTimeSerializationMode.Unspecified);
                 case BuiltInType.Guid:
-                    return ((Guid)value).ToString();
+                    return ((Uuid)value).ToString();
                 case BuiltInType.NodeId:
                     return ((NodeId)value).ToString();
                 case BuiltInType.ExpandedNodeId:
@@ -2851,21 +2851,25 @@ namespace Opc.Ua
         /// </summary>
         /// <exception cref="InvalidCastException"></exception>
         /// <exception cref="ServiceResultException"></exception>
-        private static Guid ToGuid(object value, TypeInfo sourceType)
+        private static Uuid ToGuid(object value, TypeInfo sourceType)
         {
             // handle for supported conversions.
             switch (sourceType.BuiltInType)
             {
                 case BuiltInType.String:
-                    return Guid.Parse((string)value);
+                    return Uuid.Parse((string)value);
                 case BuiltInType.ByteString:
-                    return new Guid((byte[])value);
+                    return new Uuid((byte[])value);
                 case BuiltInType.Guid:
+                    if (value is Uuid uuidValue)
+                    {
+                        return uuidValue;
+                    }
                     if (value is Guid guidValue)
                     {
-                        return guidValue;
+                        return new Uuid(guidValue);
                     }
-                    return Guid.Empty;
+                    return Uuid.Empty;
                 case >= BuiltInType.Null and <= BuiltInType.Enumeration:
                     // conversion not supported.
                     throw new InvalidCastException();
@@ -2953,7 +2957,7 @@ namespace Opc.Ua
                         return ostrm.ToArray();
                     }
                 case BuiltInType.Guid:
-                    return ((Guid)value).ToByteArray();
+                    return ((Uuid)value).ToByteArray();
                 case >= BuiltInType.Null and <= BuiltInType.Enumeration:
                     // conversion not supported.
                     throw new InvalidCastException();
@@ -3598,7 +3602,9 @@ namespace Opc.Ua
             /// <summary>
             /// A 128-bit globally unique identifier.
             /// </summary>
-            public static readonly TypeInfo Guid = new(BuiltInType.Guid, ValueRanks.OneDimension);
+            public static readonly TypeInfo Guid = new(
+                BuiltInType.Guid,
+                ValueRanks.OneDimension);
 
             /// <summary>
             /// A sequence of bytes.

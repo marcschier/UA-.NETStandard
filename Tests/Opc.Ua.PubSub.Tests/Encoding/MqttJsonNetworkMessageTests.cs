@@ -494,7 +494,7 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                 "Json ua-data entries are missing from configuration!");
 
             // set DataSetClassId
-            var dataSetClassId = Guid.NewGuid();
+            var dataSetClassId = Uuid.NewUuid();
             foreach (PubSubEncoding.JsonNetworkMessage uaNetworkMessage in uaNetworkMessages)
             {
                 uaNetworkMessage.DataSetClassId = dataSetClassId.ToString();
@@ -1845,7 +1845,7 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                 kNamespaceIndexAllTypes,
                 metaDataType.Fields);
             metadata.Description = new LocalizedText("Description text");
-            metadata.DataSetClassId = Guid.Empty;
+            metadata.DataSetClassId = Uuid.Empty;
 
             _ = hasMetaData ? metadata : null;
 
@@ -1863,8 +1863,8 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                     ? new LocalizedText(metaDataDescription)
                     : metaDataDescription;
             jsonNetworkMessage.DataSetMetaData.DataSetClassId = hasMetaDataDataSetClassId
-                ? Guid.NewGuid()
-                : Guid.Empty;
+                ? Uuid.NewUuid()
+                : Uuid.Empty;
             jsonNetworkMessage.DataSetMetaData.ConfigurationVersion
                 = hasMetaDataConfigurationVersion
                 ? new ConfigurationVersionDataType { MajorVersion = 1, MinorVersion = 1 }
@@ -2555,7 +2555,7 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                 "DataSetMetaData.Name was not decoded correctly, Encoded: {0} Decoded: {1}",
                 jsonNetworkMessage.DataSetMetaData.Name,
                 dataSetMetaData.Name);
-            if (jsonDataSetMetaData.Description == null)
+            if (jsonDataSetMetaData.Description.IsNullOrEmpty)
             {
                 return MetaDataFailOptions.MetaData_Description;
             }
@@ -2609,7 +2609,7 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                         fieldMetaData.TypeId));
             }
 
-            if (jsonDataSetMetaData.DataSetClassId == Guid.Empty)
+            if (jsonDataSetMetaData.DataSetClassId == Uuid.Empty)
             {
                 return MetaDataFailOptions.MetaData_DataSetClassId;
             }

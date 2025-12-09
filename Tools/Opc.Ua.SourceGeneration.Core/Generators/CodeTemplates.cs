@@ -1452,7 +1452,7 @@ namespace Opc.Ua.SourceGeneration
                 bool createOrReplace,
                 global::Opc.Ua.BaseInstanceState replacement)
             {
-                if (QualifiedName.IsNull(browseName))
+                if (browseName.IsNullQn)
                 {
                     return null;
                 }

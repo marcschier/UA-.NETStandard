@@ -473,11 +473,11 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public Guid ReadGuid(string fieldName)
+        public Uuid ReadGuid(string fieldName)
         {
             const int kGuidLength = 16;
             byte[] bytes = SafeReadBytes(kGuidLength);
-            return new Guid(bytes);
+            return new Uuid(bytes);
         }
 
         /// <inheritdoc/>
@@ -1033,7 +1033,7 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public GuidCollection ReadGuidArray(string fieldName)
+        public UuidCollection ReadGuidArray(string fieldName)
         {
             int length = ReadArrayLength();
 
@@ -1042,7 +1042,7 @@ namespace Opc.Ua
                 return null;
             }
 
-            var values = new GuidCollection(length);
+            var values = new UuidCollection(length);
 
             for (int ii = 0; ii < length; ii++)
             {
@@ -1740,7 +1740,7 @@ namespace Opc.Ua
                 }
                 case BuiltInType.Guid:
                 {
-                    var values = new Guid[length];
+                    var values = new Uuid[length];
 
                     for (int ii = 0; ii < values.Length; ii++)
                     {

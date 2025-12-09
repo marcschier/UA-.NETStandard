@@ -88,7 +88,7 @@ namespace Opc.Ua.Client
                     TraceId = new Guid(traceId)
 #else
                     SpanId = BitConverter.ToUInt64(spanId.ToArray(), 0),
-                    TraceId = new Guid(traceId.ToArray())
+                    TraceId = new Uuid(traceId.ToArray())
 #endif
                 })
             };

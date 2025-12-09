@@ -72,7 +72,7 @@ namespace Opc.Ua
                     .Append(result.SymbolicId);
             }
 
-            if (!LocalizedText.IsNullOrEmpty(result.LocalizedText))
+            if (!result.LocalizedText.IsNullOrEmpty)
             {
                 buffer.AppendLine()
                     .Append("Description: ")

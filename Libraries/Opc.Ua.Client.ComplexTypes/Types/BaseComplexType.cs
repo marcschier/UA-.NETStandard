@@ -470,7 +470,7 @@ namespace Opc.Ua.Client.ComplexTypes
                     encoder.WriteDateTime(name, (DateTime)property.GetValue(this));
                     break;
                 case BuiltInType.Guid:
-                    encoder.WriteGuid(name, (Guid)property.GetValue(this));
+                    encoder.WriteGuid(name, (Uuid)property.GetValue(this));
                     break;
                 case BuiltInType.ByteString:
                     encoder.WriteByteString(name, (byte[])property.GetValue(this));

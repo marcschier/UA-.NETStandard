@@ -157,7 +157,7 @@ namespace Opc.Ua
         /// <summary>
         /// Writes a GUID to the stream.
         /// </summary>
-        void WriteGuid(string fieldName, Guid value);
+        void WriteGuid(string fieldName, Uuid value);
 
         /// <summary>
         /// Writes a byte string to the stream.
@@ -304,7 +304,7 @@ namespace Opc.Ua
         /// <summary>
         /// Writes a GUID array to the stream.
         /// </summary>
-        void WriteGuidArray(string fieldName, IList<Guid> values);
+        void WriteGuidArray(string fieldName, IList<Uuid> values);
 
         /// <summary>
         /// Writes a byte string array to the stream.

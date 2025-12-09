@@ -254,8 +254,8 @@ namespace Quickstarts.Servers
             }
         }
 
-        private readonly ConcurrentDictionary<Guid, BatchBase> m_batchesToRestore = new();
-        private readonly ConcurrentDictionary<Guid, BatchBase> m_batchesToPersist = new();
+        private readonly ConcurrentDictionary<Uuid, BatchBase> m_batchesToRestore = new();
+        private readonly ConcurrentDictionary<Uuid, BatchBase> m_batchesToPersist = new();
         private readonly ILogger m_logger;
         private readonly ITelemetryContext m_telemetry;
     }

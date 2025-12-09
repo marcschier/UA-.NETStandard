@@ -38,7 +38,6 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Xml;
 using Opc.Ua.Types;
-using static Opc.Ua.TypeInfo;
 
 namespace Opc.Ua
 {
@@ -275,13 +274,13 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a Guid value.
+        /// Initializes the object with a Uuid value.
         /// </summary>
         /// <remarks>
-        /// Creates a new variant with a <see cref="Guid"/> value
+        /// Creates a new variant with a <see cref="Uuid"/> value
         /// </remarks>
-        /// <param name="value">The <see cref="Guid"/> value of the Variant</param>
-        public Variant(Guid value)
+        /// <param name="value">The <see cref="Uuid"/> value of the Variant</param>
+        public Variant(Uuid value)
         {
             Value = value;
             TypeInfo = TypeInfo.Scalars.Guid;
@@ -561,19 +560,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a Guid array value.
-        /// </summary>
-        /// <remarks>
-        /// Creates a new variant with a <see cref="Guid"/>-array value
-        /// </remarks>
-        /// <param name="value">The <see cref="Guid"/>-array value of the Variant</param>
-        public Variant(Guid[] value)
-        {
-            Value = value;
-            TypeInfo = TypeInfo.Arrays.Guid;
-        }
-
-        /// <summary>
         /// Initializes the object with a Uuid array value.
         /// </summary>
         /// <remarks>
@@ -582,7 +568,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="Uuid"/>-array value of the Variant</param>
         public Variant(Uuid[] value)
         {
-            Value = value?.Select(u => u.Value).ToArray();
+            Value = value;
             TypeInfo = TypeInfo.Arrays.Guid;
         }
 
@@ -765,6 +751,13 @@ namespace Opc.Ua
                             break;
                         }
                         break;
+                    case BuiltInType.Guid:
+                        if (Value is Guid guid)
+                        {
+                            Value = new Uuid(guid);
+                            break;
+                        }
+                        break;
                     case BuiltInType.Variant:
                         Value = ((Variant)Value).Value;
                         TypeInfo = TypeInfo.Construct(Value);
@@ -844,6 +837,12 @@ namespace Opc.Ua
                                 variants[ii] = new Variant(objects[ii]);
                             }
                             Value = variants;
+                        }
+                        break;
+                    case BuiltInType.Guid:
+                        if (array is Guid[] guids)
+                        {
+                            Value = ((UuidCollection)guids).ToArray();
                         }
                         break;
                     // just save the value.
@@ -926,6 +925,12 @@ namespace Opc.Ua
                             extensions[ii] = new ExtensionObject(encodeables[ii]);
                         }
                         Value = extensions;
+                    }
+                    break;
+                case BuiltInType.Guid:
+                    if (array is Guid[] guids)
+                    {
+                        Value = ((UuidCollection)guids).ToArray();
                     }
                     break;
                 // convert objects to variants objects.
@@ -1183,22 +1188,14 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a Guid value to an Variant object.
-        /// </summary>
-        /// <remarks>
-        /// Converts a Guid value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(Guid value)
-        {
-            return new Variant(value);
-        }
-
-        /// <summary>
         /// Converts a Uuid value to an Variant object.
         /// </summary>
+        /// <remarks>
+        /// Converts a Uuid value to an Variant object.
+        /// </remarks>
         public static implicit operator Variant(Uuid value)
         {
-            return new Variant(value.Value);
+            return new Variant(value);
         }
 
         /// <summary>
@@ -1428,17 +1425,6 @@ namespace Opc.Ua
         /// Converts a DateTime[] value to an Variant object.
         /// </remarks>
         public static implicit operator Variant(DateTime[] value)
-        {
-            return new Variant(value);
-        }
-
-        /// <summary>
-        /// Converts a Guid[] value to an Variant object.
-        /// </summary>
-        /// <remarks>
-        /// Converts a Guid[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(Guid[] value)
         {
             return new Variant(value);
         }
@@ -1781,18 +1767,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a Guid value.
-        /// </summary>
-        /// <remarks>
-        /// Initializes the object with a <see cref="Guid"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="Guid"/> value to set this Variant to</param>
-        public Variant Set(Guid value)
-        {
-            return new Variant(value);
-        }
-
-        /// <summary>
         /// Initializes the object with a Uuid value.
         /// </summary>
         /// <remarks>
@@ -2057,13 +2031,13 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a Guid array value.
+        /// Initializes the object with a Uuid array value.
         /// </summary>
         /// <remarks>
-        /// Initializes the object with a <see cref="Guid"/>-array value.
+        /// Initializes the object with a <see cref="Uuid"/>-array value.
         /// </remarks>
-        /// <param name="value">The <see cref="Guid"/>-array value to set this Variant to</param>
-        public Variant Set(Guid[] value)
+        /// <param name="value">The <see cref="Uuid"/>-array value to set this Variant to</param>
+        public Variant Set(Uuid[] value)
         {
             return new Variant(value);
         }

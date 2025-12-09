@@ -159,7 +159,7 @@ namespace Boiler
         {
             LocalizedText displayName = instance.DisplayName;
 
-            if (displayName != null)
+            if (!displayName.IsNullOrEmpty)
             {
                 string text = displayName.Text;
 

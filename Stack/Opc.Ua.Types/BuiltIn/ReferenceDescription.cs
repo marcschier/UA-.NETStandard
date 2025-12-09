@@ -231,12 +231,12 @@ namespace Opc.Ua
         {
             if (format == null)
             {
-                if (DisplayName != null && !string.IsNullOrEmpty(DisplayName.Text))
+                if (!string.IsNullOrEmpty(DisplayName.Text))
                 {
                     return DisplayName.Text;
                 }
 
-                if (!QualifiedName.IsNull(BrowseName))
+                if (!BrowseName.IsNullQn)
                 {
                     return BrowseName.Name;
                 }

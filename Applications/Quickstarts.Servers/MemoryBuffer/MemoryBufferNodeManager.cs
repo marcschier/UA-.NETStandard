@@ -303,7 +303,7 @@ namespace MemoryBuffer
             }
 
             // data encoding not supported.
-            if (!QualifiedName.IsNull(itemToCreate.ItemToMonitor.DataEncoding))
+            if (!itemToCreate.ItemToMonitor.DataEncoding.IsNullQn)
             {
                 return StatusCodes.BadDataEncodingUnsupported;
             }

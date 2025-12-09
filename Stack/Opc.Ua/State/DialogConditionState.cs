@@ -110,7 +110,7 @@ namespace Opc.Ua
 
             string locale = null;
 
-            if (DialogState.Value != null)
+            if (!DialogState.Value.IsNullOrEmpty)
             {
                 locale = DialogState.Value.Locale;
                 builder.Append(DialogState.Value);

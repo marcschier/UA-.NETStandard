@@ -497,7 +497,7 @@ namespace Opc.Ua.Test
                 case BuiltInType.DateTime:
                     return GetRandomArray<DateTime>(useBoundaryValues, length, fixedLength);
                 case BuiltInType.Guid:
-                    return GetRandomArray<Guid>(useBoundaryValues, length, fixedLength);
+                    return GetRandomArray<Uuid>(useBoundaryValues, length, fixedLength);
                 case BuiltInType.ByteString:
                     return GetRandomArray<byte[]>(useBoundaryValues, length, fixedLength);
                 case BuiltInType.XmlElement:
@@ -822,11 +822,11 @@ namespace Opc.Ua.Test
         }
 
         /// <inheritdoc/>
-        public Guid GetRandomGuid()
+        public Uuid GetRandomGuid()
         {
             byte[] bytes = new byte[16];
             m_random.NextBytes(bytes, 0, bytes.Length);
-            return new Guid(bytes);
+            return new Uuid(bytes);
         }
 
         /// <inheritdoc/>
@@ -1018,7 +1018,7 @@ namespace Opc.Ua.Test
                 case BuiltInType.DateTime:
                     return new Variant(GetRandomArray<DateTime>(true, length, true));
                 case BuiltInType.Guid:
-                    return new Variant(GetRandomArray<Guid>(true, length, true));
+                    return new Variant(GetRandomArray<Uuid>(true, length, true));
                 case BuiltInType.ByteString:
                     return new Variant(GetRandomArray<byte[]>(true, length, true));
                 case BuiltInType.XmlElement:
@@ -1221,7 +1221,7 @@ namespace Opc.Ua.Test
                 new DateTime(2039, 4, 4),
                 new DateTime(2001, 9, 11, 9, 15, 0, DateTimeKind.Local)
             ),
-            new(typeof(Guid), Guid.Empty),
+            new(typeof(Uuid), Uuid.Empty),
             new(typeof(byte[]), null, Array.Empty<byte>()),
             new(typeof(XmlElement), null),
             new(

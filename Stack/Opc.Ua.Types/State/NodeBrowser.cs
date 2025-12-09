@@ -216,7 +216,7 @@ namespace Opc.Ua
             lock (DataLock)
             {
                 // do not return add target unless the browse name matches.
-                if (!QualifiedName.IsNull(BrowseName) && target.BrowseName != BrowseName)
+                if (!BrowseName.IsNullQn && target.BrowseName != BrowseName)
                 {
                     return;
                 }

@@ -309,13 +309,13 @@ namespace Opc.Ua
                 Node node = nodeSet.Copy(nodeToImport, NamespaceUris, ServerUris);
 
                 // assign a browse name.
-                if (QualifiedName.IsNull(node.BrowseName))
+                if (node.BrowseName.IsNullQn)
                 {
                     node.BrowseName = new QualifiedName(node.NodeId.ToString(), 1);
                 }
 
                 // assign a display name.
-                if (LocalizedText.IsNullOrEmpty(node.DisplayName))
+                if (node.DisplayName.IsNullOrEmpty)
                 {
                     node.DisplayName = new LocalizedText(node.BrowseName.Name);
                 }

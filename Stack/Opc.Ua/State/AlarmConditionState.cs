@@ -386,31 +386,26 @@ namespace Opc.Ua
 
             var builder = new StringBuilder();
 
-            string locale = null;
+            string locale = ActiveState.Value.Locale;
 
-            if (ActiveState.Value != null)
+            if (ActiveState.Id.Value)
             {
-                locale = ActiveState.Value.Locale;
-
-                if (ActiveState.Id.Value)
+                if (ActiveState.EffectiveDisplayName != null &&
+                    !ActiveState.EffectiveDisplayName.Value.IsNullOrEmpty)
                 {
-                    if (ActiveState.EffectiveDisplayName != null &&
-                        !LocalizedText.IsNullOrEmpty(ActiveState.EffectiveDisplayName.Value))
-                    {
-                        builder.Append(ActiveState.EffectiveDisplayName.Value);
-                    }
-                    else
-                    {
-                        builder.Append(ActiveState.Value);
-                    }
+                    builder.Append(ActiveState.EffectiveDisplayName.Value);
                 }
                 else
                 {
                     builder.Append(ActiveState.Value);
                 }
             }
+            else
+            {
+                builder.Append(ActiveState.Value);
+            }
 
-            LocalizedText suppressedState = null;
+            LocalizedText suppressedState = default;
 
             if (SuppressedState != null && SuppressedState.Id.Value)
             {
@@ -423,13 +418,13 @@ namespace Opc.Ua
                 suppressedState = ShelvingState.CurrentState.Value;
             }
 
-            if (suppressedState != null)
+            if (!suppressedState.IsNullOrEmpty)
             {
                 builder.Append(" | ")
                     .Append(suppressedState);
             }
 
-            LocalizedText ackState = null;
+            LocalizedText ackState = default;
 
             if (ConfirmedState != null && !ConfirmedState.Id.Value)
             {
@@ -441,7 +436,7 @@ namespace Opc.Ua
                 ackState = AckedState.Value;
             }
 
-            if (ackState != null)
+            if (!ackState.IsNullOrEmpty)
             {
                 builder.Append(" | ")
                     .Append(ackState);

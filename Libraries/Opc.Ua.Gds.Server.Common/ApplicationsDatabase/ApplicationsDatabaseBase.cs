@@ -71,7 +71,7 @@ namespace Opc.Ua.Gds.Server.Database
 
             if (application.ApplicationNames == null ||
                 application.ApplicationNames.Count == 0 ||
-                LocalizedText.IsNullOrEmpty(application.ApplicationNames[0]))
+                application.ApplicationNames[0].IsNullOrEmpty)
             {
                 throw new ArgumentException(
                     "At least one ApplicationName must be provided.",

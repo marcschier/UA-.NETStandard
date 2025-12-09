@@ -1205,7 +1205,7 @@ namespace TestData
             encoder.WriteDoubleArray("DoubleValue", DoubleValue);
             encoder.WriteStringArray("StringValue", StringValue);
             encoder.WriteDateTimeArray("DateTimeValue", DateTimeValue);
-            encoder.WriteGuidArray("GuidValue", (GuidCollection)GuidValue);
+            encoder.WriteGuidArray("GuidValue", (UuidCollection)GuidValue);
             encoder.WriteByteStringArray("ByteStringValue", ByteStringValue);
             encoder.WriteXmlElementArray("XmlElementValue", XmlElementValue);
             encoder.WriteNodeIdArray("NodeIdValue", NodeIdValue);
@@ -2440,7 +2440,7 @@ namespace TestData
             encoder.WriteDoubleArray("DoubleDataType", DoubleDataType);
             encoder.WriteStringArray("StringDataType", StringDataType);
             encoder.WriteDateTimeArray("DateTimeDataType", DateTimeDataType);
-            encoder.WriteGuidArray("GuidDataType", (GuidCollection)GuidDataType);
+            encoder.WriteGuidArray("GuidDataType", (UuidCollection)GuidDataType);
             encoder.WriteByteStringArray("ByteStringDataType", ByteStringDataType);
             encoder.WriteXmlElementArray("XmlElementDataType", XmlElementDataType);
             encoder.WriteNodeIdArray("NodeIdDataType", NodeIdDataType);

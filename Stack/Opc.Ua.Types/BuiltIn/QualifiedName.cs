@@ -62,7 +62,6 @@ namespace Opc.Ua
     /// <i>1:MyName</i>
     /// <br/></para>
     /// </remarks>
-    [DataContract(Namespace = Namespaces.OpcUaXsd)]
     public readonly struct QualifiedName :
         IFormattable,
         IComparable,
@@ -461,15 +460,6 @@ namespace Opc.Ua
 
             buffer.Append(Name);
             return buffer.ToString();
-        }
-
-        /// <summary>
-        /// Returns true if the value is null.
-        /// </summary>
-        /// <param name="value">The qualified name to check</param>
-        public static bool IsNull([NotNullWhen(false)] QualifiedName value)
-        {
-            return value.IsNullQn;
         }
 
         /// <summary>

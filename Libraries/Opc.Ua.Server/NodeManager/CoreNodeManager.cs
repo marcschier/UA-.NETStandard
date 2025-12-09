@@ -501,7 +501,7 @@ namespace Opc.Ua.Server
                     metadata.DisplayName = target.DisplayName;
 
                     // check if the display name can be localized.
-                    if (!string.IsNullOrEmpty(metadata.DisplayName.Key))
+                    if (!string.IsNullOrEmpty(metadata.DisplayName.TranslationInfo?.Key))
                     {
                         metadata.DisplayName = Server.ResourceManager.Translate(
                             context.PreferredLocales,
@@ -769,7 +769,7 @@ namespace Opc.Ua.Server
                         }
 
                         // apply data encoding.
-                        if (!QualifiedName.IsNull(nodeToRead.DataEncoding))
+                        if (!nodeToRead.DataEncoding.IsNullQn)
                         {
                             error = EncodeableObject.ApplyDataEncoding(
                                 Server.MessageContext,
@@ -791,7 +791,7 @@ namespace Opc.Ua.Server
                         {
                             value.SourceTimestamp = DateTime.UtcNow;
                         }
-                        
+
                         // Set ServerTimestamp to match SourceTimestamp for Value attributes
                         // This ensures ServerTimestamp and SourceTimestamp are equal,
                         // which is important for nodes like ServerStatus children where
@@ -2047,7 +2047,7 @@ namespace Opc.Ua.Server
                         continue;
                     }
 
-                    if (QualifiedName.IsNull(browseName) || target.BrowseName == browseName)
+                    if (browseName.IsNullQn || target.BrowseName == browseName)
                     {
                         return (NodeId)targetId;
                     }
@@ -3493,7 +3493,7 @@ namespace Opc.Ua.Server
                     continue;
                 }
 
-                if (QualifiedName.IsNull(browseName) || browseName == target.BrowseName)
+                if (browseName.IsNullQn || browseName == target.BrowseName)
                 {
                     return target;
                 }

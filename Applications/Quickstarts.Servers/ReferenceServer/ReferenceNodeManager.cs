@@ -1902,17 +1902,17 @@ namespace Quickstarts.ReferenceServer
                         "Guid",
                         BuiltInType.Guid,
                         ValueRanks.OneDimension,
-                        new Guid[]
+                        new Uuid[]
                         {
-                            Guid.NewGuid(),
-                            Guid.NewGuid(),
-                            Guid.NewGuid(),
-                            Guid.NewGuid(),
-                            Guid.NewGuid(),
-                            Guid.NewGuid(),
-                            Guid.NewGuid(),
-                            Guid.NewGuid(),
-                            Guid.NewGuid()
+                            Uuid.NewUuid(),
+                            Uuid.NewUuid(),
+                            Uuid.NewUuid(),
+                            Uuid.NewUuid(),
+                            Uuid.NewUuid(),
+                            Uuid.NewUuid(),
+                            Uuid.NewUuid(),
+                            Uuid.NewUuid(),
+                            Uuid.NewUuid()
                         });
                     CreateAnalogItemVariable(
                         analogArrayFolder,

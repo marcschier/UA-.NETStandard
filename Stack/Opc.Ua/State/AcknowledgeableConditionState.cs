@@ -486,7 +486,7 @@ namespace Opc.Ua
         {
             bool canSetComment = false;
 
-            if (comment != null)
+            if (!comment.IsNullOrEmpty)
             {
                 canSetComment = true;
 

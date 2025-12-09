@@ -2108,7 +2108,6 @@ namespace Opc.Ua.SourceGeneration
 
             context.Template.AddReplacement(
                 Tokens.ListOfProperties,
-                CodeTemplates.Property_cs,
                 children,
                 LoadTemplate_ListOfProperties,
                 WriteTemplate_ListOfProperties);
@@ -3248,7 +3247,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            return context.TemplateString;
+            return CodeTemplates.Property_cs;
         }
 
         private bool WriteTemplate_ListOfProperties(IWriteContext context)
@@ -3260,34 +3259,7 @@ namespace Opc.Ua.SourceGeneration
                     return false;
                 }
 
-                bool valueType = false;
-
-                switch (field.DataTypeNode.BasicDataType)
-                {
-                    case BasicDataType.String:
-                    case BasicDataType.ByteString:
-                    case BasicDataType.DiagnosticInfo:
-                    case BasicDataType.ExpandedNodeId:
-                    case BasicDataType.LocalizedText:
-                    case BasicDataType.NodeId:
-                    case BasicDataType.QualifiedName:
-                    case BasicDataType.Guid:
-                    case BasicDataType.XmlElement:
-                    case BasicDataType.StatusCode:
-                    case BasicDataType.Structure:
-                    case BasicDataType.UserDefined:
-                    case BasicDataType.DataValue:
-                        valueType = false;
-                        break;
-                    default:
-                        if (field.ValueRank != ValueRank.Scalar)
-                        {
-                            valueType = false;
-                        }
-
-                        break;
-                }
-
+                bool valueType = field.DataTypeNode.IsDotNetValueType(field.ValueRank, true);
                 const bool emitDefaultValue = true;
 
                 context.Template.AddReplacement(

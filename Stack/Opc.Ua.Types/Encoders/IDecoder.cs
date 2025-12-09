@@ -143,7 +143,7 @@ namespace Opc.Ua
         /// <summary>
         /// Reads a GUID from the stream.
         /// </summary>
-        Guid ReadGuid(string fieldName);
+        Uuid ReadGuid(string fieldName);
 
         /// <summary>
         /// Reads a byte string from the stream.
@@ -285,7 +285,7 @@ namespace Opc.Ua
         /// <summary>
         /// Reads a GUID array from the stream.
         /// </summary>
-        GuidCollection ReadGuidArray(string fieldName);
+        UuidCollection ReadGuidArray(string fieldName);
 
         /// <summary>
         /// Reads a byte string array from the stream.

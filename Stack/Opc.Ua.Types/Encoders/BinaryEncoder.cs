@@ -542,7 +542,7 @@ namespace Opc.Ua
         /// <summary>
         /// Writes a GUID to the stream.
         /// </summary>
-        public void WriteGuid(string fieldName, Guid value)
+        public void WriteGuid(string fieldName, Uuid value)
         {
             m_writer.Write(value.ToByteArray());
         }
@@ -782,7 +782,7 @@ namespace Opc.Ua
         public void WriteLocalizedText(string fieldName, LocalizedText value)
         {
             // check for null.
-            if (value == null)
+            if (value.IsNullOrEmpty)
             {
                 WriteByte(null, 0);
                 return;
@@ -1315,7 +1315,7 @@ namespace Opc.Ua
         /// <summary>
         /// Writes a GUID array to the stream.
         /// </summary>
-        public void WriteGuidArray(string fieldName, IList<Guid> values)
+        public void WriteGuidArray(string fieldName, IList<Uuid> values)
         {
             // write length.
             if (WriteArrayLength(values))
@@ -1621,7 +1621,7 @@ namespace Opc.Ua
                         WriteDateTimeArray(null, (DateTime[])array);
                         break;
                     case BuiltInType.Guid:
-                        WriteGuidArray(null, (Guid[])array);
+                        WriteGuidArray(null, (Uuid[])array);
                         break;
                     case BuiltInType.String:
                         WriteStringArray(null, (string[])array);
@@ -1885,7 +1885,7 @@ namespace Opc.Ua
                     }
                     case BuiltInType.Guid:
                     {
-                        var values = (Guid[])matrix.Elements;
+                        var values = (Uuid[])matrix.Elements;
                         for (int ii = 0; ii < values.Length; ii++)
                         {
                             WriteGuid(null, values[ii]);
@@ -2390,7 +2390,7 @@ namespace Opc.Ua
                         WriteDateTime(null, (DateTime)valueToEncode);
                         return;
                     case BuiltInType.Guid:
-                        WriteGuid(null, (Guid)valueToEncode);
+                        WriteGuid(null, (Uuid)valueToEncode);
                         return;
                     case BuiltInType.ByteString:
                         WriteByteString(null, (byte[])valueToEncode);
@@ -2499,7 +2499,7 @@ namespace Opc.Ua
                         WriteDateTimeArray(null, (DateTime[])valueToEncode);
                         break;
                     case BuiltInType.Guid:
-                        WriteGuidArray(null, (Guid[])valueToEncode);
+                        WriteGuidArray(null, (Uuid[])valueToEncode);
                         break;
                     case BuiltInType.ByteString:
                         WriteByteStringArray(null, (byte[][])valueToEncode);

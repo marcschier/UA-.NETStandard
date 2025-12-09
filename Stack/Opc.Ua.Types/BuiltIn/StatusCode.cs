@@ -139,7 +139,6 @@ namespace Opc.Ua
     /// </list>
     /// <br/></para>
     /// </remarks>
-    [Serializable]
     public readonly struct StatusCode :
         IFormattable,
         IComparable,
@@ -993,17 +992,13 @@ namespace Opc.Ua
         }
     }
 
-
     /// <summary>
     /// Helper to allow data contract serialization of StatusCode
     /// </summary>
     [DataContract(
         Name = "StatusCode",
         Namespace = Namespaces.OpcUaXsd)]
-    public class SerializableStatusCode :
-        ISurrogateFor<StatusCode>,
-        IEquatable<StatusCode>,
-        IEquatable<SerializableStatusCode>
+    public class SerializableStatusCode : ISurrogateFor<StatusCode>
     {
         /// <inheritdoc/>
         public SerializableStatusCode()
@@ -1034,91 +1029,6 @@ namespace Opc.Ua
         {
             get => Value.Code;
             set => Value = new StatusCode(value);
-        }
-
-        /// <inheritdoc/>
-        public override bool Equals(object obj)
-        {
-            return obj switch
-            {
-                SerializableStatusCode s => Equals(s),
-                StatusCode n => Equals(n),
-                _ => Value.Equals(obj)
-            };
-        }
-
-        /// <inheritdoc/>
-        public bool Equals(StatusCode obj)
-        {
-            return Value.Equals(obj);
-        }
-
-        /// <inheritdoc/>
-        public bool Equals(SerializableStatusCode obj)
-        {
-            return Value.Equals(obj?.Value ?? default);
-        }
-
-        /// <inheritdoc/>
-        public override int GetHashCode()
-        {
-            return Value.GetHashCode();
-        }
-
-        /// <inheritdoc/>
-        public static bool operator ==(
-            SerializableStatusCode left,
-            SerializableStatusCode right)
-        {
-            return EqualityComparer<SerializableStatusCode>.Default.Equals(left, right);
-        }
-
-        /// <inheritdoc/>
-        public static bool operator !=(
-            SerializableStatusCode left,
-            SerializableStatusCode right)
-        {
-            return !(left == right);
-        }
-
-        /// <inheritdoc/>
-        public static bool operator ==(
-            SerializableStatusCode left,
-            StatusCode right)
-        {
-            return EqualityComparer<SerializableStatusCode>.Default.Equals(left, right);
-        }
-
-        /// <inheritdoc/>
-        public static bool operator !=(
-            SerializableStatusCode left,
-            StatusCode right)
-        {
-            return !(left == right);
-        }
-
-        /// <inheritdoc/>
-        public static implicit operator SerializableStatusCode(StatusCode value)
-        {
-            return new SerializableStatusCode(value);
-        }
-
-        /// <inheritdoc/>
-        public static implicit operator StatusCode(SerializableStatusCode value)
-        {
-            return value.Value;
-        }
-
-        /// <inheritdoc/>
-        public static explicit operator uint(SerializableStatusCode value)
-        {
-            return value.Code;
-        }
-
-        /// <inheritdoc/>
-        public static explicit operator SerializableStatusCode(uint value)
-        {
-            return new SerializableStatusCode { Code = value };
         }
     }
 
@@ -1164,13 +1074,6 @@ namespace Opc.Ua
         public object GetValue()
         {
             return Value;
-        }
-
-        /// <inheritdoc/>
-        public static implicit operator SerializableStatusCodeCollection(
-            SerializableStatusCode[] values)
-        {
-            return values == null ? [] : [.. values];
         }
     }
 }

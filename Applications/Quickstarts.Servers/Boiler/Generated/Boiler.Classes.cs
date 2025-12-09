@@ -178,7 +178,7 @@ namespace Boiler
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -362,7 +362,7 @@ namespace Boiler
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -502,7 +502,7 @@ namespace Boiler
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -741,7 +741,7 @@ namespace Boiler
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -1426,7 +1426,7 @@ namespace Boiler
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -1704,7 +1704,7 @@ namespace Boiler
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -1867,7 +1867,7 @@ namespace Boiler
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -2008,7 +2008,7 @@ namespace Boiler
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -2343,7 +2343,7 @@ namespace Boiler
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }

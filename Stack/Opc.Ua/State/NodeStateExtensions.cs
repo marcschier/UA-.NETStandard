@@ -140,13 +140,13 @@ namespace Opc.Ua
                     }
 
                     // ensure the browse name is set.
-                    if (QualifiedName.IsNull(child.BrowseName))
+                    if (child.BrowseName.IsNullQn)
                     {
                         child.BrowseName = field.BrowsePath[jj];
                     }
 
                     // ensure the display name is set.
-                    if (LocalizedText.IsNullOrEmpty(child.DisplayName))
+                    if (child.DisplayName.IsNullOrEmpty)
                     {
                         child.DisplayName = child.BrowseName.Name;
                     }

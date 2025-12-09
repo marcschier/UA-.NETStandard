@@ -257,7 +257,7 @@ namespace TestData
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -505,7 +505,7 @@ namespace TestData
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -931,7 +931,7 @@ namespace TestData
         }
 
         /// <remarks />
-        public BaseDataVariableState<Guid> GuidValue
+        public BaseDataVariableState<Uuid> GuidValue
         {
             get
             {
@@ -1348,7 +1348,7 @@ namespace TestData
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -1638,11 +1638,11 @@ namespace TestData
                         {
                             if (replacement == null)
                             {
-                                GuidValue = new BaseDataVariableState<Guid>(this);
+                                GuidValue = new BaseDataVariableState<Uuid>(this);
                             }
                             else
                             {
-                                GuidValue = (BaseDataVariableState<Guid>)replacement;
+                                GuidValue = (BaseDataVariableState<Uuid>)replacement;
                             }
                         }
                     }
@@ -1948,7 +1948,7 @@ namespace TestData
         private BaseDataVariableState<double> m_doubleValue;
         private BaseDataVariableState<string> m_stringValue;
         private BaseDataVariableState<DateTime> m_dateTimeValue;
-        private BaseDataVariableState<Guid> m_guidValue;
+        private BaseDataVariableState<Uuid> m_guidValue;
         private BaseDataVariableState<byte[]> m_byteStringValue;
         private BaseDataVariableState<XmlElement> m_xmlElementValue;
         private BaseDataVariableState<NodeId> m_nodeIdValue;
@@ -4930,7 +4930,7 @@ namespace TestData
         }
 
         /// <remarks />
-        public BaseDataVariableState<Guid> GuidValue
+        public BaseDataVariableState<Uuid> GuidValue
         {
             get
             {
@@ -5443,7 +5443,7 @@ namespace TestData
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -5733,11 +5733,11 @@ namespace TestData
                         {
                             if (replacement == null)
                             {
-                                GuidValue = new BaseDataVariableState<Guid>(this);
+                                GuidValue = new BaseDataVariableState<Uuid>(this);
                             }
                             else
                             {
-                                GuidValue = (BaseDataVariableState<Guid>)replacement;
+                                GuidValue = (BaseDataVariableState<Uuid>)replacement;
                             }
                         }
                     }
@@ -6127,7 +6127,7 @@ namespace TestData
         private BaseDataVariableState<double> m_doubleValue;
         private BaseDataVariableState<string> m_stringValue;
         private BaseDataVariableState<DateTime> m_dateTimeValue;
-        private BaseDataVariableState<Guid> m_guidValue;
+        private BaseDataVariableState<Uuid> m_guidValue;
         private BaseDataVariableState<byte[]> m_byteStringValue;
         private BaseDataVariableState<XmlElement> m_xmlElementValue;
         private BaseDataVariableState<NodeId> m_nodeIdValue;
@@ -6333,7 +6333,7 @@ namespace TestData
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -6844,7 +6844,7 @@ namespace TestData
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -8010,7 +8010,7 @@ namespace TestData
         }
 
         /// <remarks />
-        public BaseDataVariableState<Guid[]> GuidValue
+        public BaseDataVariableState<Uuid[]> GuidValue
         {
             get
             {
@@ -8523,7 +8523,7 @@ namespace TestData
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -8813,11 +8813,11 @@ namespace TestData
                         {
                             if (replacement == null)
                             {
-                                GuidValue = new BaseDataVariableState<Guid[]>(this);
+                                GuidValue = new BaseDataVariableState<Uuid[]>(this);
                             }
                             else
                             {
-                                GuidValue = (BaseDataVariableState<Guid[]>)replacement;
+                                GuidValue = (BaseDataVariableState<Uuid[]>)replacement;
                             }
                         }
                     }
@@ -9207,7 +9207,7 @@ namespace TestData
         private BaseDataVariableState<double[]> m_doubleValue;
         private BaseDataVariableState<string[]> m_stringValue;
         private BaseDataVariableState<DateTime[]> m_dateTimeValue;
-        private BaseDataVariableState<Guid[]> m_guidValue;
+        private BaseDataVariableState<Uuid[]> m_guidValue;
         private BaseDataVariableState<byte[][]> m_byteStringValue;
         private BaseDataVariableState<XmlElement[]> m_xmlElementValue;
         private BaseDataVariableState<NodeId[]> m_nodeIdValue;
@@ -9673,7 +9673,7 @@ namespace TestData
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -10342,7 +10342,7 @@ namespace TestData
         }
 
         /// <remarks />
-        public BaseDataVariableState<Guid> GuidValue
+        public BaseDataVariableState<Uuid> GuidValue
         {
             get
             {
@@ -10639,7 +10639,7 @@ namespace TestData
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -10929,11 +10929,11 @@ namespace TestData
                         {
                             if (replacement == null)
                             {
-                                GuidValue = new BaseDataVariableState<Guid>(this);
+                                GuidValue = new BaseDataVariableState<Uuid>(this);
                             }
                             else
                             {
-                                GuidValue = (BaseDataVariableState<Guid>)replacement;
+                                GuidValue = (BaseDataVariableState<Uuid>)replacement;
                             }
                         }
                     }
@@ -11134,7 +11134,7 @@ namespace TestData
         private BaseDataVariableState<double> m_doubleValue;
         private BaseDataVariableState<string> m_stringValue;
         private BaseDataVariableState<DateTime> m_dateTimeValue;
-        private BaseDataVariableState<Guid> m_guidValue;
+        private BaseDataVariableState<Uuid> m_guidValue;
         private BaseDataVariableState<byte[]> m_byteStringValue;
         private BaseDataVariableState<XmlElement> m_xmlElementValue;
         private BaseDataVariableState<NodeId> m_nodeIdValue;
@@ -11880,7 +11880,7 @@ namespace TestData
         }
 
         /// <remarks />
-        public BaseDataVariableState<Guid[]> GuidValue
+        public BaseDataVariableState<Uuid[]> GuidValue
         {
             get
             {
@@ -12177,7 +12177,7 @@ namespace TestData
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -12467,11 +12467,11 @@ namespace TestData
                         {
                             if (replacement == null)
                             {
-                                GuidValue = new BaseDataVariableState<Guid[]>(this);
+                                GuidValue = new BaseDataVariableState<Uuid[]>(this);
                             }
                             else
                             {
-                                GuidValue = (BaseDataVariableState<Guid[]>)replacement;
+                                GuidValue = (BaseDataVariableState<Uuid[]>)replacement;
                             }
                         }
                     }
@@ -12672,7 +12672,7 @@ namespace TestData
         private BaseDataVariableState<double[]> m_doubleValue;
         private BaseDataVariableState<string[]> m_stringValue;
         private BaseDataVariableState<DateTime[]> m_dateTimeValue;
-        private BaseDataVariableState<Guid[]> m_guidValue;
+        private BaseDataVariableState<Uuid[]> m_guidValue;
         private BaseDataVariableState<byte[][]> m_byteStringValue;
         private BaseDataVariableState<XmlElement[]> m_xmlElementValue;
         private BaseDataVariableState<NodeId[]> m_nodeIdValue;
@@ -12839,7 +12839,7 @@ namespace TestData
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -14120,7 +14120,7 @@ namespace TestData
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }
@@ -14483,7 +14483,7 @@ namespace TestData
             bool createOrReplace,
             BaseInstanceState replacement)
         {
-            if (QualifiedName.IsNull(browseName))
+            if (browseName.IsNullQn)
             {
                 return null;
             }

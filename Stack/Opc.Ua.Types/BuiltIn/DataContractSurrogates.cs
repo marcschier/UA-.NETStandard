@@ -110,8 +110,14 @@ namespace Opc.Ua
             }
             if (!SurrogateMappings.TryGetValue(targetType, out Type surrogateType))
             {
-                // Not a surrogated type
-                return obj;
+                // Handle the case where we are passed the surrogate type as target
+                // Could do a reverse lookup here too
+                if (!typeof(ISurrogate).IsAssignableFrom(targetType))
+                {
+                    // Not a surrogated type
+                    return obj;
+                }
+                surrogateType = targetType;
             }
             // Create surrogate instance - all surrogates have a constructor
             // that takes the original object it is surrogate for or a default
@@ -147,14 +153,16 @@ namespace Opc.Ua
             { typeof(NodeIdCollection), typeof(SerializableNodeIdCollection) },
             { typeof(ExpandedNodeId), typeof(SerializableExpandedNodeId) },
             { typeof(ExpandedNodeIdCollection), typeof(SerializableExpandedNodeIdCollection) },
-            { typeof(Guid), typeof(Uuid) },
-            { typeof(GuidCollection), typeof(UuidCollection) },
+            { typeof(Uuid), typeof(SerializableUuid) },
+            { typeof(UuidCollection), typeof(SerializableUuidCollection) },
             { typeof(StatusCode), typeof(SerializableStatusCode) },
             { typeof(StatusCodeCollection), typeof(SerializableStatusCodeCollection) },
             { typeof(QualifiedName), typeof(SerializableQualifiedName) },
             { typeof(QualifiedNameCollection), typeof(SerializableQualifiedNameCollection) },
             { typeof(Variant), typeof(SerializableVariant) },
             { typeof(VariantCollection), typeof(SerializableVariantCollection) },
+            { typeof(LocalizedText), typeof(SerializableLocalizedText) },
+            { typeof(LocalizedTextCollection), typeof(SerializableLocalizedTextCollection) },
         };
     }
 }

@@ -156,7 +156,7 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
             Assert.NotNull(appCertificate);
             Assert.True(appCertificate.HasPrivateKey);
 
-            char[] password = Guid.NewGuid().ToString().ToCharArray();
+            char[] password = Uuid.NewUuid().ToString().ToCharArray();
 
             // pki directory root for app cert
             string pkiRoot = Path.GetTempPath() +

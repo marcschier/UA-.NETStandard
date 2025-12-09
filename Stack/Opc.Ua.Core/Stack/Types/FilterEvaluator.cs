@@ -1233,7 +1233,7 @@ namespace Opc.Ua
                         (DateTime)value,
                         XmlDateTimeSerializationMode.Unspecified);
                 case BuiltInType.Guid:
-                    return ((Guid)value).ToString();
+                    return ((Uuid)value).ToString();
                 case BuiltInType.NodeId:
                     return ((NodeId)value).ToString();
                 case BuiltInType.ExpandedNodeId:
@@ -1297,11 +1297,11 @@ namespace Opc.Ua
 
             if (value is Array array)
             {
-                var output = new Guid[array.Length];
+                var output = new Uuid[array.Length];
 
                 for (int ii = 0; ii < array.Length; ii++)
                 {
-                    output[ii] = (Guid)Cast(array.GetValue(ii), BuiltInType.Guid);
+                    output[ii] = (Uuid)Cast(array.GetValue(ii), BuiltInType.Guid);
                 }
 
                 return output;
@@ -1311,11 +1311,11 @@ namespace Opc.Ua
             switch (sourceType)
             {
                 case BuiltInType.Guid:
-                    return (Guid)value;
+                    return (Uuid)value;
                 case BuiltInType.String:
-                    return new Guid((string)value);
+                    return new Uuid((string)value);
                 case BuiltInType.ByteString:
-                    return new Guid((byte[])value);
+                    return new Uuid((byte[])value);
                 case >= BuiltInType.Null and <= BuiltInType.Enumeration:
                     // conversion not supported.
                     return null;
@@ -1351,7 +1351,7 @@ namespace Opc.Ua
                 case BuiltInType.ByteString:
                     return (byte[])value;
                 case BuiltInType.Guid:
-                    return ((Guid)value).ToByteArray();
+                    return ((Uuid)value).ToByteArray();
                 case >= BuiltInType.Null and <= BuiltInType.Enumeration:
                     // conversion not supported.
                     return null;
@@ -1936,8 +1936,7 @@ namespace Opc.Ua
 
             object firstOperand = GetValue(operands[0]);
             string lhs;
-            var firstOperandLocalizedText = firstOperand as LocalizedText;
-            if (firstOperandLocalizedText != null)
+            if (firstOperand is LocalizedText firstOperandLocalizedText)
             {
                 lhs = firstOperandLocalizedText.Text;
             }
@@ -1948,8 +1947,7 @@ namespace Opc.Ua
 
             object secondOperand = GetValue(operands[1]);
             string rhs;
-            var secondOperandLocalizedText = secondOperand as LocalizedText;
-            if (secondOperandLocalizedText != null)
+            if (secondOperand is LocalizedText secondOperandLocalizedText)
             {
                 rhs = secondOperandLocalizedText.Text;
             }
