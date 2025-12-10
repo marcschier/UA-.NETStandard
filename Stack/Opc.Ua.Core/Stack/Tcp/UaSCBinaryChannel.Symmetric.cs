@@ -1049,7 +1049,7 @@ namespace Opc.Ua.Bindings
             // check result
             if (!result || bytesWritten != hashSizeInBytes)
             {
-                ServiceResultException.Create(
+                throw ServiceResultException.Create(
                     StatusCodes.BadSecurityChecksFailed,
                     "The computed hash doesn't match the expected size.");
             }

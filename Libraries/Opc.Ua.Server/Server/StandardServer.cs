@@ -2779,7 +2779,15 @@ namespace Opc.Ua.Server
             OperationContext context = ServerInternal.SessionManager
                 .ValidateRequest(requestHeader, secureChannelContext, requestType);
 
-            ServerUtils.EventLog.ServerCall(context.RequestType, context.RequestId);
+            if (ServerUtils.EventLog.IsEnabled())
+            {
+                string requestTypeString = Enum.GetName(
+#if !NET8_0_OR_GREATER
+                   typeof(RequestType),
+#endif
+                   context.RequestType);
+                ServerUtils.EventLog.ServerCall(requestTypeString, context.RequestId);
+            }
             m_logger.LogTrace("Server Call={RequestType}, Id={RequestId}", context.RequestType, context.RequestId);
 
             // notify the request manager.

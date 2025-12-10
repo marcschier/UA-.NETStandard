@@ -672,7 +672,9 @@ namespace Opc.Ua.Client.ComplexTypes
                                     m_logger.LogTrace(
                                         "Skipped the type definition of {DataType}, missing {MissingTypeIds}. Retry in next round.",
                                         item.Name,
-                                        missingTypeIds?.ToString() ?? string.Empty);
+                                        missingTypeIds == null ?
+                                            string.Empty :
+                                            string.Join(",", missingTypeIds.Select(id => id.ToString()).ToArray()));
                                 }
                             }
                         }
@@ -1363,7 +1365,9 @@ namespace Opc.Ua.Client.ComplexTypes
                 if (!superType.IsNullNodeId)
                 {
                     field.DataType = superType;
+#pragma warning disable EPC30 // Method calls itself recursively
                     return await GetFieldTypeAsync(field, allowSubTypes, ct).ConfigureAwait(false);
+#pragma warning restore EPC30 // Method calls itself recursively
                 }
                 return null;
             }

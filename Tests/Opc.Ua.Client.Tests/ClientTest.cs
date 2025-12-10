@@ -1084,7 +1084,7 @@ namespace Opc.Ua.Client.Tests
         {
             TestContext.Out.WriteLine("Identity         : {0}", Session.Identity);
             TestContext.Out.WriteLine("IdentityHistory  : {0}", Session.IdentityHistory);
-            TestContext.Out.WriteLine("NamespaceUris    : {0}", Session.NamespaceUris.ToString());
+            TestContext.Out.WriteLine("NamespaceUris    : {0}", string.Join(", ", Session.NamespaceUris));
             TestContext.Out.WriteLine("ServerUris       : {0}", Session.ServerUris);
             TestContext.Out.WriteLine("SystemContext    : {0}", Session.SystemContext);
             TestContext.Out.WriteLine("Factory          : {0}", Session.Factory);

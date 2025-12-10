@@ -885,7 +885,7 @@ namespace Opc.Ua
 
             foreach (LocalizedText element in this)
             {
-                clone.Add(CoreUtils.Clone(element));
+                clone.Add(element);
             }
 
             return clone;

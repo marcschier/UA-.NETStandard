@@ -672,7 +672,7 @@ namespace Opc.Ua.PubSub.Transport
                         }
 
                         // call on a new thread
-                        Task.Run(() => ProcessReceivedMessage(message, source));
+                        _ = Task.Run(() => ProcessReceivedMessage(message, source));
                     }
                 }
             }

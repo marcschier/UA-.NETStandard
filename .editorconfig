@@ -1056,6 +1056,18 @@ dotnet_diagnostic.RCS1266.severity                                            = 
 #
 dotnet_diagnostic.UA_NETStandard_1.severity = none
 
+# Error.Prone analyzer settings
+dotnet_diagnostic.EPS01.severity = warning
+dotnet_diagnostic.EPS05.severity = warning
+dotnet_diagnostic.EPS06.severity = warning
+dotnet_diagnostic.EPS12.severity = silent
+dotnet_diagnostic.EPC12.severity = silent
+dotnet_diagnostic.EPC23.severity = warning
+dotnet_diagnostic.EPC24.severity = warning
+dotnet_diagnostic.EPC25.severity = warning
+dotnet_diagnostic.EPS09.severity = warning
+dotnet_diagnostic.ERP022.severity = none
+
 # exclude generated code
 
 [**/Generated/*.cs]

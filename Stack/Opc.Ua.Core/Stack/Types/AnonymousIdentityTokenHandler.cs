@@ -127,7 +127,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public bool Equals(IUserIdentityTokenHandler other)
         {
-            return other is AnonymousIdentityTokenHandler;
+            return other?.TokenType == TokenType;
         }
 
         private readonly AnonymousIdentityToken m_token;

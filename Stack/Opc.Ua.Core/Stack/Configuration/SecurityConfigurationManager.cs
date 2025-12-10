@@ -144,7 +144,7 @@ namespace Opc.Ua.Security
                     }
 
                     // find the SecuredApplication element in the file.
-                    if (data.ToString().Contains("SecuredApplication", StringComparison.Ordinal))
+                    if (Encoding.UTF8.GetString(data).Contains("SecuredApplication", StringComparison.Ordinal))
                     {
                         using IDisposable scope = AmbientMessageContext.SetScopedContext(m_telemetry);
                         var serializer = CoreUtils.CreateDataContractSerializer<SecuredApplication>();

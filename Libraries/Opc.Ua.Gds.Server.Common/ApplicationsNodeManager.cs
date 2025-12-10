@@ -1850,7 +1850,7 @@ namespace Opc.Ua.Gds.Server
             else
             {
                 throw new NotImplementedException(
-                    $"Unknown certificate type {certificateGroup.CertificateTypes}. " +
+                    $"Unknown certificate type {string.Join(",", certificateGroup.CertificateTypes.Select(n => n.ToString()))}. " +
                     "Use ApplicationCertificateType, HttpsCertificateType or UserCredentialCertificateType");
             }
 

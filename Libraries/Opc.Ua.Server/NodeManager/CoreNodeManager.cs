@@ -2897,7 +2897,7 @@ namespace Opc.Ua.Server
 
             if (referencesToDelete.Count > 0)
             {
-                Task.Run(() => OnDeleteReferences(referencesToDelete));
+                _ = Task.Run(() => OnDeleteReferences(referencesToDelete));
             }
         }
 
