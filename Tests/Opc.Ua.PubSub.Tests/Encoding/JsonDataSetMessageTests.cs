@@ -40,7 +40,7 @@ namespace Opc.Ua.PubSub.Tests.Encoding
     /// <summary>
     /// Tests for JsonDataSetMessage encoding behavior.
     /// Validates correct handling of zero values vs StatusCode.Good per OPC UA Part 6 specification.
-    /// 
+    ///
     /// Note: JsonDataSetMessage currently only supports Reversible and NonReversible encoding modes.
     /// Compact and Verbose encoding modes are not yet supported for PubSub messages because
     /// the encoder throws when trying to modify ForceNamespaceUri property with these modes.
@@ -169,7 +169,7 @@ namespace Opc.Ua.PubSub.Tests.Encoding
         [Test]
         public void EncodeStatusCodeGoodResultsInNullValueInDataValueModeReversible()
         {
-            var field = CreateStatusCodeField("StatusField", StatusCodes.Good);
+            var field = CreateStatusCodeField("StatusField", StatusCodes.Good.Code);
             var message = CreateDataValueMessage(field);
 
             var json = EncodeMessage(message, JsonEncodingType.Reversible);
@@ -191,7 +191,7 @@ namespace Opc.Ua.PubSub.Tests.Encoding
         [Test]
         public void EncodeStatusCodeGoodResultsInNullValueInDataValueModeNonReversible()
         {
-            var field = CreateStatusCodeField("StatusField", StatusCodes.Good);
+            var field = CreateStatusCodeField("StatusField", StatusCodes.Good.Code);
             var message = CreateDataValueMessage(field);
 
             var json = EncodeMessage(message, JsonEncodingType.NonReversible);
@@ -212,7 +212,7 @@ namespace Opc.Ua.PubSub.Tests.Encoding
         [Test]
         public void EncodeStatusCodeBadPreservesValueReversible()
         {
-            var field = CreateStatusCodeField("StatusField", StatusCodes.BadInvalidArgument);
+            var field = CreateStatusCodeField("StatusField", StatusCodes.BadInvalidArgument.Code);
             var message = CreateDataValueMessage(field);
 
             var json = EncodeMessage(message, JsonEncodingType.Reversible);
@@ -233,7 +233,7 @@ namespace Opc.Ua.PubSub.Tests.Encoding
         [Test]
         public void EncodeStatusCodeBadPreservesValueNonReversible()
         {
-            var field = CreateStatusCodeField("StatusField", StatusCodes.BadInvalidArgument);
+            var field = CreateStatusCodeField("StatusField", StatusCodes.BadInvalidArgument.Code);
             var message = CreateDataValueMessage(field);
 
             var json = EncodeMessage(message, JsonEncodingType.NonReversible);

@@ -215,7 +215,7 @@ namespace Opc.Ua.Export
             var nodeTable = new Dictionary<NodeId, NodeState>();
             foreach (NodeState node in nodes)
             {
-                if (!NodeId.IsNull(node.NodeId))
+                if (!node.NodeId.IsNullNodeId)
                 {
                     nodeTable[node.NodeId] = node;
                 }

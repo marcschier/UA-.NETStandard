@@ -259,7 +259,7 @@ namespace Opc.Ua.Client
                         DisplayName = node.DisplayName,
                         IsAbstract = referenceTypeNode?.IsAbstract ?? false,
                         Symmetric = referenceTypeNode?.Symmetric ?? false,
-                        InverseName = referenceTypeNode?.InverseName
+                        InverseName = referenceTypeNode?.InverseName ?? default
                     };
 
                     if (node is ILocalNode localNode)
