@@ -554,7 +554,7 @@ namespace Opc.Ua
                 defaultCode = sre.StatusCode;
             }
 
-            if (format == null)
+            if (string.IsNullOrEmpty(format))
             {
                 return new ServiceResult(e, defaultCode);
             }

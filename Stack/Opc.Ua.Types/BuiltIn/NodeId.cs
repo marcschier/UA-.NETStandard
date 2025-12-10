@@ -1922,29 +1922,6 @@ namespace Opc.Ua
     }
 
     /// <summary>
-    /// Helper which implements a NodeId IEqualityComparer for Linq queries.
-    /// </summary>
-    public class NodeIdComparer : IEqualityComparer<NodeId>
-    {
-        /// <summary>
-        /// Get singleton comparer
-        /// </summary>
-        public static NodeIdComparer Instance { get; } = new();
-
-        /// <inheritdoc/>
-        public bool Equals(NodeId x, NodeId y)
-        {
-            return x.Equals(y);
-        }
-
-        /// <inheritdoc/>
-        public int GetHashCode(NodeId nodeId)
-        {
-            return nodeId.GetHashCode();
-        }
-    }
-
-    /// <summary>
     /// Helper to allow data contract serialization of NodeId
     /// </summary>
     [DataContract(

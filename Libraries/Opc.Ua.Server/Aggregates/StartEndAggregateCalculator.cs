@@ -126,7 +126,7 @@ namespace Opc.Ua.Server
             }
 
             double startValue = double.NaN;
-            TypeInfo originalType = null;
+            TypeInfo originalType = default;
             bool badDataSkipped = false;
 
             for (int ii = 0; ii < values.Count; ii++)
@@ -199,7 +199,7 @@ namespace Opc.Ua.Server
             // calculate delta.
             double delta = endValue - startValue;
 
-            if (originalType != null && originalType.BuiltInType != BuiltInType.Double)
+            if (!originalType.IsUnknown && originalType.BuiltInType != BuiltInType.Double)
             {
                 object delta2 = TypeInfo.Cast(
                     delta,
@@ -285,7 +285,7 @@ namespace Opc.Ua.Server
                 return GetNoDataValue(slice);
             }
 
-            TypeInfo originalType = null;
+            TypeInfo originalType = default;
 
             // convert to doubles.
             double startValue;
@@ -331,7 +331,7 @@ namespace Opc.Ua.Server
             // calculate delta.
             double delta = endValue - startValue;
 
-            if (originalType != null && originalType.BuiltInType != BuiltInType.Double)
+            if (!originalType.IsUnknown && originalType.BuiltInType != BuiltInType.Double)
             {
                 object delta2 = TypeInfo.Cast(
                     delta,

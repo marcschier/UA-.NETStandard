@@ -4389,7 +4389,7 @@ namespace Quickstarts.ReferenceServer
                 context.NamespaceUris,
                 context.TypeTable);
 
-            if (typeInfo == null || typeInfo == TypeInfo.Unknown)
+            if (typeInfo.IsUnknown)
             {
                 return StatusCodes.BadTypeMismatch;
             }
@@ -4421,8 +4421,7 @@ namespace Quickstarts.ReferenceServer
             var typeInfo = TypeInfo.Construct(value);
 
             if (node is not MultiStateValueDiscreteState variable ||
-                typeInfo == null ||
-                typeInfo == TypeInfo.Unknown ||
+                typeInfo.IsUnknown ||
                 !TypeInfo.IsNumericType(typeInfo.BuiltInType))
             {
                 return StatusCodes.BadTypeMismatch;
@@ -4473,7 +4472,7 @@ namespace Quickstarts.ReferenceServer
                 context.NamespaceUris,
                 context.TypeTable);
 
-            if (typeInfo == null || typeInfo == TypeInfo.Unknown)
+            if (typeInfo.IsUnknown)
             {
                 return StatusCodes.BadTypeMismatch;
             }
@@ -4528,8 +4527,7 @@ namespace Quickstarts.ReferenceServer
 
             if (node is not PropertyState<Range> variable ||
                 value is not ExtensionObject extensionObject ||
-                typeInfo == null ||
-                typeInfo == TypeInfo.Unknown)
+                typeInfo.IsUnknown)
             {
                 return StatusCodes.BadTypeMismatch;
             }

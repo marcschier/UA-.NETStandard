@@ -279,7 +279,7 @@ namespace Opc.Ua
     /// </code>
     /// </example>
     [DataContract(Namespace = Namespaces.OpcUaXsd)]
-    public class ExtensionObject : IFormattable, ICloneable
+    public class ExtensionObject : IFormattable, ICloneable, IEquatable<ExtensionObject>
     {
         /// <summary>
         /// Initializes the object with default values.
@@ -412,13 +412,7 @@ namespace Opc.Ua
             }
         }
 
-        /// <summary>
-        /// Determines if the specified object is equal to the <paramref name="obj"/>.
-        /// </summary>
-        /// <param name="obj">The object to compare to this instance of object</param>
-        /// <returns>
-        /// true if the specified <see cref="object"/> is equal to the current embedded object; otherwise, false.
-        /// </returns>
+        /// <inheritdoc/>
         public override bool Equals(object obj)
         {
             if (obj is null)
@@ -433,15 +427,30 @@ namespace Opc.Ua
 
             if (obj is ExtensionObject value)
             {
-                if (TypeId != value.TypeId)
-                {
-                    return false;
-                }
-
-                return CoreUtils.IsEqual(m_body, value.m_body);
+                return Equals(value);
             }
 
             return false;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(ExtensionObject value)
+        {
+            if (value is null)
+            {
+                return IsNull(this);
+            }
+
+            if (ReferenceEquals(this, value))
+            {
+                return true;
+            }
+
+            if (TypeId != value.TypeId)
+            {
+                return false;
+            }
+            return CoreUtils.IsEqual(m_body, value.m_body);
         }
 
         /// <summary>

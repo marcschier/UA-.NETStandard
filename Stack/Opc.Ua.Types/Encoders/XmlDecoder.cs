@@ -2623,7 +2623,7 @@ namespace Opc.Ua
             {
                 Array elements = null;
                 Int32Collection dimensions = null;
-                TypeInfo typeInfo = null;
+                TypeInfo typeInfo = default;
 
                 if (BeginField(fieldName, true))
                 {

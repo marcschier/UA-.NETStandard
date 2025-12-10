@@ -743,7 +743,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
                         encoder.WriteDateTime(fieldName, (DateTime)value);
                         return;
                     case BuiltInType.Guid:
-                        encoder.WriteGuid(fieldName, (Guid)value);
+                        encoder.WriteGuid(fieldName, (Uuid)value);
                         return;
                     case BuiltInType.ByteString:
                         encoder.WriteByteString(fieldName, (byte[])value);

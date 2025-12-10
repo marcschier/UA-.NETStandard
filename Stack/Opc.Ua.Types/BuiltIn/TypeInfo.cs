@@ -36,8 +36,7 @@ using System.Xml;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using Opc.Ua.Types;
-using Opc.Ua.Export;
-
+using System.Text.Json.Serialization;
 
 #if NET8_0_OR_GREATER
 using System.Collections.Frozen;
@@ -48,193 +47,94 @@ using System.Collections.ObjectModel;
 namespace Opc.Ua
 {
     /// <summary>
-    /// The set of built-in data types for UA type descriptions.
-    /// </summary>
-    /// <remarks>
-    /// An enumeration that lists all of the built-in data types for OPC UA Type Descriptions.
-    /// </remarks>
-    public enum BuiltInType
-    {
-        /// <summary>
-        /// An invalid or unspecified value.
-        /// </summary>
-        Null = 0,
-
-        /// <summary>
-        /// A boolean logic value (true or false).
-        /// </summary>
-        Boolean = 1,
-
-        /// <summary>
-        /// An 8 bit signed integer value.
-        /// </summary>
-        SByte = 2,
-
-        /// <summary>
-        /// An 8 bit unsigned integer value.
-        /// </summary>
-        Byte = 3,
-
-        /// <summary>
-        /// A 16 bit signed integer value.
-        /// </summary>
-        Int16 = 4,
-
-        /// <summary>
-        /// A 16 bit signed integer value.
-        /// </summary>
-        UInt16 = 5,
-
-        /// <summary>
-        /// A 32 bit signed integer value.
-        /// </summary>
-        Int32 = 6,
-
-        /// <summary>
-        /// A 32 bit unsigned integer value.
-        /// </summary>
-        UInt32 = 7,
-
-        /// <summary>
-        /// A 64 bit signed integer value.
-        /// </summary>
-        Int64 = 8,
-
-        /// <summary>
-        /// A 64 bit unsigned integer value.
-        /// </summary>
-        UInt64 = 9,
-
-        /// <summary>
-        /// An IEEE single precision (32 bit) floating point value.
-        /// </summary>
-        Float = 10,
-
-        /// <summary>
-        /// An IEEE double precision (64 bit) floating point value.
-        /// </summary>
-        Double = 11,
-
-        /// <summary>
-        /// A sequence of Unicode characters.
-        /// </summary>
-        String = 12,
-
-        /// <summary>
-        /// An instance in time.
-        /// </summary>
-        DateTime = 13,
-
-        /// <summary>
-        /// A 128-bit globally unique identifier.
-        /// </summary>
-        Guid = 14,
-
-        /// <summary>
-        /// A sequence of bytes.
-        /// </summary>
-        ByteString = 15,
-
-        /// <summary>
-        /// An XML element.
-        /// </summary>
-        XmlElement = 16,
-
-        /// <summary>
-        /// An identifier for a node in the address space of a UA server.
-        /// </summary>
-        NodeId = 17,
-
-        /// <summary>
-        /// A node id that stores the namespace URI instead of the namespace index.
-        /// </summary>
-        ExpandedNodeId = 18,
-
-        /// <summary>
-        /// A structured result code.
-        /// </summary>
-        StatusCode = 19,
-
-        /// <summary>
-        /// A string qualified with a namespace.
-        /// </summary>
-        QualifiedName = 20,
-
-        /// <summary>
-        /// A localized text string with an locale identifier.
-        /// </summary>
-        LocalizedText = 21,
-
-        /// <summary>
-        /// An opaque object with a syntax that may be unknown to the receiver.
-        /// </summary>
-        ExtensionObject = 22,
-
-        /// <summary>
-        /// A data value with an associated quality and timestamp.
-        /// </summary>
-        DataValue = 23,
-
-        /// <summary>
-        /// Any of the other built-in types.
-        /// </summary>
-        Variant = 24,
-
-        /// <summary>
-        /// A diagnostic information associated with a result code.
-        /// </summary>
-        DiagnosticInfo = 25,
-
-        //
-        // The following BuiltInTypes are for coding convenience
-        // internally used in the .NET Standard library.
-        // The enumerations are not used for encoding/decoding.
-        //
-
-        /// <summary>
-        /// Any numeric value.
-        /// </summary>
-        Number = 26,
-
-        /// <summary>
-        /// A signed integer.
-        /// </summary>
-        Integer = 27,
-
-        /// <summary>
-        /// An unsigned integer.
-        /// </summary>
-        UInteger = 28,
-
-        /// <summary>
-        /// An enumerated value
-        /// </summary>
-        Enumeration = 29
-    }
-
-    /// <summary>
     /// Stores information about a type.
     /// </summary>
-    public sealed class TypeInfo : IFormattable
+    public readonly struct TypeInfo : IFormattable, IEquatable<TypeInfo>
     {
-        /// <summary>
-        /// Constructs an unknown type.
-        /// </summary>
-        internal TypeInfo()
-        {
-            BuiltInType = BuiltInType.Null;
-            ValueRank = ValueRanks.Any;
-        }
-
         /// <summary>
         /// Construct the object with a built-in type and a value rank.
         /// </summary>
         /// <param name="builtInType">Type of the built in.</param>
         /// <param name="valueRank">The value rank.</param>
+        [JsonConstructor]
         public TypeInfo(BuiltInType builtInType, int valueRank)
         {
-            BuiltInType = builtInType;
-            ValueRank = valueRank;
+            // We pack value ranks into a short to save space.
+            // If we need more we can pack it to 3 bytes later.
+            if (valueRank is < short.MinValue or > short.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException(nameof(valueRank));
+            }
+            m_builtInType = unchecked((byte)builtInType);
+            m_valid = 66;
+            m_valueRank = (short)valueRank;
+        }
+
+        /// <summary>
+        /// If the type is unknown.
+        /// </summary>
+        [JsonIgnore]
+        public bool IsUnknown => m_valid == 0;
+
+        /// <summary>
+        /// A constant representing an unknown type.
+        /// </summary>
+        /// <value>The constant representing an unknown type.</value>
+        [JsonIgnore]
+        public static readonly TypeInfo Unknown;
+
+        /// <summary>
+        /// The built-in type.
+        /// </summary>
+        /// <value>The type of the type represented by this instance.</value>
+        public BuiltInType BuiltInType => (BuiltInType)m_builtInType;
+
+        /// <summary>
+        /// The value rank.
+        /// </summary>
+        /// <value>The value rank of the type represented by this instance.</value>
+        public int ValueRank => m_valueRank;
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            if (IsUnknown)
+            {
+                return 0;
+            }
+            return HashCode.Combine(BuiltInType, ValueRank);
+        }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return obj switch
+            {
+                null => IsUnknown,
+                TypeInfo typeInfo => Equals(typeInfo),
+                _ => base.Equals(obj),
+            };
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(TypeInfo typeInfo)
+        {
+            return
+                m_valid == typeInfo.m_valid &&
+                BuiltInType == typeInfo.BuiltInType &&
+                ValueRank == typeInfo.ValueRank;
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(TypeInfo left, TypeInfo right)
+        {
+            return left.Equals(right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(TypeInfo left, TypeInfo right)
+        {
+            return !left.Equals(right);
         }
 
         /// <summary>
@@ -520,12 +420,11 @@ namespace Opc.Ua
                 case DataTypes.UriString:
                     return BuiltInType.String;
                 default:
-                    var builtInType = (BuiltInType)Enum.ToObject(typeof(BuiltInType), id);
-                    if (builtInType is > BuiltInType.DiagnosticInfo and not BuiltInType.Enumeration)
+                    if (id is > (uint)BuiltInType.DiagnosticInfo and not (uint)BuiltInType.Enumeration)
                     {
                         return BuiltInType.Null;
                     }
-                    return builtInType;
+                    return (BuiltInType)(int)id;
             }
         }
 
@@ -791,12 +690,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// A constant representing an unknown type.
-        /// </summary>
-        /// <value>The constant representing an unknown type.</value>
-        public static TypeInfo Unknown { get; } = new TypeInfo();
-
-        /// <summary>
         /// Returns the xml qualified name for the specified system type id.
         /// </summary>
         /// <remarks>
@@ -883,18 +776,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// The built-in type.
-        /// </summary>
-        /// <value>The type of the type represented by this instance.</value>
-        public BuiltInType BuiltInType { get; }
-
-        /// <summary>
-        /// The value rank.
-        /// </summary>
-        /// <value>The value rank of the type represented by this instance.</value>
-        public int ValueRank { get; }
-
-        /// <summary>
         /// Returns the type info if the value is an instance of the data type with the specified value rank.
         /// </summary>
         /// <param name="value">The value instance to check.</param>
@@ -943,7 +824,7 @@ namespace Opc.Ua
                         return CreateScalar(expectedType);
                     case >= BuiltInType.Null and <= BuiltInType.Enumeration:
                         // nulls not allowed.
-                        return null;
+                        return default;
                     default:
                         throw ServiceResultException.Unexpected(
                             $"Unexpected BuiltInType {expectedType}");
@@ -960,13 +841,13 @@ namespace Opc.Ua
                     return typeInfo;
                 }
 
-                return null;
+                return default;
             }
 
             // check the value rank.
             if (!ValueRanks.IsValid(typeInfo.ValueRank, expectedValueRank))
             {
-                return null;
+                return default;
             }
 
             // check for special predefined types.
@@ -994,12 +875,12 @@ namespace Opc.Ua
                             case BuiltInType.Variant:
                                 if (typeInfo.ValueRank == ValueRanks.Scalar)
                                 {
-                                    return null;
+                                    return default;
                                 }
 
                                 break;
                             case >= BuiltInType.Null and <= BuiltInType.Enumeration:
-                                return null;
+                                return default;
                             default:
                                 throw ServiceResultException.Unexpected(
                                     $"Unexpected BuiltInType {typeInfo.BuiltInType}");
@@ -1017,12 +898,12 @@ namespace Opc.Ua
                             case BuiltInType.Variant:
                                 if (typeInfo.ValueRank == ValueRanks.Scalar)
                                 {
-                                    return null;
+                                    return default;
                                 }
 
                                 break;
                             case >= BuiltInType.Null and <= BuiltInType.Enumeration:
-                                return null;
+                                return default;
                             default:
                                 throw ServiceResultException.Unexpected(
                                     $"Unexpected BuiltInType {typeInfo.BuiltInType}");
@@ -1040,12 +921,12 @@ namespace Opc.Ua
                             case BuiltInType.Variant:
                                 if (typeInfo.ValueRank == ValueRanks.Scalar)
                                 {
-                                    return null;
+                                    return default;
                                 }
 
                                 break;
                             case >= BuiltInType.Null and <= BuiltInType.Enumeration:
-                                return null;
+                                return default;
                             default:
                                 throw ServiceResultException.Unexpected(
                                     $"Unexpected BuiltInType {typeInfo.BuiltInType}");
@@ -1057,14 +938,14 @@ namespace Opc.Ua
                             return typeInfo;
                         }
 
-                        return null;
+                        return default;
                     case DataTypes.Structure:
                         if (typeInfo.BuiltInType == BuiltInType.ExtensionObject)
                         {
                             return typeInfo;
                         }
 
-                        return null;
+                        return default;
                     case DataTypes.BaseDataType:
                         if (typeInfo.BuiltInType != BuiltInType.Variant)
                         {
@@ -1097,7 +978,7 @@ namespace Opc.Ua
                     return typeInfo;
                 }
 
-                return null;
+                return default;
             }
 
             // handle scalar.
@@ -1115,7 +996,7 @@ namespace Opc.Ua
 
                     if (expectedType != BuiltInType.ExtensionObject)
                     {
-                        return null;
+                        return default;
                     }
                 }
 
@@ -1127,7 +1008,7 @@ namespace Opc.Ua
                     return typeInfo;
                 }
 
-                return null;
+                return default;
             }
 
             // check every element in the array or matrix.
@@ -1190,9 +1071,9 @@ namespace Opc.Ua
                         typeTree);
 
                     // give up at the first invalid element.
-                    if (elementInfo == null)
+                    if (elementInfo.IsUnknown)
                     {
-                        return null;
+                        return default;
                     }
                 }
 
@@ -1200,7 +1081,7 @@ namespace Opc.Ua
                 return typeInfo;
             }
 
-            return null;
+            return default;
         }
 
         /// <summary>
@@ -3159,7 +3040,10 @@ namespace Opc.Ua
         /// <typeparam name="T"></typeparam>
         private static object Cast<T>(object input, TypeInfo sourceType, CastDelegate<T> handler)
         {
-            sourceType ??= Construct(input);
+            if (sourceType.IsUnknown)
+            {
+                sourceType = Construct(input);
+            }
 
             if (sourceType.ValueRank >= 0)
             {
@@ -3750,33 +3634,8 @@ namespace Opc.Ua
             throw new FormatException(CoreUtils.Format("Invalid format string: '{0}'.", format));
         }
 
-        /// <summary>
-        /// Determines if the specified object is equal to the object.
-        /// </summary>
-        /// <remarks>
-        /// Determines if the specified object is equal to the object.
-        /// </remarks>
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(this, obj))
-            {
-                return true;
-            }
-
-            if (obj is TypeInfo typeInfo)
-            {
-                return BuiltInType == typeInfo.BuiltInType && ValueRank == typeInfo.ValueRank;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Returns a suitable hash code.
-        /// </summary>
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(BuiltInType, ValueRank);
-        }
+        private readonly short m_valueRank;
+        private readonly byte m_valid;
+        private readonly byte m_builtInType;
     }
 }

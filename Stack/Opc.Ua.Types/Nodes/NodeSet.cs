@@ -217,7 +217,7 @@ namespace Opc.Ua
             var typeInfo = TypeInfo.Construct(value);
 
             // do nothing for unknown types.
-            if (typeInfo == null)
+            if (typeInfo.IsUnknown)
             {
                 return value;
             }

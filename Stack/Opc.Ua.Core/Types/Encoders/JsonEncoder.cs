@@ -1528,7 +1528,7 @@ namespace Opc.Ua
         public void WriteVariant(string fieldName, Variant value)
         {
             bool isNull =
-                value.TypeInfo == null ||
+                value.TypeInfo.IsUnknown ||
                 value.TypeInfo.BuiltInType == BuiltInType.Null ||
                 value.Value == null;
 
@@ -1620,7 +1620,7 @@ namespace Opc.Ua
                 CheckAndIncrementNestingLevel();
 
                 bool isNull =
-                    value.TypeInfo == null ||
+                    value.TypeInfo.IsUnknown ||
                     value.TypeInfo.BuiltInType == BuiltInType.Null ||
                     value.Value == null;
 
@@ -1682,7 +1682,7 @@ namespace Opc.Ua
 
             if (!isNull)
             {
-                if (value.WrappedValue.TypeInfo != null &&
+                if (!value.WrappedValue.TypeInfo.IsUnknown &&
                     value.WrappedValue.TypeInfo.BuiltInType != BuiltInType.Null)
                 {
                     if (EncodingToUse is not JsonEncodingType.Compact and not JsonEncodingType.Verbose)

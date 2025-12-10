@@ -2328,7 +2328,7 @@ namespace Opc.Ua
         {
             // check for null.
             if (value.IsNull ||
-                value.TypeInfo == null ||
+                value.TypeInfo.IsUnknown ||
                 value.TypeInfo.BuiltInType == BuiltInType.Null)
             {
                 WriteByte(null, 0);

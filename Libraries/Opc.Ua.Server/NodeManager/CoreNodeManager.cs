@@ -986,7 +986,7 @@ namespace Opc.Ua.Server
                         Server.NamespaceUris,
                         Server.TypeTree);
 
-                    if (typeInfo == null)
+                    if (typeInfo.IsUnknown)
                     {
                         errors[ii] = StatusCodes.BadTypeMismatch;
                         continue;
