@@ -38,6 +38,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Xml;
+using Opc.Ua.Schema.Model;
 using Opc.Ua.Types;
 
 namespace Opc.Ua
@@ -59,28 +60,57 @@ namespace Opc.Ua
     /// </remarks>
     public readonly struct Variant :
         IFormattable,
-        IEquatable<Variant>
+        IEquatable<Variant>,
+        IEquatable<bool>,
+        IEquatable<sbyte>,
+        IEquatable<byte>,
+        IEquatable<short>,
+        IEquatable<ushort>,
+        IEquatable<int>,
+        IEquatable<uint>,
+        IEquatable<long>,
+        IEquatable<ulong>,
+        IEquatable<float>,
+        IEquatable<double>,
+        IEquatable<string>,
+        IEquatable<DateTime>,
+        IEquatable<Uuid>,
+        IEquatable<byte[]>,
+        IEquatable<XmlElement>,
+        IEquatable<NodeId>,
+        IEquatable<ExpandedNodeId>,
+        IEquatable<StatusCode>,
+        IEquatable<QualifiedName>,
+        IEquatable<LocalizedText>,
+        IEquatable<ExtensionObject>,
+        IEquatable<DataValue>,
+        IEquatable<bool[]>,
+        IEquatable<sbyte[]>,
+        IEquatable<short[]>,
+        IEquatable<ushort[]>,
+        IEquatable<int[]>,
+        IEquatable<uint[]>,
+        IEquatable<long[]>,
+        IEquatable<ulong[]>,
+        IEquatable<float[]>,
+        IEquatable<double[]>,
+        IEquatable<string[]>,
+        IEquatable<DateTime[]>,
+        IEquatable<Uuid[]>,
+        IEquatable<byte[][]>,
+        IEquatable<XmlElement[]>,
+        IEquatable<NodeId[]>,
+        IEquatable<ExpandedNodeId[]>,
+        IEquatable<StatusCode[]>,
+        IEquatable<QualifiedName[]>,
+        IEquatable<LocalizedText[]>,
+        IEquatable<ExtensionObject[]>,
+        IEquatable<DataValue[]>,
+        IEquatable<Variant[]>
     {
         /// <summary>
-        /// Creates a deep copy of the value.
-        /// </summary>
-        /// <remarks>
-        /// Creates a new Variant instance, while deep-copying the
-        /// contents of the specified Variant
-        /// </remarks>
-        /// <param name="value">The Variant value to copy.</param>
-        public Variant(Variant value)
-        {
-            Value = CoreUtils.Clone(value.Value);
-            TypeInfo = value.TypeInfo;
-        }
-
-        /// <summary>
-        /// Initializes the object with an object value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant instance while specifying the value.
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The value to encode within the variant</param>
         public Variant(object value)
         {
@@ -90,6 +120,7 @@ namespace Opc.Ua
         /// <summary>
         /// Initializes the variant with an Array value and the type information.
         /// </summary>
+        /// <param name="value">The value to store within the variant</param>
         public Variant(Array value)
         {
             this = new Variant(value, TypeInfo.Construct(value));
@@ -101,605 +132,467 @@ namespace Opc.Ua
         /// <param name="value">The value to store within the variant</param>
         public Variant(Matrix value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = value.TypeInfo;
         }
 
         /// <summary>
-        /// Initializes the object with a bool value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new Variant with a Boolean value.
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The value of the variant</param>
         public Variant(bool value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.Boolean;
         }
 
         /// <summary>
-        /// Initializes the object with a sbyte value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="sbyte"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="sbyte"/> value of the Variant</param>
         public Variant(sbyte value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.SByte;
         }
 
         /// <summary>
-        /// Initializes the object with a byte value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="byte"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="byte"/> value of the Variant</param>
         public Variant(byte value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.Byte;
         }
 
         /// <summary>
-        /// Initializes the object with a short value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="short"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="short"/> value of the Variant</param>
         public Variant(short value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.Int16;
         }
 
         /// <summary>
-        /// Initializes the object with a ushort value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="ushort"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="ushort"/> value of the Variant</param>
         public Variant(ushort value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.UInt16;
         }
 
         /// <summary>
-        /// Initializes the object with an int value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="int"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="int"/> value of the Variant</param>
         public Variant(int value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.Int32;
         }
 
         /// <summary>
-        /// Initializes the object with a uint value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="uint"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="uint"/> value of the Variant</param>
         public Variant(uint value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.UInt32;
         }
 
         /// <summary>
-        /// Initializes the object with a long value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="long"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="long"/> value of the Variant</param>
         public Variant(long value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.Int64;
         }
 
         /// <summary>
-        /// Initializes the object with a ulong value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="ulong"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="ulong"/> value of the Variant</param>
         public Variant(ulong value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.UInt64;
         }
 
         /// <summary>
-        /// Initializes the object with a float value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="float"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="float"/> value of the Variant</param>
         public Variant(float value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.Float;
         }
 
         /// <summary>
-        /// Initializes the object with a double value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="double"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="double"/> value of the Variant</param>
         public Variant(double value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.Double;
         }
 
         /// <summary>
-        /// Initializes the object with a string value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="string"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="string"/> value of the Variant</param>
         public Variant(string value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.String;
         }
 
         /// <summary>
-        /// Initializes the object with a DateTime value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="DateTime"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="DateTime"/> value of the Variant</param>
         public Variant(DateTime value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.DateTime;
         }
 
         /// <summary>
-        /// Initializes the object with a Uuid value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="Uuid"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="Uuid"/> value of the Variant</param>
         public Variant(Uuid value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.Guid;
         }
 
         /// <summary>
-        /// Initializes the object with a byte[] value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="byte"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="byte"/>-array value of the Variant</param>
         public Variant(byte[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.ByteString;
         }
 
         /// <summary>
-        /// Initializes the object with a XmlElement value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="XmlElement"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="XmlElement"/> value of the Variant</param>
         public Variant(XmlElement value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.XmlElement;
         }
 
         /// <summary>
-        /// Initializes the object with a NodeId value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="NodeId"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="NodeId"/> value of the Variant</param>
         public Variant(NodeId value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.NodeId;
         }
 
         /// <summary>
-        /// Initializes the object with a ExpandedNodeId value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="ExpandedNodeId"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="ExpandedNodeId"/> value of the Variant</param>
         public Variant(ExpandedNodeId value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.ExpandedNodeId;
         }
 
         /// <summary>
-        /// Initializes the object with a StatusCode value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="StatusCode"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="StatusCode"/> value of the Variant</param>
         public Variant(StatusCode value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.StatusCode;
         }
 
         /// <summary>
-        /// Initializes the object with a QualifiedName value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="QualifiedName"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="QualifiedName"/> value of the Variant</param>
         public Variant(QualifiedName value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.QualifiedName;
         }
 
         /// <summary>
-        /// Initializes the object with a LocalizedText value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="LocalizedText"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="LocalizedText"/> value of the Variant</param>
         public Variant(LocalizedText value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.LocalizedText;
         }
 
         /// <summary>
-        /// Initializes the object with a ExtensionObject value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="ExtensionObject"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="ExtensionObject"/> value of the Variant</param>
         public Variant(ExtensionObject value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.ExtensionObject;
         }
 
         /// <summary>
-        /// Initializes the object with a DataValue value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="DataValue"/> value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="DataValue"/> value of the Variant</param>
         public Variant(DataValue value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.DataValue;
         }
 
         /// <summary>
-        /// Initializes the object with a bool array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="bool"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="bool"/>-array value of the Variant</param>
         public Variant(bool[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.Boolean;
         }
 
         /// <summary>
-        /// Initializes the object with a sbyte array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="sbyte"/>-arrat value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="sbyte"/>-array value of the Variant</param>
         public Variant(sbyte[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.SByte;
         }
 
         /// <summary>
-        /// Initializes the object with a short array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="short"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="short"/>-array value of the Variant</param>
         public Variant(short[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.Int16;
         }
 
         /// <summary>
-        /// Initializes the object with a ushort array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="ushort"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="ushort"/>-array value of the Variant</param>
         public Variant(ushort[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.UInt16;
         }
 
         /// <summary>
-        /// Initializes the object with an int array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="int"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="int"/>-array value of the Variant</param>
         public Variant(int[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.Int32;
         }
 
         /// <summary>
-        /// Initializes the object with a uint array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="uint"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="uint"/>-array value of the Variant</param>
         public Variant(uint[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.UInt32;
         }
 
         /// <summary>
-        /// Initializes the object with a long array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="long"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="long"/>-array value of the Variant</param>
         public Variant(long[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.Int64;
         }
 
         /// <summary>
-        /// Initializes the object with a ulong array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="ulong"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="ulong"/>-array value of the Variant</param>
         public Variant(ulong[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.UInt64;
         }
 
         /// <summary>
-        /// Initializes the object with a float array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="float"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="float"/>-array value of the Variant</param>
         public Variant(float[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.Float;
         }
 
         /// <summary>
-        /// Initializes the object with a double array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="double"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="double"/>-array value of the Variant</param>
         public Variant(double[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.Double;
         }
 
         /// <summary>
-        /// Initializes the object with a string array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="string"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="string"/>-array value of the Variant</param>
         public Variant(string[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.String;
         }
 
         /// <summary>
-        /// Initializes the object with a DateTime array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="DateTime"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="DateTime"/>-array value of the Variant</param>
         public Variant(DateTime[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.DateTime;
         }
 
         /// <summary>
-        /// Initializes the object with a Uuid array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="Uuid"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="Uuid"/>-array value of the Variant</param>
         public Variant(Uuid[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.Guid;
         }
 
         /// <summary>
-        /// Initializes the object with a byte[] array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a 2-d <see cref="byte"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The 2-d <see cref="byte"/>-array value of the Variant</param>
         public Variant(byte[][] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.ByteString;
         }
 
         /// <summary>
-        /// Initializes the object with a XmlElement array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="XmlElement"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="XmlElement"/>-array value of the Variant</param>
         public Variant(XmlElement[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.XmlElement;
         }
 
         /// <summary>
-        /// Initializes the object with a NodeId array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="NodeId"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="NodeId"/>-array value of the Variant</param>
         public Variant(NodeId[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.NodeId;
         }
 
         /// <summary>
-        /// Initializes the object with a ExpandedNodeId array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="ExpandedNodeId"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="ExpandedNodeId"/>-array value of the Variant</param>
         public Variant(ExpandedNodeId[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.ExpandedNodeId;
         }
 
         /// <summary>
-        /// Initializes the object with a StatusCode array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="StatusCode"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="StatusCode"/>-array value of the Variant</param>
         public Variant(StatusCode[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.StatusCode;
         }
 
         /// <summary>
-        /// Initializes the object with a QualifiedName array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="QualifiedName"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="QualifiedName"/>-array value of the Variant</param>
         public Variant(QualifiedName[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.QualifiedName;
         }
 
         /// <summary>
-        /// Initializes the object with a LocalizedText array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="LocalizedText"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="LocalizedText"/>-array value of the Variant</param>
         public Variant(LocalizedText[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.LocalizedText;
         }
 
         /// <summary>
-        /// Initializes the object with a ExtensionObject array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="ExtensionObject"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="ExtensionObject"/>-array value of the Variant</param>
         public Variant(ExtensionObject[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.ExtensionObject;
         }
 
         /// <summary>
-        /// Initializes the object with a DataValue array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="DataValue"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="DataValue"/>-array value of the Variant</param>
         public Variant(DataValue[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.DataValue;
         }
 
         /// <summary>
-        /// Initializes the object with a Variant array value.
-        /// </summary>
-        /// <remarks>
         /// Creates a new variant with a <see cref="Variant"/>-array value
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="Variant"/>-array value of the Variant</param>
         public Variant(Variant[] value)
         {
-            Value = value;
+            m_value = value;
             TypeInfo = TypeInfo.Arrays.Variant;
         }
 
@@ -711,13 +604,15 @@ namespace Opc.Ua
         [JsonConstructor]
         public Variant(object value, TypeInfo typeInfo)
         {
-            Value = value is ICloneable clonable ? clonable.Clone() : value;
+            m_value = value is ICloneable clonable ? clonable.Clone() : value;
             TypeInfo = typeInfo;
 
             // check for null values.
-            if (Value == null)
+            if (m_value == null)
             {
-                // m_value = typeInfo.ValueRank < 0 ? TypeInfo.GetDefaultValue(typeInfo.BuiltInType) : null;
+                // m_value = typeInfo.ValueRank < 0 ?
+                //      TypeInfo.GetDefaultValue(typeInfo.BuiltInType) :
+                //      null;
                 return;
             }
 
@@ -729,14 +624,14 @@ namespace Opc.Ua
                     // handle special types that can be converted to something the variant supports.
                     case BuiltInType.Null:
                         // check for enumerated value.
-                        if (Value.GetType().GetTypeInfo().IsEnum)
+                        if (m_value.GetType().GetTypeInfo().IsEnum)
                         {
-                            this = Set(Convert.ToInt32(Value, CultureInfo.InvariantCulture));
+                            this = From(Convert.ToInt32(m_value, CultureInfo.InvariantCulture));
                             break;
                         }
 
                         // check for matrix
-                        if (Value is Matrix m)
+                        if (m_value is Matrix m)
                         {
                             TypeInfo = m.TypeInfo;
                             break;
@@ -746,25 +641,25 @@ namespace Opc.Ua
                             StatusCodes.BadNotSupported,
                             CoreUtils.Format(
                                 "The type '{0}' cannot be stored in a Variant object.",
-                                Value.GetType().FullName));
+                                m_value.GetType().FullName));
                     // convert encodeables to extension objects.
                     case BuiltInType.ExtensionObject:
-                        if (Value is IEncodeable encodeable)
+                        if (m_value is IEncodeable encodeable)
                         {
-                            Value = new ExtensionObject(encodeable);
+                            m_value = new ExtensionObject(encodeable);
                             break;
                         }
                         break;
                     case BuiltInType.Guid:
-                        if (Value is Guid guid)
+                        if (m_value is Guid guid)
                         {
-                            Value = new Uuid(guid);
+                            m_value = new Uuid(guid);
                             break;
                         }
                         break;
                     case BuiltInType.Variant:
-                        Value = ((Variant)Value).Value;
-                        TypeInfo = TypeInfo.Construct(Value);
+                        m_value = ((Variant)m_value).Value;
+                        TypeInfo = TypeInfo.Construct(m_value);
                         break;
                     // just save the value.
                     case > BuiltInType.Null and <= BuiltInType.Enumeration:
@@ -773,20 +668,20 @@ namespace Opc.Ua
                         throw ServiceResultException.Unexpected(
                             $"Unexpected BuiltInType {typeInfo.BuiltInType}");
                 }
-                DebugCheck(Value, TypeInfo);
+                DebugCheck(m_value, TypeInfo);
                 return;
             }
 
             // Convert list types to arrays
-            if (Value is not Array)
+            if (m_value is not Array)
             {
                 // Convert enumerable types to arrays
-                switch (Value)
+                switch (m_value)
                 {
                     case ICollection collection when collection.Count == 0:
                         // Fast path for empty arrays
-                        Value = TypeInfo.CreateArray(typeInfo.BuiltInType, 0);
-                        DebugCheck(Value, TypeInfo);
+                        m_value = TypeInfo.CreateArray(typeInfo.BuiltInType, 0);
+                        DebugCheck(m_value, TypeInfo);
                         return;
                     case IEnumerable enumerable:
                         if (enumerable is not IList list)
@@ -798,7 +693,7 @@ namespace Opc.Ua
                         {
                             items.SetValue(list[i], i);
                         }
-                        Value = items;
+                        m_value = items;
                         break;
                 }
             }
@@ -806,18 +701,18 @@ namespace Opc.Ua
             // handle one dimensional arrays.
             if (typeInfo.ValueRank <= 1)
             {
-                if (Value is Matrix matrix)
+                if (m_value is Matrix matrix)
                 {
-                    Value = matrix.ToArray();
+                    m_value = matrix.ToArray();
                 }
-                if (Value is not Array array)
+                if (m_value is not Array array)
                 {
                     // not supported.
                     throw new ServiceResultException(
                         StatusCodes.BadNotSupported,
                         CoreUtils.Format(
                             "The type '{0}' cannot be stored as Array in a Variant object.",
-                            Value.GetType().FullName));
+                            m_value.GetType().FullName));
                 }
                 switch (typeInfo.BuiltInType)
                 {
@@ -840,7 +735,7 @@ namespace Opc.Ua
                                 array.GetValue(ii),
                                 CultureInfo.InvariantCulture);
                         }
-                        Value = values;
+                        m_value = values;
                         break;
                     // convert encodeables to extension objects.
                     case BuiltInType.ExtensionObject:
@@ -851,7 +746,7 @@ namespace Opc.Ua
                             {
                                 extensions[ii] = new ExtensionObject(encodeables[ii]);
                             }
-                            Value = extensions;
+                            m_value = extensions;
                         }
                         break;
                     // convert objects to variants objects.
@@ -863,13 +758,13 @@ namespace Opc.Ua
                             {
                                 variants[ii] = new Variant(objects[ii]);
                             }
-                            Value = variants;
+                            m_value = variants;
                         }
                         break;
                     case BuiltInType.Guid:
                         if (array is Guid[] guids)
                         {
-                            Value = ((UuidCollection)guids).ToArray();
+                            m_value = ((UuidCollection)guids).ToArray();
                         }
                         break;
                     // just save the value.
@@ -882,23 +777,23 @@ namespace Opc.Ua
             }
             else // handle multidimensional array.
             {
-                if (Value is Array array)
+                if (m_value is Array array)
                 {
-                    Value = new Matrix(array, typeInfo.BuiltInType);
+                    m_value = new Matrix(array, typeInfo.BuiltInType);
                 }
                 // handle matrix.
-                if (Value is not Matrix matrix)
+                if (m_value is not Matrix matrix)
                 {
                     // not supported.
                     throw new ServiceResultException(
                         StatusCodes.BadNotSupported,
                         CoreUtils.Format(
                             "Arrays of the type '{0}' cannot be stored in a Variant object.",
-                            Value.GetType().FullName));
+                            m_value.GetType().FullName));
                 }
                 TypeInfo = matrix.TypeInfo;
             }
-            DebugCheck(Value, TypeInfo);
+            DebugCheck(m_value, TypeInfo);
         }
 
         /// <summary>
@@ -908,7 +803,7 @@ namespace Opc.Ua
         /// <param name="typeInfo">The type information for the value.</param>
         public Variant(Array array, TypeInfo typeInfo)
         {
-            Value = array;
+            m_value = array;
             TypeInfo = typeInfo;
 
             if (typeInfo.ValueRank > 1)
@@ -938,7 +833,7 @@ namespace Opc.Ua
                             array.GetValue(ii),
                             CultureInfo.InvariantCulture);
                     }
-                    Value = values;
+                    m_value = values;
                     break;
                 // convert encodeables to extension objects.
                 case BuiltInType.ExtensionObject:
@@ -949,13 +844,13 @@ namespace Opc.Ua
                         {
                             extensions[ii] = new ExtensionObject(encodeables[ii]);
                         }
-                        Value = extensions;
+                        m_value = extensions;
                     }
                     break;
                 case BuiltInType.Guid:
                     if (array is Guid[] guids)
                     {
-                        Value = ((UuidCollection)guids).ToArray();
+                        m_value = ((UuidCollection)guids).ToArray();
                     }
                     break;
                 // convert objects to variants objects.
@@ -967,12 +862,12 @@ namespace Opc.Ua
                         {
                             variants[ii] = new Variant(objects[ii]);
                         }
-                        Value = variants;
+                        m_value = variants;
                     }
                     break;
                 // just save the value.
                 case >= BuiltInType.Null and <= BuiltInType.Enumeration:
-                    Value = CoreUtils.Clone(array);
+                    m_value = CoreUtils.Clone(array);
                     break;
                 default:
                     throw ServiceResultException.Unexpected(
@@ -983,13 +878,14 @@ namespace Opc.Ua
         /// <summary>
         /// Initializes the object with an object array value.
         /// </summary>
-        /// <remarks>
+        /// <summary>
         /// Creates a new variant with a <see cref="object"/>-array value
-        /// </remarks>
-        /// <param name="value">The <see cref="object"/>-array value of the Variant</param>
+        /// </summary>
+        /// <param name="value">The <see cref="object"/>-array value
+        /// of the Variant</param>
         public Variant(object[] value)
         {
-            Value = null;
+            m_value = null;
             TypeInfo = TypeInfo.Arrays.Variant;
             if (value != null)
             {
@@ -998,36 +894,83 @@ namespace Opc.Ua
                 {
                     anyValues[ii] = new Variant(value[ii]);
                 }
-                Value = anyValues;
+                m_value = anyValues;
             }
+        }
+
+        /// <summary>
+        /// Box the value stored in the Variant as object
+        /// </summary>
+        /// <returns></returns>
+        public object Box()
+        {
+            if (TypeInfo.IsUnknown)
+            {
+                return m_value;
+            }
+            if (TypeInfo.ValueRank < 0)
+            {
+               //// Handle built-in value type null values
+               //switch (TypeInfo.BuiltInType)
+               //{
+               //    case BuiltInType.NodeId:
+               //        return m_value is NodeId v ? v : default;
+               //    case BuiltInType.ExpandedNodeId:
+               //        return m_value is ExpandedNodeId e ? e : default;
+               //    case BuiltInType.LocalizedText:
+               //        return m_value is LocalizedText l ? l : default;
+               //    case BuiltInType.QualifiedName:
+               //        return m_value is QualifiedName q ? q : default;
+               //    case BuiltInType.StatusCode:
+               //        return m_value is StatusCode s ? s : default;
+               //}
+            }
+            return m_value;
         }
 
         /// <summary>
         /// An constant containing a null Variant structure.
         /// </summary>
-        /// <remarks>
-        /// An constant containing a null Variant structure.
-        /// </remarks>
         public static readonly Variant Null;
 
         /// <summary>
         /// Returns if the Variant is a Null value.
         /// </summary>
         [JsonIgnore]
-        public bool IsNull => Value == null;
+        public bool IsNull => m_value == null;
 
         /// <summary>
         /// The value stored -as <see cref="object"/>- within
         /// the Variant object.
         /// </summary>
         [JsonPropertyName("Value")]
-        public object Value { get; }
+        public object Value => Box();
 
         /// <summary>
         /// The type information for the matrix.
         /// </summary>
         [JsonPropertyName("TypeInfo")]
         public TypeInfo TypeInfo { get; }
+
+        /// <summary>
+        /// Returns a unique hashcode for the object.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            if (!IsNull)
+            {
+                return Box().GetHashCode();
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// Converts the value to a human readable string.
+        /// </summary>
+        public override string ToString()
+        {
+            return ToString(null, null);
+        }
 
         /// <summary>
         /// Returns the string representation of the object.
@@ -1042,7 +985,7 @@ namespace Opc.Ua
             if (format == null)
             {
                 var buffer = new StringBuilder();
-                AppendFormat(buffer, Value, formatProvider);
+                AppendFormat(buffer, m_value, formatProvider);
                 return buffer.ToString();
             }
 
@@ -1051,1153 +994,2707 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Returns true if the objects are not equal.
+        /// Initializes the object with a <see cref="bool"/> value.
         /// </summary>
-        /// <remarks>
-        /// Returns true if the objects are not equal.
-        /// </remarks>
+        /// <param name="value">The <see cref="bool"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out bool value)
+        {
+            return TryGetScalar(out value, BuiltInType.Boolean);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="sbyte"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="sbyte"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out sbyte value)
+        {
+            return TryGetScalar(out value, BuiltInType.SByte);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="byte"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="byte"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out byte value)
+        {
+            return TryGetScalar(out value, BuiltInType.Byte);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="short"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="short"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out short value)
+        {
+            return TryGetScalar(out value, BuiltInType.Int16);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="ushort"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="ushort"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out ushort value)
+        {
+            return TryGetScalar(out value, BuiltInType.UInt16);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="int"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="int"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out int value)
+        {
+            return TryGetScalar(out value, BuiltInType.Int32);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="uint"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="uint"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out uint value)
+        {
+            return TryGetScalar(out value, BuiltInType.UInt32);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="long"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="long"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out long value)
+        {
+            return TryGetScalar(out value, BuiltInType.Int64);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="ulong"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="ulong"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out ulong value)
+        {
+            return TryGetScalar(out value, BuiltInType.UInt64);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="float"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="float"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out float value)
+        {
+            return TryGetScalar(out value, BuiltInType.Float);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="double"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="double"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out double value)
+        {
+            return TryGetScalar(out value, BuiltInType.Double);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="string"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="string"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out string value)
+        {
+            return TryGetScalar(out value, BuiltInType.String);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="DateTime"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="DateTime"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out DateTime value)
+        {
+            return TryGetScalar(out value, BuiltInType.DateTime);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="Uuid"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="Uuid"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out Uuid value)
+        {
+            return TryGetScalar(out value, BuiltInType.Guid);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="byte"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="byte"/>-array value to set
+        /// this Variant to</param>
+        public bool TryGet(out byte[] value)
+        {
+            return TryGetScalar(out value, BuiltInType.ByteString);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="XmlElement"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="XmlElement"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out XmlElement value)
+        {
+            return TryGetScalar(out value, BuiltInType.XmlElement);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="NodeId"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="NodeId"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out NodeId value)
+        {
+            return TryGetScalar(out value, BuiltInType.NodeId);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="ExpandedNodeId"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="ExpandedNodeId"/> value to
+        /// set this Variant to</param>
+        public bool TryGet(out ExpandedNodeId value)
+        {
+            return TryGetScalar(out value, BuiltInType.ExpandedNodeId);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="StatusCode"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="StatusCode"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out StatusCode value)
+        {
+            return TryGetScalar(out value, BuiltInType.StatusCode);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="QualifiedName"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="QualifiedName"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out QualifiedName value)
+        {
+            return TryGetScalar(out value, BuiltInType.QualifiedName);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="LocalizedText"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="LocalizedText"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out LocalizedText value)
+        {
+            return TryGetScalar(out value, BuiltInType.LocalizedText);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="ExtensionObject"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="ExtensionObject"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out ExtensionObject value)
+        {
+            return TryGetScalar(out value, BuiltInType.ExtensionObject);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="DataValue"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="DataValue"/> value to set
+        /// this Variant to</param>
+        public bool TryGet(out DataValue value)
+        {
+            return TryGetScalar(out value, BuiltInType.DataValue);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="bool"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="bool"/>-array value to set
+        /// this Variant to</param>
+        public bool TryGet(out bool[] value)
+        {
+            return TryGetArray(out value, BuiltInType.Boolean);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="sbyte"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="sbyte"/>-array value to set
+        /// this Variant to</param>
+        public bool TryGet(out sbyte[] value)
+        {
+            return TryGetArray(out value, BuiltInType.SByte);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="short"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="short"/>-array value to set
+        /// this Variant to</param>
+        public bool TryGet(out short[] value)
+        {
+            return TryGetArray(out value, BuiltInType.Int16);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="ushort"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="ushort"/>-array value to set
+        /// this Variant to</param>
+        public bool TryGet(out ushort[] value)
+        {
+            return TryGetArray(out value, BuiltInType.UInt16);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="int"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="int"/>-array value to set
+        /// this Variant to</param>
+        public bool TryGet(out int[] value)
+        {
+            return TryGetArray(out value, BuiltInType.Int32);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="uint"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="uint"/>-array value to set
+        /// this Variant to</param>
+        public bool TryGet(out uint[] value)
+        {
+            return TryGetArray(out value, BuiltInType.UInt32);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="long"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="long"/>-array value to set
+        /// this Variant to</param>
+        public bool TryGet(out long[] value)
+        {
+            return TryGetArray(out value, BuiltInType.Int64);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="ulong"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="ulong"/>-array value to set
+        /// this Variant to</param>
+        public bool TryGet(out ulong[] value)
+        {
+            return TryGetArray(out value, BuiltInType.UInt64);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="float"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="float"/>-array value to set
+        /// this Variant to</param>
+        public bool TryGet(out float[] value)
+        {
+            return TryGetArray(out value, BuiltInType.Float);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="double"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="double"/>-array value to set
+        /// this Variant to</param>
+        public bool TryGet(out double[] value)
+        {
+            return TryGetArray(out value, BuiltInType.Double);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="string"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="string"/>-array value to set
+        /// this Variant to</param>
+        public bool TryGet(out string[] value)
+        {
+            return TryGetArray(out value, BuiltInType.String);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="DateTime"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="DateTime"/>-array value to set
+        /// this Variant to</param>
+        public bool TryGet(out DateTime[] value)
+        {
+            return TryGetArray(out value, BuiltInType.DateTime);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="Uuid"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="Uuid"/>-array value to set
+        /// this Variant to</param>
+        public bool TryGet(out Uuid[] value)
+        {
+            return TryGetArray(out value, BuiltInType.Guid);
+        }
+
+        /// <summary>
+        /// Initializes the object with a 2-d <see cref="byte"/>-array value.
+        /// </summary>
+        /// <param name="value">The 2-d <see cref="byte"/>-array value to set
+        /// this Variant to</param>
+        public bool TryGet(out byte[][] value)
+        {
+            return TryGetArray(out value, BuiltInType.ByteString);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="XmlElement"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="XmlElement"/>-array value to set
+        /// this Variant to</param>
+        public bool TryGet(out XmlElement[] value)
+        {
+            return TryGetArray(out value, BuiltInType.XmlElement);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="NodeId"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="NodeId"/>-array value to set
+        /// this Variant to</param>
+        public bool TryGet(out NodeId[] value)
+        {
+            return TryGetArray(out value, BuiltInType.NodeId);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="ExpandedNodeId"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="ExpandedNodeId"/>-array value to
+        /// set this Variant to</param>
+        public bool TryGet(out ExpandedNodeId[] value)
+        {
+            return TryGetArray(out value, BuiltInType.ExpandedNodeId);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="StatusCode"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="StatusCode"/>-array value to set
+        /// this Variant to</param>
+        public bool TryGet(out StatusCode[] value)
+        {
+            return TryGetArray(out value, BuiltInType.StatusCode);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="QualifiedName"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="QualifiedName"/>-array value to
+        /// set this Variant to</param>
+        public bool TryGet(out QualifiedName[] value)
+        {
+            return TryGetArray(out value, BuiltInType.QualifiedName);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="LocalizedText"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="LocalizedText"/>-array value to
+        /// set this Variant to</param>
+        public bool TryGet(out LocalizedText[] value)
+        {
+            return TryGetArray(out value, BuiltInType.LocalizedText);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="ExtensionObject"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="ExtensionObject"/>-array value to
+        /// set this Variant to</param>
+        public bool TryGet(out ExtensionObject[] value)
+        {
+            return TryGetArray(out value, BuiltInType.ExtensionObject);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="DataValue"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="DataValue"/>-array value to set
+        /// this Variant to</param>
+        public bool TryGet(out DataValue[] value)
+        {
+            return TryGetArray(out value, BuiltInType.DataValue);
+        }
+
+        /// <summary>
+        /// Initializes the object with a <see cref="Variant"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="Variant"/>-array value to set
+        /// this Variant to</param>
+        public bool TryGet(out Variant[] value)
+        {
+            return TryGetArray(out value, BuiltInType.Variant);
+        }
+
+        /// <summary>
+        /// Try get array of specified type.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public bool TryGetArray<T>(out T[] value, BuiltInType expectedType)
+        {
+            if (m_value == null ||
+                TypeInfo.BuiltInType != expectedType ||
+                TypeInfo.ValueRank < 0)
+            {
+                value = default;
+                return false;
+            }
+            if (m_value is T[] variable)
+            {
+                value = variable;
+                return true;
+            }
+            try
+            {
+                var array = (Array)m_value;
+                value = (T[])Array.CreateInstance(typeof(T), array.Length);
+                for (int ii = 0; ii < array.Length; ii++)
+                {
+                    value[ii] = (T)Convert.ChangeType(
+                        array.GetValue(ii),
+                        typeof(T),
+                        CultureInfo.InvariantCulture);
+                }
+                return true;
+            }
+            catch
+            {
+                value = default;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Try get scalar value
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public bool TryGetScalar<T>(out T value, BuiltInType expectedType)
+        {
+            if (m_value == null ||
+                TypeInfo.BuiltInType != expectedType ||
+                TypeInfo.ValueRank >= 0)
+            {
+                value = default;
+                return false;
+            }
+            if (m_value is T variable)
+            {
+                value = variable;
+                return true;
+            }
+            try
+            {
+                value = (T)Convert.ChangeType(m_value, typeof(T), CultureInfo.InvariantCulture);
+                return true;
+            }
+            catch
+            {
+                value = default;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Try get matrix of type
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public bool TryGetMatrix<T>(out Matrix matrix, BuiltInType expectedType)
+        {
+            if (m_value is Matrix mat && mat.TypeInfo.BuiltInType == expectedType)
+            {
+                matrix = mat;
+                return true;
+            }
+
+            if (TryGetArray<T>(out T[] array, expectedType))
+            {
+                matrix = new Matrix(array, TypeInfo.BuiltInType);
+                return true;
+            }
+
+            matrix = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Converts a bool value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(bool value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a sbyte value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(sbyte value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a byte value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(byte value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a short value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(short value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a ushort value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(ushort value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a int value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(int value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a uint value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(uint value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a long value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(long value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a ulong value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(ulong value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a float value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(float value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a double value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(double value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a string value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(string value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a DateTime value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(DateTime value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a Uuid value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(Uuid value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a byte[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(byte[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a XmlElement value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(XmlElement value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a NodeId value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(NodeId value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a ExpandedNodeId value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(ExpandedNodeId value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a StatusCode value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(StatusCode value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a QualifiedName value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(QualifiedName value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a LocalizedText value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(LocalizedText value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a ExtensionObject value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(ExtensionObject value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a DataValue value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(DataValue value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a bool[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(bool[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a sbyte[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(sbyte[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a short[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(short[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a ushort[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(ushort[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a int[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(int[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a uint[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(uint[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a long[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(long[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a ulong[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(ulong[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a float[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(float[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a double[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(double[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a string []value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(string[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a DateTime[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(DateTime[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a Uuid[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(Uuid[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a byte[][] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(byte[][] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a XmlElement[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(XmlElement[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a NodeId[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(NodeId[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a ExpandedNodeId[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(ExpandedNodeId[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a StatusCode[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(StatusCode[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a QualifiedName[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(QualifiedName[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a LocalizedText[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(LocalizedText[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a ExtensionObject[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(ExtensionObject[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a DataValue[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(DataValue[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts a Variant[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(Variant[] value)
+        {
+            return From(value);
+        }
+
+        /// <summary>
+        /// Converts an object[] value to an Variant object.
+        /// </summary>
+        public static implicit operator Variant(object[] value)
+        {
+            return From(value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(bool value)
+        {
+            return TryGet(out bool v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(sbyte value)
+        {
+            return TryGet(out sbyte v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(byte value)
+        {
+            return TryGet(out byte v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(short value)
+        {
+            return TryGet(out short v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(ushort value)
+        {
+            return TryGet(out ushort v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(int value)
+        {
+            return TryGet(out int v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(uint value)
+        {
+            return TryGet(out uint v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(long value)
+        {
+            return TryGet(out long v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(ulong value)
+        {
+            return TryGet(out ulong v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(float value)
+        {
+            return TryGet(out float v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(double value)
+        {
+            return TryGet(out double v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(string value)
+        {
+            return TryGet(out string v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(DateTime value)
+        {
+            return TryGet(out DateTime v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(Uuid value)
+        {
+            return TryGet(out Uuid v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(byte[] value)
+        {
+            return TryGet(out byte[] v) && SequenceEqualityComparer<byte>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(XmlElement value)
+        {
+            return TryGet(out XmlElement v) && XmlElementStringEqualityComparer.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(NodeId value)
+        {
+            return TryGet(out NodeId v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(ExpandedNodeId value)
+        {
+            return TryGet(out ExpandedNodeId v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(StatusCode value)
+        {
+            return TryGet(out StatusCode v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(QualifiedName value)
+        {
+            return TryGet(out QualifiedName v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(LocalizedText value)
+        {
+            return TryGet(out LocalizedText v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(ExtensionObject value)
+        {
+            return TryGet(out ExtensionObject v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(DataValue value)
+        {
+            return TryGet(out DataValue v) && v == value;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(bool[] value)
+        {
+            return TryGet(out bool[] v) &&
+                SequenceEqualityComparer<bool>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(sbyte[] value)
+        {
+            return TryGet(out sbyte[] v) &&
+                SequenceEqualityComparer<sbyte>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(short[] value)
+        {
+            return TryGet(out short[] v) &&
+                SequenceEqualityComparer<short>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(ushort[] value)
+        {
+            return TryGet(out ushort[] v) &&
+                SequenceEqualityComparer<ushort>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(int[] value)
+        {
+            return TryGet(out int[] v) &&
+                SequenceEqualityComparer<int>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(uint[] value)
+        {
+            return TryGet(out uint[] v) &&
+                SequenceEqualityComparer<uint>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(long[] value)
+        {
+            return TryGet(out long[] v) &&
+                SequenceEqualityComparer<long>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(ulong[] value)
+        {
+            return TryGet(out ulong[] v) &&
+                SequenceEqualityComparer<ulong>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(float[] value)
+        {
+            return TryGet(out float[] v) &&
+                SequenceEqualityComparer<float>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(double[] value)
+        {
+            return TryGet(out double[] v) &&
+                SequenceEqualityComparer<double>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(string[] value)
+        {
+            return TryGet(out string[] v) &&
+                SequenceEqualityComparer<string>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(DateTime[] value)
+        {
+            return TryGet(out DateTime[] v) &&
+                SequenceEqualityComparer<DateTime>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(Uuid[] value)
+        {
+            return TryGet(out Uuid[] v) &&
+                SequenceEqualityComparer<Uuid>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(byte[][] value)
+        {
+            return TryGet(out byte[][] v) &&
+                ByteStringArrayEqualityComparer.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(XmlElement[] value)
+        {
+            return TryGet(out XmlElement[] v) &&
+                XmlElementArrayStringEqualityComparer.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(NodeId[] value)
+        {
+            return TryGet(out NodeId[] v) &&
+                SequenceEqualityComparer<NodeId>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(ExpandedNodeId[] value)
+        {
+            return TryGet(out ExpandedNodeId[] v) &&
+                SequenceEqualityComparer<ExpandedNodeId>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(StatusCode[] value)
+        {
+            return TryGet(out StatusCode[] v) &&
+                SequenceEqualityComparer<StatusCode>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(QualifiedName[] value)
+        {
+            return TryGet(out QualifiedName[] v) &&
+                SequenceEqualityComparer<QualifiedName>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(LocalizedText[] value)
+        {
+            return TryGet(out LocalizedText[] v) &&
+                SequenceEqualityComparer<LocalizedText>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(ExtensionObject[] value)
+        {
+            return TryGet(out ExtensionObject[] v) &&
+                SequenceEqualityComparer<ExtensionObject>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(DataValue[] value)
+        {
+            return TryGet(out DataValue[] v) &&
+                SequenceEqualityComparer<DataValue>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(Variant[] value)
+        {
+            return TryGet(out Variant[] v) &&
+                SequenceEqualityComparer<Variant>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
         public static bool operator ==(Variant a, Variant b)
         {
             return a.Equals(b);
         }
 
-        /// <summary>
-        /// Returns true if the objects are not equal.
-        /// </summary>
-        /// <remarks>
-        /// Returns true if the objects are not equal.
-        /// </remarks>
+        /// <inheritdoc/>
         public static bool operator !=(Variant a, Variant b)
         {
             return !a.Equals(b);
         }
 
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, bool value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, bool value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, sbyte value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, sbyte value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, byte value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, byte value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, short value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, short value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, ushort value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, ushort value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, int value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, int value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, uint value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, uint value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, long value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, long value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, ulong value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, ulong value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, float value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, float value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, double value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, double value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, string value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, string value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, DateTime value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, DateTime value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, Uuid value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, Uuid value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, byte[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, byte[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, XmlElement value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, XmlElement value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, NodeId value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, NodeId value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, ExpandedNodeId value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, ExpandedNodeId value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, StatusCode value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, StatusCode value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, QualifiedName value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, QualifiedName value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, LocalizedText value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, LocalizedText value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, ExtensionObject value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, ExtensionObject value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, DataValue value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, DataValue value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, bool[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, bool[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, sbyte[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, sbyte[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, short[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, short[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, ushort[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, ushort[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, int[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, int[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, uint[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, uint[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, long[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, long[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, ulong[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, ulong[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, float[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, float[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, double[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, double[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, string[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, string[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, DateTime[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, DateTime[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, Uuid[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, Uuid[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, byte[][] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, byte[][] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, XmlElement[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, XmlElement[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, NodeId[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, NodeId[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, ExpandedNodeId[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, ExpandedNodeId[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, StatusCode[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, StatusCode[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, QualifiedName[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, QualifiedName[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, LocalizedText[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, LocalizedText[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, ExtensionObject[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, ExtensionObject[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, DataValue[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, DataValue[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, Variant[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, Variant[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(Variant other)
+        {
+            if (IsNull && other.IsNull)
+            {
+                return true;
+            }
+            if (TypeInfo.IsUnknown || other.TypeInfo.IsUnknown)
+            {
+                return TypeInfo == other.TypeInfo;
+            }
+            if (TypeInfo.ValueRank != other.TypeInfo.ValueRank)
+            {
+                return false;
+            }
+            if (TypeInfo.BuiltInType != other.TypeInfo.BuiltInType)
+            {
+                return false;
+            }
+            return Equals(other.Value); // TODO: No more Value use
+        }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return obj switch
+            {
+                null => IsNull,
+                Variant v => Equals(v),
+                bool v => Equals(v),
+                sbyte v => Equals(v),
+                byte v => Equals(v),
+                short v => Equals(v),
+                ushort v => Equals(v),
+                int v => Equals(v),
+                uint v => Equals(v),
+                long v => Equals(v),
+                ulong v => Equals(v),
+                float v => Equals(v),
+                double v => Equals(v),
+                string v => Equals(v),
+                DateTime v => Equals(v),
+                Uuid v => Equals(v),
+                byte[] v => Equals(v),
+                XmlElement v => Equals(v),
+                NodeId v => Equals(v),
+                ExpandedNodeId v => Equals(v),
+                StatusCode v => Equals(v),
+                QualifiedName v => Equals(v),
+                LocalizedText v => Equals(v),
+                ExtensionObject v => Equals(v),
+                DataValue v => Equals(v),
+                bool[] v => Equals(v),
+                sbyte[] v => Equals(v),
+                short[] v => Equals(v),
+                ushort[] v => Equals(v),
+                int[] v => Equals(v),
+                uint[] v => Equals(v),
+                long[] v => Equals(v),
+                ulong[] v => Equals(v),
+                float[] v => Equals(v),
+                double[] v => Equals(v),
+                string[] v => Equals(v),
+                DateTime[] v => Equals(v),
+                Uuid[] v => Equals(v),
+                byte[][] v => Equals(v),
+                XmlElement[] v => Equals(v),
+                NodeId[] v => Equals(v),
+                ExpandedNodeId[] v => Equals(v),
+                StatusCode[] v => Equals(v),
+                QualifiedName[] v => Equals(v),
+                LocalizedText[] v => Equals(v),
+                ExtensionObject[] v => Equals(v),
+                DataValue[] v => Equals(v),
+                Variant[] v => Equals(v),
+                _ => CoreUtils.IsEqual(m_value, obj)
+            };
+        }
+
         /// <summary>
         /// Converts a bool value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a bool value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(bool value)
+        public static explicit operator bool(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out bool v) ? v : throw CannotCast<bool>();
         }
 
         /// <summary>
         /// Converts a sbyte value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a sbyte value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(sbyte value)
+        public static explicit operator sbyte(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out sbyte v) ? v : throw CannotCast<sbyte>();
         }
 
         /// <summary>
         /// Converts a byte value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a byte value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(byte value)
+        public static explicit operator byte(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out byte v) ? v : throw CannotCast<byte>();
         }
 
         /// <summary>
         /// Converts a short value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a short value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(short value)
+        public static explicit operator short(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out short v) ? v : throw CannotCast<short>();
         }
 
         /// <summary>
         /// Converts a ushort value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a ushort value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(ushort value)
+        public static explicit operator ushort(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out ushort v) ? v : throw CannotCast<ushort>();
         }
 
         /// <summary>
         /// Converts a int value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a int value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(int value)
+        public static explicit operator int(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out int v) ? v : throw CannotCast<int>();
         }
 
         /// <summary>
         /// Converts a uint value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a uint value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(uint value)
+        public static explicit operator uint(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out uint v) ? v : throw CannotCast<uint>();
         }
 
         /// <summary>
         /// Converts a long value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a long value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(long value)
+        public static explicit operator long(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out long v) ? v : throw CannotCast<long>();
         }
 
         /// <summary>
         /// Converts a ulong value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a ulong value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(ulong value)
+        public static explicit operator ulong(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out ulong v) ? v : throw CannotCast<ulong>();
         }
 
         /// <summary>
         /// Converts a float value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a float value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(float value)
+        public static explicit operator float(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out float v) ? v : throw CannotCast<float>();
         }
 
         /// <summary>
         /// Converts a double value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a double value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(double value)
+        public static explicit operator double(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out double v) ? v : throw CannotCast<double>();
         }
 
         /// <summary>
         /// Converts a string value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a string value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(string value)
+        public static explicit operator string(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out string v) ? v : throw CannotCast<string>();
         }
 
         /// <summary>
         /// Converts a DateTime value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a DateTime value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(DateTime value)
+        public static explicit operator DateTime(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out DateTime v) ? v : throw CannotCast<DateTime>();
         }
 
         /// <summary>
         /// Converts a Uuid value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a Uuid value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(Uuid value)
+        public static explicit operator Uuid(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out Uuid v) ? v : throw CannotCast<Uuid>();
         }
 
         /// <summary>
         /// Converts a byte[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a byte[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(byte[] value)
+        public static explicit operator byte[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out byte[] v) ? v : throw CannotCast<byte[]>();
         }
 
         /// <summary>
         /// Converts a XmlElement value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a XmlElement value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(XmlElement value)
+        public static explicit operator XmlElement(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out XmlElement v) ? v : throw CannotCast<XmlElement>();
         }
 
         /// <summary>
         /// Converts a NodeId value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a NodeId value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(NodeId value)
+        public static explicit operator NodeId(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out NodeId v) ? v : throw CannotCast<NodeId>();
         }
 
         /// <summary>
         /// Converts a ExpandedNodeId value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a ExpandedNodeId value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(ExpandedNodeId value)
+        public static explicit operator ExpandedNodeId(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out ExpandedNodeId v) ? v : throw CannotCast<ExpandedNodeId>();
         }
 
         /// <summary>
         /// Converts a StatusCode value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a StatusCode value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(StatusCode value)
+        public static explicit operator StatusCode(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out StatusCode v) ? v : throw CannotCast<StatusCode>();
         }
 
         /// <summary>
         /// Converts a QualifiedName value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a QualifiedName value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(QualifiedName value)
+        public static explicit operator QualifiedName(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out QualifiedName v) ? v : throw CannotCast<QualifiedName>();
         }
 
         /// <summary>
         /// Converts a LocalizedText value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a LocalizedText value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(LocalizedText value)
+        public static explicit operator LocalizedText(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out LocalizedText v) ? v : throw CannotCast<LocalizedText>();
         }
 
         /// <summary>
         /// Converts a ExtensionObject value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a ExtensionObject value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(ExtensionObject value)
+        public static explicit operator ExtensionObject(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out ExtensionObject v) ? v : throw CannotCast<ExtensionObject>();
         }
 
         /// <summary>
         /// Converts a DataValue value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a DataValue value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(DataValue value)
+        public static explicit operator DataValue(Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out DataValue v) ? v : throw CannotCast<DataValue>();
         }
 
         /// <summary>
         /// Converts a bool[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a bool[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(bool[] value)
+        public static explicit operator bool[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out bool[] v) ? v : throw CannotCast<bool[]>();
         }
 
         /// <summary>
         /// Converts a sbyte[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a sbyte[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(sbyte[] value)
+        public static explicit operator sbyte[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out sbyte[] v) ? v : throw CannotCast<sbyte[]>();
         }
 
         /// <summary>
         /// Converts a short[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a short[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(short[] value)
+        public static explicit operator short[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out short[] v) ? v : throw CannotCast<short[]>();
         }
 
         /// <summary>
         /// Converts a ushort[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a ushort[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(ushort[] value)
+        public static explicit operator ushort[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out ushort[] v) ? v : throw CannotCast<ushort[]>();
         }
 
         /// <summary>
         /// Converts a int[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a int[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(int[] value)
+        public static explicit operator int[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out int[] v) ? v : throw CannotCast<int[]>();
         }
 
         /// <summary>
         /// Converts a uint[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a uint[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(uint[] value)
+        public static explicit operator uint[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out uint[] v) ? v : throw CannotCast<uint[]>();
         }
 
         /// <summary>
         /// Converts a long[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a long[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(long[] value)
+        public static explicit operator long[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out long[] v) ? v : throw CannotCast<long[]>();
         }
 
         /// <summary>
         /// Converts a ulong[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a ulong[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(ulong[] value)
+        public static explicit operator ulong[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out ulong[] v) ? v : throw CannotCast<ulong[]>();
         }
 
         /// <summary>
         /// Converts a float[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a float[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(float[] value)
+        public static explicit operator float[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out float[] v) ? v : throw CannotCast<float[]>();
         }
 
         /// <summary>
         /// Converts a double[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a double[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(double[] value)
+        public static explicit operator double[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out double[] v) ? v : throw CannotCast<double[]>();
         }
 
         /// <summary>
         /// Converts a string []value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a string []value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(string[] value)
+        public static explicit operator string[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out string[] v) ? v : throw CannotCast<string[]>();
         }
 
         /// <summary>
         /// Converts a DateTime[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a DateTime[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(DateTime[] value)
+        public static explicit operator DateTime[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out DateTime[] v) ? v : throw CannotCast<DateTime[]>();
         }
 
         /// <summary>
         /// Converts a Uuid[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a Uuid[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(Uuid[] value)
+        public static explicit operator Uuid[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out Uuid[] v) ? v : throw CannotCast<Uuid[]>();
         }
 
         /// <summary>
         /// Converts a byte[][] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a byte[][] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(byte[][] value)
+        public static explicit operator byte[][](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out byte[][] v) ? v : throw CannotCast<byte[][]>();
         }
 
         /// <summary>
         /// Converts a XmlElement[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a XmlElement[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(XmlElement[] value)
+        public static explicit operator XmlElement[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out XmlElement[] v) ? v : throw CannotCast<XmlElement[]>();
         }
 
         /// <summary>
         /// Converts a NodeId[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a NodeId[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(NodeId[] value)
+        public static explicit operator NodeId[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out NodeId[] v) ? v : throw CannotCast<NodeId[]>();
         }
 
         /// <summary>
         /// Converts a ExpandedNodeId[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a ExpandedNodeId[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(ExpandedNodeId[] value)
+        public static explicit operator ExpandedNodeId[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out ExpandedNodeId[] v) ? v : throw CannotCast<ExpandedNodeId[]>();
         }
 
         /// <summary>
         /// Converts a StatusCode[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a StatusCode[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(StatusCode[] value)
+        public static explicit operator StatusCode[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out StatusCode[] v) ? v : throw CannotCast<StatusCode[]>();
         }
 
         /// <summary>
         /// Converts a QualifiedName[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a QualifiedName[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(QualifiedName[] value)
+        public static explicit operator QualifiedName[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out QualifiedName[] v) ? v : throw CannotCast<QualifiedName[]>();
         }
 
         /// <summary>
         /// Converts a LocalizedText[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a LocalizedText[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(LocalizedText[] value)
+        public static explicit operator LocalizedText[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out LocalizedText[] v) ? v : throw CannotCast<LocalizedText[]>();
         }
 
         /// <summary>
         /// Converts a ExtensionObject[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a ExtensionObject[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(ExtensionObject[] value)
+        public static explicit operator ExtensionObject[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out ExtensionObject[] v) ? v : throw CannotCast<ExtensionObject[]>();
         }
 
         /// <summary>
         /// Converts a DataValue[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a DataValue[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(DataValue[] value)
+        public static explicit operator DataValue[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out DataValue[] v) ? v : throw CannotCast<DataValue[]>();
         }
 
         /// <summary>
         /// Converts a Variant[] value to an Variant object.
         /// </summary>
-        /// <remarks>
-        /// Converts a Variant[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(Variant[] value)
+        public static explicit operator Variant[](Variant value)
         {
-            return new Variant(value);
+            return value.TryGet(out Variant[] v) ? v : throw CannotCast<Variant[]>();
         }
 
         /// <summary>
-        /// Converts an object[] value to an Variant object.
-        /// </summary>
-        /// <remarks>
-        /// Converts an object[] value to an Variant object.
-        /// </remarks>
-        public static implicit operator Variant(object[] value)
-        {
-            return new Variant(value);
-        }
-
-        /// <summary>
-        /// Determines if the specified object is equal to the object.
-        /// Implements <see cref="IEquatable{Variant}.Equals(Variant)"/>.
-        /// </summary>
-        public readonly bool Equals(Variant other)
-        {
-            return CoreUtils.IsEqual(Value, other.Value);
-        }
-
-        /// <summary>
-        /// Determines if the specified object is equal to the object.
-        /// </summary>
-        /// <remarks>
-        /// Determines if the specified object is equal to the object.
-        /// </remarks>
-        public override readonly bool Equals(object obj)
-        {
-            var variant = obj as Variant?;
-
-            if (variant != null)
-            {
-                return CoreUtils.IsEqual(Value, variant.Value.Value);
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Returns a unique hashcode for the object.
-        /// </summary>
-        public override readonly int GetHashCode()
-        {
-            if (Value != null)
-            {
-                return Value.GetHashCode();
-            }
-
-            return 0;
-        }
-
-        /// <summary>
-        /// Converts the value to a human readable string.
-        /// </summary>
-        public override readonly string ToString()
-        {
-            return ToString(null, null);
-        }
-
-        /// <summary>
-        /// Initializes the object with a bool value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="bool"/> value.
-        /// </remarks>
+        /// </summary>
         /// <param name="value">The <see cref="bool"/> value to set
         /// this Variant to</param>
-        public Variant Set(bool value)
+        public static Variant From(bool value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a sbyte value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="sbyte"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="sbyte"/> value to set this Variant to</param>
-        public Variant Set(sbyte value)
+        /// </summary>
+        /// <param name="value">The <see cref="sbyte"/> value to set
+        /// this Variant to</param>
+        public static Variant From(sbyte value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a byte value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="byte"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="byte"/> value to set this Variant to</param>
-        public Variant Set(byte value)
+        /// </summary>
+        /// <param name="value">The <see cref="byte"/> value to set
+        /// this Variant to</param>
+        public static Variant From(byte value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a short value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="short"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="short"/> value to set this Variant to</param>
-        public Variant Set(short value)
+        /// </summary>
+        /// <param name="value">The <see cref="short"/> value to set
+        /// this Variant to</param>
+        public static Variant From(short value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a ushort value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="ushort"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="ushort"/> value to set this Variant to</param>
-        public Variant Set(ushort value)
+        /// </summary>
+        /// <param name="value">The <see cref="ushort"/> value to set
+        /// this Variant to</param>
+        public static Variant From(ushort value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with an int value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="int"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="int"/> value to set this Variant to</param>
-        public Variant Set(int value)
+        /// </summary>
+        /// <param name="value">The <see cref="int"/> value to set
+        /// this Variant to</param>
+        public static Variant From(int value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a uint value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="uint"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="uint"/> value to set this Variant to</param>
-        public Variant Set(uint value)
+        /// </summary>
+        /// <param name="value">The <see cref="uint"/> value to set
+        /// this Variant to</param>
+        public static Variant From(uint value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a long value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="long"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="long"/> value to set this Variant to</param>
-        public Variant Set(long value)
+        /// </summary>
+        /// <param name="value">The <see cref="long"/> value to set
+        /// this Variant to</param>
+        public static Variant From(long value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a ulong value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="ulong"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="ulong"/> value to set this Variant to</param>
-        public Variant Set(ulong value)
+        /// </summary>
+        /// <param name="value">The <see cref="ulong"/> value to set
+        /// this Variant to</param>
+        public static Variant From(ulong value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a float value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="float"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="float"/> value to set this Variant to</param>
-        public Variant Set(float value)
+        /// </summary>
+        /// <param name="value">The <see cref="float"/> value to set
+        /// this Variant to</param>
+        public static Variant From(float value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a double value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="double"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="double"/> value to set this Variant to</param>
-        public Variant Set(double value)
+        /// </summary>
+        /// <param name="value">The <see cref="double"/> value to set
+        /// this Variant to</param>
+        public static Variant From(double value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a string value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="string"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="string"/> value to set this Variant to</param>
-        public Variant Set(string value)
+        /// </summary>
+        /// <param name="value">The <see cref="string"/> value to set
+        /// this Variant to</param>
+        public static Variant From(string value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a DateTime value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="DateTime"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="DateTime"/> value to set this Variant to</param>
-        public Variant Set(DateTime value)
+        /// </summary>
+        /// <param name="value">The <see cref="DateTime"/> value to set
+        /// this Variant to</param>
+        public static Variant From(DateTime value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a Uuid value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="Uuid"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="Uuid"/> value to set this Variant to</param>
-        public Variant Set(Uuid value)
+        /// </summary>
+        /// <param name="value">The <see cref="Uuid"/> value to set
+        /// this Variant to</param>
+        public static Variant From(Uuid value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a byte[] value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="byte"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="byte"/>-array value to set this Variant to</param>
-        public Variant Set(byte[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="byte"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(byte[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a XmlElement value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="XmlElement"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="XmlElement"/> value to set this Variant to</param>
-        public Variant Set(XmlElement value)
+        /// </summary>
+        /// <param name="value">The <see cref="XmlElement"/> value to set
+        /// this Variant to</param>
+        public static Variant From(XmlElement value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a NodeId value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="NodeId"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="NodeId"/> value to set this Variant to</param>
-        public Variant Set(NodeId value)
+        /// </summary>
+        /// <param name="value">The <see cref="NodeId"/> value to set
+        /// this Variant to</param>
+        public static Variant From(NodeId value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a ExpandedNodeId value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="ExpandedNodeId"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="ExpandedNodeId"/> value to set this Variant to</param>
-        public Variant Set(ExpandedNodeId value)
+        /// </summary>
+        /// <param name="value">The <see cref="ExpandedNodeId"/> value to
+        /// set this Variant to</param>
+        public static Variant From(ExpandedNodeId value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a StatusCode value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="StatusCode"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="StatusCode"/> value to set this Variant to</param>
-        public Variant Set(StatusCode value)
+        /// </summary>
+        /// <param name="value">The <see cref="StatusCode"/> value to set
+        /// this Variant to</param>
+        public static Variant From(StatusCode value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a QualifiedName value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="QualifiedName"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="QualifiedName"/> value to set this Variant to</param>
-        public Variant Set(QualifiedName value)
+        /// </summary>
+        /// <param name="value">The <see cref="QualifiedName"/> value to set
+        /// this Variant to</param>
+        public static Variant From(QualifiedName value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a LocalizedText value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="LocalizedText"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="LocalizedText"/> value to set this Variant to</param>
-        public Variant Set(LocalizedText value)
+        /// </summary>
+        /// <param name="value">The <see cref="LocalizedText"/> value to set
+        /// this Variant to</param>
+        public static Variant From(LocalizedText value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a ExtensionObject value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="ExtensionObject"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="ExtensionObject"/> value to set this Variant to</param>
-        public Variant Set(ExtensionObject value)
+        /// </summary>
+        /// <param name="value">The <see cref="ExtensionObject"/> value to set
+        /// this Variant to</param>
+        public static Variant From(ExtensionObject value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a DataValue value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="DataValue"/> value.
-        /// </remarks>
-        /// <param name="value">The <see cref="DataValue"/> value to set this Variant to</param>
-        public Variant Set(DataValue value)
+        /// </summary>
+        /// <param name="value">The <see cref="DataValue"/> value to set
+        /// this Variant to</param>
+        public static Variant From(DataValue value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a bool array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="bool"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="bool"/>-array value to set this Variant to</param>
-        public Variant Set(bool[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="bool"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(bool[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a sbyte array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="sbyte"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="sbyte"/>-array value to set this Variant to</param>
-        public Variant Set(sbyte[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="sbyte"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(sbyte[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a short array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="short"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="short"/>-array value to set this Variant to</param>
-        public Variant Set(short[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="short"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(short[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a ushort array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="ushort"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="ushort"/>-array value to set this Variant to</param>
-        public Variant Set(ushort[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="ushort"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(ushort[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with an int array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="int"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="int"/>-array value to set this Variant to</param>
-        public Variant Set(int[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="int"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(int[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a uint array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="uint"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="uint"/>-array value to set this Variant to</param>
-        public Variant Set(uint[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="uint"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(uint[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a long array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="long"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="long"/>-array value to set this Variant to</param>
-        public Variant Set(long[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="long"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(long[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a ulong array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="ulong"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="ulong"/>-array value to set this Variant to</param>
-        public Variant Set(ulong[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="ulong"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(ulong[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a float array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="float"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="float"/>-array value to set this Variant to</param>
-        public Variant Set(float[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="float"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(float[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a double array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="double"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="double"/>-array value to set this Variant to</param>
-        public Variant Set(double[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="double"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(double[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a string array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="string"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="string"/>-array value to set this Variant to</param>
-        public Variant Set(string[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="string"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(string[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a DateTime array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="DateTime"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="DateTime"/>-array value to set this Variant to</param>
-        public Variant Set(DateTime[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="DateTime"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(DateTime[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a Uuid array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="Uuid"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="Uuid"/>-array value to set this Variant to</param>
-        public Variant Set(Uuid[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="Uuid"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(Uuid[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a byte[] array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a 2-d <see cref="byte"/>-array value.
-        /// </remarks>
-        /// <param name="value">The 2-d <see cref="byte"/>-array value to set this Variant to</param>
-        public Variant Set(byte[][] value)
+        /// </summary>
+        /// <param name="value">The 2-d <see cref="byte"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(byte[][] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a XmlElement array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="XmlElement"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="XmlElement"/>-array value to set this Variant to</param>
-        public Variant Set(XmlElement[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="XmlElement"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(XmlElement[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a NodeId array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="NodeId"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="NodeId"/>-array value to set this Variant to</param>
-        public Variant Set(NodeId[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="NodeId"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(NodeId[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a ExpandedNodeId array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="ExpandedNodeId"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="ExpandedNodeId"/>-array value to set this Variant to</param>
-        public Variant Set(ExpandedNodeId[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="ExpandedNodeId"/>-array value to
+        /// set this Variant to</param>
+        public static Variant From(ExpandedNodeId[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a StatusCode array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="StatusCode"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="StatusCode"/>-array value to set this Variant to</param>
-        public Variant Set(StatusCode[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="StatusCode"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(StatusCode[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a QualifiedName array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="QualifiedName"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="QualifiedName"/>-array value to set this Variant to</param>
-        public Variant Set(QualifiedName[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="QualifiedName"/>-array value to
+        /// set this Variant to</param>
+        public static Variant From(QualifiedName[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a LocalizedText array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="LocalizedText"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="LocalizedText"/>-array value to set this Variant to</param>
-        public Variant Set(LocalizedText[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="LocalizedText"/>-array value to
+        /// set this Variant to</param>
+        public static Variant From(LocalizedText[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a ExtensionObject array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="ExtensionObject"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="ExtensionObject"/>-array value to set this Variant to</param>
-        public Variant Set(ExtensionObject[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="ExtensionObject"/>-array value to
+        /// set this Variant to</param>
+        public static Variant From(ExtensionObject[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a DataValue array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="DataValue"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="DataValue"/>-array value to set this Variant to</param>
-        public Variant Set(DataValue[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="DataValue"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(DataValue[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with a Variant array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with a <see cref="Variant"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="Variant"/>-array value to set this Variant to</param>
-        public Variant Set(Variant[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="Variant"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(Variant[] value)
         {
             return new Variant(value);
         }
 
         /// <summary>
-        /// Initializes the object with an object array value.
-        /// </summary>
-        /// <remarks>
         /// Initializes the object with an <see cref="object"/>-array value.
-        /// </remarks>
-        /// <param name="value">The <see cref="object"/>-array value to set this Variant to</param>
-        public Variant Set(object[] value)
+        /// </summary>
+        /// <param name="value">The <see cref="object"/>-array value to set
+        /// this Variant to</param>
+        public static Variant From(object[] value)
         {
             return new Variant(value);
         }
@@ -2226,13 +3723,13 @@ namespace Opc.Ua
         /// <summary>
         /// Formats a value as a string.
         /// </summary>
-        private readonly void AppendFormat(
+        private void AppendFormat(
             StringBuilder buffer,
             object value,
             IFormatProvider formatProvider)
         {
             // check for null.
-            if (value == null || TypeInfo == null)
+            if (value == null || TypeInfo.IsUnknown)
             {
                 buffer.Append("(null)");
                 return;
@@ -2296,6 +3793,19 @@ namespace Opc.Ua
             buffer.AppendFormat(formatProvider, "{0}", value);
         }
 
+        /// <summary>
+        /// Helper to create a InvalidCastException for type T.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        private static InvalidCastException CannotCast<T>()
+        {
+            return new InvalidCastException(
+                CoreUtils.Format(
+                    "Cannot convert Variant to {1}.",
+                    typeof(T).Name));
+        }
+
         [Conditional("DEBUG")]
         private static void DebugCheck(object value, TypeInfo typeInfo)
         {
@@ -2340,6 +3850,8 @@ namespace Opc.Ua
                         typeInfo.ValueRank));
             }
         }
+
+        private readonly object m_value;
     }
 
     /// <summary>

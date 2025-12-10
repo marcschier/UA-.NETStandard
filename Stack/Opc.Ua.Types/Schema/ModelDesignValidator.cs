@@ -4008,7 +4008,7 @@ namespace Opc.Ua.Schema.Model
 
                     variableType.DecodedValue = decoder.ReadVariantContents(out TypeInfo typeInfo);
 
-                    if (typeInfo != null)
+                    if (!typeInfo.IsUnknown)
                     {
                         variableType.ValueRank = typeInfo.ValueRank == ValueRanks.Scalar ?
                             ValueRank.Scalar :
@@ -4293,7 +4293,7 @@ namespace Opc.Ua.Schema.Model
 
                     variable.DecodedValue = decoder.ReadVariantContents(out TypeInfo typeInfo);
 
-                    if (typeInfo != null)
+                    if (!typeInfo.IsUnknown)
                     {
                         variable.ValueRank = typeInfo.ValueRank == ValueRanks.Scalar ? ValueRank.Scalar : ValueRank.Array;
                         variable.ValueRankSpecified = true;

@@ -776,7 +776,7 @@ namespace Opc.Ua.SourceGeneration
                 return "null";
             }
 
-            TypeInfo decodedValueType = null;
+            TypeInfo decodedValueType = default;
 
             if (decodedValue == null && defaultValue != null)
             {

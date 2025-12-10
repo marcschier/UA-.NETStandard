@@ -50,17 +50,18 @@ namespace Opc.Ua
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The StatusCode is defined in <b>OPC UA Specifications Part 4: Services,
-    /// section 7.22</b> titled <b>StatusCode</b>.<br/>
+    /// The StatusCode is defined in <b>OPC UA Specifications Part 4: Services, section
+    /// 7.22</b> titled <b>StatusCode</b>.<br/>
     /// <br/></para>
     /// <para>
-    /// A numeric code that is used to describe the result of a service or operation. The
-    /// StatusCode uses bit-assignments, which are described below.
+    /// A numeric code that is used to describe the result of a service or operation.
+    /// The StatusCode uses bit-assignments, which are described below.
     /// <br/></para>
     /// <para>
-    /// The StatusCode is a 32-bit number, with the top 16-bits (high word) representing the
-    /// numeric value of an error or condition, whereas the bottom 16-bits (low word) represents
-    /// additional flags to provide more information on the meaning of the status code.
+    /// The StatusCode is a 32-bit number, with the top 16-bits (high word) representing
+    /// the numeric value of an error or condition, whereas the bottom 16-bits (low word)
+    /// represents additional flags to provide more information on the meaning of the
+    /// status code.
     /// <br/></para>
     /// <para>
     /// The following list shows the bit-assignments, i.e. 0-7 means bit 0 to bit 7.
@@ -74,8 +75,8 @@ namespace Opc.Ua
     ///         <item>Binary Representation <b>00</b>:<br/>
     ///         The info bits are not used and must be set to zero.</item>
     ///         <item>Binary Representation <b>01</b>:<br/>
-    ///         The status code and its info bits are associated with a data value returned
-    ///         from the Server.</item>
+    ///         The status code and its info bits are associated with a data value
+    ///         returned from the Server.</item>
     ///         <item>Binary Representation <b>10</b> or <b>11</b>:<br/>
     ///         Reserved for future use. The info bits must be ignored.</item>
     ///     </list>
@@ -84,18 +85,19 @@ namespace Opc.Ua
     /// Reserved for future use. Must always be zero.</item>
     /// <item><b>14</b>:
     /// Indicates that the semantics of the associated data value have changed. Clients
-    /// should not process the data value until they re-read the metadata associated with
-    /// the Variable.
+    /// should not process the data value until they re-read the metadata associated
+    /// with the Variable.
     /// Servers should set this bit if the metadata has changed in way that could case
     /// application errors if the Client does not re-read the metadata.
-    /// For example, a change to the engineering units could create problems if the Client
-    /// uses the value to perform calculations.
-    /// [UA Part 8] defines the conditions where a Server must set this bit for a DA Variable.
-    /// Other specifications may define additional conditions. A Server may define
-    /// other conditions that cause this bit to be set.
+    /// For example, a change to the engineering units could create problems if the
+    /// Client uses the value to perform calculations.
+    /// [UA Part 8] defines the conditions where a Server must set this bit for a DA
+    /// Variable. Other specifications may define additional conditions. A Server may
+    /// define other conditions that cause this bit to be set.
     /// This bit only has meaning for status codes returned as part of a data change
     /// Notification.
-    /// Status codes used in other contexts must always set this bit to zero.</item>
+    /// Status codes used in other contexts must always set this bit to zero.
+    /// </item>
     /// <item><b>15</b>:<br/>
     /// Indicates that the structure of the associated data value has changed since
     /// the last Notification.
@@ -163,7 +165,8 @@ namespace Opc.Ua
             {
                 SymbolicId = null;
             }
-            Code = code; // Set code again which could be containing more than code bits
+            // Set code again which could be containing more than code bits
+            Code = code;
         }
 
         /// <summary>
@@ -185,7 +188,8 @@ namespace Opc.Ua
                     string.Intern(symbolicId) :
                     null;
             }
-            Code = code; // Set code again which could be containing more than code bits
+            // Set code again which could be containing more than code bits
+            Code = code;
         }
 
         /// <summary>
@@ -197,8 +201,8 @@ namespace Opc.Ua
         /// otherwise the value passed in will be used.
         /// </remarks>
         /// <param name="e">The exception to convert to a status code</param>
-        /// <param name="defaultCode">The default code to apply if the routine cannot
-        /// determine the code from the Exception</param>
+        /// <param name="defaultCode">The default code to apply if the routine
+        /// cannot determine the code from the Exception</param>
         /// <param name="symbolicId">The optional symbol</param>
         public StatusCode(Exception e, uint defaultCode, string symbolicId)
         {
@@ -335,7 +339,8 @@ namespace Opc.Ua
         public bool StructureChanged => (Code & kStructureChangedBit) != 0;
 
         /// <summary>
-        /// Returns a copy of the status code with the StructureChanged bit set.
+        /// Returns a copy of the status code with the StructureChanged bit
+        /// set.
         /// </summary>
         /// <param name="structureChanged">The value for the StructureChanged
         /// bit.</param>
@@ -544,7 +549,8 @@ namespace Opc.Ua
                 return string.Format(formatProvider, "0x{0:X8}", Code);
             }
 
-            throw new FormatException(CoreUtils.Format("Invalid format string: '{0}'.", format));
+            throw new FormatException(
+                CoreUtils.Format("Invalid format string: '{0}'.", format));
         }
 
         /// <inheritdoc/>
@@ -751,7 +757,8 @@ namespace Opc.Ua
         /// <summary>
         /// Looks up the Utf8 encoded symbolic name for a status code.
         /// </summary>
-        /// <param name="code">The numeric error-code to convert to a textual description</param>
+        /// <param name="code">The numeric error-code to convert to a textual
+        /// description</param>
         public static byte[] LookupUtf8SymbolicId(uint code)
         {
             return TryGetInternedStatusCode(code, out StatusCode s) ?
@@ -904,7 +911,8 @@ namespace Opc.Ua
         Interpolated = 0x02,
 
         /// <summary>
-        /// A mask that selects the bit which identify the source of the value (raw, calculated, interpolated).
+        /// A mask that selects the bit which identify the source of the
+        /// value (raw, calculated, interpolated).
         /// </summary>
         DataSourceMask = Calculated | Interpolated,
 
@@ -919,7 +927,8 @@ namespace Opc.Ua
         ExtraData = 0x08,
 
         /// <summary>
-        /// Multiple values match the aggregate criteria (i.e. multiple minimum values at different timestamps within the same interval)
+        /// Multiple values match the aggregate criteria (i.e. multiple minimum
+        /// values at different timestamps within the same interval)
         /// </summary>
         MultipleValues = 0x10
     }
@@ -933,29 +942,18 @@ namespace Opc.Ua
         ItemName = "StatusCode")]
     public class StatusCodeCollection : List<StatusCode>, ICloneable
     {
-        /// <summary>
-        /// Initializes an empty collection.
-        /// </summary>
-        /// <remarks>
-        /// Initializes an empty collection.
-        /// </remarks>
+        /// <inheritdoc/>
         public StatusCodeCollection()
         {
         }
 
-        /// <summary>
-        /// Initializes the collection from another collection.
-        /// </summary>
-        /// <param name="collection">The collection to copy</param>
+        /// <inheritdoc/>
         public StatusCodeCollection(IEnumerable<StatusCode> collection)
             : base(collection)
         {
         }
 
-        /// <summary>
-        /// Initializes the collection with the specified capacity.
-        /// </summary>
-        /// <param name="capacity">The maximum capacity allowed for this instance of the collection</param>
+        /// <inheritdoc/>
         public StatusCodeCollection(int capacity)
             : base(capacity)
         {
@@ -964,8 +962,10 @@ namespace Opc.Ua
         /// <summary>
         /// Converts an array to a collection.
         /// </summary>
-        /// <param name="values">The array of <see cref="StatusCode"/> values to return as a Collection</param>
-        public static StatusCodeCollection ToStatusCodeCollection(StatusCode[] values)
+        /// <param name="values">The array of <see cref="StatusCode"/>
+        /// values to return as a Collection</param>
+        public static StatusCodeCollection ToStatusCodeCollection(
+            StatusCode[] values)
         {
             if (values != null)
             {
@@ -978,8 +978,8 @@ namespace Opc.Ua
         /// <summary>
         /// Converts an array to a collection.
         /// </summary>
-        /// <param name="values">The array of <see cref="StatusCode"/> values to return as a Collection</param>
-        public static implicit operator StatusCodeCollection(StatusCode[] values)
+        public static implicit operator StatusCodeCollection(
+            StatusCode[] values)
         {
             return ToStatusCodeCollection(values);
         }

@@ -63,7 +63,7 @@ namespace Opc.Ua
         public ServiceResultException(Exception e, StatusCode defaultCode)
             : base(e.Message, e)
         {
-            Result = ServiceResult.Create(e, defaultCode, string.Empty);
+            Result = ServiceResult.Create(e, defaultCode, defaultCode.SymbolicId);
         }
 
         /// <summary>

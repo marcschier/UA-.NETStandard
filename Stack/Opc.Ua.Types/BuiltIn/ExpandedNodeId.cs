@@ -197,9 +197,11 @@ namespace Opc.Ua
             string namespaceUri = null,
             uint serverIndex = 0)
         {
-            NamespaceUri = null;
-            ServerIndex = 0;
-            InnerNodeId = new NodeId(value, namespaceIndex);
+            NamespaceUri = namespaceUri;
+            ServerIndex = serverIndex;
+            InnerNodeId = new NodeId(
+                value,
+                string.IsNullOrEmpty(namespaceUri) ? namespaceIndex : (ushort)0);
         }
 
         /// <summary>
@@ -1457,29 +1459,6 @@ namespace Opc.Ua
             }
 
             return clone;
-        }
-    }
-
-    /// <summary>
-    /// Node id comparer
-    /// </summary>
-    internal class ExpandedNodeIdComparer : IEqualityComparer<ExpandedNodeId>
-    {
-        /// <summary>
-        /// Get singleton comparer
-        /// </summary>
-        public static ExpandedNodeIdComparer Instance { get; } = new();
-
-        /// <inheritdoc/>
-        public bool Equals(ExpandedNodeId x, ExpandedNodeId y)
-        {
-            return x == y;
-        }
-
-        /// <inheritdoc/>
-        public int GetHashCode(ExpandedNodeId obj)
-        {
-            return obj.GetHashCode();
         }
     }
 

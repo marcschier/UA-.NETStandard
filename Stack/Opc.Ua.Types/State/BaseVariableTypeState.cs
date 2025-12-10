@@ -678,7 +678,7 @@ namespace Opc.Ua
                 context.NamespaceUris,
                 context.TypeTable);
 
-            if (typeInfo == null || typeInfo == TypeInfo.Unknown)
+            if (typeInfo.IsUnknown)
             {
                 return StatusCodes.BadTypeMismatch;
             }

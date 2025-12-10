@@ -1979,7 +1979,7 @@ namespace Opc.Ua
                 context.NamespaceUris,
                 context.TypeTable);
 
-            if (typeInfo == null || typeInfo == TypeInfo.Unknown)
+            if (typeInfo.IsUnknown)
             {
                 //if xml element data decoding error appeared : a value of type status code is received with the error code
                 if (DataTypeIds.XmlElement == m_dataType)
@@ -1990,7 +1990,7 @@ namespace Opc.Ua
                         -1,
                         context.NamespaceUris,
                         context.TypeTable);
-                    if (statusCodeTypeInfo != null)
+                    if (!statusCodeTypeInfo.IsUnknown)
                     {
                         //the error code
                         return (StatusCode)(uint)value;
