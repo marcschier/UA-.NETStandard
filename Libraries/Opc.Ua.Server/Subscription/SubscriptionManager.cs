@@ -2222,7 +2222,7 @@ namespace Opc.Ua.Server
                     "Server - {Count} Subscriptions scheduled for delete.",
                     subscriptionsToDelete.Count);
 
-                Task.Run(
+                _ = Task.Run(
                     () => CleanupSubscriptionsCore(server, subscriptionsToDelete, logger));
             }
         }

@@ -226,7 +226,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
 
             // Act
             var localizedText = new LocalizedText(mulLocale, jsonText);
-            LocalizedText deepCopy = CoreUtils.Clone(localizedText);
+            LocalizedText deepCopy = CoreUtils.Clone(in localizedText);
 
             //Assert
             Assert.IsTrue(localizedText.IsMultiLanguage, "Should be mul locale");

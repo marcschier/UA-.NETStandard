@@ -273,7 +273,7 @@ namespace Opc.Ua.Bindings
             TcpChannelStateEventHandler stateChanged = m_stateChanged;
             if (stateChanged != null)
             {
-                Task.Run(() => stateChanged?.Invoke(this, state, reason));
+                _ = Task.Run(() => stateChanged?.Invoke(this, state, reason));
             }
         }
 

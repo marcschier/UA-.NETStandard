@@ -4424,7 +4424,7 @@ namespace Opc.Ua.Client
                         notificationMessage,
                         responseHeader.StringTable);
 
-                    Task.Run(() => OnRaisePublishNotification(publishEventHandler, args));
+                    _ = Task.Run(() => OnRaisePublishNotification(publishEventHandler, args));
                 }
             }
             else if (DeleteSubscriptionsOnClose && !Reconnecting && !subscriptionCreationInProgress)
@@ -4434,7 +4434,7 @@ namespace Opc.Ua.Client
                     "Received Publish Response for Unknown SubscriptionId={SubscriptionId}. Deleting abandoned subscription from server.",
                     subscriptionId);
 
-                Task.Run(() => DeleteSubscriptionAsync(subscriptionId));
+                _ = Task.Run(() => DeleteSubscriptionAsync(subscriptionId));
             }
             else
             {

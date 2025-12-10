@@ -394,7 +394,9 @@ namespace Opc.Ua.Client
                     .GetResult();
             }
             subTypeId = GetSuperTypeFromReferences(references);
+#pragma warning disable EPC30 // Method calls itself recursively
             return !subTypeId.IsNullNodeId && IsTypeOf(subTypeId, superTypeId);
+#pragma warning restore EPC30 // Method calls itself recursively
         }
 
         /// <inheritdoc/>

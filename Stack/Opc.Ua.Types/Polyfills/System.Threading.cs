@@ -161,7 +161,7 @@ namespace System.Threading
         /// A disposable structure that is returned by <see cref="EnterScope()"/>,
         /// which when disposed, exits the lock.
         /// </summary>
-        public ref struct Scope(Lock @lock)
+        public readonly ref struct Scope(Lock @lock)
         {
             /// <summary>
             /// Exits the lock.
@@ -175,7 +175,7 @@ namespace System.Threading
             /// The calling thread does not hold the lock.
             /// </exception>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public readonly void Dispose()
+            public void Dispose()
             {
                 @lock.Exit();
             }

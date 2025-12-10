@@ -1280,7 +1280,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
             string result1;
             {
                 System.Buffers.ReadOnlySequence<byte> sequence = memoryStream.GetReadOnlySequence();
-                result1 = Encoding.UTF8.GetString(sequence);
+                result1 = Encoding.UTF8.GetString(in sequence);
                 Assert.IsNotEmpty(result1);
                 TestContext.Out.WriteLine("Result1:");
                 _ = PrettifyAndValidateJson(result1);

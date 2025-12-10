@@ -1188,7 +1188,7 @@ namespace Opc.Ua.Client
             {
                 CoreClientUtils.EventLog.Notification(
                     (int)notification.ClientHandle,
-                    LastValue.WrappedValue);
+                    LastValue.WrappedValue.ToString());
             }
 
             if (m_logger.IsEnabled(LogLevel.Debug))

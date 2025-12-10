@@ -308,7 +308,7 @@ namespace Opc.Ua.Security.Certificates.BouncyCastle
                 GetX9ECParameters(ecParams)
                 ?? throw new ArgumentException(
                     "Curve OID is not recognized ",
-                    ecParams.Curve.Oid.ToString());
+                    ecParams.Curve.Oid.FriendlyName);
 
             Org.BouncyCastle.Math.EC.ECPoint q = curve.Curve.CreatePoint(
                 new BigInteger(1, ecParams.Q.X),

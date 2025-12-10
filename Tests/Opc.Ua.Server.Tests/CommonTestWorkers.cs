@@ -456,7 +456,8 @@ namespace Opc.Ua.Server.Tests
                 {
                     if (result.Targets?.Count > 0)
                     {
-                        TestContext.Out.WriteLine("BrowsePath {0}", result.Targets[0].ToString());
+                        TestContext.Out.WriteLine("BrowsePath {0}",
+                            result.Targets[0].TargetId.ToString());
                     }
                 }
 
@@ -647,10 +648,8 @@ namespace Opc.Ua.Server.Tests
                     var eventNotification = publishResponse.NotificationMessage.NotificationData[0]
                         .Body as EventNotificationList;
                     TestContext.Out.WriteLine(
-                        "Notification: {0} {1} {2}",
+                        "Notification: {0} {1}",
                         publishResponse.NotificationMessage.SequenceNumber,
-                        dataChangeNotification?.MonitoredItems[0].Value.ToString()
-                        ?? eventNotification?.Events[0].Message.ToString(),
                         publishResponse.NotificationMessage.PublishTime);
                 }
 

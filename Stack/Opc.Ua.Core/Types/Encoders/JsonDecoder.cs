@@ -3199,12 +3199,14 @@ namespace Opc.Ua
                         case JsonToken.String:
                             elements.Add(m_reader.Value);
                             break;
+#pragma warning disable EPC30 // Method calls itself recursively
                         case JsonToken.StartArray:
                             elements.Add(ReadArray());
                             break;
                         case JsonToken.StartObject:
                             elements.Add(ReadObject());
                             break;
+#pragma warning restore EPC30 // Method calls itself recursively
                         case JsonToken.None:
                         case JsonToken.StartConstructor:
                         case JsonToken.PropertyName:
@@ -3266,12 +3268,14 @@ namespace Opc.Ua
                                 case JsonToken.String:
                                     fields[name] = m_reader.Value;
                                     break;
+#pragma warning disable EPC30 // Method calls itself recursively
                                 case JsonToken.StartArray:
                                     fields[name] = ReadArray();
                                     break;
                                 case JsonToken.StartObject:
                                     fields[name] = ReadObject();
                                     break;
+#pragma warning restore EPC30 // Method calls itself recursively
                                 case JsonToken.None:
                                 case JsonToken.StartConstructor:
                                 case JsonToken.PropertyName:

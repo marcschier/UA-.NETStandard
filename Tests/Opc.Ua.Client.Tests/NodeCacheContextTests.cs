@@ -234,7 +234,7 @@ namespace Opc.Ua.Client.Tests
                 .Verifiable(Times.Once);
 
             Assert.ThrowsAsync<OperationCanceledException>(
-                async () => await sut.FetchValuesAsync(null, nodeIds, cts.Token).ConfigureAwait(false));
+                async () => _ = await sut.FetchValuesAsync(null, nodeIds, cts.Token).ConfigureAwait(false));
         }
 
         [Test]
@@ -770,7 +770,7 @@ namespace Opc.Ua.Client.Tests
                 .ThrowsAsync(new OperationCanceledException())
                 .Verifiable(Times.Once);
 
-            Assert.ThrowsAsync<OperationCanceledException>(async () => await sut.FetchNodesAsync(
+            Assert.ThrowsAsync<OperationCanceledException>(async () => _ = await sut.FetchNodesAsync(
                 null,
                 nodeIds,
                 NodeClass.Unspecified,
@@ -1058,7 +1058,7 @@ namespace Opc.Ua.Client.Tests
                 .Verifiable(Times.Once);
 
             Assert.ThrowsAsync<OperationCanceledException>(
-                async () => await sut.FetchReferencesAsync(null, nodeIds, cts.Token).ConfigureAwait(false));
+                async () => _ = await sut.FetchReferencesAsync(null, nodeIds, cts.Token).ConfigureAwait(false));
         }
 
         [Test]

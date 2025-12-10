@@ -15,6 +15,7 @@
     <PackageLicenseFile></PackageLicenseFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <NoPackageAnalysis>true</NoPackageAnalysis>
+    <NoErrorProneAnalyzers>true</NoErrorProneAnalyzers>
   </PropertyGroup>
   <PropertyGroup>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>

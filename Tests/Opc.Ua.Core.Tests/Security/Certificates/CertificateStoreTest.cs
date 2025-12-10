@@ -415,7 +415,7 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
             {
                 Assert.False(x509Store.SupportsCRLs);
                 NUnit.Framework.Assert
-                    .Throws<ServiceResultException>(() => x509Store.EnumerateCRLsAsync());
+                    .ThrowsAsync<ServiceResultException>(() => x509Store.EnumerateCRLsAsync());
             }
             else
             {

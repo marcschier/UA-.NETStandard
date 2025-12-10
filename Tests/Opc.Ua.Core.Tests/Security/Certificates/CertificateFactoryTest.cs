@@ -583,7 +583,6 @@ namespace Opc.Ua.Core.Tests.Security.Certificates
             Assert.NotNull(authority.Issuer);
             Assert.AreEqual(cert.IssuerName.RawData, authority.Issuer.RawData);
             Assert.AreEqual(cert.IssuerName.Name, authority.Issuer.Name);
-            Assert.NotNull(authority.ToString());
             Assert.AreEqual(
                 authority.SerialNumber,
                 Utils.ToHexString(authority.GetSerialNumber(), true));

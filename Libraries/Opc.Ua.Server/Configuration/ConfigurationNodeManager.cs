@@ -1035,7 +1035,7 @@ namespace Opc.Ua.Server
                 // all channels and reevaluate sessions, this needs to be implemented in
                 // Transport side presumably.
 
-                Task.Run(async () =>
+                _ = Task.Run(async () =>
                 {
                     m_logger.LogInformation(
                         Utils.TraceMasks.Security,

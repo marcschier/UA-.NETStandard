@@ -4285,7 +4285,7 @@ namespace Opc.Ua
 
             foreach (Variant element in this)
             {
-                clone.Add((Variant)CoreUtils.Clone(element));
+                clone.Add(element);
             }
 
             return clone;

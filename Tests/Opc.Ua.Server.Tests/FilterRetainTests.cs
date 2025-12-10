@@ -274,7 +274,7 @@ namespace Opc.Ua.Server.Tests
                 SelectClauses = GetSelectFields(),
                 WhereClause = GetStateFilter()
             };
-            filter.Validate(filterContext);
+            _ = filter.Validate(filterContext);
 
             MonitoredItem monitoredItem = CreateMonitoredItem(filter, telemetry);
 
@@ -488,7 +488,7 @@ namespace Opc.Ua.Server.Tests
                 filter.SelectClauses = GetSelectFields();
                 filter.WhereClause = GetHighOnlyFilter();
             }
-            filter.Validate(GetFilterContext(telemetry));
+            _ = filter.Validate(GetFilterContext(telemetry));
             return filter;
         }
 
