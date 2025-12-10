@@ -233,7 +233,7 @@ namespace MemoryBuffer
                     return StatusCodes.BadOutOfService;
                 }
 
-                value = GetValueAtOffset(offset).Value;
+                value = GetValueAtOffset(offset).AsBoxedObject();
             }
 
             statusCode = StatusCodes.Good;

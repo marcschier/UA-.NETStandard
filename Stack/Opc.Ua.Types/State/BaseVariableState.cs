@@ -312,7 +312,7 @@ namespace Opc.Ua
 
                     for (int ii = 0; ii < variants.Count; ii++)
                     {
-                        objects[ii] = variants[ii].Value;
+                        objects[ii] = variants[ii].AsBoxedObject();
                     }
 
                     return objects;

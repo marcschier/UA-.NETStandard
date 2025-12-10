@@ -84,7 +84,8 @@ namespace Opc.Ua
     /// Helper to compare arrays for deep equality
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public sealed class SequenceEqualityComparer<T> : EqualityComparer<T[]> where T : IEquatable<T>
+    public sealed class SequenceEqualityComparer<T> : EqualityComparer<T[]>
+        where T : unmanaged, IEquatable<T>
     {
         /// <inheritdoc/>
         public override bool Equals(T[] x, T[] y)

@@ -2881,10 +2881,17 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                                             case FieldTypeEncodingMask.Variant:
                                                 decodedFieldValue = jsonDecoder.ReadVariant(
                                                     field.FieldMetaData.Name);
-                                                Assert.IsNotNull(
-                                                    ((Variant)decodedFieldValue).Value,
+                                                Assert.IsFalse(
+                                                    ((Variant)decodedFieldValue).IsNull,
                                                     "Decoded Field: {0} value should not be null",
                                                     field.FieldMetaData.Name);
+                                                Assert.AreEqual(
+                                                    field.Value.WrappedValue,
+                                                    (Variant)decodedFieldValue,
+                                                    "Decoded Field name: {0} values: encoded Variant {1} - decoded {2}",
+                                                    field.FieldMetaData.Name,
+                                                    field.Value.WrappedValue,
+                                                    dataSetPayload[field.FieldMetaData.Name]);
                                                 Assert.IsTrue(
                                                     Utils.IsEqual(
                                                         field.Value.Value,

@@ -4840,12 +4840,11 @@ namespace Opc.Ua.Client
                         if (ii.Value.TypeInfo == TypeInfo.Scalars.StatusCode)
                         {
                             throw new ServiceResultException(
-                                (uint)(StatusCode)ii.Value.Value,
+                                ii.Value.GetStatusCode(StatusCodes.Bad),
                                 "Server could not provide an ECDHKey. User authentication not possible.");
                         }
 
-                        if (ExtensionObject.ToEncodeable(
-                            ii.Value.Value as ExtensionObject) is not EphemeralKeyType key)
+                        if (ExtensionObject.ToEncodeable(ii.Value.GetExtensionObject()) is not EphemeralKeyType key)
                         {
                             throw new ServiceResultException(
                                 StatusCodes.BadDecodingError,

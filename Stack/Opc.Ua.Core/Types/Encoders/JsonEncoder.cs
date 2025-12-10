@@ -1530,7 +1530,7 @@ namespace Opc.Ua
             bool isNull =
                 value.TypeInfo.IsUnknown ||
                 value.TypeInfo.BuiltInType == BuiltInType.Null ||
-                value.Value == null;
+                value.IsNull;
 
             if (EncodingToUse is JsonEncodingType.Compact or JsonEncodingType.Verbose)
             {
@@ -1622,7 +1622,7 @@ namespace Opc.Ua
                 bool isNull =
                     value.TypeInfo.IsUnknown ||
                     value.TypeInfo.BuiltInType == BuiltInType.Null ||
-                    value.Value == null;
+                    value.IsNull;
 
                 if (!isNull)
                 {

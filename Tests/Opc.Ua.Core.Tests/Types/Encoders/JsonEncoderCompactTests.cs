@@ -1639,7 +1639,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
             Variant v1 = decoder.ReadVariant("D1");
             Assert.AreEqual(v1.TypeInfo.BuiltInType, BuiltInType.ExtensionObject);
 
-            eo = v1.Value as ExtensionObject;
+            eo = v1.GetExtensionObject();
             Assert.IsNotNull(eo);
             Assert.AreEqual(
                 Gds.DataTypeIds.ApplicationRecordDataType.ToString(),
@@ -1761,7 +1761,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
             Variant v1 = decoder.ReadVariant("D1");
             Assert.AreEqual(v1.TypeInfo.BuiltInType, BuiltInType.ExtensionObject);
 
-            eo = v1.Value as ExtensionObject;
+            eo = v1.GetExtensionObject();
             Assert.IsNotNull(eo);
             Assert.AreEqual(
                 Gds.DataTypeIds.ApplicationRecordDataType.ToString(),
@@ -1884,7 +1884,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
             Variant v1 = decoder.ReadVariant("D1");
             Assert.AreEqual(v1.TypeInfo.BuiltInType, BuiltInType.ExtensionObject);
 
-            eo = v1.Value as ExtensionObject;
+            eo = v1.GetExtensionObject();
             Assert.IsNotNull(eo);
             Assert.AreEqual(
                 Gds.DataTypeIds.ApplicationRecordDataType.ToString(),

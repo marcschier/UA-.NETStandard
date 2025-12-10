@@ -304,7 +304,7 @@ namespace Opc.Ua
         /// <value>The value.</value>
         object IVariableBase.Value
         {
-            get => Value.Value;
+            get => Value.AsBoxedObject();
             set => Value = new Variant(value);
         }
 
@@ -378,7 +378,7 @@ namespace Opc.Ua
                     return AccessLevelEx;
                 // values are copied when the are written so then can be safely returned.
                 case Attributes.Value:
-                    return Value.Value;
+                    return Value.AsBoxedObject();
                 // array dimensions attribute is not support if it is empty.
                 case Attributes.ArrayDimensions:
                     if (m_arrayDimensions == null || m_arrayDimensions.Count == 0)

@@ -713,9 +713,9 @@ namespace Opc.Ua.PubSub.Encoding
                 foreach (DataSetReaderDataType dataSetReader in dataSetReaders)
                 {
                     //check Enabled & publisher id
-                    if (dataSetReader.PublisherId.Value == null ||
+                    if (dataSetReader.PublisherId.IsNull ||
                         (PublisherId != null &&
-                            PublisherId.Equals(dataSetReader.PublisherId.Value)))
+                            PublisherId.Equals(dataSetReader.PublisherId.AsBoxedObject()))) // TODO: Make PublisherId field a Variant to avoid boxing
                     {
                         dataSetReadersFiltered.Add(dataSetReader);
                     }

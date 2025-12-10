@@ -1507,7 +1507,7 @@ namespace Quickstarts
                         {
                             try
                             {
-                                var currentTime = (DateTime)field.Value;
+                                var currentTime = field.GetDateTime();
                                 TimeSpan timeSpan = currentTime - m_lastEventTime;
                                 m_lastEventTime = currentTime;
                                 m_processedEvents++;
@@ -1536,7 +1536,7 @@ namespace Quickstarts
                             "\tField [{Index}] \"{Name}\" = [{Value}]",
                             entry.Key,
                             fieldName,
-                            field.Value);
+                            field);
                     }
                 }
             }

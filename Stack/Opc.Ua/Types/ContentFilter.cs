@@ -756,7 +756,7 @@ namespace Opc.Ua
 
                     if (operands.Count > 1 && operands[1] is LiteralOperand literalOperand)
                     {
-                        if (literalOperand.Value.Value is not NodeId nodeIdValue)
+                        if (!literalOperand.Value.TryGet(out NodeId nodeIdValue))
                         {
                             nodeIdValue = default;
                         }
@@ -1226,7 +1226,7 @@ namespace Opc.Ua
         /// <returns>The result of the validation</returns>
         public override ServiceResult Validate(IFilterContext context, int index)
         {
-            if (m_value.Value == null)
+            if (m_value.IsNull)
             {
                 return ServiceResult.Create(
                     StatusCodes.BadEventFilterInvalid,
@@ -1243,9 +1243,9 @@ namespace Opc.Ua
         /// <returns>LiteralOperand as a displayable string.</returns>
         public override string ToString(INodeTable nodeTable)
         {
-            if (Value.Value is not NodeId nodeId)
+            if (!Value.TryGet(out NodeId nodeId))
             {
-                if (Value.Value is ExpandedNodeId expandedNodeId)
+                if (Value.TryGet(out ExpandedNodeId expandedNodeId))
                 {
                     nodeId = (NodeId)expandedNodeId;
                 }

@@ -836,7 +836,7 @@ namespace Opc.Ua.Client
                     }
 
                     // ignore event type id when matching null browse paths.
-                    return eventFields.EventFields[ii].Value;
+                    return eventFields.EventFields[ii].AsBoxedObject();
                 }
 
                 // match browse path.
@@ -872,7 +872,7 @@ namespace Opc.Ua.Client
                 }
 
                 // return value.
-                return eventFields.EventFields[ii].Value;
+                return eventFields.EventFields[ii].AsBoxedObject();
             }
 
             // no event type in event field list.
@@ -975,8 +975,7 @@ namespace Opc.Ua.Client
             }
 
             if (ExtensionObject.ToEncodeable(
-                    eventFields.EventFields[index].Value as ExtensionObject)
-                is not StatusResult status)
+                eventFields.EventFields[index].GetExtensionObject()) is not StatusResult status)
             {
                 return null;
             }

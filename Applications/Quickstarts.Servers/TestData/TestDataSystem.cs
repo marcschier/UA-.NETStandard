@@ -242,7 +242,7 @@ namespace TestData
                         return m_generator.GetRandom<StatusCode>(false);
                     case Variables.ScalarValueObjectType_VariantValue:
                     case Variables.UserScalarValueObjectType_VariantValue:
-                        return m_generator.GetRandomVariant(false).Value;
+                        return m_generator.GetRandomVariant(false).AsBoxedObject();
                     case Variables.ScalarValueObjectType_StructureValue:
                         return GetRandomStructure();
                     case Variables.ScalarValueObjectType_EnumerationValue:

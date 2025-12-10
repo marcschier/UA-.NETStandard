@@ -99,14 +99,14 @@ namespace Opc.Ua.Schema.Model
         public bool Equals(ListOfChildren other)
         {
             return other is not null &&
-                SequenceEqualityComparer<InstanceDesign>.Default.Equals(Items, other.Items);
+                ArrayEqualityComparer<InstanceDesign>.Default.Equals(Items, other.Items);
         }
 
         /// <inheritdoc/>
         public override int GetHashCode()
         {
             var hash = new HashCode();
-            hash.Add(Items, SequenceEqualityComparer<InstanceDesign>.Default);
+            hash.Add(Items, ArrayEqualityComparer<InstanceDesign>.Default);
             return hash.ToHashCode();
         }
 
@@ -135,7 +135,7 @@ namespace Opc.Ua.Schema.Model
         public bool Equals(RolePermissionSet other)
         {
             return other is not null &&
-                SequenceEqualityComparer<RolePermission>.Default.Equals(RolePermission, other.RolePermission) &&
+                ArrayEqualityComparer<RolePermission>.Default.Equals(RolePermission, other.RolePermission) &&
                 Name == other.Name &&
                 DoNotInheirit == other.DoNotInheirit;
         }
@@ -144,7 +144,7 @@ namespace Opc.Ua.Schema.Model
         public override int GetHashCode()
         {
             var hash = new HashCode();
-            hash.Add(RolePermission, SequenceEqualityComparer<RolePermission>.Default);
+            hash.Add(RolePermission, ArrayEqualityComparer<RolePermission>.Default);
             hash.Add(Name);
             hash.Add(DoNotInheirit);
             return hash.ToHashCode();
@@ -472,9 +472,9 @@ namespace Opc.Ua.Schema.Model
         public bool Equals(ModelDesign design)
         {
             return
-                SequenceEqualityComparer<Namespace>.Default.Equals(Namespaces, design.Namespaces) &&
-                SequenceEqualityComparer<RolePermissionSet>.Default.Equals(PermissionSets, design.PermissionSets) &&
-                SequenceEqualityComparer<NodeDesign>.Default.Equals(Items, design.Items) &&
+                ArrayEqualityComparer<Namespace>.Default.Equals(Namespaces, design.Namespaces) &&
+                ArrayEqualityComparer<RolePermissionSet>.Default.Equals(PermissionSets, design.PermissionSets) &&
+                ArrayEqualityComparer<NodeDesign>.Default.Equals(Items, design.Items) &&
                 XmlElementArrayStringEqualityComparer.Default.Equals(Extensions, design.Extensions) &&
                 TargetNamespace == design.TargetNamespace &&
                 TargetVersion == design.TargetVersion &&
@@ -487,9 +487,9 @@ namespace Opc.Ua.Schema.Model
         public override int GetHashCode()
         {
             var hash = new HashCode();
-            hash.Add(Namespaces, SequenceEqualityComparer<Namespace>.Default);
-            hash.Add(PermissionSets, SequenceEqualityComparer<RolePermissionSet>.Default);
-            hash.Add(Items, SequenceEqualityComparer<NodeDesign>.Default);
+            hash.Add(Namespaces, ArrayEqualityComparer<Namespace>.Default);
+            hash.Add(PermissionSets, ArrayEqualityComparer<RolePermissionSet>.Default);
+            hash.Add(Items, ArrayEqualityComparer<NodeDesign>.Default);
             hash.Add(Extensions, XmlElementArrayStringEqualityComparer.Default);
             hash.Add(TargetNamespace);
             hash.Add(TargetVersion);
@@ -843,7 +843,7 @@ namespace Opc.Ua.Schema.Model
                 EqualityComparer<LocalizedText>.Default.Equals(DisplayName, other.DisplayName) &&
                 EqualityComparer<LocalizedText>.Default.Equals(Description, other.Description) &&
                 EqualityComparer<ListOfChildren>.Default.Equals(Children, other.Children) &&
-                SequenceEqualityComparer<Reference>.Default.Equals(References, other.References) &&
+                ArrayEqualityComparer<Reference>.Default.Equals(References, other.References) &&
                 EqualityComparer<RolePermissionSet>.Default.Equals(RolePermissions, other.RolePermissions) &&
                 EqualityComparer<RolePermissionSet>.Default.Equals(DefaultRolePermissions, other.DefaultRolePermissions) &&
                 AccessRestrictions == other.AccessRestrictions &&
@@ -874,7 +874,7 @@ namespace Opc.Ua.Schema.Model
             hash.Add(DisplayName);
             hash.Add(Description);
             hash.Add(Children);
-            hash.Add(References, SequenceEqualityComparer<Reference>.Default);
+            hash.Add(References, ArrayEqualityComparer<Reference>.Default);
             hash.Add(RolePermissions);
             hash.Add(DefaultRolePermissions);
             hash.Add(AccessRestrictions);
@@ -1103,8 +1103,8 @@ namespace Opc.Ua.Schema.Model
             return
                 other is not null &&
                 base.Equals(other) &&
-                SequenceEqualityComparer<Parameter>.Default.Equals(InputArguments, other.InputArguments) &&
-                SequenceEqualityComparer<Parameter>.Default.Equals(OutputArguments, other.OutputArguments) &&
+                ArrayEqualityComparer<Parameter>.Default.Equals(InputArguments, other.InputArguments) &&
+                ArrayEqualityComparer<Parameter>.Default.Equals(OutputArguments, other.OutputArguments) &&
                 NonExecutable == other.NonExecutable &&
                 NonExecutableSpecified == other.NonExecutableSpecified;
         }
@@ -1114,8 +1114,8 @@ namespace Opc.Ua.Schema.Model
         {
             var hash = new HashCode();
             hash.Add(base.GetHashCode());
-            hash.Add(InputArguments, SequenceEqualityComparer<Parameter>.Default);
-            hash.Add(OutputArguments, SequenceEqualityComparer<Parameter>.Default);
+            hash.Add(InputArguments, ArrayEqualityComparer<Parameter>.Default);
+            hash.Add(OutputArguments, ArrayEqualityComparer<Parameter>.Default);
             hash.Add(NonExecutable);
             hash.Add(NonExecutableSpecified);
             return hash.ToHashCode();
@@ -1662,8 +1662,8 @@ namespace Opc.Ua.Schema.Model
             return
                 other is not null &&
                 base.Equals(other) &&
-                SequenceEqualityComparer<Parameter>.Default.Equals(Fields, other.Fields) &&
-                SequenceEqualityComparer<EncodingDesign>.Default.Equals(Encodings, other.Encodings) &&
+                ArrayEqualityComparer<Parameter>.Default.Equals(Fields, other.Fields) &&
+                ArrayEqualityComparer<EncodingDesign>.Default.Equals(Encodings, other.Encodings) &&
                 IsOptionSet == other.IsOptionSet &&
                 IsUnion == other.IsUnion &&
                 NoArraysAllowed == other.NoArraysAllowed &&
@@ -1676,8 +1676,8 @@ namespace Opc.Ua.Schema.Model
         {
             var hash = new HashCode();
             hash.Add(base.GetHashCode());
-            hash.Add(Fields, SequenceEqualityComparer<Parameter>.Default);
-            hash.Add(Encodings, SequenceEqualityComparer<EncodingDesign>.Default);
+            hash.Add(Fields, ArrayEqualityComparer<Parameter>.Default);
+            hash.Add(Encodings, ArrayEqualityComparer<EncodingDesign>.Default);
             hash.Add(IsOptionSet);
             hash.Add(IsUnion);
             hash.Add(NoArraysAllowed);

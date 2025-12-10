@@ -345,7 +345,7 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
             //Assert.AreEqual(expected.Body, result.Body, encodeInfo);
             Assert.IsTrue(
                 Utils.IsEqual(expected.Body, result.Body),
-                $"Opc.Ua.Utils.IsEqual failed to compare expected and result.\r\n{encodeInfo}.\r\n{expected.Body}!={result.Body}.");
+                $"Opc.Ua.Utils.IsEqual failed to compare expected and result.\r\n{encodeInfo}.\r\n{expected.Body}\r\n!=\r\n{result.Body}.");
         }
 
         /// <summary>

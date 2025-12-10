@@ -4996,7 +4996,7 @@ namespace Quickstarts.ReferenceServer
                     [10],
                     Server.TypeTree);
                 // skip Variant Null
-                if (value is Variant variant && variant.Value == null)
+                if (value is Variant variant && variant.IsNull)
                 {
                     value = null;
                 }

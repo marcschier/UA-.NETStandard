@@ -1682,7 +1682,7 @@ namespace Opc.Ua.Client.Tests
                 {
                     continue;
                 }
-                if (item.Value.Value is ExtensionObject eo &&
+                if (item.Value.TryGet(out ExtensionObject eo) &&
                     eo.Body is SpanContextDataType spanContext)
                 {
 #if NET8_0_OR_GREATER

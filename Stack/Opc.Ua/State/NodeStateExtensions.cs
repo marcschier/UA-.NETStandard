@@ -56,12 +56,12 @@ namespace Opc.Ua
 
                 if (child is BaseVariableState variableInstance)
                 {
-                    variableInstance.Value = values.EventFields[ii].Value;
+                    variableInstance.Value = values.EventFields[ii].AsBoxedObject();
                     continue;
                 }
 
                 if (child is BaseObjectState objectInstance &&
-                    values.EventFields[ii].Value is NodeId nodeId &&
+                    values.EventFields[ii].TryGet(out NodeId nodeId) &&
                     !nodeId.IsNullNodeId)
                 {
                     objectInstance.NodeId = nodeId;
@@ -89,10 +89,9 @@ namespace Opc.Ua
             for (int ii = 0; ii < fields.Count; ii++)
             {
                 SimpleAttributeOperand field = fields[ii];
-                object value = e.EventFields[ii].Value;
 
                 // check if value provided.
-                if (value == null)
+                if (e.EventFields[ii].IsNull)
                 {
                     continue;
                 }
@@ -100,7 +99,7 @@ namespace Opc.Ua
                 // extract the NodeId for the event.
                 if (field.BrowsePath.Count == 0 &&
                     field.AttributeId == Attributes.NodeId &&
-                    value is NodeId nodeId)
+                    e.EventFields[ii].TryGet(out NodeId nodeId))
                 {
                     state.NodeId = nodeId;
                     continue;
@@ -110,7 +109,7 @@ namespace Opc.Ua
                 if (field.BrowsePath.Count == 1 &&
                     field.AttributeId == Attributes.Value &&
                     field.BrowsePath[0] == BrowseNames.EventType &&
-                    value is NodeId typeDefinitionId)
+                    e.EventFields[ii].TryGet(out NodeId typeDefinitionId))
                 {
                     state.TypeDefinitionId = typeDefinitionId;
                     continue;
@@ -178,7 +177,7 @@ namespace Opc.Ua
                     }
 
                     // save the node id.
-                    child.NodeId = value is NodeId n ? n : default;
+                    child.NodeId = e.EventFields[ii].GetNodeId();
                 }
             }
         }

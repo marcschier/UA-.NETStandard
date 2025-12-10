@@ -954,9 +954,9 @@ namespace Alarms
             // Bad magic Numbers hereStart
             if (request.InputArguments != null &&
                 request.InputArguments.Count == 2 &&
-                request.InputArguments[0].TypeInfo.BuiltInType.Equals(BuiltInType.ByteString))
+                request.InputArguments[0].TryGet(out byte[] byteArray))
             {
-                eventId = (byte[])request.InputArguments[0].Value;
+                eventId = byteArray;
             }
             return eventId;
         }

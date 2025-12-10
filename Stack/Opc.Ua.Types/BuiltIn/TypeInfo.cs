@@ -1060,7 +1060,7 @@ namespace Opc.Ua
 
                     if (actualElementType == BuiltInType.Variant)
                     {
-                        element = ((Variant)element).Value;
+                        element = ((Variant)element).AsBoxedObject(); // TODO: optimize boxing
                     }
 
                     TypeInfo elementInfo = IsInstanceOfDataType(
@@ -1979,7 +1979,7 @@ namespace Opc.Ua
 
                     if (isSrcVariant)
                     {
-                        element = ((Variant)element).Value;
+                        element = ((Variant)element).AsBoxedObject(); // TODO: Avoid boxing
                     }
 
                     if (convertor != null)
@@ -2025,7 +2025,7 @@ namespace Opc.Ua
                 {
                     if (isSrcVariant)
                     {
-                        element = ((Variant)element).Value;
+                        element = ((Variant)element).AsBoxedObject(); // TODO: Avoid boxing
                     }
 
                     if (convertor != null)
@@ -3052,7 +3052,7 @@ namespace Opc.Ua
 
             if (sourceType.BuiltInType == BuiltInType.Variant)
             {
-                object value = ((Variant)input).Value;
+                object value = ((Variant)input).AsBoxedObject(); // TODO: Avoid boxing
                 sourceType = Construct(value);
                 return handler(value, sourceType);
             }
@@ -3085,7 +3085,7 @@ namespace Opc.Ua
                     {
                         if (sourceType.BuiltInType == BuiltInType.Variant)
                         {
-                            value = ((Variant)value).Value;
+                            value = ((Variant)value).AsBoxedObject(); // TODO: Avoid boxing
                             elementType = Construct(value);
                         }
 
@@ -3113,7 +3113,7 @@ namespace Opc.Ua
                         {
                             if (sourceType.BuiltInType == BuiltInType.Variant)
                             {
-                                value = ((Variant)value).Value;
+                                value = ((Variant)value).AsBoxedObject(); // TODO: Avoid boxing
                                 elementType = Construct(value);
                             }
 
@@ -3153,7 +3153,7 @@ namespace Opc.Ua
                 {
                     if (sourceType.BuiltInType == BuiltInType.Variant)
                     {
-                        value = ((Variant)value).Value;
+                        value = ((Variant)value).AsBoxedObject(); // TODO: Avoid boxing
                         elementType = Construct(value);
                     }
 

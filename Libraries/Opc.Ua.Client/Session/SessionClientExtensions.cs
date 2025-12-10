@@ -873,7 +873,7 @@ namespace Opc.Ua.Client
 
             foreach (Variant arg in results[0].OutputArguments)
             {
-                outputArguments.Add(arg.Value);
+                outputArguments.Add(arg.AsBoxedObject());
             }
 
             return outputArguments;

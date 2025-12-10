@@ -174,7 +174,7 @@ namespace Opc.Ua.PubSub.PublishedData
                                     /*If an entry of the PublishedData references one of the ExtensionFields, the substituteValue shall contain the
                                     * QualifiedName of the ExtensionFields entry.
                                     * All other fields of this PublishedVariableDataType array element shall be null*/
-                                    if (publishedVariable.SubstituteValue.Value is QualifiedName extensionFieldName)
+                                    if (publishedVariable.SubstituteValue.TryGet(out QualifiedName extensionFieldName))
                                     {
                                         KeyValuePair extensionField = publishedDataSet
                                             .ExtensionFields
@@ -195,7 +195,7 @@ namespace Opc.Ua.PubSub.PublishedData
                                     if (dataValue.StatusCode == StatusCodes.Bad &&
                                         publishedVariable.SubstituteValue != Variant.Null)
                                     {
-                                        dataValue.Value = publishedVariable.SubstituteValue.Value;
+                                        dataValue.WrappedValue = publishedVariable.SubstituteValue;
                                         dataValue.StatusCode = StatusCodes.UncertainSubstituteValue;
                                     }
                                 }
@@ -217,7 +217,7 @@ namespace Opc.Ua.PubSub.PublishedData
                                     case BuiltInType.String:
                                         if (field.FieldMetaData.ValueRank == ValueRanks.Scalar)
                                         {
-                                            if (variant.Value is string strFieldValue &&
+                                            if (variant.TryGet(out string strFieldValue) &&
                                                 ShouldBringToConstraints(
                                                     (uint)strFieldValue.Length))
                                             {
@@ -229,8 +229,8 @@ namespace Opc.Ua.PubSub.PublishedData
                                         else if (field.FieldMetaData.ValueRank == ValueRanks
                                             .OneDimension)
                                         {
-                                            string[] valueArray = variant.Value as string[];
-                                            if (valueArray != null)
+                                            if (variant.TryGet(out string[] valueArray) &&
+                                                valueArray != null)
                                             {
                                                 for (int idx = 0; idx < valueArray.Length; idx++)
                                                 {
@@ -250,7 +250,7 @@ namespace Opc.Ua.PubSub.PublishedData
                                     case BuiltInType.ByteString:
                                         if (field.FieldMetaData.ValueRank == ValueRanks.Scalar)
                                         {
-                                            if (variant.Value is byte[] byteStringFieldValue &&
+                                            if (variant.TryGet(out byte[] byteStringFieldValue) &&
                                                 ShouldBringToConstraints(
                                                     (uint)byteStringFieldValue.Length))
                                             {
@@ -265,8 +265,8 @@ namespace Opc.Ua.PubSub.PublishedData
                                         else if (field.FieldMetaData.ValueRank == ValueRanks
                                             .OneDimension)
                                         {
-                                            byte[][] valueArray = variant.Value as byte[][];
-                                            if (valueArray != null)
+                                            if (variant.TryGet(out byte[][] valueArray) &&
+                                                valueArray != null)
                                             {
                                                 for (int idx = 0; idx < valueArray.Length; idx++)
                                                 {

@@ -677,7 +677,7 @@ namespace Opc.Ua
                     error = true;
                 }
 
-                inputs.Add(inputArguments[ii].Value);
+                inputs.Add(inputArguments[ii].AsBoxedObject());
                 argumentErrors.Add(argumentError);
             }
 
@@ -855,7 +855,7 @@ namespace Opc.Ua
             Argument expectedArgument = arguments[index];
 
             var typeInfo = TypeInfo.IsInstanceOfDataType(
-                inputArgument.Value,
+                inputArgument.AsBoxedObject(),
                 expectedArgument.DataType,
                 expectedArgument.ValueRank,
                 context.NamespaceUris,

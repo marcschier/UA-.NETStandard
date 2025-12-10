@@ -621,11 +621,11 @@ namespace Opc.Ua.Test
         /// False or ServiceResultException in case of unequal values.</returns>
         public bool CompareVariant(Variant value1, Variant value2)
         {
-            if (value1.Value == null || value2.Value == null)
+            if (value1.IsNull || value2.IsNull)
             {
-                if (value1.Value != value2.Value)
+                if (value1.IsNull != value2.IsNull)
                 {
-                    return ReportError(value1.Value, value2.Value);
+                    return ReportError(value1.AsBoxedObject(), value2.AsBoxedObject());
                 }
 
                 return true;
@@ -635,7 +635,7 @@ namespace Opc.Ua.Test
 
             if (systemType != value2.Value.GetType())
             {
-                return ReportError(value1.Value, value2.Value);
+                return ReportError(value1.AsBoxedObject(), value2.AsBoxedObject());
             }
 
             if (!systemType.IsArray || systemType == typeof(byte[]))

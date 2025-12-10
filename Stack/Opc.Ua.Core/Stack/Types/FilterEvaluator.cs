@@ -210,7 +210,7 @@ namespace Opc.Ua
 
             if (operand is LiteralOperand literal)
             {
-                return literal.Value.Value;
+                return literal.Value.AsBoxedObject();
             }
 
             // must query the filter target for simple attribute operands.
@@ -1587,7 +1587,7 @@ namespace Opc.Ua
             // extract the value from a Variant if specified.
             if (source is Variant variant)
             {
-                return Cast(variant.Value, targetType);
+                return Cast(variant.AsBoxedObject(), targetType);
             }
 
             // call the appropriate function if a conversion is supported for the m_target type.
