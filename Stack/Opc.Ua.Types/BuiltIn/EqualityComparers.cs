@@ -39,10 +39,8 @@ namespace Opc.Ua
     /// </summary>
     public class NodeIdComparer : IEqualityComparer<NodeId>
     {
-        /// <summary>
-        /// Get singleton comparer
-        /// </summary>
-        public static NodeIdComparer Instance { get; } = new();
+        /// <inheritdoc/>
+        public static NodeIdComparer Default { get; } = new();
 
         /// <inheritdoc/>
         public bool Equals(NodeId x, NodeId y)
@@ -62,10 +60,8 @@ namespace Opc.Ua
     /// </summary>
     internal class ExpandedNodeIdComparer : IEqualityComparer<ExpandedNodeId>
     {
-        /// <summary>
-        /// Get singleton comparer
-        /// </summary>
-        public static ExpandedNodeIdComparer Instance { get; } = new();
+        /// <inheritdoc/>
+        public static ExpandedNodeIdComparer Default { get; } = new();
 
         /// <inheritdoc/>
         public bool Equals(ExpandedNodeId x, ExpandedNodeId y)
@@ -84,11 +80,14 @@ namespace Opc.Ua
     /// Helper to compare arrays for deep equality
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public sealed class SequenceEqualityComparer<T> : EqualityComparer<T[]>
+    public sealed class SequenceEqualityComparer<T> : IEqualityComparer<T[]>
         where T : unmanaged, IEquatable<T>
     {
         /// <inheritdoc/>
-        public override bool Equals(T[] x, T[] y)
+        public static SequenceEqualityComparer<T> Default { get; } = new();
+
+        /// <inheritdoc/>
+        public bool Equals(T[] x, T[] y)
         {
             if (ReferenceEquals(x, y))
             {
@@ -102,7 +101,7 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public override int GetHashCode(T[] obj)
+        public int GetHashCode(T[] obj)
         {
             var hash = new HashCode();
             if (obj != null)
@@ -117,13 +116,89 @@ namespace Opc.Ua
     }
 
     /// <summary>
+    /// Compare arrays of date time as per OPC UA rules
+    /// </summary>
+    public sealed class DateTimeArrayComparer : IEqualityComparer<DateTime[]>
+    {
+        /// <inheritdoc/>
+        public static DateTimeArrayComparer Default { get; } = new();
+
+        /// <inheritdoc/>
+        public bool Equals(DateTime[] x, DateTime[] y)
+        {
+            if (ReferenceEquals(x, y))
+            {
+                return true;
+            }
+            if (x is null || y is null || x.Length != y.Length)
+            {
+                return false;
+            }
+            for (int i = 0; i < x.Length; i++)
+            {
+                if (!CoreUtils.IsEqual(x[i], y[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <inheritdoc/>
+        public int GetHashCode(DateTime[] obj)
+        {
+            var hash = new HashCode();
+            if (obj != null)
+            {
+                foreach (DateTime item in obj)
+                {
+                    hash.Add(DateTimeComparer.Default.GetHashCode(item));
+                }
+            }
+            return hash.ToHashCode();
+        }
+    }
+
+    /// <summary>
+    /// Compare date times
+    /// </summary>
+    public sealed class DateTimeComparer : IEqualityComparer<DateTime>
+    {
+        /// <inheritdoc/>
+        public static DateTimeComparer Default { get; } = new();
+
+        /// <inheritdoc/>
+        public bool Equals(DateTime x, DateTime y)
+        {
+            return CoreUtils.IsEqual(x, y);
+        }
+        /// <inheritdoc/>
+        public int GetHashCode(DateTime obj)
+        {
+            if (obj <= CoreUtils.TimeBase)
+            {
+                return 0;
+            }
+
+            if (obj >= DateTime.MaxValue)
+            {
+                return int.MaxValue;
+            }
+            return obj.ToUniversalTime().GetHashCode();
+        }
+    }
+
+    /// <summary>
     /// Helper to compare arrays for deep equality
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public sealed class ArrayEqualityComparer<T> : EqualityComparer<T[]>
+    public sealed class ArrayEqualityComparer<T> : IEqualityComparer<T[]>
     {
         /// <inheritdoc/>
-        public override bool Equals(T[] x, T[] y)
+        public static ArrayEqualityComparer<T> Default { get; } = new();
+
+        /// <inheritdoc/>
+        public bool Equals(T[] x, T[] y)
         {
             if (ReferenceEquals(x, y))
             {
@@ -144,7 +219,7 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public override int GetHashCode(T[] obj)
+        public int GetHashCode(T[] obj)
         {
             var hash = new HashCode();
             if (obj != null)
@@ -161,10 +236,13 @@ namespace Opc.Ua
     /// <summary>
     /// Compares a byte string for deep equality
     /// </summary>
-    public sealed class ByteStringEqualityComparer : EqualityComparer<byte[]>
+    public sealed class ByteStringEqualityComparer : IEqualityComparer<byte[]>
     {
         /// <inheritdoc/>
-        public override bool Equals(byte[] x, byte[] y)
+        public static ByteStringEqualityComparer Default { get; } = new();
+
+        /// <inheritdoc/>
+        public bool Equals(byte[] x, byte[] y)
         {
             if (ReferenceEquals(x, y))
             {
@@ -178,7 +256,7 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public override int GetHashCode(byte[] obj)
+        public int GetHashCode(byte[] obj)
         {
             if (obj is null)
             {
@@ -200,10 +278,13 @@ namespace Opc.Ua
     /// <summary>
     /// Compares an array of byte strings for deep equality
     /// </summary>
-    public sealed class ByteStringArrayEqualityComparer : EqualityComparer<byte[][]>
+    public sealed class ByteStringArrayEqualityComparer : IEqualityComparer<byte[][]>
     {
         /// <inheritdoc/>
-        public override bool Equals(byte[][] x, byte[][] y)
+        public static ByteStringArrayEqualityComparer Default { get; } = new();
+
+        /// <inheritdoc/>
+        public bool Equals(byte[][] x, byte[][] y)
         {
             if (ReferenceEquals(x, y))
             {
@@ -224,7 +305,7 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public override int GetHashCode(byte[][] obj)
+        public int GetHashCode(byte[][] obj)
         {
             var hash = new HashCode();
             if (obj != null)
@@ -241,10 +322,13 @@ namespace Opc.Ua
     /// <summary>
     /// Deep comparison of XmlElement array
     /// </summary>
-    public sealed class XmlElementArrayStringEqualityComparer : EqualityComparer<XmlElement[]>
+    public sealed class XmlElementArrayStringEqualityComparer : IEqualityComparer<XmlElement[]>
     {
         /// <inheritdoc/>
-        public override bool Equals(XmlElement[] x, XmlElement[] y)
+        public static XmlElementArrayStringEqualityComparer Default { get; } = new();
+
+        /// <inheritdoc/>
+        public bool Equals(XmlElement[] x, XmlElement[] y)
         {
             if (ReferenceEquals(x, y))
             {
@@ -265,7 +349,7 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public override int GetHashCode(XmlElement[] obj)
+        public int GetHashCode(XmlElement[] obj)
         {
             var hash = new HashCode();
             if (obj != null)
@@ -282,10 +366,13 @@ namespace Opc.Ua
     /// <summary>
     /// String comparison of xml element
     /// </summary>
-    public sealed class XmlElementStringEqualityComparer : EqualityComparer<XmlElement>
+    public sealed class XmlElementStringEqualityComparer : IEqualityComparer<XmlElement>
     {
         /// <inheritdoc/>
-        public override bool Equals(XmlElement x, XmlElement y)
+        public static XmlElementStringEqualityComparer Default { get; } = new();
+
+        /// <inheritdoc/>
+        public bool Equals(XmlElement x, XmlElement y)
         {
             if (ReferenceEquals(x, y))
             {
@@ -299,7 +386,7 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public override int GetHashCode(XmlElement obj)
+        public int GetHashCode(XmlElement obj)
         {
             return EqualityComparer<string>.Default.GetHashCode(obj?.OuterXml);
         }
@@ -308,10 +395,13 @@ namespace Opc.Ua
     /// <summary>
     /// String comparison of xml element
     /// </summary>
-    public sealed class XmlQualifiedNameEqualityComparer : EqualityComparer<XmlQualifiedName>
+    public sealed class XmlQualifiedNameEqualityComparer : IEqualityComparer<XmlQualifiedName>
     {
         /// <inheritdoc/>
-        public override bool Equals(XmlQualifiedName x, XmlQualifiedName y)
+        public static XmlQualifiedNameEqualityComparer Default { get; } = new();
+
+        /// <inheritdoc/>
+        public bool Equals(XmlQualifiedName x, XmlQualifiedName y)
         {
             if (ReferenceEquals(x, y))
             {
@@ -327,7 +417,7 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public override int GetHashCode(XmlQualifiedName obj)
+        public int GetHashCode(XmlQualifiedName obj)
         {
             return HashCode.Combine(obj?.Name, obj?.Namespace);
         }
@@ -341,7 +431,7 @@ namespace Opc.Ua
         /// <summary>
         /// Get an instance of the reference equality comparer.
         /// </summary>
-        public static ReferenceEqualityComparer Instance { get; } = new ReferenceEqualityComparer();
+        public static ReferenceEqualityComparer Default { get; } = new();
 
         /// <inheritdoc/>
         public bool Equals(IReference x, IReference y)

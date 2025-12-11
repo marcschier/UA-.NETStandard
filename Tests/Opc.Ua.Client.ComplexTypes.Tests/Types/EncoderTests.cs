@@ -242,16 +242,19 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
 
             var localCtxt = (ServiceMessageContext)EncoderContext;
 
-            // Serialize/Encode a Variant succeeds with a context available
-            using (AmbientMessageContext.SetScopedContext(localCtxt))
-            {
-                _ = Newtonsoft.Json.JsonConvert.SerializeObject(keyValuePair);
-            }
-
             // Serialize/Encode an ExtensionObject succeeds with a context available
             using (AmbientMessageContext.SetScopedContext(localCtxt))
             {
                 _ = Newtonsoft.Json.JsonConvert.SerializeObject(extensionObject);
+            }
+
+            // Serialize/Encode a Variant succeeds with a context available
+            using (AmbientMessageContext.SetScopedContext(localCtxt))
+            {
+                _ = Newtonsoft.Json.JsonConvert.SerializeObject(keyValuePair, new Newtonsoft.Json.JsonSerializerSettings
+                {
+                    ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore // Uses equality which does not work with Variant.
+                });
             }
         }
     }

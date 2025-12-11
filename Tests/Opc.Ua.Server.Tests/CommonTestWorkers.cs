@@ -210,11 +210,11 @@ namespace Opc.Ua.Server.Tests
         /// <param name="services">The service interface.</param>
         /// <param name="operationLimits">The operation limits.</param>
         public static async Task<ReferenceDescriptionCollection> BrowseFullAddressSpaceWorkerAsync(
-                    IServerTestServices services,
-                    RequestHeader requestHeader,
-                    OperationLimits operationLimits = null,
-                    BrowseDescription browseDescription = null,
-                    bool outputResult = false)
+            IServerTestServices services,
+            RequestHeader requestHeader,
+            OperationLimits operationLimits = null,
+            BrowseDescription browseDescription = null,
+            bool outputResult = false)
         {
             operationLimits ??= new OperationLimits();
             requestHeader.Timestamp = DateTime.UtcNow;
@@ -245,11 +245,11 @@ namespace Opc.Ua.Server.Tests
             // Test if server responds with BadNothingToDo
             {
                 ServiceResultException sre = NUnit.Framework.Assert.ThrowsAsync<ServiceResultException>(async () =>
-                        _ = await services.BrowseAsync(
-                            requestHeader,
-                            null,
-                            0,
-                            browseDescriptionCollection.Take(0).ToArray()).ConfigureAwait(false));
+                    _ = await services.BrowseAsync(
+                        requestHeader,
+                        null,
+                        0,
+                        browseDescriptionCollection.Take(0).ToArray()).ConfigureAwait(false));
                 Assert.AreEqual(StatusCodes.BadNothingToDo, (StatusCode)sre.StatusCode);
             }
 
@@ -382,6 +382,10 @@ namespace Opc.Ua.Server.Tests
             }
 
             referenceDescriptions.Sort((x, y) => x.NodeId.CompareTo(y.NodeId));
+            int diagnosticNs = services.MessageContext.NamespaceUris
+                .GetIndex(Ua.Namespaces.OpcUa + "Diagnostics");
+            // Remove diagnostic nodes since they change per session
+            referenceDescriptions.RemoveAll(r => (int)r.NodeId.NamespaceIndex == diagnosticNs);
 
             TestContext.Out
                 .WriteLine("Found {0} references on server.", referenceDescriptions.Count);

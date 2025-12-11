@@ -320,14 +320,14 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
             { BuiltInType.DateTime, DateTime.MaxValue, Quotes("9999-12-31T23:59:59Z"), null },
             {
                 BuiltInType.Guid,
-                Guid.Empty,
+                Uuid.Empty,
                 null,
                 null,
                 null,
                 Quotes("00000000-0000-0000-0000-000000000000") },
             {
                 BuiltInType.Guid,
-                Guid.Empty,
+                Uuid.Empty,
                 Quotes("00000000-0000-0000-0000-000000000000"),
                 null,
                 null,

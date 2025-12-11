@@ -38,7 +38,7 @@ namespace Opc.Ua.Server.Tests
     /// </summary>
     public interface IServerTestServices
     {
-        ITelemetryContext Telemetry { get; }
+        IServiceMessageContext MessageContext { get; }
 
         ILogger Logger { get; }
 
@@ -137,16 +137,15 @@ namespace Opc.Ua.Server.Tests
     {
         private readonly ISessionServer m_server;
 
-        public ITelemetryContext Telemetry { get; }
-
         public ILogger Logger { get; }
 
         public SecureChannelContext SecureChannelContext { get; set; }
 
-        public ServerTestServices(ISessionServer server, SecureChannelContext secureChannelContext, ITelemetryContext telemetry)
+        public IServiceMessageContext MessageContext => m_server.MessageContext;
+
+        public ServerTestServices(ISessionServer server, SecureChannelContext secureChannelContext)
         {
-            Telemetry = telemetry;
-            Logger = telemetry.CreateLogger<ServerTestServices>();
+            Logger = server.MessageContext.Telemetry.CreateLogger<ServerTestServices>();
             m_server = server;
             SecureChannelContext = secureChannelContext;
         }

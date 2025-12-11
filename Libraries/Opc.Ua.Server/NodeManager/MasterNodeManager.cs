@@ -715,8 +715,8 @@ namespace Opc.Ua.Server
         /// Adds the references to the target.
         /// </summary>
         public virtual async ValueTask AddReferencesAsync(NodeId sourceId,
-                                                          IList<IReference> references,
-                                                          CancellationToken cancellationToken = default)
+            IList<IReference> references,
+            CancellationToken cancellationToken = default)
         {
             // find source node.
             (object sourceHandle, IAsyncNodeManager nodeManager) = await GetManagerHandleAsync(sourceId, cancellationToken)
@@ -743,8 +743,8 @@ namespace Opc.Ua.Server
         /// Deletes the references to the target.
         /// </summary>
         public virtual async ValueTask DeleteReferencesAsync(NodeId targetId,
-                                                             IList<IReference> references,
-                                                             CancellationToken cancellationToken = default)
+            IList<IReference> references,
+            CancellationToken cancellationToken = default)
         {
             foreach (ReferenceNode reference in references.OfType<ReferenceNode>())
             {
@@ -782,7 +782,9 @@ namespace Opc.Ua.Server
         /// <summary>
         /// Deletes the specified references.
         /// </summary>
-        public async ValueTask RemoveReferencesAsync(List<LocalReference> referencesToRemove, CancellationToken cancellationToken = default)
+        public async ValueTask RemoveReferencesAsync(
+            List<LocalReference> referencesToRemove,
+            CancellationToken cancellationToken = default)
         {
             for (int ii = 0; ii < referencesToRemove.Count; ii++)
             {

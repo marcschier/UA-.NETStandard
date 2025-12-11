@@ -89,7 +89,7 @@ namespace Opc.Ua.Security.Certificates.Tests
         [Test]
         public void VerifyX509AuthorityKeyIdentifierExtension()
         {
-            var authorityName = new X500DistinguishedName("CN=Test,O=OPC Foundation,DC=localhost");
+            var authorityName = new X500DistinguishedName("CN=Test, O=OPC Foundation, DC=localhost");
             byte[] serialNumber = [9, 1, 2, 3, 4, 5, 6, 7, 8, 9];
             byte[] subjectKeyIdentifier = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
             var aki = new X509AuthorityKeyIdentifierExtension(

@@ -71,7 +71,7 @@ namespace Opc.Ua.Client
                     .WithAtomicGetOrAdd()
                     .AsAsyncCache()
                     .WithCapacity(capacity)
-                    .WithKeyComparer(NodeIdComparer.Instance)
+                    .WithKeyComparer(NodeIdComparer.Default)
                     .WithExpireAfterAccess(cacheExpiry.Value);
             BitFaster.Caching.Lru.Builder.AtomicAsyncConcurrentLruBuilder<
                 NodeId,
@@ -80,14 +80,14 @@ namespace Opc.Ua.Client
                 .WithAtomicGetOrAdd()
                 .AsAsyncCache()
                 .WithCapacity(capacity)
-                .WithKeyComparer(NodeIdComparer.Instance)
+                .WithKeyComparer(NodeIdComparer.Default)
                 .WithExpireAfterAccess(cacheExpiry.Value);
             BitFaster.Caching.Lru.Builder.AtomicAsyncConcurrentLruBuilder<NodeId, DataValue> valuesBuilder =
                 new ConcurrentLruBuilder<NodeId, DataValue>()
                     .WithAtomicGetOrAdd()
                     .AsAsyncCache()
                     .WithCapacity(capacity)
-                    .WithKeyComparer(NodeIdComparer.Instance)
+                    .WithKeyComparer(NodeIdComparer.Default)
                     .WithExpireAfterAccess(cacheExpiry.Value);
             if (withMetrics)
             {

@@ -319,7 +319,7 @@ namespace Opc.Ua.Server.Tests
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.Create();
 
-            var serverTestServices = new ServerTestServices(m_server, m_secureChannelContext, telemetry);
+            var serverTestServices = new ServerTestServices(m_server, m_secureChannelContext);
             if (m_operationLimits == null)
             {
                 await GetOperationLimitsAsync().ConfigureAwait(false);
@@ -425,7 +425,7 @@ namespace Opc.Ua.Server.Tests
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.Create();
 
-            var serverTestServices = new ServerTestServices(m_server, m_secureChannelContext, telemetry);
+            var serverTestServices = new ServerTestServices(m_server, m_secureChannelContext);
             if (m_operationLimits == null)
             {
                 await GetOperationLimitsAsync().ConfigureAwait(false);
@@ -446,7 +446,7 @@ namespace Opc.Ua.Server.Tests
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.Create();
 
-            var serverTestServices = new ServerTestServices(m_server, m_secureChannelContext, telemetry);
+            var serverTestServices = new ServerTestServices(m_server, m_secureChannelContext);
             if (m_operationLimits == null)
             {
                 await GetOperationLimitsAsync().ConfigureAwait(false);
@@ -472,7 +472,7 @@ namespace Opc.Ua.Server.Tests
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.Create();
 
-            var serverTestServices = new ServerTestServices(m_server, m_secureChannelContext, telemetry);
+            var serverTestServices = new ServerTestServices(m_server, m_secureChannelContext);
             await CommonTestWorkers.SubscriptionTestAsync(serverTestServices, m_requestHeader).ConfigureAwait(false);
         }
 
@@ -487,7 +487,7 @@ namespace Opc.Ua.Server.Tests
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.Create();
 
-            var serverTestServices = new ServerTestServices(m_server, m_secureChannelContext, telemetry);
+            var serverTestServices = new ServerTestServices(m_server, m_secureChannelContext);
             (RequestHeader transferRequestHeader, SecureChannelContext transferContext) = await m_server.CreateAndActivateSessionAsync(
                 "ClosedSession",
                 useSecurity).ConfigureAwait(false);
@@ -546,7 +546,7 @@ namespace Opc.Ua.Server.Tests
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.Create();
 
-            var serverTestServices = new ServerTestServices(m_server, m_secureChannelContext, telemetry);
+            var serverTestServices = new ServerTestServices(m_server, m_secureChannelContext);
 
             NamespaceTable namespaceUris = m_server.CurrentInstance.NamespaceUris;
             NodeId[] testSet =
@@ -602,7 +602,7 @@ namespace Opc.Ua.Server.Tests
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.Create();
 
-            var serverTestServices = new ServerTestServices(m_server, m_secureChannelContext, telemetry);
+            var serverTestServices = new ServerTestServices(m_server, m_secureChannelContext);
 
             NamespaceTable namespaceUris = m_server.CurrentInstance.NamespaceUris;
             NodeIdCollection testSetCollection = CommonTestWorkers

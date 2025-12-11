@@ -513,9 +513,9 @@ namespace Opc.Ua.PubSub.Transport
         {
             UserName = new SecureString();
             QualifiedName qUserName = nameof(EnumMqttClientConfigurationParameters.UserName);
-            if (connectionProperties
-                    .Find(kvp => kvp.Key.Name.Equals(qUserName.Name, StringComparison.Ordinal))
-                    .Value.TryGet(out string sUserName))
+            if ((connectionProperties
+                    .Find(kvp => kvp.Key.Name.Equals(qUserName.Name, StringComparison.Ordinal))?
+                    .Value ?? default).TryGet(out string sUserName))
             {
                 foreach (char c in sUserName)
                 {
@@ -525,9 +525,9 @@ namespace Opc.Ua.PubSub.Transport
 
             Password = new SecureString();
             QualifiedName qPassword = nameof(EnumMqttClientConfigurationParameters.Password);
-            if (connectionProperties
-                    .Find(kvp => kvp.Key.Name.Equals(qPassword.Name, StringComparison.Ordinal))
-                    .Value.TryGet(out string sPassword))
+            if ((connectionProperties
+                    .Find(kvp => kvp.Key.Name.Equals(qPassword.Name, StringComparison.Ordinal))?
+                    .Value ?? default).TryGet(out string sPassword))
             {
                 foreach (char c in sPassword)
                 {

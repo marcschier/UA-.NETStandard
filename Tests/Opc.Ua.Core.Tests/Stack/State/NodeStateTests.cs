@@ -105,9 +105,21 @@ namespace Opc.Ua.Core.Tests.Stack.State
                 {
                     instance = Activator.CreateInstance(systemType, (NodeState)null);
                 }
+                else if (systemType.IsAbstract)
+                {
+                    instance = null;
+                }
                 else
                 {
-                    instance = Activator.CreateInstance(systemType);
+                    var defaultConstructor = systemType.GetConstructor([]);
+                    if (defaultConstructor == null || !defaultConstructor.IsPublic)
+                    {
+                        instance = null;
+                    }
+                    else
+                    {
+                        instance = Activator.CreateInstance(systemType);
+                    }
                 }
             }
             catch

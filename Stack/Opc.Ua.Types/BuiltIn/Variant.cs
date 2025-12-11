@@ -31,9 +31,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -67,6 +69,7 @@ namespace Opc.Ua
         IEquatable<short>,
         IEquatable<ushort>,
         IEquatable<int>,
+        IEquatable<Enum>,
         IEquatable<uint>,
         IEquatable<long>,
         IEquatable<ulong>,
@@ -89,6 +92,7 @@ namespace Opc.Ua
         IEquatable<short[]>,
         IEquatable<ushort[]>,
         IEquatable<int[]>,
+        IEquatable<Enum[]>,
         IEquatable<uint[]>,
         IEquatable<long[]>,
         IEquatable<ulong[]>,
@@ -112,6 +116,7 @@ namespace Opc.Ua
         /// Creates a new variant instance while specifying the value.
         /// </summary>
         /// <param name="value">The value to encode within the variant</param>
+        [OverloadResolutionPriority(0)]
         public Variant(object value)
         {
             this = new Variant(value, TypeInfo.Construct(value));
@@ -121,6 +126,7 @@ namespace Opc.Ua
         /// Initializes the variant with an Array value and the type information.
         /// </summary>
         /// <param name="value">The value to store within the variant</param>
+        [OverloadResolutionPriority(0)]
         public Variant(Array value)
         {
             this = new Variant(value, TypeInfo.Construct(value));
@@ -194,6 +200,16 @@ namespace Opc.Ua
         {
             m_value = value;
             TypeInfo = TypeInfo.Scalars.Int32;
+        }
+
+        /// <summary>
+        /// Creates a new variant with a <see cref="Enum"/> value
+        /// </summary>
+        /// <param name="value">The <see cref="Enum"/> value of the Variant</param>
+        public Variant(Enum value)
+        {
+            m_value = value;
+            TypeInfo = TypeInfo.Scalars.Enumeration;
         }
 
         /// <summary>
@@ -352,7 +368,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="ExtensionObject"/> value of the Variant</param>
         public Variant(ExtensionObject value)
         {
-            m_value = value;
+            m_value = CoreUtils.Clone(value);
             TypeInfo = TypeInfo.Scalars.ExtensionObject;
         }
 
@@ -362,7 +378,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="DataValue"/> value of the Variant</param>
         public Variant(DataValue value)
         {
-            m_value = value;
+            m_value = CoreUtils.Clone(value);
             TypeInfo = TypeInfo.Scalars.DataValue;
         }
 
@@ -414,6 +430,17 @@ namespace Opc.Ua
         {
             m_value = value;
             TypeInfo = TypeInfo.Arrays.Int32;
+        }
+
+        /// <summary>
+        /// Creates a new variant with a <see cref="Enum"/>-array value
+        /// </summary>
+        /// <param name="value">The <see cref="Enum"/>-array value of the Variant</param>
+        [OverloadResolutionPriority(1)]
+        public Variant(Enum[] value)
+        {
+            m_value = value;
+            TypeInfo = TypeInfo.Arrays.Enumeration;
         }
 
         /// <summary>
@@ -572,7 +599,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="ExtensionObject"/>-array value of the Variant</param>
         public Variant(ExtensionObject[] value)
         {
-            m_value = value;
+            m_value = CoreUtils.Clone(value);
             TypeInfo = TypeInfo.Arrays.ExtensionObject;
         }
 
@@ -582,7 +609,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="DataValue"/>-array value of the Variant</param>
         public Variant(DataValue[] value)
         {
-            m_value = value;
+            m_value = CoreUtils.Clone(value);
             TypeInfo = TypeInfo.Arrays.DataValue;
         }
 
@@ -610,14 +637,14 @@ namespace Opc.Ua
             // check for null values.
             if (m_value == null)
             {
-                // m_value = typeInfo.ValueRank < 0 ?
+                // m_value = typeInfo.IsScalar ?
                 //      TypeInfo.GetDefaultValue(typeInfo.BuiltInType) :
                 //      null;
                 return;
             }
 
             // handle scalar values.
-            if (typeInfo.ValueRank < 0)
+            if (typeInfo.IsScalar)
             {
                 switch (typeInfo.BuiltInType)
                 {
@@ -657,10 +684,18 @@ namespace Opc.Ua
                             break;
                         }
                         break;
+                    case BuiltInType.Number:
+                    case BuiltInType.Integer:
+                    case BuiltInType.UInteger:
                     case BuiltInType.Variant:
-                        m_value = ((Variant)m_value).Value;
-                        TypeInfo = TypeInfo.Construct(m_value);
+                        // We treat passing a variant as a copy operation as variants
+                        // are not supported inside variants other than as array or matrix
+                        this = (Variant)m_value;
                         break;
+                    case BuiltInType.DiagnosticInfo:
+                        // https://reference.opcfoundation.org/Core/Part6/v104/docs/5.1.6
+                        throw ServiceResultException.Unexpected(
+                            $"Diagnostic info not supported inside Variants");
                     // just save the value.
                     case > BuiltInType.Null and <= BuiltInType.Enumeration:
                         break;
@@ -699,7 +734,7 @@ namespace Opc.Ua
             }
 
             // handle one dimensional arrays.
-            if (typeInfo.ValueRank <= 1)
+            if (typeInfo.IsArray)
             {
                 if (m_value is Matrix matrix)
                 {
@@ -767,6 +802,10 @@ namespace Opc.Ua
                             m_value = ((UuidCollection)guids).ToArray();
                         }
                         break;
+                    case BuiltInType.DiagnosticInfo:
+                        // https://reference.opcfoundation.org/Core/Part6/v104/docs/5.1.6
+                        throw ServiceResultException.Unexpected(
+                            $"Diagnostic info not supported inside Variants");
                     // just save the value.
                     case >= BuiltInType.Null and <= BuiltInType.Enumeration:
                         break;
@@ -908,7 +947,7 @@ namespace Opc.Ua
             {
                 return m_value;
             }
-            if (TypeInfo.ValueRank < 0)
+            if (TypeInfo.IsScalar)
             {
                 // Handle built-in value type null values
                 switch (TypeInfo.BuiltInType)
@@ -937,7 +976,7 @@ namespace Opc.Ua
         /// Returns if the Variant is a Null value.
         /// </summary>
         [JsonIgnore]
-        public bool IsNull => m_value == null;
+        public bool IsNull => TypeInfo.IsUnknown;
 
         /// <summary>
         /// The value stored -as <see cref="object"/>- within
@@ -994,7 +1033,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a bool value to an Variant object.
+        /// Converts the variant to a bool value or returns the default.
         /// </summary>
         public bool GetBoolean(bool defaultValue = default)
         {
@@ -1002,7 +1041,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a sbyte value to an Variant object.
+        /// Converts the variant to a sbyte value or returns the default.
         /// </summary>
         public sbyte GetSByte(sbyte defaultValue = default)
         {
@@ -1010,7 +1049,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a byte value to an Variant object.
+        /// Converts the variant to a byte value or returns the default.
         /// </summary>
         public byte GetByte(byte defaultValue = default)
         {
@@ -1018,7 +1057,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a short value to an Variant object.
+        /// Converts the variant to a short value or returns the default.
         /// </summary>
         public short GetInt16(short defaultValue = default)
         {
@@ -1026,7 +1065,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a ushort value to an Variant object.
+        /// Converts the variant to a ushort value or returns the default.
         /// </summary>
         public ushort GetUInt16(ushort defaultValue = default)
         {
@@ -1034,7 +1073,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a int value to an Variant object.
+        /// Converts the variant to a int value or returns the default.
         /// </summary>
         public int GetInt32(int defaultValue = default)
         {
@@ -1042,7 +1081,16 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a uint value to an Variant object.
+        /// Converts the variant to a enum value or returns the default.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public T GetEnumeration<T>(T defaultValue = default) where T : Enum
+        {
+            return TryGet(out T v) ? v : defaultValue;
+        }
+
+        /// <summary>
+        /// Converts the variant to a uint value or returns the default.
         /// </summary>
         public uint GetUInt32(uint defaultValue = default)
         {
@@ -1050,7 +1098,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a long value to an Variant object.
+        /// Converts the variant to a long value or returns the default.
         /// </summary>
         public long GetInt64(long defaultValue = default)
         {
@@ -1058,7 +1106,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a ulong value to an Variant object.
+        /// Converts the variant to a ulong value or returns the default.
         /// </summary>
         public ulong GetUInt64(ulong defaultValue = default)
         {
@@ -1066,7 +1114,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a float value to an Variant object.
+        /// Converts the variant to a float value or returns the default.
         /// </summary>
         public float GetFloat(float defaultValue = default)
         {
@@ -1074,7 +1122,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a double value to an Variant object.
+        /// Converts the variant to a double value or returns the default.
         /// </summary>
         public double GetDouble(double defaultValue = default)
         {
@@ -1082,7 +1130,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a string value to an Variant object.
+        /// Converts the variant to a string value or returns the default.
         /// </summary>
         public string GetString(string defaultValue = default)
         {
@@ -1090,7 +1138,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a DateTime value to an Variant object.
+        /// Converts the variant to a DateTime value or returns the default.
         /// </summary>
         public DateTime GetDateTime(DateTime defaultValue = default)
         {
@@ -1098,7 +1146,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a Uuid value to an Variant object.
+        /// Converts the variant to a Uuid value or returns the default.
         /// </summary>
         public Uuid GetGuid(Uuid defaultValue = default)
         {
@@ -1106,7 +1154,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a byte[] value to an Variant object.
+        /// Converts the variant to a byte[] value or returns the default.
         /// </summary>
         public byte[] GetByteString(byte[] defaultValue = default)
         {
@@ -1114,7 +1162,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a XmlElement value to an Variant object.
+        /// Converts the variant to a XmlElement value or returns the default.
         /// </summary>
         public XmlElement GetXmlElement(XmlElement defaultValue = default)
         {
@@ -1122,7 +1170,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a NodeId value to an Variant object.
+        /// Converts the variant to a NodeId value or returns the default.
         /// </summary>
         public NodeId GetNodeId(NodeId defaultValue = default)
         {
@@ -1130,7 +1178,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a ExpandedNodeId value to an Variant object.
+        /// Converts the variant to a ExpandedNodeId value or returns the default.
         /// </summary>
         public ExpandedNodeId GetExpandedNodeId(ExpandedNodeId defaultValue = default)
         {
@@ -1138,7 +1186,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a StatusCode value to an Variant object.
+        /// Converts the variant to a StatusCode value or returns the default.
         /// </summary>
         public StatusCode GetStatusCode(StatusCode defaultValue = default)
         {
@@ -1146,7 +1194,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a QualifiedName value to an Variant object.
+        /// Converts the variant to a QualifiedName value or returns the default.
         /// </summary>
         public QualifiedName GetQualifiedName(QualifiedName defaultValue = default)
         {
@@ -1154,7 +1202,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a LocalizedText value to an Variant object.
+        /// Converts the variant to a LocalizedText value or returns the default.
         /// </summary>
         public LocalizedText GetLocalizedText(LocalizedText defaultValue = default)
         {
@@ -1162,7 +1210,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a ExtensionObject value to an Variant object.
+        /// Converts the variant to a ExtensionObject value or returns the default.
         /// </summary>
         public ExtensionObject GetExtensionObject(ExtensionObject defaultValue = default)
         {
@@ -1170,7 +1218,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a DataValue value to an Variant object.
+        /// Converts the variant to a DataValue value or returns the default.
         /// </summary>
         public DataValue GetDataValue(DataValue defaultValue = default)
         {
@@ -1178,7 +1226,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a bool[] value to an Variant object.
+        /// Converts the variant to a bool[] value or returns the default.
         /// </summary>
         public bool[] GetBooleanArray(bool[] defaultValue = default)
         {
@@ -1186,7 +1234,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a sbyte[] value to an Variant object.
+        /// Converts the variant to a sbyte[] value or returns the default.
         /// </summary>
         public sbyte[] GetSByteArray(sbyte[] defaultValue = default)
         {
@@ -1194,7 +1242,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a short[] value to an Variant object.
+        /// Converts the variant to a short[] value or returns the default.
         /// </summary>
         public short[] GetInt16Array(short[] defaultValue = default)
         {
@@ -1202,7 +1250,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a ushort[] value to an Variant object.
+        /// Converts the variant to a ushort[] value or returns the default.
         /// </summary>
         public ushort[] GetUInt16Array(ushort[] defaultValue = default)
         {
@@ -1210,7 +1258,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a int[] value to an Variant object.
+        /// Converts the variant to a int[] value or returns the default.
         /// </summary>
         public int[] GetInt32Array(int[] defaultValue = default)
         {
@@ -1218,7 +1266,16 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a uint[] value to an Variant object.
+        /// Converts the variant to a enum array value or returns the default.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public T[] GetEnumerationArray<T>(T[] defaultValue = default) where T : Enum
+        {
+            return TryGet(out T[] v) ? v : defaultValue;
+        }
+
+        /// <summary>
+        /// Converts the variant to a uint[] value or returns the default.
         /// </summary>
         public uint[] GetUInt32Array(uint[] defaultValue = default)
         {
@@ -1226,7 +1283,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a long[] value to an Variant object.
+        /// Converts the variant to a long[] value or returns the default.
         /// </summary>
         public long[] GetInt64Array(long[] defaultValue = default)
         {
@@ -1234,7 +1291,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a ulong[] value to an Variant object.
+        /// Converts the variant to a ulong[] value or returns the default.
         /// </summary>
         public ulong[] GetUInt64Array(ulong[] defaultValue = default)
         {
@@ -1242,7 +1299,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a float[] value to an Variant object.
+        /// Converts the variant to a float[] value or returns the default.
         /// </summary>
         public float[] GetFloatArray(float[] defaultValue = default)
         {
@@ -1250,7 +1307,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a double[] value to an Variant object.
+        /// Converts the variant to a double[] value or returns the default.
         /// </summary>
         public double[] GetDoubleArray(double[] defaultValue = default)
         {
@@ -1258,7 +1315,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a string []value to an Variant object.
+        /// Converts the variant to a string []value or returns the default.
         /// </summary>
         public string[] GetStringArray(string[] defaultValue = default)
         {
@@ -1266,7 +1323,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a DateTime[] value to an Variant object.
+        /// Converts the variant to a DateTime[] value or returns the default.
         /// </summary>
         public DateTime[] GetDateTimeArray(DateTime[] defaultValue = default)
         {
@@ -1274,7 +1331,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a Uuid[] value to an Variant object.
+        /// Converts the variant to a Uuid[] value or returns the default.
         /// </summary>
         public Uuid[] GetGuidArray(Uuid[] defaultValue = default)
         {
@@ -1282,7 +1339,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a byte[][] value to an Variant object.
+        /// Converts the variant to a byte[][] value or returns the default.
         /// </summary>
         public byte[][] GetByteStringArray(byte[][] defaultValue = default)
         {
@@ -1290,7 +1347,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a XmlElement[] value to an Variant object.
+        /// Converts the variant to a XmlElement[] value or returns the default.
         /// </summary>
         public XmlElement[] GetXmlElementArray(XmlElement[] defaultValue = default)
         {
@@ -1298,7 +1355,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a NodeId[] value to an Variant object.
+        /// Converts the variant to a NodeId[] value or returns the default.
         /// </summary>
         public NodeId[] GetNodeIdArray(NodeId[] defaultValue = default)
         {
@@ -1306,7 +1363,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a ExpandedNodeId[] value to an Variant object.
+        /// Converts the variant to a ExpandedNodeId[] value or returns the default.
         /// </summary>
         public ExpandedNodeId[] GetExpandedNodeIdArray(ExpandedNodeId[] defaultValue = default)
         {
@@ -1314,7 +1371,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a StatusCode[] value to an Variant object.
+        /// Converts the variant to a StatusCode[] value or returns the default.
         /// </summary>
         public StatusCode[] GetStatusCodeArray(StatusCode[] defaultValue = default)
         {
@@ -1322,7 +1379,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a QualifiedName[] value to an Variant object.
+        /// Converts the variant to a QualifiedName[] value or returns the default.
         /// </summary>
         public QualifiedName[] GetQualifiedNameArray(QualifiedName[] defaultValue = default)
         {
@@ -1330,7 +1387,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a LocalizedText[] value to an Variant object.
+        /// Converts the variant to a LocalizedText[] value or returns the default.
         /// </summary>
         public LocalizedText[] GetLocalizedTextArray(LocalizedText[] defaultValue = default)
         {
@@ -1338,7 +1395,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a ExtensionObject[] value to an Variant object.
+        /// Converts the variant to a ExtensionObject[] value or returns the default.
         /// </summary>
         public ExtensionObject[] GetExtensionObjectArray(ExtensionObject[] defaultValue = default)
         {
@@ -1346,7 +1403,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a DataValue[] value to an Variant object.
+        /// Converts the variant to a DataValue[] value or returns the default.
         /// </summary>
         public DataValue[] GetDataValueArray(DataValue[] defaultValue = default)
         {
@@ -1354,7 +1411,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Converts a Variant[] value to an Variant object.
+        /// Converts the variant to a Variant[] value or returns the default.
         /// </summary>
         public Variant[] GetVariantArray(Variant[] defaultValue = default)
         {
@@ -1362,190 +1419,203 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="bool"/> value.
+        /// Try convert the variant to a <see cref="bool"/> value.
         /// </summary>
-        /// <param name="value">The <see cref="bool"/> value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="bool"/> value to get
+        /// </param>
         public bool TryGet(out bool value)
         {
             return TryGetScalar(out value, BuiltInType.Boolean);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="sbyte"/> value.
+        /// Try convert the variant to a <see cref="sbyte"/> value.
         /// </summary>
-        /// <param name="value">The <see cref="sbyte"/> value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="sbyte"/> value to get
+        /// </param>
         public bool TryGet(out sbyte value)
         {
             return TryGetScalar(out value, BuiltInType.SByte);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="byte"/> value.
+        /// Try convert the variant to a <see cref="byte"/> value.
         /// </summary>
-        /// <param name="value">The <see cref="byte"/> value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="byte"/> value to get
+        /// </param>
         public bool TryGet(out byte value)
         {
             return TryGetScalar(out value, BuiltInType.Byte);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="short"/> value.
+        /// Try convert the variant to a <see cref="short"/> value.
         /// </summary>
-        /// <param name="value">The <see cref="short"/> value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="short"/> value to get
+        /// </param>
         public bool TryGet(out short value)
         {
             return TryGetScalar(out value, BuiltInType.Int16);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="ushort"/> value.
+        /// Try convert the variant to a <see cref="ushort"/> value.
         /// </summary>
-        /// <param name="value">The <see cref="ushort"/> value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="ushort"/> value to get
+        /// </param>
         public bool TryGet(out ushort value)
         {
             return TryGetScalar(out value, BuiltInType.UInt16);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="int"/> value.
+        /// Try convert the variant to a <see cref="int"/> value.
         /// </summary>
-        /// <param name="value">The <see cref="int"/> value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="int"/> value to get
+        /// </param>
         public bool TryGet(out int value)
         {
             return TryGetScalar(out value, BuiltInType.Int32);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="uint"/> value.
+        /// Get a enumeration value from the Variant.
         /// </summary>
-        /// <param name="value">The <see cref="uint"/> value to set
-        /// this Variant to</param>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="value">The enumeration value to get
+        /// </param>
+        public bool TryGet<T>(out T value) where T : Enum
+        {
+            return TryGetScalar(out value, BuiltInType.Enumeration);
+        }
+
+        /// <summary>
+        /// Try convert the variant to a <see cref="uint"/> value.
+        /// </summary>
+        /// <param name="value">The <see cref="uint"/> value to get
+        /// </param>
         public bool TryGet(out uint value)
         {
             return TryGetScalar(out value, BuiltInType.UInt32);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="long"/> value.
+        /// Try convert the variant to a <see cref="long"/> value.
         /// </summary>
-        /// <param name="value">The <see cref="long"/> value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="long"/> value to get
+        /// </param>
         public bool TryGet(out long value)
         {
             return TryGetScalar(out value, BuiltInType.Int64);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="ulong"/> value.
+        /// Try convert the variant to a <see cref="ulong"/> value.
         /// </summary>
-        /// <param name="value">The <see cref="ulong"/> value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="ulong"/> value to get
+        /// </param>
         public bool TryGet(out ulong value)
         {
             return TryGetScalar(out value, BuiltInType.UInt64);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="float"/> value.
+        /// Try convert the variant to a <see cref="float"/> value.
         /// </summary>
-        /// <param name="value">The <see cref="float"/> value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="float"/> value to get
+        /// </param>
         public bool TryGet(out float value)
         {
             return TryGetScalar(out value, BuiltInType.Float);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="double"/> value.
+        /// Try convert the variant to a <see cref="double"/> value.
         /// </summary>
-        /// <param name="value">The <see cref="double"/> value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="double"/> value to get
+        /// </param>
         public bool TryGet(out double value)
         {
             return TryGetScalar(out value, BuiltInType.Double);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="string"/> value.
+        /// Try convert the variant to a <see cref="string"/> value.
         /// </summary>
-        /// <param name="value">The <see cref="string"/> value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="string"/> value to get
+        /// </param>
         public bool TryGet(out string value)
         {
             return TryGetScalar(out value, BuiltInType.String);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="DateTime"/> value.
+        /// Try convert the variant to a <see cref="DateTime"/> value.
         /// </summary>
-        /// <param name="value">The <see cref="DateTime"/> value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="DateTime"/> value to get
+        /// </param>
         public bool TryGet(out DateTime value)
         {
             return TryGetScalar(out value, BuiltInType.DateTime);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="Uuid"/> value.
+        /// Try convert the variant to a <see cref="Uuid"/> value.
         /// </summary>
-        /// <param name="value">The <see cref="Uuid"/> value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="Uuid"/> value to get
+        /// </param>
         public bool TryGet(out Uuid value)
         {
             return TryGetScalar(out value, BuiltInType.Guid);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="byte"/>-array value.
+        /// Try convert the variant to a <see cref="byte"/>-array value.
         /// </summary>
-        /// <param name="value">The <see cref="byte"/>-array value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="byte"/>-array value to get
+        /// </param>
         public bool TryGet(out byte[] value)
         {
-            return TryGetScalar(out value, BuiltInType.ByteString);
+            return
+                TryGetScalar(out value, BuiltInType.ByteString) ||
+                TryGetArray(out value, BuiltInType.Byte);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="XmlElement"/> value.
+        /// Try convert the variant to a <see cref="XmlElement"/> value.
         /// </summary>
-        /// <param name="value">The <see cref="XmlElement"/> value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="XmlElement"/> value to get
+        /// </param>
         public bool TryGet(out XmlElement value)
         {
             return TryGetScalar(out value, BuiltInType.XmlElement);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="NodeId"/> value.
+        /// Try convert the variant to a <see cref="NodeId"/> value.
         /// </summary>
-        /// <param name="value">The <see cref="NodeId"/> value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="NodeId"/> value to get
+        /// </param>
         public bool TryGet(out NodeId value)
         {
             return TryGetScalar(out value, BuiltInType.NodeId);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="ExpandedNodeId"/> value.
+        /// Try convert the variant to a <see cref="ExpandedNodeId"/> value.
         /// </summary>
         /// <param name="value">The <see cref="ExpandedNodeId"/> value to
-        /// set this Variant to</param>
+        /// get </param>
         public bool TryGet(out ExpandedNodeId value)
         {
             return TryGetScalar(out value, BuiltInType.ExpandedNodeId);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="StatusCode"/> value.
+        /// Try convert the variant to a <see cref="StatusCode"/> value.
         /// </summary>
-        /// <param name="value">The <see cref="StatusCode"/> value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="StatusCode"/> value to get
+        /// </param>
         public bool TryGet(out StatusCode value)
         {
             if (TryGetScalar(out value, BuiltInType.StatusCode))
@@ -1561,270 +1631,280 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="QualifiedName"/> value.
+        /// Try convert the variant to a <see cref="QualifiedName"/> value.
         /// </summary>
-        /// <param name="value">The <see cref="QualifiedName"/> value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="QualifiedName"/> value to get
+        /// </param>
         public bool TryGet(out QualifiedName value)
         {
             return TryGetScalar(out value, BuiltInType.QualifiedName);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="LocalizedText"/> value.
+        /// Try convert the variant to a <see cref="LocalizedText"/> value.
         /// </summary>
-        /// <param name="value">The <see cref="LocalizedText"/> value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="LocalizedText"/> value to get
+        /// </param>
         public bool TryGet(out LocalizedText value)
         {
             return TryGetScalar(out value, BuiltInType.LocalizedText);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="ExtensionObject"/> value.
+        /// Try convert the variant to a <see cref="ExtensionObject"/> value.
         /// </summary>
-        /// <param name="value">The <see cref="ExtensionObject"/> value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="ExtensionObject"/> value to get
+        /// </param>
         public bool TryGet(out ExtensionObject value)
         {
             return TryGetScalar(out value, BuiltInType.ExtensionObject);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="DataValue"/> value.
+        /// Try convert the variant to a <see cref="DataValue"/> value.
         /// </summary>
-        /// <param name="value">The <see cref="DataValue"/> value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="DataValue"/> value to get
+        /// </param>
         public bool TryGet(out DataValue value)
         {
             return TryGetScalar(out value, BuiltInType.DataValue);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="bool"/>-array value.
+        /// Try convert the variant to a <see cref="bool"/>-array value.
         /// </summary>
-        /// <param name="value">The <see cref="bool"/>-array value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="bool"/>-array value to get
+        /// </param>
         public bool TryGet(out bool[] value)
         {
             return TryGetArray(out value, BuiltInType.Boolean);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="sbyte"/>-array value.
+        /// Try convert the variant to a <see cref="sbyte"/>-array value.
         /// </summary>
-        /// <param name="value">The <see cref="sbyte"/>-array value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="sbyte"/>-array value to get
+        /// </param>
         public bool TryGet(out sbyte[] value)
         {
             return TryGetArray(out value, BuiltInType.SByte);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="short"/>-array value.
+        /// Try convert the variant to a <see cref="short"/>-array value.
         /// </summary>
-        /// <param name="value">The <see cref="short"/>-array value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="short"/>-array value to get
+        /// </param>
         public bool TryGet(out short[] value)
         {
             return TryGetArray(out value, BuiltInType.Int16);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="ushort"/>-array value.
+        /// Try convert the variant to a <see cref="ushort"/>-array value.
         /// </summary>
-        /// <param name="value">The <see cref="ushort"/>-array value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="ushort"/>-array value to get
+        /// </param>
         public bool TryGet(out ushort[] value)
         {
             return TryGetArray(out value, BuiltInType.UInt16);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="int"/>-array value.
+        /// Try convert the variant to a <see cref="int"/>-array value.
         /// </summary>
-        /// <param name="value">The <see cref="int"/>-array value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="int"/>-array value to get
+        /// </param>
         public bool TryGet(out int[] value)
         {
             return TryGetArray(out value, BuiltInType.Int32);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="uint"/>-array value.
+        /// Get a enumeration value from the Variant.
         /// </summary>
-        /// <param name="value">The <see cref="uint"/>-array value to set
-        /// this Variant to</param>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="value">The value to get</param>
+        public bool TryGet<T>(out T[] value) where T : Enum
+        {
+            return TryGetArray(out value, BuiltInType.Enumeration);
+        }
+
+        /// <summary>
+        /// Try convert the variant to a <see cref="uint"/>-array value.
+        /// </summary>
+        /// <param name="value">The <see cref="uint"/>-array value to get
+        /// </param>
         public bool TryGet(out uint[] value)
         {
             return TryGetArray(out value, BuiltInType.UInt32);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="long"/>-array value.
+        /// Try convert the variant to a <see cref="long"/>-array value.
         /// </summary>
-        /// <param name="value">The <see cref="long"/>-array value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="long"/>-array value to get
+        /// </param>
         public bool TryGet(out long[] value)
         {
             return TryGetArray(out value, BuiltInType.Int64);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="ulong"/>-array value.
+        /// Try convert the variant to a <see cref="ulong"/>-array value.
         /// </summary>
-        /// <param name="value">The <see cref="ulong"/>-array value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="ulong"/>-array value to get
+        /// </param>
         public bool TryGet(out ulong[] value)
         {
             return TryGetArray(out value, BuiltInType.UInt64);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="float"/>-array value.
+        /// Try convert the variant to a <see cref="float"/>-array value.
         /// </summary>
-        /// <param name="value">The <see cref="float"/>-array value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="float"/>-array value to get
+        /// </param>
         public bool TryGet(out float[] value)
         {
             return TryGetArray(out value, BuiltInType.Float);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="double"/>-array value.
+        /// Try convert the variant to a <see cref="double"/>-array value.
         /// </summary>
-        /// <param name="value">The <see cref="double"/>-array value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="double"/>-array value to get
+        /// </param>
         public bool TryGet(out double[] value)
         {
             return TryGetArray(out value, BuiltInType.Double);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="string"/>-array value.
+        /// Try convert the variant to a <see cref="string"/>-array value.
         /// </summary>
-        /// <param name="value">The <see cref="string"/>-array value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="string"/>-array value to get
+        /// </param>
         public bool TryGet(out string[] value)
         {
             return TryGetArray(out value, BuiltInType.String);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="DateTime"/>-array value.
+        /// Try convert the variant to a <see cref="DateTime"/>-array value.
         /// </summary>
-        /// <param name="value">The <see cref="DateTime"/>-array value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="DateTime"/>-array value to get
+        /// </param>
         public bool TryGet(out DateTime[] value)
         {
             return TryGetArray(out value, BuiltInType.DateTime);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="Uuid"/>-array value.
+        /// Try convert the variant to a <see cref="Uuid"/>-array value.
         /// </summary>
-        /// <param name="value">The <see cref="Uuid"/>-array value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="Uuid"/>-array value to get
+        /// </param>
         public bool TryGet(out Uuid[] value)
         {
             return TryGetArray(out value, BuiltInType.Guid);
         }
 
         /// <summary>
-        /// Initializes the object with a 2-d <see cref="byte"/>-array value.
+        /// Try convert the variant to a 2-d <see cref="byte"/>-array value.
         /// </summary>
-        /// <param name="value">The 2-d <see cref="byte"/>-array value to set
-        /// this Variant to</param>
+        /// <param name="value">The 2-d <see cref="byte"/>-array value to get
+        /// </param>
         public bool TryGet(out byte[][] value)
         {
             return TryGetArray(out value, BuiltInType.ByteString);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="XmlElement"/>-array value.
+        /// Try convert the variant to a <see cref="XmlElement"/>-array value.
         /// </summary>
-        /// <param name="value">The <see cref="XmlElement"/>-array value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="XmlElement"/>-array value to get
+        /// </param>
         public bool TryGet(out XmlElement[] value)
         {
             return TryGetArray(out value, BuiltInType.XmlElement);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="NodeId"/>-array value.
+        /// Try convert the variant to a <see cref="NodeId"/>-array value.
         /// </summary>
-        /// <param name="value">The <see cref="NodeId"/>-array value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="NodeId"/>-array value to get
+        /// </param>
         public bool TryGet(out NodeId[] value)
         {
             return TryGetArray(out value, BuiltInType.NodeId);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="ExpandedNodeId"/>-array value.
+        /// Try convert the variant to a <see cref="ExpandedNodeId"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="ExpandedNodeId"/>-array value to
-        /// set this Variant to</param>
+        /// get </param>
         public bool TryGet(out ExpandedNodeId[] value)
         {
             return TryGetArray(out value, BuiltInType.ExpandedNodeId);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="StatusCode"/>-array value.
+        /// Try convert the variant to a <see cref="StatusCode"/>-array value.
         /// </summary>
-        /// <param name="value">The <see cref="StatusCode"/>-array value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="StatusCode"/>-array value to get
+        /// </param>
         public bool TryGet(out StatusCode[] value)
         {
             return TryGetArray(out value, BuiltInType.StatusCode);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="QualifiedName"/>-array value.
+        /// Try convert the variant to a <see cref="QualifiedName"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="QualifiedName"/>-array value to
-        /// set this Variant to</param>
+        /// get </param>
         public bool TryGet(out QualifiedName[] value)
         {
             return TryGetArray(out value, BuiltInType.QualifiedName);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="LocalizedText"/>-array value.
+        /// Try convert the variant to a <see cref="LocalizedText"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="LocalizedText"/>-array value to
-        /// set this Variant to</param>
+        /// get </param>
         public bool TryGet(out LocalizedText[] value)
         {
             return TryGetArray(out value, BuiltInType.LocalizedText);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="ExtensionObject"/>-array value.
+        /// Try convert the variant to a <see cref="ExtensionObject"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="ExtensionObject"/>-array value to
-        /// set this Variant to</param>
+        /// get </param>
         public bool TryGet(out ExtensionObject[] value)
         {
             return TryGetArray(out value, BuiltInType.ExtensionObject);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="DataValue"/>-array value.
+        /// Try convert the variant to a <see cref="DataValue"/>-array value.
         /// </summary>
-        /// <param name="value">The <see cref="DataValue"/>-array value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="DataValue"/>-array value to get
+        /// </param>
         public bool TryGet(out DataValue[] value)
         {
             return TryGetArray(out value, BuiltInType.DataValue);
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="Variant"/>-array value.
+        /// Try convert the variant to a <see cref="Variant"/>-array value.
         /// </summary>
-        /// <param name="value">The <see cref="Variant"/>-array value to set
-        /// this Variant to</param>
+        /// <param name="value">The <see cref="Variant"/>-array value to get
+        /// </param>
         public bool TryGet(out Variant[] value)
         {
             return TryGetArray(out value, BuiltInType.Variant);
@@ -1836,14 +1916,21 @@ namespace Opc.Ua
         /// <typeparam name="T"></typeparam>
         public bool TryGetArray<T>(out T[] value, BuiltInType expectedType)
         {
-            if (m_value == null ||
-                TypeInfo.BuiltInType != expectedType ||
-                TypeInfo.ValueRank < 0)
+            if (m_value == null)
             {
                 value = default;
                 return false;
             }
-            if (m_value is T[] variable)
+            if (TypeInfo.BuiltInType != expectedType || TypeInfo.IsScalar)
+            {
+                if (!IsConvertible(TypeInfo, new TypeInfo(expectedType, TypeInfo.ValueRank)))
+                {
+                    value = default;
+                    return false;
+                }
+            }
+            // Leave else we need to convert between enum/int array types
+            else if (m_value is T[] variable)
             {
                 value = variable;
                 return true;
@@ -1883,14 +1970,20 @@ namespace Opc.Ua
         /// <typeparam name="T"></typeparam>
         public bool TryGetScalar<T>(out T value, BuiltInType expectedType)
         {
-            if (m_value == null ||
-                TypeInfo.BuiltInType != expectedType ||
-                TypeInfo.ValueRank >= 0)
+            if (m_value == null)
             {
                 value = default;
                 return false;
             }
-            if (m_value is T variable)
+            if (TypeInfo.BuiltInType != expectedType || !TypeInfo.IsScalar)
+            {
+                if (!IsConvertible(TypeInfo, new TypeInfo(expectedType, TypeInfo.ValueRank)))
+                {
+                    value = default;
+                    return false;
+                }
+            }
+            else if (m_value is T variable)
             {
                 value = variable;
                 return true;
@@ -1930,7 +2023,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="bool"/> value.
+        /// Create a Variant from a <see cref="bool"/> value.
         /// </summary>
         /// <param name="value">The <see cref="bool"/> value to set
         /// this Variant to</param>
@@ -1940,7 +2033,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="sbyte"/> value.
+        /// Create a Variant from a <see cref="sbyte"/> value.
         /// </summary>
         /// <param name="value">The <see cref="sbyte"/> value to set
         /// this Variant to</param>
@@ -1950,7 +2043,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="byte"/> value.
+        /// Create a Variant from a <see cref="byte"/> value.
         /// </summary>
         /// <param name="value">The <see cref="byte"/> value to set
         /// this Variant to</param>
@@ -1960,7 +2053,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="short"/> value.
+        /// Create a Variant from a <see cref="short"/> value.
         /// </summary>
         /// <param name="value">The <see cref="short"/> value to set
         /// this Variant to</param>
@@ -1970,7 +2063,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="ushort"/> value.
+        /// Create a Variant from a <see cref="ushort"/> value.
         /// </summary>
         /// <param name="value">The <see cref="ushort"/> value to set
         /// this Variant to</param>
@@ -1980,7 +2073,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="int"/> value.
+        /// Create a Variant from a <see cref="int"/> value.
         /// </summary>
         /// <param name="value">The <see cref="int"/> value to set
         /// this Variant to</param>
@@ -1990,7 +2083,17 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="uint"/> value.
+        /// Create a Variant from a Enum value.
+        /// </summary>
+        /// <param name="value">The Enum value to set
+        /// this Variant to</param>
+        public static Variant From<T>(T value) where T : Enum
+        {
+            return new Variant(value);
+        }
+
+        /// <summary>
+        /// Create a Variant from a <see cref="uint"/> value.
         /// </summary>
         /// <param name="value">The <see cref="uint"/> value to set
         /// this Variant to</param>
@@ -2000,7 +2103,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="long"/> value.
+        /// Create a Variant from a <see cref="long"/> value.
         /// </summary>
         /// <param name="value">The <see cref="long"/> value to set
         /// this Variant to</param>
@@ -2010,7 +2113,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="ulong"/> value.
+        /// Create a Variant from a <see cref="ulong"/> value.
         /// </summary>
         /// <param name="value">The <see cref="ulong"/> value to set
         /// this Variant to</param>
@@ -2020,7 +2123,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="float"/> value.
+        /// Create a Variant from a <see cref="float"/> value.
         /// </summary>
         /// <param name="value">The <see cref="float"/> value to set
         /// this Variant to</param>
@@ -2030,7 +2133,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="double"/> value.
+        /// Create a Variant from a <see cref="double"/> value.
         /// </summary>
         /// <param name="value">The <see cref="double"/> value to set
         /// this Variant to</param>
@@ -2040,7 +2143,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="string"/> value.
+        /// Create a Variant from a <see cref="string"/> value.
         /// </summary>
         /// <param name="value">The <see cref="string"/> value to set
         /// this Variant to</param>
@@ -2050,7 +2153,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="DateTime"/> value.
+        /// Create a Variant from a <see cref="DateTime"/> value.
         /// </summary>
         /// <param name="value">The <see cref="DateTime"/> value to set
         /// this Variant to</param>
@@ -2060,7 +2163,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="Uuid"/> value.
+        /// Create a Variant from a <see cref="Uuid"/> value.
         /// </summary>
         /// <param name="value">The <see cref="Uuid"/> value to set
         /// this Variant to</param>
@@ -2070,7 +2173,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="byte"/>-array value.
+        /// Create a Variant from a <see cref="byte"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="byte"/>-array value to set
         /// this Variant to</param>
@@ -2080,7 +2183,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="XmlElement"/> value.
+        /// Create a Variant from a <see cref="XmlElement"/> value.
         /// </summary>
         /// <param name="value">The <see cref="XmlElement"/> value to set
         /// this Variant to</param>
@@ -2090,7 +2193,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="NodeId"/> value.
+        /// Create a Variant from a <see cref="NodeId"/> value.
         /// </summary>
         /// <param name="value">The <see cref="NodeId"/> value to set
         /// this Variant to</param>
@@ -2100,7 +2203,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="ExpandedNodeId"/> value.
+        /// Create a Variant from a <see cref="ExpandedNodeId"/> value.
         /// </summary>
         /// <param name="value">The <see cref="ExpandedNodeId"/> value to
         /// set this Variant to</param>
@@ -2110,7 +2213,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="StatusCode"/> value.
+        /// Create a Variant from a <see cref="StatusCode"/> value.
         /// </summary>
         /// <param name="value">The <see cref="StatusCode"/> value to set
         /// this Variant to</param>
@@ -2120,7 +2223,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="QualifiedName"/> value.
+        /// Create a Variant from a <see cref="QualifiedName"/> value.
         /// </summary>
         /// <param name="value">The <see cref="QualifiedName"/> value to set
         /// this Variant to</param>
@@ -2130,7 +2233,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="LocalizedText"/> value.
+        /// Create a Variant from a <see cref="LocalizedText"/> value.
         /// </summary>
         /// <param name="value">The <see cref="LocalizedText"/> value to set
         /// this Variant to</param>
@@ -2140,7 +2243,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="ExtensionObject"/> value.
+        /// Create a Variant from a <see cref="ExtensionObject"/> value.
         /// </summary>
         /// <param name="value">The <see cref="ExtensionObject"/> value to set
         /// this Variant to</param>
@@ -2150,7 +2253,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="DataValue"/> value.
+        /// Create a Variant from a <see cref="DataValue"/> value.
         /// </summary>
         /// <param name="value">The <see cref="DataValue"/> value to set
         /// this Variant to</param>
@@ -2160,7 +2263,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="bool"/>-array value.
+        /// Create a Variant from a <see cref="bool"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="bool"/>-array value to set
         /// this Variant to</param>
@@ -2170,7 +2273,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="sbyte"/>-array value.
+        /// Create a Variant from a <see cref="sbyte"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="sbyte"/>-array value to set
         /// this Variant to</param>
@@ -2180,7 +2283,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="short"/>-array value.
+        /// Create a Variant from a <see cref="short"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="short"/>-array value to set
         /// this Variant to</param>
@@ -2190,7 +2293,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="ushort"/>-array value.
+        /// Create a Variant from a <see cref="ushort"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="ushort"/>-array value to set
         /// this Variant to</param>
@@ -2200,7 +2303,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="int"/>-array value.
+        /// Create a Variant from a <see cref="int"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="int"/>-array value to set
         /// this Variant to</param>
@@ -2210,7 +2313,17 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="uint"/>-array value.
+        /// Create a Variant from a Enum-array value.
+        /// </summary>
+        /// <param name="value">The Enum-array value to set
+        /// this Variant to</param>
+        public static Variant From<T>(T[] value) where T : Enum
+        {
+            return new Variant(value);
+        }
+
+        /// <summary>
+        /// Create a Variant from a <see cref="uint"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="uint"/>-array value to set
         /// this Variant to</param>
@@ -2220,7 +2333,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="long"/>-array value.
+        /// Create a Variant from a <see cref="long"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="long"/>-array value to set
         /// this Variant to</param>
@@ -2230,7 +2343,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="ulong"/>-array value.
+        /// Create a Variant from a <see cref="ulong"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="ulong"/>-array value to set
         /// this Variant to</param>
@@ -2240,7 +2353,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="float"/>-array value.
+        /// Create a Variant from a <see cref="float"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="float"/>-array value to set
         /// this Variant to</param>
@@ -2250,7 +2363,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="double"/>-array value.
+        /// Create a Variant from a <see cref="double"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="double"/>-array value to set
         /// this Variant to</param>
@@ -2260,7 +2373,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="string"/>-array value.
+        /// Create a Variant from a <see cref="string"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="string"/>-array value to set
         /// this Variant to</param>
@@ -2270,7 +2383,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="DateTime"/>-array value.
+        /// Create a Variant from a <see cref="DateTime"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="DateTime"/>-array value to set
         /// this Variant to</param>
@@ -2280,7 +2393,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="Uuid"/>-array value.
+        /// Create a Variant from a <see cref="Uuid"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="Uuid"/>-array value to set
         /// this Variant to</param>
@@ -2290,7 +2403,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a 2-d <see cref="byte"/>-array value.
+        /// Create a Variant from a 2-d <see cref="byte"/>-array value.
         /// </summary>
         /// <param name="value">The 2-d <see cref="byte"/>-array value to set
         /// this Variant to</param>
@@ -2300,7 +2413,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="XmlElement"/>-array value.
+        /// Create a Variant from a <see cref="XmlElement"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="XmlElement"/>-array value to set
         /// this Variant to</param>
@@ -2310,7 +2423,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="NodeId"/>-array value.
+        /// Create a Variant from a <see cref="NodeId"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="NodeId"/>-array value to set
         /// this Variant to</param>
@@ -2320,7 +2433,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="ExpandedNodeId"/>-array value.
+        /// Create a Variant from a <see cref="ExpandedNodeId"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="ExpandedNodeId"/>-array value to
         /// set this Variant to</param>
@@ -2330,7 +2443,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="StatusCode"/>-array value.
+        /// Create a Variant from a <see cref="StatusCode"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="StatusCode"/>-array value to set
         /// this Variant to</param>
@@ -2340,7 +2453,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="QualifiedName"/>-array value.
+        /// Create a Variant from a <see cref="QualifiedName"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="QualifiedName"/>-array value to
         /// set this Variant to</param>
@@ -2350,7 +2463,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="LocalizedText"/>-array value.
+        /// Create a Variant from a <see cref="LocalizedText"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="LocalizedText"/>-array value to
         /// set this Variant to</param>
@@ -2360,7 +2473,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="ExtensionObject"/>-array value.
+        /// Create a Variant from a <see cref="ExtensionObject"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="ExtensionObject"/>-array value to
         /// set this Variant to</param>
@@ -2370,7 +2483,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="DataValue"/>-array value.
+        /// Create a Variant from a <see cref="DataValue"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="DataValue"/>-array value to set
         /// this Variant to</param>
@@ -2380,7 +2493,7 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with a <see cref="Variant"/>-array value.
+        /// Create a Variant from a <see cref="Variant"/>-array value.
         /// </summary>
         /// <param name="value">The <see cref="Variant"/>-array value to set
         /// this Variant to</param>
@@ -3180,6 +3293,13 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
+        public bool Equals(Enum value)
+        {
+            return TryGet(out int v) &&
+                v == Convert.ToInt32(value, CultureInfo.InvariantCulture);
+        }
+
+        /// <inheritdoc/>
         public bool Equals(uint value)
         {
             return TryGet(out uint v) && v == value;
@@ -3218,7 +3338,8 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public bool Equals(DateTime value)
         {
-            return TryGet(out DateTime v) && v == value;
+            return TryGet(out DateTime v) &&
+                DateTimeComparer.Default.Equals(v, value);
         }
 
         /// <inheritdoc/>
@@ -3272,7 +3393,8 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public bool Equals(ExtensionObject value)
         {
-            return TryGet(out ExtensionObject v) && CoreUtils.IsEqual(v.Body, value.Body);
+            return TryGet(out ExtensionObject v) &&
+                EqualityComparer<ExtensionObject>.Default.Equals(v, value);
         }
 
         /// <inheritdoc/>
@@ -3314,6 +3436,14 @@ namespace Opc.Ua
         {
             return TryGet(out int[] v) &&
                 SequenceEqualityComparer<int>.Default.Equals(v, value);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(Enum[] value)
+        {
+            return TryGet(out int[] v) &&
+                ArrayEqualityComparer<int>.Default.Equals(v,
+                value.Select(e => Convert.ToInt32(e, CultureInfo.InvariantCulture)).ToArray());
         }
 
         /// <inheritdoc/>
@@ -3362,7 +3492,7 @@ namespace Opc.Ua
         public bool Equals(DateTime[] value)
         {
             return TryGet(out DateTime[] v) &&
-                SequenceEqualityComparer<DateTime>.Default.Equals(v, value);
+                DateTimeArrayComparer.Default.Equals(v, value);
         }
 
         /// <inheritdoc/>
@@ -3522,6 +3652,18 @@ namespace Opc.Ua
 
         /// <inheritdoc/>
         public static bool operator !=(Variant a, int value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Variant a, Enum value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, Enum value)
         {
             return !a.Equals(value);
         }
@@ -3791,6 +3933,18 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
+        public static bool operator ==(Variant a, Enum[] value)
+        {
+            return a.Equals(value);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Variant a, Enum[] value)
+        {
+            return !a.Equals(value);
+        }
+
+        /// <inheritdoc/>
         public static bool operator ==(Variant a, uint[] value)
         {
             return a.Equals(value);
@@ -4013,24 +4167,153 @@ namespace Opc.Ua
             {
                 return true;
             }
-            if (TypeInfo.IsUnknown || other.TypeInfo.IsUnknown)
-            {
-                return TypeInfo.IsUnknown == other.TypeInfo.IsUnknown;
-            }
-            if (TypeInfo.ValueRank != other.TypeInfo.ValueRank)
+
+            // Ensure we compare against a null variant correctly below.
+            TypeInfo ourTypeInfo = IsNull ? other.TypeInfo : TypeInfo;
+            TypeInfo otherTypeInfo = other.IsNull ? ourTypeInfo : other.TypeInfo;
+
+            if ((ourTypeInfo.ValueRank != otherTypeInfo.ValueRank ||
+                ourTypeInfo.BuiltInType != otherTypeInfo.BuiltInType) &&
+                !IsConvertible(ourTypeInfo, otherTypeInfo))
             {
                 return false;
             }
-            if (TypeInfo.BuiltInType != other.TypeInfo.BuiltInType)
+            if (ourTypeInfo.IsScalar)
+            {
+                switch (ourTypeInfo.BuiltInType)
+                {
+                    case BuiltInType.Null:
+                        return otherTypeInfo.BuiltInType == BuiltInType.Null;
+                    case BuiltInType.Boolean:
+                        return Equals(other.GetBoolean());
+                    case BuiltInType.SByte:
+                        return Equals(other.GetSByte());
+                    case BuiltInType.Byte:
+                        return Equals(other.GetByte());
+                    case BuiltInType.Int16:
+                        return Equals(other.GetInt16());
+                    case BuiltInType.UInt16:
+                        return Equals(other.GetUInt16());
+                    case BuiltInType.Enumeration:
+                    case BuiltInType.Int32:
+                        return Equals(other.GetInt32());
+                    case BuiltInType.UInt32:
+                        return Equals(other.GetUInt32());
+                    case BuiltInType.Int64:
+                        return Equals(other.GetInt64());
+                    case BuiltInType.UInt64:
+                        return Equals(other.GetUInt64());
+                    case BuiltInType.Float:
+                        return Equals(other.GetFloat());
+                    case BuiltInType.Double:
+                        return Equals(other.GetDouble());
+                    case BuiltInType.String:
+                        return Equals(other.GetString());
+                    case BuiltInType.DateTime:
+                        return Equals(other.GetDateTime());
+                    case BuiltInType.Guid:
+                        return Equals(other.GetGuid());
+                    case BuiltInType.ByteString:
+                        return Equals(other.GetByteString());
+                    case BuiltInType.XmlElement:
+                        return Equals(other.GetXmlElement());
+                    case BuiltInType.NodeId:
+                        return Equals(other.GetNodeId());
+                    case BuiltInType.ExpandedNodeId:
+                        return Equals(other.GetExpandedNodeId());
+                    case BuiltInType.StatusCode:
+                        return Equals(other.GetStatusCode());
+                    case BuiltInType.QualifiedName:
+                        return Equals(other.GetQualifiedName());
+                    case BuiltInType.LocalizedText:
+                        return Equals(other.GetLocalizedText());
+                    case BuiltInType.ExtensionObject:
+                        return Equals(other.GetExtensionObject());
+                    case BuiltInType.DataValue:
+                        return Equals(other.GetDataValue());
+                    default:
+                        Debug.Fail("Unexpected Built in type.");
+                        return false;
+                }
+            }
+            else if (ourTypeInfo.IsArray)
+            {
+                switch (ourTypeInfo.BuiltInType)
+                {
+                    case BuiltInType.Null:
+                        return other.IsNull;
+                    case BuiltInType.Boolean:
+                        return Equals(other.GetBooleanArray());
+                    case BuiltInType.SByte:
+                        return Equals(other.GetSByteArray());
+                    case BuiltInType.Byte:
+                        return Equals(other.GetByteString());
+                    case BuiltInType.Int16:
+                        return Equals(other.GetInt16Array());
+                    case BuiltInType.UInt16:
+                        return Equals(other.GetUInt16Array());
+                    case BuiltInType.Enumeration:
+                    case BuiltInType.Int32:
+                        return Equals(other.GetInt32Array());
+                    case BuiltInType.UInt32:
+                        return Equals(other.GetUInt32Array());
+                    case BuiltInType.Int64:
+                        return Equals(other.GetInt64Array());
+                    case BuiltInType.UInt64:
+                        return Equals(other.GetUInt64Array());
+                    case BuiltInType.Float:
+                        return Equals(other.GetFloatArray());
+                    case BuiltInType.Double:
+                        return Equals(other.GetDoubleArray());
+                    case BuiltInType.String:
+                        return Equals(other.GetStringArray());
+                    case BuiltInType.DateTime:
+                        return Equals(other.GetDateTimeArray());
+                    case BuiltInType.Guid:
+                        return Equals(other.GetGuidArray());
+                    case BuiltInType.ByteString:
+                        return Equals(other.GetByteStringArray());
+                    case BuiltInType.XmlElement:
+                        return Equals(other.GetXmlElementArray());
+                    case BuiltInType.NodeId:
+                        return Equals(other.GetNodeIdArray());
+                    case BuiltInType.ExpandedNodeId:
+                        return Equals(other.GetExpandedNodeIdArray());
+                    case BuiltInType.StatusCode:
+                        return Equals(other.GetStatusCodeArray());
+                    case BuiltInType.QualifiedName:
+                        return Equals(other.GetQualifiedNameArray());
+                    case BuiltInType.LocalizedText:
+                        return Equals(other.GetLocalizedTextArray());
+                    case BuiltInType.ExtensionObject:
+                        return Equals(other.GetExtensionObjectArray());
+                    case BuiltInType.DataValue:
+                        return Equals(other.GetDataValueArray());
+                    case BuiltInType.Variant:
+                    case BuiltInType.Number:
+                    case BuiltInType.Integer:
+                    case BuiltInType.UInteger:
+                        return Equals(other.GetVariantArray());
+                    default:
+                        Debug.Fail("Unexpected Built in type.");
+                        return false;
+                }
+            }
+            else if (ourTypeInfo.IsMatrix)
+            {
+                // return Equals(other.TryGetMatrix());
+                return CoreUtils.IsEqual(m_value, other.m_value);
+            }
+            else
             {
                 return false;
             }
-            return Equals(other.Value); // TODO: No more Value use
         }
 
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
+            // Sign before uns
             return obj switch
             {
                 null => IsNull,
@@ -4038,18 +4321,18 @@ namespace Opc.Ua
                 bool v => Equals(v),
                 sbyte v => Equals(v),
                 byte v => Equals(v),
-                short v => Equals(v),
                 ushort v => Equals(v),
-                int v => Equals(v),
+                short v => Equals(v),
                 uint v => Equals(v),
-                long v => Equals(v),
+                int v => Equals(v),
                 ulong v => Equals(v),
+                long v => Equals(v),
                 float v => Equals(v),
                 double v => Equals(v),
                 string v => Equals(v),
+                Enum v => Equals(v),
                 DateTime v => Equals(v),
                 Uuid v => Equals(v),
-                byte[] v => Equals(v),
                 XmlElement v => Equals(v),
                 NodeId v => Equals(v),
                 ExpandedNodeId v => Equals(v),
@@ -4058,17 +4341,19 @@ namespace Opc.Ua
                 LocalizedText v => Equals(v),
                 ExtensionObject v => Equals(v),
                 DataValue v => Equals(v),
-                bool[] v => Equals(v),
                 sbyte[] v => Equals(v),
-                short[] v => Equals(v),
+                byte[] v => Equals(v),
                 ushort[] v => Equals(v),
-                int[] v => Equals(v),
+                short[] v => Equals(v),
                 uint[] v => Equals(v),
-                long[] v => Equals(v),
+                int[] v => Equals(v),
                 ulong[] v => Equals(v),
+                long[] v => Equals(v),
+                bool[] v => Equals(v),
                 float[] v => Equals(v),
                 double[] v => Equals(v),
                 string[] v => Equals(v),
+                Enum[] v => Equals(v),
                 DateTime[] v => Equals(v),
                 Uuid[] v => Equals(v),
                 byte[][] v => Equals(v),
@@ -4081,7 +4366,7 @@ namespace Opc.Ua
                 ExtensionObject[] v => Equals(v),
                 DataValue[] v => Equals(v),
                 Variant[] v => Equals(v),
-                _ => CoreUtils.IsEqual(m_value, obj)
+                _ => false
             };
         }
 
@@ -4122,7 +4407,7 @@ namespace Opc.Ua
             }
 
             // convert byte string to hexstring.
-            if (TypeInfo.BuiltInType == BuiltInType.ByteString && TypeInfo.ValueRank < 0)
+            if (TypeInfo.BuiltInType == BuiltInType.ByteString && TypeInfo.IsScalar)
             {
                 byte[] bytes = (byte[])value;
                 AppendByteString(buffer, bytes, formatProvider);
@@ -4130,7 +4415,7 @@ namespace Opc.Ua
             }
 
             // convert XML element to string.
-            if (TypeInfo.BuiltInType == BuiltInType.XmlElement && TypeInfo.ValueRank < 0)
+            if (TypeInfo.BuiltInType == BuiltInType.XmlElement && TypeInfo.IsScalar)
             {
                 var xml = (XmlElement)value;
                 buffer.AppendFormat(formatProvider, "{0}", xml.OuterXml);
@@ -4139,7 +4424,7 @@ namespace Opc.Ua
 
             // recusrively write individual elements of an array.
 
-            if (value is Array array && TypeInfo.ValueRank <= 1)
+            if (value is Array array && TypeInfo.IsArray)
             {
                 buffer.Append('{');
 
@@ -4188,8 +4473,47 @@ namespace Opc.Ua
         {
             return new InvalidCastException(
                 CoreUtils.Format(
-                    "Cannot convert Variant to {1}.",
+                    "Cannot convert Variant to {0}.",
                     typeof(T).Name));
+        }
+
+        /// <summary>
+        /// Returns true if for sake of variant these type infos are equivalent
+        /// </summary>
+        /// <param name="typeInfo1"></param>
+        /// <param name="typeInfo2"></param>
+        /// <returns></returns>
+        private bool IsConvertible(TypeInfo typeInfo1, TypeInfo typeInfo2)
+        {
+            // Cooerce Enumeration and Int32
+            if (typeInfo1.ValueRank == typeInfo2.ValueRank &&
+                IsEnumeration(typeInfo1) &&
+                IsEnumeration(typeInfo2))
+            {
+                return true;
+            }
+            // ByteString is the same as Array of bytes
+            if (IsByteString(typeInfo1) &&
+                IsByteString(typeInfo2))
+            {
+                return true;
+            }
+
+            return false;
+
+            static bool IsByteString(TypeInfo typeInfo)
+            {
+                return
+                   (typeInfo.BuiltInType == BuiltInType.Byte && typeInfo.IsArray) ||
+                   (typeInfo.BuiltInType == BuiltInType.ByteString && typeInfo.IsScalar);
+            }
+
+            static bool IsEnumeration(TypeInfo typeInfo)
+            {
+                return
+                   typeInfo.BuiltInType == BuiltInType.Int32 ||
+                   typeInfo.BuiltInType == BuiltInType.Enumeration;
+            }
         }
 
         [Conditional("DEBUG")]

@@ -84,6 +84,24 @@ namespace Opc.Ua
         public static readonly TypeInfo Unknown;
 
         /// <summary>
+        /// True if scalar type
+        /// </summary>
+        [JsonIgnore]
+        public bool IsScalar => ValueRank < 0;
+
+        /// <summary>
+        /// True if scalar type
+        /// </summary>
+        [JsonIgnore]
+        public bool IsArray => ValueRank is 0 or 1;
+
+        /// <summary>
+        /// True if matrix type
+        /// </summary>
+        [JsonIgnore]
+        public bool IsMatrix => ValueRank > 1;
+
+        /// <summary>
         /// The built-in type.
         /// </summary>
         /// <value>The type of the type represented by this instance.</value>

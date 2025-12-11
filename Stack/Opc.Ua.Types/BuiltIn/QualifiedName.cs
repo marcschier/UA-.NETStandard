@@ -339,11 +339,12 @@ namespace Opc.Ua
             // extract local namespace index.
             int start = text.IndexOf(':', StringComparison.Ordinal);
             if (start < 0 ||
-                !ushort.TryParse(text[..start], out ushort namespaceIndex))
+                !ushort.TryParse(text[..start], out ushort namespaceIndex) ||
+                start + 1 == text.Length)
             {
                 return new QualifiedName(text);
             }
-            return new QualifiedName(text[start..], namespaceIndex);
+            return new QualifiedName(text[(start + 1)..], namespaceIndex);
         }
 
         /// <summary>

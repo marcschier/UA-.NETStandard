@@ -223,53 +223,53 @@ namespace Opc.Ua
                 return true;
             }
 
-            if (other != null)
+            if (other is null)
             {
-                if (StatusCode != other.StatusCode)
-                {
-                    return false;
-                }
-
-                if (ServerTimestamp != other.ServerTimestamp)
-                {
-                    return false;
-                }
-
-                if (SourceTimestamp != other.SourceTimestamp)
-                {
-                    return false;
-                }
-
-                if (ServerPicoseconds != other.ServerPicoseconds)
-                {
-                    return false;
-                }
-
-                if (SourcePicoseconds != other.SourcePicoseconds)
-                {
-                    return false;
-                }
-
-                if (m_value != other.m_value)
-                {
-                    return false;
-                }
-                return true;
+                return false;
+            }
+            if (StatusCode != other.StatusCode)
+            {
+                return false;
             }
 
-            return false;
+            if (ServerTimestamp != other.ServerTimestamp)
+            {
+                return false;
+            }
+
+            if (SourceTimestamp != other.SourceTimestamp)
+            {
+                return false;
+            }
+
+            if (ServerPicoseconds != other.ServerPicoseconds)
+            {
+                return false;
+            }
+
+            if (SourcePicoseconds != other.SourcePicoseconds)
+            {
+                return false;
+            }
+
+            if (m_value != other.m_value)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         /// <inheritdoc/>
         public static bool operator ==(DataValue a, DataValue b)
         {
-            return a.Equals(b);
+            return a is null ? b is null : a.Equals(b);
         }
 
         /// <inheritdoc/>
         public static bool operator !=(DataValue a, DataValue b)
         {
-            return !a.Equals(b);
+            return !(a == b);
         }
 
         /// <summary>

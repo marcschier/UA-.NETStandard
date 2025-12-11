@@ -41,14 +41,14 @@ namespace Opc.Ua.Client.Tests
     {
         private readonly ISession m_session;
 
-        public ITelemetryContext Telemetry { get; }
         public ILogger Logger { get; }
+
+        public IServiceMessageContext MessageContext => m_session.MessageContext;
 
         public ClientTestServices(ISession session, ITelemetryContext telemetry)
         {
             m_session = session;
-            Telemetry = telemetry;
-            Logger = telemetry.CreateLogger<ClientTestServices>();
+            Logger = session.MessageContext.Telemetry.CreateLogger<ClientTestServices>();
         }
 
         public ValueTask<BrowseResponse> BrowseAsync(

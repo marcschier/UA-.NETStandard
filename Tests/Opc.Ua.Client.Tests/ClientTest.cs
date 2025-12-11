@@ -1442,8 +1442,8 @@ namespace Opc.Ua.Client.Tests
             foreach (Node node in nodeCollection)
             {
                 Assert.NotNull(node);
-                Assert.AreEqual(ServiceResult.Good, errors[ii]);
                 TestContext.Out.WriteLine("NodeId: {0} Node: {1}", node.NodeId, node);
+                Assert.AreEqual(ServiceResult.Good, errors[ii]);
                 if (node is VariableNode)
                 {
                     try

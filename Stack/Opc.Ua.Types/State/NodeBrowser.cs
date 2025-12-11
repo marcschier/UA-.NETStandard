@@ -77,7 +77,7 @@ namespace Opc.Ua
             m_references = [];
             m_seenReferences = allowDuplicateReferences ?
                 null :
-                new(ReferenceEqualityComparer.Instance);
+                new(ReferenceEqualityComparer.Default);
 
             // add any additional references if they meet the criteria.
             if (additionalReferences != null)

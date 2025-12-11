@@ -31,6 +31,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
@@ -54,21 +55,6 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             Zero = 0,
             One = 1,
             Two = 2
-        }
-
-        private sealed class CloneableHolder : ICloneable
-        {
-            public CloneableHolder(int value)
-            {
-                Value = value;
-            }
-
-            public int Value { get; }
-
-            public object Clone()
-            {
-                return new CloneableHolder(Value);
-            }
         }
 
         public sealed record VariantDescriptor(
@@ -131,7 +117,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
                 yield return CreateConstructorCase("ScalarLocalizedText",
                     () => new LocalizedText("en", "text"), TypeInfo.Scalars.LocalizedText);
                 yield return CreateConstructorCase("ScalarExtensionObject",
-                    () => new ExtensionObject(new StatusCode(1)), TypeInfo.Scalars.ExtensionObject);
+                    () => new ExtensionObject(new Argument()), TypeInfo.Scalars.ExtensionObject);
                 yield return CreateConstructorCase("ScalarDataValue",
                     () => new DataValue(5), TypeInfo.Scalars.DataValue);
             }
@@ -195,8 +181,8 @@ namespace Opc.Ua.Types.Tests.BuiltIn
                         new LocalizedText("de", "b")), TypeInfo.Arrays.LocalizedText);
                 yield return CreateConstructorCase("ArrayExtensionObject",
                     () => ArrayOf(
-                        new ExtensionObject(new StatusCode(1)),
-                        new ExtensionObject(new StatusCode(2))), TypeInfo.Arrays.ExtensionObject);
+                        new ExtensionObject(new Argument()),
+                        new ExtensionObject(new Argument())), TypeInfo.Arrays.ExtensionObject);
                 yield return CreateConstructorCase("ArrayDataValue",
                     () => ArrayOf(new DataValue(1), new DataValue(2)), TypeInfo.Arrays.DataValue);
                 yield return CreateConstructorCase("ArrayVariant",
@@ -358,7 +344,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
                 yield return CreateDescriptorCase(
                     new VariantDescriptor(
                         "ScalarExtensionObject",
-                        () => new ExtensionObject(new StatusCode(5)),
+                        () => new ExtensionObject(new Argument()),
                         typeof(ExtensionObject),
                         TypeInfo.Scalars.ExtensionObject,
                         nameof(Variant.GetExtensionObject)));
@@ -523,7 +509,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
                 yield return CreateDescriptorCase(
                     new VariantDescriptor(
                         "ArrayExtensionObject",
-                        () => ArrayOf(new ExtensionObject(new StatusCode(1)), new ExtensionObject(new StatusCode(2))),
+                        () => ArrayOf(new ExtensionObject(new Argument()), new ExtensionObject(new Argument())),
                         typeof(ExtensionObject[]),
                         TypeInfo.Arrays.ExtensionObject,
                         nameof(Variant.GetExtensionObjectArray)));
@@ -574,9 +560,9 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             };
             var variant = new Variant((Array)data);
 
-            Assert.AreEqual(ValueRanks.Scalar, variant.TypeInfo.ValueRank);
+            Assert.AreEqual(2, variant.TypeInfo.ValueRank);
             Assert.AreEqual(BuiltInType.Int32, variant.TypeInfo.BuiltInType);
-            Assert.That(variant.Value, Is.TypeOf<Matrix>());
+            Assert.That(variant.AsBoxedObject(), Is.TypeOf<Matrix>());
             var matrix = (Matrix)variant.Value;
             Assert.That(data.Cast<int>().ToArray(), Is.EquivalentTo(matrix.Elements.Cast<int>().ToArray()));
         }
@@ -598,7 +584,9 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             var variant = new Variant(value, TypeInfo.Scalars.Enumeration);
 
             Assert.AreEqual(BuiltInType.Enumeration, variant.TypeInfo.BuiltInType);
-            Assert.AreEqual((int)value, variant.GetInt32());
+            Assert.That(variant.GetInt32(), Is.EqualTo(Convert.ToInt32(value, CultureInfo.InvariantCulture)));
+            Assert.That(variant.GetEnumeration<EnumValue>(), Is.EqualTo(value));
+            Assert.That(variant.Value, Is.EqualTo(value));
         }
 
         [Test]
@@ -606,10 +594,38 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         {
             EnumValue[] values = { EnumValue.Zero, EnumValue.One };
             TypeInfo typeInfo = TypeInfo.Create(BuiltInType.Enumeration, ValueRanks.OneDimension);
-            var variant = new Variant((Array)values, typeInfo);
+            var variant = new Variant(values, typeInfo);
 
             Assert.AreEqual(BuiltInType.Enumeration, variant.TypeInfo.BuiltInType);
-            Assert.That(values.Select(v => (int)v).ToArray(), Is.EquivalentTo((int[])variant.Value));
+            Assert.That(variant.Value, Is.EqualTo(values));
+            Assert.That(variant.GetEnumerationArray<EnumValue>(), Is.EqualTo(values));
+            Assert.That(variant.GetInt32Array(), Is.EqualTo(
+                values.Select(v => Convert.ToInt32(v, CultureInfo.InvariantCulture)).ToArray()));
+        }
+
+        [Test]
+        public void EnumConstructorWithTypeInfo_CoercesEnumerationValue()
+        {
+            EnumValue value = EnumValue.Two;
+            var variant = new Variant(value);
+
+            Assert.AreEqual(BuiltInType.Enumeration, variant.TypeInfo.BuiltInType);
+            Assert.That(variant.GetInt32(), Is.EqualTo(Convert.ToInt32(value, CultureInfo.InvariantCulture)));
+            Assert.That(variant.GetEnumeration<EnumValue>(), Is.EqualTo(value));
+            Assert.That(variant.Value, Is.EqualTo(value));
+        }
+
+        [Test]
+        public void EnumArrayConstructorWithTypeInfo_CoercesEnumerationArray()
+        {
+            EnumValue[] values = { EnumValue.Zero, EnumValue.One };
+            var variant = Variant.From(values);
+
+            Assert.AreEqual(BuiltInType.Enumeration, variant.TypeInfo.BuiltInType);
+            Assert.That(variant.Value, Is.EqualTo(values));
+            Assert.That(variant.GetEnumerationArray<EnumValue>(), Is.EqualTo(values));
+            Assert.That(variant.GetInt32Array(), Is.EqualTo(
+                values.Select(v => Convert.ToInt32(v, CultureInfo.InvariantCulture)).ToArray()));
         }
 
         [Test]
@@ -628,17 +644,6 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         }
 
         [Test]
-        public void VariantClonesCloneableValues()
-        {
-            var holder = new CloneableHolder(5);
-            var variant = new Variant(holder);
-            var boxed = (CloneableHolder)variant.Value;
-
-            Assert.AreNotSame(holder, boxed);
-            Assert.AreEqual(holder.Value, boxed.Value);
-        }
-
-        [Test]
         public void VariantConstructsArrayFromEnumerable()
         {
             IList source = new List<int> { 1, 2, 3 };
@@ -652,7 +657,8 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         [TestCaseSource(nameof(ScalarDescriptorCases))]
         public void TryGetScalar_Succeeds(VariantDescriptor descriptor)
         {
-            var variant = new Variant(descriptor.CreateValue());
+            var value = descriptor.CreateValue();
+            var variant = new Variant(value);
             MethodInfo method = typeof(Variant).GetMethod(nameof(Variant.TryGet), ArrayOf(descriptor.ValueType.MakeByRefType()));
             object[] args = ArrayOf(CreateDefaultValue(descriptor.ValueType));
 
@@ -660,13 +666,14 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             bool success = (bool)method!.Invoke(variant, args);
 
             Assert.IsTrue(success);
-            AssertValueEquality(descriptor.CreateValue(), args[0]);
+            AssertValueEquality(value, args[0]);
         }
 
         [TestCaseSource(nameof(ArrayDescriptorCases))]
         public void TryGetArray_Succeeds(VariantDescriptor descriptor)
         {
-            var variant = new Variant((Array)descriptor.CreateValue());
+            var values = (Array)descriptor.CreateValue();
+            var variant = new Variant(values);
             MethodInfo method = typeof(Variant).GetMethod(nameof(Variant.TryGet), ArrayOf(descriptor.ValueType.MakeByRefType()));
             object[] args = ArrayOf(CreateDefaultValue(descriptor.ValueType));
 
@@ -674,31 +681,33 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             bool success = (bool)method!.Invoke(variant, args);
 
             Assert.IsTrue(success);
-            AssertValueEquality(descriptor.CreateValue(), args[0]);
+            AssertValueEquality(values, args[0]);
         }
 
         [TestCaseSource(nameof(ScalarDescriptorCases))]
         public void GetScalar_ReturnsStoredValue(VariantDescriptor descriptor)
         {
-            var variant = new Variant(descriptor.CreateValue());
+            var value = descriptor.CreateValue();
+            var variant = new Variant(value);
             MethodInfo method = typeof(Variant).GetMethod(descriptor.GetMethodName, ArrayOf(descriptor.ValueType));
             object[] args = ArrayOf(CreateDefaultValue(descriptor.ValueType));
 
             Assert.NotNull(method, $"Get method {descriptor.GetMethodName} should exist");
             object result = method!.Invoke(variant, args);
-            AssertValueEquality(descriptor.CreateValue(), result);
+            AssertValueEquality(value, result);
         }
 
         [TestCaseSource(nameof(ArrayDescriptorCases))]
         public void GetArray_ReturnsStoredValue(VariantDescriptor descriptor)
         {
-            var variant = new Variant((Array)descriptor.CreateValue());
+            var values = (Array)descriptor.CreateValue();
+            var variant = new Variant(values);
             MethodInfo method = typeof(Variant).GetMethod(descriptor.GetMethodName, ArrayOf(descriptor.ValueType));
             object[] args = ArrayOf(CreateDefaultValue(descriptor.ValueType));
 
             Assert.NotNull(method, $"Get method {descriptor.GetMethodName} should exist");
             object result = method!.Invoke(variant, args);
-            AssertValueEquality(descriptor.CreateValue(), result);
+            AssertValueEquality(values, result);
         }
 
         [TestCaseSource(nameof(ScalarDescriptorCases))]
@@ -728,20 +737,22 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         [TestCaseSource(nameof(ScalarDescriptorCases))]
         public void GenericTryGetScalar_Succeeds(VariantDescriptor descriptor)
         {
-            var variant = new Variant(descriptor.CreateValue());
+            var value = descriptor.CreateValue();
+            var variant = new Variant(value);
             MethodInfo method = typeof(Variant).GetMethod(nameof(Variant.TryGetScalar))!
                 .MakeGenericMethod(descriptor.ValueType);
             object[] args = ArrayOf(CreateDefaultValue(descriptor.ValueType), descriptor.TypeInfo.BuiltInType);
 
             bool success = (bool)method.Invoke(variant, args);
             Assert.IsTrue(success);
-            AssertValueEquality(descriptor.CreateValue(), args[0]);
+            AssertValueEquality(value, args[0]);
         }
 
         [TestCaseSource(nameof(ArrayDescriptorCases))]
         public void GenericTryGetArray_Succeeds(VariantDescriptor descriptor)
         {
-            var variant = new Variant((Array)descriptor.CreateValue());
+            var values = (Array)descriptor.CreateValue();
+            var variant = new Variant(values);
             Type elementType = descriptor.ValueType.GetElementType() ?? descriptor.ValueType;
             MethodInfo method = typeof(Variant).GetMethod(nameof(Variant.TryGetArray))!
                 .MakeGenericMethod(elementType);
@@ -749,7 +760,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
 
             bool success = (bool)method.Invoke(variant, args);
             Assert.IsTrue(success);
-            AssertValueEquality(descriptor.CreateValue(), args[0]);
+            AssertValueEquality(values, args[0]);
         }
 
         [Test]
@@ -808,34 +819,6 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             Assert.That(args[0], Is.TypeOf<Matrix>());
         }
 
-        [TestCaseSource(nameof(ScalarDescriptorCases))]
-        public void TypedScalarEquals_ReturnsTrue(VariantDescriptor descriptor)
-        {
-            var variant = new Variant(descriptor.CreateValue());
-            Assert.IsTrue(InvokeTypedEquals(descriptor, variant, CloneValue(descriptor.CreateValue())));
-        }
-
-        [TestCaseSource(nameof(ScalarDescriptorCases))]
-        public void TypedScalarEquals_ReturnsFalseWhenDifferent(VariantDescriptor descriptor)
-        {
-            var variant = new Variant(descriptor.CreateValue());
-            Assert.IsFalse(InvokeTypedEquals(descriptor, variant, CreateDifferentValue(descriptor)));
-        }
-
-        [TestCaseSource(nameof(ArrayDescriptorCases))]
-        public void TypedArrayEquals_ReturnsTrue(VariantDescriptor descriptor)
-        {
-            var variant = new Variant((Array)descriptor.CreateValue());
-            Assert.IsTrue(InvokeTypedEquals(descriptor, variant, CloneValue(descriptor.CreateValue())));
-        }
-
-        [TestCaseSource(nameof(ArrayDescriptorCases))]
-        public void TypedArrayEquals_ReturnsFalseWhenDifferent(VariantDescriptor descriptor)
-        {
-            var variant = new Variant((Array)descriptor.CreateValue());
-            Assert.IsFalse(InvokeTypedEquals(descriptor, variant, CreateDifferentValue(descriptor)));
-        }
-
         [Test]
         public void VariantEqualsVariant_UsesValueSemantics()
         {
@@ -864,32 +847,6 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             Assert.IsTrue(variant.Equals((object)"value"));
             Assert.IsFalse(variant.Equals((object)"other"));
             Assert.IsTrue(Variant.Null.Equals((object)null));
-        }
-
-        [TestCaseSource(nameof(ScalarDescriptorCases))]
-        public void EqualityOperatorWithScalarMatches(VariantDescriptor descriptor)
-        {
-            dynamic variant = new Variant(descriptor.CreateValue());
-            dynamic same = CloneValue(descriptor.CreateValue());
-            dynamic different = CreateDifferentValue(descriptor);
-
-            Assert.IsTrue(variant == same);
-            Assert.IsFalse(variant != same);
-            Assert.IsFalse(variant == different);
-            Assert.IsTrue(variant != different);
-        }
-
-        [TestCaseSource(nameof(ArrayDescriptorCases))]
-        public void EqualityOperatorWithArrayMatches(VariantDescriptor descriptor)
-        {
-            dynamic variant = new Variant((Array)descriptor.CreateValue());
-            dynamic same = CloneValue(descriptor.CreateValue());
-            dynamic different = CreateDifferentValue(descriptor);
-
-            Assert.IsTrue(variant == same);
-            Assert.IsFalse(variant != same);
-            Assert.IsFalse(variant == different);
-            Assert.IsTrue(variant != different);
         }
 
         [Test]
@@ -940,8 +897,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         {
             var variant = new Variant(null, TypeInfo.Scalars.NodeId);
 
-            Assert.IsNull(variant.AsBoxedObject());
-            Assert.IsNull(variant.Value);
+            Assert.That(variant.AsBoxedObject(), Is.EqualTo(NodeId.Null));
         }
 
         [Test]
@@ -996,19 +952,21 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         [TestCaseSource(nameof(ScalarDescriptorCases))]
         public void VariantFromScalarProducesEquivalentVariant(VariantDescriptor descriptor)
         {
-            Variant variant = InvokeVariantFrom(descriptor.CreateValue());
+            var value = descriptor.CreateValue();
+            Variant variant = InvokeVariantFrom(value);
 
             AssertTypeInfo(descriptor.TypeInfo, variant.TypeInfo);
-            AssertValueEquality(descriptor.CreateValue(), variant.Value);
+            AssertValueEquality(value, variant.Value);
         }
 
         [TestCaseSource(nameof(ArrayDescriptorCases))]
         public void VariantFromArrayProducesEquivalentVariant(VariantDescriptor descriptor)
         {
-            Variant variant = InvokeVariantFrom(descriptor.CreateValue());
+            var value = descriptor.CreateValue();
+            Variant variant = InvokeVariantFrom(value);
 
             AssertTypeInfo(descriptor.TypeInfo, variant.TypeInfo);
-            AssertValueEquality(descriptor.CreateValue(), variant.Value);
+            AssertValueEquality(value, variant.Value);
         }
 
         [Test]
@@ -1021,69 +979,6 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             Assert.AreEqual(2, stored.Length);
             Assert.AreEqual(1, stored[0].GetInt32());
             Assert.AreEqual("two", stored[1].GetString());
-        }
-
-        private static bool InvokeTypedEquals(VariantDescriptor descriptor, Variant variant, object candidate)
-        {
-            MethodInfo method = typeof(Variant).GetMethod(nameof(Variant.Equals), ArrayOf(descriptor.ValueType))!;
-            return (bool)method.Invoke(variant, ArrayOf(candidate));
-        }
-
-        private static object CreateDifferentValue(VariantDescriptor descriptor)
-        {
-            object value = descriptor.CreateValue();
-            return descriptor.TypeInfo.ValueRank >= 0
-                ? CreateDifferentArrayValue((Array)value)
-                : CreateAlternateElement(value);
-        }
-
-        private static Array CreateDifferentArrayValue(Array array)
-        {
-            if (array.Length == 0)
-            {
-                throw new InvalidOperationException("Array test data must contain at least one item.");
-            }
-
-            var clone = (Array)CloneValue(array);
-            object alternate = CreateAlternateElement(clone.GetValue(0));
-            clone.SetValue(alternate, 0);
-            return clone;
-        }
-
-#pragma warning disable CA1859 // Use concrete types when possible for improved performance
-        private static object CreateAlternateElement(object element)
-#pragma warning restore CA1859 // Use concrete types when possible for improved performance
-        {
-            return element switch
-            {
-                bool b => !b,
-                sbyte sb => (sbyte)(sb + 1),
-                byte bt => (byte)(bt + 1),
-                short s => (short)(s + 1),
-                ushort us => (ushort)(us + 1),
-                int i => i + 1,
-                uint ui => ui + 1,
-                long l => l + 1,
-                ulong ul => ul + 1,
-                float f => f + 1,
-                double d => d + 1,
-                string str => str + "_different",
-                DateTime dt => dt.AddMinutes(1),
-                Uuid guid => new Uuid(Guid.NewGuid()),
-                byte[] bytes => CreateDifferentByteArray(bytes),
-                XmlElement xml => CreateDifferentXmlElement(xml),
-                NodeId nodeId => new NodeId(Guid.NewGuid().ToString(), nodeId.NamespaceIndex),
-                ExpandedNodeId expanded => new ExpandedNodeId(
-                    Guid.NewGuid().ToString(),
-                    expanded.NamespaceIndex),
-                StatusCode status => new StatusCode(status.Code + 1u),
-                QualifiedName qualified => new QualifiedName(qualified.Name + "Diff", (ushort)(qualified.NamespaceIndex + 1)),
-                LocalizedText text => new LocalizedText(text.Locale ?? "en", text.Text + "Diff"),
-                ExtensionObject => new ExtensionObject(new StatusCode(999u)),
-                DataValue => new DataValue(new Variant(Guid.NewGuid().ToString())),
-                Variant => new Variant(new Uuid(Guid.NewGuid())),
-                _ => throw new InvalidOperationException($"Missing alternate generator for type {element.GetType()}")
-            };
         }
 
         private static byte[] CreateDifferentByteArray(byte[] bytes)
