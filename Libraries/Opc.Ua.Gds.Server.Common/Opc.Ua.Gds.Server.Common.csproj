@@ -20,9 +20,6 @@
     <EmbeddedResource Include="Model\Opc.Ua.Gds.PredefinedNodes.uanodes" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="BouncyCastle.Cryptography" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Opc.Ua.Gds.Common\Opc.Ua.Gds.Common.csproj" />
     <ProjectReference Include="..\Opc.Ua.Server\Opc.Ua.Server.csproj" />
   </ItemGroup>
