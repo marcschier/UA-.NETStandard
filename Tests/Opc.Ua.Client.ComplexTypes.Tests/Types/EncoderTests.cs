@@ -232,7 +232,7 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
             ExpandedNodeId nodeId;
             Type complexType;
             (nodeId, complexType) = TypeDictionary[structureType];
-            object emittedType = Activator.CreateInstance(complexType);
+            IEncodeable emittedType = Activator.CreateInstance(complexType) as IEncodeable;
             var baseType = emittedType as BaseComplexType;
             FillStructWithValues(baseType, true, NameSpaceUris);
 

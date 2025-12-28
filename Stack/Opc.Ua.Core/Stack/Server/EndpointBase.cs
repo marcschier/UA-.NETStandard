@@ -752,8 +752,9 @@ namespace Opc.Ua
                     if (activitySource.HasListeners())
                     {
                         // extract trace information from the request header if available
-                        if (Request.RequestHeader?.AdditionalHeader?
-                            .Body is AdditionalParametersType parameters &&
+                        if (Request.RequestHeader != null &&
+                            Request.RequestHeader.AdditionalHeader
+                                .TryGetEncodeable(out AdditionalParametersType parameters) &&
                             TryExtractActivityContextFromParameters(
                                 parameters,
                                 out ActivityContext activityContext))

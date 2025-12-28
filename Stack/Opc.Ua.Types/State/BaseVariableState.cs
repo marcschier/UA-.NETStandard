@@ -357,7 +357,7 @@ namespace Opc.Ua
 
                 if (uuid != null)
                 {
-                    return (Guid)uuid.Value;
+                    return uuid.Value;
                 }
             }
 

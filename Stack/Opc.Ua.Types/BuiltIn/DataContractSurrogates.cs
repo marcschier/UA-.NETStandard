@@ -151,6 +151,7 @@ namespace Opc.Ua
         {
             { typeof(NodeId), typeof(SerializableNodeId) },
             { typeof(ExpandedNodeId), typeof(SerializableExpandedNodeId) },
+            { typeof(ExtensionObject), typeof(SerializableExtensionObject) },
             { typeof(Uuid), typeof(SerializableUuid) },
             { typeof(StatusCode), typeof(SerializableStatusCode) },
             { typeof(QualifiedName), typeof(SerializableQualifiedName) },

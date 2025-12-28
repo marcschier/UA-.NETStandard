@@ -152,7 +152,7 @@ namespace Opc.Ua.Client.Tests
 
             Assert.AreEqual(
                 StatusCodes.BadServiceUnsupported,
-                (StatusCode)sre.StatusCode,
+                sre.StatusCode,
                 sre.ToString());
         }
 
@@ -187,7 +187,7 @@ namespace Opc.Ua.Client.Tests
 
             Assert.AreEqual(
                 StatusCodes.BadServiceUnsupported,
-                (StatusCode)sre.StatusCode);
+                sre.StatusCode);
         }
 
         [Test]
@@ -218,7 +218,7 @@ namespace Opc.Ua.Client.Tests
 
             Assert.AreEqual(
                 StatusCodes.BadServiceUnsupported,
-                (StatusCode)sre.StatusCode);
+                sre.StatusCode);
         }
 
         [Test]
@@ -252,7 +252,7 @@ namespace Opc.Ua.Client.Tests
 
             Assert.AreEqual(
                 StatusCodes.BadServiceUnsupported,
-                (StatusCode)sre.StatusCode);
+                sre.StatusCode);
         }
 
         [Test]

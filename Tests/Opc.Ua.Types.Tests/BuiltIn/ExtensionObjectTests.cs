@@ -49,7 +49,6 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         [Test]
         public void ExtensionObject()
         {
-            ExtensionObject extensionObject_null = null;
             // Validate the default constructor
             var extensionObject_Default = new ExtensionObject();
             Assert.NotNull(extensionObject_Default);
@@ -64,19 +63,17 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             Assert.Null(extensionObject.Body);
             // static extensions
             Assert.True(Ua.ExtensionObject.IsNull(extensionObject));
-            Assert.Null(Ua.ExtensionObject.ToEncodeable(null));
+            Assert.Null(Ua.ExtensionObject.ToEncodeable(default));
             Assert.Null(Ua.ExtensionObject.ToArray(null, typeof(object)));
             Assert.Null(Ua.ExtensionObject.ToList<object>(null));
             // constructor by ExpandedNodeId
             extensionObject = new ExtensionObject(ExpandedNodeId.Null);
             Assert.AreEqual(0, extensionObject.GetHashCode());
             NUnit.Framework.Assert
-                .Throws<ArgumentNullException>(() => new ExtensionObject(extensionObject_null));
-            NUnit.Framework.Assert
-                .Throws<ServiceResultException>(() => new ExtensionObject(new object()));
+                .Throws<ServiceResultException>(() => new ExtensionObject(default, new object()));
             // constructor by object
             byte[] byteArray = [1, 2, 3];
-            extensionObject = new ExtensionObject((object)byteArray);
+            extensionObject = new ExtensionObject(default, byteArray);
             Assert.NotNull(extensionObject);
             Assert.AreEqual(extensionObject, extensionObject);
             // string extension
@@ -84,11 +81,8 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             NUnit.Framework.Assert
                 .Throws<FormatException>(() => extensionObject.ToString("123", null));
             Assert.NotNull(extensionObjectString);
-            // clone
-            ExtensionObject clonedExtensionObject = CoreUtils.Clone(extensionObject);
-            Assert.AreEqual(extensionObject, clonedExtensionObject);
             // IsEqual operator
-            clonedExtensionObject.TypeId = new ExpandedNodeId(333);
+            var clonedExtensionObject = extensionObject.WithTypeId(new ExpandedNodeId(333));
             Assert.AreNotEqual(extensionObject, clonedExtensionObject);
             Assert.AreNotEqual(extensionObject, extensionObject_Default);
             Assert.AreNotEqual(extensionObject, new object());

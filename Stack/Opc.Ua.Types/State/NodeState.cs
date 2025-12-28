@@ -852,12 +852,10 @@ namespace Opc.Ua
         {
             AttributesToSave attributesToSave = AttributesToSave.None;
 
-            if (!string.IsNullOrEmpty(SymbolicName))
+            if (!string.IsNullOrEmpty(SymbolicName) &&
+                SymbolicName != m_browseName.Name)
             {
-                if (SymbolicName != m_browseName.Name)
-                {
-                    attributesToSave |= AttributesToSave.SymbolicName;
-                }
+                attributesToSave |= AttributesToSave.SymbolicName;
             }
 
             attributesToSave |= AttributesToSave.NodeClass;

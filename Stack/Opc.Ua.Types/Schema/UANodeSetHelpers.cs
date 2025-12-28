@@ -1110,7 +1110,7 @@ namespace Opc.Ua.Export
             NamespaceTable namespaceUris,
             bool outputRedundantNames)
         {
-            if (source == null || source.Body == null)
+            if (source.IsNull)
             {
                 return null;
             }

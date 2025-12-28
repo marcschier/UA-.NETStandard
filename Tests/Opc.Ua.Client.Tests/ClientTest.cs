@@ -314,7 +314,7 @@ namespace Opc.Ua.Client.Tests
             }
             Assert.AreEqual(
                 StatusCodes.BadSecurityPolicyRejected,
-                (StatusCode)sre.StatusCode,
+                sre.StatusCode,
                 "Unexpected Status: {0}",
                 sre);
         }
@@ -363,7 +363,7 @@ namespace Opc.Ua.Client.Tests
                 }
                 Assert.AreEqual(
                     StatusCodes.BadSecurityPolicyRejected,
-                    (StatusCode)sre.StatusCode,
+                    sre.StatusCode,
                     "Unexpected Status: {0}",
                     sre);
             }
@@ -455,7 +455,7 @@ namespace Opc.Ua.Client.Tests
                         .ConfigureAwait(false));
             Assert.AreEqual(
                 StatusCodes.BadSessionIdInvalid,
-                (StatusCode)sre.StatusCode);
+                sre.StatusCode);
         }
 
         [Test]
@@ -490,7 +490,7 @@ namespace Opc.Ua.Client.Tests
                         .ConfigureAwait(false));
             Assert.AreEqual(
                 StatusCodes.BadSessionIdInvalid,
-                (StatusCode)sre.StatusCode);
+                sre.StatusCode);
 
             // reconnect/reactivate
             await session.OpenAsync(sessionName, userIdentity, CancellationToken.None)
@@ -767,7 +767,7 @@ namespace Opc.Ua.Client.Tests
                             VariableIds.Server_ServerStatus).ConfigureAwait(false));
                 Assert.AreEqual(
                     StatusCodes.BadSecureChannelClosed,
-                    (StatusCode)exception.StatusCode);
+                    exception.StatusCode);
             }
 
             // the inactive channel
@@ -810,7 +810,7 @@ namespace Opc.Ua.Client.Tests
                     VariableIds.Server_ServerStatus).ConfigureAwait(false));
             Assert.AreEqual(
                 StatusCodes.BadSessionIdInvalid,
-                (StatusCode)sre.StatusCode,
+                sre.StatusCode,
                 sre.Message);
 
             // close the channel
@@ -826,7 +826,7 @@ namespace Opc.Ua.Client.Tests
             {
                 Assert.AreEqual(
                     StatusCodes.BadNotConnected,
-                    (StatusCode)sre.StatusCode,
+                    sre.StatusCode,
                     sre.Message);
             }
         }
@@ -937,7 +937,7 @@ namespace Opc.Ua.Client.Tests
                         VariableIds.Server_ServerStatus).ConfigureAwait(false));
                 Assert.AreEqual(
                     StatusCodes.BadSecureChannelIdInvalid,
-                    (StatusCode)sre.StatusCode,
+                    sre.StatusCode,
                     sre.Message);
             }
             else
@@ -1140,7 +1140,7 @@ namespace Opc.Ua.Client.Tests
             ServiceResultException sre = NUnit.Framework.Assert.ThrowsAsync<ServiceResultException>(
                 async () => await Session.ReadValueAsync<ServiceHost>(
                     VariableIds.Server_ServerStatus).ConfigureAwait(false));
-            Assert.AreEqual(StatusCodes.BadTypeMismatch, (StatusCode)sre.StatusCode);
+            Assert.AreEqual(StatusCodes.BadTypeMismatch, sre.StatusCode);
         }
 
         [Test]
@@ -1292,7 +1292,7 @@ namespace Opc.Ua.Client.Tests
                                 nodeIds).ConfigureAwait(false));
                     Assert.AreEqual(
                         StatusCodes.BadTooManyOperations,
-                        (StatusCode)sre.StatusCode);
+                        sre.StatusCode);
                     while (nodeIds.Count > 0)
                     {
                         IList<string> displayNames;
@@ -1560,7 +1560,7 @@ namespace Opc.Ua.Client.Tests
             ServiceResultException sre = NUnit.Framework.Assert.ThrowsAsync<ServiceResultException>(
                 async () => await Session.ReadAvailableEncodingsAsync(DataTypeIds.BaseDataType)
                     .ConfigureAwait(false));
-            Assert.AreEqual(StatusCodes.BadNodeIdInvalid, (StatusCode)sre.StatusCode);
+            Assert.AreEqual(StatusCodes.BadNodeIdInvalid, sre.StatusCode);
             ReferenceDescriptionCollection encoding = await Session.ReadAvailableEncodingsAsync(
                 VariableIds.Server_ServerStatus_CurrentTime).ConfigureAwait(false);
             Assert.NotNull(encoding);
@@ -1812,7 +1812,8 @@ namespace Opc.Ua.Client.Tests
             Assert.NotNull(variableNodes);
 
             // test build info contains the equal values as the properties
-            var buildInfo = (values[0].Value as ExtensionObject)?.Body as BuildInfo;
+            (values[0].Value is ExtensionObject eo ? eo : default)
+                .TryGetEncodeable(out BuildInfo buildInfo);
             Assert.NotNull(buildInfo);
             Assert.AreEqual(buildInfo.ProductName, values[1].Value);
             Assert.AreEqual(buildInfo.ProductUri, values[2].Value);

@@ -971,7 +971,8 @@ namespace Opc.Ua.Client.ComplexTypes
         /// </summary>
         private static StructureDefinition GetStructureDefinition(DataTypeNode dataTypeNode)
         {
-            if (dataTypeNode.DataTypeDefinition?.Body is StructureDefinition structureDefinition)
+            if (dataTypeNode.DataTypeDefinition.TryGetEncodeable(
+                out StructureDefinition structureDefinition))
             {
                 // Validate the DataTypeDefinition structure,
                 // but not if the type is supported
@@ -1181,7 +1182,8 @@ namespace Opc.Ua.Client.ComplexTypes
 
                 // 1. use DataTypeDefinition
                 if (DisableDataTypeDefinition ||
-                    enumTypeNode.DataTypeDefinition?.Body is not EnumDefinition enumDefinition)
+                    !enumTypeNode.DataTypeDefinition.TryGetEncodeable(
+                        out EnumDefinition enumDefinition))
                 {
                     // browse for EnumFields or EnumStrings property
                     object enumTypeArray = await m_complexTypeResolver

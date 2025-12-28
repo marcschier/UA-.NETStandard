@@ -120,7 +120,7 @@ namespace Opc.Ua.Server.Tests
                 createSessionResponse.ServerSignature,
                 [],
                 [],
-                identityToken != null ? new ExtensionObject(identityToken) : null,
+                identityToken != null ? new ExtensionObject(identityToken) : default,
                 null,
                 CancellationToken.None).ConfigureAwait(false);
             ValidateResponse(activateSessionResponse.ResponseHeader);

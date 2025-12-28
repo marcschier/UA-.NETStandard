@@ -196,6 +196,7 @@ namespace Opc.Ua
         /// <param name="transportChannelBindings">Optional bindings to use</param>
         /// <param name="ct">The cancellation token</param>
         /// <exception cref="ServiceResultException"></exception>
+        /// <exception cref="ArgumentException"></exception>
         internal static async ValueTask<ITransportChannel> CreateUaBinaryChannelAsync(
             ApplicationConfiguration configuration,
             EndpointDescription description,

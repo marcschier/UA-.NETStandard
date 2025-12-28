@@ -169,7 +169,7 @@ namespace Opc.Ua.Server.Tests
             // Attempt to create session - should throw BadCertificateUriInvalid
             ServiceResultException ex = NUnit.Framework.Assert.ThrowsAsync<ServiceResultException>(async () =>
                 await CreateSessionWithCustomCertificateAsync(clientCert, kClientApplicationUri).ConfigureAwait(false));
-            Assert.AreEqual(StatusCodes.BadCertificateUriInvalid, (StatusCode)ex.StatusCode);
+            Assert.AreEqual(StatusCodes.BadCertificateUriInvalid, ex.StatusCode);
         }
 
         /// <summary>
@@ -251,7 +251,7 @@ namespace Opc.Ua.Server.Tests
             // Attempt to create session - should throw BadCertificateUriInvalid
             ServiceResultException ex = NUnit.Framework.Assert.ThrowsAsync<ServiceResultException>(async () =>
                 await CreateSessionWithCustomCertificateAsync(clientCert, kClientApplicationUri).ConfigureAwait(false));
-            Assert.AreEqual(StatusCodes.BadCertificateUriInvalid, (StatusCode)ex.StatusCode);
+            Assert.AreEqual(StatusCodes.BadCertificateUriInvalid, ex.StatusCode);
         }
 
         #region Helper Methods

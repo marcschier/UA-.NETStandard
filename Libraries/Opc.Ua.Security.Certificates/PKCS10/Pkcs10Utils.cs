@@ -39,10 +39,14 @@ namespace Opc.Ua.Security.Certificates
     /// </summary>
     public static class Pkcs10Utils
     {
-        // OID for PKCS#9 Extension Request attribute
+        /// <summary>
+        /// OID for PKCS#9 Extension Request attribute
+        /// </summary>
         private const string Pkcs9AtExtensionRequest = "1.2.840.113549.1.9.14";
-        
-        // OID for Subject Alternative Name extension
+
+        /// <summary>
+        /// OID for Subject Alternative Name extension
+        /// </summary>
         private const string SubjectAlternativeNameOid = "2.5.29.17";
 
         /// <summary>
@@ -50,6 +54,7 @@ namespace Opc.Ua.Security.Certificates
         /// </summary>
         /// <param name="attributes">The CSR attributes encoded as DER bytes.</param>
         /// <returns>The X509SubjectAltNameExtension if found; otherwise, null.</returns>
+        /// <exception cref="CryptographicException"></exception>
         public static X509SubjectAltNameExtension GetSubjectAltNameExtension(byte[] attributes)
         {
             if (attributes == null || attributes.Length == 0)
@@ -62,7 +67,7 @@ namespace Opc.Ua.Security.Certificates
                 // Attributes are encoded as [0] IMPLICIT Attributes
                 // which is a SET OF Attribute
                 var reader = new AsnReader(attributes, AsnEncodingRules.DER);
-                
+
                 // Read the context-specific tag [0]
                 AsnReader attributesReader = reader.ReadSetOf(new Asn1Tag(TagClass.ContextSpecific, 0));
 
@@ -70,7 +75,7 @@ namespace Opc.Ua.Security.Certificates
                 {
                     // Each attribute is a SEQUENCE
                     AsnReader attributeReader = attributesReader.ReadSequence();
-                    
+
                     // Read the attribute type (OID)
                     string attributeOid = attributeReader.ReadObjectIdentifier();
 
@@ -82,15 +87,15 @@ namespace Opc.Ua.Security.Certificates
                     {
                         // The extension request contains a SEQUENCE of extensions
                         AsnReader extensionsSequenceReader = valuesReader.ReadSequence();
-                        
+
                         while (extensionsSequenceReader.HasData)
                         {
                             // Each extension is a SEQUENCE
                             AsnReader extensionReader = extensionsSequenceReader.ReadSequence();
-                            
+
                             // Read extension OID
                             string extensionOid = extensionReader.ReadObjectIdentifier();
-                            
+
                             // Check for critical flag (optional BOOLEAN, default FALSE)
                             bool critical = false;
                             if (extensionReader.PeekTag().HasSameClassAndValue(Asn1Tag.Boolean))
@@ -116,7 +121,7 @@ namespace Opc.Ua.Security.Certificates
             catch (Exception ex)
             {
                 throw new CryptographicException(
-                    "Failed to parse CSR attributes for Subject Alternative Name extension.", 
+                    "Failed to parse CSR attributes for Subject Alternative Name extension.",
                     ex);
             }
 

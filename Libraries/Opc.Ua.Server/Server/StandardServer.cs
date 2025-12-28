@@ -1383,7 +1383,7 @@ namespace Opc.Ua.Server
 
             try
             {
-                if (historyReadDetails?.Body is ReadEventDetails)
+                if (historyReadDetails.Body is ReadEventDetails)
                 {
                     ValidateOperationLimits(
                         nodesToRead,

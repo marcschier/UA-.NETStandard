@@ -1866,12 +1866,7 @@ namespace Opc.Ua
         /// </summary>
         public static NodeIdCollection ToNodeIdCollection(NodeId[] values)
         {
-            if (values != null)
-            {
-                return [.. values];
-            }
-
-            return [];
+            return values != null ? [.. values] : [];
         }
 
         /// <inheritdoc/>

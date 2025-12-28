@@ -1046,16 +1046,6 @@ namespace Opc.Ua.Test
         /// False or ServiceResultException in case of unequal values.</returns>
         public bool CompareExtensionObject(ExtensionObject value1, ExtensionObject value2)
         {
-            if (value1 == null || value2 == null)
-            {
-                if (value1 != value2)
-                {
-                    return ReportError(value1, value2);
-                }
-
-                return true;
-            }
-
             object body1 = value1.Body;
             object body2 = value2.Body;
 

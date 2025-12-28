@@ -175,7 +175,7 @@ namespace Opc.Ua
             var clone = (ReferenceNode)base.MemberwiseClone();
 
             clone.ReferenceTypeId = ReferenceTypeId;
-            clone.IsInverse = (bool)CoreUtils.Clone(IsInverse);
+            clone.IsInverse = CoreUtils.Clone(IsInverse);
             clone.TargetId = TargetId;
 
             return clone;
@@ -220,7 +220,7 @@ namespace Opc.Ua
                 return false;
             }
 
-            if (TargetId  != obj.TargetId)
+            if (TargetId != obj.TargetId)
             {
                 return false;
             }

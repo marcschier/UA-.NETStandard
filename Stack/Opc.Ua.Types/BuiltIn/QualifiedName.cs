@@ -177,7 +177,7 @@ namespace Opc.Ua
             return obj switch
             {
                 QualifiedName qname => Equals(qname),
-                _ => base.Equals(obj),
+                _ => base.Equals(obj)
             };
         }
 

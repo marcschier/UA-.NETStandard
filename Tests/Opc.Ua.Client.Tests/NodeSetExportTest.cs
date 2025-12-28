@@ -116,7 +116,7 @@ namespace Opc.Ua.Client.Tests
 
             // Browse starting from Server object
             ReferenceDescriptionCollection references = await browser.BrowseAsync(nodesToBrowse[0]).ConfigureAwait(false);
-            
+
             // Fetch the actual nodes
             foreach (ReferenceDescription reference in references)
             {

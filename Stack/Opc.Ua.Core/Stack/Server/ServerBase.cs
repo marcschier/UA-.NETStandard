@@ -809,6 +809,7 @@ namespace Opc.Ua
         /// <param name="endpointConfiguration">The configuration of the endpoints.</param>
         /// <param name="listener">The transport listener.</param>
         /// <param name="certificateValidator">The certificate validator for the transport.</param>
+        /// <exception cref="ServiceResultException"></exception>
         public virtual void CreateServiceHostEndpoint(
             Uri endpointUri,
             EndpointDescriptionCollection endpoints,

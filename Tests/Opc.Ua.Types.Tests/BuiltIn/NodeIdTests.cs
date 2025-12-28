@@ -131,13 +131,13 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             Assert.True(nodeGuid1.Equals(id1));
             Assert.True(nodeGuid1 == id1);
             Assert.True(nodeGuid1 == (NodeId)id1);
-            Assert.True(nodeGuid1.Equals((Guid)id1));
-            Assert.True(nodeGuid1 == (Guid)id1);
+            Assert.True(nodeGuid1.Equals(id1));
+            Assert.True(nodeGuid1 == id1);
             Assert.False(nodeGuid1.Equals(id2));
             Assert.False(nodeGuid1 == id2);
 
             NUnit.Framework.Assert.Throws<ServiceResultException>(
-                () => _ = NodeId.Create((uint)123, "urn:xyz", null));
+                () => _ = NodeId.Create(123, "urn:xyz", null));
             NUnit.Framework.Assert.Throws<ServiceResultException>(() => _ = NodeId.Parse("ns="));
             NUnit.Framework.Assert.Throws<ArgumentException>(() => _ = NodeId.Parse("nsu="));
             NUnit.Framework.Assert.Throws<ArgumentException>(() => _ = NodeId.Parse("Test"));
@@ -282,14 +282,14 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             Assert.AreEqual(nodeId, new NodeId(Guid.Empty));
             Assert.AreEqual(nodeId, new NodeId([]));
             Assert.AreEqual(nodeId, new NodeId((byte[])null));
-            Assert.AreEqual(nodeId, NodeId.Parse((string)null));
+            Assert.AreEqual(nodeId, NodeId.Parse(null));
 
             Assert.True(nodeId.Equals(NodeId.Null));
             Assert.True(nodeId.Equals(new NodeId(0, 0)));
             Assert.True(nodeId.Equals(new NodeId(Guid.Empty)));
             Assert.True(nodeId.Equals(new NodeId([])));
             Assert.True(nodeId.Equals(new NodeId((byte[])null)));
-            Assert.True(nodeId.Equals(NodeId.Parse((string)null)));
+            Assert.True(nodeId.Equals(NodeId.Parse(null)));
 
             var nodeIdBasedDataValue = new DataValue(new Variant(nodeId));
 

@@ -695,7 +695,7 @@ namespace Opc.Ua
                     case BuiltInType.DiagnosticInfo:
                         // https://reference.opcfoundation.org/Core/Part6/v104/docs/5.1.6
                         throw ServiceResultException.Unexpected(
-                            $"Diagnostic info not supported inside Variants");
+                            "Diagnostic info not supported inside Variants");
                     // just save the value.
                     case > BuiltInType.Null and <= BuiltInType.Enumeration:
                         break;
@@ -805,7 +805,7 @@ namespace Opc.Ua
                     case BuiltInType.DiagnosticInfo:
                         // https://reference.opcfoundation.org/Core/Part6/v104/docs/5.1.6
                         throw ServiceResultException.Unexpected(
-                            $"Diagnostic info not supported inside Variants");
+                            "Diagnostic info not supported inside Variants");
                     // just save the value.
                     case >= BuiltInType.Null and <= BuiltInType.Enumeration:
                         break;
@@ -1923,7 +1923,7 @@ namespace Opc.Ua
             }
             if (TypeInfo.BuiltInType != expectedType || TypeInfo.IsScalar)
             {
-                if (!IsConvertible(TypeInfo, new TypeInfo(expectedType, TypeInfo.ValueRank)))
+                if (!Variant.IsConvertible(TypeInfo, new TypeInfo(expectedType, TypeInfo.ValueRank)))
                 {
                     value = default;
                     return false;
@@ -1940,8 +1940,8 @@ namespace Opc.Ua
                 //if (m_value is not Matrix matrix ||
                 //    expectedType != matrix.TypeInfo.BuiltInType)
                 //{
-                    value = default;
-                    return false;
+                value = default;
+                return false;
                 // }
                 // array = matrix.Elements;
             }
@@ -1977,7 +1977,7 @@ namespace Opc.Ua
             }
             if (TypeInfo.BuiltInType != expectedType || !TypeInfo.IsScalar)
             {
-                if (!IsConvertible(TypeInfo, new TypeInfo(expectedType, TypeInfo.ValueRank)))
+                if (!Variant.IsConvertible(TypeInfo, new TypeInfo(expectedType, TypeInfo.ValueRank)))
                 {
                     value = default;
                     return false;
@@ -2315,6 +2315,7 @@ namespace Opc.Ua
         /// <summary>
         /// Create a Variant from a Enum-array value.
         /// </summary>
+        /// <typeparam name="T"></typeparam>
         /// <param name="value">The Enum-array value to set
         /// this Variant to</param>
         public static Variant From<T>(T[] value) where T : Enum
@@ -3443,7 +3444,7 @@ namespace Opc.Ua
         {
             return TryGet(out int[] v) &&
                 ArrayEqualityComparer<int>.Default.Equals(v,
-                value.Select(e => Convert.ToInt32(e, CultureInfo.InvariantCulture)).ToArray());
+                [.. value.Select(e => Convert.ToInt32(e, CultureInfo.InvariantCulture))]);
         }
 
         /// <inheritdoc/>
@@ -4174,7 +4175,7 @@ namespace Opc.Ua
 
             if ((ourTypeInfo.ValueRank != otherTypeInfo.ValueRank ||
                 ourTypeInfo.BuiltInType != otherTypeInfo.BuiltInType) &&
-                !IsConvertible(ourTypeInfo, otherTypeInfo))
+                !Variant.IsConvertible(ourTypeInfo, otherTypeInfo))
             {
                 return false;
             }
@@ -4483,7 +4484,7 @@ namespace Opc.Ua
         /// <param name="typeInfo1"></param>
         /// <param name="typeInfo2"></param>
         /// <returns></returns>
-        private bool IsConvertible(TypeInfo typeInfo1, TypeInfo typeInfo2)
+        private static bool IsConvertible(TypeInfo typeInfo1, TypeInfo typeInfo2)
         {
             // Cooerce Enumeration and Int32
             if (typeInfo1.ValueRank == typeInfo2.ValueRank &&
@@ -4544,7 +4545,7 @@ namespace Opc.Ua
 
             if (sanityCheck.BuiltInType != typeInfo.BuiltInType)
             {
-                System.Diagnostics.Debug.Fail(
+                Debug.Fail(
                     CoreUtils.Format(
                         "{0} != {1}",
                         sanityCheck.BuiltInType,
@@ -4553,7 +4554,7 @@ namespace Opc.Ua
 
             if (sanityCheck.ValueRank != typeInfo.ValueRank)
             {
-                System.Diagnostics.Debug.Fail(
+                Debug.Fail(
                     CoreUtils.Format(
                         "{0} != {1}",
                         sanityCheck.ValueRank,

@@ -220,15 +220,15 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             {
                 Scalars = CreateScalarContract(0),
                 Collections = CreateCollectionContract(0),
-                AdditionalScalars = new[]
-                {
+                AdditionalScalars =
+                [
                     CreateScalarContract(1),
                     CreateScalarContract(2)
-                },
-                AdditionalCollections = new[]
-                {
+                ],
+                AdditionalCollections =
+                [
                     CreateCollectionContract(1)
-                }
+                ]
             };
         }
 

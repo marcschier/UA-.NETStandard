@@ -170,7 +170,7 @@ namespace Opc.Ua.Fuzzing
                 }
                 Console.WriteLine(
                     "Unexpected ServiceResultException: {0} {1}",
-                    (StatusCode)sre.StatusCode,
+                    sre.StatusCode,
                     sre.Message);
                 throw;
             }

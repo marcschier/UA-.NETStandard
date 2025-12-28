@@ -857,8 +857,7 @@ namespace Opc.Ua.Server
             policy = null;
 
             // check for anonymous (same as empty) token.
-            if (identityToken == null ||
-                identityToken.Body == null ||
+            if (identityToken.IsNull ||
                 identityToken.Body is AnonymousIdentityToken)
             {
                 // check if an anonymous login is permitted.

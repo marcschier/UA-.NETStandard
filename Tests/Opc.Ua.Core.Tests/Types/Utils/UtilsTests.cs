@@ -341,7 +341,7 @@ namespace Opc.Ua.Core.Tests.Types.UtilsTests
                 RelativePath.Parse(path, typeTable, currentTable, targetTable).Format(typeTable));
             Assert.AreEqual(
                 StatusCodes.BadIndexRangeInvalid,
-                (StatusCode)sre.StatusCode);
+                sre.StatusCode);
         }
 
         /// <summary>

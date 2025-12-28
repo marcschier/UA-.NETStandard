@@ -537,7 +537,7 @@ namespace Opc.Ua.Sample
                     StatusCode = StatusCodes.Good,
                     RevisedSamplingInterval = m_samplingInterval,
                     RevisedQueueSize = 0,
-                    FilterResult = null
+                    FilterResult = default
                 };
 
                 if (m_queue != null)
@@ -561,7 +561,7 @@ namespace Opc.Ua.Sample
                     StatusCode = StatusCodes.Good,
                     RevisedSamplingInterval = m_samplingInterval,
                     RevisedQueueSize = 0,
-                    FilterResult = null
+                    FilterResult = default
                 };
 
                 if (m_queue != null)

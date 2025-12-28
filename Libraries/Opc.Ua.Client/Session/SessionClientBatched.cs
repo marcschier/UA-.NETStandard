@@ -442,15 +442,15 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public override ValueTask<HistoryReadResponse> HistoryReadAsync(
             RequestHeader? requestHeader,
-            ExtensionObject? historyReadDetails,
+            ExtensionObject historyReadDetails,
             TimestampsToReturn timestampsToReturn,
             bool releaseContinuationPoints,
             HistoryReadValueIdCollection nodesToRead,
             CancellationToken ct)
         {
             uint operationLimit = OperationLimits.MaxNodesPerHistoryReadData;
-            if (historyReadDetails?.TypeId == DataTypeIds.ReadEventDetails ||
-                historyReadDetails?.Body is ReadEventDetails)
+            if (historyReadDetails.TypeId == DataTypeIds.ReadEventDetails ||
+                historyReadDetails.Body is ReadEventDetails)
             {
                 operationLimit = OperationLimits.MaxNodesPerHistoryReadEvents;
             }
@@ -476,7 +476,7 @@ namespace Opc.Ua
 
             async ValueTask<HistoryReadResponse> HistoryReadBatchedAsync(
                 RequestHeader? requestHeader,
-                ExtensionObject? historyReadDetails,
+                ExtensionObject historyReadDetails,
                 TimestampsToReturn timestampsToReturn,
                 bool releaseContinuationPoints,
                 HistoryReadValueIdCollection nodesToRead,
@@ -599,7 +599,7 @@ namespace Opc.Ua
             uint operationLimit = OperationLimits.MaxNodesPerHistoryUpdateData;
             if (historyUpdateDetails.Count > 0 &&
                 (historyUpdateDetails[0].TypeId == DataTypeIds.UpdateEventDetails ||
-                    historyUpdateDetails[0]?.Body is UpdateEventDetails))
+                    historyUpdateDetails[0].Body is UpdateEventDetails))
             {
                 operationLimit = OperationLimits.MaxNodesPerHistoryUpdateEvents;
             }

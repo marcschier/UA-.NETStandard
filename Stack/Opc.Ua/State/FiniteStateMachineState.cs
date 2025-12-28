@@ -131,7 +131,9 @@ namespace Opc.Ua
         /// </summary>
         protected uint GetCurrentStateId()
         {
-            if (CurrentState == null || CurrentState.Id == null || CurrentState.Value == null)
+            if (CurrentState == null ||
+                CurrentState.Id == null ||
+                CurrentState.Value.IsNullOrEmpty)
             {
                 return 0;
             }

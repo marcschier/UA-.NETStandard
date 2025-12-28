@@ -45,6 +45,7 @@ namespace Opc.Ua.Client
         /// <param name="context">The system context containing namespace information.</param>
         /// <param name="nodes">The list of nodes to export.</param>
         /// <param name="outputStream">The output stream to write the NodeSet2 XML to.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="nodes"/> is <c>null</c>.</exception>
         public static void ExportNodesToNodeSet2(
             ISystemContext context,
             IList<INode> nodes,
@@ -111,14 +112,13 @@ namespace Opc.Ua.Client
                     if (node is ILocalNode localNode)
                     {
                         state.Description = localNode.Description;
-                        state.WriteMask = (AttributeWriteMask)localNode.WriteMask;
-                        state.UserWriteMask = (AttributeWriteMask)localNode.UserWriteMask;
+                        state.WriteMask = localNode.WriteMask;
+                        state.UserWriteMask = localNode.UserWriteMask;
                     }
 
                     nodeState = state;
                     break;
                 }
-
                 case NodeClass.Variable:
                 {
                     var variableNode = node as IVariable;
@@ -144,14 +144,13 @@ namespace Opc.Ua.Client
                     if (node is ILocalNode localNode)
                     {
                         state.Description = localNode.Description;
-                        state.WriteMask = (AttributeWriteMask)localNode.WriteMask;
-                        state.UserWriteMask = (AttributeWriteMask)localNode.UserWriteMask;
+                        state.WriteMask = localNode.WriteMask;
+                        state.UserWriteMask = localNode.UserWriteMask;
                     }
 
                     nodeState = state;
                     break;
                 }
-
                 case NodeClass.Method:
                 {
                     var methodNode = node as IMethod;
@@ -167,18 +166,17 @@ namespace Opc.Ua.Client
                     if (node is ILocalNode localNode)
                     {
                         state.Description = localNode.Description;
-                        state.WriteMask = (AttributeWriteMask)localNode.WriteMask;
-                        state.UserWriteMask = (AttributeWriteMask)localNode.UserWriteMask;
+                        state.WriteMask = localNode.WriteMask;
+                        state.UserWriteMask = localNode.UserWriteMask;
                     }
 
                     nodeState = state;
                     break;
                 }
-
                 case NodeClass.ObjectType:
                 {
                     var objectTypeNode = node as IObjectType;
-                    var state = new BaseObjectTypeState()
+                    var state = new BaseObjectTypeState
                     {
                         NodeId = ExpandedNodeId.ToNodeId(node.NodeId, context.NamespaceUris),
                         BrowseName = node.BrowseName,
@@ -189,18 +187,17 @@ namespace Opc.Ua.Client
                     if (node is ILocalNode localNode)
                     {
                         state.Description = localNode.Description;
-                        state.WriteMask = (AttributeWriteMask)localNode.WriteMask;
-                        state.UserWriteMask = (AttributeWriteMask)localNode.UserWriteMask;
+                        state.WriteMask = localNode.WriteMask;
+                        state.UserWriteMask = localNode.UserWriteMask;
                     }
 
                     nodeState = state;
                     break;
                 }
-
                 case NodeClass.VariableType:
                 {
                     var variableTypeNode = node as IVariableType;
-                    var state = new BaseDataVariableTypeState()
+                    var state = new BaseDataVariableTypeState
                     {
                         NodeId = ExpandedNodeId.ToNodeId(node.NodeId, context.NamespaceUris),
                         BrowseName = node.BrowseName,
@@ -219,18 +216,17 @@ namespace Opc.Ua.Client
                     if (node is ILocalNode localNode)
                     {
                         state.Description = localNode.Description;
-                        state.WriteMask = (AttributeWriteMask)localNode.WriteMask;
-                        state.UserWriteMask = (AttributeWriteMask)localNode.UserWriteMask;
+                        state.WriteMask = localNode.WriteMask;
+                        state.UserWriteMask = localNode.UserWriteMask;
                     }
 
                     nodeState = state;
                     break;
                 }
-
                 case NodeClass.DataType:
                 {
                     var dataTypeNode = node as IDataType;
-                    var state = new DataTypeState()
+                    var state = new DataTypeState
                     {
                         NodeId = ExpandedNodeId.ToNodeId(node.NodeId, context.NamespaceUris),
                         BrowseName = node.BrowseName,
@@ -241,18 +237,17 @@ namespace Opc.Ua.Client
                     if (node is ILocalNode localNode)
                     {
                         state.Description = localNode.Description;
-                        state.WriteMask = (AttributeWriteMask)localNode.WriteMask;
-                        state.UserWriteMask = (AttributeWriteMask)localNode.UserWriteMask;
+                        state.WriteMask = localNode.WriteMask;
+                        state.UserWriteMask = localNode.UserWriteMask;
                     }
 
                     nodeState = state;
                     break;
                 }
-
                 case NodeClass.ReferenceType:
                 {
                     var referenceTypeNode = node as IReferenceType;
-                    var state = new ReferenceTypeState()
+                    var state = new ReferenceTypeState
                     {
                         NodeId = ExpandedNodeId.ToNodeId(node.NodeId, context.NamespaceUris),
                         BrowseName = node.BrowseName,
@@ -265,18 +260,17 @@ namespace Opc.Ua.Client
                     if (node is ILocalNode localNode)
                     {
                         state.Description = localNode.Description;
-                        state.WriteMask = (AttributeWriteMask)localNode.WriteMask;
-                        state.UserWriteMask = (AttributeWriteMask)localNode.UserWriteMask;
+                        state.WriteMask = localNode.WriteMask;
+                        state.UserWriteMask = localNode.UserWriteMask;
                     }
 
                     nodeState = state;
                     break;
                 }
-
                 case NodeClass.View:
                 {
                     var viewNode = node as IView;
-                    var state = new ViewState()
+                    var state = new ViewState
                     {
                         NodeId = ExpandedNodeId.ToNodeId(node.NodeId, context.NamespaceUris),
                         BrowseName = node.BrowseName,
@@ -288,14 +282,13 @@ namespace Opc.Ua.Client
                     if (node is ILocalNode localNode)
                     {
                         state.Description = localNode.Description;
-                        state.WriteMask = (AttributeWriteMask)localNode.WriteMask;
-                        state.UserWriteMask = (AttributeWriteMask)localNode.UserWriteMask;
+                        state.WriteMask = localNode.WriteMask;
+                        state.UserWriteMask = localNode.UserWriteMask;
                     }
 
                     nodeState = state;
                     break;
                 }
-
                 default:
                     return null;
             }

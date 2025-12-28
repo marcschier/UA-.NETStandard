@@ -152,7 +152,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
                 context.NamespaceUris.GetIndex(Get(NamespaceUris, index + 3)));
             Assert.AreEqual(
                 Utils.ToHexString(Get(OpaqueIds, index)),
-                Utils.ToHexString(n4.TryGetIdentifier(out byte[] id5) ? id5 : Array.Empty<byte>()));
+                Utils.ToHexString(n4.TryGetIdentifier(out byte[] id5) ? id5 : []));
         }
 
         private static void CheckDecodedExpandedNodeIds(

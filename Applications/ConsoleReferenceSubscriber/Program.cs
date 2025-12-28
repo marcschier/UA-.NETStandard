@@ -385,16 +385,15 @@ namespace Quickstarts.ConsoleReferenceSubscriber
             pubSubConnection1.Address = new ExtensionObject(address);
 
             // configure custoom DicoveryAddress for Dicovery messages
-            pubSubConnection1.TransportSettings = new ExtensionObject
-            {
-                Body = new DatagramConnectionTransportDataType
+            pubSubConnection1.TransportSettings = new ExtensionObject(
+                new DatagramConnectionTransportDataType
                 {
-                    DiscoveryAddress = new ExtensionObject
-                    {
-                        Body = new NetworkAddressUrlDataType { Url = "opc.udp://224.0.2.15:4840" }
-                    }
-                }
-            };
+                    DiscoveryAddress = new ExtensionObject(
+                        new NetworkAddressUrlDataType
+                        {
+                            Url = "opc.udp://224.0.2.15:4840"
+                        })
+                });
 
             var readerGroup1 = new ReaderGroupDataType
             {

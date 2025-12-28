@@ -1022,7 +1022,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
                         decoder.ReadDataValue("DataValue"));
                 Assert.AreEqual(
                     StatusCodes.BadDecodingError,
-                    (StatusCode)sre.StatusCode,
+                    sre.StatusCode,
                     sre.Message);
             }
         }
@@ -1112,7 +1112,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
 
                 Assert.AreEqual(
                     StatusCodes.BadDecodingError,
-                    (StatusCode)sre.StatusCode,
+                    sre.StatusCode,
                     sre.Message);
             }
         }
@@ -1201,7 +1201,7 @@ namespace Opc.Ua.Core.Tests.Types.Encoders
 
             Assert.AreEqual(
                 StatusCodes.BadEncodingLimitsExceeded,
-                (StatusCode)sre.StatusCode,
+                sre.StatusCode,
                 sre.Message);
         }
 

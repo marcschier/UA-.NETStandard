@@ -1738,7 +1738,7 @@ namespace Opc.Ua
         /// </summary>
         public void WriteExtensionObject(string fieldName, ExtensionObject value)
         {
-            bool isNull = value == null || value.Encoding == ExtensionObjectEncoding.None;
+            bool isNull = value.IsNull || value.Encoding == ExtensionObjectEncoding.None;
 
             if (fieldName != null && isNull && !IncludeDefaultValues)
             {

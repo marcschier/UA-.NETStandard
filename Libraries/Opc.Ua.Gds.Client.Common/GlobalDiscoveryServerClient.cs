@@ -862,10 +862,12 @@ namespace Opc.Ua.Gds.Client
                 ct,
                 applicationId).ConfigureAwait(false);
 
-            if (outputArguments.Count >= 1)
+            if (outputArguments.Count >= 1 &&
+                outputArguments[0] is ExtensionObject extension &&
+                extension.TryGetEncodeable(
+                    out ApplicationRecordDataType applicationRecord))
             {
-                return ExtensionObject.ToEncodeable(
-                    outputArguments[0] as ExtensionObject) as ApplicationRecordDataType;
+                return applicationRecord;
             }
 
             return null;

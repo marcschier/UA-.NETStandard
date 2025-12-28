@@ -558,7 +558,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
                 { 1, 2 },
                 { 3, 4 }
             };
-            var variant = new Variant((Array)data);
+            var variant = new Variant(data);
 
             Assert.AreEqual(2, variant.TypeInfo.ValueRank);
             Assert.AreEqual(BuiltInType.Int32, variant.TypeInfo.BuiltInType);
@@ -592,7 +592,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         [Test]
         public void ArrayConstructorWithTypeInfo_CoercesEnumerationArray()
         {
-            EnumValue[] values = { EnumValue.Zero, EnumValue.One };
+            EnumValue[] values = [EnumValue.Zero, EnumValue.One];
             TypeInfo typeInfo = TypeInfo.Create(BuiltInType.Enumeration, ValueRanks.OneDimension);
             var variant = new Variant(values, typeInfo);
 
@@ -618,7 +618,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         [Test]
         public void EnumArrayConstructorWithTypeInfo_CoercesEnumerationArray()
         {
-            EnumValue[] values = { EnumValue.Zero, EnumValue.One };
+            EnumValue[] values = [EnumValue.Zero, EnumValue.One];
             var variant = Variant.From(values);
 
             Assert.AreEqual(BuiltInType.Enumeration, variant.TypeInfo.BuiltInType);
@@ -631,7 +631,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         [Test]
         public void ObjectArrayConstructorWrapsElementsInVariants()
         {
-            object[] values = { 1, "two", true };
+            object[] values = [1, "two", true];
             var variant = new Variant(values);
 
             Assert.AreEqual(ValueRanks.OneDimension, variant.TypeInfo.ValueRank);
@@ -809,7 +809,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
                 { 1.0 },
                 { 2.0 }
             };
-            var variant = new Variant((Array)data);
+            var variant = new Variant(data);
             object[] args = ArrayOf<object>(null, BuiltInType.Double);
             MethodInfo method = typeof(Variant).GetMethod(nameof(Variant.TryGetMatrix))!
                 .MakeGenericMethod(typeof(double));
@@ -865,7 +865,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         [Test]
         public void ImplicitConversionFromObjectArray_WrapsEachElement()
         {
-            object[] values = { 1, "two", false };
+            object[] values = [1, "two", false];
             Variant variant = values;
 
             Variant[] stored = variant.GetVariantArray();
@@ -972,7 +972,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         [Test]
         public void VariantFromObjectArrayCreatesVariantArray()
         {
-            object[] values = { 1, "two" };
+            object[] values = [1, "two"];
             var variant = Variant.From(values);
 
             Variant[] stored = variant.GetVariantArray();

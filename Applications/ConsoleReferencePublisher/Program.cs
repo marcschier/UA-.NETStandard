@@ -212,16 +212,15 @@ namespace Quickstarts.ConsoleReferencePublisher
             pubSubConnection1.Address = new ExtensionObject(address);
 
             // configure custom DiscoveryAddress for Discovery messages
-            pubSubConnection1.TransportSettings = new ExtensionObject
-            {
-                Body = new DatagramConnectionTransportDataType
+            pubSubConnection1.TransportSettings = new ExtensionObject(
+                new DatagramConnectionTransportDataType
                 {
-                    DiscoveryAddress = new ExtensionObject
-                    {
-                        Body = new NetworkAddressUrlDataType { Url = "opc.udp://224.0.2.15:4840" }
-                    }
-                }
-            };
+                    DiscoveryAddress = new ExtensionObject(
+                        new NetworkAddressUrlDataType
+                        {
+                            Url = "opc.udp://224.0.2.15:4840"
+                        })
+                });
 
             var writerGroup1 = new WriterGroupDataType
             {

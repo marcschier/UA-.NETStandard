@@ -1983,13 +1983,12 @@ namespace Opc.Ua
         /// <exception cref="ServiceResultException"></exception>
         private ExtensionObject ReadExtensionObject()
         {
-            var extension = new ExtensionObject();
-
             // read type id.
             NodeId typeId = ReadNodeId(null);
 
             // convert to absolute node id.
-            extension.TypeId = NodeId.ToExpandedNodeId(typeId, Context.NamespaceUris);
+            var extension = new ExtensionObject(
+                NodeId.ToExpandedNodeId(typeId, Context.NamespaceUris));
 
             if (!typeId.IsNullNodeId && extension.TypeId.IsNull)
             {
@@ -2007,7 +2006,9 @@ namespace Opc.Ua
                 return extension;
             }
 
-            if (encoding is not ((byte)ExtensionObjectEncoding.Binary) and not ((byte)ExtensionObjectEncoding.Xml))
+            if (encoding is
+                not ((byte)ExtensionObjectEncoding.Binary) and
+                not ((byte)ExtensionObjectEncoding.Xml))
             {
                 throw ServiceResultException.Create(
                     StatusCodes.BadDecodingError,
@@ -2021,7 +2022,9 @@ namespace Opc.Ua
             // check for XML bodies.
             if (encoding == (byte)ExtensionObjectEncoding.Xml)
             {
-                extension.Body = ReadXmlElement(null);
+                extension = new ExtensionObject(
+                    extension.TypeId,
+                    ReadXmlElement(null));
 
                 // attempt to decode a known type.
                 if (systemType != null && extension.Body != null)
@@ -2038,7 +2041,7 @@ namespace Opc.Ua
                         xmlDecoder.PopNamespace();
 
                         // update body.
-                        extension.Body = body;
+                        extension = new ExtensionObject(body);
 
                         xmlDecoder.Close();
                     }
@@ -2179,7 +2182,9 @@ namespace Opc.Ua
                 }
 
                 // read the bytes of the body.
-                extension.Body = SafeReadBytes(length);
+                extension = new ExtensionObject(
+                    extension.TypeId,
+                    SafeReadBytes(length));
 
                 return extension;
             }
@@ -2197,11 +2202,7 @@ namespace Opc.Ua
                         extension.TypeId);
                 }
             }
-
-            // Set the known TypeId for encodeables.
-            extension.TypeId = encodeable.TypeId;
-            extension.Body = encodeable;
-            return extension;
+            return new ExtensionObject(encodeable);
         }
 
         /// <summary>

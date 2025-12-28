@@ -70,7 +70,7 @@ namespace Opc.Ua.Types.Tests.State
 
             // Create an Argument (IEncodeable type that can be in ExtensionObject)
             var testArg = new Argument("arg1", DataTypeIds.String, -1, "test description");
-            
+
             // Wrap in ExtensionObject
             var extensionObject = new ExtensionObject(testArg);
 
@@ -105,7 +105,7 @@ namespace Opc.Ua.Types.Tests.State
                     }
                 }
             };
-            
+
             var extensionObject = new ExtensionObject(testValue);
 
             // Set the value

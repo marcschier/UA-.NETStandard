@@ -97,7 +97,6 @@ namespace Opc.Ua.SourceGeneration
             switch (datatype.Name)
             {
                 case "Boolean":
-                    return "false";
                 case "SByte":
                 case "Byte":
                 case "Int16":
@@ -108,26 +107,19 @@ namespace Opc.Ua.SourceGeneration
                 case "UInt64":
                 case "Float":
                 case "Double":
-                    return "0";
                 case "String":
                 case "ByteString":
-                case "ExtensionObject":
                 case "XmlElement":
-                    return "null";
+                case "ExtensionObject":
                 case "Guid":
-                    return "global::Opc.Ua.Uuid.Empty";
+                case "StatusCode":
+                case "NodeId":
+                case "ExpandedNodeId":
+                case "LocalizedText":
+                case "QualifiedName":
+                    return "default";
                 case "DateTime":
                     return "global::System.DateTime.MinValue";
-                case "StatusCode":
-                    return "global::Opc.Ua.StatusCodes.Good";
-                case "NodeId":
-                    return "global::Opc.Ua.NodeId.Null";
-                case "ExpandedNodeId":
-                    return "global::Opc.Ua.ExpandedNodeId.Null";
-                case "LocalizedText":
-                    return "global::Opc.Ua.LocalizedText.Null";
-                case "QualifiedName":
-                    return "global::Opc.Ua.QualifiedName.Null";
                 default:
                     return CoreUtils.Format("new {0}()", datatype.Name);
             }
@@ -171,7 +163,7 @@ namespace Opc.Ua.SourceGeneration
                 // translate built-in types to .NET types.
                 if (valueRank < 0)
                 {
-                    switch (qname.Name)
+                    switch (typeName)
                     {
                         case "Boolean":
                             return "bool";
@@ -201,11 +193,23 @@ namespace Opc.Ua.SourceGeneration
                             return "global::System.DateTime";
                         case "Guid":
                             return "global::Opc.Ua.Uuid";
+                        case "ExtensionObject":
+                            return "global::Opc.Ua.ExtensionObject";
+                        case "LocalizedText":
+                            return "global::Opc.Ua.LocalizedText";
+                        case "NodeId":
+                            return "global::Opc.Ua.NodeId";
+                        case "ExpandedNodeId":
+                            return "global::Opc.Ua.ExpandedNodeId";
+                        case "QualifiedName":
+                            return "global::Opc.Ua.QualifiedName";
+                        case "Variant":
+                            return "global::Opc.Ua.Variant";
                         case "ByteString":
                             return !nullable ? "byte[]" : "byte[]?";
                     }
                 }
-                switch (qname.Name)
+                switch (typeName)
                 {
                     case "Guid":
                         typeName = "global::Opc.Ua.Uuid";
@@ -731,7 +735,8 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.QualifiedName:
                 case BasicDataType.LocalizedText:
                 case BasicDataType.StatusCode:
-                // case BasicDataType.BaseDataType: // Variant
+                case BasicDataType.Structure: // Extension object
+                case BasicDataType.BaseDataType: // Variant
                     return true;
                 default:
                     return false;
@@ -755,7 +760,7 @@ namespace Opc.Ua.SourceGeneration
             {
                 if (!useVariantForObject)
                 {
-                    return "null";
+                    return "default";
                 }
                 return CoreUtils.Format("new {0}()", GetDotNetTypeName(
                     dataType,
@@ -768,12 +773,7 @@ namespace Opc.Ua.SourceGeneration
             if (dataType.BasicDataType == BasicDataType.BaseDataType ||
                 valueRank != ValueRank.Scalar)
             {
-                if (useVariantForObject)
-                {
-                    return "global::Opc.Ua.Variant.Null";
-                }
-
-                return "null";
+                return "default";
             }
 
             TypeInfo decodedValueType = default;
@@ -789,10 +789,11 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.Boolean:
                     if (decodedValue is not bool boolValue)
                     {
-                        boolValue = false;
+                        return "default";
                     }
 
-                    if (defaultValue != null && decodedValueType == TypeInfo.Scalars.Boolean)
+                    if (defaultValue != null &&
+                        decodedValueType == TypeInfo.Scalars.Boolean)
                     {
                         return boolValue ? "true" : "false";
                     }
@@ -803,70 +804,70 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.SByte:
                     if (decodedValue is not sbyte sbyteValue)
                     {
-                        sbyteValue = 0;
+                        return "default";
                     }
                     return CoreUtils.Format("(sbyte){0}", sbyteValue);
                 case BasicDataType.Byte:
                     if (decodedValue is not byte byteValue)
                     {
-                        byteValue = 0;
+                        return "default";
                     }
                     return CoreUtils.Format("(byte){0}", byteValue);
                 case BasicDataType.Int16:
                     if (decodedValue is not short shortValue)
                     {
-                        shortValue = 0;
+                        return "default";
                     }
                     return CoreUtils.Format("(short){0}", shortValue);
                 case BasicDataType.UInt16:
                     if (decodedValue is not ushort ushortValue)
                     {
-                        ushortValue = 0;
+                        return "default";
                     }
                     return CoreUtils.Format("(ushort){0}", ushortValue);
                 case BasicDataType.Int32:
                     if (decodedValue is not int intValue)
                     {
-                        intValue = 0;
+                        return "default";
                     }
                     return CoreUtils.Format("(int){0}", intValue);
                 case BasicDataType.UInt32:
                     if (decodedValue is not uint uintValue)
                     {
-                        uintValue = 0;
+                        return "default";
                     }
                     return CoreUtils.Format("(uint){0}", uintValue);
                 case BasicDataType.Integer:
                 case BasicDataType.Int64:
                     if (decodedValue is not long longValue)
                     {
-                        longValue = 0;
+                        return "default";
                     }
                     return CoreUtils.Format("(long){0}", longValue);
                 case BasicDataType.UInteger:
                 case BasicDataType.UInt64:
                     if (decodedValue is not ulong ulongValue)
                     {
-                        ulongValue = 0;
+                        return "default";
                     }
                     return CoreUtils.Format("(ulong){0}", ulongValue);
                 case BasicDataType.Float:
                     if (decodedValue is not float floatValue)
                     {
-                        floatValue = 0;
+                        return "default";
                     }
                     return CoreUtils.Format("(float){0}", floatValue);
                 case BasicDataType.Number:
                 case BasicDataType.Double:
                     if (decodedValue is not double doubleValue)
                     {
-                        doubleValue = 0;
+                        return "default";
                     }
                     return CoreUtils.Format("(double){0}", doubleValue);
                 case BasicDataType.String:
                     if (decodedValue is not string stringValue)
                     {
-                        return "null";
+                        return "default";
                     }
                     if (stringValue.Length == 0)
                     {
@@ -890,7 +891,7 @@ namespace Opc.Ua.SourceGeneration
                     if (decodedValue is not Guid guidValue ||
                         guidValue == Guid.Empty)
                     {
-                        return "global::Opc.Ua.Uuid.Empty";
+                        return "default";
                     }
                     return CoreUtils.Format(
                         "global::Opc.Ua.Uuid.Parse(\"{0}\")",
@@ -898,7 +899,7 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.ByteString:
                     if (decodedValue is not byte[] byteStringValue)
                     {
-                        return "null";
+                        return "default";
                     }
                     return CoreUtils.Format(
                         "CoreUtils.FromHexString(\"{0}\")",
@@ -907,7 +908,7 @@ namespace Opc.Ua.SourceGeneration
                     if (decodedValue is not NodeId nodeId ||
                         nodeId.IsNullNodeId)
                     {
-                        return "global::Opc.Ua.NodeId.Null";
+                        return "default";
                     }
                     if (nodeId.NamespaceIndex == 0 ||
                         nodeId.NamespaceIndex >= namespaces.Length)
@@ -926,7 +927,7 @@ namespace Opc.Ua.SourceGeneration
                     if (decodedValue is not ExpandedNodeId expandedNodeId ||
                         expandedNodeId.IsNull)
                     {
-                        return "global::Opc.Ua.ExpandedNodeId.Null";
+                        return "default";
                     }
                     return CoreUtils.Format(
                         "global::Opc.Ua.ExpandedNodeId.Parse(\"{0}\")",
@@ -935,7 +936,7 @@ namespace Opc.Ua.SourceGeneration
                     if (decodedValue is not QualifiedName qualifiedName ||
                         qualifiedName.IsNullQn)
                     {
-                        return "global::Opc.Ua.QualifiedName.Null";
+                        return "default";
                     }
                     return CoreUtils.Format(
                         "global::Opc.Ua.QualifiedName.Parse(\"{0}\")",
@@ -944,7 +945,7 @@ namespace Opc.Ua.SourceGeneration
                     if (decodedValue is not LocalizedText localizedText ||
                         localizedText.IsNullOrEmpty)
                     {
-                        return "global::Opc.Ua.LocalizedText.Null";
+                        return "default";
                     }
                     return CoreUtils.Format(
                         "new global::Opc.Ua.LocalizedText(\"{0}\", \"{1}\")",
@@ -954,7 +955,7 @@ namespace Opc.Ua.SourceGeneration
                     if (decodedValue is not StatusCode statusCode ||
                         statusCode.Code == 0)
                     {
-                        return "global::Opc.Ua.StatusCodes.Good";
+                        return "default";
                     }
                     return CoreUtils.Format("(StatusCode){0}", statusCode);
                 case BasicDataType.Enumeration:
@@ -982,9 +983,6 @@ namespace Opc.Ua.SourceGeneration
                         dataType.Fields[0].Name);
                 case BasicDataType.DataValue:
                     return "new global::Opc.Ua.DataValue()";
-                case BasicDataType.Structure:
-                case BasicDataType.XmlElement:
-                    return "null";
                 case BasicDataType.UserDefined:
                     if (useVariantForObject)
                     {
@@ -997,9 +995,9 @@ namespace Opc.Ua.SourceGeneration
                                 namespaces,
                                 nullable: false));
                     }
-                    return "null";
+                    return "default";
                 default:
-                    return "null";
+                    return "default";
             }
         }
 
@@ -1019,13 +1017,10 @@ namespace Opc.Ua.SourceGeneration
                 namespaces,
                 nullable: isOptional);
 
-            if (typeName is "global::Opc.Ua.IEncodeable")
+            if (typeName is "global::Opc.Ua.IEncodeable" ||
+                typeName is "global::Opc.Ua.IEncodeable?")
             {
                 typeName = "global::Opc.Ua.ExtensionObject";
-            }
-            else if (typeName is "global::Opc.Ua.IEncodeable?")
-            {
-                typeName = "global::Opc.Ua.ExtensionObject?";
             }
             if (valueRank == ValueRank.Array)
             {
@@ -1189,20 +1184,20 @@ namespace Opc.Ua.SourceGeneration
                     namespaces,
                     nullable);
 
-                if (typeName is "object" or "object?")
+                if (typeName is
+                    "object" or
+                    "object?")
                 {
                     return "global::Opc.Ua.Variant";
                 }
 
-                if (typeName is "global::Opc.Ua.IEncodeable")
+                if (typeName is
+                    "global::Opc.Ua.IEncodeable" or
+                    "global::Opc.Ua.IEncodeable?")
                 {
                     return "global::Opc.Ua.ExtensionObject";
                 }
 
-                if (typeName is "global::Opc.Ua.IEncodeable?")
-                {
-                    return "global::Opc.Ua.ExtensionObject?";
-                }
                 return typeName;
             }
 

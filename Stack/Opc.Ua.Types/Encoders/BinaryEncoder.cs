@@ -920,7 +920,7 @@ namespace Opc.Ua
         public void WriteExtensionObject(string fieldName, ExtensionObject value)
         {
             // check for null.
-            if (value == null)
+            if (value.IsNull)
             {
                 WriteNodeId(null, NodeId.Null);
                 WriteByte(null, (byte)ExtensionObjectEncoding.None);

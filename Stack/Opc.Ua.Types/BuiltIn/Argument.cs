@@ -215,7 +215,7 @@ namespace Opc.Ua
 
             clone.Name = CoreUtils.Clone(Name);
             clone.DataType = DataType;
-            clone.ValueRank = (int)CoreUtils.Clone(ValueRank);
+            clone.ValueRank = ValueRank;
             clone.m_arrayDimensions = CoreUtils.Clone(m_arrayDimensions);
             clone.Description = CoreUtils.Clone(Description);
 

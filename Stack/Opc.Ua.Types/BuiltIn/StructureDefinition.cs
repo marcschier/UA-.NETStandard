@@ -184,7 +184,7 @@ namespace Opc.Ua
 
             clone.DefaultEncodingId = DefaultEncodingId;
             clone.BaseDataType = BaseDataType;
-            clone.StructureType = (StructureType)CoreUtils.Clone(StructureType);
+            clone.StructureType = CoreUtils.Clone(StructureType);
             clone.m_fields = CoreUtils.Clone(m_fields);
 
             return clone;

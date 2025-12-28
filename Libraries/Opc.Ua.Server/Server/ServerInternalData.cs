@@ -600,7 +600,7 @@ namespace Opc.Ua.Server
             lock (DiagnosticsNodeManager.Lock)
             {
                 // get the server object.
-                ServerObjectState serverObject = ServerObject = (ServerObjectState)
+                ServerObjectState serverObject = ServerObject =
                     DiagnosticsNodeManager.FindPredefinedNode<ServerObjectState>(ObjectIds.Server);
 
                 // update server capabilities.
@@ -734,7 +734,7 @@ namespace Opc.Ua.Server
                     BuildNumber = m_serverDescription.BuildNumber,
                     BuildDate = m_serverDescription.BuildDate
                 };
-                var buildInfoVariableState = (BuildInfoVariableState)
+                var buildInfoVariableState =
                     DiagnosticsNodeManager.FindPredefinedNode<BuildInfoVariableState>(
                         VariableIds.Server_ServerStatus_BuildInfo);
                 var buildInfoVariable = new BuildInfoVariableValue(

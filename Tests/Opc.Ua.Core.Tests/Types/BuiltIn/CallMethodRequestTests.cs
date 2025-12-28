@@ -37,7 +37,8 @@ namespace Opc.Ua.Core.Tests.Types.BuiltIn
     /// <summary>
     /// Tests for the CallMethodRequest class.
     /// </summary>
-    [TestFixture, Category("CallMethodRequest")]
+    [TestFixture]
+    [Category("CallMethodRequest")]
     [SetCulture("en-us")]
     [Parallelizable]
     public class CallMethodRequestTests

@@ -106,7 +106,7 @@ namespace Opc.Ua
 
             encoder.PushNamespace(Namespaces.OpcUaXsd);
 
-            if (m_dataTypeDefinition != null)
+            if (!m_dataTypeDefinition.IsNull)
             {
                 encoder.WriteExtensionObject("DataTypeDefinition", m_dataTypeDefinition);
             }
@@ -142,7 +142,7 @@ namespace Opc.Ua
         {
             AttributesToSave attributesToSave = base.GetAttributesToSave(context);
 
-            if (m_dataTypeDefinition != null)
+            if (!m_dataTypeDefinition.IsNull)
             {
                 attributesToSave |= AttributesToSave.DataTypeDefinition;
             }
@@ -223,7 +223,7 @@ namespace Opc.Ua
 
                     if (ServiceResult.IsGood(result))
                     {
-                        if (dataTypeDefinition?.Body is StructureDefinition structureType &&
+                        if (dataTypeDefinition.Body is StructureDefinition structureType &&
                             structureType.DefaultEncodingId.IsNullNodeId)
                         {
                             // one time set the id for binary encoding, currently the only supported encoding
@@ -256,7 +256,7 @@ namespace Opc.Ua
             switch (attributeId)
             {
                 case Attributes.DataTypeDefinition:
-                    var dataTypeDefinition = value as ExtensionObject;
+                    var dataTypeDefinition = value is ExtensionObject eo ? eo : default;
 
                     if ((WriteMask & AttributeWriteMask.DataTypeDefinition) == 0)
                     {

@@ -250,7 +250,7 @@ namespace Opc.Ua.Server.Tests
                         null,
                         0,
                         browseDescriptionCollection.Take(0).ToArray()).ConfigureAwait(false));
-                Assert.AreEqual(StatusCodes.BadNothingToDo, (StatusCode)sre.StatusCode);
+                Assert.AreEqual(StatusCodes.BadNothingToDo, sre.StatusCode);
             }
 
             while (browseDescriptionCollection.Count > 0)
@@ -269,7 +269,7 @@ namespace Opc.Ua.Server.Tests
                                 browseDescriptionCollection).ConfigureAwait(false));
                     Assert.AreEqual(
                         StatusCodes.BadTooManyOperations,
-                        (StatusCode)sre.StatusCode);
+                        sre.StatusCode);
 
                     // Test if server responds with BadTooManyOperations
                     BrowseDescription[] tempBrowsePath =
@@ -285,7 +285,7 @@ namespace Opc.Ua.Server.Tests
                             tempBrowsePath).ConfigureAwait(false));
                     Assert.AreEqual(
                         StatusCodes.BadTooManyOperations,
-                        (StatusCode)sre.StatusCode);
+                        sre.StatusCode);
                 }
 
                 bool repeatBrowse;
@@ -385,7 +385,7 @@ namespace Opc.Ua.Server.Tests
             int diagnosticNs = services.MessageContext.NamespaceUris
                 .GetIndex(Ua.Namespaces.OpcUa + "Diagnostics");
             // Remove diagnostic nodes since they change per session
-            referenceDescriptions.RemoveAll(r => (int)r.NodeId.NamespaceIndex == diagnosticNs);
+            referenceDescriptions.RemoveAll(r => r.NodeId.NamespaceIndex == diagnosticNs);
 
             TestContext.Out
                 .WriteLine("Found {0} references on server.", referenceDescriptions.Count);
@@ -439,7 +439,7 @@ namespace Opc.Ua.Server.Tests
                                 browsePaths).ConfigureAwait(false));
                     Assert.AreEqual(
                         StatusCodes.BadTooManyOperations,
-                        (StatusCode)sre.StatusCode);
+                        sre.StatusCode);
                 }
                 BrowsePathCollection browsePathSnippet =
                     operationLimits.MaxNodesPerTranslateBrowsePathsToNodeIds > 0
@@ -520,7 +520,7 @@ namespace Opc.Ua.Server.Tests
                     id,
                     TimestampsToReturn.Neither,
                     itemsToCreate).ConfigureAwait(false));
-            Assert.AreEqual(StatusCodes.BadNothingToDo, (StatusCode)sre.StatusCode);
+            Assert.AreEqual(StatusCodes.BadNothingToDo, sre.StatusCode);
 
             // add item
             uint handleCounter = 1;
@@ -537,7 +537,7 @@ namespace Opc.Ua.Server.Tests
                     {
                         ClientHandle = ++handleCounter,
                         SamplingInterval = -1,
-                        Filter = null,
+                        Filter = default,
                         DiscardOldest = true,
                         QueueSize = queueSize
                     }
@@ -948,15 +948,19 @@ namespace Opc.Ua.Server.Tests
         {
             var itemsToCreate = new MonitoredItemCreateRequestCollection {
                 // add item
-                new MonitoredItemCreateRequest {
-                    ItemToMonitor = new ReadValueId {
+                new MonitoredItemCreateRequest
+                {
+                    ItemToMonitor = new ReadValueId
+                    {
                         AttributeId = Attributes.Value,
-                        NodeId = nodeId },
+                        NodeId = nodeId
+                    },
                     MonitoringMode = MonitoringMode.Reporting,
-                    RequestedParameters = new MonitoringParameters {
+                    RequestedParameters = new MonitoringParameters
+                    {
                         ClientHandle = clientHandle,
                         SamplingInterval = samplingInterval,
-                        Filter = null,
+                        Filter = default,
                         DiscardOldest = true,
                         QueueSize = queueSize
                     }

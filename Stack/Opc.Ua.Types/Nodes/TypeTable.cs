@@ -345,7 +345,7 @@ namespace Opc.Ua
         public bool IsEncodingFor(NodeId expectedTypeId, ExtensionObject value)
         {
             // no match on null values.
-            if (value == null)
+            if (value.IsNull)
             {
                 return false;
             }

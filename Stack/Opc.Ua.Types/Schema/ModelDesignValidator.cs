@@ -7172,7 +7172,7 @@ namespace Opc.Ua.Schema.Model
             return state;
         }
 
-        private void SetTypeId(ExtensionObject e, NamespaceTable namespaceUris)
+        private ExtensionObject SetTypeId(ExtensionObject e, NamespaceTable namespaceUris)
         {
             XmlQualifiedName qname = null;
 
@@ -7226,9 +7226,10 @@ namespace Opc.Ua.Schema.Model
 
                 if (namespaceIndex >= 0)
                 {
-                    e.TypeId = new NodeId(numericId, (ushort)namespaceIndex);
+                    return e.WithTypeId(new NodeId(numericId, (ushort)namespaceIndex));
                 }
             }
+            return e;
         }
 
         private BaseVariableState CreateNodeState(NodeState parent, VariableDesign root, NamespaceTable namespaceUris)
@@ -7277,17 +7278,18 @@ namespace Opc.Ua.Schema.Model
             state.MinimumSamplingInterval = root.MinimumSamplingInterval;
             state.Historizing = root.Historizing;
 
-            if (root.DecodedValue is ExtensionObject e)
+            if (root.DecodedValue is ExtensionObject extensionObject)
             {
-                SetTypeId(e, namespaceUris);
+                root.DecodedValue = SetTypeId(extensionObject, namespaceUris);
             }
 
-            if (root.DecodedValue is ExtensionObject[] e2)
+            if (root.DecodedValue is ExtensionObject[] extensionObjects)
             {
-                foreach (ExtensionObject e3 in e2)
-                {
-                    SetTypeId(e3, namespaceUris);
-                }
+                root.DecodedValue = extensionObjects
+                    .Select(extensionObject => SetTypeId(
+                        extensionObject,
+                        namespaceUris))
+                    .ToArray();
             }
 
             if (root.DecodedValue is IList<Argument> argument)

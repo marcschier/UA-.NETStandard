@@ -329,11 +329,13 @@ namespace Opc.Ua.Client.ComplexTypes
 
             ExpandedNodeId binaryEncodingId = references
                 .FirstOrDefault(r => r.BrowseName.Name == BrowseNames.DefaultBinary)?
-                .NodeId ?? ExpandedNodeId.Null;
+                .NodeId ??
+                ExpandedNodeId.Null;
             binaryEncodingId = NormalizeExpandedNodeId(binaryEncodingId);
             ExpandedNodeId xmlEncodingId = references
                 .FirstOrDefault(r => r.BrowseName.Name == BrowseNames.DefaultXml)?
-                .NodeId ?? ExpandedNodeId.Null;
+                .NodeId ??
+                ExpandedNodeId.Null;
             xmlEncodingId = NormalizeExpandedNodeId(xmlEncodingId);
             return (
                 references

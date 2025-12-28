@@ -891,7 +891,7 @@ namespace Opc.Ua.Client
             CancellationToken ct = default)
         {
             // no match on null values.
-            if (value == null)
+            if (value.IsNull)
             {
                 return false;
             }

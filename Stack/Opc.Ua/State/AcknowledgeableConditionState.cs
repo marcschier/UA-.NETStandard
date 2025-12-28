@@ -512,7 +512,8 @@ namespace Opc.Ua
         {
             bool supportsConfirm = false;
 
-            if (ConfirmedState != null && ConfirmedState.Value != null)
+            if (ConfirmedState != null &&
+                !ConfirmedState.Value.IsNullOrEmpty)
             {
                 supportsConfirm = true;
             }

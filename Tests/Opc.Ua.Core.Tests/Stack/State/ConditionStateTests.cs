@@ -334,7 +334,10 @@ namespace Opc.Ua.Core.Tests.Stack.State
         /// </summary>
         private sealed class TestConditionStateWithRetain : ConditionState
         {
-            public TestConditionStateWithRetain(NodeState parent) : base(parent) { }
+            public TestConditionStateWithRetain(NodeState parent)
+                : base(parent)
+            {
+            }
 
             public void ForceRetain(bool value)
             {

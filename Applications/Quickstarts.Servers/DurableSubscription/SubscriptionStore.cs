@@ -135,7 +135,7 @@ namespace Quickstarts.Servers
                 var jo = JObject.Load(reader);
                 object body = jo["Body"].ToObject<object>(serializer);
                 ExpandedNodeId typeId = jo["TypeId"].ToObject<ExpandedNodeId>(serializer);
-                return new ExtensionObject { Body = body, TypeId = typeId };
+                return new ExtensionObject(typeId, body);
             }
 
             public override void WriteJson(

@@ -1208,7 +1208,7 @@ namespace Opc.Ua.Gds.Tests
                     Assert.NotNull(sre);
                     Assert.AreEqual(
                         StatusCodes.BadUserAccessDenied,
-                        (StatusCode)sre.StatusCode,
+                        sre.StatusCode,
                         sre.Result.ToString());
                 }
             }
@@ -1250,7 +1250,7 @@ namespace Opc.Ua.Gds.Tests
                     Assert.NotNull(sre);
                     Assert.AreEqual(
                         StatusCodes.BadUserAccessDenied,
-                        (StatusCode)sre.StatusCode,
+                        sre.StatusCode,
                         sre.Result.ToString());
                 }
             }
@@ -1323,7 +1323,7 @@ namespace Opc.Ua.Gds.Tests
                     Assert.NotNull(sre);
                     Assert.AreEqual(
                         StatusCodes.BadUserAccessDenied,
-                        (StatusCode)sre.StatusCode,
+                        sre.StatusCode,
                         sre.Result.ToString());
                 }
             }
@@ -1436,7 +1436,7 @@ namespace Opc.Ua.Gds.Tests
                     Assert.NotNull(sre);
                     Assert.AreEqual(
                         StatusCodes.BadUserAccessDenied,
-                        (StatusCode)sre.StatusCode,
+                        sre.StatusCode,
                         sre.Result.ToString());
                 }
             }
@@ -1551,7 +1551,7 @@ namespace Opc.Ua.Gds.Tests
             Assert.NotNull(sre);
             Assert.AreEqual(
                 StatusCodes.BadUserAccessDenied,
-                (StatusCode)sre.StatusCode,
+                sre.StatusCode,
                 sre.Result.ToString());
         }
 

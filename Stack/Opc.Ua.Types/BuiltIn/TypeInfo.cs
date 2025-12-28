@@ -130,7 +130,7 @@ namespace Opc.Ua
             {
                 null => IsUnknown,
                 TypeInfo typeInfo => Equals(typeInfo),
-                _ => base.Equals(obj),
+                _ => base.Equals(obj)
             };
         }
 

@@ -473,5 +473,4 @@ namespace Opc.Ua
                 obj.IsInverse);
         }
     }
-
 }

@@ -824,7 +824,7 @@ namespace Opc.Ua.PubSub.Encoding
                         case BuiltInType.ExtensionObject:
                             binaryEncoder.WriteExtensionObject(
                                 "ExtensionObject",
-                                valueToEncode as ExtensionObject);
+                                valueToEncode is ExtensionObject eo ? eo : default);
                             break;
                         case BuiltInType.Null:
                         case BuiltInType.DataValue:

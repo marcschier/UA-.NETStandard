@@ -661,7 +661,7 @@ namespace Opc.Ua
         /// </summary>
         public static explicit operator ExpandedNodeId(string text)
         {
-            return ExpandedNodeId.Parse(text);
+            return Parse(text);
         }
 
         /// <inheritdoc/>

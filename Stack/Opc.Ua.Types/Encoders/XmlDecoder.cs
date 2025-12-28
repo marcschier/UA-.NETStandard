@@ -1379,9 +1379,9 @@ namespace Opc.Ua
         /// </summary>
         public ExtensionObject ReadExtensionObject(string fieldName)
         {
-            if (!BeginField(fieldName, true, out bool isNil))
+            if (!BeginField(fieldName, true))
             {
-                return isNil ? null : ExtensionObject.Null;
+                return ExtensionObject.Null;
             }
 
             PushNamespace(Namespaces.OpcUaXsd);

@@ -855,15 +855,23 @@ namespace Opc.Ua
         /// <summary>
         /// Writes an ExtensionObject to the stream.
         /// </summary>
-        /// <exception cref="ServiceResultException"></exception>
         public void WriteExtensionObject(string fieldName, ExtensionObject value)
         {
-            if (BeginField(fieldName, value == null, true))
+            WriteExtensionObject(fieldName, value, false);
+        }
+
+        /// <summary>
+        /// Writes an ExtensionObject to the stream.
+        /// </summary>
+        /// <exception cref="ServiceResultException"></exception>
+        private void WriteExtensionObject(string fieldName, ExtensionObject value, bool isArrayElement)
+        {
+            if (BeginField(fieldName, value.IsNull, true, isArrayElement))
             {
                 PushNamespace(Namespaces.OpcUaXsd);
 
                 // check for null.
-                if (value == null)
+                if (value.IsNull)
                 {
                     EndField(fieldName);
                     PopNamespace();
@@ -1711,7 +1719,7 @@ namespace Opc.Ua
                 {
                     for (int ii = 0; ii < values.Count; ii++)
                     {
-                        WriteExtensionObject("ExtensionObject", values[ii]);
+                        WriteExtensionObject("ExtensionObject", values[ii], true);
                     }
                 }
 

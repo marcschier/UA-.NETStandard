@@ -3624,7 +3624,7 @@ namespace Opc.Ua.Server
             // check filter.
             DataChangeFilter datachangeFilter = null;
 
-            if (filter != null)
+            if (!filter.IsNull)
             {
                 datachangeFilter = filter.Body as DataChangeFilter;
             }

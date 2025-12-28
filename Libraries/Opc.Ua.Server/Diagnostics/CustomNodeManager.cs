@@ -2288,7 +2288,7 @@ namespace Opc.Ua.Server
                     // create an initial result.
                     HistoryReadResult result = results[ii] = new HistoryReadResult();
 
-                    result.HistoryData = null;
+                    result.HistoryData = default;
                     result.ContinuationPoint = null;
                     result.StatusCode = StatusCodes.Good;
 

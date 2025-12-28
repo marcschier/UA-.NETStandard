@@ -213,11 +213,11 @@ namespace Opc.Ua
             var clone = (ReferenceDescription)base.MemberwiseClone();
 
             clone.ReferenceTypeId = ReferenceTypeId;
-            clone.IsForward = (bool)CoreUtils.Clone(IsForward);
+            clone.IsForward = CoreUtils.Clone(IsForward);
             clone.NodeId = NodeId;
             clone.BrowseName = BrowseName;
             clone.DisplayName = DisplayName;
-            clone.NodeClass = (NodeClass)CoreUtils.Clone(NodeClass);
+            clone.NodeClass = CoreUtils.Clone(NodeClass);
             clone.TypeDefinition = TypeDefinition;
 
             return clone;

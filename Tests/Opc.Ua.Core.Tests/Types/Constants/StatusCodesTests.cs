@@ -82,7 +82,7 @@ namespace Opc.Ua.Core.Tests.Types.Constants
         [Test]
         public void StatusCode_SymbolicId_BadStatusCode_ReturnsBad()
         {
-            string browseName =StatusCodes.Bad.SymbolicId;
+            string browseName = StatusCodes.Bad.SymbolicId;
             Assert.That(browseName, Is.EqualTo("Bad"));
         }
 

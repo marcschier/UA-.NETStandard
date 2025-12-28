@@ -532,7 +532,7 @@ namespace Opc.Ua.Server.Tests
                 });
                 Assert.AreEqual(
                     StatusCodes.BadNoSubscription,
-                    (StatusCode)sre.StatusCode);
+                    sre.StatusCode);
             }
         }
 
@@ -1081,7 +1081,8 @@ namespace Opc.Ua.Server.Tests
                 "Int32Value node should have HistoryRead access level");
 
             // Perform a history read operation
-            var historyReadDetails = new ReadRawModifiedDetails {
+            var historyReadDetails = new ReadRawModifiedDetails
+            {
                 StartTime = DateTime.UtcNow.AddHours(-1),
                 EndTime = DateTime.UtcNow,
                 NumValuesPerNode = 10,

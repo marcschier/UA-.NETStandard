@@ -206,6 +206,7 @@ namespace Opc.Ua
             get => m_typeBackingField ?? m_token.TokenType;
             set => m_typeBackingField = value;
         }
+
         // TODO Fix the save/restore asap
         private UserTokenType? m_typeBackingField;
 

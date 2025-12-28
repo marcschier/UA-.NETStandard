@@ -209,7 +209,7 @@ namespace Opc.Ua
             {
                 foreach (ExtensionObject extension in m_elements[ii].FilterOperands)
                 {
-                    if (extension != null && extension.Body is ElementOperand operand)
+                    if (!extension.IsNull && extension.Body is ElementOperand operand)
                     {
                         operand.Index++;
                     }
@@ -452,7 +452,7 @@ namespace Opc.Ua
 
                 for (int ii = 0; ii < FilterOperands.Count; ii++)
                 {
-                    if (FilterOperands[ii] != null)
+                    if (!FilterOperands[ii].IsNull)
                     {
                         buffer.AppendFormat(formatProvider, ", {0}", FilterOperands[ii].Body);
                     }

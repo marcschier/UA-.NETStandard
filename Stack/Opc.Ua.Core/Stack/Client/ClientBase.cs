@@ -421,7 +421,7 @@ namespace Opc.Ua
 #endif
                     })
                 };
-                if (request.RequestHeader.AdditionalHeader?.Body == null)
+                if (request.RequestHeader.AdditionalHeader.IsNull)
                 {
                     var additionalHeader = new AdditionalParametersType();
                     additionalHeader.Parameters.Add(spanContextParameter);

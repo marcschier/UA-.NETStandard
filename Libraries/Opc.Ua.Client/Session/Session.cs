@@ -4830,8 +4830,9 @@ namespace Opc.Ua.Client
             ResponseHeader responseHeader,
             X509Certificate2? serverCertificate)
         {
-            if (ExtensionObject.ToEncodeable(
-                responseHeader?.AdditionalHeader) is AdditionalParametersType parameters)
+            if (responseHeader != null &&
+                responseHeader.AdditionalHeader.TryGetEncodeable(out IEncodeable e) &&
+                e is AdditionalParametersType parameters)
             {
                 foreach (KeyValuePair ii in parameters.Parameters)
                 {

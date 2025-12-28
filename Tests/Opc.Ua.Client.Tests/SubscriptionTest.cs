@@ -215,7 +215,7 @@ namespace Opc.Ua.Client.Tests
                     .ConfigureAwait(false));
             Assert.AreEqual(
                 StatusCodes.BadMessageNotAvailable,
-                (StatusCode)sre.StatusCode,
+                sre.StatusCode,
                 $"Expected BadMessageNotAvailable, but received {sre.Message}");
 
             // verify that reconnect created subclassed version of subscription and monitored item
@@ -712,7 +712,7 @@ namespace Opc.Ua.Client.Tests
                             VariableIds.Server_ServerStatus));
                     Assert.AreEqual(
                         StatusCodes.BadSecureChannelIdInvalid,
-                        (StatusCode)sre.StatusCode,
+                        sre.StatusCode,
                         sre.Message);
                 }
                 else
@@ -1351,7 +1351,7 @@ namespace Opc.Ua.Client.Tests
                     subscription.RepublishAsync(subscription.SequenceNumber + 100));
             Assert.AreEqual(
                 StatusCodes.BadMessageNotAvailable,
-                (StatusCode)sre.StatusCode);
+                sre.StatusCode);
 
             subscription.RemoveItems(list);
             await subscription.ApplyChangesAsync().ConfigureAwait(false);
@@ -1604,12 +1604,12 @@ namespace Opc.Ua.Client.Tests
                 if (item.Status.Created)
                 {
                     totalCreated++;
-                    Assert.That(item.Status.Id, Is.GreaterThan(0u), 
+                    Assert.That(item.Status.Id, Is.GreaterThan(0u),
                         $"Item {item.DisplayName} should have a server-assigned ID");
                 }
             }
 
-            Assert.That(totalCreated, Is.EqualTo(10), 
+            Assert.That(totalCreated, Is.EqualTo(10),
                 "All 10 items should be created exactly once");
 
             // Verify that each result list contains only the items that were actually created

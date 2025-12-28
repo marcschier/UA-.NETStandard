@@ -386,8 +386,8 @@ namespace Opc.Ua.Client.Tests
         [Order(910)]
         public async Task FetchAllReferenceTypesAsync()
         {
-           IEnumerable<ExpandedNodeId> fieldValues = ReferenceTypeIds.Identifiers
-                .Select(nodeId=> NodeId.ToExpandedNodeId(nodeId, Session.NamespaceUris));
+            IEnumerable<ExpandedNodeId> fieldValues = ReferenceTypeIds.Identifiers
+                 .Select(nodeId => NodeId.ToExpandedNodeId(nodeId, Session.NamespaceUris));
 
             await Session.FetchTypeTreeAsync([.. fieldValues]).ConfigureAwait(false);
         }

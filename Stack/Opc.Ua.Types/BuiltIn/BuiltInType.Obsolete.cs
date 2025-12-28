@@ -102,4 +102,36 @@ namespace Opc.Ua
             }
         }
     }
+
+    /// <summary>
+    /// Extension object extensions
+    /// </summary>
+    public static class ExtensionObjectExtensions
+    {
+        extension(ExtensionObject)
+        {
+            /// <summary>
+            /// Tests if the extension or embed objects are null value.
+            /// </summary>
+            /// <param name="extension">The object to check if null</param>
+            /// <returns>
+            /// <c>true</c> if the specified <paramref name="extension"/> is null
+            /// of the embedded object is null; otherwise, <c>false</c>.
+            /// </returns>
+            public static bool IsNull([NotNullWhen(false)] ExtensionObject extension)
+            {
+                return extension.IsNull;
+            }
+
+            /// <summary>
+            /// Converts an extension object to an encodeable object.
+            /// </summary>
+            /// <param name="extension">The extension object to convert to an encodeable object</param>
+            /// <returns>Instance of <see cref="IEncodeable"/> for the embedded object.</returns>
+            public static IEncodeable ToEncodeable(ExtensionObject extension)
+            {
+                return extension.Body as IEncodeable;
+            }
+        }
+    }
 }

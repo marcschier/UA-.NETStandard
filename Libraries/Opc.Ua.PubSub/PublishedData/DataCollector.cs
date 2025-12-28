@@ -133,7 +133,7 @@ namespace Opc.Ua.PubSub.PublishedData
             {
                 m_dataStore.UpdateMetaData(publishedDataSet);
 
-                if (publishedDataSet.DataSetSource != null)
+                if (!publishedDataSet.DataSetSource.IsNull)
                 {
                     var dataSet = new DataSet(dataSetName)
                     {

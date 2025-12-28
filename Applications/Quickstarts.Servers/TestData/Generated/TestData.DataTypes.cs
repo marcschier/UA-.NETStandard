@@ -82,7 +82,7 @@ namespace TestData
             m_statusCodeValue = StatusCodes.Good;
             m_variantValue = Variant.Null;
             m_enumerationValue = 0;
-            m_structureValue = null;
+            m_structureValue = default;
             m_numberValue = (double)0;
             m_integerValue = (long)0;
             m_uIntegerValue = (ulong)0;
