@@ -50,6 +50,9 @@ namespace Opc.Ua.Security.Certificates
         private readonly byte[] m_certificationRequestInfo;
         private readonly byte[] m_signature;
         private readonly string m_signatureAlgorithm;
+        private readonly byte[] m_subjectPublicKeyInfo;
+        private readonly X500DistinguishedName m_subject;
+        private readonly byte[] m_attributes;
 
         /// <summary>
         /// Initializes a new instance of the Pkcs10CertificationRequest class from DER-encoded data.
@@ -74,7 +77,7 @@ namespace Opc.Ua.Security.Certificates
                 m_certificationRequestInfo = sequenceReader.ReadEncodedValue().ToArray();
 
                 // Parse CertificationRequestInfo to extract components
-                (Subject, SubjectPublicKeyInfo, Attributes) =
+                (m_subject, m_subjectPublicKeyInfo, m_attributes) =
                     ParseCertificationRequestInfo(m_certificationRequestInfo);
 
                 // Read SignatureAlgorithm
@@ -99,17 +102,17 @@ namespace Opc.Ua.Security.Certificates
         /// <summary>
         /// Gets the subject distinguished name from the CSR.
         /// </summary>
-        public X500DistinguishedName Subject { get; }
+        public X500DistinguishedName Subject => m_subject;
 
         /// <summary>
         /// Gets the subject public key info as DER-encoded bytes.
         /// </summary>
-        public byte[] SubjectPublicKeyInfo { get; }
+        public byte[] SubjectPublicKeyInfo => m_subjectPublicKeyInfo;
 
         /// <summary>
         /// Gets the attributes from the CSR.
         /// </summary>
-        public byte[] Attributes { get; }
+        public byte[] Attributes => m_attributes;
 
         /// <summary>
         /// Verifies the signature of the certificate request.
@@ -123,7 +126,7 @@ namespace Opc.Ua.Security.Certificates
                 HashAlgorithmName hashAlgorithm = Oids.GetHashAlgorithmName(m_signatureAlgorithm);
 
                 // Parse the public key to get the key for verification
-                var publicKeyReader = new AsnReader(SubjectPublicKeyInfo, AsnEncodingRules.DER);
+                var publicKeyReader = new AsnReader(m_subjectPublicKeyInfo, AsnEncodingRules.DER);
                 AsnReader pkSequence = publicKeyReader.ReadSequence();
 
                 // Read algorithm identifier

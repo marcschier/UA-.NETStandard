@@ -39,14 +39,10 @@ namespace Opc.Ua.Security.Certificates
     /// </summary>
     public static class Pkcs10Utils
     {
-        /// <summary>
-        /// OID for PKCS#9 Extension Request attribute
-        /// </summary>
+        // OID for PKCS#9 Extension Request attribute
         private const string Pkcs9AtExtensionRequest = "1.2.840.113549.1.9.14";
 
-        /// <summary>
-        /// OID for Subject Alternative Name extension
-        /// </summary>
+        // OID for Subject Alternative Name extension
         private const string SubjectAlternativeNameOid = "2.5.29.17";
 
         /// <summary>
@@ -54,7 +50,6 @@ namespace Opc.Ua.Security.Certificates
         /// </summary>
         /// <param name="attributes">The CSR attributes encoded as DER bytes.</param>
         /// <returns>The X509SubjectAltNameExtension if found; otherwise, null.</returns>
-        /// <exception cref="CryptographicException"></exception>
         public static X509SubjectAltNameExtension GetSubjectAltNameExtension(byte[] attributes)
         {
             if (attributes == null || attributes.Length == 0)
