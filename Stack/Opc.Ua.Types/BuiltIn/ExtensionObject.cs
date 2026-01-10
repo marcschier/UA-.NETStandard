@@ -218,10 +218,13 @@ namespace Opc.Ua
                 return Body switch
                 {
                     byte[] b => ByteStringEqualityComparer.Default.Equals(
+                        b,
                         value.TryGetAsBinary(out byte[] b2) ? b2 : default),
                     string s => StringComparer.Ordinal.Equals(
+                        s,
                         value.TryGetAsJson(out string s2) ? s2 : default),
                     XmlElement x => XmlElementStringEqualityComparer.Default.Equals(
+                        x,
                         value.TryGetAsXml(out XmlElement x2) ? x2 : default),
                     IEncodeable e => e.IsEqual(
                         value.TryGetEncodeable(out IEncodeable e2) ? e2 : default),
@@ -379,7 +382,7 @@ namespace Opc.Ua
             IServiceMessageContext messageContext = null)
             where T : IEncodeable
         {
-            if (TryGetEncodeable(out var e, messageContext) &&
+            if (TryGetEncodeable(out IEncodeable e, messageContext) &&
                 e is T typedEncodeable)
             {
                 encodeable = typedEncodeable;
