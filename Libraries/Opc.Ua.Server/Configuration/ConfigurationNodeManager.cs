@@ -43,21 +43,6 @@ using System.Runtime.InteropServices;
 
 namespace Opc.Ua.Server
 {
-    /// <summary>
-    /// Privileged identity which can access the system configuration.
-    /// </summary>
-    public class SystemConfigurationIdentity : RoleBasedIdentity
-    {
-        /// <summary>
-        /// Create a user identity with the privilege
-        /// to modify the system configuration.
-        /// </summary>
-        /// <param name="identity">The user identity.</param>
-        public SystemConfigurationIdentity(IUserIdentity identity)
-            : base(identity, [Role.SecurityAdmin, Role.ConfigureAdmin])
-        {
-        }
-    }
 
     /// <summary>
     /// The Server Configuration Node Manager.
@@ -319,7 +304,8 @@ namespace Opc.Ua.Server
                     certGroup.IssuerStore,
                     new TrustList.SecureAccess(HasApplicationSecureAdminAccess),
                     new TrustList.SecureAccess(HasApplicationSecureAdminAccess),
-                    Server.Telemetry);
+                    Server.Telemetry,
+                    m_configuration.ServerConfiguration.MaxTrustListSize);
                 certGroup.Node.ClearChangeMasks(systemContext, true);
             }
 

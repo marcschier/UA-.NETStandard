@@ -950,8 +950,8 @@ namespace Opc.Ua.Client
         {
             using Activity? activity = m_telemetry.StartActivity();
             // Snapshot subscription state
-            var subscriptionStateCollection = new SubscriptionStateCollection(SubscriptionCount);
-            foreach (Subscription subscription in Subscriptions)
+            var subscriptionStateCollection = new SubscriptionStateCollection();
+            foreach (Subscription subscription in subscriptions)
             {
                 subscription.Snapshot(out SubscriptionState state);
                 subscriptionStateCollection.Add(state);
@@ -1201,8 +1201,6 @@ namespace Opc.Ua.Client
             byte[]? serverCertificateData = response.ServerCertificate;
             SignatureData serverSignature = response.ServerSignature;
             EndpointDescriptionCollection serverEndpoints = response.ServerEndpoints;
-            SignedSoftwareCertificateCollection serverSoftwareCertificates = response
-                .ServerSoftwareCertificates;
 
             m_sessionTimeout = response.RevisedSessionTimeout;
             m_maxRequestMessageSize = response.MaxRequestMessageSize;
@@ -1236,8 +1234,6 @@ namespace Opc.Ua.Client
                     clientCertificateData,
                     clientCertificateChainData,
                     clientNonce);
-
-                HandleSignedSoftwareCertificates(serverSoftwareCertificates);
 
                 //  process additional header
                 ProcessResponseAdditionalHeader(response.ResponseHeader, serverCertificate);
@@ -1284,10 +1280,6 @@ namespace Opc.Ua.Client
                     m_instanceCertificateChain,
                     m_endpoint.Description.SecurityMode != MessageSecurityMode.None);
 
-                // send the software certificates assigned to the client.
-                SignedSoftwareCertificateCollection clientSoftwareCertificates
-                    = GetSoftwareCertificates();
-
                 // copy the preferred locales if provided.
                 if (preferredLocales != null && preferredLocales.Count > 0)
                 {
@@ -1298,7 +1290,7 @@ namespace Opc.Ua.Client
                 ActivateSessionResponse activateResponse = await ActivateSessionAsync(
                     null,
                     clientSignature,
-                    clientSoftwareCertificates,
+                    [],
                     m_preferredLocales,
                     new ExtensionObject(identityToken.Token),
                     userTokenSignature,
@@ -1321,12 +1313,6 @@ namespace Opc.Ua.Client
                             i,
                             certificateResults[i]);
                     }
-                }
-
-                if (clientSoftwareCertificates?.Count > 0 &&
-                    (certificateResults == null || certificateResults.Count == 0))
-                {
-                    m_logger.LogInformation("Empty results were received for the ActivateSession call.");
                 }
 
                 // fetch namespaces.
@@ -1491,14 +1477,10 @@ namespace Opc.Ua.Client
                 m_instanceCertificateChain,
                 m_endpoint.Description.SecurityMode != MessageSecurityMode.None);
 
-            // send the software certificates assigned to the client.
-            SignedSoftwareCertificateCollection clientSoftwareCertificates
-                = GetSoftwareCertificates();
-
             ActivateSessionResponse response = await ActivateSessionAsync(
                 null,
                 clientSignature,
-                clientSoftwareCertificates,
+                [],
                 preferredLocales,
                 new ExtensionObject(identityToken.Token),
                 userTokenSignature,
@@ -2341,10 +2323,6 @@ namespace Opc.Ua.Client
                     m_instanceCertificateChain,
                     m_endpoint.Description.SecurityMode != MessageSecurityMode.None);
 
-                // send the software certificates assigned to the client.
-                SignedSoftwareCertificateCollection clientSoftwareCertificates
-                    = GetSoftwareCertificates();
-
                 m_logger.LogInformation("Session REPLACING channel for {SessionId}.", SessionId);
 
                 if (connection != null)
@@ -2643,14 +2621,6 @@ namespace Opc.Ua.Client
         }
 
         /// <summary>
-        /// Returns the software certificates assigned to the application.
-        /// </summary>
-        protected virtual SignedSoftwareCertificateCollection GetSoftwareCertificates()
-        {
-            return [];
-        }
-
-        /// <summary>
         /// Handles an error when validating the application instance certificate provided by the server.
         /// </summary>
         /// <exception cref="ServiceResultException"></exception>
@@ -2659,26 +2629,6 @@ namespace Opc.Ua.Client
             ServiceResult result)
         {
             throw new ServiceResultException(result);
-        }
-
-        /// <summary>
-        /// Handles an error when validating software certificates provided by the server.
-        /// </summary>
-        /// <exception cref="ServiceResultException"></exception>
-        protected virtual void OnSoftwareCertificateError(
-            SignedSoftwareCertificate signedCertificate,
-            ServiceResult result)
-        {
-            throw new ServiceResultException(result);
-        }
-
-        /// <summary>
-        /// Inspects the software certificates provided by the server.
-        /// </summary>
-        protected virtual void ValidateSoftwareCertificates(
-            List<SoftwareCertificate> softwareCertificates)
-        {
-            // always accept valid certificates.
         }
 
         /// <summary>
@@ -4171,38 +4121,6 @@ namespace Opc.Ua.Client
         {
             ChannelToken? currentToken = (NullableTransportChannel as ISecureChannel)?.CurrentToken;
             return currentToken?.ServerNonce;
-        }
-
-        /// <summary>
-        /// Handles the validation of server software certificates and application callback.
-        /// </summary>
-        private void HandleSignedSoftwareCertificates(
-            SignedSoftwareCertificateCollection serverSoftwareCertificates)
-        {
-            // get a validator to check certificates provided by server.
-            CertificateValidator validator = m_configuration.CertificateValidator;
-
-            // validate software certificates.
-            var softwareCertificates = new List<SoftwareCertificate>();
-
-            foreach (SignedSoftwareCertificate signedCertificate in serverSoftwareCertificates)
-            {
-                ServiceResult result = SoftwareCertificate.Validate(
-                    validator,
-                    signedCertificate.CertificateData,
-                    m_telemetry,
-                    out SoftwareCertificate softwareCertificate);
-
-                if (ServiceResult.IsBad(result))
-                {
-                    OnSoftwareCertificateError(signedCertificate, result);
-                }
-
-                softwareCertificates.Add(softwareCertificate);
-            }
-
-            // check if software certificates meet application requirements.
-            ValidateSoftwareCertificates(softwareCertificates);
         }
 
         /// <summary>

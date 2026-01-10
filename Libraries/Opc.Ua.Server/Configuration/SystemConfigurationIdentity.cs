@@ -27,47 +27,24 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
-using System.Security.Cryptography.X509Certificates;
+#if !NET9_0_OR_GREATER
+#endif
 
-namespace Opc.Ua
+namespace Opc.Ua.Server
 {
     /// <summary>
-    /// The SoftwareCertificate class.
+    /// Privileged identity which can access the system configuration.
     /// </summary>
-    public static class SoftwareCertificateExtensions
+    public class SystemConfigurationIdentity : RoleBasedIdentity
     {
-        extension(SoftwareCertificate)
+        /// <summary>
+        /// Create a user identity with the privilege
+        /// to modify the system configuration.
+        /// </summary>
+        /// <param name="identity">The user identity.</param>
+        public SystemConfigurationIdentity(IUserIdentity identity)
+            : base(identity, [Role.SecurityAdmin, Role.ConfigureAdmin])
         {
-            /// <summary>
-            /// Validates a software certificate.
-            /// </summary>
-            public static ServiceResult Validate(
-                CertificateValidator validator,
-                byte[] signedCertificate,
-                ITelemetryContext telemetry,
-                out SoftwareCertificate softwareCertificate)
-            {
-                softwareCertificate = null;
-
-                // validate the certificate.
-                X509Certificate2 certificate;
-                try
-                {
-                    certificate = CertificateFactory.Create(signedCertificate);
-                    validator.ValidateAsync(certificate, default).GetAwaiter().GetResult();
-                }
-                catch (Exception e)
-                {
-                    return ServiceResult.Create(
-                        e,
-                        StatusCodes.BadDecodingError,
-                        "Could not decode software certificate body.");
-                }
-
-                // certificate is valid.
-                return ServiceResult.Good;
-            }
         }
     }
 }

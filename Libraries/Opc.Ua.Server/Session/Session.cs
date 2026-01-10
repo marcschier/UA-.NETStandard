@@ -441,7 +441,6 @@ namespace Opc.Ua.Server
         public void ValidateBeforeActivate(
             OperationContext context,
             SignatureData clientSignature,
-            List<SoftwareCertificate> clientSoftwareCertificates,
             ExtensionObject userIdentityToken,
             SignatureData userTokenSignature,
             out IUserIdentityTokenHandler identityToken,
@@ -534,14 +533,6 @@ namespace Opc.Ua.Server
                         throw new ServiceResultException(StatusCodes.BadSecureChannelIdInvalid);
                     }
                 }
-                else
-                {
-                    // cannot change the certificates after activation.
-                    if (clientSoftwareCertificates != null && clientSoftwareCertificates.Count > 0)
-                    {
-                        throw new ServiceResultException(StatusCodes.BadInvalidArgument);
-                    }
-                }
 
                 // validate the user identity token.
                 identityToken = ValidateUserIdentityToken(
@@ -558,7 +549,6 @@ namespace Opc.Ua.Server
         /// </summary>
         public bool Activate(
             OperationContext context,
-            List<SoftwareCertificate> clientSoftwareCertificates,
             IUserIdentityTokenHandler identityToken,
             IUserIdentity identity,
             IUserIdentity effectiveIdentity,
@@ -599,21 +589,6 @@ namespace Opc.Ua.Server
 
                 // update server nonce.
                 m_serverNonce = serverNonce;
-
-                // build list of signed certificates for audit event.
-                var signedSoftwareCertificates = new List<SignedSoftwareCertificate>();
-
-                if (clientSoftwareCertificates != null)
-                {
-                    foreach (SoftwareCertificate softwareCertificate in clientSoftwareCertificates)
-                    {
-                        var item = new SignedSoftwareCertificate
-                        {
-                            CertificateData = softwareCertificate.SignedCertificate.RawData
-                        };
-                        signedSoftwareCertificates.Add(item);
-                    }
-                }
 
                 // update the contact time.
                 lock (DiagnosticsLock)

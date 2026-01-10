@@ -1053,6 +1053,7 @@ namespace Opc.Ua.Gds.Tests
             NodeId trustListId = await m_gdsClient.GDSClient.GetTrustListAsync(id, default, ct).ConfigureAwait(false);
             TrustListDataType trustList = await m_gdsClient.GDSClient.ReadTrustListAsync(
                 trustListId,
+                0,
                 ct).ConfigureAwait(false);
             bool result = await AddTrustListToStoreAsync(
                 m_gdsClient.Configuration.SecurityConfiguration,

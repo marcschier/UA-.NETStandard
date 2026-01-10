@@ -52,12 +52,7 @@ namespace Opc.Ua.Server
         {
         }
 
-        /// <summary>
-        /// An overrideable version of the Dispose.
-        /// </summary>
-        /// <param name="disposing"><c>true</c> to release both managed
-        /// and unmanaged resources;<c>false</c> to release only unmanaged
-        /// resources.</param>
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -87,18 +82,7 @@ namespace Opc.Ua.Server
             base.Dispose(disposing);
         }
 
-        /// <summary>
-        /// Invokes the FindServers service.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="endpointUrl">The endpoint URL.</param>
-        /// <param name="localeIds">The locale ids.</param>
-        /// <param name="serverUris">The server uris.</param>
-        /// <param name="ct">The cancellation token</param>
-        /// <returns>
-        /// Returns a <see cref="FindServersResponse"/> object
-        /// </returns>
+        /// <inheritdoc/>
         public override async ValueTask<FindServersResponse> FindServersAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -190,18 +174,7 @@ namespace Opc.Ua.Server
             };
         }
 
-        /// <summary>
-        /// Invokes the GetEndpoints service.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="endpointUrl">The endpoint URL.</param>
-        /// <param name="localeIds">The locale ids.</param>
-        /// <param name="profileUris">The profile uris.</param>
-        /// <param name="ct">The cancellation token</param>
-        /// <returns>
-        /// Returns a <see cref="GetEndpointsResponse"/> object
-        /// </returns>
+        /// <inheritdoc/>
         public override async ValueTask<GetEndpointsResponse> GetEndpointsAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -316,23 +289,7 @@ namespace Opc.Ua.Server
             ServerInternal?.ReportAuditCertificateEvent(clientCertificate, exception, m_logger);
         }
 
-        /// <summary>
-        /// Invokes the CreateSession service.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="clientDescription">Application description for the client application.</param>
-        /// <param name="serverUri">The server URI.</param>
-        /// <param name="endpointUrl">The endpoint URL.</param>
-        /// <param name="sessionName">Name for the Session assigned by the client.</param>
-        /// <param name="clientNonce">The client nonce.</param>
-        /// <param name="clientCertificate">The client certificate.</param>
-        /// <param name="requestedSessionTimeout">The requested session timeout.</param>
-        /// <param name="maxResponseMessageSize">Size of the max response message.</param>
-        /// <param name="ct">The cancellation token</param>
-        /// <returns>
-        /// Returns a <see cref="CreateSessionResponse"/> object
-        /// </returns>
+        /// <inheritdoc/>
         public override async ValueTask<CreateSessionResponse> CreateSessionAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -346,11 +303,12 @@ namespace Opc.Ua.Server
             uint maxResponseMessageSize,
             CancellationToken ct)
         {
-            NodeId sessionId = 0;
+            NodeId sessionId;
+            NodeId authenticationToken;
             double revisedSessionTimeout = 0;
+            byte[] serverNonce;
             byte[] serverCertificate = null;
             EndpointDescriptionCollection serverEndpoints = null;
-            SignedSoftwareCertificateCollection serverSoftwareCertificates = null;
             SignatureData serverSignature = null;
             uint maxRequestMessageSize = (uint)MessageContext.MaxMessageSize;
 
@@ -467,8 +425,8 @@ namespace Opc.Ua.Server
 
                 session = result.Session;
                 sessionId = result.SessionId;
-                NodeId authenticationToken = result.AuthenticationToken;
-                byte[] serverNonce = result.ServerNonce;
+                authenticationToken = result.AuthenticationToken;
+                serverNonce = result.ServerNonce;
                 revisedSessionTimeout = result.RevisedSessionTimeout;
 
                 if (endpointUrl != null)
@@ -532,9 +490,6 @@ namespace Opc.Ua.Server
                     // return the endpoints supported by the server.
                     serverEndpoints = GetEndpointDescriptions(endpointUrl, BaseAddresses, null);
 
-                    // return the software certificates assigned to the server.
-                    serverSoftwareCertificates = [.. ServerProperties.SoftwareCertificates];
-
                     // sign the nonce provided by the client.
                     serverSignature = null;
 
@@ -584,7 +539,6 @@ namespace Opc.Ua.Server
                     ServerNonce = serverNonce,
                     ServerCertificate = serverCertificate,
                     ServerEndpoints = serverEndpoints,
-                    ServerSoftwareCertificates = serverSoftwareCertificates,
                     ServerSignature = serverSignature,
                     MaxRequestMessageSize = maxRequestMessageSize
                 };
@@ -699,20 +653,7 @@ namespace Opc.Ua.Server
             return response;
         }
 
-        /// <summary>
-        /// Invokes the ActivateSession service.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="clientSignature">The client signature.</param>
-        /// <param name="clientSoftwareCertificates">The client software certificates.</param>
-        /// <param name="localeIds">The locale ids.</param>
-        /// <param name="userIdentityToken">The user identity token.</param>
-        /// <param name="userTokenSignature">The user token signature.</param>
-        /// <param name="ct">The cancellationToken</param>
-        /// <returns>
-        /// Returns a <see cref="ActivateSessionResponse"/> object
-        /// </returns>
+        /// <inheritdoc/>
         public override async ValueTask<ActivateSessionResponse> ActivateSessionAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -723,80 +664,19 @@ namespace Opc.Ua.Server
             SignatureData userTokenSignature,
             CancellationToken ct)
         {
+            byte[] serverNonce;
             StatusCodeCollection results = null;
             DiagnosticInfoCollection diagnosticInfos = null;
 
             OperationContext context = ValidateRequest(secureChannelContext, requestHeader, RequestType.ActivateSession);
-            // validate client's software certificates.
-            var softwareCertificates = new List<SoftwareCertificate>();
 
             try
             {
-                if (context?.SecurityPolicyUri != SecurityPolicies.None)
-                {
-                    bool diagnosticsExist = false;
-
-                    if ((context.DiagnosticsMask & DiagnosticsMasks.OperationAll) != 0)
-                    {
-                        diagnosticInfos = [];
-                    }
-
-                    results = [];
-                    diagnosticInfos = [];
-
-                    foreach (SignedSoftwareCertificate signedCertificate in clientSoftwareCertificates)
-                    {
-                        ServiceResult result = SoftwareCertificate.Validate(
-                            CertificateValidator,
-                            signedCertificate.CertificateData,
-                            m_serverInternal.Telemetry,
-                            out SoftwareCertificate softwareCertificate);
-
-                        if (ServiceResult.IsBad(result))
-                        {
-                            results.Add(result.Code);
-
-                            // add diagnostics if requested.
-                            if ((context.DiagnosticsMask & DiagnosticsMasks.OperationAll) != 0)
-                            {
-                                DiagnosticInfo diagnosticInfo = ServerUtils.CreateDiagnosticInfo(
-                                    ServerInternal,
-                                    context,
-                                    result,
-                                    m_logger);
-                                diagnosticInfos.Add(diagnosticInfo);
-                                diagnosticsExist = true;
-                            }
-                        }
-                        else
-                        {
-                            softwareCertificates.Add(softwareCertificate);
-                            results.Add(StatusCodes.Good);
-
-                            // add diagnostics if requested.
-                            if ((context.DiagnosticsMask & DiagnosticsMasks.OperationAll) != 0)
-                            {
-                                diagnosticInfos.Add(null);
-                            }
-                        }
-                    }
-
-                    if (!diagnosticsExist && diagnosticInfos != null)
-                    {
-                        diagnosticInfos.Clear();
-                    }
-                }
-
-                // check if certificates meet the server's requirements.
-                ValidateSoftwareCertificates(softwareCertificates);
-
-                byte[] serverNonce;
                 // activate the session.
                 (bool identityChanged, serverNonce) = await ServerInternal.SessionManager.ActivateSessionAsync(
                         context,
                         requestHeader.AuthenticationToken,
                         clientSignature,
-                        softwareCertificates,
                         userIdentityToken,
                         userTokenSignature,
                         localeIds,
@@ -821,8 +701,7 @@ namespace Opc.Ua.Server
                 ServerInternal.ReportAuditActivateSessionEvent(
                     m_logger,
                     context?.AuditEntryId,
-                    session,
-                    softwareCertificates);
+                    session);
 
                 ResponseHeader responseHeader = CreateResponse(requestHeader, StatusCodes.Good);
 
@@ -849,7 +728,6 @@ namespace Opc.Ua.Server
                     m_logger,
                     context?.AuditEntryId,
                     session,
-                    softwareCertificates,
                     e);
 
                 lock (ServerInternal.DiagnosticsWriteLock)
@@ -943,13 +821,7 @@ namespace Opc.Ua.Server
             return responseHeader;
         }
 
-        /// <summary>
-        /// Invokes the CloseSession service using a task based request.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="deleteSubscriptions">if set to <c>true</c> subscriptions are deleted.</param>
-        /// <param name="ct">The cancellation token.</param>
+        /// <inheritdoc/>
         public override async ValueTask<CloseSessionResponse> CloseSessionAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -995,16 +867,7 @@ namespace Opc.Ua.Server
             }
         }
 
-        /// <summary>
-        /// Invokes the Cancel service.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context.</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="requestHandle">The request handle assigned to the request.</param>
-        /// <param name="ct">The cancellation token.</param>
-        /// <returns>
-        /// Returns a <see cref="CancelResponse"/> object
-        /// </returns>
+        /// <inheritdoc/>
         public override ValueTask<CancelResponse> CancelAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -1044,9 +907,7 @@ namespace Opc.Ua.Server
             return new ValueTask<CancelResponse>(response);
         }
 
-        /// <summary>
-        /// Invokes the Browse service using async Task based request.
-        /// </summary>
+        /// <inheritdoc/>
         public override async ValueTask<BrowseResponse> BrowseAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -1097,9 +958,7 @@ namespace Opc.Ua.Server
             }
         }
 
-        /// <summary>
-        /// Invokes the BrowseNext service using async Task based request.
-        /// </summary>
+        /// <inheritdoc/>
         public override async ValueTask<BrowseNextResponse> BrowseNextAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -1148,16 +1007,7 @@ namespace Opc.Ua.Server
             }
         }
 
-        /// <summary>
-        /// Invokes the RegisterNodes service.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context.</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="nodesToRegister">The list of NodeIds to register.</param>
-        /// <param name="ct">The cancellation token.</param>
-        /// <returns>
-        /// Returns a <see cref="RegisterNodesResponse"/> object
-        /// </returns>
+        /// <inheritdoc/>
         public override ValueTask<RegisterNodesResponse> RegisterNodesAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -1200,16 +1050,7 @@ namespace Opc.Ua.Server
             return new ValueTask<RegisterNodesResponse>(response);
         }
 
-        /// <summary>
-        /// Invokes the UnregisterNodes service.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context.</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="nodesToUnregister">The list of NodeIds to unregister</param>
-        /// <param name="ct">The cancellation token.</param>
-        /// <returns>
-        /// Returns a <see cref="UnregisterNodesResponse"/> object
-        /// </returns>
+        /// <inheritdoc/>
         public override ValueTask<UnregisterNodesResponse> UnregisterNodesAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -1252,9 +1093,7 @@ namespace Opc.Ua.Server
             return new ValueTask<UnregisterNodesResponse>(response);
         }
 
-        /// <summary>
-        /// Invokes the TranslateBrowsePathsToNodeIds service using async Task based request.
-        /// </summary>
+        /// <inheritdoc/>
         public override async ValueTask<TranslateBrowsePathsToNodeIdsResponse> TranslateBrowsePathsToNodeIdsAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -1313,9 +1152,7 @@ namespace Opc.Ua.Server
             }
         }
 
-        /// <summary>
-        /// Invokes the Read service using async Task based request.
-        /// </summary>
+        /// <inheritdoc/>
         public override async ValueTask<ReadResponse> ReadAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -1367,9 +1204,7 @@ namespace Opc.Ua.Server
             }
         }
 
-        /// <summary>
-        /// Invokes the HistoryRead service using async Task based request.
-        /// </summary>
+        /// <inheritdoc/>
         public override async ValueTask<HistoryReadResponse> HistoryReadAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -1435,9 +1270,7 @@ namespace Opc.Ua.Server
             }
         }
 
-        /// <summary>
-        /// Invokes the Write service using async Task based request.
-        /// </summary>
+        /// <inheritdoc/>
         public override async ValueTask<WriteResponse> WriteAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -1482,9 +1315,7 @@ namespace Opc.Ua.Server
             }
         }
 
-        /// <summary>
-        /// Invokes the HistoryUpdate service using async Task based request.
-        /// </summary>
+        /// <inheritdoc/>
         public override async ValueTask<HistoryUpdateResponse> HistoryUpdateAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -1530,22 +1361,8 @@ namespace Opc.Ua.Server
             }
         }
 
-        /// <summary>
-        /// Invokes the CreateSubscription service.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context.</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="requestedPublishingInterval">The cyclic rate that the Subscription is being requested to return Notifications to the Client.</param>
-        /// <param name="requestedLifetimeCount">The client-requested lifetime count for the Subscription</param>
-        /// <param name="requestedMaxKeepAliveCount">The requested max keep alive count.</param>
-        /// <param name="maxNotificationsPerPublish">The maximum number of notifications that the Client wishes to receive in a single Publish response.</param>
-        /// <param name="publishingEnabled">If set to <c>true</c> publishing is enabled for the Subscription.</param>
-        /// <param name="priority">The relative priority of the Subscription.</param>
-        /// <param name="ct">The cancellation token.</param>
-        /// <returns>
-        /// Returns a <see cref="CreateSubscriptionResponse"/> object
-        /// </returns>
-        public override ValueTask<CreateSubscriptionResponse> CreateSubscriptionAsync(
+        /// <inheritdoc/>
+        public override async ValueTask<CreateSubscriptionResponse> CreateSubscriptionAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             double requestedPublishingInterval,
@@ -1561,10 +1378,9 @@ namespace Opc.Ua.Server
                 requestHeader,
                 RequestType.CreateSubscription);
 
-            CreateSubscriptionResponse response;
             try
             {
-                ServerInternal.SubscriptionManager.CreateSubscription(
+                CreateSubscriptionResponse response = await ServerInternal.SubscriptionManager.CreateSubscriptionAsync(
                     context,
                     requestedPublishingInterval,
                     requestedLifetimeCount,
@@ -1572,19 +1388,11 @@ namespace Opc.Ua.Server
                     maxNotificationsPerPublish,
                     publishingEnabled,
                     priority,
-                    out uint subscriptionId,
-                    out double revisedPublishingInterval,
-                    out uint revisedLifetimeCount,
-                    out uint revisedMaxKeepAliveCount);
+                    ct).ConfigureAwait(false);
 
-                response = new CreateSubscriptionResponse
-                {
-                    ResponseHeader = CreateResponse(requestHeader, context.StringTable),
-                    SubscriptionId = subscriptionId,
-                    RevisedPublishingInterval = revisedPublishingInterval,
-                    RevisedLifetimeCount = revisedLifetimeCount,
-                    RevisedMaxKeepAliveCount = revisedMaxKeepAliveCount
-                };
+                response.ResponseHeader = CreateResponse(requestHeader, context.StringTable);
+
+                return response;
             }
             catch (ServiceResultException e)
             {
@@ -1604,18 +1412,10 @@ namespace Opc.Ua.Server
             {
                 OnRequestComplete(context);
             }
-            return new ValueTask<CreateSubscriptionResponse>(response);
         }
 
-        /// <summary>
-        /// Invokes the TransferSubscriptions service.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context.</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="subscriptionIds">The list of Subscriptions to transfer.</param>
-        /// <param name="sendInitialValues">If the initial values should be sent.</param>
-        /// <param name="ct">The cancellation token.</param>
-        public override ValueTask<TransferSubscriptionsResponse> TransferSubscriptionsAsync(
+        /// <inheritdoc/>
+        public override async ValueTask<TransferSubscriptionsResponse> TransferSubscriptionsAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             UInt32Collection subscriptionIds,
@@ -1627,24 +1427,19 @@ namespace Opc.Ua.Server
                 requestHeader,
                 RequestType.TransferSubscriptions);
 
-            TransferSubscriptionsResponse response;
             try
             {
                 ValidateOperationLimits(subscriptionIds);
 
-                ServerInternal.SubscriptionManager.TransferSubscriptions(
+                TransferSubscriptionsResponse response = await ServerInternal.SubscriptionManager.TransferSubscriptionsAsync(
                     context,
                     subscriptionIds,
                     sendInitialValues,
-                    out TransferResultCollection results,
-                    out DiagnosticInfoCollection diagnosticInfos);
+                    ct).ConfigureAwait(false);
 
-                response = new TransferSubscriptionsResponse
-                {
-                    ResponseHeader = CreateResponse(requestHeader, context.StringTable),
-                    Results = results,
-                    DiagnosticInfos = diagnosticInfos
-                };
+                response.ResponseHeader = CreateResponse(requestHeader, context.StringTable);
+
+                return response;
             }
             catch (ServiceResultException e)
             {
@@ -1664,20 +1459,10 @@ namespace Opc.Ua.Server
             {
                 OnRequestComplete(context);
             }
-            return new ValueTask<TransferSubscriptionsResponse>(response);
         }
 
-        /// <summary>
-        /// Invokes the DeleteSubscriptions service.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context.</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="subscriptionIds">The list of Subscriptions to delete.</param>
-        /// <param name="ct">The cancellation token.</param>
-        /// <returns>
-        /// Returns a <see cref="DeleteSubscriptionsResponse"/> object
-        /// </returns>
-        public override ValueTask<DeleteSubscriptionsResponse> DeleteSubscriptionsAsync(
+        /// <inheritdoc/>
+        public override async ValueTask<DeleteSubscriptionsResponse> DeleteSubscriptionsAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             UInt32Collection subscriptionIds,
@@ -1688,23 +1473,18 @@ namespace Opc.Ua.Server
                 requestHeader,
                 RequestType.DeleteSubscriptions);
 
-            DeleteSubscriptionsResponse response;
             try
             {
                 ValidateOperationLimits(subscriptionIds);
 
-                ServerInternal.SubscriptionManager.DeleteSubscriptions(
+                DeleteSubscriptionsResponse response = await ServerInternal.SubscriptionManager.DeleteSubscriptionsAsync(
                     context,
                     subscriptionIds,
-                    out StatusCodeCollection results,
-                    out DiagnosticInfoCollection diagnosticInfos);
+                    ct).ConfigureAwait(false);
 
-                response = new DeleteSubscriptionsResponse
-                {
-                    ResponseHeader = CreateResponse(requestHeader, context.StringTable),
-                    Results = results,
-                    DiagnosticInfos = diagnosticInfos
-                };
+                response.ResponseHeader = CreateResponse(requestHeader, context.StringTable);
+
+                return response;
             }
             catch (ServiceResultException e)
             {
@@ -1724,19 +1504,9 @@ namespace Opc.Ua.Server
             {
                 OnRequestComplete(context);
             }
-            return new ValueTask<DeleteSubscriptionsResponse>(response);
         }
 
-        /// <summary>
-        /// Invokes the Publish service using async Task based request.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context.</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="subscriptionAcknowledgements">The list of acknowledgements for one or more Subscriptions.</param>
-        /// <param name="ct">The cancellation token.</param>
-        /// <returns>
-        /// Returns a <see cref="PublishResponse"/>
-        /// </returns>
+        /// <inheritdoc/>
         public override async ValueTask<PublishResponse> PublishAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -1804,17 +1574,7 @@ namespace Opc.Ua.Server
             }
         }
 
-        /// <summary>
-        /// Invokes the Republish service.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context.</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="subscriptionId">The subscription id.</param>
-        /// <param name="retransmitSequenceNumber">The sequence number of a specific NotificationMessage to be republished.</param>
-        /// <param name="ct">The cancellation token.</param>
-        /// <returns>
-        /// Returns a <see cref="RepublishResponse"/> object
-        /// </returns>
+        /// <inheritdoc/>
         public override ValueTask<RepublishResponse> RepublishAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -1858,21 +1618,7 @@ namespace Opc.Ua.Server
             return new ValueTask<RepublishResponse>(response);
         }
 
-        /// <summary>
-        /// Invokes the ModifySubscription service.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context.</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="subscriptionId">The subscription id.</param>
-        /// <param name="requestedPublishingInterval">The cyclic rate that the Subscription is being requested to return Notifications to the Client.</param>
-        /// <param name="requestedLifetimeCount">The client-requested lifetime count for the Subscription.</param>
-        /// <param name="requestedMaxKeepAliveCount">The requested max keep alive count.</param>
-        /// <param name="maxNotificationsPerPublish">The maximum number of notifications that the Client wishes to receive in a single Publish response.</param>
-        /// <param name="priority">The relative priority of the Subscription.</param>
-        /// <param name="ct">The cancellation token.</param>
-        /// <returns>
-        /// Returns a <see cref="ModifySubscriptionResponse"/> object
-        /// </returns>
+        /// <inheritdoc/>
         public override ValueTask<ModifySubscriptionResponse> ModifySubscriptionAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -1888,7 +1634,6 @@ namespace Opc.Ua.Server
                 secureChannelContext,
                 requestHeader,
                 RequestType.ModifySubscription);
-
             ModifySubscriptionResponse response;
             try
             {
@@ -1933,17 +1678,7 @@ namespace Opc.Ua.Server
             return new ValueTask<ModifySubscriptionResponse>(response);
         }
 
-        /// <summary>
-        /// Invokes the SetPublishingMode service.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context.</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="publishingEnabled">If set to <c>true</c> publishing of NotificationMessages is enabled for the Subscription.</param>
-        /// <param name="subscriptionIds">The list of subscription ids.</param>
-        /// <param name="ct">The cancellation token.</param>
-        /// <returns>
-        /// Returns a <see cref="SetPublishingModeResponse"/> object
-        /// </returns>
+        /// <inheritdoc/>
         public override ValueTask<SetPublishingModeResponse> SetPublishingModeAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -1955,7 +1690,6 @@ namespace Opc.Ua.Server
                 secureChannelContext,
                 requestHeader,
                 RequestType.SetPublishingMode);
-
             SetPublishingModeResponse response;
             try
             {
@@ -1996,19 +1730,7 @@ namespace Opc.Ua.Server
             return new ValueTask<SetPublishingModeResponse>(response);
         }
 
-        /// <summary>
-        /// Invokes the SetTriggering service.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context.</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="subscriptionId">The subscription id.</param>
-        /// <param name="triggeringItemId">The id for the MonitoredItem used as the triggering item.</param>
-        /// <param name="linksToAdd">The list of ids of the items to report that are to be added as triggering links.</param>
-        /// <param name="linksToRemove">The list of ids of the items to report for the triggering links to be deleted.</param>
-        /// <param name="ct">The cancellation token.</param>
-        /// <returns>
-        /// Returns a <see cref="SetTriggeringResponse"/> object
-        /// </returns>
+        /// <inheritdoc/>
         public override ValueTask<SetTriggeringResponse> SetTriggeringAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -2076,19 +1798,8 @@ namespace Opc.Ua.Server
             return new ValueTask<SetTriggeringResponse>(response);
         }
 
-        /// <summary>
-        /// Invokes the CreateMonitoredItems service.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context.</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="subscriptionId">The subscription id that will report notifications.</param>
-        /// <param name="timestampsToReturn">The type of timestamps to be returned for the MonitoredItems.</param>
-        /// <param name="itemsToCreate">The list of MonitoredItems to be created and assigned to the specified subscription</param>
-        /// <param name="ct">The cancellation token.</param>
-        /// <returns>
-        /// Returns a <see cref="CreateMonitoredItemsResponse"/> object
-        /// </returns>
-        public override ValueTask<CreateMonitoredItemsResponse> CreateMonitoredItemsAsync(
+        /// <inheritdoc/>
+        public override async ValueTask<CreateMonitoredItemsResponse> CreateMonitoredItemsAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             uint subscriptionId,
@@ -2100,25 +1811,21 @@ namespace Opc.Ua.Server
                 secureChannelContext,
                 requestHeader,
                 RequestType.CreateMonitoredItems);
-            CreateMonitoredItemsResponse response;
+
             try
             {
                 ValidateOperationLimits(itemsToCreate, OperationLimits.MaxMonitoredItemsPerCall);
 
-                ServerInternal.SubscriptionManager.CreateMonitoredItems(
+                CreateMonitoredItemsResponse result = await ServerInternal.SubscriptionManager.CreateMonitoredItemsAsync(
                     context,
                     subscriptionId,
                     timestampsToReturn,
                     itemsToCreate,
-                    out MonitoredItemCreateResultCollection results,
-                    out DiagnosticInfoCollection diagnosticInfos);
+                    ct).ConfigureAwait(false);
 
-                response = new CreateMonitoredItemsResponse
-                {
-                    Results = results,
-                    DiagnosticInfos = diagnosticInfos,
-                    ResponseHeader = CreateResponse(requestHeader, context.StringTable)
-                };
+                result.ResponseHeader = CreateResponse(requestHeader, context.StringTable);
+
+                return result;
             }
             catch (ServiceResultException e)
             {
@@ -2138,22 +1845,10 @@ namespace Opc.Ua.Server
             {
                 OnRequestComplete(context);
             }
-            return new ValueTask<CreateMonitoredItemsResponse>(response);
         }
 
-        /// <summary>
-        /// Invokes the ModifyMonitoredItems service.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context.</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="subscriptionId">The subscription id.</param>
-        /// <param name="timestampsToReturn">The type of timestamps to be returned for the MonitoredItems.</param>
-        /// <param name="itemsToModify">The list of MonitoredItems to modify.</param>
-        /// <param name="ct">The cancellation token.</param>
-        /// <returns>
-        /// Returns a <see cref="ModifyMonitoredItemsResponse"/> object
-        /// </returns>
-        public override ValueTask<ModifyMonitoredItemsResponse> ModifyMonitoredItemsAsync(
+        /// <inheritdoc/>
+        public override async ValueTask<ModifyMonitoredItemsResponse> ModifyMonitoredItemsAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             uint subscriptionId,
@@ -2165,25 +1860,21 @@ namespace Opc.Ua.Server
                 secureChannelContext,
                 requestHeader,
                 RequestType.ModifyMonitoredItems);
-            ModifyMonitoredItemsResponse response;
+
             try
             {
                 ValidateOperationLimits(itemsToModify, OperationLimits.MaxMonitoredItemsPerCall);
 
-                ServerInternal.SubscriptionManager.ModifyMonitoredItems(
+                ModifyMonitoredItemsResponse response = await ServerInternal.SubscriptionManager.ModifyMonitoredItemsAsync(
                     context,
                     subscriptionId,
                     timestampsToReturn,
                     itemsToModify,
-                    out MonitoredItemModifyResultCollection results,
-                    out DiagnosticInfoCollection diagnosticInfos);
+                    ct).ConfigureAwait(false);
 
-                response = new ModifyMonitoredItemsResponse
-                {
-                    Results = results,
-                    DiagnosticInfos = diagnosticInfos,
-                    ResponseHeader = CreateResponse(requestHeader, context.StringTable)
-                };
+                response.ResponseHeader = CreateResponse(requestHeader, context.StringTable);
+
+                return response;
             }
             catch (ServiceResultException e)
             {
@@ -2203,21 +1894,10 @@ namespace Opc.Ua.Server
             {
                 OnRequestComplete(context);
             }
-            return new ValueTask<ModifyMonitoredItemsResponse>(response);
         }
 
-        /// <summary>
-        /// Invokes the DeleteMonitoredItems service.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context.</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="subscriptionId">The subscription id.</param>
-        /// <param name="monitoredItemIds">The list of MonitoredItems to delete.</param>
-        /// <param name="ct">The cancellation token.</param>
-        /// <returns>
-        /// Returns a <see cref="DeleteMonitoredItemsResponse"/> object
-        /// </returns>
-        public override ValueTask<DeleteMonitoredItemsResponse> DeleteMonitoredItemsAsync(
+        /// <inheritdoc/>
+        public override async ValueTask<DeleteMonitoredItemsResponse> DeleteMonitoredItemsAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
             uint subscriptionId,
@@ -2228,24 +1908,20 @@ namespace Opc.Ua.Server
                 secureChannelContext,
                 requestHeader,
                 RequestType.DeleteMonitoredItems);
-            DeleteMonitoredItemsResponse response;
+
             try
             {
                 ValidateOperationLimits(monitoredItemIds, OperationLimits.MaxMonitoredItemsPerCall);
 
-                ServerInternal.SubscriptionManager.DeleteMonitoredItems(
+                DeleteMonitoredItemsResponse response = await ServerInternal.SubscriptionManager.DeleteMonitoredItemsAsync(
                     context,
                     subscriptionId,
                     monitoredItemIds,
-                    out StatusCodeCollection results,
-                    out DiagnosticInfoCollection diagnosticInfos);
+                    ct).ConfigureAwait(false);
 
-                response = new DeleteMonitoredItemsResponse
-                {
-                    Results = results,
-                    DiagnosticInfos = diagnosticInfos,
-                    ResponseHeader = CreateResponse(requestHeader, context.StringTable)
-                };
+                response.ResponseHeader = CreateResponse(requestHeader, context.StringTable);
+
+                return response;
             }
             catch (ServiceResultException e)
             {
@@ -2265,21 +1941,9 @@ namespace Opc.Ua.Server
             {
                 OnRequestComplete(context);
             }
-            return new ValueTask<DeleteMonitoredItemsResponse>(response);
         }
 
-        /// <summary>
-        /// Invokes the SetMonitoringMode service.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="subscriptionId">The subscription id.</param>
-        /// <param name="monitoringMode">The monitoring mode to be set for the MonitoredItems.</param>
-        /// <param name="monitoredItemIds">The list of MonitoredItems to modify.</param>
-        /// <param name="ct">The cancellation token.</param>
-        /// <returns>
-        /// Returns a <see cref="SetMonitoringModeResponse"/>
-        /// </returns>
+        /// <inheritdoc/>
         public override async ValueTask<SetMonitoringModeResponse> SetMonitoringModeAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -2333,16 +1997,7 @@ namespace Opc.Ua.Server
             }
         }
 
-        /// <summary>
-        /// Invokes the Call service using async Task based request.
-        /// </summary>
-        /// <param name="secureChannelContext">The secure channel context</param>
-        /// <param name="requestHeader">The request header.</param>
-        /// <param name="methodsToCall">The methods to call.</param>
-        /// <param name="ct">The cancellation token</param>
-        /// <returns>
-        /// Returns a <see cref="ResponseHeader"/> object
-        /// </returns>
+        /// <inheritdoc/>
         public override async ValueTask<CallResponse> CallAsync(
             SecureChannelContext secureChannelContext,
             RequestHeader requestHeader,
@@ -2451,11 +2106,10 @@ namespace Opc.Ua.Server
         /// <returns>Boolean value.</returns>
         public async ValueTask<bool> RegisterWithDiscoveryServerAsync(CancellationToken ct = default)
         {
-            var configuration = new ApplicationConfiguration(Configuration)
-            {
-                // use a dedicated certificate validator with the registration, but derive behavior from server config
-                CertificateValidator = new CertificateValidator(MessageContext.Telemetry)
-            };
+            var configuration = new ApplicationConfiguration(Configuration);
+
+            // use a dedicated certificate validator with the registration, but derive behavior from server config
+            configuration.CertificateValidator = new CertificateValidator(MessageContext.Telemetry);
             await configuration
                 .CertificateValidator.UpdateAsync(
                     configuration.SecurityConfiguration,
@@ -2564,8 +2218,7 @@ namespace Opc.Ua.Server
                                 {
                                     m_logger.LogWarning(
                                         "Could not cleanly close connection with LDS. Exception={ErrorMessage}",
-                                        e.Message);
-                                }
+                                        e.Message);}
                             }
                         }
                     }
@@ -2748,20 +2401,10 @@ namespace Opc.Ua.Server
         }
 
         /// <summary>
-        /// Inspects the software certificates provided by the server.
-        /// </summary>
-        /// <param name="softwareCertificates">The software certificates.</param>
-        protected virtual void ValidateSoftwareCertificates(
-            List<SoftwareCertificate> softwareCertificates)
-        {
-            // always accept valid certificates.
-        }
-
-        /// <summary>
         /// Verifies that the request header is valid.
         /// </summary>
-        /// <param name="secureChannelContext">The secure channel context.</param>
         /// <param name="requestHeader">The request header.</param>
+        /// <param name="secureChannelContext">The secure channel context.</param>
         /// <param name="requestType">Type of the request.</param>
         /// <exception cref="ServiceResultException"></exception>
         protected virtual OperationContext ValidateRequest(
@@ -2970,14 +2613,7 @@ namespace Opc.Ua.Server
             }
         }
 
-        /// <summary>
-        /// Called when the server configuration is changed on disk.
-        /// </summary>
-        /// <param name="configuration">The configuration.</param>
-        /// <param name="cancellationToken">The cancellation token</param>
-        /// <remarks>
-        /// Servers are free to ignore changes if it is difficult/impossible to apply them without a restart.
-        /// </remarks>
+        /// <inheritdoc/>
         protected override async ValueTask OnUpdateConfigurationAsync(
             ApplicationConfiguration configuration,
             CancellationToken cancellationToken = default)
@@ -3131,12 +2767,7 @@ namespace Opc.Ua.Server
             return new SessionEndpoint(server);
         }
 
-        /// <summary>
-        /// Starts the server application.
-        /// </summary>
-        /// <param name="configuration">The configuration.</param>
-        /// <param name="cancellationToken">The cancellationToken</param>
-        /// <exception cref="ServiceResultException"></exception>
+        /// <inheritdoc/>
         protected override async ValueTask StartApplicationAsync(ApplicationConfiguration configuration, CancellationToken cancellationToken = default)
         {
             await base.StartApplicationAsync(configuration, cancellationToken)
@@ -3361,9 +2992,7 @@ namespace Opc.Ua.Server
             CertificateValidator.CertificateUpdate += OnCertificateUpdateAsync;
         }
 
-        /// <summary>
-        /// Called before the server stops
-        /// </summary>
+        /// <inheritdoc/>
         protected override async ValueTask OnServerStoppingAsync(CancellationToken cancellationToken = default)
         {
             m_logger.LogInformation(Utils.TraceMasks.StartStop, "Server - Stopping.");
