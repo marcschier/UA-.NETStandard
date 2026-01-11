@@ -84,8 +84,11 @@ namespace Opc.Ua
         /// <param name="body"></param>
         public ExtensionObject(IEncodeable body)
         {
-            TypeId = body.TypeId;
-            Body = body;
+            if (body != null)
+            {
+                TypeId = body.TypeId;
+                Body = body;
+            }
         }
 
         /// <summary>
@@ -465,6 +468,16 @@ namespace Opc.Ua
         }
 
         /// <summary>
+        /// Converts an extension object to an encodeable object.
+        /// </summary>
+        /// <param name="extension">The extension object to convert to an encodeable object</param>
+        /// <returns>Instance of <see cref="IEncodeable"/> for the embedded object.</returns>
+        public static IEncodeable ToEncodeable(ExtensionObject extension)
+        {
+            return extension.Body as IEncodeable;
+        }
+
+        /// <summary>
         /// Converts an array of extension objects to an array of
         /// the specified type.
         /// </summary>
@@ -543,7 +556,8 @@ namespace Opc.Ua
                 byte[] v => new ExtensionObject(typeId, v),
                 string v => new ExtensionObject(typeId, v),
                 XmlElement v => new ExtensionObject(typeId, v),
-                _ => this
+                IEncodeable v => new ExtensionObject(typeId, v),
+                _ => new ExtensionObject(typeId)
             };
         }
     }

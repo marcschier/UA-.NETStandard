@@ -26,7 +26,7 @@
         </Body>
       </Address>
       <ConnectionProperties />
-      <TransportSettings i:nil="true" />
+      <TransportSettings/>
       <WriterGroups></WriterGroups>
       <ReaderGroups>
         <ReaderGroupDataType>
@@ -153,7 +153,7 @@
               <SecurityGroupId i:nil="true" />
               <SecurityKeyServices />
               <DataSetReaderProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16016</Identifier>
@@ -457,7 +457,7 @@
               <SecurityGroupId i:nil="true" />
               <SecurityKeyServices />
               <DataSetReaderProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16016</Identifier>
@@ -2332,7 +2332,7 @@
               <SecurityGroupId i:nil="true" />
               <SecurityKeyServices />
               <DataSetReaderProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16016</Identifier>
@@ -4791,7 +4791,7 @@
               <SecurityGroupId i:nil="true" />
               <SecurityKeyServices />
               <DataSetReaderProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16016</Identifier>
@@ -5095,7 +5095,7 @@
               <SecurityGroupId i:nil="true" />
               <SecurityKeyServices />
               <DataSetReaderProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16016</Identifier>
@@ -6970,7 +6970,7 @@
               <SecurityGroupId i:nil="true" />
               <SecurityKeyServices />
               <DataSetReaderProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16016</Identifier>
@@ -9328,7 +9328,7 @@
         </Body>
       </Address>
       <ConnectionProperties />
-      <TransportSettings i:nil="true" />
+      <TransportSettings/>
       <WriterGroups></WriterGroups>
       <ReaderGroups>
         <ReaderGroupDataType>
@@ -9455,7 +9455,7 @@
               <SecurityGroupId i:nil="true" />
               <SecurityKeyServices />
               <DataSetReaderProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16016</Identifier>
@@ -9759,7 +9759,7 @@
               <SecurityGroupId i:nil="true" />
               <SecurityKeyServices />
               <DataSetReaderProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16016</Identifier>
@@ -11634,7 +11634,7 @@
               <SecurityGroupId i:nil="true" />
               <SecurityKeyServices />
               <DataSetReaderProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16016</Identifier>
@@ -14093,7 +14093,7 @@
               <SecurityGroupId i:nil="true" />
               <SecurityKeyServices />
               <DataSetReaderProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16016</Identifier>
@@ -14397,7 +14397,7 @@
               <SecurityGroupId i:nil="true" />
               <SecurityKeyServices />
               <DataSetReaderProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16016</Identifier>
@@ -16272,7 +16272,7 @@
               <SecurityGroupId i:nil="true" />
               <SecurityKeyServices />
               <DataSetReaderProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16016</Identifier>
@@ -18630,7 +18630,7 @@
         </Body>
       </Address>
       <ConnectionProperties />
-      <TransportSettings i:nil="true" />
+      <TransportSettings/>
       <WriterGroups></WriterGroups>
       <ReaderGroups>
         <ReaderGroupDataType>
@@ -19062,7 +19062,7 @@
               <SecurityGroupId i:nil="true" />
               <SecurityKeyServices />
               <DataSetReaderProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16016</Identifier>
@@ -20928,7 +20928,7 @@
               <SecurityGroupId i:nil="true" />
               <SecurityKeyServices />
               <DataSetReaderProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16016</Identifier>

@@ -122,16 +122,6 @@ namespace Opc.Ua
             {
                 return extension.IsNull;
             }
-
-            /// <summary>
-            /// Converts an extension object to an encodeable object.
-            /// </summary>
-            /// <param name="extension">The extension object to convert to an encodeable object</param>
-            /// <returns>Instance of <see cref="IEncodeable"/> for the embedded object.</returns>
-            public static IEncodeable ToEncodeable(ExtensionObject extension)
-            {
-                return extension.Body as IEncodeable;
-            }
         }
     }
 }

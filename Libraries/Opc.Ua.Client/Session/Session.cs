@@ -1458,7 +1458,7 @@ namespace Opc.Ua.Client
                 m_endpoint.Description.SecurityMode);
 
             // sign data with user token.
-            using var identityToken = (IUserIdentityTokenHandler)m_identity.TokenHandler.Clone();
+            using var identityToken = (IUserIdentityTokenHandler)identity.TokenHandler.Clone();
             identityToken.UpdatePolicy(identityPolicy);
             SignatureData userTokenSignature = identityToken.Sign(
                 dataToSign,

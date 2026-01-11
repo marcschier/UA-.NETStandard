@@ -542,6 +542,7 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                 "Json ua-data entries are missing from configuration!");
 
             int index = 0;
+            Assert.That(uaDataNetworkMessages.Count, Is.EqualTo(dataSetReaders.Count));
             foreach (PubSubEncoding.JsonNetworkMessage uaDataNetworkMessage in uaDataNetworkMessages)
             {
                 CompareEncodeDecode(uaDataNetworkMessage, [dataSetReaders[index++]]);

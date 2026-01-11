@@ -789,7 +789,7 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.Boolean:
                     if (decodedValue is not bool boolValue)
                     {
-                        return "default";
+                        boolValue = false;
                     }
 
                     if (defaultValue != null &&

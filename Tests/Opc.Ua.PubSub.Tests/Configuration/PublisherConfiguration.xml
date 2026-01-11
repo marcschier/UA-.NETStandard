@@ -3789,7 +3789,7 @@
         </Body>
       </Address>
       <ConnectionProperties />
-      <TransportSettings i:nil="true" />
+      <TransportSettings/>
       <WriterGroups>
         <WriterGroupDataType>
           <Name>WriterGroup 1</Name>
@@ -3839,7 +3839,7 @@
               <KeyFrameCount>1</KeyFrameCount>
               <DataSetName>Simple</DataSetName>
               <DataSetWriterProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16015</Identifier>
@@ -3862,7 +3862,7 @@
               <KeyFrameCount>1</KeyFrameCount>
               <DataSetName>AllTypes</DataSetName>
               <DataSetWriterProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16015</Identifier>
@@ -3885,7 +3885,7 @@
               <KeyFrameCount>1</KeyFrameCount>
               <DataSetName>MassTest</DataSetName>
               <DataSetWriterProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16015</Identifier>
@@ -3926,7 +3926,7 @@
         </Body>
       </Address>
       <ConnectionProperties />
-      <TransportSettings i:nil="true" />
+      <TransportSettings/>
       <WriterGroups>
         <WriterGroupDataType>
           <Name>WriterGroup 2</Name>
@@ -3976,7 +3976,7 @@
               <KeyFrameCount>1</KeyFrameCount>
               <DataSetName>Simple</DataSetName>
               <DataSetWriterProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16015</Identifier>
@@ -3999,7 +3999,7 @@
               <KeyFrameCount>1</KeyFrameCount>
               <DataSetName>AllTypes</DataSetName>
               <DataSetWriterProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16015</Identifier>
@@ -4022,7 +4022,7 @@
               <KeyFrameCount>1</KeyFrameCount>
               <DataSetName>MassTest</DataSetName>
               <DataSetWriterProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16015</Identifier>
@@ -4063,7 +4063,7 @@
         </Body>
       </Address>
       <ConnectionProperties />
-      <TransportSettings i:nil="true" />
+      <TransportSettings/>
       <WriterGroups>
         <WriterGroupDataType>
           <Name>WriterGroup 1</Name>
@@ -4109,7 +4109,7 @@
               <KeyFrameCount>1</KeyFrameCount>
               <DataSetName>Simple</DataSetName>
               <DataSetWriterProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16015</Identifier>
@@ -4129,7 +4129,7 @@
               <KeyFrameCount>1</KeyFrameCount>
               <DataSetName>AllTypes</DataSetName>
               <DataSetWriterProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16015</Identifier>
@@ -4149,7 +4149,7 @@
               <KeyFrameCount>1</KeyFrameCount>
               <DataSetName>MassTest</DataSetName>
               <DataSetWriterProperties />
-              <TransportSettings i:nil="true" />
+              <TransportSettings/>
               <MessageSettings>
                 <TypeId>
                   <Identifier>i=16015</Identifier>

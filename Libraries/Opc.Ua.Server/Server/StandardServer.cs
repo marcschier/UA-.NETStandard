@@ -765,7 +765,6 @@ namespace Opc.Ua.Server
             return
                 error == StatusCodes.BadUserSignatureInvalid ||
                 error == StatusCodes.BadUserAccessDenied ||
-                error == StatusCodes.BadUserAccessDenied ||
                 error == StatusCodes.BadSecurityPolicyRejected ||
                 error == StatusCodes.BadSecurityModeRejected ||
                 error == StatusCodes.BadSecurityChecksFailed ||
