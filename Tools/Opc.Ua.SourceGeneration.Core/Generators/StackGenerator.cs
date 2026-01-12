@@ -38,6 +38,9 @@ namespace Opc.Ua.SourceGeneration
     /// </summary>
     internal class StackGenerator
     {
+        public const string NamespaceConstant = "OpcUa";
+        public const string NamespacePrefix = "Opc.Ua";
+
         /// <summary>
         /// Generates the code from the contents of the address space.
         /// </summary>
@@ -168,7 +171,7 @@ namespace Opc.Ua.SourceGeneration
                 typeDictionaries,
                 Options.Exclusions);
             TextFileResource xmlSchemaResource = xmlSchema.Emit(
-                kNamespacePrefix,
+                NamespacePrefix,
                 validateOutput: validateSchemas);
 
             typeDictionaries = [];
@@ -179,7 +182,7 @@ namespace Opc.Ua.SourceGeneration
                 typeDictionaries,
                 Options.Exclusions);
             TextFileResource binarySchemaResource = binarySchema.Emit(
-                kNamespacePrefix,
+                NamespacePrefix,
                 Namespaces.OpcUa,
                 validateOutput: validateSchemas);
 
@@ -189,14 +192,12 @@ namespace Opc.Ua.SourceGeneration
                 m_outputFolder,
                 Options);
             schemaResources.Embed(
-                kNamespacePrefix,
+                NamespacePrefix,
                 "XmlSchemas",
                 false,
                 binarySchemaResource,
                 xmlSchemaResource);
         }
-
-        private const string kNamespacePrefix = "Opc.Ua";
 
         private readonly IFileSystem m_fileSystem;
         private readonly string m_outputFolder;

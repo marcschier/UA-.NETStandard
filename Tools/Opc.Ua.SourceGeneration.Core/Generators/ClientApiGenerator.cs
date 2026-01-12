@@ -71,12 +71,12 @@ namespace Opc.Ua.SourceGeneration
 
             using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
                 m_outputFolder,
-                CoreUtils.Format("{0}.Client.g.cs", kNamespacePrefix)));
+                CoreUtils.Format("{0}.Client.g.cs", StackGenerator.NamespacePrefix)));
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, CodeTemplates.ClientApi_File_cs);
 
-            template.AddReplacement(Tokens.Prefix, kNamespacePrefix);
-            template.AddReplacement(Tokens.Namespace, kNamespaceConstant);
+            template.AddReplacement(Tokens.Prefix, StackGenerator.NamespacePrefix);
+            template.AddReplacement(Tokens.Namespace, StackGenerator.NamespaceConstant);
 
             template.AddReplacement(
                 Tokens.ServiceSets,
@@ -136,7 +136,7 @@ namespace Opc.Ua.SourceGeneration
             }
 
             context.Template.AddReplacement(Tokens.Name, serviceType.Name);
-            context.Template.AddReplacement(Tokens.Namespace, kNamespaceConstant);
+            context.Template.AddReplacement(Tokens.Namespace, StackGenerator.NamespaceConstant);
 
             context.Template.AddReplacement(
                 Tokens.ClientMethodSync,
@@ -484,20 +484,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// A set of services that are grouped into a single interface.
         /// </summary>
-        private sealed class ServiceSet
-        {
-            public ServiceSet(string serviceSet, params ServiceCategory[] categories)
-            {
-                Name = serviceSet;
-                Categories = categories;
-            }
-
-            public string Name { get; set; }
-            public ServiceCategory[] Categories { get; set; }
-        }
-
-        private const string kNamespaceConstant = "OpcUa";
-        private const string kNamespacePrefix = "Opc.Ua";
+        private sealed record class ServiceSet(string Name, params ServiceCategory[] Categories);
 
         private readonly IFileSystem m_fileSystem;
         private readonly string m_outputFolder;

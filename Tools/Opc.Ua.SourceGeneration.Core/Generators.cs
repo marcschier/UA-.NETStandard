@@ -87,8 +87,6 @@ namespace Opc.Ua.SourceGeneration
     /// </summary>
     public static class Generators
     {
-        internal const string StackNamespacePrefix = "Opc.Ua";
-
         /// <summary>
         /// Generate code from design files
         /// </summary>

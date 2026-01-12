@@ -65,11 +65,11 @@ namespace Opc.Ua.SourceGeneration
 
             using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
                 m_outputFolder,
-                CoreUtils.Format("{0}.Messages.g.cs", kNamespacePrefix)));
+                CoreUtils.Format("{0}.Messages.g.cs", StackGenerator.NamespacePrefix)));
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, CodeTemplates.Messages_File_cs);
 
-            template.AddReplacement(Tokens.Prefix, kNamespacePrefix);
+            template.AddReplacement(Tokens.Prefix, StackGenerator.NamespacePrefix);
 
             template.AddReplacement(
                 Tokens.TypeList,
@@ -91,15 +91,10 @@ namespace Opc.Ua.SourceGeneration
             }
 
             context.Template.AddReplacement(Tokens.Name, serviceType.Name);
-            context.Template.AddReplacement(Tokens.Namespace, kNamespaceConstant);
-            context.Template.AddReplacement(Tokens.TypesNamespace, kSchemaNamespaceConstant);
+            context.Template.AddReplacement(Tokens.Namespace, StackGenerator.NamespaceConstant);
 
             return context.Template.Render();
         }
-
-        private const string kNamespaceConstant = "OpcUa";
-        private const string kSchemaNamespaceConstant = "OpcUaXsd";
-        private const string kNamespacePrefix = "Opc.Ua";
 
         private readonly IFileSystem m_fileSystem;
         private readonly string m_outputFolder;

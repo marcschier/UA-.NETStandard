@@ -135,7 +135,6 @@ namespace Opc.Ua.SourceGeneration
         public static string SymbolicName => nameof(SymbolicName);
         public static string TypedVariableType => nameof(TypedVariableType);
         public static string TypeName => nameof(TypeName);
-        public static string TypesNamespace => nameof(TypesNamespace);
         public static string ValueRank => nameof(ValueRank);
         public static string VariableTypeValue => nameof(VariableTypeValue);
         public static string Version => nameof(Version);
