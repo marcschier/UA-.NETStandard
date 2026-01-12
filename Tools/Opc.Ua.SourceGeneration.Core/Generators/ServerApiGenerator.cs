@@ -1,0 +1,280 @@
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
+using System.Collections.Generic;
+using System.IO;
+using Opc.Ua.Schema.Model;
+
+namespace Opc.Ua.SourceGeneration
+{
+    /// <summary>
+    /// Generates server API code for the stack.
+    /// </summary>
+    internal sealed class ServerApiGenerator
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ServerApiGenerator"/> class.
+        /// </summary>
+        public ServerApiGenerator(
+            IFileSystem fileSystem,
+            string outputDirectory,
+            ModelDesignValidator validator,
+            GeneratorOptions options)
+        {
+            m_validator = validator;
+            m_outputFolder = outputDirectory ?? string.Empty;
+            m_fileSystem = fileSystem ?? LocalFileSystem.Instance;
+        }
+
+        /// <summary>
+        /// Writes the classes and interfaces that implement a UA server.
+        /// </summary>
+        public void Emit()
+        {
+            List<ServiceSet> serviceSets =
+            [
+                new ServiceSet("Session", ServiceCategory.Discovery, ServiceCategory.Session, ServiceCategory.Test),
+                new ServiceSet("Discovery", ServiceCategory.Discovery, ServiceCategory.Registration)
+            ];
+
+            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
+                m_outputFolder,
+                CoreUtils.Format("{0}.ServerBase.g.cs", kNamespacePrefix)));
+            using var templateWriter = new TemplateWriter(writer);
+            var template = new Template(templateWriter, CodeTemplates.ServerApi_File_cs);
+
+            template.AddReplacement(Tokens.Prefix, kNamespacePrefix);
+            template.AddReplacement(Tokens.Namespace, kNamespaceConstant);
+
+            template.AddReplacement(
+                Tokens.ServiceSets,
+                CodeTemplates.ServerApi_ServiceSet_cs,
+                serviceSets,
+                WriteTemplate_ServerApiServiceSet);
+
+            template.Render();
+        }
+
+        /// <summary>
+        /// Writes the server API service set.
+        /// </summary>
+        private bool WriteTemplate_ServerApiServiceSet(IWriteContext context)
+        {
+            if (context.Target is not ServiceSet serviceSet)
+            {
+                return false;
+            }
+
+            Service[] serviceTypes = m_validator.GetListOfServices(serviceSet.Categories);
+            if (serviceTypes.Length == 0)
+            {
+                return false;
+            }
+
+            context.Template.AddReplacement(Tokens.ServiceSet, serviceSet.Name);
+
+            context.Template.AddReplacement(
+                Tokens.ServerApi,
+                CodeTemplates.ServerApi_InterfaceMethod_cs,
+                serviceTypes,
+                WriteTemplate_InterfaceMethod);
+
+            context.Template.AddReplacement(
+                Tokens.ServerStubs,
+                CodeTemplates.ServerApi_Method_cs,
+                serviceTypes,
+                WriteTemplate_ServerApiMethod);
+
+            return context.Template.Render();
+        }
+
+        /// <summary>
+        /// Writes an interface method declaration.
+        /// </summary>
+        private bool WriteTemplate_InterfaceMethod(IWriteContext context)
+        {
+            if (context.Target is not Service serviceType)
+            {
+                return false;
+            }
+
+            context.Template.AddReplacement(Tokens.Name, serviceType.Name);
+
+            context.Template.AddReplacement(
+                Tokens.ServerMethodAsync,
+                [serviceType],
+                context => LoadTemplate_AsyncParameters(
+                    context,
+                    isInterface: true));
+
+            return context.Template.Render();
+        }
+
+        /// <summary>
+        /// Writes a server API method.
+        /// </summary>
+        private bool WriteTemplate_ServerApiMethod(IWriteContext context)
+        {
+            if (context.Target is not Service serviceType)
+            {
+                return false;
+            }
+
+            context.Template.AddReplacement(Tokens.Name, serviceType.Name);
+            context.Template.AddReplacement(Tokens.Namespace, kNamespaceConstant);
+
+            context.Template.AddReplacement(
+                Tokens.ServerMethodAsync,
+                [serviceType],
+                context => LoadTemplate_AsyncParameters(
+                    context,
+                    isInterface: false));
+
+            return context.Template.Render();
+        }
+
+        /// <summary>
+        /// Writes an asynchronous method declaration.
+        /// </summary>
+        private TemplateString LoadTemplate_AsyncParameters(
+            ILoadContext context,
+            bool isInterface)
+        {
+            if (context.Target is not Service serviceType)
+            {
+                return null;
+            }
+
+            List<string> types = [];
+            List<string> names = [];
+
+            types.Add("global::Opc.Ua.SecureChannelContext");
+            names.Add("secureChannelContext");
+
+            CollectParameters(serviceType.Request, types, names);
+
+            types.Add("global::System.Threading.CancellationToken");
+            names.Add("ct");
+
+            // write method type if not writing an interface declaration.
+            if (!isInterface)
+            {
+                context.Out.Write("public virtual async ");
+            }
+
+            context.Out.WriteLine(
+                "global::System.Threading.Tasks.ValueTask<{0}Response> {1}Async(",
+                serviceType.Name,
+                serviceType.Name);
+
+            WriteParameters(context, types, names);
+
+            // write closing semicolon for interface.
+            if (isInterface)
+            {
+                context.Out.WriteLine(";");
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Collects the parameters to write.
+        /// </summary>
+        private void CollectParameters(
+            DataTypeDesign dataType,
+            List<string> types,
+            List<string> names)
+        {
+            Parameter[] fields = dataType?.Fields;
+            if (fields != null)
+            {
+                foreach (Parameter field in fields)
+                {
+                    DataTypeDesign datatype = field.DataTypeNode;
+                    string typeName = datatype.GetDotNetTypeName(
+                        field.ValueRank,
+                        m_validator.Dictionary.TargetNamespace,
+                        m_validator.Dictionary.Namespaces,
+                        nullable: NullableAnnotation.Nullable);
+
+                    types.Add(typeName);
+                    names.Add(field.Name.ToLowerCamelCase());
+                }
+            }
+        }
+
+        /// <summary>
+        /// Writes a set of method parameters.
+        /// </summary>
+        private static void WriteParameters(
+            ILoadContext context,
+            List<string> types,
+            List<string> names)
+        {
+            for (int ii = 0; ii < types.Count; ii++)
+            {
+                string typeName = types[ii];
+
+                context.Out.Write("    {0} {1}", typeName, names[ii]);
+
+                if (ii < types.Count - 1)
+                {
+                    context.Out.WriteLine(",");
+                }
+                else
+                {
+                    context.Out.Write(")");
+                }
+            }
+        }
+
+        /// <summary>
+        /// A set of services that are grouped into a single interface.
+        /// </summary>
+        private sealed class ServiceSet
+        {
+            public ServiceSet(string serviceSet, params ServiceCategory[] categories)
+            {
+                Name = serviceSet;
+                Categories = categories;
+            }
+
+            public string Name { get; set; }
+            public ServiceCategory[] Categories { get; set; }
+        }
+
+        private const string kNamespaceConstant = "OpcUa";
+        private const string kNamespacePrefix = "Opc.Ua";
+
+        private readonly IFileSystem m_fileSystem;
+        private readonly string m_outputFolder;
+        private readonly ModelDesignValidator m_validator;
+    }
+}

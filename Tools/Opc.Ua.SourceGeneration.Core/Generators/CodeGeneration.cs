@@ -33,7 +33,6 @@ using System.Globalization;
 using System.Linq;
 using System.Xml;
 using Opc.Ua.Schema.Model;
-using Opc.Ua.Schema.Types;
 using Opc.Ua.Types;
 
 namespace Opc.Ua.SourceGeneration
@@ -43,190 +42,6 @@ namespace Opc.Ua.SourceGeneration
     /// </summary>
     internal static class CodeGeneration
     {
-        /// <summary>
-        /// Returns the default value for a field.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="validator"/> is <c>null</c>.
-        /// </exception>
-        public static string GetDotNetDefaultValue(
-            this TypeDictionaryValidator validator,
-            FieldType fieldType)
-        {
-            if (validator == null)
-            {
-                throw new ArgumentNullException(nameof(validator));
-            }
-
-            if (fieldType == null)
-            {
-                return "null";
-            }
-
-            DataType datatype = validator.ResolveType(fieldType.DataType);
-
-            if (datatype == null || string.IsNullOrEmpty(datatype.Name))
-            {
-                return "null";
-            }
-
-            if (fieldType.ValueRank >= 0)
-            {
-                switch (datatype.Name)
-                {
-                    case "Guid":
-                        return "new global::Opc.Ua.UuidCollection()";
-                    default:
-                        return CoreUtils.Format("new {0}Collection()", datatype.Name);
-                }
-            }
-
-            if (datatype is EnumeratedType enumeratedType)
-            {
-                return CoreUtils.Format(
-                    "{0}.{1}",
-                    datatype.Name,
-                    enumeratedType.Value[0].Name);
-            }
-
-            if (datatype.QName.Namespace != Namespaces.OpcUaBuiltInTypes)
-            {
-                return CoreUtils.Format("new {0}()", datatype.Name);
-            }
-
-            switch (datatype.Name)
-            {
-                case "Boolean":
-                case "SByte":
-                case "Byte":
-                case "Int16":
-                case "UInt16":
-                case "Int32":
-                case "UInt32":
-                case "Int64":
-                case "UInt64":
-                case "Float":
-                case "Double":
-                case "String":
-                case "ByteString":
-                case "XmlElement":
-                case "ExtensionObject":
-                case "Guid":
-                case "StatusCode":
-                case "NodeId":
-                case "ExpandedNodeId":
-                case "LocalizedText":
-                case "QualifiedName":
-                    return "default";
-                case "DateTime":
-                    return "global::System.DateTime.MinValue";
-                default:
-                    return CoreUtils.Format("new {0}()", datatype.Name);
-            }
-        }
-
-        /// <summary>
-        /// Returns a name qualified with a namespace prefix.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="validator"/> is <c>null</c>.</exception>
-        public static string GetDotNetTypeName(
-            this TypeDictionaryValidator validator,
-            XmlQualifiedName qname,
-            int valueRank,
-            bool nullable = false)
-        {
-            if (validator == null)
-            {
-                throw new ArgumentNullException(nameof(validator));
-            }
-
-            if (qname.IsNull())
-            {
-                return string.Empty;
-            }
-
-            DataType datatype = validator.ResolveType(qname);
-            if (datatype is EnumeratedType)
-            {
-                nullable = false;
-            }
-
-            if (datatype != null && !datatype.QName.IsNull())
-            {
-                qname = datatype.QName;
-            }
-
-            string typeName = qname.Name;
-            if (qname.Namespace == Namespaces.OpcUaBuiltInTypes)
-            {
-                // translate built-in types to .NET types.
-                if (valueRank < 0)
-                {
-                    switch (typeName)
-                    {
-                        case "Boolean":
-                            return "bool";
-                        case "SByte":
-                            return "sbyte";
-                        case "Byte":
-                            return "byte";
-                        case "Int16":
-                            return "short";
-                        case "UInt16":
-                            return "ushort";
-                        case "Int32":
-                            return "int";
-                        case "UInt32":
-                            return "uint";
-                        case "Int64":
-                            return "long";
-                        case "UInt64":
-                            return "ulong";
-                        case "Float":
-                            return "float";
-                        case "Double":
-                            return "double";
-                        case "String":
-                            return !nullable ? "string" : "string?";
-                        case "DateTime":
-                            return "global::System.DateTime";
-                        case "Guid":
-                            return "global::Opc.Ua.Uuid";
-                        case "ExtensionObject":
-                            return "global::Opc.Ua.ExtensionObject";
-                        case "LocalizedText":
-                            return "global::Opc.Ua.LocalizedText";
-                        case "NodeId":
-                            return "global::Opc.Ua.NodeId";
-                        case "ExpandedNodeId":
-                            return "global::Opc.Ua.ExpandedNodeId";
-                        case "QualifiedName":
-                            return "global::Opc.Ua.QualifiedName";
-                        case "Variant":
-                            return "global::Opc.Ua.Variant";
-                        case "ByteString":
-                            return !nullable ? "byte[]" : "byte[]?";
-                    }
-                }
-                switch (typeName)
-                {
-                    case "Guid":
-                        typeName = "global::Opc.Ua.Uuid";
-                        break;
-                }
-            }
-            if (valueRank >= 0)
-            {
-                // Leave collections always non nullable even though they can
-                // serialized as null value.  But properties are always init
-                // as collection never null
-                return CoreUtils.Format("{0}Collection", typeName);
-            }
-            return !nullable ?
-                typeName : CoreUtils.Format("{0}?", typeName);
-        }
-
         /// <summary>
         /// Returns the class name to use when creating an instance of the type.
         /// </summary>
@@ -301,7 +116,7 @@ namespace Opc.Ua.SourceGeneration
                         variable.DataTypeNode,
                         targetNamespace,
                         namespaces,
-                        nullable: false);
+                        nullable: NullableAnnotation.NonNullable);
                     break;
             }
 
@@ -767,7 +582,7 @@ namespace Opc.Ua.SourceGeneration
                     valueRank,
                     targetNamespace,
                     namespaces,
-                    nullable: false));
+                    nullable: NullableAnnotation.NonNullable));
             }
 
             if (dataType.BasicDataType == BasicDataType.BaseDataType ||
@@ -993,7 +808,7 @@ namespace Opc.Ua.SourceGeneration
                                 ValueRank.Scalar,
                                 targetNamespace,
                                 namespaces,
-                                nullable: false));
+                                nullable: NullableAnnotation.NonNullable));
                     }
                     return "default";
                 default:
@@ -1015,7 +830,7 @@ namespace Opc.Ua.SourceGeneration
                 datatype,
                 targetNamespace,
                 namespaces,
-                nullable: isOptional);
+                nullable: isOptional ? NullableAnnotation.Nullable : NullableAnnotation.NonNullable);
 
             if (typeName is "global::Opc.Ua.IEncodeable" ||
                 typeName is "global::Opc.Ua.IEncodeable?")
@@ -1074,7 +889,7 @@ namespace Opc.Ua.SourceGeneration
             this DataTypeDesign datatype,
             string targetNamespace,
             Namespace[] namespaces,
-            bool nullable = false)
+            NullableAnnotation nullable = NullableAnnotation.NonNullable)
         {
             switch (datatype.BasicDataType)
             {
@@ -1101,13 +916,13 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.Double:
                     return "double";
                 case BasicDataType.String:
-                    return !nullable ? "string" : "string?";
+                    return nullable == NullableAnnotation.NonNullable ? "string" : "string?";
                 case BasicDataType.DateTime:
                     return "global::System.DateTime";
                 case BasicDataType.Guid:
                     return "global::Opc.Ua.Uuid";
                 case BasicDataType.ByteString:
-                    return !nullable ? "byte[]" : "byte[]?";
+                    return nullable == NullableAnnotation.NonNullable ? "byte[]" : "byte[]?";
                 case BasicDataType.XmlElement:
                     return "global::System.Xml.XmlElement";
                 case BasicDataType.NodeId:
@@ -1117,7 +932,7 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.StatusCode:
                     return "global::Opc.Ua.StatusCode";
                 case BasicDataType.DiagnosticInfo:
-                    return !nullable ? "global::Opc.Ua.DiagnosticInfo" : "global::Opc.Ua.DiagnosticInfo?";
+                    return nullable == NullableAnnotation.NonNullable ? "global::Opc.Ua.DiagnosticInfo" : "global::Opc.Ua.DiagnosticInfo?";
                 case BasicDataType.QualifiedName:
                     return "global::Opc.Ua.QualifiedName";
                 case BasicDataType.LocalizedText:
@@ -1158,12 +973,11 @@ namespace Opc.Ua.SourceGeneration
                     {
                         return typeName;
                     }
-                    // TODO: Handle nullable user defined types
                     // All of these are always set to default type in properties when null
-                    // is passed.
-                    return typeName; // !nullable ? typeName : typeName + "?";
+                    // is passed therefore we want to maintain non nullability no matter
+                    return nullable != NullableAnnotation.Nullable ? typeName : typeName + "?";
             }
-            return !nullable ? "object" : "object?";
+            return nullable == NullableAnnotation.NonNullable ? "object" : "object?";
         }
 
         /// <summary>
@@ -1174,7 +988,7 @@ namespace Opc.Ua.SourceGeneration
             ValueRank valueRank,
             string targetNamespace,
             Namespace[] namespaces,
-            bool nullable = false)
+            NullableAnnotation nullable = NullableAnnotation.NonNullable)
         {
             if (valueRank == ValueRank.Scalar)
             {
@@ -1286,7 +1100,7 @@ namespace Opc.Ua.SourceGeneration
                                     valueRank,
                                     targetNamespace,
                                     namespaces,
-                                    nullable: false);
+                                    nullable: NullableAnnotation.NonNullable);
                             }
                             return datatype.SymbolicName.Name + "Collection";
                         case BasicDataType.UserDefined:
@@ -1323,5 +1137,26 @@ namespace Opc.Ua.SourceGeneration
             }
             return false;
         }
+    }
+
+    /// <summary>
+    /// Defines where to add nullable annotations
+    /// </summary>
+    internal enum NullableAnnotation
+    {
+        /// <summary>
+        /// Types should be non nullable
+        /// </summary>
+        NonNullable,
+
+        /// <summary>
+        /// Types are nullable except for data types
+        /// </summary>
+        NullableExceptDataTypes,
+
+        /// <summary>
+        /// All types are nullable
+        /// </summary>
+        Nullable
     }
 }

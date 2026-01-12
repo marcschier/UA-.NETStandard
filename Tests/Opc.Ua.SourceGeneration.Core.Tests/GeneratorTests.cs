@@ -142,7 +142,7 @@ namespace Opc.Ua.SourceGeneration.Tests
             Generators.GenerateStack(
                 StackGenerationType.All,
                 LocalFileSystem.Instance,
-                Path.Combine(Directory.GetCurrentDirectory(), "Benchmark"), [], telemetry);
+                Path.Combine(Directory.GetCurrentDirectory(), "Benchmark"), telemetry);
         }
 
         [Benchmark]
@@ -171,7 +171,6 @@ namespace Opc.Ua.SourceGeneration.Tests
         /// <summary>
         /// Generate stack code
         /// </summary>
-        /// <returns></returns>
         private static Dictionary<string, string> GenerateStack(
             StackGenerationType generationType,
             ITelemetryContext telemetry)
@@ -179,7 +178,7 @@ namespace Opc.Ua.SourceGeneration.Tests
             // Generate
             var sw = Stopwatch.StartNew();
             using var fileSystem = new VirtualFileSystem();
-            Generators.GenerateStack(generationType, fileSystem, string.Empty, [], telemetry);
+            Generators.GenerateStack(generationType, fileSystem, string.Empty, telemetry);
             var generatedText = fileSystem.CreatedFiles
                 .Where(c => Path.GetExtension(c) == ".cs")
                 .ToDictionary(c => c, c => Encoding.UTF8.GetString(fileSystem.Get(c)));

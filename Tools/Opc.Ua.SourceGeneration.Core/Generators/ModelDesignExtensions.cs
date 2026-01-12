@@ -29,132 +29,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Xml;
 using Opc.Ua.Schema.Model;
-using Opc.Ua.Schema.Types;
 using Opc.Ua.Types;
 
 namespace Opc.Ua.SourceGeneration
 {
     /// <summary>
-    /// Type system extensions
+    /// Model design extensions
     /// </summary>
-    internal static class TypeExtensions
+    internal static class ModelDesignExtensions
     {
-        /// <summary>
-        /// Returns the list of datatypes to process.
-        /// </summary>
-        /// <exception cref="ArgumentNullException"><paramref name="validator"/> is <c>null</c>.</exception>
-        public static IReadOnlyList<DataType> GetDataTypeList(
-            this TypeDictionaryValidator validator,
-            Type type,
-            IReadOnlyList<string> dictionariesToExport,
-            IReadOnlyList<string> exclusions,
-            bool exportAll,
-            bool exportApi)
-        {
-            if (validator == null)
-            {
-                throw new ArgumentNullException(nameof(validator));
-            }
-
-            // collect datatypes with the specified type.
-            var datatypes = new List<DataType>();
-
-            foreach (TypeDictionary dictionary in validator.LoadedTypeDictionaries)
-            {
-                if (dictionary.TargetNamespace != Namespaces.OpcUaBuiltInTypes)
-                {
-                    if (exportAll || dictionariesToExport?.Contains(dictionary.TargetNamespace) == true)
-                    {
-                        CollectDatatypes(dictionary, type, datatypes, exportApi);
-                    }
-                }
-            }
-
-            // include identifiers from the target dictionary.
-            CollectDatatypes(validator.Dictionary, type, datatypes, exportApi);
-
-            if (exclusions == null)
-            {
-                return datatypes;
-            }
-
-            var datatypes2 = new List<DataType>();
-            foreach (DataType ii in datatypes)
-            {
-                if (!TypeDictionaryValidator.IsExcluded(exclusions, ii))
-                {
-                    datatypes2.Add(ii);
-                }
-            }
-
-            return datatypes2;
-        }
-
-        /// <summary>
-        /// Returns the list of datatypes to process.
-        /// </summary>
-        public static void CollectDatatypes(
-            this TypeDictionary dictionary,
-            Type type,
-            List<DataType> datatypes,
-            bool exportApi)
-        {
-            if (dictionary == null || dictionary.Items == null || datatypes == null)
-            {
-                return;
-            }
-
-            // include identifiers from the target dictionary.
-            foreach (DataType datatype in dictionary.Items)
-            {
-                if (type == null || type.IsInstanceOfType(datatype))
-                {
-                    if (datatype is ComplexType complexType)
-                    {
-                        GetDataTypeList(type, complexType.Field, datatypes);
-                    }
-
-                    if (datatype is ServiceType serviceType)
-                    {
-                        if (exportApi && serviceType.InterfaceType == InterfaceType.SecureChannel)
-                        {
-                            continue;
-                        }
-
-                        GetDataTypeList(type, serviceType.Request, datatypes);
-                        GetDataTypeList(type, serviceType.Response, datatypes);
-                    }
-
-                    datatypes.Add(datatype);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Returns the list of datatypes to process.
-        /// </summary>
-        private static void GetDataTypeList(Type type, FieldType[] fields, List<DataType> datatypes)
-        {
-            if (fields != null)
-            {
-                foreach (FieldType field in fields)
-                {
-                    if (field.ComplexType != null)
-                    {
-                        if (type == null || type.IsInstanceOfType(field.ComplexType))
-                        {
-                            datatypes.Add(field.ComplexType);
-                            GetDataTypeList(type, field.ComplexType.Field, datatypes);
-                        }
-                    }
-                }
-            }
-        }
-
         /// <summary>
         /// Is overridden instance.
         /// </summary>
@@ -660,49 +545,6 @@ namespace Opc.Ua.SourceGeneration
             }
 
             return symbol.EndsWith("MethodType", StringComparison.Ordinal);
-        }
-
-        /// <summary>
-        /// Creates a description from a documentation element.
-        /// </summary>
-        public static string GetDescription(this Documentation documentation)
-        {
-            if (documentation == null || documentation.Text == null)
-            {
-                return null;
-            }
-
-            var buffer = new StringBuilder();
-
-            for (int ii = 0; ii < documentation.Text.Length; ii++)
-            {
-                if (buffer.Length > 0)
-                {
-                    buffer.Append(' ');
-                }
-
-                buffer.Append(documentation.Text[ii]);
-            }
-
-            return buffer.ToString();
-        }
-
-        /// <summary>
-        /// Checks for a null qualified name.
-        /// </summary>
-        public static bool IsNull(this XmlQualifiedName qname)
-        {
-            if (qname == null)
-            {
-                return true;
-            }
-
-            if (string.IsNullOrEmpty(qname.Name))
-            {
-                return true;
-            }
-
-            return false;
         }
 
         public static bool IsPartOfOpcUaTypesLibrary(this DataTypeDesign dataType)

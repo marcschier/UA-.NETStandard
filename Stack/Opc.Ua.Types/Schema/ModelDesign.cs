@@ -1645,6 +1645,18 @@ namespace Opc.Ua.Schema.Model
         public bool IsEnumeration { get; set; }
 
         /// <summary>
+        /// Name of the service the data type belongs to
+        /// </summary>
+        [XmlIgnore]
+        public Service Service { get; set; }
+
+        /// <summary>
+        /// Is service response type
+        /// </summary>
+        [XmlIgnore]
+        public bool IsServiceResponse { get; set; }
+
+        /// <summary>
         /// Built in data type
         /// </summary>
         [XmlIgnore]
@@ -1668,7 +1680,9 @@ namespace Opc.Ua.Schema.Model
                 IsUnion == other.IsUnion &&
                 NoArraysAllowed == other.NoArraysAllowed &&
                 ForceEnumValues == other.ForceEnumValues &&
-                NoEncodings == other.NoEncodings;
+                NoEncodings == other.NoEncodings &&
+                IsServiceResponse == other.IsServiceResponse &&
+                Service == other.Service;
         }
 
         /// <inheritdoc/>
@@ -1683,6 +1697,8 @@ namespace Opc.Ua.Schema.Model
             hash.Add(NoArraysAllowed);
             hash.Add(ForceEnumValues);
             hash.Add(NoEncodings);
+            hash.Add(Service);
+            hash.Add(IsServiceResponse);
             return hash.ToHashCode();
         }
 
@@ -1697,5 +1713,105 @@ namespace Opc.Ua.Schema.Model
         {
             return !(left == right);
         }
+    }
+
+    /// <summary>
+    /// Service descriptor
+    /// </summary>
+    [Serializable]
+    public sealed class Service : IEquatable<Service>
+    {
+        /// <summary>
+        /// Service category of the service the data type belongs to
+        /// </summary>
+        [XmlIgnore]
+        public ServiceCategory Category { get; init; }
+
+        /// <summary>
+        /// Name of the service the data type belongs to
+        /// </summary>
+        [XmlIgnore]
+        public string Name { get; init; }
+
+        /// <summary>
+        /// Service request data type
+        /// </summary>
+        [XmlIgnore]
+        public DataTypeDesign Request { get; set; }
+
+        /// <summary>
+        /// Service response data type
+        /// </summary>
+        [XmlIgnore]
+        public DataTypeDesign Response { get; set; }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as Service);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(Service other)
+        {
+            return
+                other is not null &&
+                Category == other.Category &&
+                Name == other.Name;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Category, Name);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator ==(Service left, Service right)
+        {
+            return EqualityComparer<Service>.Default.Equals(left, right);
+        }
+
+        /// <inheritdoc/>
+        public static bool operator !=(Service left, Service right)
+        {
+            return !(left == right);
+        }
+    }
+
+    /// <summary>
+    /// Service
+    /// </summary>
+    public enum ServiceCategory
+    {
+        /// <summary>
+        /// Not part of a service
+        /// </summary>
+        None,
+
+        /// <summary>
+        /// Session
+        /// </summary>
+        Session,
+
+        /// <summary>
+        /// Secure channel
+        /// </summary>
+        SecureChannel,
+
+        /// <summary>
+        /// Discovery
+        /// </summary>
+        Discovery,
+
+        /// <summary>
+        /// Registration
+        /// </summary>
+        Registration,
+
+        /// <summary>
+        /// Test
+        /// </summary>
+        Test,
     }
 }

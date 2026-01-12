@@ -48,7 +48,7 @@ namespace Opc.Ua.SourceGeneration.Tester
             // {
             //     fs.Delete(output, true);
             // }
-            Generators.GenerateStack(StackGenerationType.All, fs, output, [], new Telemetry());
+            Generators.GenerateStack(StackGenerationType.All, fs, output, new Telemetry());
             Console.WriteLine("Stack generated.");
         }
 

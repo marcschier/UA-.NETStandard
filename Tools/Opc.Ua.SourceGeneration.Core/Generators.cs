@@ -30,6 +30,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Opc.Ua.Schema.Model;
 
 namespace Opc.Ua.SourceGeneration
 {
@@ -42,6 +43,11 @@ namespace Opc.Ua.SourceGeneration
         /// Optimize generated code for compile speed.
         /// </summary>
         public bool OptimizeForCompileSpeed { get; set; }
+
+        /// <summary>
+        /// Exclusions to apply on the input
+        /// </summary>
+        public IReadOnlyList<string> Exclusions { get; set; } = [];
 
         /// <summary>
         /// Generation should be cancelled
@@ -89,7 +95,6 @@ namespace Opc.Ua.SourceGeneration
         /// <param name="designFiles">Design files to process</param>
         /// <param name="fileSystem">File system abstraction to use</param>
         /// <param name="outputDir">Output folder or null</param>
-        /// <param name="exclusions">Exclusion map</param>
         /// <param name="telemetry">Telemetry context for logging</param>
         /// <param name="options">Generator options</param>
         /// <param name="useAllowSubtypes">allow subtypes</param>
@@ -97,7 +102,6 @@ namespace Opc.Ua.SourceGeneration
             this DesignFileCollection designFiles,
             IFileSystem fileSystem,
             string outputDir,
-            string[] exclusions,
             ITelemetryContext telemetry,
             GeneratorOptions options = null,
             bool useAllowSubtypes = false)
@@ -113,19 +117,20 @@ namespace Opc.Ua.SourceGeneration
                 .AsFileSystem("Opc.Ua.SourceGeneration.Design")
                 .WithFallback(fileSystem);
 
+            // The rest of the input is processed as design files
+            ModelDesignValidator modelDesign = fileSystem.OpenModelDesign(
+                designFiles,
+                null, // identifierFile,
+                options.Exclusions,
+                telemetry,
+                useAllowSubtypes);
+
             var generator = new ModelGenerator(
                 fileSystem,
                 outputDir,
+                modelDesign,
                 telemetry,
                 options);
-            // The rest of the input is processed as design files
-            generator.ValidateAndUpdateIds(
-                designFiles.DesignFiles,
-                null, // identifierFile,
-                exclusions,
-                designFiles.Options,
-                useAllowSubtypes);
-
             generator.Emit();
         }
 
@@ -159,14 +164,6 @@ namespace Opc.Ua.SourceGeneration
 
             foreach (string modelUri in nodesets.ModelUris)
             {
-                var generator = new ModelGenerator(
-                    fileSystem,
-                    outputDir,
-                    telemetry,
-                    options)
-                {
-                    AvailableNodeSets = nodesets.Files
-                };
                 List<string> designFilesForModel =
                     nodesets.GetDesignFileListForModel(
                         modelUri,
@@ -175,10 +172,24 @@ namespace Opc.Ua.SourceGeneration
                 {
                     continue;
                 }
-                generator.ValidateAndUpdateIds(
-                    designFilesForModel,
+                // The rest of the input is processed as design files
+                ModelDesignValidator modelDesign = fileSystem.OpenModelDesign(
+                    new DesignFileCollection
+                    {
+                        DesignFiles = designFilesForModel
+                    },
                     null,
-                    exclusions);
+                    exclusions,
+                    telemetry);
+                var generator = new ModelGenerator(
+                    fileSystem,
+                    outputDir,
+                    modelDesign,
+                    telemetry,
+                    options)
+                {
+                    AvailableNodeSets = nodesets.Files
+                };
                 generator.Emit();
             }
         }
@@ -189,14 +200,12 @@ namespace Opc.Ua.SourceGeneration
         /// <param name="generatorType">Generator type</param>
         /// <param name="fileSystem">The root file system to use</param>
         /// <param name="outputDir">Output folder or null</param>
-        /// <param name="exclusions">Optional exclusions</param>
         /// <param name="telemetry">A telemetry context for logging</param>
         /// <param name="options">Generator options</param>
         public static void GenerateStack(
             StackGenerationType generatorType,
             IFileSystem fileSystem,
             string outputDir,
-            IReadOnlyList<string> exclusions,
             ITelemetryContext telemetry,
             GeneratorOptions options = null)
         {
@@ -206,32 +215,33 @@ namespace Opc.Ua.SourceGeneration
                 .AsFileSystem("Opc.Ua.SourceGeneration.Design")
                 .WithFallback(fileSystem);
 
-            // Generate standard types as models just like for other models.
-            var modelGenerator = new ModelGenerator(
-                fileSystem,
-                outputDir,
-                telemetry,
-                options);
-            modelGenerator.ValidateAndUpdateIds(
-                [
+            var modelDesign = fileSystem.OpenModelDesign(new DesignFileCollection
+            {
+                DesignFiles = [
                     BuiltInDesignFiles.StandardTypesXml,
                     BuiltInDesignFiles.UACoreServicesXml
                 ],
-                BuiltInDesignFiles.StandardTypesCsv,
-                exclusions,
-                new DesignFileOptions
+                Options = new DesignFileOptions
                 {
                     StartId = 0,
                     ModelVersion = "1.05.06",
                     ModelPublicationDate = "2025-11-08",
                     ReleaseCandidate = true
-                },
-                false);
+                }
+            }, BuiltInDesignFiles.StandardTypesCsv, options.Exclusions, telemetry, false);
+
+            // Generate standard types as models just like for other models.
+            var modelGenerator = new ModelGenerator(
+                fileSystem,
+                outputDir,
+                modelDesign,
+                telemetry,
+                options);
 
             var stackGenerator = new StackGenerator(
                 fileSystem,
                 outputDir,
-                exclusions,
+                modelDesign,
                 options);
             stackGenerator.Emit(generatorType);
 

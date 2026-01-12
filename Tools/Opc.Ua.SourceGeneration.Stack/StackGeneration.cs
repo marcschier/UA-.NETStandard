@@ -75,11 +75,11 @@ namespace Opc.Ua.SourceGeneration
                     generationType,
                     fileSystem,
                     string.Empty,
-                    m_options.Exclude,
                     m_telemetry,
                     new GeneratorOptions
                     {
                         Cancellation = cancellationToken,
+                        Exclusions = m_options.Exclude,
                         OptimizeForCompileSpeed =
                             m_compilationOptions.OptimizationLevel ==
                                 OptimizationLevel.Debug

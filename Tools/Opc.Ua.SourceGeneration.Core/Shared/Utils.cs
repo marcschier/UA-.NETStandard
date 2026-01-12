@@ -27,7 +27,9 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-namespace Opc.Ua.SourceGeneration.Shared
+using System.Xml;
+
+namespace Opc.Ua.SourceGeneration
 {
     /// <summary>
     /// Common utils for all generators
@@ -50,6 +52,24 @@ namespace Opc.Ua.SourceGeneration.Shared
             }
 
             return CoreUtils.Format("{0}{1}", char.ToLowerInvariant(name[0]), name[1..]);
+        }
+
+        /// <summary>
+        /// Checks for a null qualified name.
+        /// </summary>
+        public static bool IsNull(this XmlQualifiedName qname)
+        {
+            if (qname == null)
+            {
+                return true;
+            }
+
+            if (string.IsNullOrEmpty(qname.Name))
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

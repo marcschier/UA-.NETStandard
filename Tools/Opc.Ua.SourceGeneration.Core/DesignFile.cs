@@ -28,6 +28,7 @@
  * ======================================================================*/
 
 using System.Collections.Generic;
+using Opc.Ua.Schema.Model;
 
 namespace Opc.Ua.SourceGeneration
 {
@@ -76,5 +77,40 @@ namespace Opc.Ua.SourceGeneration
         /// Design file options
         /// </summary>
         public DesignFileOptions Options { get; init; }
+    }
+
+    /// <summary>
+    /// Validate model design
+    /// </summary>
+    internal static class DesignFileExtensions
+    {
+        /// <summary>
+        /// Validates the model design files
+        /// </summary>
+        public static ModelDesignValidator OpenModelDesign(
+            this IFileSystem fileSystem,
+            DesignFileCollection designFiles,
+            string identifierFilePath,
+            IReadOnlyList<string> exclusions,
+            ITelemetryContext telemetry,
+            bool useAllowSubtypes = true)
+        {
+            DesignFileOptions options = designFiles.Options ?? new DesignFileOptions();
+            var m_validator = new ModelDesignValidator(
+                fileSystem,
+                options.StartId,
+                exclusions,
+                telemetry,
+                SpecificationVersion.V105)
+            {
+                UseAllowSubtypes = useAllowSubtypes,
+                ReleaseCandidate = options.ReleaseCandidate,
+                ModelVersion = options.ModelVersion,
+                ModelPublicationDate = options.ModelPublicationDate
+            };
+
+            m_validator.Validate(designFiles.DesignFiles, identifierFilePath, false);
+            return m_validator;
+        }
     }
 }

@@ -285,6 +285,7 @@ namespace Opc.Ua.SourceGeneration
             }
 
             {{Tokens.CollectionClass}}
+
             """);
 
         /// <summary>
@@ -418,6 +419,7 @@ namespace Opc.Ua.SourceGeneration
             }
 
             {{Tokens.CollectionClass}}
+
             """);
 
         /// <summary>
@@ -551,6 +553,7 @@ namespace Opc.Ua.SourceGeneration
             }
 
             {{Tokens.CollectionClass}}
+
             """);
 
         /// <summary>
@@ -657,6 +660,7 @@ namespace Opc.Ua.SourceGeneration
             }
 
             {{Tokens.CollectionClass}}
+
             """);
 
         /// <summary>

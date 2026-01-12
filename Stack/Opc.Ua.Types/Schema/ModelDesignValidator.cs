@@ -143,6 +143,118 @@ namespace Opc.Ua.Schema.Model
         }
 
         /// <summary>
+        /// Returns a list of services filter by their service category.
+        /// </summary>
+        public Service[] GetListOfServices(params ServiceCategory[] serviceCategories)
+        {
+            return [.. Nodes
+                .OfType<DataTypeDesign>()
+                .Where(x =>
+                    !IsExcluded(x) &&
+                    x.Service != null &&
+                    (
+                        serviceCategories == null ||
+                        serviceCategories.Length == 0 ||
+                        serviceCategories.Contains(x.Service.Category)
+                    ))
+                .Select(x => x.Service)
+                .Distinct()];
+        }
+
+        /// <summary>
+        /// Finds the data type with the specified name.
+        /// </summary>
+        public NodeDesign FindType(XmlQualifiedName typeName)
+        {
+            if (!m_nodes.TryGetValue(typeName, out NodeDesign node))
+            {
+                return null;
+            }
+
+            return node;
+        }
+
+        /// <summary>
+        /// Is excluded design
+        /// </summary>
+        /// <param name="node"></param>
+        public bool IsExcluded(NodeDesign node)
+        {
+            if (m_exclusions != null)
+            {
+                foreach (string exclusion in m_exclusions)
+                {
+                    if (exclusion == node.ReleaseStatus.ToString())
+                    {
+                        return true;
+                    }
+
+                    if (exclusion == node.Purpose.ToString())
+                    {
+                        return true;
+                    }
+
+                    if (node.Category != null &&
+                        node.Category.Contains(exclusion, StringComparison.Ordinal))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Is excluded data type
+        /// </summary>
+        public bool IsExcluded(DataType dataType)
+        {
+            if (m_exclusions != null)
+            {
+                foreach (string exclusion in m_exclusions)
+                {
+                    if (exclusion == dataType.ReleaseStatus.ToString())
+                    {
+                        return true;
+                    }
+
+                    if (exclusion == dataType.Purpose.ToString())
+                    {
+                        return true;
+                    }
+
+                    if (dataType.Category != null &&
+                        dataType.Category.Contains(exclusion, StringComparison.Ordinal))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Is excluded field
+        /// </summary>
+        public bool IsExcluded(Parameter field)
+        {
+            if (m_exclusions != null)
+            {
+                foreach (string exclusion in m_exclusions)
+                {
+                    if (exclusion == field.ReleaseStatus.ToString())
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Validate model
         /// </summary>
         /// <param name="designFilePaths"></param>
@@ -502,19 +614,6 @@ namespace Opc.Ua.Schema.Model
         }
 
         /// <summary>
-        /// Finds the data type with the specified name.
-        /// </summary>
-        public NodeDesign FindType(XmlQualifiedName typeName)
-        {
-            if (!m_nodes.TryGetValue(typeName, out NodeDesign node))
-            {
-                return null;
-            }
-
-            return node;
-        }
-
-        /// <summary>
         /// Load built in model
         /// </summary>
         /// <returns></returns>
@@ -825,8 +924,23 @@ namespace Opc.Ua.Schema.Model
 
                 if (dataType is ServiceType serviceType)
                 {
+                    var service = new Service
+                    {
+                        Category = serviceType.InterfaceType switch
+                        {
+                            InterfaceType.Session => ServiceCategory.Session,
+                            InterfaceType.SecureChannel => ServiceCategory.SecureChannel,
+                            InterfaceType.Discovery => ServiceCategory.Discovery,
+                            InterfaceType.Registration => ServiceCategory.Registration,
+                            InterfaceType.Test => ServiceCategory.Test,
+                            _ => ServiceCategory.None,
+                        },
+                        Name = dataType.Name
+                    };
+
                     design.SymbolicId = new XmlQualifiedName(dataType.Name + "Request", namespaceUri);
                     design.SymbolicName = design.SymbolicId;
+                    design.Service = service;
                     design.BaseType = new XmlQualifiedName("Structure", m_defaultNamespace);
                     design.BasicDataType = design.DetermineBasicDataType();
                     design.NoArraysAllowed = true;
@@ -847,6 +961,8 @@ namespace Opc.Ua.Schema.Model
                         SymbolicId = new XmlQualifiedName(dataType.Name + "Response", namespaceUri)
                     };
                     design2.SymbolicName = design2.SymbolicId;
+                    design2.IsServiceResponse = true;
+                    design2.Service = service;
                     design2.BaseType = new XmlQualifiedName("Structure", m_defaultNamespace);
                     design2.BasicDataType = design.DetermineBasicDataType();
                     design2.NoArraysAllowed = true;
@@ -861,6 +977,9 @@ namespace Opc.Ua.Schema.Model
                     ImportFields(design2, serviceType.Response);
 
                     nodes.Add(design2);
+
+                    service.Request = design;
+                    service.Response = design2;
                 }
 
                 if (dataType is EnumeratedType enumeratedType)
@@ -4522,86 +4641,6 @@ namespace Opc.Ua.Schema.Model
                 encoding.SymbolicId.Name);
 
             return encoding;
-        }
-
-        /// <summary>
-        /// Is excluded design
-        /// </summary>
-        /// <param name="node"></param>
-        public bool IsExcluded(NodeDesign node)
-        {
-            if (m_exclusions != null)
-            {
-                foreach (string exclusion in m_exclusions)
-                {
-                    if (exclusion == node.ReleaseStatus.ToString())
-                    {
-                        return true;
-                    }
-
-                    if (exclusion == node.Purpose.ToString())
-                    {
-                        return true;
-                    }
-
-                    if (node.Category != null &&
-                        node.Category.Contains(exclusion, StringComparison.Ordinal))
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Is excluded data type
-        /// </summary>
-        public bool IsExcluded(DataType dataType)
-        {
-            if (m_exclusions != null)
-            {
-                foreach (string exclusion in m_exclusions)
-                {
-                    if (exclusion == dataType.ReleaseStatus.ToString())
-                    {
-                        return true;
-                    }
-
-                    if (exclusion == dataType.Purpose.ToString())
-                    {
-                        return true;
-                    }
-
-                    if (dataType.Category != null &&
-                        dataType.Category.Contains(exclusion, StringComparison.Ordinal))
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Is excluded field
-        /// </summary>
-        public bool IsExcluded(Parameter field)
-        {
-            if (m_exclusions != null)
-            {
-                foreach (string exclusion in m_exclusions)
-                {
-                    if (exclusion == field.ReleaseStatus.ToString())
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
         }
 
         /// <summary>

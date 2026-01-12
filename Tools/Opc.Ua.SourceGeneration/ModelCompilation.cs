@@ -116,11 +116,11 @@ namespace Opc.Ua.SourceGeneration
                 }.GenerateCode(
                     sourceFiles.WithFallback(vfs),
                     string.Empty,
-                    exclusions,
                     m_telemetry,
                     new GeneratorOptions
                     {
                         Cancellation = cancellationToken,
+                        Exclusions = exclusions,
                         OptimizeForCompileSpeed =
                             m_compilationOptions.OptimizationLevel == OptimizationLevel.Debug
                     },
