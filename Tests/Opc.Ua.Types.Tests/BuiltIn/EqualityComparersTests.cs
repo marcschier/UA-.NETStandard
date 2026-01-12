@@ -653,21 +653,6 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             Assert.That(dictionary[[[1, 2, 3], [4, 5, 6]]], Is.EqualTo("Test"));
         }
 
-        private static XmlElement CreateXmlElement(string name, string value = null, string attributeName = null, string attributeValue = null)
-        {
-            var doc = new XmlDocument();
-            XmlElement element = doc.CreateElement(name);
-            if (value != null)
-            {
-                element.InnerText = value;
-            }
-            if (attributeName != null)
-            {
-                element.SetAttribute(attributeName, attributeValue);
-            }
-            return element;
-        }
-
         [Test]
         public void XmlElementStringEqualityComparerDefaultInstanceExists()
         {
@@ -1327,6 +1312,21 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             Assert.That(
                 ReferenceEqualityComparer.Default.Equals(reference1, reference3),
                 Is.False);
+        }
+
+        private static XmlElement CreateXmlElement(string name, string value = null, string attributeName = null, string attributeValue = null)
+        {
+            var doc = new XmlDocument();
+            XmlElement element = doc.CreateElement(name);
+            if (value != null)
+            {
+                element.InnerText = value;
+            }
+            if (attributeName != null)
+            {
+                element.SetAttribute(attributeName, attributeValue);
+            }
+            return element;
         }
     }
 }
