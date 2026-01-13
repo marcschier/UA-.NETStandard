@@ -256,7 +256,7 @@ namespace Opc.Ua
             switch (attributeId)
             {
                 case Attributes.DataTypeDefinition:
-                    var dataTypeDefinition = value is ExtensionObject eo ? eo : default;
+                    ExtensionObject dataTypeDefinition = value is ExtensionObject eo ? eo : default;
 
                     if ((WriteMask & AttributeWriteMask.DataTypeDefinition) == 0)
                     {

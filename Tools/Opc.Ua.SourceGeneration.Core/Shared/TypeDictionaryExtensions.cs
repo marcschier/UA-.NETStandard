@@ -44,7 +44,6 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Returns the list of datatypes to process.
         /// </summary>
-        /// <exception cref="ArgumentNullException"><paramref name="validator"/> is <c>null</c>.</exception>
         public static IReadOnlyList<DataType> GetDataTypeList(
             this TypeDictionaryValidator validator,
             Type type,
@@ -53,11 +52,6 @@ namespace Opc.Ua.SourceGeneration
             bool exportAll,
             bool exportApi)
         {
-            if (validator == null)
-            {
-                throw new ArgumentNullException(nameof(validator));
-            }
-
             // collect datatypes with the specified type.
             var datatypes = new List<DataType>();
 

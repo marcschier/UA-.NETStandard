@@ -65,13 +65,13 @@ namespace Opc.Ua.SourceGeneration
         public void Emit()
         {
             string fileName = Path.Combine(m_outputFolder,
-                CoreUtils.Format("{0}.StatusCodes.g.cs", StackGenerator.NamespacePrefix));
+                CoreUtils.Format("{0}.StatusCodes.g.cs", Constants.CoreNamespacePrefix));
             using TextWriter writer = m_fileSystem.CreateTextWriter(fileName);
 
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, CodeTemplates.Constants_File_cs);
 
-            template.AddReplacement(Tokens.Prefix, StackGenerator.NamespacePrefix);
+            template.AddReplacement(Tokens.Prefix, Constants.CoreNamespacePrefix);
             template.AddReplacement(Tokens.ClassName, "StatusCodes");
 
             var nodeDictionaries = new Dictionary<string, string>();

@@ -34,7 +34,7 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Common utils for all generators
     /// </summary>
-    internal static class Utils
+    internal static class SourceGenerationUtils
     {
         /// <summary>
         /// Ensures the first character is lower case.

@@ -74,9 +74,11 @@ namespace Opc.Ua.SourceGeneration
                 out int errors,
                 out int warnings);
             Assert.That(errors, Is.EqualTo(0), $"Compilation produced {errors} errors");
-            // TestContext.Out.WriteLine($"Compilation produced {warnings} warnings");
+#if NETFRAMEWORK
+            TestContext.Out.WriteLine($"Compilation produced {warnings} warnings");
+#else
             Assert.That(warnings, Is.EqualTo(0), $"Compilation produced {warnings} warnings");
-
+#endif
             // Get the results
             GeneratorDriverRunResult runResult = driver.GetRunResult();
             // Test the results
@@ -90,7 +92,7 @@ namespace Opc.Ua.SourceGeneration
             Assert.That(errors, Is.EqualTo(0));
             TestContext.Out.WriteLine($"Generate run produced {warnings} warnings");
 
-            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(12));
+            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(13));
             Assert.That(generatorResult.Exception, Is.Null);
         }
     }

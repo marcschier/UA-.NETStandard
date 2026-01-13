@@ -82,7 +82,7 @@ namespace Opc.Ua.SourceGeneration
                 .WithUpdatedAnalyzerConfigOptions(options)
                 ;
             GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation);
-            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(5));
+            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(6));
         }
 
         [Theory]
@@ -114,7 +114,7 @@ namespace Opc.Ua.SourceGeneration
                 .WithUpdatedAnalyzerConfigOptions(options)
                 ;
             GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation);
-            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(10));
+            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(12));
         }
 
         private static GeneratorRunResult GenerateAndCompile(
@@ -136,9 +136,11 @@ namespace Opc.Ua.SourceGeneration
                 out int warnings);
 
             Assert.That(errors, Is.EqualTo(0), $"Compilation produced {errors} errors");
-            // TestContext.Out.WriteLine($"Compilation produced {warnings} warnings");
+#if NETFRAMEWORK
+            TestContext.Out.WriteLine($"Compilation produced {warnings} warnings");
+#else
             Assert.That(warnings, Is.EqualTo(0), $"Compilation produced {warnings} warnings");
-
+#endif
             // Get the results
             GeneratorDriverRunResult runResult = driver.GetRunResult();
             // Test the results

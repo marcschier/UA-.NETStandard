@@ -65,12 +65,12 @@ namespace Opc.Ua.SourceGeneration
 
             using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
                 m_outputFolder,
-                CoreUtils.Format("{0}.Endpoints.g.cs", StackGenerator.NamespacePrefix)));
+                CoreUtils.Format("{0}.Endpoints.g.cs", Constants.CoreNamespacePrefix)));
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, CodeTemplates.Endpoints_File_cs);
 
-            template.AddReplacement(Tokens.Prefix, StackGenerator.NamespacePrefix);
-            template.AddReplacement(Tokens.Namespace, StackGenerator.NamespaceConstant);
+            template.AddReplacement(Tokens.Prefix, Constants.CoreNamespacePrefix);
+            template.AddReplacement(Tokens.Namespace, Constants.CoreNamespace);
 
             template.AddReplacement(
                 Tokens.ServiceSets,

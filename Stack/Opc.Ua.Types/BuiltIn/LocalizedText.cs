@@ -559,7 +559,7 @@ namespace Opc.Ua
                     "At least one translation must be provided.",
                     nameof(translations));
             }
-            var first = translations?.FirstOrDefault() ?? default;
+            KeyValuePair<string, string> first = translations?.FirstOrDefault() ?? default;
             TranslationInfo = translationInfo with
             {
                 Text = translationInfo.Text ?? first.Value,

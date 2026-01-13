@@ -37,10 +37,32 @@ using Opc.Ua.Types;
 
 namespace Opc.Ua.SourceGeneration
 {
+
+    /// <summary>
+    /// Defines where to add nullable annotations
+    /// </summary>
+    internal enum NullableAnnotation
+    {
+        /// <summary>
+        /// Types should be non nullable
+        /// </summary>
+        NonNullable,
+
+        /// <summary>
+        /// Types are nullable except for data types
+        /// </summary>
+        NullableExceptDataTypes,
+
+        /// <summary>
+        /// All types are nullable
+        /// </summary>
+        Nullable
+    }
+
     /// <summary>
     /// Dotnet code generation support.
     /// </summary>
-    internal static class CodeGeneration
+    internal static class ModelDesignExtensions
     {
         /// <summary>
         /// Returns the class name to use when creating an instance of the type.
@@ -390,7 +412,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Returns a boolean value as text.
         /// </summary>
-        public static string GetBooleanString(bool value)
+        public static string AsBooleanString(this bool value)
         {
             return value ? "true" : "false";
         }
@@ -398,13 +420,12 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Maps the event notifier flag onto a string.
         /// </summary>
-        public static string GetEventNotifierString(bool supportsEvents)
+        public static string GetEventNotifierString(this ObjectTypeDesign objectType)
         {
-            if (supportsEvents)
+            if (objectType.SupportsEvents)
             {
                 return "global::Opc.Ua.EventNotifiers.SubscribeToEvents";
             }
-
             return "global::Opc.Ua.EventNotifiers.None";
         }
 
@@ -474,13 +495,13 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Maps the MinimumSamplingInterval onto a constant.
         /// </summary>
-        public static string GetMinimumSamplingIntervalString(int minimumSamplingInterval)
+        public static string GetMinimumSamplingIntervalString(this VariableTypeDesign variableType)
         {
-            return minimumSamplingInterval switch
+            return variableType.MinimumSamplingInterval switch
             {
                 -1 => "global::Opc.Ua.MinimumSamplingIntervals.Indeterminate",
                 0 => "global::Opc.Ua.MinimumSamplingIntervals.Continuous",
-                _ => minimumSamplingInterval.ToString(CultureInfo.InvariantCulture)
+                _ => variableType.MinimumSamplingInterval.ToString(CultureInfo.InvariantCulture)
             };
         }
 
@@ -1137,26 +1158,557 @@ namespace Opc.Ua.SourceGeneration
             }
             return false;
         }
-    }
-
-    /// <summary>
-    /// Defines where to add nullable annotations
-    /// </summary>
-    internal enum NullableAnnotation
-    {
-        /// <summary>
-        /// Types should be non nullable
-        /// </summary>
-        NonNullable,
 
         /// <summary>
-        /// Types are nullable except for data types
+        /// Is overridden instance.
         /// </summary>
-        NullableExceptDataTypes,
+        public static bool IsOverridden(this InstanceDesign instance)
+        {
+            return instance.OveriddenNode != null &&
+                instance.ModellingRule != ModellingRule.None &&
+                instance.ModellingRule != ModellingRule.ExposesItsArray &&
+                instance.ModellingRule != ModellingRule.MandatoryPlaceholder &&
+                instance.ModellingRule != ModellingRule.OptionalPlaceholder;
+        }
 
         /// <summary>
-        /// All types are nullable
+        /// Returns the merged instance for an overriden node.
         /// </summary>
-        Nullable
+        public static InstanceDesign GetMergedInstance(this InstanceDesign instance)
+        {
+            for (NodeDesign parent = instance.Parent; parent != null; parent = parent.Parent)
+            {
+                if (parent.Parent == null && parent.Hierarchy != null)
+                {
+                    string relativePath = instance.SymbolicId.Name;
+
+                    int index = relativePath.IndexOf('_', StringComparison.Ordinal);
+
+                    if (index != -1)
+                    {
+                        relativePath = relativePath[(index + 1)..];
+                    }
+
+                    if (parent.Hierarchy.Nodes.TryGetValue(relativePath, out HierarchyNode hierarchyNode) &&
+                        hierarchyNode.Instance is InstanceDesign instanceDesign)
+                    {
+                        return instanceDesign;
+                    }
+
+                    break;
+                }
+            }
+
+            return instance;
+        }
+
+        /// <summary>
+        /// Checks if the instance is a built in property that should not be generatd.
+        /// </summary>
+        public static bool IsBuiltInProperty(this InstanceDesign instance)
+        {
+            if (instance == null)
+            {
+                return true;
+            }
+
+            if (instance.Parent is MethodDesign)
+            {
+                if (instance.SymbolicName ==
+                    new XmlQualifiedName("InputArguments", Namespaces.OpcUa))
+                {
+                    return true;
+                }
+
+                if (instance.SymbolicName ==
+                    new XmlQualifiedName("OutputArguments", Namespaces.OpcUa))
+                {
+                    return true;
+                }
+            }
+
+            return instance.Parent is VariableDesign &&
+                instance.SymbolicName ==
+                    new XmlQualifiedName("EnumStrings", Namespaces.OpcUa);
+        }
+
+        /// <summary>
+        /// Returns a name qualified with a namespace prefix.
+        /// </summary>
+        public static string GetPrefixedName(this XmlQualifiedName qname, List<string> namespaceUris)
+        {
+            if (qname.IsNull())
+            {
+                return string.Empty;
+            }
+
+            if (qname.Namespace == Namespaces.OpcUaBuiltInTypes)
+            {
+                return CoreUtils.Format("ua:{0}", qname.Name);
+            }
+
+            int index = namespaceUris.IndexOf(qname.Namespace);
+
+            if (index > 0)
+            {
+                return CoreUtils.Format("s{0}:{1}", index - 1, qname.Name);
+            }
+
+            return qname.Name;
+        }
+
+        /// <summary>
+        /// Returns the data type to use for the value of a variable or the argument of a method.
+        /// </summary>
+        public static string GetBinaryDataType(
+            this DataTypeDesign dataType,
+            string targetNamespace,
+            Namespace[] namespaces)
+        {
+            switch (dataType.BasicDataType)
+            {
+                case BasicDataType.Boolean:
+                    return "opc:Boolean";
+                case BasicDataType.SByte:
+                    return "opc:SByte";
+                case BasicDataType.Byte:
+                    return "opc:Byte";
+                case BasicDataType.Int16:
+                    return "opc:Int16";
+                case BasicDataType.UInt16:
+                    return "opc:UInt16";
+                case BasicDataType.Int32:
+                    return "opc:Int32";
+                case BasicDataType.UInt32:
+                    return "opc:UInt32";
+                case BasicDataType.Int64:
+                    return "opc:Int64";
+                case BasicDataType.UInt64:
+                    return "opc:UInt64";
+                case BasicDataType.Float:
+                    return "opc:Float";
+                case BasicDataType.Double:
+                    return "opc:Double";
+                case BasicDataType.String:
+                    return "opc:String";
+                case BasicDataType.DateTime:
+                    return "opc:DateTime";
+                case BasicDataType.Guid:
+                    return "opc:Guid";
+                case BasicDataType.ByteString:
+                    return "opc:ByteString";
+                case BasicDataType.XmlElement:
+                    return "ua:XmlElement";
+                case BasicDataType.NodeId:
+                    return "ua:NodeId";
+                case BasicDataType.ExpandedNodeId:
+                    return "ua:ExpandedNodeId";
+                case BasicDataType.StatusCode:
+                    return "ua:StatusCode";
+                case BasicDataType.DiagnosticInfo:
+                    return "ua:DiagnosticInfo";
+                case BasicDataType.QualifiedName:
+                    return "ua:QualifiedName";
+                case BasicDataType.LocalizedText:
+                    return "ua:LocalizedText";
+                case BasicDataType.DataValue:
+                    return "ua:DataValue";
+                case BasicDataType.Number:
+                case BasicDataType.Integer:
+                case BasicDataType.UInteger:
+                case BasicDataType.BaseDataType:
+                    return "ua:Variant";
+                default:
+                    if (dataType.SymbolicName ==
+                        new XmlQualifiedName("Structure", Namespaces.OpcUa))
+                    {
+                        return CoreUtils.Format("ua:ExtensionObject");
+                    }
+
+                    if (dataType.SymbolicName ==
+                        new XmlQualifiedName("Enumeration", Namespaces.OpcUa))
+                    {
+                        if (dataType.IsOptionSet)
+                        {
+                            return GetBinaryDataType(
+                                (DataTypeDesign)dataType.BaseTypeNode,
+                                targetNamespace,
+                                namespaces);
+                        }
+
+                        return CoreUtils.Format("opc:Int32");
+                    }
+
+                    string prefix = "tns";
+
+                    if (dataType.SymbolicName.Namespace != targetNamespace)
+                    {
+                        if (dataType.SymbolicName.Namespace == Namespaces.OpcUa)
+                        {
+                            prefix = "ua";
+                        }
+                        else
+                        {
+                            prefix = GetXmlNamespacePrefix(
+                                namespaces,
+                                dataType.SymbolicName.Namespace);
+                        }
+                    }
+                    return CoreUtils.Format("{0}:{1}", prefix, dataType.SymbolicName.Name);
+            }
+        }
+
+        /// <summary>
+        /// Returns the data type to use for the value of a variable or the argument of a method.
+        /// </summary>
+        public static string GetXmlDataType(
+            this DataTypeDesign dataType,
+            ValueRank valueRank,
+            string targetNamespace,
+            Namespace[] namespaces)
+        {
+            if (valueRank != ValueRank.Scalar)
+            {
+                switch (dataType.BasicDataType)
+                {
+                    case BasicDataType.Boolean:
+                        return "ua:ListOfBoolean";
+                    case BasicDataType.SByte:
+                        return "ua:ListOfSByte";
+                    case BasicDataType.Int16:
+                        return "ua:ListOfInt16";
+                    case BasicDataType.UInt16:
+                        return "ua:ListOfUInt16";
+                    case BasicDataType.Int32:
+                        return "ua:ListOfInt32";
+                    case BasicDataType.UInt32:
+                        return "ua:ListOfUInt32";
+                    case BasicDataType.Int64:
+                        return "ua:ListOfInt64";
+                    case BasicDataType.UInt64:
+                        return "ua:ListOfUInt64";
+                    case BasicDataType.Float:
+                        return "ua:ListOfFloat";
+                    case BasicDataType.Double:
+                        return "ua:ListOfDouble";
+                    case BasicDataType.String:
+                        return "ua:ListOfString";
+                    case BasicDataType.DateTime:
+                        return "ua:ListOfDateTime";
+                    case BasicDataType.Guid:
+                        return "ua:ListOfGuid";
+                    case BasicDataType.ByteString:
+                        return "ua:ListOfByteString";
+                    case BasicDataType.XmlElement:
+                        return "ua:ListOfXmlElement";
+                    case BasicDataType.NodeId:
+                        return "ua:ListOfNodeId";
+                    case BasicDataType.ExpandedNodeId:
+                        return "ua:ListOfExpandedNodeId";
+                    case BasicDataType.StatusCode:
+                        return "ua:ListOfStatusCode";
+                    case BasicDataType.DiagnosticInfo:
+                        return "ua:ListOfDiagnosticInfo";
+                    case BasicDataType.QualifiedName:
+                        return "ua:ListOfQualifiedName";
+                    case BasicDataType.LocalizedText:
+                        return "ua:ListOfLocalizedText";
+                    case BasicDataType.DataValue:
+                        return "ua:ListOfDataValue";
+                    case BasicDataType.Number:
+                    case BasicDataType.Integer:
+                    case BasicDataType.UInteger:
+                    case BasicDataType.BaseDataType:
+                        return "ua:ListOfVariant";
+                    default:
+                        if (dataType.SymbolicName ==
+                            new XmlQualifiedName("Structure", Namespaces.OpcUa))
+                        {
+                            return CoreUtils.Format("ua:ListOfExtensionObject");
+                        }
+
+                        if (dataType.SymbolicName ==
+                            new XmlQualifiedName("Enumeration", Namespaces.OpcUa))
+                        {
+                            if (dataType.IsOptionSet)
+                            {
+                                return GetXmlDataType(
+                                    (DataTypeDesign)dataType.BaseTypeNode,
+                                    valueRank,
+                                    targetNamespace,
+                                    namespaces);
+                            }
+
+                            return CoreUtils.Format("ua:ListOfInt32");
+                        }
+
+                        string prefix = "tns";
+
+                        if (dataType.SymbolicName.Namespace != targetNamespace)
+                        {
+                            if (dataType.SymbolicName.Namespace == Namespaces.OpcUa)
+                            {
+                                if (dataType.SymbolicName.Name == "Enumeration")
+                                {
+                                    if (dataType.IsOptionSet)
+                                    {
+                                        return GetXmlDataType(
+                                            (DataTypeDesign)dataType.BaseTypeNode,
+                                            valueRank,
+                                            targetNamespace,
+                                            namespaces);
+                                    }
+
+                                    return CoreUtils.Format("ua:ListOfInt32");
+                                }
+
+                                prefix = "ua";
+                            }
+                            else
+                            {
+                                prefix = GetXmlNamespacePrefix(namespaces, dataType.SymbolicName.Namespace);
+                            }
+                        }
+
+                        return CoreUtils.Format("{0}:ListOf{1}", prefix, dataType.SymbolicName.Name);
+                }
+            }
+
+            switch (dataType.BasicDataType)
+            {
+                case BasicDataType.Boolean:
+                    return "xs:boolean";
+                case BasicDataType.SByte:
+                    return "xs:byte";
+                case BasicDataType.Byte:
+                    return "xs:unsignedByte";
+                case BasicDataType.Int16:
+                    return "xs:short";
+                case BasicDataType.UInt16:
+                    return "xs:unsignedShort";
+                case BasicDataType.Int32:
+                    return "xs:int";
+                case BasicDataType.UInt32:
+                    return "xs:unsignedInt";
+                case BasicDataType.Int64:
+                    return "xs:long";
+                case BasicDataType.UInt64:
+                    return "xs:unsignedLong";
+                case BasicDataType.Float:
+                    return "xs:float";
+                case BasicDataType.Double:
+                    return "xs:double";
+                case BasicDataType.String:
+                    return "xs:string";
+                case BasicDataType.DateTime:
+                    return "xs:dateTime";
+                case BasicDataType.Guid:
+                    return "ua:Guid";
+                case BasicDataType.ByteString:
+                    return "xs:base64Binary";
+                case BasicDataType.XmlElement:
+                    return "ua:XmlElement";
+                case BasicDataType.NodeId:
+                    return "ua:NodeId";
+                case BasicDataType.ExpandedNodeId:
+                    return "ua:ExpandedNodeId";
+                case BasicDataType.StatusCode:
+                    return "ua:StatusCode";
+                case BasicDataType.DiagnosticInfo:
+                    return "ua:DiagnosticInfo";
+                case BasicDataType.QualifiedName:
+                    return "ua:QualifiedName";
+                case BasicDataType.LocalizedText:
+                    return "ua:LocalizedText";
+                case BasicDataType.DataValue:
+                    return "ua:DataValue";
+                case BasicDataType.Number:
+                case BasicDataType.Integer:
+                case BasicDataType.UInteger:
+                case BasicDataType.BaseDataType:
+                    return "ua:Variant";
+                default:
+                    if (dataType.SymbolicName ==
+                        new XmlQualifiedName("Structure", Namespaces.OpcUa))
+                    {
+                        return CoreUtils.Format("ua:ExtensionObject");
+                    }
+
+                    if (dataType.SymbolicName ==
+                        new XmlQualifiedName("Enumeration", Namespaces.OpcUa))
+                    {
+                        if (dataType.IsOptionSet)
+                        {
+                            return GetXmlDataType(
+                                (DataTypeDesign)dataType.BaseTypeNode,
+                                valueRank,
+                                targetNamespace,
+                                namespaces);
+                        }
+
+                        return CoreUtils.Format("xs:int");
+                    }
+
+                    string prefix = "tns";
+
+                    if (dataType.SymbolicName.Namespace != targetNamespace)
+                    {
+                        if (dataType.SymbolicName.Namespace == Namespaces.OpcUa)
+                        {
+                            if (dataType.SymbolicName.Name == "Enumeration")
+                            {
+                                if (dataType.IsOptionSet)
+                                {
+                                    return GetXmlDataType(
+                                        (DataTypeDesign)dataType.BaseTypeNode,
+                                        valueRank,
+                                        targetNamespace,
+                                        namespaces);
+                                }
+
+                                return CoreUtils.Format("xs:int");
+                            }
+
+                            prefix = "ua";
+                        }
+                        else
+                        {
+                            prefix = GetXmlNamespacePrefix(namespaces, dataType.SymbolicName.Namespace);
+                        }
+                    }
+
+                    return CoreUtils.Format("{0}:{1}", prefix, dataType.SymbolicName.Name);
+            }
+        }
+
+        /// <summary>
+        /// Returns a constant for the namespace uri.
+        /// </summary>
+        public static Namespace GetNamespace(this Namespace[] namespaces, string namespaceUri)
+        {
+            if (namespaces != null)
+            {
+                foreach (Namespace ns in namespaces)
+                {
+                    if (ns.Value == namespaceUri)
+                    {
+                        return ns;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Returns a constant for the namespace uri.
+        /// </summary>
+        public static string GetConstantForXmlNamespace(this Namespace[] namespaces, string namespaceUri)
+        {
+            Namespace ns = GetNamespace(namespaces, namespaceUri);
+            if (ns != null)
+            {
+                if (!string.IsNullOrEmpty(ns.XmlNamespace))
+                {
+                    return CoreUtils.Format("{1}.Namespaces.{0}Xsd", ns.Name, ns.Prefix);
+                }
+
+                return CoreUtils.Format("{1}.Namespaces.{0}", ns.Name, ns.Prefix);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Returns the XML prefix for the specified namespace.
+        /// </summary>
+        public static string GetXmlNamespacePrefix(this Namespace[] namespaces, string namespaceUri)
+        {
+            if (namespaceUri == null)
+            {
+                return null;
+            }
+
+            if (namespaces != null)
+            {
+                for (int ii = 0; ii < namespaces.Length; ii++)
+                {
+                    if (namespaces[ii].Value == namespaceUri)
+                    {
+                        if (string.IsNullOrEmpty(namespaces[ii].XmlPrefix))
+                        {
+                            return CoreUtils.Format("s{0}", ii);
+                        }
+
+                        return namespaces[ii].XmlPrefix;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public static bool IsMethodTypeNode(this NodeDesign node)
+        {
+            if (node == null)
+            {
+                return false;
+            }
+
+            string symbol = node.SymbolicId.Name;
+
+            int index = symbol.IndexOf('_', StringComparison.Ordinal);
+
+            if (index > 0)
+            {
+                symbol = symbol[..index];
+            }
+
+            return symbol.EndsWith("MethodType", StringComparison.Ordinal);
+        }
+
+        public static bool IsPartOfOpcUaTypesLibrary(this DataTypeDesign dataType)
+        {
+            if (dataType != null &&
+                dataType.SymbolicId.Namespace == Namespaces.OpcUa)
+            {
+                switch (dataType.NumericId)
+                {
+                    case DataTypes.AccessRestrictionType:
+                    case DataTypes.ReferenceDescription:
+                    case DataTypes.AttributeWriteMask:
+                    case DataTypes.Argument:
+                    case DataTypes.IdType:
+                    case DataTypes.RolePermissionType:
+                    case DataTypes.PermissionType:
+                    case DataTypes.ViewDescription:
+                    case DataTypes.BrowseDescription:
+                    case DataTypes.StructureDefinition:
+                    case DataTypes.StructureType:
+                    case DataTypes.StructureField:
+                    case DataTypes.InstanceNode:
+                    case DataTypes.ReferenceTypeNode:
+                    case DataTypes.ReferenceNode:
+                    case DataTypes.DataTypeDefinition:
+                    case DataTypes.EnumDefinition:
+                    case DataTypes.EnumField:
+                    case DataTypes.EnumValueType:
+                    case DataTypes.RelativePath:
+                    case DataTypes.BrowseDirection:
+                    case DataTypes.RelativePathElement:
+                    case DataTypes.NodeClass:
+                    case DataTypes.Node:
+                    case DataTypes.ViewNode:
+                    case DataTypes.ObjectNode:
+                    case DataTypes.MethodNode:
+                    case DataTypes.TypeNode:
+                    case DataTypes.ObjectTypeNode:
+                    case DataTypes.DataTypeNode:
+                    case DataTypes.VariableTypeNode:
+                    case DataTypes.VariableNode:
+                        return true;
+                }
+            }
+            return false;
+        }
     }
 }

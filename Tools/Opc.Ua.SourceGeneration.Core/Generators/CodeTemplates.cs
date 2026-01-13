@@ -247,8 +247,11 @@ namespace Opc.Ua.SourceGeneration
 
                     switch (SwitchField)
                     {
-                        default: { break; }
                         {{Tokens.ListOfComparedFields}}
+                        default:
+                        {
+                            break;
+                        }
                     }
 
                     return true;
@@ -269,8 +272,11 @@ namespace Opc.Ua.SourceGeneration
 
                     switch (SwitchField)
                     {
-                        default: { break; }
                         {{Tokens.ListOfClonedFields}}
+                        default:
+                        {
+                            break;
+                        }
                     }
 
                     return clone;

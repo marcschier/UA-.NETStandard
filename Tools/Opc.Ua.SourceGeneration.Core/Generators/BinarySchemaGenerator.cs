@@ -31,422 +31,406 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Text;
+using System.Linq;
 using System.Xml;
-using Opc.Ua.Schema.Types;
+using Opc.Ua.Schema.Model;
 using Opc.Ua.Types;
 
 namespace Opc.Ua.SourceGeneration
 {
     /// <summary>
-    /// Generates files used to describe data types.
+    /// Generates binary schema files from model designs.
     /// </summary>
-    internal class BinarySchemaGenerator : SchemaGenerator
+    internal sealed class BinarySchemaGenerator
     {
         /// <summary>
-        /// Generates the code from the contents of the address space.
+        /// Initializes a new instance of the <see cref="BinarySchemaGenerator"/> class.
         /// </summary>
         public BinarySchemaGenerator(
             IFileSystem fileSystem,
-            string typeDictionary,
-            string outputDirectory,
-            Dictionary<string, string> knownFiles,
-            IReadOnlyList<string> exclusions)
-            : base(
-                fileSystem,
-                typeDictionary,
-                outputDirectory,
-                knownFiles,
-                exclusions)
+            string outputFolder,
+            ModelDesignValidator validator)
         {
+            m_fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
+            m_outputFolder = outputFolder ?? throw new ArgumentNullException(nameof(outputFolder));
+            m_validator = validator ?? throw new ArgumentNullException(nameof(validator));
         }
 
         /// <summary>
-        /// Generates the datatype files.
+        /// Generates the binary schema file for the supplied nodes.
         /// </summary>
-        public TextFileResource Emit(
-            string namespacePrefix,
-            string targetNamespace,
-            bool exportAll = true,
-            bool validateOutput = true)
+        public TextFileResource Emit(bool validateOutput = false)
         {
-            TargetNamespace = targetNamespace;
-            m_exportAll = exportAll;
-
-            string schemaFile = Path.Combine(OutputDirectory, CoreUtils.Format(
-                "{0}.Types.bsd",
-                namespacePrefix));
+            string namespacePrefix = m_validator.Dictionary.TargetNamespaceInfo.Prefix;
+            string schemaFile = Path.Combine(
+                m_outputFolder,
+                CoreUtils.Format("{0}.Types.bsd", namespacePrefix));
 
             WriteTemplate_BinarySchema(schemaFile);
 
             if (validateOutput)
             {
                 // Validate generated file
-                var validator = new Schema.Binary.BinarySchemaValidator(
-                    FileSystem,
-                    KnownFiles);
+                var validator = new Schema.Binary.BinarySchemaValidator(m_fileSystem);
                 validator.Validate(schemaFile);
             }
+
             return schemaFile.AsTextFileResource(namespacePrefix);
         }
 
-        /// <summary>
-        /// Writes schema file.
-        /// </summary>
-        private void WriteTemplate_BinarySchema(string fileName)
+        public void WriteTemplate_BinarySchema(string schemaFile)
         {
-            using TextWriter writer = FileSystem.CreateTextWriter(fileName);
+            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
+                m_outputFolder,
+                schemaFile));
+
             using var templateWriter = new TemplateWriter(writer);
-            var template = new Template(templateWriter, SchemaTemplates.Stack_BinarySchema_File_xml);
+            var template = new Template(templateWriter, SchemaTemplates.BinarySchema_File_xml);
 
-            template.AddReplacement(Tokens.DictionaryUri, TargetNamespace);
-
-            var buffer = new StringBuilder();
-            buffer.AppendFormat(
-                CultureInfo.InvariantCulture,
-                """
-                xmlns="{0}"
-                """,
-                NamespaceUris[0]);
-            if (!m_exportAll)
-            {
-                for (int ii = 1; ii < NamespaceUris.Count; ii++)
-                {
-                    buffer.Append(Environment.NewLine)
-                        .Append("  ")
-                        .AppendFormat(
-                        CultureInfo.InvariantCulture,
-                        """
-                        xmlns:s{0}="{1}"
-                        """,
-                        ii - 1,
-                        NamespaceUris[ii]);
-                }
-            }
-            buffer.Append(Environment.NewLine);
+            template.AddReplacement(Tokens.DictionaryUri, m_validator.Dictionary.TargetNamespace);
 
             template.AddReplacement(
                 Tokens.XmlnsS0ListOfNamespaces,
-                buffer.ToString(),
-                ["Dummy"]); // Ensure new lines are correctly processed
-            List<string> imports = [Namespaces.OpcUaBuiltInTypes];
-            if (!m_exportAll)
-            {
-                for (int ii = 1; ii < NamespaceUris.Count; ii++)
-                {
-                    imports.Add(NamespaceUris[ii]);
-                }
-            }
+                m_validator.Dictionary.Namespaces,
+                LoadTemplate_BinaryNamespaceImports);
 
             template.AddReplacement(
                 Tokens.Imports,
-                imports,
-                LoadTemplate_Imports);
+                m_validator.Dictionary.Namespaces,
+                LoadTemplate_BinaryNamespaceImports);
+
+            template.AddReplacement(
+                Tokens.BuiltInTypes,
+                SchemaTemplates.BinarySchema_BuiltInTypes_bsd,
+                [m_validator.Dictionary],
+                LoadTemplate_BinaryType,
+                WriteTemplate_BinaryType);
 
             template.AddReplacement(
                 Tokens.ListOfTypes,
-                SchemaTemplates.Stack_BinarySchema_OpaqueType_xml,
-                GetListOfTypes(m_exportAll),
-                LoadTemplate_DataType,
-                WriteTemplate_DataType);
+                [.. m_validator.GetNodeDesigns()],
+                LoadTemplate_BinaryType,
+                WriteTemplate_BinaryType);
 
             template.Render();
         }
 
-        /// <summary>
-        /// Creates a schema import statement.
-        /// </summary>
-        private static string GetImportStatment(string uri)
+        private TemplateString LoadTemplate_BinaryNamespaceImports(ILoadContext context)
         {
-            string location = null;
-            string[] elements = uri.Split(['/']);
-
-            for (int ii = elements.Length - 1; ii >= 0; ii--)
-            {
-                if (!string.IsNullOrEmpty(elements[ii]))
-                {
-                    location = elements[ii];
-                    break;
-                }
-            }
-
-            return CoreUtils.Format(
-                "<opc:Import Namespace=\"{0}\" Location=\"{1}.bsd\" />",
-                uri,
-                location);
-        }
-
-        /// <summary>
-        /// Writes the import statements.
-        /// </summary>
-        private TemplateString LoadTemplate_Imports(ILoadContext context)
-        {
-            if (context.Target is not string namespaceUri)
+            if (context.Target is not Namespace ns)
             {
                 return null;
             }
 
-            if (!m_exportAll)
-            {
-                if (namespaceUri == Namespaces.OpcUaBuiltInTypes)
-                {
-                    context.Out.WriteLine(
-                        "<opc:Import Namespace=\"{0}\" />",
-                        Namespaces.OpcUaBuiltInTypes);
-                }
-                else
-                {
-                    context.Out.WriteLine(GetImportStatment(namespaceUri));
-                }
-
-                return null;
-            }
-
-            return SchemaTemplates.Stack_BinarySchema_BuiltInTypes_bsd;
-        }
-
-        /// <summary>
-        /// Writes the attributes for a node.
-        /// </summary>
-        private TemplateString LoadTemplate_DataType(ILoadContext context)
-        {
-            // do not publish type declarations in OPC BinarySchema files.
-            if (context.Target is TypeDeclaration)
+            if (ns.Value == m_validator.Dictionary.TargetNamespace)
             {
                 return null;
             }
 
-            if (context.Target is ComplexType)
+            if (context.Token == Tokens.XmlnsS0ListOfNamespaces)
             {
-                var complexType = context.Target as ComplexType;
-
-                // do not publish types with no fields.
-                if (complexType.Field == null || complexType.Field.Length == 0)
+                if (ns.Value == Namespaces.OpcUa)
                 {
                     return null;
                 }
 
-                return SchemaTemplates.Stack_BinarySchema_ComplexType_xml;
+                context.Out.WriteLine(
+                    "\nxmlns:{0}=\"{1}\"\n",
+                    m_validator.Dictionary.Namespaces.GetXmlNamespacePrefix(ns.Value),
+                    ns.Value);
+                return null;
             }
 
-            if (context.Target is EnumeratedType)
-            {
-                return SchemaTemplates.Stack_BinarySchema_EnumeratedType_xml;
-            }
+            context.Out.WriteLine(
+                "<opc:Import Namespace=\"{0}\" Location=\"{1}.BinarySchema.bsd\"/>",
+                ns.Value,
+                m_validator.Dictionary.Namespaces.GetNamespacePrefix(ns.Value));
 
-            if (context.Target is ServiceType)
-            {
-                return SchemaTemplates.Stack_BinarySchema_ServiceType_xml;
-            }
-
-            // do not publish unrecognized sub-types.
             return null;
         }
 
-        /// <summary>
-        /// Writes the
-        /// </summary>
-        private bool WriteTemplate_DataType(IWriteContext context)
+        private TemplateString LoadTemplate_BinaryType(ILoadContext context)
         {
-            if (context.Target is not DataType datatype)
+            if (context.Target is ModelDesign)
             {
-                return false;
-            }
-
-            context.Template.AddReplacement(Tokens.TypeName, datatype.QName.Name);
-            CreateDescription(context.Template, Tokens.Description, datatype.Documentation);
-
-            if (datatype is ComplexType complexType)
-            {
-                List<FieldType> fields = [];
-                GetFields(complexType, fields);
-
-                context.Template.AddReplacement(
-                    Tokens.ListOfFields,
-                    fields,
-                    LoadTemplate_Field);
-            }
-
-            if (datatype is EnumeratedType enumeratedType)
-            {
-                uint lengthInBits = 32;
-                bool isOptionSet = false;
-                List<EnumeratedValue> values = [];
-
-                foreach (EnumeratedValue value in enumeratedType.Value)
+                if (m_validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
                 {
-                    if (!TypeDictionaryValidator.IsExcluded(Exclusions, value))
-                    {
-                        values.Add(value);
-                    }
+                    return context.TemplateString;
                 }
 
-                if (enumeratedType.IsOptionSet)
-                {
-                    isOptionSet = true;
-
-                    DataType baseType = Validator.ResolveType(enumeratedType.BaseType);
-
-                    if (baseType != null)
-                    {
-                        switch (baseType.Name)
-                        {
-                            case "SByte":
-                            case "Byte":
-                                lengthInBits = 8;
-                                break;
-                            case "Int16":
-                            case "UInt16":
-                                lengthInBits = 16;
-                                break;
-                            case "Int32":
-                            case "UInt32":
-                                lengthInBits = 32;
-                                break;
-                            case "Int64":
-                            case "UInt64":
-                                lengthInBits = 64;
-                                break;
-                        }
-                    }
-
-                    values.Add(new EnumeratedValue
-                    {
-                        Name = "None",
-                        Value = 0,
-                        ValueSpecified = true
-                    });
-                }
-
-                context.Template.AddReplacement(
-                    Tokens.LengthInBits,
-                    lengthInBits);
-                context.Template.AddReplacement(
-                    Tokens.IsOptionSet,
-                    isOptionSet ? " IsOptionSet=\"true\"" : string.Empty);
-
-                context.Template.AddReplacement(
-                    Tokens.ListOfValues,
-                    values,
-                    LoadTemplate_EnumeratedValue);
+                return null;
             }
 
-            if (datatype is ServiceType serviceType)
-            {
-                context.Template.AddReplacement(
-                    Tokens.ListOfRequestParameters,
-                    serviceType.Request,
-                    LoadTemplate_Field);
-
-                context.Template.AddReplacement(
-                    Tokens.ListOfResponseParameters,
-                    serviceType.Response,
-                    LoadTemplate_Field);
-            }
-
-            return context.Template.Render();
-        }
-
-        /// <summary>
-        /// Writes a field in an OPCBinary schema.
-        /// </summary>
-        /// <exception cref="InvalidOperationException"></exception>
-        private TemplateString LoadTemplate_Field(ILoadContext context)
-        {
-            if (context.Target is not FieldType fieldType)
+            if (context.Target is not DataTypeDesign dataType)
             {
                 return null;
             }
 
-            // resolve any type definitions.
-            DataType datatype = Validator.ResolveType(fieldType.DataType) ??
-                throw new InvalidOperationException(CoreUtils.Format(
-                    "Could not find datatype '{0}' for field '{1}'.",
-                    fieldType.DataType,
-                    fieldType.Name));
+            // don't write built-in types.
+            if (dataType.NumericId < 256 && dataType.SymbolicId.Namespace == Namespaces.OpcUa)
+            {
+                switch (dataType.NumericId)
+                {
+                    case DataTypes.PermissionType:
+                    case DataTypes.AccessRestrictionType:
+                    case DataTypes.RolePermissionType:
+                    case DataTypes.StructureDefinition:
+                    case DataTypes.StructureField:
+                    case DataTypes.StructureType:
+                    case DataTypes.EnumDefinition:
+                    case DataTypes.EnumField:
+                    case DataTypes.DataTypeDefinition:
+                    case DataTypes.Enumeration:
+                    case DataTypes.Union:
+                        break;
+                    default:
+                        return null;
+                }
+            }
 
-            context.Out.WriteLine();
-            if (fieldType.ValueRank == 0)
+            if (dataType.Purpose == Schema.Model.DataTypePurpose.CodeGenerator)
+            {
+                return null;
+            }
+
+            BasicDataType basicType = dataType.BasicDataType;
+
+            if (basicType == BasicDataType.Enumeration)
+            {
+                return SchemaTemplates.BinarySchema_EnumeratedType_xml;
+            }
+            else if (basicType == BasicDataType.UserDefined)
+            {
+                return SchemaTemplates.BinarySchema_ComplexType_xml;
+            }
+
+            return SchemaTemplates.BinarySchema_OpaqueType_xml;
+        }
+
+        private bool WriteTemplate_BinaryType(IWriteContext context)
+        {
+            if (context.Target is ModelDesign model)
+            {
+                if (m_validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
+                {
+                    return context.Template.Render();
+                }
+
+                return false;
+            }
+
+            if (context.Target is not DataTypeDesign dataType)
+            {
+                return false;
+            }
+
+            context.Template.AddReplacement(Tokens.TypeName, dataType.SymbolicName.Name);
+
+            if (dataType.BasicDataType == BasicDataType.UserDefined)
+            {
+                context.Template.AddReplacement(Tokens.BaseType,
+                    (dataType.BaseTypeNode as DataTypeDesign).GetBinaryDataType(
+                        m_validator.Dictionary.TargetNamespace,
+                        m_validator.Dictionary.Namespaces));
+            }
+
+            List<Parameter> fields = new();
+            var parents = new Stack<DataTypeDesign>();
+
+            for (DataTypeDesign parent = dataType;
+                parent != null;
+                parent = parent.BaseTypeNode as DataTypeDesign)
+            {
+                if (parent.Fields != null)
+                {
+                    parents.Push(parent);
+                }
+            }
+
+            while (parents.Count > 0)
+            {
+                DataTypeDesign parent = parents.Pop();
+
+                foreach (Parameter field in parent.Fields)
+                {
+                    if (m_validator.IsExcluded(field))
+                    {
+                        continue;
+                    }
+
+                    if (ReferenceEquals(dataType, parent))
+                    {
+                        fields.Add(field);
+                        continue;
+                    }
+
+                    fields.Add(new Parameter
+                    {
+                        DataType = field.DataType,
+                        DataTypeNode = field.DataTypeNode,
+                        Description = field.Description,
+                        Identifier = field.Identifier,
+                        IdentifierInName = field.IdentifierInName,
+                        IdentifierSpecified = field.IdentifierSpecified,
+                        IsInherited = true,
+                        Name = field.Name,
+                        Parent = field.Parent,
+                        ValueRank = field.ValueRank,
+                        ArrayDimensions = field.ArrayDimensions,
+                        AllowSubTypes = field.AllowSubTypes,
+                        IsOptional = field.IsOptional,
+                        BitMask = field.BitMask,
+                        DefaultValue = field.DefaultValue,
+                        ReleaseStatus = field.ReleaseStatus
+                    });
+                }
+            }
+
+            if (dataType.BasicDataType == BasicDataType.Enumeration)
+            {
+                uint lengthInBits = 32;
+                bool isOptionSet = false;
+
+                if (dataType.IsOptionSet)
+                {
+                    isOptionSet = true;
+
+                    switch (dataType.BaseType.Name)
+                    {
+                        case "SByte":
+                        case "Byte":
+                            lengthInBits = 8;
+                            break;
+                        case "Int16":
+                        case "UInt16":
+                            lengthInBits = 16;
+                            break;
+                        case "Int32":
+                        case "UInt32":
+                            lengthInBits = 32;
+                            break;
+                        case "Int64":
+                        case "UInt64":
+                            lengthInBits = 64;
+                            break;
+                    }
+
+                    fields.Insert(0, new Parameter
+                    {
+                        Name = "None",
+                        Identifier = 0,
+                        IdentifierSpecified = true,
+                        DataType = fields[0].DataType,
+                        DataTypeNode = fields[0].DataTypeNode,
+                        Parent = fields[0].Parent
+                    });
+                }
+
+                context.Template.AddReplacement(Tokens.LengthInBits, lengthInBits);
+                context.Template.AddReplacement(
+                    Tokens.IsOptionSet,
+                    isOptionSet ? " IsOptionSet=\"true\"" : string.Empty);
+            }
+
+            context.Template.AddReplacement(
+                Tokens.Documentation,
+                [dataType],
+                LoadTemplate_BinaryDocumentation);
+
+            context.Template.AddReplacement(
+                Tokens.ListOfFields,
+                fields,
+                LoadTemplate_BinaryTypeFields);
+
+            return context.Template.Render();
+        }
+
+        private TemplateString LoadTemplate_BinaryTypeFields(ILoadContext context)
+        {
+            if (context.Target is not Parameter field)
+            {
+                return null;
+            }
+
+            if (field.Parent is not DataTypeDesign dataType)
+            {
+                return null;
+            }
+
+            BasicDataType basicType = dataType.BasicDataType;
+
+            string fieldDataType = field.DataTypeNode.GetBinaryDataType(
+                m_validator.Dictionary.TargetNamespace,
+                m_validator.Dictionary.Namespaces);
+
+            if (field.AllowSubTypes)
+            {
+                fieldDataType = "ua:ExtensionObject";
+            }
+
+            if (basicType == BasicDataType.Enumeration)
+            {
+                context.Out.WriteLine(
+                    "<opc:EnumeratedValue Name=\"{0}\" Value=\"{1}\" />",
+                    field.Name,
+                    field.Identifier);
+                return null;
+            }
+
+            if (field.ValueRank != ValueRank.Scalar)
             {
                 context.Out.WriteLine(
                     "<opc:Field Name=\"NoOf{0}\" TypeName=\"opc:Int32\" />",
-                    fieldType.Name);
+                    field.Name);
+                context.Out.WriteLine(
+                    "<opc:Field Name=\"{0}\" TypeName=\"{1}\" LengthField=\"NoOf{0}\" />",
+                    field.Name,
+                    fieldDataType);
+                return null;
             }
-
-            context.Out.Write("<opc:Field Name=\"{0}\"", fieldType.Name);
-            context.Out.Write(" TypeName=\"{0}\"", GetBinarySchemaTypeName(datatype.QName));
-
-            if (fieldType.ValueRank == 0)
+            if (field.IsInherited)
             {
-                context.Out.Write(" LengthField=\"NoOf{0}\"", fieldType.Name);
+                context.Out.WriteLine(
+                    "<opc:Field Name=\"{0}\" TypeName=\"{1}\" SourceType=\"{2}\" />",
+                    field.Name,
+                    fieldDataType,
+                    (field.Parent as DataTypeDesign).GetBinaryDataType(
+                        m_validator.Dictionary.TargetNamespace,
+                        m_validator.Dictionary.Namespaces));
             }
-
-            context.Out.Write(" />");
+            else
+            {
+                context.Out.WriteLine(
+                    "<opc:Field Name=\"{0}\" TypeName=\"{1}\" />",
+                    field.Name,
+                    fieldDataType);
+            }
 
             return null;
         }
 
-        /// <summary>
-        /// Writes an enumerated value in an OPCBinary schema.
-        /// </summary>
-        private TemplateString LoadTemplate_EnumeratedValue(ILoadContext context)
+        private TemplateString LoadTemplate_BinaryDocumentation(ILoadContext context)
         {
-            if (context.Target is not EnumeratedValue valueType)
+            if (context.Target is not DataTypeDesign dataType)
+            {
+                return null;
+            }
+
+            if (dataType.Description == null ||
+                dataType.Description.IsAutogenerated)
             {
                 return null;
             }
 
             context.Out.WriteLine(
-                "<opc:EnumeratedValue Name=\"{0}\" Value=\"{1}\" />",
-                valueType.Name,
-                valueType.Value);
+                "<opc:Documentation>{0}</opc:Documentation>",
+                dataType.Description.Value);
 
-            return null;
+            return context.TemplateString;
         }
 
-        /// <summary>
-        /// Returns a name qualified with a namespace prefix.
-        /// </summary>
-        private string GetBinarySchemaTypeName(XmlQualifiedName qname)
-        {
-            if (qname.IsNull())
-            {
-                return string.Empty;
-            }
-
-            if (qname.Namespace == Namespaces.OpcUaBuiltInTypes)
-            {
-                // translate built-in types to OPC Binary Schema types.
-                switch (qname.Name)
-                {
-                    case "Boolean":
-                    case "SByte":
-                    case "Byte":
-                    case "Int16":
-                    case "UInt16":
-                    case "Int32":
-                    case "UInt32":
-                    case "Int64":
-                    case "UInt64":
-                    case "Float":
-                    case "Double":
-                    case "Guid":
-                    case "DateTime":
-                    case "ByteString":
-                        return CoreUtils.Format("opc:{0}", qname.Name);
-                    case "String":
-                        return "opc:CharArray";
-                }
-            }
-
-            if (!m_exportAll)
-            {
-                return GetPrefixedName(qname);
-            }
-
-            return qname.Name;
-        }
-
-        private bool m_exportAll;
+        private readonly IFileSystem m_fileSystem;
+        private readonly string m_outputFolder;
+        private readonly ModelDesignValidator m_validator;
     }
 }

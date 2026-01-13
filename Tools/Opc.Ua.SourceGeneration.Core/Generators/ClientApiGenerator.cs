@@ -71,12 +71,12 @@ namespace Opc.Ua.SourceGeneration
 
             using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
                 m_outputFolder,
-                CoreUtils.Format("{0}.Client.g.cs", StackGenerator.NamespacePrefix)));
+                CoreUtils.Format("{0}.Client.g.cs", Constants.CoreNamespacePrefix)));
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, CodeTemplates.ClientApi_File_cs);
 
-            template.AddReplacement(Tokens.Prefix, StackGenerator.NamespacePrefix);
-            template.AddReplacement(Tokens.Namespace, StackGenerator.NamespaceConstant);
+            template.AddReplacement(Tokens.Prefix, Constants.CoreNamespacePrefix);
+            template.AddReplacement(Tokens.Namespace, Constants.CoreNamespace);
 
             template.AddReplacement(
                 Tokens.ServiceSets,
@@ -136,7 +136,7 @@ namespace Opc.Ua.SourceGeneration
             }
 
             context.Template.AddReplacement(Tokens.Name, serviceType.Name);
-            context.Template.AddReplacement(Tokens.Namespace, StackGenerator.NamespaceConstant);
+            context.Template.AddReplacement(Tokens.Namespace, Constants.CoreNamespace);
 
             context.Template.AddReplacement(
                 Tokens.ClientMethodSync,

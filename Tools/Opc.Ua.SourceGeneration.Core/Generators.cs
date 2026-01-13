@@ -31,6 +31,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Opc.Ua.Schema.Model;
+using Opc.Ua.Types;
 
 namespace Opc.Ua.SourceGeneration
 {
@@ -179,6 +180,7 @@ namespace Opc.Ua.SourceGeneration
                     null,
                     exclusions,
                     telemetry);
+
                 var generator = new ModelGenerator(
                     fileSystem,
                     outputDir,
@@ -213,38 +215,107 @@ namespace Opc.Ua.SourceGeneration
                 .AsFileSystem("Opc.Ua.SourceGeneration.Design")
                 .WithFallback(fileSystem);
 
-            var modelDesign = fileSystem.OpenModelDesign(new DesignFileCollection
-            {
-                DesignFiles = [
-                    BuiltInDesignFiles.StandardTypesXml,
-                    BuiltInDesignFiles.UACoreServicesXml
-                ],
-                Options = new DesignFileOptions
+            ModelDesignValidator modelDesign = fileSystem.OpenModelDesign(
+                new DesignFileCollection
                 {
-                    StartId = 0,
-                    ModelVersion = "1.05.06",
-                    ModelPublicationDate = "2025-11-08",
-                    ReleaseCandidate = true
-                }
-            }, BuiltInDesignFiles.StandardTypesCsv, options.Exclusions, telemetry, false);
-
-            // Generate standard types as models just like for other models.
-            var modelGenerator = new ModelGenerator(
-                fileSystem,
-                outputDir,
-                modelDesign,
+                    DesignFiles = [
+                        BuiltInDesignFiles.StandardTypesXml,
+                        BuiltInDesignFiles.UACoreServicesXml
+                    ],
+                    Options = new DesignFileOptions
+                    {
+                        StartId = 0,
+                        ModelVersion = "1.05.06",
+                        ModelPublicationDate = "2025-11-08",
+                        ReleaseCandidate = true
+                    }
+                },
+                BuiltInDesignFiles.StandardTypesCsv,
+                options.Exclusions,
                 telemetry,
-                options);
+                false);
 
-            var stackGenerator = new StackGenerator(
-                fileSystem,
-                outputDir,
-                modelDesign,
-                options);
-            stackGenerator.Emit(generatorType);
+            if ((generatorType & StackGenerationType.Stack) != 0)
+            {
+                var clientApiGenerator = new ClientApiGenerator(
+                    fileSystem,
+                    outputDir,
+                    modelDesign,
+                    options);
+                clientApiGenerator.Emit();
+                var serverApiGenerator = new ServerApiGenerator(
+                    fileSystem,
+                    outputDir,
+                    modelDesign,
+                    options);
+                serverApiGenerator.Emit();
+                var endpointsGenerator = new EndpointsGenerator(
+                    fileSystem,
+                    outputDir,
+                    modelDesign,
+                    options);
+                endpointsGenerator.Emit();
+            }
 
             if ((generatorType & StackGenerationType.Models) != 0)
             {
+                bool validateSchemas = !options.OptimizeForCompileSpeed;
+                var typeDictionaries = new Dictionary<string, string>();
+                var xmlSchema = new XmlSchemaGeneratorCore(
+                    fileSystem,
+                    BuiltInDesignFiles.UACoreServicesXml,
+                    outputDir,
+                    typeDictionaries,
+                    options.Exclusions);
+                TextFileResource xmlSchemaResource = xmlSchema.Emit(
+                    Constants.CoreNamespacePrefix,
+                    validateOutput: validateSchemas);
+
+                typeDictionaries = [];
+                var binarySchema = new BinarySchemaGeneratorCore(
+                    fileSystem,
+                    BuiltInDesignFiles.UACoreServicesXml,
+                    outputDir,
+                    typeDictionaries,
+                    options.Exclusions);
+                TextFileResource binarySchemaResource = binarySchema.Emit(
+                    Constants.CoreNamespacePrefix,
+                    Namespaces.OpcUa,
+                    validateOutput: validateSchemas);
+
+                var schemaResources = new ResourceGenerator(
+                    fileSystem,
+                    outputDir,
+                    options);
+                schemaResources.Embed(
+                    Constants.CoreNamespacePrefix,
+                    "XmlSchemas",
+                    false,
+                    binarySchemaResource,
+                    xmlSchemaResource);
+
+                var messagesGenerator = new MessagesGenerator(
+                    fileSystem,
+                    outputDir,
+                    modelDesign,
+                    options);
+                messagesGenerator.Emit();
+                var attributesGenerator = new AttributesGenerator(
+                    fileSystem,
+                    outputDir,
+                    options);
+                attributesGenerator.Emit();
+                var statusCodesGenerator = new StatusCodesGenerator(
+                    fileSystem,
+                    outputDir,
+                    options);
+                statusCodesGenerator.Emit();
+                var modelGenerator = new ModelGenerator(
+                    fileSystem,
+                    outputDir,
+                    modelDesign,
+                    telemetry,
+                    options);
                 modelGenerator.Emit(skipSchemas: true);
             }
         }

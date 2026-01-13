@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Xml;
 using Opc.Ua.Types;
 
@@ -91,7 +92,7 @@ namespace Opc.Ua
 
             XmlWriterSettings settings = CoreUtils.DefaultXmlWriterSettings();
             settings.CloseOutput = true;
-            var serializer = CoreUtils.CreateDataContractSerializer<NodeSet>();
+            DataContractSerializer serializer = CoreUtils.CreateDataContractSerializer<NodeSet>();
             using var writer = XmlWriter.Create(ostrm, settings);
             serializer.WriteObject(writer, nodeSet);
         }

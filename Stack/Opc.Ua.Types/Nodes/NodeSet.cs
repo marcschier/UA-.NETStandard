@@ -67,7 +67,7 @@ namespace Opc.Ua
         /// <returns>The set of nodes</returns>
         public static NodeSet Read(Stream istrm)
         {
-            var serializer = CoreUtils.CreateDataContractSerializer<NodeSet>();
+            DataContractSerializer serializer = CoreUtils.CreateDataContractSerializer<NodeSet>();
             using var reader = XmlReader.Create(istrm, CoreUtils.DefaultXmlReaderSettings());
             return serializer.ReadObject(reader) as NodeSet;
         }
@@ -81,7 +81,7 @@ namespace Opc.Ua
             var writer = XmlWriter.Create(istrm, CoreUtils.DefaultXmlWriterSettings());
             try
             {
-                var serializer = CoreUtils.CreateDataContractSerializer<NodeSet>();
+                DataContractSerializer serializer = CoreUtils.CreateDataContractSerializer<NodeSet>();
                 serializer.WriteObject(writer, this);
             }
             finally

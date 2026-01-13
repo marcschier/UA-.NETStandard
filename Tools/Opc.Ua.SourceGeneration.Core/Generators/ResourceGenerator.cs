@@ -705,19 +705,19 @@ namespace Opc.Ua.SourceGeneration
     {
         public static TextFileResource AsTextFileResource(
             this string fileName,
-            string namespaceUri = null)
+            string namespacePrefix = null)
         {
             return new TextFileResource(
-                Resource.GetNameForFile(fileName, namespaceUri),
+                Resource.GetNameForFile(fileName, namespacePrefix),
                 fileName);
         }
 
         public static BinaryFileResource ToBinaryFileResource(
             this string fileName,
-            string namespaceUri = null)
+            string namespacePrefix = null)
         {
             return new BinaryFileResource(
-                Resource.GetNameForFile(fileName, namespaceUri),
+                Resource.GetNameForFile(fileName, namespacePrefix),
                 fileName);
         }
     }

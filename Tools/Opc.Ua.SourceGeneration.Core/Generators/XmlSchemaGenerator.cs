@@ -31,51 +31,40 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Text;
+using System.Linq;
 using System.Xml;
-using Opc.Ua.Schema.Types;
+using Opc.Ua.Schema.Model;
 using Opc.Ua.Types;
 
 namespace Opc.Ua.SourceGeneration
 {
     /// <summary>
-    /// Generates an XML Schema based on a UA Type Dictionary.
+    /// Generates XML schema files from model designs.
     /// </summary>
-    internal class XmlSchemaGenerator : SchemaGenerator
+    internal sealed class XmlSchemaGenerator
     {
         /// <summary>
-        /// Generates the code from the contents of the address space.
+        /// Initializes a new instance of the <see cref="XmlSchemaGenerator"/> class.
         /// </summary>
         public XmlSchemaGenerator(
             IFileSystem fileSystem,
-            string typeDictionary,
-            string outputDirectory,
-            Dictionary<string, string>
-            knownFiles,
-            IReadOnlyList<string> exclusions)
-            : base(
-                fileSystem,
-                typeDictionary,
-                outputDirectory,
-                knownFiles,
-                exclusions)
+            string outputFolder,
+            ModelDesignValidator validator)
         {
+            m_fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
+            m_outputFolder = outputFolder ?? throw new ArgumentNullException(nameof(outputFolder));
+            m_validator = validator ?? throw new ArgumentNullException(nameof(validator));
         }
 
         /// <summary>
-        /// Generates the schema file
+        /// Generates the XML schema file for the supplied nodes.
         /// </summary>
-        public TextFileResource Emit(
-            string namespacePrefix,
-            bool exportAll = true,
-            bool validateOutput = true)
+        public TextFileResource Emit(bool validateOutput = false)
         {
-            TargetNamespace = XmlSchemaNamespace.Types;
-            m_exportAll = exportAll;
-
-            string schemaFile = Path.Combine(OutputDirectory, CoreUtils.Format(
-                "{0}.Types.xsd",
-                namespacePrefix));
+            string namespacePrefix = m_validator.Dictionary.TargetNamespaceInfo.Prefix;
+            string schemaFile = Path.Combine(
+                m_outputFolder,
+                CoreUtils.Format("{0}.Types.xsd", namespacePrefix));
 
             WriteTemplate_XmlSchema(schemaFile);
 
@@ -83,437 +72,420 @@ namespace Opc.Ua.SourceGeneration
             {
                 // Validate generated file
                 var validator = new Schema.Xml.XmlSchemaValidator2(
-                    FileSystem,
-                    KnownFiles);
+                    m_fileSystem,
+                    []);
                 validator.Validate(schemaFile);
             }
+
             return schemaFile.AsTextFileResource(namespacePrefix);
         }
 
-        /// <summary>
-        /// Writes schema file.
-        /// </summary>
-        private void WriteTemplate_XmlSchema(string fileName)
+        private void WriteTemplate_XmlSchema(string schemaFile)
         {
-            using TextWriter writer = FileSystem.CreateTextWriter(fileName);
-            using var templateWriter = new TemplateWriter(writer);
-            var template = new Template(
-                templateWriter,
-                SchemaTemplates.Stack_XmlSchema_File_xml);
+            using TextWriter writer = m_fileSystem.CreateTextWriter(schemaFile);
+            var templateWriter = new TemplateWriter(writer);
+            var template = new Template(templateWriter, SchemaTemplates.XmlSchema_File_xml);
 
-            template.AddReplacement(Tokens.Namespace, TargetNamespace);
-
-            var buffer = new StringBuilder();
-            buffer.AppendFormat(
-                CultureInfo.InvariantCulture,
-                """
-                xmlns:tns="{0}"
-                """,
-                TargetNamespace);
-
-            if (!m_exportAll)
+            if (!string.IsNullOrEmpty(m_validator.Dictionary.TargetNamespaceInfo.XmlNamespace))
             {
-                for (int ii = 1; ii < NamespaceUris.Count; ii++)
-                {
-                    buffer.Append(Environment.NewLine)
-                        .Append("  ")
-                        .AppendFormat(
-                        CultureInfo.InvariantCulture,
-                        """
-                        xmlns:s{0}="{1}"
-                        """,
-                        ii - 1,
-                        NamespaceUris[ii]);
-                }
+                template.AddReplacement(Tokens.Namespace, m_validator.Dictionary.TargetNamespaceInfo.XmlNamespace);
             }
-            buffer.Append(Environment.NewLine);
+            else
+            {
+                template.AddReplacement(Tokens.Namespace, m_validator.Dictionary.TargetNamespaceInfo.Value);
+            }
+
+            template.AddReplacement(Tokens.TargetVersion, m_validator.Dictionary.TargetVersion);
+            template.AddReplacement(Tokens.ModelUri, m_validator.Dictionary.TargetNamespaceInfo.Value);
+            template.AddReplacement(Tokens.TargetPublicationDate, XmlConvert.ToString(
+                m_validator.Dictionary.TargetPublicationDate,
+                XmlDateTimeSerializationMode.Utc));
 
             template.AddReplacement(
                 Tokens.XmlnsS0ListOfNamespaces,
-                buffer.ToString(),
-                ["Dummy"]); // Ensure new lines are correctly processed
-            List<string> imports = [Namespaces.OpcUaBuiltInTypes];
-            if (!m_exportAll)
-            {
-                for (int ii = 1; ii < NamespaceUris.Count; ii++)
-                {
-                    imports.Add(NamespaceUris[ii]);
-                }
-            }
+                m_validator.Dictionary.Namespaces,
+                LoadTemplate_XmlNamespaceImports);
 
             template.AddReplacement(
                 Tokens.Imports,
-                imports,
-                LoadTemplate_Imports);
+                m_validator.Dictionary.Namespaces,
+                LoadTemplate_XmlNamespaceImports);
+
+            template.AddReplacement(
+                Tokens.BuiltInTypes,
+                SchemaTemplates.Stack_XmlSchema_BuiltInTypes_xsd,
+                [m_validator.Dictionary],
+                LoadTemplate_XmlType,
+                WriteTemplate_XmlType);
 
             template.AddReplacement(
                 Tokens.ListOfTypes,
-                GetListOfTypes(m_exportAll),
-                LoadTemplate_DataType,
-                WriteTemplate_DataType);
+                [.. m_validator.GetNodeDesigns()],
+                LoadTemplate_XmlType,
+                WriteTemplate_XmlType);
 
             template.Render();
         }
 
-        /// <summary>
-        /// Creates a schema import statement.
-        /// </summary>
-        private static string GetImportStatment(string uri)
+        private TemplateString LoadTemplate_XmlNamespaceImports(ILoadContext context)
         {
-            string location = null;
-            string[] elements = uri.Split(['/']);
-
-            for (int ii = elements.Length - 1; ii >= 0; ii--)
-            {
-                if (!string.IsNullOrEmpty(elements[ii]))
-                {
-                    location = elements[ii];
-                    break;
-                }
-            }
-
-            return CoreUtils.Format(
-                """<xs:import namespace="{0}" schemaLocation="{1}.xsd" />""",
-                uri,
-                location);
-        }
-
-        /// <summary>
-        /// Writes the import statements.
-        /// </summary>
-        private TemplateString LoadTemplate_Imports(ILoadContext context)
-        {
-            if (context.Target is not string namespaceUri)
+            if (context.Target is not Namespace ns)
             {
                 return null;
             }
 
-            if (!m_exportAll)
-            {
-                if (namespaceUri == Namespaces.OpcUaBuiltInTypes)
-                {
-                    context.Out.WriteLine(
-                        """<xs:import namespace="{0}" schemaLocation="BuiltInTypes.xsd" />""",
-                        Namespaces.OpcUaBuiltInTypes);
-                }
-                else
-                {
-                    context.Out.WriteLine(GetImportStatment(namespaceUri));
-                }
-
-                return null;
-            }
-
-            return SchemaTemplates.Stack_XmlSchema_BuiltInTypes_xsd;
-        }
-
-        /// <summary>
-        /// Writes the attributes for a node.
-        /// </summary>
-        private TemplateString LoadTemplate_DataType(ILoadContext context)
-        {
-            // do not publish type declarations in OPC BinarySchema files.
-            if (context.Target is TypeDeclaration)
+            if (ns.Value == m_validator.Dictionary.TargetNamespace)
             {
                 return null;
             }
 
-            if (context.Target is ComplexType complexType)
+            string uri = ns.Value;
+            if (!string.IsNullOrEmpty(ns.XmlNamespace))
             {
-                if (!complexType.BaseType.IsNull())
+                uri = ns.XmlNamespace;
+            }
+
+            if (context.Token == Tokens.XmlnsS0ListOfNamespaces)
+            {
+                if (ns.Value == Namespaces.OpcUa)
                 {
-                    return SchemaTemplates.Stack_XmlSchema_DerivedType_xml;
+                    return null;
                 }
 
-                return SchemaTemplates.Stack_XmlSchema_ComplexType_xml;
+                context.Out.WriteLine(
+                    "xmlns:{0}=\"{1}\"",
+                    m_validator.Dictionary.Namespaces.GetXmlNamespacePrefix(ns.Value),
+                    uri);
+
+                return null;
             }
 
-            if (context.Target is EnumeratedType)
-            {
-                return SchemaTemplates.Stack_XmlSchema_EnumeratedType_xml;
-            }
+            context.Out.WriteLine("<xs:import namespace=\"{0}\" />", uri);
 
-            if (context.Target is ServiceType)
-            {
-                return SchemaTemplates.Stack_XmlSchema_ServiceType_xml;
-            }
-
-            // do not publish unrecognized sub-types.
             return null;
         }
 
-        /// <summary>
-        /// Writes a datatype to the stream.
-        /// </summary>
-        /// <exception cref="InvalidOperationException"></exception>
-        private bool WriteTemplate_DataType(IWriteContext context)
+        private TemplateString LoadTemplate_XmlType(ILoadContext context)
         {
-            if (context.Target is not DataType datatype)
+            if (context.Target is ModelDesign)
             {
-                return false;
-            }
-
-            context.Template.AddReplacement(Tokens.TypeName, datatype.QName.Name);
-            CreateDescription(context.Template, Tokens.Description, datatype.Documentation);
-
-            context.Template.AddReplacement(
-                Tokens.ArrayDeclaration,
-                SchemaTemplates.Stack_XmlSchema_Array_xml,
-                [datatype],
-                WriteTemplate_Array);
-
-            if (datatype is ComplexType complexType)
-            {
-                if (!complexType.BaseType.IsNull())
+                if (m_validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
                 {
-                    DataType basetype = Validator.ResolveType(complexType.BaseType) ??
-                        throw new InvalidOperationException(CoreUtils.Format(
-                            "Could not find base type '{0}' for complex type '{1}'.",
-                            complexType.BaseType,
-                            complexType.QName));
-
-                    context.Template.AddReplacement(Tokens.BaseType, GetXmlSchemaTypeName(basetype.QName, -1));
+                    return context.TemplateString;
                 }
 
-                List<FieldType> fields = [];
-
-                foreach (FieldType field in complexType.Field)
-                {
-                    if (!TypeDictionaryValidator.IsExcluded(Exclusions, field))
-                    {
-                        fields.Add(field);
-                    }
-                }
-
-                context.Template.AddReplacement(
-                    Tokens.ListOfFields,
-                    fields,
-                    LoadTemplate_Field);
+                return null;
             }
 
-            if (datatype is EnumeratedType enumeratedType)
-            {
-                var values = new List<EnumeratedValue>();
-
-                foreach (EnumeratedValue value in enumeratedType.Value)
-                {
-                    if (!TypeDictionaryValidator.IsExcluded(Exclusions, value))
-                    {
-                        values.Add(value);
-                    }
-                }
-
-                context.Template.AddReplacement(
-                    Tokens.ListOfValues,
-                    values,
-                    LoadTemplate_EnumeratedValue);
-            }
-
-            if (datatype is ServiceType serviceType)
-            {
-                context.Template.AddReplacement(
-                    Tokens.ListOfRequestParameters,
-                    serviceType.Request,
-                    LoadTemplate_Field);
-
-                context.Template.AddReplacement(
-                    Tokens.ListOfResponseParameters,
-                    serviceType.Response,
-                    LoadTemplate_Field);
-            }
-
-            return context.Template.Render();
-        }
-
-        /// <summary>
-        /// Writes an array declaration to the stream.
-        /// </summary>
-        private bool WriteTemplate_Array(IWriteContext context)
-        {
-            if (context.Target is not DataType datatype)
-            {
-                return false;
-            }
-
-            if (!datatype.AllowArrays)
-            {
-                return false;
-            }
-
-            context.Template.AddReplacement(Tokens.TypeName, datatype.QName.Name);
-
-            return context.Template.Render();
-        }
-
-        /// <summary>
-        /// Writes a field in an OPCBinary schema.
-        /// </summary>
-        /// <exception cref="InvalidOperationException"></exception>
-        private TemplateString LoadTemplate_Field(ILoadContext context)
-        {
-            if (context.Target is not FieldType fieldType)
+            if (context.Target is not DataTypeDesign dataType)
             {
                 return null;
             }
 
-            // resolve any type definitions.
-            DataType datatype = Validator.ResolveType(fieldType.DataType) ??
-                throw new InvalidOperationException(CoreUtils.Format(
-                    "Could not find datatype '{0}' for field '{1}'.",
-                    fieldType.DataType,
-                    fieldType.Name));
-
-            context.Out.Write("""
-                <xs:element name="{0}"
-                """, fieldType.Name);
-
-            if (datatype.Name == "XmlElement" && fieldType.ValueRank < 0)
+            // don't write built-in types.
+            if (dataType.NumericId < 256 && dataType.SymbolicId.Namespace == Namespaces.OpcUa)
             {
-                context.Out.WriteLine(">");
+                switch (dataType.NumericId)
+                {
+                    case DataTypes.PermissionType:
+                    case DataTypes.RolePermissionType:
+                    case DataTypes.DataTypeDefinition:
+                    case DataTypes.StructureDefinition:
+                    case DataTypes.StructureField:
+                    case DataTypes.StructureType:
+                    case DataTypes.EnumDefinition:
+                    case DataTypes.EnumField:
+                        break;
+                    default:
+                        return null;
+                }
+            }
+
+            BasicDataType basicType = dataType.BasicDataType;
+
+            if (basicType == BasicDataType.Enumeration)
+            {
+                var baseType = dataType.BaseTypeNode as DataTypeDesign;
+
+                if (baseType?.SymbolicId == new XmlQualifiedName("OptionSet", Namespaces.OpcUa))
+                {
+                    return SchemaTemplates.XmlSchema_DerivedType_xml;
+                }
+
+                return SchemaTemplates.XmlSchema_EnumeratedType_xml;
+            }
+            else if (basicType == BasicDataType.UserDefined)
+            {
+                if (dataType.BaseTypeNode.SymbolicName.Name == "Union")
+                {
+                    return SchemaTemplates.XmlSchema_Union_xml;
+                }
+                else if (dataType.BaseTypeNode.SymbolicName.Name == "Structure")
+                {
+                    return SchemaTemplates.XmlSchema_ComplexType_xml;
+                }
+                else
+                {
+                    return SchemaTemplates.XmlSchema_DerivedType_xml;
+                }
+            }
+
+            return SchemaTemplates.XmlSchema_SimpleType_xml;
+        }
+
+        private bool WriteTemplate_XmlType(IWriteContext context)
+        {
+            if (context.Target is ModelDesign model)
+            {
+                if (m_validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
+                {
+                    return context.Template.Render();
+                }
+
+                return false;
+            }
+
+            if (context.Target is not DataTypeDesign dataType)
+            {
+                return false;
+            }
+
+            var baseType = dataType.BaseTypeNode as DataTypeDesign;
+
+            if (baseType != null)
+            {
+                context.Template.AddReplacement(Tokens.BaseType, baseType.GetXmlDataType(
+                    ValueRank.Scalar,
+                    m_validator.Dictionary.TargetNamespace,
+                    m_validator.Dictionary.Namespaces));
+            }
+
+            context.Template.AddReplacement(Tokens.TypeName, dataType.SymbolicName.Name);
+
+            if (dataType.BasicDataType == BasicDataType.Enumeration && dataType.IsOptionSet)
+            {
+                context.Template.AddReplacement(Tokens.XsRestrictionBaseType,
+                    baseType.GetXmlDataType(
+                        ValueRank.Scalar,
+                        m_validator.Dictionary.TargetNamespace,
+                        m_validator.Dictionary.Namespaces));
+            }
+            else
+            {
+                context.Template.AddReplacement(Tokens.XsRestrictionBaseType, "xs:string");
+            }
+
+            context.Template.AddReplacement(
+                Tokens.Documentation,
+                SchemaTemplates.XmlSchema_Documentation_xml,
+                [dataType],
+                LoadTemplate_XmlDocumentation,
+                WriteTemplate_XmlDocumentation);
+
+            context.Template.AddReplacement(
+                Tokens.CollectionType,
+                SchemaTemplates.XmlSchema_CollectionType_xml,
+                [dataType],
+                LoadTemplate_XmlCollectionType,
+                WriteTemplate_XmlCollectionType);
+
+            context.Template.AddReplacement(
+                Tokens.ListOfFields,
+                dataType.Fields,
+                LoadTemplate_XmlTypeFields);
+
+            return context.Template.Render();
+        }
+
+        private TemplateString LoadTemplate_XmlTypeFields(ILoadContext context)
+        {
+            if (context.Target is not Parameter field)
+            {
+                return null;
+            }
+
+            if (field.Parent is not DataTypeDesign dataType)
+            {
+                return null;
+            }
+
+            BasicDataType basicType = dataType.BasicDataType;
+
+            if (basicType == BasicDataType.Enumeration)
+            {
+                if (dataType.IsOptionSet)
+                {
+                    return null;
+                }
+
+                if (field.IdentifierInName)
+                {
+                    context.Out.WriteLine(
+                        "<xs:enumeration value=\"{0}\" />",
+                        field.Name);
+                    return null;
+                }
+
+                context.Out.WriteLine(
+                    "<xs:enumeration value=\"{0}_{1}\" />",
+                    field.Name,
+                    field.Identifier);
+                return null;
+            }
+
+            basicType = field.DataTypeNode.BasicDataType;
+
+            if (basicType == BasicDataType.XmlElement &&
+                field.ValueRank == ValueRank.Scalar)
+            {
+                context.Out.WriteLine("<xs:element name=\"{0}\" minOccurs=\"0\" nillable=\"true\">", field.Name);
                 context.Out.WriteLine("  <xs:complexType>");
                 context.Out.WriteLine("    <xs:sequence>");
-                context.Out.WriteLine("""      <xs:any minOccurs="0" processContents="lax" />""");
+                context.Out.WriteLine("      <xs:any minOccurs=\"0\" processContents=\"lax\" />");
                 context.Out.WriteLine("    </xs:sequence>");
                 context.Out.WriteLine("  </xs:complexType>");
                 context.Out.WriteLine("</xs:element>");
+                return null;
+            }
+
+            if (field.ValueRank != ValueRank.Scalar)
+            {
+                string fieldDataType = field.DataTypeNode.GetXmlDataType(
+                    field.ValueRank,
+                    m_validator.Dictionary.TargetNamespace,
+                    m_validator.Dictionary.Namespaces);
+
+                if (basicType == BasicDataType.UserDefined && field.AllowSubTypes)
+                {
+                    fieldDataType = "ua:ListOfExtensionObject";
+                }
+
+                context.Out.WriteLine(
+                    "<xs:element name=\"{0}\" type=\"{1}\" minOccurs=\"0\" nillable=\"true\" />",
+                    field.Name,
+                    fieldDataType);
             }
             else
             {
-                context.Out.Write("""
-                     type="{0}" minOccurs="0"
-                    """, GetXmlSchemaTypeName(datatype.QName, fieldType.ValueRank));
-
-                if (datatype.Name is "String" or "ByteString")
+                switch (basicType)
                 {
-                    context.Out.Write("""
-                         nillable="true"
-                        """);
-                }
+                    case BasicDataType.String:
+                    case BasicDataType.ByteString:
+                    case BasicDataType.DiagnosticInfo:
+                    case BasicDataType.ExpandedNodeId:
+                    case BasicDataType.LocalizedText:
+                    case BasicDataType.NodeId:
+                    case BasicDataType.QualifiedName:
+                    case BasicDataType.Structure:
+                    case BasicDataType.DataValue:
+                        context.Out.WriteLine(
+                                "<xs:element name=\"{0}\" type=\"{1}\" minOccurs=\"0\" nillable=\"true\" />",
+                                field.Name,
+                                field.DataTypeNode.GetXmlDataType(
+                                    field.ValueRank,
+                                    m_validator.Dictionary.TargetNamespace,
+                                    m_validator.Dictionary.Namespaces));
+                        break;
+                    case BasicDataType.Guid:
+                    case BasicDataType.StatusCode:
+                        context.Out.WriteLine(
+                                "<xs:element name=\"{0}\" type=\"{1}\" minOccurs=\"0\" />",
+                                field.Name,
+                                field.DataTypeNode.GetXmlDataType(
+                                    field.ValueRank,
+                                    m_validator.Dictionary.TargetNamespace,
+                                    m_validator.Dictionary.Namespaces));
+                        break;
+                    case BasicDataType.UserDefined:
+                        string fieldDataType = field.DataTypeNode.GetXmlDataType(
+                                field.ValueRank,
+                                m_validator.Dictionary.TargetNamespace,
+                                m_validator.Dictionary.Namespaces);
 
-                context.Out.WriteLine(" />");
+                        if (field.AllowSubTypes)
+                        {
+                            fieldDataType = "ua:ExtensionObject";
+                        }
+
+                        context.Out.WriteLine(
+                            "<xs:element name=\"{0}\" type=\"{1}\" minOccurs=\"0\" nillable=\"true\" />",
+                            field.Name,
+                            fieldDataType);
+                        break;
+                    default:
+                        context.Out.WriteLine("<xs:element name=\"{0}\" type=\"{1}\" minOccurs=\"0\" />",
+                                field.Name,
+                                field.DataTypeNode.GetXmlDataType(
+                                    field.ValueRank,
+                                    m_validator.Dictionary.TargetNamespace,
+                                    m_validator.Dictionary.Namespaces));
+                        break;
+                }
             }
 
             return null;
         }
 
-        /// <summary>
-        /// Writes an enumerated value in an OPCBinary schema.
-        /// </summary>
-        private TemplateString LoadTemplate_EnumeratedValue(ILoadContext context)
+        private TemplateString LoadTemplate_XmlDocumentation(ILoadContext context)
         {
-            if (context.Target is not EnumeratedValue valueType)
+            if (context.Target is not DataTypeDesign dataType)
             {
                 return null;
             }
 
-            context.Out.Write(
-                """<xs:enumeration value="{0}_{1}" />""",
-                valueType.Name,
-                valueType.Value);
-
-            /*
-            if (valueType.Value != 1)
+            if (dataType.Description == null || dataType.Description.IsAutogenerated)
             {
-                context.Out.WriteLine(">");
-                context.Out.WriteLine("  <xs:annotation>");
-                context.Out.WriteLine("    <xs:appinfo>");
-                context.Out.WriteLine("      <EnumerationValue xmlns=\"http://schemas.microsoft.com/2003/10/Serialization/\">{1}</EnumerationValue>", valueType.Value);
-                context.Out.WriteLine("    </xs:appinfo>");
-                context.Out.WriteLine("  </xs:annotation>");
-                context.Out.WriteLine("</xs:enumeration>");
+                return null;
             }
-            else
-            {
-                context.Out.WriteLine(" />");
-            }
-            */
 
-            return null;
+            return context.TemplateString;
         }
 
-        /// <summary>
-        /// Returns a name qualified with a namespace prefix.
-        /// </summary>
-        private string GetXmlSchemaTypeName(XmlQualifiedName qname, int valueRank)
+        private bool WriteTemplate_XmlDocumentation(IWriteContext context)
         {
-            if (qname.IsNull())
+            if (context.Target is not DataTypeDesign dataType)
             {
-                return string.Empty;
+                return false;
             }
 
-            if (qname.Namespace == Namespaces.OpcUaBuiltInTypes)
-            {
-                // translate built-in types to XML Schema types.
-                if (valueRank < 0)
-                {
-                    switch (qname.Name)
-                    {
-                        case "Boolean":
-                            return "xs:boolean";
-                        case "SByte":
-                            return "xs:byte";
-                        case "Byte":
-                            return "xs:unsignedByte";
-                        case "Int16":
-                            return "xs:short";
-                        case "UInt16":
-                            return "xs:unsignedShort";
-                        case "Int32":
-                            return "xs:int";
-                        case "UInt32":
-                            return "xs:unsignedInt";
-                        case "Int64":
-                            return "xs:long";
-                        case "UInt64":
-                            return "xs:unsignedLong";
-                        case "Float":
-                            return "xs:float";
-                        case "Double":
-                            return "xs:double";
-                        case "String":
-                            return "xs:string";
-                        case "DateTime":
-                            return "xs:dateTime";
-                        case "ByteString":
-                            return "xs:base64Binary";
-                    }
-                }
-            }
+            context.Template.AddReplacement(Tokens.Description, dataType.Description.Value);
 
-            string typeName = qname.Name;
-
-            if (!m_exportAll)
-            {
-                typeName = GetPrefixedName(qname);
-            }
-
-            int index = typeName.IndexOf(':', StringComparison.Ordinal);
-
-            // convert to an array element.
-            if (valueRank >= 0)
-            {
-                string prefix;
-
-                if (index != -1)
-                {
-                    prefix = typeName[..(index + 1)];
-                    typeName = typeName[(index + 1)..];
-                }
-                else
-                {
-                    prefix = "tns:";
-                }
-
-                return CoreUtils.Format("{0}ListOf{1}", prefix, typeName);
-            }
-            else if (index == -1)
-            {
-                return "tns:" + typeName;
-            }
-
-            return typeName;
+            return context.Template.Render();
         }
 
-        private bool m_exportAll;
+        private TemplateString LoadTemplate_XmlCollectionType(ILoadContext context)
+        {
+            if (context.Target is not DataTypeDesign dataType)
+            {
+                return null;
+            }
+
+            if (dataType.NoArraysAllowed)
+            {
+                return null;
+            }
+
+            return context.TemplateString;
+        }
+
+        private bool WriteTemplate_XmlCollectionType(IWriteContext context)
+        {
+            if (context.Target is not DataTypeDesign dataType)
+            {
+                return false;
+            }
+
+            context.Template.AddReplacement(Tokens.TypeName, dataType.SymbolicName.Name);
+            context.Template.AddReplacement(
+                Tokens.Nillable,
+                !dataType.BasicDataType.IsXmlNillable() ?
+                    string.Empty : "nillable=\"true\" ");
+
+            return context.Template.Render();
+        }
+
+        private readonly IFileSystem m_fileSystem;
+        private readonly string m_outputFolder;
+        private readonly ModelDesignValidator m_validator;
     }
 }
