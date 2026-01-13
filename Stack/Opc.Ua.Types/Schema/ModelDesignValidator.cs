@@ -29,11 +29,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
 using Opc.Ua.Export;
 using Opc.Ua.Schema.Types;
@@ -116,29 +118,16 @@ namespace Opc.Ua.Schema.Model
         public string ModelPublicationDate { get; set; }
 
         /// <summary>
-        /// Validate model designs
+        /// Returns a list of nodes with nodes excluded per exclusion criteria.
         /// </summary>
-        /// <exception cref="ArgumentException"></exception>
-        public void Validate(
-            IReadOnlyList<string> designFilePaths,
-            string identifierFilePath,
-            bool generateIds)
+        public IEnumerable<NodeDesign> GetNodeDesigns()
         {
-            if (designFilePaths == null || designFilePaths.Count == 0)
+            foreach (NodeDesign node in Dictionary.Items)
             {
-                throw new ArgumentException(
-                    "No design files specified",
-                    nameof(designFilePaths));
-            }
-
-            if (designFilePaths[0].EndsWith("StandardTypes.xml", StringComparison.Ordinal))
-            {
-                // Stack generation flow
-                ValidateCoreModel(designFilePaths, identifierFilePath, generateIds);
-            }
-            else
-            {
-                ValidateModel(designFilePaths, identifierFilePath, generateIds);
+                if (!IsExcluded(node) && !node.IsDeclaration)
+                {
+                    yield return node;
+                }
             }
         }
 
@@ -175,11 +164,48 @@ namespace Opc.Ua.Schema.Model
         }
 
         /// <summary>
+        /// Validate model designs
+        /// </summary>
+        /// <exception cref="ArgumentException"></exception>
+        public void Validate(
+            IReadOnlyList<string> designFilePaths,
+            string identifierFilePath,
+            bool generateIds)
+        {
+            if (designFilePaths == null || designFilePaths.Count == 0)
+            {
+                throw new ArgumentException(
+                    "No design files specified",
+                    nameof(designFilePaths));
+            }
+
+            if (designFilePaths[0].EndsWith("StandardTypes.xml", StringComparison.Ordinal))
+            {
+                // Stack generation flow
+                ValidateCoreModel(designFilePaths, identifierFilePath, generateIds);
+            }
+            else
+            {
+                ValidateModel(designFilePaths, identifierFilePath, generateIds);
+            }
+        }
+
+        /// <summary>
         /// Is excluded design
         /// </summary>
         /// <param name="node"></param>
         public bool IsExcluded(NodeDesign node)
         {
+            if (node == null)
+            {
+                return false;
+            }
+
+            if (node.Purpose == Schema.Model.DataTypePurpose.Testing)
+            {
+                return true;
+            }
+
             if (m_exclusions != null)
             {
                 foreach (string exclusion in m_exclusions)
@@ -240,6 +266,11 @@ namespace Opc.Ua.Schema.Model
         /// </summary>
         public bool IsExcluded(Parameter field)
         {
+            if (field == null)
+            {
+                return false;
+            }
+
             if (m_exclusions != null)
             {
                 foreach (string exclusion in m_exclusions)

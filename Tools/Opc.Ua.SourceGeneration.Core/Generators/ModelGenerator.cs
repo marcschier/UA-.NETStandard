@@ -83,43 +83,47 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public void Emit(bool includeNodeSetXml = false, bool skipSchemas = false)
         {
-            // write type and object definitions.
-            List<NodeDesign> nodes = GetNodeList();
-            if (nodes.Count == 0)
-            {
-                return;
-            }
-
             var context = new SystemContext(m_telemetry)
             {
                 NamespaceUris = m_validator.Dictionary.NamespaceUris,
                 ServerUris = new StringTable()
             };
 
-            GenerateConstants(nodes);
-            GenerateDataTypes(nodes, false);
-            GenerateNonDataTypes(nodes);
+            GenerateConstants();
+            GenerateClasses();
 
             if (!skipSchemas)
             {
-                GenerateXmlSchema(nodes);
-                GenerateBinarySchema(nodes);
+                var xmlSchemaGenerator = new ModelXmlSchemaGenerator(
+                    m_fileSystem,
+                    m_outputFolder,
+                    m_validator);
+                xmlSchemaGenerator.Emit();
+
+                var binarySchemaGenerator = new ModelBinarySchemaGenerator(
+                    m_fileSystem,
+                    m_outputFolder,
+                    m_validator);
+                binarySchemaGenerator.Emit();
             }
 
             NodeStateCollection nodeStates = GenerateNodeSet(context, includeNodeSetXml);
 
             // Embed initializers and add helpers as source code (.g.cs)
             EmbedInitializers(context, nodeStates);
-
             GenerateHelpers();
+        }
+
+        private void GenerateClasses()
+        {
+            GenerateDataTypes(false);
+            GenerateNonDataTypes();
         }
 
         /// <summary>
         /// Writes the nodesets
         /// </summary>
-        private NodeStateCollection GenerateNodeSet(
-            SystemContext context,
-            bool embedNodeSet = false)
+        private NodeStateCollection GenerateNodeSet(SystemContext context, bool embedNodeSet = false)
         {
             // collect the nodes to write.
             NodeStateCollection collection = [];
@@ -130,7 +134,7 @@ namespace Opc.Ua.SourceGeneration
             {
                 NodeDesign node = m_validator.Dictionary.Items[ii];
 
-                if (IsExcluded(node))
+                if (m_validator.IsExcluded(node))
                 {
                     continue;
                 }
@@ -343,11 +347,28 @@ namespace Opc.Ua.SourceGeneration
                     false,
                     [.. resources]);
             }
+
+
             return collection;
         }
 
-        private void GenerateConstants(List<NodeDesign> nodes)
+        /// <summary>
+        /// Generate node id and browse name constants
+        /// </summary>
+        private void GenerateConstants()
         {
+            SortedDictionary<string, string> browseNames = [];
+            foreach (NodeDesign node in m_validator.GetNodeDesigns())
+            {
+                CollectBrowseNames(node, browseNames);
+            }
+            SortedDictionary<string, List<NodeDesign>> identifiers = GetIdentifiers();
+
+            if (browseNames.Count == 0 && identifiers.Count == 0)
+            {
+                return;
+            }
+
             using TextWriter writer = GenerateFile(
                 m_outputFolder,
                 "Constants",
@@ -361,16 +382,12 @@ namespace Opc.Ua.SourceGeneration
                 namespaces,
                 WriteTemplate_CodeNamespaceUri);
 
-            SortedDictionary<string, string> browseNames = GetBrowseNames(nodes);
-
             template.AddReplacement(
                 Tokens.ListOfBrowseNames,
                 CodeTemplates.BrowseName_cs,
                 browseNames.ToArray(),
                 LoadTemplate_BrowseNames,
                 WriteTemplate_BrowseNames);
-
-            SortedDictionary<string, List<NodeDesign>> identifiers = GetIdentifiers();
 
             template.AddReplacement(
                 Tokens.ListOfIdentifiers,
@@ -389,24 +406,32 @@ namespace Opc.Ua.SourceGeneration
             template.Render();
         }
 
-        private void GenerateDataTypes(List<NodeDesign> nodes, bool omitProperties = true)
+        /// <summary>
+        /// Generate data types
+        /// </summary>
+        private void GenerateDataTypes(bool omitProperties = true)
         {
+            List<DataTypeDesign> datatypes = [];
+            foreach (NodeDesign node in m_validator.GetNodeDesigns())
+            {
+                if (node is DataTypeDesign dataTypeDesign &&
+                    !dataTypeDesign.IsPartOfOpcUaTypesLibrary())
+                {
+                    datatypes.Add(dataTypeDesign);
+                }
+            }
+
+            if (datatypes.Count == 0)
+            {
+                return;
+            }
+
             using TextWriter writer = GenerateFile(
                 m_outputFolder,
                 "DataTypes",
                 CodeTemplates.TypesFile_cs,
                 out Template template,
                 out List<string> namespaces);
-
-            List<DataTypeDesign> datatypes = [];
-            for (int ii = 0; ii < nodes.Count; ii++)
-            {
-                if (nodes[ii] is DataTypeDesign dataTypeDesign &&
-                    !dataTypeDesign.IsPartOfOpcUaTypesLibrary())
-                {
-                    datatypes.Add(dataTypeDesign);
-                }
-            }
 
             template.AddReplacement(
                 Tokens.ListOfTypes,
@@ -417,8 +442,30 @@ namespace Opc.Ua.SourceGeneration
             template.Render();
         }
 
-        private void GenerateNonDataTypes(List<NodeDesign> nodes)
+        /// <summary>
+        /// Generate node state classes
+        /// </summary>
+        private void GenerateNonDataTypes()
         {
+            List<NodeDesign> nodeClasses = [];
+            foreach (NodeDesign node in m_validator.GetNodeDesigns())
+            {
+                if (node is not DataTypeDesign)
+                {
+                    if (node is MethodDesign &&
+                        !node.SymbolicName.Name.EndsWith("MethodType", StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+                    nodeClasses.Add(node);
+                }
+            }
+
+            if (nodeClasses.Count == 0)
+            {
+                return;
+            }
+
             using TextWriter writer = GenerateFile(
                 m_outputFolder,
                 "Classes",
@@ -426,45 +473,13 @@ namespace Opc.Ua.SourceGeneration
                 out Template template,
                 out List<string> namespaces);
 
-            List<NodeDesign> nonDataTypes = [];
-
-            for (int ii = 0; ii < nodes.Count; ii++)
-            {
-                if (nodes[ii] is not DataTypeDesign)
-                {
-                    if (nodes[ii] is MethodDesign &&
-                        !nodes[ii].SymbolicName.Name.EndsWith("MethodType", StringComparison.Ordinal))
-                    {
-                        continue;
-                    }
-
-                    nonDataTypes.Add(nodes[ii]);
-                }
-            }
-
             template.AddReplacement(
                 Tokens.ListOfTypes,
-                nonDataTypes,
+                nodeClasses,
                 LoadTemplate_ListOfTypes,
                 WriteTemplate_ListOfTypes);
 
             template.Render();
-        }
-
-        private void GenerateXmlSchema(List<NodeDesign> nodes)
-        {
-            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
-                m_outputFolder,
-                CoreUtils.Format("{0}.Types.xsd", m_validator.Dictionary.TargetNamespaceInfo.Prefix)));
-            WriteTemplate_XmlSchema(writer, nodes);
-        }
-
-        private void GenerateBinarySchema(List<NodeDesign> nodes)
-        {
-            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
-                m_outputFolder,
-                CoreUtils.Format("{0}.Types.bsd", m_validator.Dictionary.TargetNamespaceInfo.Prefix)));
-            WriteTemplate_BinarySchema(writer, nodes);
         }
 
         /// <summary>
@@ -555,759 +570,6 @@ namespace Opc.Ua.SourceGeneration
                 "Initializers",
                 internalAccess: true,
                 [.. m_initializers.Values, predefinedNodesInitializer]);
-        }
-
-        private void WriteTemplate_XmlSchema(TextWriter writer, List<NodeDesign> nodes)
-        {
-            using var templateWriter = new TemplateWriter(writer);
-            var template = new Template(templateWriter, SchemaTemplates.XmlSchema_File_xml);
-
-            if (!string.IsNullOrEmpty(m_validator.Dictionary.TargetNamespaceInfo.XmlNamespace))
-            {
-                template.AddReplacement(Tokens.Namespace, m_validator.Dictionary.TargetNamespaceInfo.XmlNamespace);
-            }
-            else
-            {
-                template.AddReplacement(Tokens.Namespace, m_validator.Dictionary.TargetNamespaceInfo.Value);
-            }
-
-            template.AddReplacement(Tokens.TargetVersion, m_validator.Dictionary.TargetVersion);
-            template.AddReplacement(Tokens.ModelUri, m_validator.Dictionary.TargetNamespaceInfo.Value);
-            template.AddReplacement(Tokens.TargetPublicationDate, XmlConvert.ToString(
-                m_validator.Dictionary.TargetPublicationDate,
-                XmlDateTimeSerializationMode.Utc));
-
-            template.AddReplacement(
-                Tokens.XmlnsS0ListOfNamespaces,
-                m_validator.Dictionary.Namespaces,
-                LoadTemplate_XmlNamespaceImports);
-
-            template.AddReplacement(
-                Tokens.Imports,
-                m_validator.Dictionary.Namespaces,
-                LoadTemplate_XmlNamespaceImports);
-
-            template.AddReplacement(
-                Tokens.BuiltInTypes,
-                SchemaTemplates.Stack_XmlSchema_BuiltInTypes_xsd,
-                [m_validator.Dictionary],
-                LoadTemplate_XmlType,
-                WriteTemplate_XmlType);
-
-            template.AddReplacement(
-                Tokens.ListOfTypes,
-                nodes,
-                LoadTemplate_XmlType,
-                WriteTemplate_XmlType);
-
-            template.Render();
-        }
-
-        private TemplateString LoadTemplate_XmlNamespaceImports(ILoadContext context)
-        {
-            if (context.Target is not Namespace ns)
-            {
-                return null;
-            }
-
-            if (ns.Value == m_validator.Dictionary.TargetNamespace)
-            {
-                return null;
-            }
-
-            string uri = ns.Value;
-
-            if (!string.IsNullOrEmpty(ns.XmlNamespace))
-            {
-                uri = ns.XmlNamespace;
-            }
-
-            if (context.Token == Tokens.XmlnsS0ListOfNamespaces)
-            {
-                if (ns.Value == Namespaces.OpcUa)
-                {
-                    return null;
-                }
-
-                context.Out.WriteLine(
-                    "xmlns:{0}=\"{1}\"",
-                    m_validator.Dictionary.Namespaces.GetXmlNamespacePrefix(ns.Value),
-                    uri);
-
-                return null;
-            }
-
-            context.Out.WriteLine("""<xs:import namespace="{0}" />""", uri);
-
-            return null;
-        }
-
-        private TemplateString LoadTemplate_XmlType(ILoadContext context)
-        {
-            if (context.Target is ModelDesign)
-            {
-                if (m_validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
-                {
-                    return context.TemplateString;
-                }
-
-                return null;
-            }
-
-            if (context.Target is not DataTypeDesign dataType)
-            {
-                return null;
-            }
-
-            // don't write built-in types.
-            if (dataType.NumericId < 256 && dataType.SymbolicId.Namespace == Namespaces.OpcUa)
-            {
-                switch (dataType.NumericId)
-                {
-                    case DataTypes.PermissionType:
-                    case DataTypes.RolePermissionType:
-                    case DataTypes.DataTypeDefinition:
-                    case DataTypes.StructureDefinition:
-                    case DataTypes.StructureField:
-                    case DataTypes.StructureType:
-                    case DataTypes.EnumDefinition:
-                    case DataTypes.EnumField:
-                        break;
-                    default:
-                        return null;
-                }
-            }
-
-            BasicDataType basicType = dataType.BasicDataType;
-
-            if (basicType == BasicDataType.Enumeration)
-            {
-                var baseType = dataType.BaseTypeNode as DataTypeDesign;
-
-                if (baseType?.SymbolicId == new XmlQualifiedName("OptionSet", Namespaces.OpcUa))
-                {
-                    return SchemaTemplates.XmlSchema_DerivedType_xml;
-                }
-
-                return SchemaTemplates.XmlSchema_EnumeratedType_xml;
-            }
-            else if (basicType == BasicDataType.UserDefined)
-            {
-                if (dataType.BaseTypeNode.SymbolicName.Name == "Union")
-                {
-                    return SchemaTemplates.XmlSchema_Union_xml;
-                }
-                else if (dataType.BaseTypeNode.SymbolicName.Name == "Structure")
-                {
-                    return SchemaTemplates.XmlSchema_ComplexType_xml;
-                }
-                else
-                {
-                    return SchemaTemplates.XmlSchema_DerivedType_xml;
-                }
-            }
-
-            return SchemaTemplates.XmlSchema_SimpleType_xml;
-        }
-
-        private bool WriteTemplate_XmlType(IWriteContext context)
-        {
-            if (context.Target is ModelDesign model)
-            {
-                if (m_validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
-                {
-                    return context.Template.Render();
-                }
-
-                return false;
-            }
-
-            if (context.Target is not DataTypeDesign dataType)
-            {
-                return false;
-            }
-
-            var baseType = dataType.BaseTypeNode as DataTypeDesign;
-
-            if (baseType != null)
-            {
-                context.Template.AddReplacement(Tokens.BaseType, baseType.GetXmlDataType(
-                    ValueRank.Scalar,
-                    m_validator.Dictionary.TargetNamespace,
-                    m_validator.Dictionary.Namespaces));
-            }
-
-            context.Template.AddReplacement(Tokens.TypeName, dataType.SymbolicName.Name);
-
-            if (dataType.BasicDataType == BasicDataType.Enumeration && dataType.IsOptionSet)
-            {
-                context.Template.AddReplacement(Tokens.XsRestrictionBaseType,
-                    baseType.GetXmlDataType(
-                        ValueRank.Scalar,
-                        m_validator.Dictionary.TargetNamespace,
-                        m_validator.Dictionary.Namespaces));
-            }
-            else
-            {
-                context.Template.AddReplacement(Tokens.XsRestrictionBaseType, "xs:string");
-            }
-
-            context.Template.AddReplacement(
-                Tokens.Documentation,
-                SchemaTemplates.XmlSchema_Documentation_xml,
-                [dataType],
-                LoadTemplate_XmlDocumentation,
-                WriteTemplate_XmlDocumentation);
-
-            context.Template.AddReplacement(
-                Tokens.CollectionType,
-                SchemaTemplates.XmlSchema_CollectionType_xml,
-                [dataType],
-                LoadTemplate_XmlCollectionType,
-                WriteTemplate_XmlCollectionType);
-
-            context.Template.AddReplacement(
-                Tokens.ListOfFields,
-                dataType.Fields,
-                LoadTemplate_XmlTypeFields);
-
-            return context.Template.Render();
-        }
-
-        private TemplateString LoadTemplate_XmlTypeFields(ILoadContext context)
-        {
-            if (context.Target is not Parameter field)
-            {
-                return null;
-            }
-
-            if (field.Parent is not DataTypeDesign dataType)
-            {
-                return null;
-            }
-
-            BasicDataType basicType = dataType.BasicDataType;
-
-            if (basicType == BasicDataType.Enumeration)
-            {
-                if (dataType.IsOptionSet)
-                {
-                    return null;
-                }
-
-                if (field.IdentifierInName)
-                {
-                    context.Out.WriteLine(
-                        """<xs:enumeration value="{0}" />""",
-                        field.Name);
-                    return null;
-                }
-
-                context.Out.WriteLine(
-                    """<xs:enumeration value="{0}_{1}" />""",
-                    field.Name,
-                    field.Identifier);
-                return null;
-            }
-
-            basicType = field.DataTypeNode.BasicDataType;
-
-            if (basicType == BasicDataType.XmlElement &&
-                field.ValueRank == ValueRank.Scalar)
-            {
-                context.Out.WriteLine("""<xs:element name="{0}" minOccurs="0" nillable="true">""", field.Name);
-                context.Out.WriteLine("  <xs:complexType>");
-                context.Out.WriteLine("    <xs:sequence>");
-                context.Out.WriteLine("""      <xs:any minOccurs="0" processContents="lax" />""");
-                context.Out.WriteLine("    </xs:sequence>");
-                context.Out.WriteLine("  </xs:complexType>");
-                context.Out.WriteLine("</xs:element>");
-                return null;
-            }
-
-            if (field.ValueRank != ValueRank.Scalar)
-            {
-                string fieldDataType = field.DataTypeNode.GetXmlDataType(
-                    field.ValueRank,
-                    m_validator.Dictionary.TargetNamespace,
-                    m_validator.Dictionary.Namespaces);
-
-                if (basicType == BasicDataType.UserDefined && field.AllowSubTypes)
-                {
-                    fieldDataType = "ua:ListOfExtensionObject";
-                }
-
-                context.Out.WriteLine(
-                    """<xs:element name="{0}" type="{1}" minOccurs="0" nillable="true" />""",
-                    field.Name,
-                    fieldDataType);
-            }
-            else
-            {
-                switch (basicType)
-                {
-                    case BasicDataType.String:
-                    case BasicDataType.ByteString:
-                    case BasicDataType.DiagnosticInfo:
-                    case BasicDataType.ExpandedNodeId:
-                    case BasicDataType.LocalizedText:
-                    case BasicDataType.NodeId:
-                    case BasicDataType.QualifiedName:
-                    case BasicDataType.Structure:
-                    case BasicDataType.DataValue:
-                        context.Out.WriteLine(
-                                """<xs:element name="{0}" type="{1}" minOccurs="0" nillable="true" />""",
-                                field.Name,
-                                field.DataTypeNode.GetXmlDataType(
-                                    field.ValueRank,
-                                    m_validator.Dictionary.TargetNamespace,
-                                    m_validator.Dictionary.Namespaces));
-                        break;
-                    case BasicDataType.Guid:
-                    case BasicDataType.StatusCode:
-                        context.Out.WriteLine(
-                                """<xs:element name="{0}" type="{1}" minOccurs="0" />""",
-                                field.Name,
-                                field.DataTypeNode.GetXmlDataType(
-                                    field.ValueRank,
-                                    m_validator.Dictionary.TargetNamespace,
-                                    m_validator.Dictionary.Namespaces));
-                        break;
-                    case BasicDataType.UserDefined:
-                        string fieldDataType = field.DataTypeNode.GetXmlDataType(
-                                field.ValueRank,
-                                m_validator.Dictionary.TargetNamespace,
-                                m_validator.Dictionary.Namespaces);
-
-                        if (field.AllowSubTypes)
-                        {
-                            fieldDataType = "ua:ExtensionObject";
-                        }
-
-                        context.Out.WriteLine(
-                            """<xs:element name="{0}" type="{1}" minOccurs="0" nillable="true" />""",
-                            field.Name,
-                            fieldDataType);
-                        break;
-                    default:
-                        context.Out.WriteLine("""<xs:element name="{0}" type="{1}" minOccurs="0" />""",
-                                field.Name,
-                                field.DataTypeNode.GetXmlDataType(
-                                    field.ValueRank,
-                                    m_validator.Dictionary.TargetNamespace,
-                                    m_validator.Dictionary.Namespaces));
-                        break;
-                }
-            }
-
-            return null;
-        }
-
-        private TemplateString LoadTemplate_XmlDocumentation(ILoadContext context)
-        {
-            if (context.Target is not DataTypeDesign dataType)
-            {
-                return null;
-            }
-
-            if (dataType.Description == null || dataType.Description.IsAutogenerated)
-            {
-                return null;
-            }
-
-            return context.TemplateString;
-        }
-
-        private bool WriteTemplate_XmlDocumentation(IWriteContext context)
-        {
-            if (context.Target is not DataTypeDesign dataType)
-            {
-                return false;
-            }
-
-            context.Template.AddReplacement(Tokens.Description, dataType.Description.Value);
-
-            return context.Template.Render();
-        }
-
-        private TemplateString LoadTemplate_XmlCollectionType(ILoadContext context)
-        {
-            if (context.Target is not DataTypeDesign dataType)
-            {
-                return null;
-            }
-
-            if (dataType.NoArraysAllowed)
-            {
-                return null;
-            }
-
-            return context.TemplateString;
-        }
-
-        private bool WriteTemplate_XmlCollectionType(IWriteContext context)
-        {
-            if (context.Target is not DataTypeDesign dataType)
-            {
-                return false;
-            }
-
-            context.Template.AddReplacement(Tokens.TypeName, dataType.SymbolicName.Name);
-            context.Template.AddReplacement(
-                Tokens.Nillable,
-                !dataType.BasicDataType.IsXmlNillable() ?
-                    string.Empty : """nillable="true" """);
-
-            return context.Template.Render();
-        }
-
-        private void WriteTemplate_BinarySchema(TextWriter writer, List<NodeDesign> nodes)
-        {
-            using var templateWriter = new TemplateWriter(writer);
-            var template = new Template(templateWriter, SchemaTemplates.BinarySchema_File_xml);
-
-            template.AddReplacement(Tokens.DictionaryUri, m_validator.Dictionary.TargetNamespace);
-
-            template.AddReplacement(
-                Tokens.XmlnsS0ListOfNamespaces,
-                m_validator.Dictionary.Namespaces,
-                LoadTemplate_BinaryNamespaceImports);
-
-            template.AddReplacement(
-                Tokens.Imports,
-                m_validator.Dictionary.Namespaces,
-                LoadTemplate_BinaryNamespaceImports);
-
-            template.AddReplacement(
-                Tokens.BuiltInTypes,
-                SchemaTemplates.BinarySchema_BuiltInTypes_bsd,
-                [m_validator.Dictionary],
-                LoadTemplate_BinaryType,
-                WriteTemplate_BinaryType);
-
-            template.AddReplacement(
-                Tokens.ListOfTypes,
-                nodes,
-                LoadTemplate_BinaryType,
-                WriteTemplate_BinaryType);
-
-            template.Render();
-        }
-
-        private TemplateString LoadTemplate_BinaryNamespaceImports(ILoadContext context)
-        {
-            if (context.Target is not Namespace ns)
-            {
-                return null;
-            }
-
-            if (ns.Value == m_validator.Dictionary.TargetNamespace)
-            {
-                return null;
-            }
-
-            if (context.Token == Tokens.XmlnsS0ListOfNamespaces)
-            {
-                if (ns.Value == Namespaces.OpcUa)
-                {
-                    return null;
-                }
-
-                context.Out.WriteLine(
-                    """
-                    xmlns:{0}="{1}"
-                    """,
-                    m_validator.Dictionary.Namespaces.GetXmlNamespacePrefix(ns.Value),
-                    ns.Value);
-                return null;
-            }
-
-            context.Out.WriteLine(
-                """<opc:Import Namespace="{0}" Location="{1}.BinarySchema.bsd"/>""",
-                ns.Value,
-                m_validator.Dictionary.Namespaces.GetNamespacePrefix(ns.Value));
-
-            return null;
-        }
-
-        private TemplateString LoadTemplate_BinaryType(ILoadContext context)
-        {
-            if (context.Target is ModelDesign)
-            {
-                if (m_validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
-                {
-                    return context.TemplateString;
-                }
-
-                return null;
-            }
-
-            if (context.Target is not DataTypeDesign dataType)
-            {
-                return null;
-            }
-
-            // don't write built-in types.
-            if (dataType.NumericId < 256 && dataType.SymbolicId.Namespace == Namespaces.OpcUa)
-            {
-                switch (dataType.NumericId)
-                {
-                    case DataTypes.PermissionType:
-                    case DataTypes.AccessRestrictionType:
-                    case DataTypes.RolePermissionType:
-                    case DataTypes.StructureDefinition:
-                    case DataTypes.StructureField:
-                    case DataTypes.StructureType:
-                    case DataTypes.EnumDefinition:
-                    case DataTypes.EnumField:
-                    case DataTypes.DataTypeDefinition:
-                    case DataTypes.Enumeration:
-                    case DataTypes.Union:
-                        break;
-                    default:
-                        return null;
-                }
-            }
-
-            if (dataType.Purpose == Schema.Model.DataTypePurpose.CodeGenerator)
-            {
-                return null;
-            }
-
-            BasicDataType basicType = dataType.BasicDataType;
-
-            if (basicType == BasicDataType.Enumeration)
-            {
-                return SchemaTemplates.BinarySchema_EnumeratedType_xml;
-            }
-            else if (basicType == BasicDataType.UserDefined)
-            {
-                return SchemaTemplates.BinarySchema_ComplexType_xml;
-            }
-
-            return SchemaTemplates.BinarySchema_OpaqueType_xml;
-        }
-
-        private bool WriteTemplate_BinaryType(IWriteContext context)
-        {
-            if (context.Target is ModelDesign model)
-            {
-                if (m_validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
-                {
-                    return context.Template.Render();
-                }
-
-                return false;
-            }
-
-            if (context.Target is not DataTypeDesign dataType)
-            {
-                return false;
-            }
-
-            context.Template.AddReplacement(Tokens.TypeName, dataType.SymbolicName.Name);
-
-            if (dataType.BasicDataType == BasicDataType.UserDefined)
-            {
-                context.Template.AddReplacement(Tokens.BaseType,
-                    (dataType.BaseTypeNode as DataTypeDesign).GetBinaryDataType(
-                        m_validator.Dictionary.TargetNamespace,
-                        m_validator.Dictionary.Namespaces));
-            }
-
-            List<Parameter> fields = [];
-            var parents = new Stack<DataTypeDesign>();
-
-            for (DataTypeDesign parent = dataType;
-                parent != null;
-                parent = parent.BaseTypeNode as DataTypeDesign)
-            {
-                if (parent.Fields != null)
-                {
-                    parents.Push(parent);
-                }
-            }
-
-            while (parents.Count > 0)
-            {
-                DataTypeDesign parent = parents.Pop();
-
-                foreach (Parameter field in parent.Fields)
-                {
-                    if (IsExcluded(field))
-                    {
-                        continue;
-                    }
-
-                    if (ReferenceEquals(dataType, parent))
-                    {
-                        fields.Add(field);
-                        continue;
-                    }
-
-                    fields.Add(new Parameter
-                    {
-                        DataType = field.DataType,
-                        DataTypeNode = field.DataTypeNode,
-                        Description = field.Description,
-                        Identifier = field.Identifier,
-                        IdentifierInName = field.IdentifierInName,
-                        IdentifierSpecified = field.IdentifierSpecified,
-                        IsInherited = true,
-                        Name = field.Name,
-                        Parent = field.Parent,
-                        ValueRank = field.ValueRank,
-                        ArrayDimensions = field.ArrayDimensions,
-                        AllowSubTypes = field.AllowSubTypes,
-                        IsOptional = field.IsOptional,
-                        BitMask = field.BitMask,
-                        DefaultValue = field.DefaultValue,
-                        ReleaseStatus = field.ReleaseStatus
-                    });
-                }
-            }
-
-            if (dataType.BasicDataType == BasicDataType.Enumeration)
-            {
-                uint lengthInBits = 32;
-                bool isOptionSet = false;
-
-                if (dataType.IsOptionSet)
-                {
-                    isOptionSet = true;
-
-                    switch (dataType.BaseType.Name)
-                    {
-                        case "SByte":
-                        case "Byte":
-                            lengthInBits = 8;
-                            break;
-                        case "Int16":
-                        case "UInt16":
-                            lengthInBits = 16;
-                            break;
-                        case "Int32":
-                        case "UInt32":
-                            lengthInBits = 32;
-                            break;
-                        case "Int64":
-                        case "UInt64":
-                            lengthInBits = 64;
-                            break;
-                    }
-
-                    fields.Insert(0, new Parameter
-                    {
-                        Name = "None",
-                        Identifier = 0,
-                        IdentifierSpecified = true,
-                        DataType = fields[0].DataType,
-                        DataTypeNode = fields[0].DataTypeNode,
-                        Parent = fields[0].Parent
-                    });
-                }
-
-                context.Template.AddReplacement(Tokens.LengthInBits, lengthInBits);
-                context.Template.AddReplacement(
-                    Tokens.IsOptionSet,
-                    isOptionSet ? " IsOptionSet=\"true\"" : string.Empty);
-            }
-
-            context.Template.AddReplacement(
-                Tokens.Documentation,
-                [dataType],
-                LoadTemplate_BinaryDocumentation);
-
-            context.Template.AddReplacement(
-                Tokens.ListOfFields,
-                fields,
-                LoadTemplate_BinaryTypeFields);
-
-            return context.Template.Render();
-        }
-
-        private TemplateString LoadTemplate_BinaryTypeFields(ILoadContext context)
-        {
-            if (context.Target is not Parameter field)
-            {
-                return null;
-            }
-
-            if (field.Parent is not DataTypeDesign dataType)
-            {
-                return null;
-            }
-
-            BasicDataType basicType = dataType.BasicDataType;
-
-            string fieldDataType = field.DataTypeNode.GetBinaryDataType(
-                m_validator.Dictionary.TargetNamespace,
-                m_validator.Dictionary.Namespaces);
-
-            if (field.AllowSubTypes)
-            {
-                fieldDataType = "ua:ExtensionObject";
-            }
-
-            if (basicType == BasicDataType.Enumeration)
-            {
-                context.Out.WriteLine(
-                    """<opc:EnumeratedValue Name="{0}" Value="{1}" />""",
-                    field.Name,
-                    field.Identifier);
-                return null;
-            }
-
-            if (field.ValueRank != ValueRank.Scalar)
-            {
-                context.Out.WriteLine(
-                    """<opc:Field Name="NoOf{0}" TypeName="opc:Int32" />""",
-                    field.Name);
-                context.Out.WriteLine(
-                    """<opc:Field Name="{0}" TypeName="{1}" LengthField="NoOf{0}" />""",
-                    field.Name,
-                    fieldDataType);
-                return null;
-            }
-            if (field.IsInherited)
-            {
-                context.Out.WriteLine(
-                    """<opc:Field Name="{0}" TypeName="{1}" SourceType="{2}" />""",
-                    field.Name,
-                    fieldDataType,
-                    (field.Parent as DataTypeDesign).GetBinaryDataType(
-                        m_validator.Dictionary.TargetNamespace,
-                        m_validator.Dictionary.Namespaces));
-            }
-            else
-            {
-                context.Out.WriteLine(
-                    """<opc:Field Name="{0}" TypeName="{1}" />""",
-                    field.Name,
-                    fieldDataType);
-            }
-
-            return null;
-        }
-
-        private TemplateString LoadTemplate_BinaryDocumentation(ILoadContext context)
-        {
-            if (context.Target is not DataTypeDesign dataType)
-            {
-                return null;
-            }
-
-            if (dataType.Description == null ||
-                dataType.Description.IsAutogenerated)
-            {
-                return null;
-            }
-
-            context.Out.WriteLine(
-                "<opc:Documentation>{0}</opc:Documentation>",
-                dataType.Description.Value);
-
-            return context.TemplateString;
         }
 
         private TemplateString LoadTemplate_IdClass(ILoadContext context)
@@ -3143,9 +2405,9 @@ namespace Opc.Ua.SourceGeneration
             context.Template.AddReplacement(Tokens.ChildName, instance.SymbolicName.Name);
             if (instance.Parent is MethodDesign method)
             {
-                context.Template.AddReplacement(
-                    Tokens.ClassName,
-                    method.GetClassName(m_validator.Dictionary.TargetNamespace, m_validator.Dictionary.Namespaces));
+                context.Template.AddReplacement(Tokens.ClassName, method.GetClassName(
+                    m_validator.Dictionary.TargetNamespace,
+                    m_validator.Dictionary.Namespaces));
             }
             else if (instance.Parent is TypeDesign type)
             {
@@ -3210,7 +2472,9 @@ namespace Opc.Ua.SourceGeneration
 
             if (instance.IsOverridden())
             {
-                if (instance.IsOverriddenWithSameClass(m_validator.Dictionary.TargetNamespace, m_validator.Dictionary.Namespaces))
+                if (instance.IsOverriddenWithSameClass(
+                    m_validator.Dictionary.TargetNamespace,
+                    m_validator.Dictionary.Namespaces))
                 {
                     return null;
                 }
@@ -3304,8 +2568,11 @@ namespace Opc.Ua.SourceGeneration
                 instance = instance.GetMergedInstance();
             }
 
-            context.Template.AddReplacement(Tokens.Description, instance.Description != null ? instance.Description.Value : string.Empty);
-            context.Template.AddReplacement(Tokens.ClassName, instance.GetClassName(m_validator.Dictionary.TargetNamespace, m_validator.Dictionary.Namespaces));
+            context.Template.AddReplacement(Tokens.Description,
+                instance.Description != null ? instance.Description.Value : string.Empty);
+            context.Template.AddReplacement(Tokens.ClassName, instance.GetClassName(
+                m_validator.Dictionary.TargetNamespace,
+                m_validator.Dictionary.Namespaces));
             context.Template.AddReplacement(Tokens.ChildName, instance.SymbolicName.Name);
             context.Template.AddReplacement(Tokens.FieldName, instance.GetChildFieldName());
 
@@ -3353,7 +2620,9 @@ namespace Opc.Ua.SourceGeneration
                     continue;
                 }
 
-                if (instance.IsOverriddenWithSameClass(m_validator.Dictionary.TargetNamespace, m_validator.Dictionary.Namespaces))
+                if (instance.IsOverriddenWithSameClass(
+                    m_validator.Dictionary.TargetNamespace,
+                    m_validator.Dictionary.Namespaces))
                 {
                     continue;
                 }
@@ -3389,7 +2658,9 @@ namespace Opc.Ua.SourceGeneration
                     continue;
                 }
 
-                if (instance.IsOverriddenWithSameClass(m_validator.Dictionary.TargetNamespace, m_validator.Dictionary.Namespaces))
+                if (instance.IsOverriddenWithSameClass(
+                    m_validator.Dictionary.TargetNamespace,
+                    m_validator.Dictionary.Namespaces))
                 {
                     continue;
                 }
@@ -3630,7 +2901,7 @@ namespace Opc.Ua.SourceGeneration
 
                 foreach (Parameter child in dataType.Fields)
                 {
-                    if (!IsExcluded(child))
+                    if (!m_validator.IsExcluded(child))
                     {
                         fields.Add(child);
                     }
@@ -3657,7 +2928,7 @@ namespace Opc.Ua.SourceGeneration
             {
                 foreach (InstanceDesign child in children.Items)
                 {
-                    if (!IsExcluded(child))
+                    if (!m_validator.IsExcluded(child))
                     {
                         selectedChildren.Add(child);
                     }
@@ -3716,11 +2987,11 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
-        private void GetBrowseNames(
+        private void CollectBrowseNames(
             NodeDesign node,
             SortedDictionary<string, string> browseNames)
         {
-            if (IsExcluded(node))
+            if (m_validator.IsExcluded(node))
             {
                 return;
             }
@@ -3742,7 +3013,7 @@ namespace Opc.Ua.SourceGeneration
 
             foreach (NodeDesign child in node.Children.Items)
             {
-                if (IsExcluded(child))
+                if (m_validator.IsExcluded(child))
                 {
                     continue;
                 }
@@ -3780,27 +3051,14 @@ namespace Opc.Ua.SourceGeneration
 
                 if (child is InstanceDesign instance && instance.InstanceDeclarationNode == null)
                 {
-                    GetBrowseNames(child, browseNames);
+                    CollectBrowseNames(child, browseNames);
                 }
             }
-        }
-
-        private SortedDictionary<string, string> GetBrowseNames(IReadOnlyList<NodeDesign> nodes)
-        {
-            SortedDictionary<string, string> browseNames = [];
-
-            foreach (NodeDesign node in nodes)
-            {
-                GetBrowseNames(node, browseNames);
-            }
-
-            return browseNames;
         }
 
         private bool IsParentExcluded(NodeDesign root, KeyValuePair<string, HierarchyNode> child)
         {
             string parentId = child.Key;
-            _ = child.Value;
 
             while (parentId != null)
             {
@@ -3816,7 +3074,7 @@ namespace Opc.Ua.SourceGeneration
                     return false;
                 }
 
-                if (IsExcluded(parent.Instance))
+                if (m_validator.IsExcluded(parent.Instance))
                 {
                     return true;
                 }
@@ -3838,12 +3096,14 @@ namespace Opc.Ua.SourceGeneration
             {
                 NodeDesign node = m_validator.Dictionary.Items[ii];
 
-                if (IsExcluded(node))
+                if (m_validator.IsExcluded(node))
                 {
                     continue;
                 }
 
-                if (node is InstanceDesign instance && instance.TypeDefinitionNode != null && IsExcluded(instance.TypeDefinitionNode))
+                if (node is InstanceDesign instance &&
+                    instance.TypeDefinitionNode != null &&
+                    m_validator.IsExcluded(instance.TypeDefinitionNode))
                 {
                     continue;
                 }
@@ -3882,7 +3142,7 @@ namespace Opc.Ua.SourceGeneration
                         continue;
                     }
 
-                    if (IsExcluded(current.Value.Instance))
+                    if (m_validator.IsExcluded(current.Value.Instance))
                     {
                         continue;
                     }
@@ -3894,7 +3154,8 @@ namespace Opc.Ua.SourceGeneration
 
                     var method = current.Value.Instance as MethodDesign;
 
-                    if (method?.MethodDeclarationNode != null && IsExcluded(method?.MethodDeclarationNode))
+                    if (method?.MethodDeclarationNode != null &&
+                        m_validator.IsExcluded(method?.MethodDeclarationNode))
                     {
                         continue;
                     }
@@ -3903,12 +3164,15 @@ namespace Opc.Ua.SourceGeneration
                     {
                         if (!current.Value.ExplicitlyDefined)
                         {
-                            if (current.Value.Inherited && (current.Value.Instance == null || current.Value.Instance.BrowseName == current.Value.RelativePath))
+                            if (current.Value.Inherited &&
+                                (current.Value.Instance == null ||
+                                    current.Value.Instance.BrowseName == current.Value.RelativePath))
                             {
                                 continue;
                             }
 
-                            if (current.Value.Instance is InstanceDesign child && child.ModellingRule != ModellingRule.Mandatory)
+                            if (current.Value.Instance is InstanceDesign child &&
+                                child.ModellingRule != ModellingRule.Mandatory)
                             {
                                 continue;
                             }
@@ -3940,7 +3204,8 @@ namespace Opc.Ua.SourceGeneration
                         //}
                     }
 
-                    if (current.Value.Instance.NumericIdSpecified ? current.Value.Instance.NumericId == 0 : current.Value.Instance.StringId == null)
+                    if (current.Value.Instance.NumericIdSpecified ?
+                        current.Value.Instance.NumericId == 0 : current.Value.Instance.StringId == null)
                     {
                         continue;
                     }
@@ -3963,19 +3228,19 @@ namespace Opc.Ua.SourceGeneration
         {
             if (Options.Exclusions != null)
             {
-                foreach (string jj in Options.Exclusions)
+                foreach (string exclusion in Options.Exclusions)
                 {
-                    if (jj == node.ReleaseStatus.ToString())
+                    if (exclusion == node.ReleaseStatus.ToString())
                     {
                         return true;
                     }
 
-                    if (node.Categories != null && node.Categories.Contains(jj))
+                    if (node.Categories != null && node.Categories.Contains(exclusion))
                     {
                         return true;
                     }
 
-                    if (!string.IsNullOrEmpty(node.Specification) && jj == node.Specification)
+                    if (!string.IsNullOrEmpty(node.Specification) && exclusion == node.Specification)
                     {
                         return true;
                     }
@@ -4004,41 +3269,20 @@ namespace Opc.Ua.SourceGeneration
 
             if (Options.Exclusions != null)
             {
-                foreach (string jj in Options.Exclusions)
+                foreach (string exclusion in Options.Exclusions)
                 {
-                    if (jj == node.ReleaseStatus.ToString())
+                    if (exclusion == node.ReleaseStatus.ToString())
                     {
                         return true;
                     }
 
                     if (node.Category != null &&
-                        node.Category.Contains(jj, StringComparison.Ordinal))
+                        node.Category.Contains(exclusion, StringComparison.Ordinal))
                     {
                         return true;
                     }
 
-                    if (node.PartNo != 0 && jj == $"Part{node.PartNo}")
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        private bool IsExcluded(Parameter parameter)
-        {
-            if (parameter == null)
-            {
-                return false;
-            }
-
-            if (Options.Exclusions != null)
-            {
-                foreach (string jj in Options.Exclusions)
-                {
-                    if (jj == parameter.ReleaseStatus.ToString())
+                    if (node.PartNo != 0 && exclusion == $"Part{node.PartNo}")
                     {
                         return true;
                     }
@@ -4046,24 +3290,6 @@ namespace Opc.Ua.SourceGeneration
             }
 
             return false;
-        }
-
-        /// <summary>
-        /// Returns a list of nodes to process.
-        /// </summary>
-        private List<NodeDesign> GetNodeList()
-        {
-            List<NodeDesign> nodes = [];
-
-            foreach (NodeDesign node in m_validator.Dictionary.Items)
-            {
-                if (!IsExcluded(node) && !node.IsDeclaration)
-                {
-                    nodes.Add(node);
-                }
-            }
-
-            return nodes;
         }
 
         /// <summary>
