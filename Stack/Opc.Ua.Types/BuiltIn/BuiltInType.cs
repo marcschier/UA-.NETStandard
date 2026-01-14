@@ -27,11 +27,6 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-#if NET8_0_OR_GREATER
-using System.Collections.Frozen;
-#else
-#endif
-
 namespace Opc.Ua
 {
     /// <summary>

@@ -29,11 +29,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Xml;
 using Opc.Ua.Export;
 using Opc.Ua.Schema.Model;
 using Opc.Ua.Types;
@@ -81,7 +77,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Generates all files
         /// </summary>
-        public void Emit(bool includeNodeSetXml = false, bool skipSchemas = false)
+        public void Emit(bool includeNodeSetXml = false, bool validateSchemas = false)
         {
             var constantsGenerator = new ConstantsGenerator(
                 m_fileSystem,
@@ -99,20 +95,30 @@ namespace Opc.Ua.SourceGeneration
                 UseXmlInitializers);
             classGenerator.Emit();
 
-            if (!skipSchemas)
-            {
-                var xmlSchemaGenerator = new XmlSchemaGenerator(
-                    m_fileSystem,
-                    m_outputFolder,
-                    m_validator);
-                xmlSchemaGenerator.Emit();
+            var xmlSchemaGenerator = new XmlSchemaGenerator(
+                m_fileSystem,
+                m_outputFolder,
+                m_validator);
+            TextFileResource xmlSchemaResource = xmlSchemaGenerator.Emit(
+                validateOutput: validateSchemas);
 
-                var binarySchemaGenerator = new BinarySchemaGenerator(
-                    m_fileSystem,
-                    m_outputFolder,
-                    m_validator);
-                binarySchemaGenerator.Emit();
-            }
+            var binarySchemaGenerator = new BinarySchemaGenerator(
+                m_fileSystem,
+                m_outputFolder,
+                m_validator);
+            TextFileResource binarySchemaResource = binarySchemaGenerator.Emit(
+                validateOutput: validateSchemas);
+
+            var schemaResources = new ResourceGenerator(
+                m_fileSystem,
+                m_outputFolder,
+                Options);
+            schemaResources.Embed(
+                Constants.CoreNamespacePrefix,
+                "XmlSchemas",
+                false,
+                binarySchemaResource,
+                xmlSchemaResource);
 
             GenerateNodeSet(includeNodeSetXml);
         }

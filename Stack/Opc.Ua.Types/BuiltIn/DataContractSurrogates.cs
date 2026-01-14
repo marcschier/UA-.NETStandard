@@ -154,7 +154,7 @@ namespace Opc.Ua
             { typeof(StatusCode), typeof(SerializableStatusCode) },
             { typeof(QualifiedName), typeof(SerializableQualifiedName) },
             { typeof(Variant), typeof(SerializableVariant) },
-            { typeof(LocalizedText), typeof(SerializableLocalizedText) },
+            { typeof(LocalizedText), typeof(SerializableLocalizedText) }
         };
     }
 }

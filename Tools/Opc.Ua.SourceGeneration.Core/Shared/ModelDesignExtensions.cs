@@ -37,7 +37,6 @@ using Opc.Ua.Types;
 
 namespace Opc.Ua.SourceGeneration
 {
-
     /// <summary>
     /// Defines where to add nullable annotations
     /// </summary>
@@ -853,8 +852,7 @@ namespace Opc.Ua.SourceGeneration
                 namespaces,
                 nullable: isOptional ? NullableAnnotation.Nullable : NullableAnnotation.NonNullable);
 
-            if (typeName is "global::Opc.Ua.IEncodeable" ||
-                typeName is "global::Opc.Ua.IEncodeable?")
+            if (typeName is "global::Opc.Ua.IEncodeable" or "global::Opc.Ua.IEncodeable?")
             {
                 typeName = "global::Opc.Ua.ExtensionObject";
             }
@@ -1290,7 +1288,7 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.Double:
                     return "opc:Double";
                 case BasicDataType.String:
-                    return "opc:String";
+                    return "opc:CharArray";
                 case BasicDataType.DateTime:
                     return "opc:DateTime";
                 case BasicDataType.Guid:

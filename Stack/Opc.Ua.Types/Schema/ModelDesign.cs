@@ -1812,6 +1812,6 @@ namespace Opc.Ua.Schema.Model
         /// <summary>
         /// Test
         /// </summary>
-        Test,
+        Test
     }
 }

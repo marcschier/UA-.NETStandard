@@ -27,9 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using Opc.Ua.Schema.Types;
 using Opc.Ua.Types;
@@ -45,12 +43,7 @@ namespace Opc.Ua.SourceGeneration
         /// Returns the list of datatypes to process.
         /// </summary>
         public static IReadOnlyList<DataType> GetDataTypeList(
-            this TypeDictionaryValidator validator,
-            Type type,
-            IReadOnlyList<string> dictionariesToExport,
-            IReadOnlyList<string> exclusions,
-            bool exportAll,
-            bool exportApi)
+            this TypeDictionaryValidator validator)
         {
             // collect datatypes with the specified type.
             var datatypes = new List<DataType>();
@@ -59,41 +52,21 @@ namespace Opc.Ua.SourceGeneration
             {
                 if (dictionary.TargetNamespace != Namespaces.OpcUaBuiltInTypes)
                 {
-                    if (exportAll || dictionariesToExport?.Contains(dictionary.TargetNamespace) == true)
-                    {
-                        CollectDatatypes(dictionary, type, datatypes, exportApi);
-                    }
+                    CollectDatatypes(dictionary, datatypes);
                 }
             }
 
             // include identifiers from the target dictionary.
-            CollectDatatypes(validator.Dictionary, type, datatypes, exportApi);
-
-            if (exclusions == null)
-            {
-                return datatypes;
-            }
-
-            var datatypes2 = new List<DataType>();
-            foreach (DataType ii in datatypes)
-            {
-                if (!TypeDictionaryValidator.IsExcluded(exclusions, ii))
-                {
-                    datatypes2.Add(ii);
-                }
-            }
-
-            return datatypes2;
+            CollectDatatypes(validator.Dictionary, datatypes);
+            return datatypes;
         }
 
         /// <summary>
         /// Returns the list of datatypes to process.
         /// </summary>
-        public static void CollectDatatypes(
+        private static void CollectDatatypes(
             this TypeDictionary dictionary,
-            Type type,
-            List<DataType> datatypes,
-            bool exportApi)
+            List<DataType> datatypes)
         {
             if (dictionary == null || dictionary.Items == null || datatypes == null)
             {
@@ -103,26 +76,18 @@ namespace Opc.Ua.SourceGeneration
             // include identifiers from the target dictionary.
             foreach (DataType datatype in dictionary.Items)
             {
-                if (type == null || type.IsInstanceOfType(datatype))
+                if (datatype is ComplexType complexType)
                 {
-                    if (datatype is ComplexType complexType)
-                    {
-                        GetDataTypeList(type, complexType.Field, datatypes);
-                    }
-
-                    if (datatype is ServiceType serviceType)
-                    {
-                        if (exportApi && serviceType.InterfaceType == InterfaceType.SecureChannel)
-                        {
-                            continue;
-                        }
-
-                        GetDataTypeList(type, serviceType.Request, datatypes);
-                        GetDataTypeList(type, serviceType.Response, datatypes);
-                    }
-
-                    datatypes.Add(datatype);
+                    GetDataTypeList(complexType.Field, datatypes);
                 }
+
+                if (datatype is ServiceType serviceType)
+                {
+                    GetDataTypeList(serviceType.Request, datatypes);
+                    GetDataTypeList(serviceType.Response, datatypes);
+                }
+
+                datatypes.Add(datatype);
             }
         }
 
@@ -154,7 +119,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Returns the list of datatypes to process.
         /// </summary>
-        private static void GetDataTypeList(Type type, FieldType[] fields, List<DataType> datatypes)
+        private static void GetDataTypeList(FieldType[] fields, List<DataType> datatypes)
         {
             if (fields != null)
             {
@@ -162,11 +127,8 @@ namespace Opc.Ua.SourceGeneration
                 {
                     if (field.ComplexType != null)
                     {
-                        if (type == null || type.IsInstanceOfType(field.ComplexType))
-                        {
-                            datatypes.Add(field.ComplexType);
-                            GetDataTypeList(type, field.ComplexType.Field, datatypes);
-                        }
+                        datatypes.Add(field.ComplexType);
+                        GetDataTypeList(field.ComplexType.Field, datatypes);
                     }
                 }
             }

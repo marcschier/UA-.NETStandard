@@ -29,10 +29,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Xml;
 using Opc.Ua.Schema.Model;
 using Opc.Ua.Types;
 
@@ -78,44 +75,44 @@ namespace Opc.Ua.SourceGeneration
             return schemaFile.AsTextFileResource(namespacePrefix);
         }
 
-        public void WriteTemplate_BinarySchema(string schemaFile)
+        public void WriteTemplate_BinarySchema(string fileName)
         {
-            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
-                m_outputFolder,
-                schemaFile));
-
+            using TextWriter writer = m_fileSystem.CreateTextWriter(fileName);
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, SchemaTemplates.BinarySchema_File_xml);
 
-            template.AddReplacement(Tokens.DictionaryUri, m_validator.Dictionary.TargetNamespace);
+            string targetNamespace = m_validator.Dictionary.TargetNamespace;
+
+            template.AddReplacement(Tokens.DictionaryUri, targetNamespace);
 
             template.AddReplacement(
                 Tokens.XmlnsS0ListOfNamespaces,
                 m_validator.Dictionary.Namespaces,
-                LoadTemplate_BinaryNamespaceImports);
+                LoadTemplate_Imports);
 
             template.AddReplacement(
                 Tokens.Imports,
                 m_validator.Dictionary.Namespaces,
-                LoadTemplate_BinaryNamespaceImports);
+                LoadTemplate_Imports);
 
             template.AddReplacement(
                 Tokens.BuiltInTypes,
                 SchemaTemplates.BinarySchema_BuiltInTypes_bsd,
                 [m_validator.Dictionary],
-                LoadTemplate_BinaryType,
-                WriteTemplate_BinaryType);
+                LoadTemplate_DataType,
+                WriteTemplate_DataType);
 
             template.AddReplacement(
                 Tokens.ListOfTypes,
-                [.. m_validator.GetNodeDesigns()],
-                LoadTemplate_BinaryType,
-                WriteTemplate_BinaryType);
+                SchemaTemplates.BinarySchema_OpaqueType_xml,
+                GetListOfTypes(),
+                LoadTemplate_DataType,
+                WriteTemplate_DataType);
 
             template.Render();
         }
 
-        private TemplateString LoadTemplate_BinaryNamespaceImports(ILoadContext context)
+        private TemplateString LoadTemplate_Imports(ILoadContext context)
         {
             if (context.Target is not Namespace ns)
             {
@@ -135,7 +132,9 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 context.Out.WriteLine(
-                    "\nxmlns:{0}=\"{1}\"\n",
+                    """
+                    xmlns:{0}="{1}"
+                    """,
                     m_validator.Dictionary.Namespaces.GetXmlNamespacePrefix(ns.Value),
                     ns.Value);
                 return null;
@@ -149,7 +148,7 @@ namespace Opc.Ua.SourceGeneration
             return null;
         }
 
-        private TemplateString LoadTemplate_BinaryType(ILoadContext context)
+        private TemplateString LoadTemplate_DataType(ILoadContext context)
         {
             if (context.Target is ModelDesign)
             {
@@ -166,8 +165,10 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            // don't write built-in types.
-            if (dataType.NumericId < 256 && dataType.SymbolicId.Namespace == Namespaces.OpcUa)
+#if TRUE
+            // don't write built-in types already in the template.
+            if (dataType.NumericId < 256 &&
+                dataType.SymbolicId.Namespace == Namespaces.OpcUa)
             {
                 switch (dataType.NumericId)
                 {
@@ -187,6 +188,7 @@ namespace Opc.Ua.SourceGeneration
                         return null;
                 }
             }
+#endif
 
             if (dataType.Purpose == Schema.Model.DataTypePurpose.CodeGenerator)
             {
@@ -195,19 +197,20 @@ namespace Opc.Ua.SourceGeneration
 
             BasicDataType basicType = dataType.BasicDataType;
 
+            if (basicType == BasicDataType.UserDefined)
+            {
+                return SchemaTemplates.BinarySchema_ComplexType_xml;
+            }
+
             if (basicType == BasicDataType.Enumeration)
             {
                 return SchemaTemplates.BinarySchema_EnumeratedType_xml;
-            }
-            else if (basicType == BasicDataType.UserDefined)
-            {
-                return SchemaTemplates.BinarySchema_ComplexType_xml;
             }
 
             return SchemaTemplates.BinarySchema_OpaqueType_xml;
         }
 
-        private bool WriteTemplate_BinaryType(IWriteContext context)
+        private bool WriteTemplate_DataType(IWriteContext context)
         {
             if (context.Target is ModelDesign model)
             {
@@ -234,7 +237,7 @@ namespace Opc.Ua.SourceGeneration
                         m_validator.Dictionary.Namespaces));
             }
 
-            List<Parameter> fields = new();
+            List<Parameter> fields = [];
             var parents = new Stack<DataTypeDesign>();
 
             for (DataTypeDesign parent = dataType;
@@ -340,12 +343,12 @@ namespace Opc.Ua.SourceGeneration
             context.Template.AddReplacement(
                 Tokens.ListOfFields,
                 fields,
-                LoadTemplate_BinaryTypeFields);
+                LoadTemplate_Field);
 
             return context.Template.Render();
         }
 
-        private TemplateString LoadTemplate_BinaryTypeFields(ILoadContext context)
+        private TemplateString LoadTemplate_Field(ILoadContext context)
         {
             if (context.Target is not Parameter field)
             {
@@ -427,6 +430,11 @@ namespace Opc.Ua.SourceGeneration
                 dataType.Description.Value);
 
             return context.TemplateString;
+        }
+
+        private IReadOnlyList<NodeDesign> GetListOfTypes()
+        {
+            return [.. m_validator.GetNodeDesigns()];
         }
 
         private readonly IFileSystem m_fileSystem;

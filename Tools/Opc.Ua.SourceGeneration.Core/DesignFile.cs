@@ -96,7 +96,7 @@ namespace Opc.Ua.SourceGeneration
             bool useAllowSubtypes = true)
         {
             DesignFileOptions options = designFiles.Options ?? new DesignFileOptions();
-            var m_validator = new ModelDesignValidator(
+            var validator = new ModelDesignValidator(
                 fileSystem,
                 options.StartId,
                 exclusions,
@@ -109,8 +109,8 @@ namespace Opc.Ua.SourceGeneration
                 ModelPublicationDate = options.ModelPublicationDate
             };
 
-            m_validator.Validate(designFiles.DesignFiles, identifierFilePath, false);
-            return m_validator;
+            validator.Validate(designFiles.DesignFiles, identifierFilePath, false);
+            return validator;
         }
     }
 }

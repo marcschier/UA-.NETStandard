@@ -572,7 +572,7 @@ namespace Opc.Ua
                     BuiltInType builtInType = TypeInfo.GetBuiltInType(m_dataType);
                     if (builtInType != BuiltInType.Null)
                     {
-                        TypeInfo typeInfo = TypeInfo.Create(builtInType, m_valueRank);
+                        var typeInfo = TypeInfo.Create(builtInType, m_valueRank);
                         return new Variant(m_value, typeInfo);
                     }
                 }

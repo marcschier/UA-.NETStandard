@@ -28,10 +28,7 @@
  * ======================================================================*/
 
 using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Xml;
 using Opc.Ua.Schema.Model;
 using Opc.Ua.Types;
@@ -80,19 +77,23 @@ namespace Opc.Ua.SourceGeneration
             return schemaFile.AsTextFileResource(namespacePrefix);
         }
 
-        private void WriteTemplate_XmlSchema(string schemaFile)
+        private void WriteTemplate_XmlSchema(string fileName)
         {
-            using TextWriter writer = m_fileSystem.CreateTextWriter(schemaFile);
+            using TextWriter writer = m_fileSystem.CreateTextWriter(fileName);
             var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, SchemaTemplates.XmlSchema_File_xml);
 
             if (!string.IsNullOrEmpty(m_validator.Dictionary.TargetNamespaceInfo.XmlNamespace))
             {
-                template.AddReplacement(Tokens.Namespace, m_validator.Dictionary.TargetNamespaceInfo.XmlNamespace);
+                template.AddReplacement(
+                    Tokens.Namespace,
+                    m_validator.Dictionary.TargetNamespaceInfo.XmlNamespace);
             }
             else
             {
-                template.AddReplacement(Tokens.Namespace, m_validator.Dictionary.TargetNamespaceInfo.Value);
+                template.AddReplacement(
+                    Tokens.Namespace,
+                    m_validator.Dictionary.TargetNamespaceInfo.Value);
             }
 
             template.AddReplacement(Tokens.TargetVersion, m_validator.Dictionary.TargetVersion);
@@ -104,30 +105,30 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(
                 Tokens.XmlnsS0ListOfNamespaces,
                 m_validator.Dictionary.Namespaces,
-                LoadTemplate_XmlNamespaceImports);
+                LoadTemplate_Imports);
 
             template.AddReplacement(
                 Tokens.Imports,
                 m_validator.Dictionary.Namespaces,
-                LoadTemplate_XmlNamespaceImports);
+                LoadTemplate_Imports);
 
             template.AddReplacement(
                 Tokens.BuiltInTypes,
-                SchemaTemplates.Stack_XmlSchema_BuiltInTypes_xsd,
+                SchemaTemplates.XmlSchema_BuiltInTypes_xsd,
                 [m_validator.Dictionary],
-                LoadTemplate_XmlType,
-                WriteTemplate_XmlType);
+                LoadTemplate_DataType,
+                WriteTemplate_DataType);
 
             template.AddReplacement(
                 Tokens.ListOfTypes,
                 [.. m_validator.GetNodeDesigns()],
-                LoadTemplate_XmlType,
-                WriteTemplate_XmlType);
+                LoadTemplate_DataType,
+                WriteTemplate_DataType);
 
             template.Render();
         }
 
-        private TemplateString LoadTemplate_XmlNamespaceImports(ILoadContext context)
+        private TemplateString LoadTemplate_Imports(ILoadContext context)
         {
             if (context.Target is not Namespace ns)
             {
@@ -165,7 +166,7 @@ namespace Opc.Ua.SourceGeneration
             return null;
         }
 
-        private TemplateString LoadTemplate_XmlType(ILoadContext context)
+        private TemplateString LoadTemplate_DataType(ILoadContext context)
         {
             if (context.Target is ModelDesign)
             {
@@ -182,8 +183,10 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            // don't write built-in types.
-            if (dataType.NumericId < 256 && dataType.SymbolicId.Namespace == Namespaces.OpcUa)
+#if TRUE
+            // don't write built-in types already in the template.
+            if (dataType.NumericId < 256 &&
+                dataType.SymbolicId.Namespace == Namespaces.OpcUa)
             {
                 switch (dataType.NumericId)
                 {
@@ -200,6 +203,7 @@ namespace Opc.Ua.SourceGeneration
                         return null;
                 }
             }
+#endif
 
             BasicDataType basicType = dataType.BasicDataType;
 
@@ -233,7 +237,7 @@ namespace Opc.Ua.SourceGeneration
             return SchemaTemplates.XmlSchema_SimpleType_xml;
         }
 
-        private bool WriteTemplate_XmlType(IWriteContext context)
+        private bool WriteTemplate_DataType(IWriteContext context)
         {
             if (context.Target is ModelDesign model)
             {

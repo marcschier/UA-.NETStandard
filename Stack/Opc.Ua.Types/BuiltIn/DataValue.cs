@@ -211,7 +211,7 @@ namespace Opc.Ua
             {
                 null => false,
                 DataValue value => Equals(value),
-                _ => base.Equals(obj),
+                _ => base.Equals(obj)
             };
         }
 

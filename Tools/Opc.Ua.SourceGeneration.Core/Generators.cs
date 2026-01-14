@@ -31,7 +31,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Opc.Ua.Schema.Model;
-using Opc.Ua.Types;
 
 namespace Opc.Ua.SourceGeneration
 {
@@ -259,41 +258,6 @@ namespace Opc.Ua.SourceGeneration
 
             if ((generatorType & StackGenerationType.Models) != 0)
             {
-                bool validateSchemas = !options.OptimizeForCompileSpeed;
-                var typeDictionaries = new Dictionary<string, string>();
-                var xmlSchema = new XmlSchemaGeneratorCore(
-                    fileSystem,
-                    BuiltInDesignFiles.UACoreServicesXml,
-                    outputDir,
-                    typeDictionaries,
-                    options.Exclusions);
-                TextFileResource xmlSchemaResource = xmlSchema.Emit(
-                    Constants.CoreNamespacePrefix,
-                    validateOutput: validateSchemas);
-
-                typeDictionaries = [];
-                var binarySchema = new BinarySchemaGeneratorCore(
-                    fileSystem,
-                    BuiltInDesignFiles.UACoreServicesXml,
-                    outputDir,
-                    typeDictionaries,
-                    options.Exclusions);
-                TextFileResource binarySchemaResource = binarySchema.Emit(
-                    Constants.CoreNamespacePrefix,
-                    Namespaces.OpcUa,
-                    validateOutput: validateSchemas);
-
-                var schemaResources = new ResourceGenerator(
-                    fileSystem,
-                    outputDir,
-                    options);
-                schemaResources.Embed(
-                    Constants.CoreNamespacePrefix,
-                    "XmlSchemas",
-                    false,
-                    binarySchemaResource,
-                    xmlSchemaResource);
-
                 var messagesGenerator = new MessagesGenerator(
                     fileSystem,
                     outputDir,
@@ -310,13 +274,15 @@ namespace Opc.Ua.SourceGeneration
                     outputDir,
                     options);
                 statusCodesGenerator.Emit();
+
                 var modelGenerator = new ModelGenerator(
                     fileSystem,
                     outputDir,
                     modelDesign,
                     telemetry,
                     options);
-                modelGenerator.Emit(skipSchemas: true);
+                modelGenerator.Emit(
+                    validateSchemas: !options.OptimizeForCompileSpeed);
             }
         }
     }

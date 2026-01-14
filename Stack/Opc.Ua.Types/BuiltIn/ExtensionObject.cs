@@ -156,10 +156,10 @@ namespace Opc.Ua
         /// <value>The encoding for the embedded object.</value>
         public ExtensionObjectEncoding Encoding => Body switch
         {
-            string s => ExtensionObjectEncoding.Json,
-            XmlElement x => ExtensionObjectEncoding.Xml,
-            byte[] b => ExtensionObjectEncoding.Binary,
-            IEncodeable e => ExtensionObjectEncoding.EncodeableObject,
+            string => ExtensionObjectEncoding.Json,
+            XmlElement => ExtensionObjectEncoding.Xml,
+            byte[] => ExtensionObjectEncoding.Binary,
+            IEncodeable => ExtensionObjectEncoding.EncodeableObject,
             _ => ExtensionObjectEncoding.None
         };
 

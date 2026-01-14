@@ -2182,11 +2182,9 @@ namespace Opc.Ua
                 }
 
                 // read the bytes of the body.
-                extension = new ExtensionObject(
+                return new ExtensionObject(
                     extension.TypeId,
                     SafeReadBytes(length));
-
-                return extension;
             }
 
             // any unread data indicates a decoding error.

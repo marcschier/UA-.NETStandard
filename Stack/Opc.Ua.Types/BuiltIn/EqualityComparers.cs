@@ -172,6 +172,7 @@ namespace Opc.Ua
         {
             return CoreUtils.IsEqual(x, y);
         }
+
         /// <inheritdoc/>
         public int GetHashCode(DateTime obj)
         {
