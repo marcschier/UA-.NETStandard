@@ -3609,14 +3609,14 @@ namespace Opc.Ua.Client
                 }
                 if (error.StatusCode == StatusCodes.BadSessionIdInvalid ||
                     error.StatusCode == StatusCodes.BadSecureChannelIdInvalid ||
-                    error.StatusCode == StatusCodes.BadSecureChannelClosed ||
-                    error.StatusCode == StatusCodes.BadRequestTimeout)
+                    error.StatusCode == StatusCodes.BadSecureChannelClosed)
                 {
                     OnKeepAliveError(error);
                     return;
                 }
                 // Servers may return this error when overloaded
-                if (error.StatusCode != StatusCodes.BadTimeout)
+                if (error.StatusCode != StatusCodes.BadTimeout &&
+                    error.StatusCode != StatusCodes.BadRequestTimeout)
                 {
                     if (error.StatusCode != StatusCodes.BadTooManyOperations &&
                         error.StatusCode != StatusCodes.BadTcpServerTooBusy &&

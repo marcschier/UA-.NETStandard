@@ -856,6 +856,7 @@ namespace Opc.Ua.Server
                 {
                     serverStatusState.Timestamp = now;
                     serverStatusState.CurrentTime.Timestamp = now;
+                    serverStatusState.State.Timestamp = now;
                 }
             }
         }
