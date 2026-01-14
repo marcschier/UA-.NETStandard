@@ -31,7 +31,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Xml;
 using Opc.Ua.Schema.Model;
 using Opc.Ua.Types;
 

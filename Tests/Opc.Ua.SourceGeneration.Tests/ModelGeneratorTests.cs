@@ -114,7 +114,7 @@ namespace Opc.Ua.SourceGeneration
                 .WithUpdatedAnalyzerConfigOptions(options)
                 ;
             GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation);
-            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(15));
+            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(16));
         }
 
         private static GeneratorRunResult GenerateAndCompile(

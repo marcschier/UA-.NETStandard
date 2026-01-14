@@ -27,10 +27,8 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System.Collections.Generic;
 using System.Text;
 using Opc.Ua.Schema.Types;
-using Opc.Ua.Types;
 
 namespace Opc.Ua.SourceGeneration
 {

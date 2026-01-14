@@ -27,9 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
 using System.Collections.Generic;
-using System.Threading;
 using Opc.Ua.Schema.Model;
 
 namespace Opc.Ua.SourceGeneration
@@ -48,13 +46,15 @@ namespace Opc.Ua.SourceGeneration
         /// <param name="telemetry">Telemetry context for logging</param>
         /// <param name="options">Generator options</param>
         /// <param name="useAllowSubtypes">allow subtypes</param>
+        /// <param name="identifierFiles"></param>
         public static void GenerateCode(
             this DesignFileCollection designFiles,
             IFileSystem fileSystem,
             string outputDir,
             ITelemetryContext telemetry,
             GeneratorOptions options = null,
-            bool useAllowSubtypes = false)
+            bool useAllowSubtypes = false,
+            List<string> identifierFiles = null)
         {
             if (designFiles.DesignFiles.Count == 0)
             {
@@ -67,21 +67,22 @@ namespace Opc.Ua.SourceGeneration
                 .AsFileSystem("Opc.Ua.SourceGeneration.Design")
                 .WithFallback(fileSystem);
 
-            // The rest of the input is processed as design files
-            ModelDesignValidator modelDesign = fileSystem.OpenModelDesign(
-                designFiles,
-                null, // identifierFile,
-                options.Exclusions,
-                telemetry,
-                useAllowSubtypes);
-            Generate(new GeneratorContext
+            foreach (DesignFileCollection model in designFiles.Group(identifierFiles))
             {
-                FileSystem = fileSystem,
-                OutputFolder = outputDir,
-                Validator = modelDesign,
-                Telemetry = telemetry,
-                Options = options
-            });
+                ModelDesignValidator modelDesign = fileSystem.OpenModelDesign(
+                    model,
+                    options.Exclusions,
+                    telemetry,
+                    useAllowSubtypes);
+                Generate(new GeneratorContext
+                {
+                    FileSystem = fileSystem,
+                    OutputFolder = outputDir,
+                    Validator = modelDesign,
+                    Telemetry = telemetry,
+                    Options = options
+                });
+            }
         }
 
         /// <summary>
@@ -127,7 +128,6 @@ namespace Opc.Ua.SourceGeneration
                     {
                         DesignFiles = designFilesForModel
                     },
-                    null,
                     options.Exclusions,
                     telemetry,
                     useAllowSubtypes);
@@ -174,6 +174,7 @@ namespace Opc.Ua.SourceGeneration
                         BuiltInDesignFiles.StandardTypesXml,
                         BuiltInDesignFiles.UACoreServicesXml
                     ],
+                    IdentifierFilePath = BuiltInDesignFiles.StandardTypesCsv,
                     Options = new DesignFileOptions
                     {
                         StartId = 0,
@@ -182,7 +183,6 @@ namespace Opc.Ua.SourceGeneration
                         ReleaseCandidate = true
                     }
                 },
-                BuiltInDesignFiles.StandardTypesCsv,
                 options.Exclusions,
                 telemetry,
                 false);
@@ -239,7 +239,7 @@ namespace Opc.Ua.SourceGeneration
                 validateOutput: validateSchemas);
             var schemaResources = new ResourceGenerator(context);
             schemaResources.Embed(
-                Constants.CoreNamespacePrefix,
+                context.Validator.Dictionary.TargetNamespaceInfo.Prefix,
                 "XmlSchemas",
                 false,
                 binarySchemaResource,

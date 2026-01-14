@@ -28,6 +28,8 @@
  * ======================================================================*/
 
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Opc.Ua.Schema.Model;
 
 namespace Opc.Ua.SourceGeneration
@@ -74,6 +76,12 @@ namespace Opc.Ua.SourceGeneration
         public IReadOnlyList<string> DesignFiles { get; init; }
 
         /// <summary>
+        /// Optional identifier file if not same name and side
+        /// by side with design files
+        /// </summary>
+        public string IdentifierFilePath { get; init; }
+
+        /// <summary>
         /// Design file options
         /// </summary>
         public DesignFileOptions Options { get; init; }
@@ -85,12 +93,44 @@ namespace Opc.Ua.SourceGeneration
     internal static class DesignFileExtensions
     {
         /// <summary>
+        /// Get design file groups for processing. A group is a set of design files
+        /// in the same common folder with an optional csv file included.
+        /// </summary>
+        public static IEnumerable<DesignFileCollection> Group(
+            this DesignFileCollection collection,
+            List<string> identifierFiles = null)
+        {
+            var idFiles = new Dictionary<string, List<string>>();
+            if (identifierFiles != null)
+            {
+                foreach (string idFile in identifierFiles)
+                {
+                    string dir = Path.GetDirectoryName(idFile);
+                    if (!idFiles.TryGetValue(dir, out List<string> value))
+                    {
+                        value = new List<string>();
+                        idFiles[dir] = value;
+                    }
+                    value.Add(idFile);
+                }
+            }
+            return collection.DesignFiles
+                .GroupBy(Path.GetDirectoryName)
+                .Select(g => new DesignFileCollection
+                {
+                    DesignFiles = g.ToList(),
+                    IdentifierFilePath = idFiles.TryGetValue(g.Key, out List<string> files) ?
+                        files.FirstOrDefault() : collection.IdentifierFilePath,
+                    Options = collection.Options
+                });
+        }
+
+        /// <summary>
         /// Validates the model design files
         /// </summary>
         public static ModelDesignValidator OpenModelDesign(
             this IFileSystem fileSystem,
             DesignFileCollection designFiles,
-            string identifierFilePath,
             IReadOnlyList<string> exclusions,
             ITelemetryContext telemetry,
             bool useAllowSubtypes = true)
@@ -109,6 +149,7 @@ namespace Opc.Ua.SourceGeneration
                 ModelPublicationDate = options.ModelPublicationDate
             };
 
+            var identifierFilePath = designFiles.IdentifierFilePath;
             validator.Validate(designFiles.DesignFiles, identifierFilePath, false);
             return validator;
         }

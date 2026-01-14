@@ -83,21 +83,12 @@ namespace Opc.Ua.SourceGeneration
             using var vfs = new VirtualFileSystem(); // Use a virtual file sytem
             try
             {
-                string identiferFile = m_identifierFiles
-                    .Select(i => i.Path)
-                    .FirstOrDefault();
                 if (m_input.Length == 0)
                 {
                     // Nothing to do
                     return;
                 }
 
-                // Load all available nodeset files from the input
-                NodesetFileCollection nodesets = m_input.ToNodeSetFileCollection(
-                    sourceFiles, // .WithFallback(vfs),
-                    m_telemetry);
-
-                // Generate code for all nodesets
                 string[] exclusions = [.. m_options.Exclude
                     .Append("Draft")
                     .Distinct()];
@@ -107,10 +98,15 @@ namespace Opc.Ua.SourceGeneration
                     Exclusions = exclusions,
                     // csharp10 or below does not support utf8 string literals
                     UseUtf8StringLiterals =
-                            m_compilationOptions.LanguageVersion >= LanguageVersion.CSharp11,
+                        m_compilationOptions.LanguageVersion >= LanguageVersion.CSharp11,
                     OptimizeForCompileSpeed =
-                            m_compilationOptions.OptimizationLevel == OptimizationLevel.Debug
+                        m_compilationOptions.OptimizationLevel == OptimizationLevel.Debug
                 };
+
+                // Load all available nodeset files from the input
+                NodesetFileCollection nodesets = m_input.ToNodeSetFileCollection(
+                    sourceFiles, // .WithFallback(vfs),
+                    m_telemetry);
                 nodesets.GenerateCode(
                     sourceFiles.WithFallback(vfs),
                     string.Empty,
@@ -130,7 +126,8 @@ namespace Opc.Ua.SourceGeneration
                     string.Empty,
                     m_telemetry,
                     generatorOptions,
-                    m_options.UseAllowSubtypes);
+                    m_options.UseAllowSubtypes,
+                    [.. m_identifierFiles.Select(i => i.Path)]);
 
                 // Collect all generated cs files and produce them into the compilation
                 foreach (string file in vfs.CreatedFiles
