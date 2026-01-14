@@ -27,24 +27,38 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System.IO;
-using System.Xml;
+using Opc.Ua.Schema.Model;
 
-namespace Opc.Ua.Schema
+namespace Opc.Ua.SourceGeneration
 {
-    internal static class Extensions
+    /// <summary>
+    /// Context for all generators
+    /// </summary>
+    internal sealed record class GeneratorContext
     {
         /// <summary>
-        /// Safe version for assignment of InnerXml.
+        /// File system to use
         /// </summary>
-        /// <param name="doc">The XmlDocument.</param>
-        /// <param name="xml">The Xml document string.</param>
-        internal static void LoadInnerXml(this XmlDocument doc, string xml)
-        {
-            using var sreader = new StringReader(xml);
-            using var reader = XmlReader.Create(sreader, CoreUtils.DefaultXmlReaderSettings());
-            doc.XmlResolver = null;
-            doc.Load(reader);
-        }
+        public required IFileSystem FileSystem { get; init; }
+
+        /// <summary>
+        /// Output folder for generated files
+        /// </summary>
+        public required string OutputFolder { get; init; }
+
+        /// <summary>
+        /// Model design validated
+        /// </summary>
+        public required ModelDesignValidator Validator { get; init; }
+
+        /// <summary>
+        /// Telemetry context for logging
+        /// </summary>
+        public required ITelemetryContext Telemetry { get; init; }
+
+        /// <summary>
+        /// Generator options
+        /// </summary>
+        public required GeneratorOptions Options { get; init; }
     }
 }

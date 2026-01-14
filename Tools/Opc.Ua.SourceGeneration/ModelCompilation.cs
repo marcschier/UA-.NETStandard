@@ -79,6 +79,7 @@ namespace Opc.Ua.SourceGeneration
             }
             var sourceFiles = new SourceGeneratorFileSystem(
                 m_input.Select(i => i.Item1).Concat(m_identifierFiles));
+
             using var vfs = new VirtualFileSystem(); // Use a virtual file sytem
             try
             {
@@ -100,11 +101,22 @@ namespace Opc.Ua.SourceGeneration
                 string[] exclusions = [.. m_options.Exclude
                     .Append("Draft")
                     .Distinct()];
+                var generatorOptions = new GeneratorOptions
+                {
+                    Cancellation = cancellationToken,
+                    Exclusions = exclusions,
+                    // csharp10 or below does not support utf8 string literals
+                    UseUtf8StringLiterals =
+                            m_compilationOptions.LanguageVersion >= LanguageVersion.CSharp11,
+                    OptimizeForCompileSpeed =
+                            m_compilationOptions.OptimizationLevel == OptimizationLevel.Debug
+                };
                 nodesets.GenerateCode(
                     sourceFiles.WithFallback(vfs),
                     string.Empty,
-                    exclusions,
-                    m_telemetry);
+                    m_telemetry,
+                    generatorOptions,
+                    m_options.UseAllowSubtypes);
 
                 // Process any remaining design files
                 new DesignFileCollection
@@ -117,13 +129,7 @@ namespace Opc.Ua.SourceGeneration
                     sourceFiles.WithFallback(vfs),
                     string.Empty,
                     m_telemetry,
-                    new GeneratorOptions
-                    {
-                        Cancellation = cancellationToken,
-                        Exclusions = exclusions,
-                        OptimizeForCompileSpeed =
-                            m_compilationOptions.OptimizationLevel == OptimizationLevel.Debug
-                    },
+                    generatorOptions,
                     m_options.UseAllowSubtypes);
 
                 // Collect all generated cs files and produce them into the compilation

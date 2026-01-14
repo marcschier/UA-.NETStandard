@@ -32,10 +32,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml;
-using Opc.Ua.Schema.Model;
+using Opc.Ua.SourceGeneration;
 using Opc.Ua.Types;
 
-namespace Opc.Ua.SourceGeneration
+namespace Opc.Ua.Schema.Model
 {
     /// <summary>
     /// Defines where to add nullable annotations
@@ -63,6 +63,58 @@ namespace Opc.Ua.SourceGeneration
     /// </summary>
     internal static class ModelDesignExtensions
     {
+        /// <summary>
+        /// Get basic data type from data type design.
+        /// </summary>
+        /// <param name="dataType"></param>
+        /// <returns></returns>
+        public static BasicDataType DetermineBasicDataType(this DataTypeDesign dataType)
+        {
+            if (dataType == null)
+            {
+                return BasicDataType.BaseDataType;
+            }
+
+            if (dataType.IsOptionSet)
+            {
+                return BasicDataType.Enumeration;
+            }
+
+            // check if it is a built in data type.
+            if (dataType.SymbolicName.Namespace == "http://opcfoundation.org/UA/")
+            {
+#if NET8_0_OR_GREATER
+                foreach (string name in Enum.GetNames<BasicDataType>())
+#else
+                foreach (string name in Enum.GetNames(typeof(BasicDataType)))
+#endif
+                {
+                    if (name == dataType.SymbolicName.Name)
+                    {
+#if NET8_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+                        return Enum.Parse<BasicDataType>(dataType.SymbolicName.Name);
+#else
+                        return (BasicDataType)Enum.Parse(
+                            typeof(BasicDataType),
+                            dataType.SymbolicName.Name);
+#endif
+                    }
+                }
+            }
+
+            // recursively search hierarchy if conversion to enum fails.
+            BasicDataType basicType = DetermineBasicDataType(
+                dataType.BaseTypeNode as DataTypeDesign);
+
+            // data type is user defined if a sub-type of structure.
+            if (basicType == BasicDataType.Structure)
+            {
+                return BasicDataType.UserDefined;
+            }
+
+            return basicType;
+        }
+
         /// <summary>
         /// Returns the class name to use when creating an instance of the type.
         /// </summary>
@@ -777,7 +829,7 @@ namespace Opc.Ua.SourceGeneration
                         "global::Opc.Ua.QualifiedName.Parse(\"{0}\")",
                         qualifiedName);
                 case BasicDataType.LocalizedText:
-                    if (decodedValue is not LocalizedText localizedText ||
+                    if (decodedValue is not Opc.Ua.LocalizedText localizedText ||
                         localizedText.IsNullOrEmpty)
                     {
                         return "default";

@@ -41,15 +41,9 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Initializes a new instance of the <see cref="EndpointsGenerator"/> class.
         /// </summary>
-        public EndpointsGenerator(
-            IFileSystem fileSystem,
-            string outputDirectory,
-            ModelDesignValidator validator,
-            GeneratorOptions options)
+        public EndpointsGenerator(GeneratorContext context)
         {
-            m_validator = validator;
-            m_outputFolder = outputDirectory ?? string.Empty;
-            m_fileSystem = fileSystem ?? LocalFileSystem.Instance;
+            m_context = context;
         }
 
         /// <summary>
@@ -63,8 +57,8 @@ namespace Opc.Ua.SourceGeneration
                 new ServiceSet("Discovery", ServiceCategory.Discovery, ServiceCategory.Registration)
             ];
 
-            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
-                m_outputFolder,
+            using TextWriter writer = m_context.FileSystem.CreateTextWriter(Path.Combine(
+                m_context.OutputFolder,
                 CoreUtils.Format("{0}.Endpoints.g.cs", Constants.CoreNamespacePrefix)));
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, CodeTemplates.Endpoints_File_cs);
@@ -92,7 +86,7 @@ namespace Opc.Ua.SourceGeneration
             }
 
             // get datatypes.
-            Service[] datatypes = m_validator.GetListOfServices(serviceSet.Categories);
+            Service[] datatypes = m_context.Validator.GetListOfServices(serviceSet.Categories);
             if (datatypes.Length == 0)
             {
                 return false;
@@ -188,8 +182,6 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         private sealed record class ServiceSet(string Name, params ServiceCategory[] Categories);
 
-        private readonly IFileSystem m_fileSystem;
-        private readonly string m_outputFolder;
-        private readonly ModelDesignValidator m_validator;
+        private readonly GeneratorContext m_context;
     }
 }

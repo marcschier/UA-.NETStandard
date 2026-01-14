@@ -35,7 +35,7 @@ namespace Opc.Ua.SourceGeneration
     internal static class SchemaTemplates
     {
         /// <summary>
-        /// XmlSchemaGenerator.cs
+        /// Xml schema file template
         /// </summary>
         public static readonly TemplateString XmlSchema_File_xml = TemplateString.Parse(
             $$"""
@@ -61,7 +61,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// XmlSchemaGenerator.cs
+        /// Built-in types schema template
         /// </summary>
         public static readonly TemplateString XmlSchema_BuiltInTypes_xsd =
               """
@@ -486,7 +486,7 @@ namespace Opc.Ua.SourceGeneration
               """;
 
         /// <summary>
-        /// XmlSchemaGenerator.cs
+        /// Derived type schema template
         /// </summary>
         public static readonly TemplateString XmlSchema_DerivedType_xml = TemplateString.Parse(
             $$"""
@@ -507,7 +507,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// XmlSchemaGenerator.cs
+        /// Enumerated type schema template
         /// </summary>
         public static readonly TemplateString XmlSchema_EnumeratedType_xml = TemplateString.Parse(
             $$"""
@@ -524,7 +524,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// XmlSchemaGenerator.cs
+        /// Union type schema template
         /// </summary>
         public static readonly TemplateString XmlSchema_Union_xml = TemplateString.Parse(
             $$"""
@@ -544,7 +544,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// XmlSchemaGenerator.cs
+        /// Complex type schema template
         /// </summary>
         public static readonly TemplateString XmlSchema_ComplexType_xml = TemplateString.Parse(
             $$"""
@@ -561,7 +561,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// XmlSchemaGenerator.cs
+        /// Service type schema template
         /// </summary>
         public static readonly TemplateString XmlSchema_ServiceType_xml = TemplateString.Parse(
             $$"""
@@ -585,7 +585,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// XmlSchemaGenerator.cs
+        /// Simple type schema template
         /// </summary>
         public static readonly TemplateString XmlSchema_SimpleType_xml = TemplateString.Parse(
             $$"""
@@ -594,7 +594,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// XmlSchemaGenerator.cs
+        /// Documentation schema template
         /// </summary>
         public static readonly TemplateString XmlSchema_Documentation_xml = TemplateString.Parse(
             $$"""
@@ -605,7 +605,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// XmlSchemaGenerator.cs
+        /// Collection type schema template
         /// </summary>
         public static readonly TemplateString XmlSchema_CollectionType_xml = TemplateString.Parse(
             $$"""
@@ -619,7 +619,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// BinarySchemaGenerator.cs
+        /// Binary schema file template
         /// </summary>
         public static readonly TemplateString BinarySchema_File_xml = TemplateString.Parse(
             $$"""
@@ -641,7 +641,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// BinarySchemaGenerator.cs
+        /// Built-in types schema template
         /// </summary>
         public static readonly TemplateString BinarySchema_BuiltInTypes_bsd =
             """
@@ -829,7 +829,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// BinarySchemaGenerator.cs
+        /// Enumerated type schema template
         /// </summary>
         public static readonly TemplateString BinarySchema_EnumeratedType_xml = TemplateString.Parse(
             $$"""
@@ -841,7 +841,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// BinarySchemaGenerator.cs
+        /// Complex type schema template
         /// </summary>
         public static readonly TemplateString BinarySchema_ComplexType_xml = TemplateString.Parse(
             $$"""
@@ -853,7 +853,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// BinarySchemaGenerator.cs
+        /// Opaque type schema template
         /// </summary>
         public static readonly TemplateString BinarySchema_OpaqueType_xml = TemplateString.Parse(
             $$"""

@@ -37,100 +37,27 @@ using Opc.Ua.Types;
 namespace Opc.Ua.SourceGeneration
 {
     /// <summary>
-    /// Model generator
+    /// Address space generator
     /// </summary>
-    internal sealed class ModelGenerator
+    internal sealed class NodesetGenerator
     {
         /// <summary>
         /// Loads the model design from the specified file and validates it.
         /// </summary>
-        public ModelGenerator(
-            IFileSystem fileSystem,
-            string outputFolder,
-            ModelDesignValidator validator,
-            ITelemetryContext telemetry,
-            GeneratorOptions options)
+        public NodesetGenerator(GeneratorContext context, bool useXmlInitializers = false)
         {
-            m_telemetry = telemetry;
-            Options = options;
-            m_validator = validator;
-            m_context = new ServiceMessageContext(telemetry);
-            m_fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
-            m_outputFolder = outputFolder ?? string.Empty;
+            m_context = context;
+            m_useXmlInitializers = useXmlInitializers;
         }
-
-        /// <summary>
-        /// Whether the XML version of the initialization strings.
-        /// </summary>
-        public bool UseXmlInitializers { get; set; }
-
-        /// <summary>
-        /// Available nodesets
-        /// </summary>
-        public Dictionary<string, string> AvailableNodeSets { get; set; }
-
-        /// <summary>
-        /// Generator options
-        /// </summary>
-        public GeneratorOptions Options { get; }
 
         /// <summary>
         /// Generates all files
         /// </summary>
-        public void Emit(bool includeNodeSetXml = false, bool validateSchemas = false)
+        public void Emit(bool embedNodeset = false)
         {
-            var constantsGenerator = new ConstantsGenerator(
-                m_fileSystem,
-                m_outputFolder,
-                m_validator);
-            constantsGenerator.Emit();
-
-            var classGenerator = new CkassGenerator(
-                m_fileSystem,
-                m_outputFolder,
-                m_validator,
-                m_telemetry,
-                m_context,
-                Options,
-                UseXmlInitializers);
-            classGenerator.Emit();
-
-            var xmlSchemaGenerator = new XmlSchemaGenerator(
-                m_fileSystem,
-                m_outputFolder,
-                m_validator);
-            TextFileResource xmlSchemaResource = xmlSchemaGenerator.Emit(
-                validateOutput: validateSchemas);
-
-            var binarySchemaGenerator = new BinarySchemaGenerator(
-                m_fileSystem,
-                m_outputFolder,
-                m_validator);
-            TextFileResource binarySchemaResource = binarySchemaGenerator.Emit(
-                validateOutput: validateSchemas);
-
-            var schemaResources = new ResourceGenerator(
-                m_fileSystem,
-                m_outputFolder,
-                Options);
-            schemaResources.Embed(
-                Constants.CoreNamespacePrefix,
-                "XmlSchemas",
-                false,
-                binarySchemaResource,
-                xmlSchemaResource);
-
-            GenerateNodeSet(includeNodeSetXml);
-        }
-
-        /// <summary>
-        /// Writes the nodesets
-        /// </summary>
-        private void GenerateNodeSet(bool embedNodeSet = false)
-        {
-            var context = new SystemContext(m_telemetry)
+            var context = new SystemContext(m_context.Telemetry)
             {
-                NamespaceUris = m_validator.Dictionary.NamespaceUris,
+                NamespaceUris = m_context.Validator.Dictionary.NamespaceUris,
                 ServerUris = new StringTable()
             };
 
@@ -139,31 +66,31 @@ namespace Opc.Ua.SourceGeneration
             NodeStateCollection collectionWithServices = [];
             Dictionary<uint, NodeStateCollection> subsets = [];
 
-            for (int ii = 0; ii < m_validator.Dictionary.Items.Length; ii++)
+            for (int ii = 0; ii < m_context.Validator.Dictionary.Items.Length; ii++)
             {
-                NodeDesign node = m_validator.Dictionary.Items[ii];
+                NodeDesign node = m_context.Validator.Dictionary.Items[ii];
 
-                if (m_validator.IsExcluded(node))
+                if (m_context.Validator.IsExcluded(node))
                 {
                     continue;
                 }
 
-                bool isInAddressSpace = !m_validator.Dictionary.Items[ii].NotInAddressSpace;
+                bool isInAddressSpace = !m_context.Validator.Dictionary.Items[ii].NotInAddressSpace;
 
-                if (m_validator.Dictionary.Items[ii] is InstanceDesign design2 &&
+                if (m_context.Validator.Dictionary.Items[ii] is InstanceDesign design2 &&
                     design2.TypeDefinition != null &&
                     design2.TypeDefinition.Name == "DataTypeEncodingType")
                 {
                     isInAddressSpace = design2.Parent == null || !design2.Parent.NotInAddressSpace;
                 }
 
-                if (m_validator.Dictionary.Items[ii] is MethodDesign design3 &&
+                if (m_context.Validator.Dictionary.Items[ii] is MethodDesign design3 &&
                     design3.SymbolicName.Name.EndsWith("MethodType", StringComparison.Ordinal))
                 {
                     continue;
                 }
 
-                NodeState state = m_validator.Dictionary.Items[ii].State;
+                NodeState state = m_context.Validator.Dictionary.Items[ii].State;
 
                 if (state != null)
                 {
@@ -192,11 +119,13 @@ namespace Opc.Ua.SourceGeneration
 
                     RemoveChildrenWithNoNodeId(context, state);
 
-                    if (m_validator.Dictionary.Items[ii].PartNo != 0)
+                    if (m_context.Validator.Dictionary.Items[ii].PartNo != 0)
                     {
-                        if (!subsets.TryGetValue(m_validator.Dictionary.Items[ii].PartNo, out NodeStateCollection subset))
+                        if (!subsets.TryGetValue(
+                            m_context.Validator.Dictionary.Items[ii].PartNo,
+                            out NodeStateCollection subset))
                         {
-                            subsets[m_validator.Dictionary.Items[ii].PartNo] = subset = [];
+                            subsets[m_context.Validator.Dictionary.Items[ii].PartNo] = subset = [];
                         }
 
                         subset.Add(state);
@@ -218,25 +147,25 @@ namespace Opc.Ua.SourceGeneration
                             references[0].TargetId == ObjectIds.XmlSchema_TypeSystem)
                         {
                             file = Path.Combine(
-                                m_outputFolder,
-                                m_validator.Dictionary.TargetNamespaceInfo.Prefix + ".Types.xsd");
+                                m_context.OutputFolder,
+                                m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix + ".Types.xsd");
                         }
 
                         if (references.Count > 0 &&
                             references[0].TargetId == ObjectIds.OPCBinarySchema_TypeSystem)
                         {
                             file = Path.Combine(
-                                m_outputFolder,
-                                m_validator.Dictionary.TargetNamespaceInfo.Prefix + ".Types.bsd");
+                                m_context.OutputFolder,
+                                m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix + ".Types.bsd");
                         }
 
                         if (file != null)
                         {
                             try
                             {
-                                if (m_fileSystem.Exists(file))
+                                if (m_context.FileSystem.Exists(file))
                                 {
-                                    using Stream stream = m_fileSystem.OpenRead(file);
+                                    using Stream stream = m_context.FileSystem.OpenRead(file);
                                     using var ms = new MemoryStream();
                                     stream.CopyTo(ms);
                                     variable.Value = ms.ToArray();
@@ -256,17 +185,16 @@ namespace Opc.Ua.SourceGeneration
             }
 
             string documentationFile = Path.Combine(
-                m_outputFolder,
-                m_validator.Dictionary.TargetNamespaceInfo.Prefix + ".NodeSet2.documentation.csv");
-
-            if (!m_fileSystem.Exists(documentationFile))
+                m_context.OutputFolder,
+                m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix + ".NodeSet2.documentation.csv");
+            if (!m_context.FileSystem.Exists(documentationFile))
             {
                 documentationFile = Path.Combine(
-                    m_outputFolder,
-                    m_validator.Dictionary.TargetNamespaceInfo.Prefix + ".NodeSet2.Services.documentation.csv");
+                    m_context.OutputFolder,
+                    m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix + ".NodeSet2.Services.documentation.csv");
             }
 
-            if (m_fileSystem.Exists(documentationFile))
+            if (m_context.FileSystem.Exists(documentationFile))
             {
                 Dictionary<NodeId, NodeState> index = [];
 
@@ -278,7 +206,7 @@ namespace Opc.Ua.SourceGeneration
                     namespaceIndex = CollectNodes(context, index, ii);
                 }
 
-                var reader = new NodeDocumentationReader(m_fileSystem);
+                var reader = new NodeDocumentationReader(m_context.FileSystem);
                 foreach (NodeDocumentationRow row in reader.Load(documentationFile))
                 {
                     var nodeId = new NodeId(row.Id, namespaceIndex);
@@ -294,24 +222,24 @@ namespace Opc.Ua.SourceGeneration
 
             // save as nodeset.
             string originalFile = Path.Combine(
-                m_outputFolder,
-                m_validator.Dictionary.TargetNamespaceInfo.Prefix + ".NodeSet2.xml");
-            if (m_validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
+                m_context.OutputFolder,
+                m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix + ".NodeSet2.xml");
+            if (m_context.Validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
             {
                 originalFile = CoreUtils.Format("{0}{1}{2}.NodeSet2.Services.xml",
-                    m_outputFolder,
+                    m_context.OutputFolder,
                     Path.DirectorySeparatorChar,
-                    m_validator.Dictionary.TargetNamespaceInfo.Prefix);
+                    m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix);
             }
 
             // load existing file from xml.
-            if (m_fileSystem.Exists(originalFile))
+            if (m_context.FileSystem.Exists(originalFile))
             {
                 try
                 {
                     NodeStateCollection existingCollection = null;
 
-                    using (Stream istrm = m_fileSystem.OpenRead(originalFile))
+                    using (Stream istrm = m_context.FileSystem.OpenRead(originalFile))
                     {
                         var nodeSet = UANodeSet.Read(istrm);
                         existingCollection = [];
@@ -323,7 +251,7 @@ namespace Opc.Ua.SourceGeneration
 
                     UpdateDocumentation(context, map, collection);
 
-                    if (m_validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
+                    if (m_context.Validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
                     {
                         UpdateDocumentation(context, map, collectionWithServices);
                     }
@@ -334,24 +262,20 @@ namespace Opc.Ua.SourceGeneration
                 }
             }
 
-            if (embedNodeSet)
+            if (embedNodeset)
             {
                 // Generate nodeset2.xml files as source code (.g.cs)
-                var nodesetGenerator = new Nodeset2Generator(
-                    m_validator.Dictionary,
-                    [.. m_validator.Nodes],
-                    m_fileSystem,
-                    m_telemetry);
+                var nodesetGenerator = new Nodeset2Generator(m_context);
                 IReadOnlyList<Resource> resources = nodesetGenerator.Emit(
-                    m_outputFolder,
+                    m_context.OutputFolder,
                     context,
                     collection,
                     collectionWithServices);
 
                 // Pack as resources
-                var resourceGenerator = new ResourceGenerator(m_fileSystem, m_outputFolder, Options);
+                var resourceGenerator = new ResourceGenerator(m_context);
                 resourceGenerator.Embed(
-                    m_validator.Dictionary.TargetNamespaceInfo.Prefix,
+                    m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix,
                     "NodeSet2",
                     false,
                     [.. resources]);
@@ -363,21 +287,47 @@ namespace Opc.Ua.SourceGeneration
         }
 
         /// <summary>
+        /// Embed all initializers as source code
+        /// </summary>
+        private void EmbedPredefinedNodes(
+            SystemContext context,
+            NodeStateCollection collection)
+        {
+            var initializers = new ResourceGenerator(m_context);
+            using var ostrm = new MemoryStream();
+            if (!m_useXmlInitializers)
+            {
+                collection.SaveAsBinary(context, ostrm);
+            }
+            else
+            {
+                collection.SaveAsXml(context, ostrm, true);
+            }
+            var predefinedNodesInitializer =
+                new StreamResource("Nodes", ostrm, m_useXmlInitializers);
+            initializers.Embed(
+                m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix,
+                "Predefined",
+                internalAccess: true,
+                predefinedNodesInitializer);
+        }
+
+        /// <summary>
         /// Generate helpers
         /// </summary>
         private void GenerateHelpers()
         {
-            string nsPrefix = m_validator.Dictionary.TargetNamespaceInfo.Prefix;
+            string nsPrefix = m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix;
             // Add helpers
-            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
-                m_outputFolder,
+            using TextWriter writer = m_context.FileSystem.CreateTextWriter(Path.Combine(
+                m_context.OutputFolder,
                 nsPrefix + ".Helpers.g.cs"));
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, CodeTemplates.Helpers_File_cs);
 
             template.AddReplacement(
                 Tokens.ListOfImports,
-                m_validator.Dictionary.Namespaces,
+                m_context.Validator.Dictionary.Namespaces,
                 LoadTemplate_NamespaceImports);
 
             template.AddReplacement(Tokens.NamespacePrefix, nsPrefix);
@@ -388,32 +338,6 @@ namespace Opc.Ua.SourceGeneration
             template.Render();
         }
 
-        /// <summary>
-        /// Embed all initializers as source code
-        /// </summary>
-        private void EmbedPredefinedNodes(
-            SystemContext context,
-            NodeStateCollection collection)
-        {
-            var initializers = new ResourceGenerator(m_fileSystem, m_outputFolder, Options);
-            using var ostrm = new MemoryStream();
-            if (!UseXmlInitializers)
-            {
-                collection.SaveAsBinary(context, ostrm);
-            }
-            else
-            {
-                collection.SaveAsXml(context, ostrm, true);
-            }
-            var predefinedNodesInitializer =
-                new StreamResource("Nodes", ostrm, UseXmlInitializers);
-            initializers.Embed(
-                m_validator.Dictionary.TargetNamespaceInfo.Prefix,
-                "Predefined",
-                internalAccess: true,
-                predefinedNodesInitializer);
-        }
-
         private TemplateString LoadTemplate_NamespaceImports(ILoadContext context)
         {
             if (context.Target is not Namespace ns)
@@ -421,7 +345,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            if (ns.Value == m_validator.Dictionary.TargetNamespace)
+            if (ns.Value == m_context.Validator.Dictionary.TargetNamespace)
             {
                 return null;
             }
@@ -431,7 +355,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            string externalPrefix = m_validator.Dictionary.Namespaces.GetNamespacePrefix(ns.Value);
+            string externalPrefix = m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(ns.Value);
 
             context.Out.WriteLine("using {0};", externalPrefix);
 
@@ -521,9 +445,9 @@ namespace Opc.Ua.SourceGeneration
 
         private bool IsExcluded(NodeState node)
         {
-            if (Options.Exclusions != null)
+            if (m_context.Options.Exclusions != null)
             {
-                foreach (string exclusion in Options.Exclusions)
+                foreach (string exclusion in m_context.Options.Exclusions)
                 {
                     if (exclusion == node.ReleaseStatus.ToString())
                     {
@@ -545,12 +469,8 @@ namespace Opc.Ua.SourceGeneration
             return false;
         }
 
-        private string EncodingString => UseXmlInitializers ? "Xml" : "Binary";
-
-        private readonly IServiceMessageContext m_context;
-        private readonly ITelemetryContext m_telemetry;
-        private readonly ModelDesignValidator m_validator;
-        private readonly IFileSystem m_fileSystem;
-        private readonly string m_outputFolder;
+        private string EncodingString => m_useXmlInitializers ? "Xml" : "Binary";
+        private readonly bool m_useXmlInitializers;
+        private readonly GeneratorContext m_context;
     }
 }

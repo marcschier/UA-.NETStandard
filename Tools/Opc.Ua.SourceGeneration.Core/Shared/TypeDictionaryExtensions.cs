@@ -40,58 +40,6 @@ namespace Opc.Ua.SourceGeneration
     internal static class TypeDictionaryExtensions
     {
         /// <summary>
-        /// Returns the list of datatypes to process.
-        /// </summary>
-        public static IReadOnlyList<DataType> GetDataTypeList(
-            this TypeDictionaryValidator validator)
-        {
-            // collect datatypes with the specified type.
-            var datatypes = new List<DataType>();
-
-            foreach (TypeDictionary dictionary in validator.LoadedTypeDictionaries)
-            {
-                if (dictionary.TargetNamespace != Namespaces.OpcUaBuiltInTypes)
-                {
-                    CollectDatatypes(dictionary, datatypes);
-                }
-            }
-
-            // include identifiers from the target dictionary.
-            CollectDatatypes(validator.Dictionary, datatypes);
-            return datatypes;
-        }
-
-        /// <summary>
-        /// Returns the list of datatypes to process.
-        /// </summary>
-        private static void CollectDatatypes(
-            this TypeDictionary dictionary,
-            List<DataType> datatypes)
-        {
-            if (dictionary == null || dictionary.Items == null || datatypes == null)
-            {
-                return;
-            }
-
-            // include identifiers from the target dictionary.
-            foreach (DataType datatype in dictionary.Items)
-            {
-                if (datatype is ComplexType complexType)
-                {
-                    GetDataTypeList(complexType.Field, datatypes);
-                }
-
-                if (datatype is ServiceType serviceType)
-                {
-                    GetDataTypeList(serviceType.Request, datatypes);
-                    GetDataTypeList(serviceType.Response, datatypes);
-                }
-
-                datatypes.Add(datatype);
-            }
-        }
-
-        /// <summary>
         /// Creates a description from a documentation element.
         /// </summary>
         public static string GetDescription(this Documentation documentation)
@@ -114,24 +62,6 @@ namespace Opc.Ua.SourceGeneration
             }
 
             return buffer.ToString();
-        }
-
-        /// <summary>
-        /// Returns the list of datatypes to process.
-        /// </summary>
-        private static void GetDataTypeList(FieldType[] fields, List<DataType> datatypes)
-        {
-            if (fields != null)
-            {
-                foreach (FieldType field in fields)
-                {
-                    if (field.ComplexType != null)
-                    {
-                        datatypes.Add(field.ComplexType);
-                        GetDataTypeList(field.ComplexType.Field, datatypes);
-                    }
-                }
-            }
         }
     }
 }

@@ -380,13 +380,7 @@ namespace Opc.Ua.Gds.Server
         /// </summary>
         protected override NodeStateCollection LoadPredefinedNodes(ISystemContext context)
         {
-            var predefinedNodes = new NodeStateCollection();
-            predefinedNodes.LoadFromBinaryResource(
-                context,
-                "Opc.Ua.Gds.Server.Model.Opc.Ua.Gds.PredefinedNodes.uanodes",
-                typeof(ApplicationsNodeManager).GetTypeInfo().Assembly,
-                true);
-            return predefinedNodes;
+            return new NodeStateCollection().AddOpcUaGds(context);
         }
 
         /// <summary>

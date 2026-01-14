@@ -425,8 +425,9 @@ namespace Opc.Ua.Client
                 {
                     if (m_reverseConnectManager != null)
                     {
-                        var endpointUrl = current.Endpoint.EndpointUrl
-                            ?? throw ServiceResultException.Unexpected("Endpoint URL is null");
+                        string? endpointUrl = current.Endpoint.EndpointUrl
+                            ?? throw ServiceResultException.Unexpected(
+                                "Endpoint Url is null for reverse connect session RECONNECT.");
                         ITransportWaitingConnection connection = await m_reverseConnectManager
                             .WaitForConnectionAsync(
                                 new Uri(endpointUrl),
@@ -508,24 +509,20 @@ namespace Opc.Ua.Client
             try
             {
                 ISession session;
-                if (transportChannel == null)
-                {
-                    throw ServiceResultException.Unexpected(
-                        "Transport channel is null for reverse connect session recreation.");
-                }
                 if (m_reverseConnectManager != null)
                 {
                     ITransportWaitingConnection? connection;
                     do
                     {
-                        EndpointDescription endpointDescription =
-                            current.Endpoint ?? transportChannel.EndpointDescription;
-                        var endpointUrl = endpointDescription.EndpointUrl
-                            ?? throw ServiceResultException.Unexpected("Endpoint URL is null");
+                        EndpointDescription? endpointDescription =
+                            current.Endpoint ?? transportChannel?.EndpointDescription;
+                        string? endpointUrl = endpointDescription?.EndpointUrl
+                            ?? throw ServiceResultException.Unexpected(
+                                "Endpoint Url is null for reverse connect session RECREATE.");
                         connection = await m_reverseConnectManager
                             .WaitForConnectionAsync(
                                 new Uri(endpointUrl),
-                                endpointDescription.Server.ApplicationUri)
+                                endpointDescription?.Server?.ApplicationUri)
                             .ConfigureAwait(false);
 
                         if (m_updateFromServer)
@@ -561,10 +558,13 @@ namespace Opc.Ua.Client
                             .ConfigureAwait(false);
                         m_updateFromServer = false;
                     }
-
-                    session = await current
-                        .SessionFactory.RecreateAsync(current, transportChannel)
-                        .ConfigureAwait(false);
+                    session = transportChannel == null
+                        ? await current
+                            .SessionFactory.RecreateAsync(current)
+                            .ConfigureAwait(false)
+                        : await current
+                            .SessionFactory.RecreateAsync(current, transportChannel)
+                            .ConfigureAwait(false);
                 }
                 // note: the template session is not connected at this point
                 //       and must be disposed by the owner

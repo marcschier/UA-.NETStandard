@@ -51,7 +51,7 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
         public void WriteTemplate_WithNamespaceUriTemplate_RendersCorrectly()
         {
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.NamespaceUri_cs;
+            TemplateString templateString = CodeTemplates.NamespaceUriStrings_cs;
             using (var templateWriter = new TemplateWriter(writer))
             {
                 var template = new Template(templateWriter, templateString);
@@ -79,7 +79,7 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
         public void WriteTemplate_WithBrowseNameTemplate_RendersCorrectly()
         {
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.BrowseName_cs;
+            TemplateString templateString = CodeTemplates.BrowseNames_cs;
             using (var templateWriter = new TemplateWriter(writer))
             {
                 var template = new Template(templateWriter, templateString);
@@ -421,7 +421,7 @@ namespace Opc.Ua.SourceGeneration.Tests.Templating
                 template.AddReplacement(Tokens.Header, string.Empty);
                 template.AddReplacement(
                     Tokens.TypeList,
-                    CodeTemplates.Classes_ServiceMessage_cs,
+                    CodeTemplates.Messages_DataTypeAnnotation_cs,
                     ["Type1", "Type2", "Type3"],
                     context =>
                     {

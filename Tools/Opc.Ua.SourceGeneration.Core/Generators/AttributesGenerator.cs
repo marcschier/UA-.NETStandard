@@ -43,30 +43,19 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Generates the code from the contents of the address space.
         /// </summary>
-        public AttributesGenerator(
-            IFileSystem fileSystem,
-            string outputDirectory,
-            GeneratorOptions options)
+        public AttributesGenerator(GeneratorContext context)
         {
-            // save output directory.
-            m_outputFolder = outputDirectory ?? string.Empty;
-            m_fileSystem = fileSystem ?? LocalFileSystem.Instance;
-            Options = options;
+            m_context = context;
         }
-
-        /// <summary>
-        /// Generator options
-        /// </summary>
-        public GeneratorOptions Options { get; }
 
         /// <summary>
         /// Write attributes
         /// </summary>
         public void Emit()
         {
-            string fileName = Path.Combine(m_outputFolder,
+            string fileName = Path.Combine(m_context.OutputFolder,
                 CoreUtils.Format("{0}.Attributes.g.cs", Constants.CoreNamespacePrefix));
-            using TextWriter writer = m_fileSystem.CreateTextWriter(fileName);
+            using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
 
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, CodeTemplates.Constants_File_cs);
@@ -78,7 +67,7 @@ namespace Opc.Ua.SourceGeneration
             // load and validate type dictionary.
             var nodeDictionaries = new Dictionary<string, string>();
             var validator = new TypeDictionaryValidator(
-                m_fileSystem,
+                m_context.FileSystem,
                 nodeDictionaries);
             validator.Validate(BuiltInDesignFiles.UAAttributesXml);
             Dictionary<string, int> identifiers =
@@ -87,7 +76,7 @@ namespace Opc.Ua.SourceGeneration
             var constants = new List<Constant>();
             foreach (DataType datatype in validator.Dictionary.Items)
             {
-                if (!TypeDictionaryValidator.IsExcluded(Options.Exclusions, datatype) &&
+                if (!TypeDictionaryValidator.IsExcluded(m_context.Options.Exclusions, datatype) &&
                     datatype is Constant constant &&
                     identifiers.TryGetValue(constant.Name, out int id))
                 {
@@ -197,7 +186,7 @@ namespace Opc.Ua.SourceGeneration
             var identifiers = new Dictionary<string, int>();
             int maxId = 1;
 
-            using TextReader reader = m_fileSystem.CreateTextReader(identifiersFile);
+            using TextReader reader = m_context.FileSystem.CreateTextReader(identifiersFile);
             while (true)
             {
                 string line = reader.ReadLine();
@@ -242,7 +231,6 @@ namespace Opc.Ua.SourceGeneration
             return identifiers;
         }
 
-        private readonly IFileSystem m_fileSystem;
-        private readonly string m_outputFolder;
+        private readonly GeneratorContext m_context;
     }
 }

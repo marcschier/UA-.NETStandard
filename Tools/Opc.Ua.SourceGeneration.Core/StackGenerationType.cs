@@ -27,24 +27,34 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System.IO;
-using System.Xml;
+using System;
 
-namespace Opc.Ua.Schema
+namespace Opc.Ua.SourceGeneration
 {
-    internal static class Extensions
+    /// <summary>
+    /// What part of the stack to generate
+    /// </summary>
+    [Flags]
+    public enum StackGenerationType
     {
         /// <summary>
-        /// Safe version for assignment of InnerXml.
+        /// Generate nothing
         /// </summary>
-        /// <param name="doc">The XmlDocument.</param>
-        /// <param name="xml">The Xml document string.</param>
-        internal static void LoadInnerXml(this XmlDocument doc, string xml)
-        {
-            using var sreader = new StringReader(xml);
-            using var reader = XmlReader.Create(sreader, CoreUtils.DefaultXmlReaderSettings());
-            doc.XmlResolver = null;
-            doc.Load(reader);
-        }
+        None,
+
+        /// <summary>
+        /// Generate the .NET stack code
+        /// </summary>
+        Stack,
+
+        /// <summary>
+        /// Generate the core models
+        /// </summary>
+        Models,
+
+        /// <summary>
+        /// Generate both stack and models
+        /// </summary>
+        All
     }
 }

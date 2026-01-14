@@ -77,7 +77,7 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Helpers
         /// </summary>
         public static readonly TemplateString Helpers_File_cs = TemplateString.Parse(
             $$"""
@@ -110,7 +110,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Base data type and node state files
         /// </summary>
         public static readonly TemplateString TypesFile_cs = TemplateString.Parse(
             $$"""
@@ -125,7 +125,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// A union data type
         /// </summary>
         public static readonly TemplateString DataTypes_Union_cs = TemplateString.Parse(
             $$"""
@@ -295,7 +295,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Derived data type with optional fields
         /// </summary>
         public static readonly TemplateString DataTypes_DerivedClassWithOptionalFields_cs = TemplateString.Parse(
             $$"""
@@ -429,7 +429,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Class with optional fields
         /// </summary>
         public static readonly TemplateString DataTypes_ClassWithOptionalFields_cs = TemplateString.Parse(
             $$"""
@@ -563,7 +563,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Data type class
         /// </summary>
         public static readonly TemplateString DataTypes_Class_cs = TemplateString.Parse(
             $$"""
@@ -670,8 +670,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
-        /// ModelGenerator.cs
+        /// Derived data type class
         /// </summary>
         public static readonly TemplateString DataTypes_DerivedClass_cs = TemplateString.Parse(
             $$"""
@@ -780,7 +779,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Enum data type
         /// </summary>
         public static readonly TemplateString DataTypes_Enumeration_cs = TemplateString.Parse(
             $$"""
@@ -799,7 +798,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Object Type node state
         /// </summary>
         public static readonly TemplateString ObjectType_cs = TemplateString.Parse(
             $$"""
@@ -859,7 +858,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Variable type node state
         /// </summary>
         public static readonly TemplateString VariableType_cs = TemplateString.Parse(
             $$"""
@@ -940,7 +939,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Method type node state
         /// </summary>
         public static readonly TemplateString MethodType_cs = TemplateString.Parse(
             $$"""
@@ -1079,7 +1078,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Collection class for data types
         /// </summary>
         public static readonly TemplateString DataTypes_CollectionClass_cs = TemplateString.Parse(
             $$"""
@@ -1169,7 +1168,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Typed variable type node state
         /// </summary>
         public static readonly TemplateString TypedVariableType_cs = TemplateString.Parse(
             $$"""
@@ -1183,24 +1182,24 @@ namespace Opc.Ua.SourceGeneration
                 /// <summary>
                 /// Initializes a new instance of the <see cref="{{Tokens.ClassName}}State{T}"/> class.
                 /// </summary>
-                public {{Tokens.ClassName}}State(NodeState? parent)
+                public {{Tokens.ClassName}}State(global::Opc.Ua.NodeState? parent)
                     : base(parent)
                 {
                     Value = default(T);
                 }
 
                 /// <inheritdoc/>
-                protected override void Initialize(ISystemContext context)
+                protected override void Initialize(global::Opc.Ua.ISystemContext context)
                 {
                     base.Initialize(context);
 
                     Value = default(T);
-                    DataType = TypeInfo.GetDataTypeId(typeof(T), context.NamespaceUris);
-                    ValueRank = TypeInfo.GetValueRank(typeof(T));
+                    DataType = global::Opc.Ua.TypeInfo.GetDataTypeId(typeof(T), context.NamespaceUris);
+                    ValueRank = global::Opc.Ua.TypeInfo.GetValueRank(typeof(T));
                 }
 
                 /// <inheritdoc/>
-                protected override void Initialize(ISystemContext context, NodeState source)
+                protected override void Initialize(global::Opc.Ua.ISystemContext context, global::Opc.Ua.NodeState source)
                 {
                     InitializeOptionalChildren(context);
                     base.Initialize(context, source);
@@ -1209,7 +1208,7 @@ namespace Opc.Ua.SourceGeneration
                 /// <inheritdoc/>
                 public new T Value
                 {
-                    get => CheckTypeBeforeCast<T>(((BaseVariableState)this).Value, true);
+                    get => CheckTypeBeforeCast<T>(((global::Opc.Ua.BaseVariableState)this).Value, true);
                     set => ((BaseVariableState)this).Value = value;
                 }
             }
@@ -1217,7 +1216,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Variable type node state
         /// </summary>
         public static readonly TemplateString VariableTypeValue_cs = TemplateString.Parse(
             $$"""
@@ -1226,7 +1225,7 @@ namespace Opc.Ua.SourceGeneration
             /// </summary>
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
             [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
-            public class {{Tokens.ClassName}}Value : BaseVariableValue
+            public class {{Tokens.ClassName}}Value : global::Opc.Ua.BaseVariableValue
             {
                 /// <summary>
                 /// Initializes a new instance of the <see cref="{{Tokens.ClassName}}Value"/> class.
@@ -1275,7 +1274,7 @@ namespace Opc.Ua.SourceGeneration
                         variable.OnReadValue = OnReadValue;
                         variable.OnWriteValue = OnWriteValue;
 
-                        BaseVariableState instance = null;
+                        global::Opc.Ua.BaseVariableState? instance = null;
                         global::System.Collections.Generic.List<BaseInstanceState> updateList =
                             new global::System.Collections.Generic.List<BaseInstanceState>();
                         updateList.Add(variable);
@@ -1397,7 +1396,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Initialize optional child
         /// </summary>
         public static readonly TemplateString InitializeOptionalChild_cs = TemplateString.Parse(
             $$"""
@@ -1412,7 +1411,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Property template
         /// </summary>
         public static readonly TemplateString Property_cs = TemplateString.Parse(
             $$"""
@@ -1433,7 +1432,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Find child methods
         /// </summary>
         public static readonly TemplateString FindChildMethods_cs = TemplateString.Parse(
             $$"""
@@ -1485,7 +1484,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Variable type value field methods
         /// </summary>
         public static readonly TemplateString VariableTypeValueField_cs = TemplateString.Parse(
             $$"""
@@ -1520,7 +1519,7 @@ namespace Opc.Ua.SourceGeneration
 
                     var result = Read(context, node, indexRange, dataEncoding, ref value, ref statusCode, ref timestamp);
 
-                    if (childVariable != null && ServiceResult.IsNotBad(result))
+                    if (childVariable != null && global::Opc.Ua.ServiceResult.IsNotBad(result))
                     {
                         timestamp = childVariable.Timestamp;
                         if (statusCode != childVariable.StatusCode)
@@ -1559,7 +1558,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Properties of data types
         /// </summary>
         public static readonly TemplateString DataTypes_Property_cs = TemplateString.Parse(
             $$"""
@@ -1580,7 +1579,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Array Properties of data types
         /// </summary>
         public static readonly TemplateString DataTypes_ArrayProperty_cs = TemplateString.Parse(
             $$"""
@@ -1601,7 +1600,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Enumeration value of enum data types
         /// </summary>
         public static readonly TemplateString DataTypes_EnumerationValue_cs = TemplateString.Parse(
             $$"""
@@ -1614,7 +1613,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Override property template
         /// </summary>
         public static readonly TemplateString PropertyOverride_cs = TemplateString.Parse(
             $$"""
@@ -1630,7 +1629,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Find child case template
         /// </summary>
         public static readonly TemplateString FindChildCase_cs = TemplateString.Parse(
             $$"""
@@ -1658,7 +1657,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Find children method template
         /// </summary>
         public static readonly TemplateString FindChildren_cs = TemplateString.Parse(
             $$"""
@@ -1670,7 +1669,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Remove child method template
         /// </summary>
         public static readonly TemplateString RemoveChild_cs = TemplateString.Parse(
             $$"""
@@ -1683,7 +1682,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// StackGenerator.cs
+        /// Endpoints file for stack generator
         /// </summary>
         public static readonly TemplateString Endpoints_File_cs = TemplateString.Parse(
             $$"""
@@ -1699,7 +1698,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// StackGenerator.cs
+        /// Service set endpoint class
         /// </summary>
         public static readonly TemplateString Endpoints_ServiceSet_cs = TemplateString.Parse(
             $$"""
@@ -1768,7 +1767,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// StackGenerator.cs
+        /// Endpoints method template
         /// </summary>
         public static readonly TemplateString Endpoints_Method_cs = TemplateString.Parse(
             $$"""
@@ -1801,7 +1800,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// StackGenerator.cs
+        /// Server base template
         /// </summary>
         public static readonly TemplateString ServerApi_File_cs = TemplateString.Parse(
             $$"""
@@ -1814,7 +1813,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// StackGenerator.cs
+        /// Server API service set template
         /// </summary>
         public static readonly TemplateString ServerApi_ServiceSet_cs = TemplateString.Parse(
             $$"""
@@ -1850,7 +1849,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// StackGenerator.cs
+        /// Server API interface method template
         /// </summary>
         public static readonly TemplateString ServerApi_InterfaceMethod_cs = TemplateString.Parse(
             $$"""
@@ -1862,7 +1861,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// StackGenerator.cs
+        /// Server API interface method template
         /// </summary>
         public static readonly TemplateString ServerApi_Method_cs = TemplateString.Parse(
             $$"""
@@ -1882,7 +1881,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// StackGenerator.cs
+        /// Client API file template
         /// </summary>
         public static readonly TemplateString ClientApi_File_cs = TemplateString.Parse(
             $$"""
@@ -1897,7 +1896,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// StackGenerator.cs
+        /// Client API service set template
         /// </summary>
         public static readonly TemplateString ClientApi_ServiceSet_cs = TemplateString.Parse(
             $$"""
@@ -1935,7 +1934,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// StackGenerator.cs
+        /// Client API interface method template
         /// </summary>
         public static readonly TemplateString ClientApi_InterfaceMethods_cs = TemplateString.Parse(
             $$"""
@@ -1965,7 +1964,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// StackGenerator.cs
+        /// Client API method implementations template
         /// </summary>
         public static readonly TemplateString ClientApi_MethodImplementations_cs = TemplateString.Parse(
             $$"""
@@ -2085,7 +2084,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// StackGenerator.cs
+        /// Messages file template
         /// </summary>
         public static readonly TemplateString Messages_File_cs = TemplateString.Parse(
             $$"""
@@ -2098,9 +2097,9 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// StackGenerator.cs
+        /// Service message template
         /// </summary>
-        public static readonly TemplateString Classes_ServiceMessage_cs = TemplateString.Parse(
+        public static readonly TemplateString Messages_DataTypeAnnotation_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// The request message for the {{Tokens.Name}} service.
@@ -2118,7 +2117,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// StackGenerator.cs
+        /// Const file template
         /// </summary>
         public static readonly TemplateString Constants_File_cs = TemplateString.Parse(
             $$"""
@@ -2143,7 +2142,24 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Identifiers file template
+        /// </summary>
+        public static readonly TemplateString IdentifiersFile_cs = TemplateString.Parse(
+            $$"""
+            {{Tokens.Header}}
+
+            {{Tokens.ListOfImports}}
+
+            namespace {{Tokens.Namespace}}
+            {
+                {{Tokens.ListOfIdentifiers}}
+
+                {{Tokens.ListOfNodeIds}}
+            }
+            """);
+
+        /// <summary>
+        /// Constants file template
         /// </summary>
         public static readonly TemplateString ConstantsFile_cs = TemplateString.Parse(
             $$"""
@@ -2174,9 +2190,9 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Namespace Uris
         /// </summary>
-        public static readonly TemplateString NamespaceUri_cs = TemplateString.Parse(
+        public static readonly TemplateString NamespaceUriStrings_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// The URI for the {{Tokens.Name}} namespace (.NET code namespace is '{{Tokens.CodeName}}').
@@ -2186,18 +2202,18 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Browse names
         /// </summary>
-        public static readonly TemplateString BrowseName_cs = TemplateString.Parse(
+        public static readonly TemplateString BrowseNames_cs = TemplateString.Parse(
             $$"""
             public const string {{Tokens.SymbolicName}} = "{{Tokens.BrowseName}}";
 
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Identifiers per node class
         /// </summary>
-        public static readonly TemplateString IdClass_cs = TemplateString.Parse(
+        public static readonly TemplateString IdsPerNodeClass_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// A class that declares constants for all {{Tokens.NodeClass}}
@@ -2215,9 +2231,9 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// NodeIds per node class
         /// </summary>
-        public static readonly TemplateString NodeIdClass_cs = TemplateString.Parse(
+        public static readonly TemplateString NodeIdPerNodeClass_cs = TemplateString.Parse(
             $$"""
             /// <summary>
             /// A class that declares constants for all {{Tokens.NodeClass}}
@@ -2235,7 +2251,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// Identifier declaration
         /// </summary>
         public static readonly TemplateString IdDeclaration_cs = TemplateString.Parse(
             $$"""
@@ -2244,7 +2260,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// StackGenerator.cs
+        /// Constant declaration
         /// </summary>
         public static readonly TemplateString Constants_Constant_cs = TemplateString.Parse(
             $$"""
@@ -2256,7 +2272,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// StackGenerator.cs
+        /// Interning static constructor
         /// </summary>
         public static readonly TemplateString TypeInterning_cs = TemplateString.Parse(
             $$"""
@@ -2270,7 +2286,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// StackGenerator.cs
+        /// StatusCode declaration
         /// </summary>
         public static readonly TemplateString StatusCodeDeclaration_cs = TemplateString.Parse(
             $$"""
@@ -2282,7 +2298,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// NodeId declaration with namespace URI
         /// </summary>
         public static readonly TemplateString NodeIdDeclarationAbsolute_cs = TemplateString.Parse(
             $$"""
@@ -2292,7 +2308,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ModelGenerator.cs
+        /// NodeId declaration
         /// </summary>
         public static readonly TemplateString NodeIdDeclaration_cs = TemplateString.Parse(
             $$"""
@@ -2302,8 +2318,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// StackGenerator.cs
-        /// ModelGenerator.cs
+        /// Reflection methods for identifiers
         /// </summary>
         public static readonly TemplateString Constants_Reflection_cs = TemplateString.Parse(
             $$"""
@@ -2389,7 +2404,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ResourceGenerator.cs
+        /// Resources file template
         /// </summary>
         public static readonly TemplateString Resources_File_cs = TemplateString.Parse(
             $$"""
@@ -2402,7 +2417,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ResourceGenerator.cs
+        /// Resources class template
         /// </summary>
         public static readonly TemplateString Resources_Classes_cs = TemplateString.Parse(
             $$"""
@@ -2416,7 +2431,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ResourceGenerator.cs
+        /// ReadOnlySpan resource declaration
         /// </summary>
         public static readonly TemplateString ResourceDeclaration_ReadOnlySpan_cs = TemplateString.Parse(
             $$"""
@@ -2439,7 +2454,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ResourceGenerator.cs
+        /// Byte array resource declaration
         /// </summary>
         public static readonly TemplateString ResourceDeclaration_ByteArray_cs = TemplateString.Parse(
             $$"""
@@ -2461,7 +2476,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// ResourceGenerator.cs
+        /// String resource declaration
         /// </summary>
         public static readonly TemplateString ResourceDeclaration_ConstString_cs = TemplateString.Parse(
             $$"""

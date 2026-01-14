@@ -82,7 +82,7 @@ namespace Opc.Ua.SourceGeneration
                 .WithUpdatedAnalyzerConfigOptions(options)
                 ;
             GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation);
-            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(6));
+            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(8));
         }
 
         [Theory]
@@ -114,7 +114,7 @@ namespace Opc.Ua.SourceGeneration
                 .WithUpdatedAnalyzerConfigOptions(options)
                 ;
             GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation);
-            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(12));
+            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(15));
         }
 
         private static GeneratorRunResult GenerateAndCompile(

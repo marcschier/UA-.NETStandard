@@ -40,15 +40,9 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Initializes a new instance of the <see cref="MessagesGenerator"/> class.
         /// </summary>
-        public MessagesGenerator(
-            IFileSystem fileSystem,
-            string outputDirectory,
-            ModelDesignValidator validator,
-            GeneratorOptions options)
+        public MessagesGenerator(GeneratorContext context)
         {
-            m_validator = validator;
-            m_outputFolder = outputDirectory ?? string.Empty;
-            m_fileSystem = fileSystem ?? LocalFileSystem.Instance;
+            m_context = context;
         }
 
         /// <summary>
@@ -57,14 +51,14 @@ namespace Opc.Ua.SourceGeneration
         public void Emit()
         {
             // get datatypes.
-            Service[] serviceTypes = m_validator.GetListOfServices();
+            Service[] serviceTypes = m_context.Validator.GetListOfServices();
             if (serviceTypes.Length == 0)
             {
                 return;
             }
 
-            using TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
-                m_outputFolder,
+            using TextWriter writer = m_context.FileSystem.CreateTextWriter(Path.Combine(
+                m_context.OutputFolder,
                 CoreUtils.Format("{0}.Messages.g.cs", Constants.CoreNamespacePrefix)));
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, CodeTemplates.Messages_File_cs);
@@ -73,7 +67,7 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddReplacement(
                 Tokens.TypeList,
-                CodeTemplates.Classes_ServiceMessage_cs,
+                CodeTemplates.Messages_DataTypeAnnotation_cs,
                 serviceTypes,
                 WriteTemplate_ServiceMessage);
 
@@ -96,8 +90,6 @@ namespace Opc.Ua.SourceGeneration
             return context.Template.Render();
         }
 
-        private readonly IFileSystem m_fileSystem;
-        private readonly string m_outputFolder;
-        private readonly ModelDesignValidator m_validator;
+        private readonly GeneratorContext m_context;
     }
 }

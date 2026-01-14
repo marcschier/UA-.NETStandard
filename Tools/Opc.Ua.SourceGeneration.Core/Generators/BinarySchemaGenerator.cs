@@ -43,14 +43,9 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Initializes a new instance of the <see cref="BinarySchemaGenerator"/> class.
         /// </summary>
-        public BinarySchemaGenerator(
-            IFileSystem fileSystem,
-            string outputFolder,
-            ModelDesignValidator validator)
+        public BinarySchemaGenerator(GeneratorContext context)
         {
-            m_fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
-            m_outputFolder = outputFolder ?? throw new ArgumentNullException(nameof(outputFolder));
-            m_validator = validator ?? throw new ArgumentNullException(nameof(validator));
+            m_context = context;
         }
 
         /// <summary>
@@ -58,9 +53,9 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public TextFileResource Emit(bool validateOutput = false)
         {
-            string namespacePrefix = m_validator.Dictionary.TargetNamespaceInfo.Prefix;
+            string namespacePrefix = m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix;
             string schemaFile = Path.Combine(
-                m_outputFolder,
+                m_context.OutputFolder,
                 CoreUtils.Format("{0}.Types.bsd", namespacePrefix));
 
             WriteTemplate_BinarySchema(schemaFile);
@@ -68,7 +63,7 @@ namespace Opc.Ua.SourceGeneration
             if (validateOutput)
             {
                 // Validate generated file
-                var validator = new Schema.Binary.BinarySchemaValidator(m_fileSystem);
+                var validator = new Schema.Binary.BinarySchemaValidator(m_context.FileSystem);
                 validator.Validate(schemaFile);
             }
 
@@ -77,28 +72,28 @@ namespace Opc.Ua.SourceGeneration
 
         public void WriteTemplate_BinarySchema(string fileName)
         {
-            using TextWriter writer = m_fileSystem.CreateTextWriter(fileName);
+            using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, SchemaTemplates.BinarySchema_File_xml);
 
-            string targetNamespace = m_validator.Dictionary.TargetNamespace;
+            string targetNamespace = m_context.Validator.Dictionary.TargetNamespace;
 
             template.AddReplacement(Tokens.DictionaryUri, targetNamespace);
 
             template.AddReplacement(
                 Tokens.XmlnsS0ListOfNamespaces,
-                m_validator.Dictionary.Namespaces,
+                m_context.Validator.Dictionary.Namespaces,
                 LoadTemplate_Imports);
 
             template.AddReplacement(
                 Tokens.Imports,
-                m_validator.Dictionary.Namespaces,
+                m_context.Validator.Dictionary.Namespaces,
                 LoadTemplate_Imports);
 
             template.AddReplacement(
                 Tokens.BuiltInTypes,
                 SchemaTemplates.BinarySchema_BuiltInTypes_bsd,
-                [m_validator.Dictionary],
+                [m_context.Validator.Dictionary],
                 LoadTemplate_DataType,
                 WriteTemplate_DataType);
 
@@ -119,7 +114,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            if (ns.Value == m_validator.Dictionary.TargetNamespace)
+            if (ns.Value == m_context.Validator.Dictionary.TargetNamespace)
             {
                 return null;
             }
@@ -135,7 +130,7 @@ namespace Opc.Ua.SourceGeneration
                     """
                     xmlns:{0}="{1}"
                     """,
-                    m_validator.Dictionary.Namespaces.GetXmlNamespacePrefix(ns.Value),
+                    m_context.Validator.Dictionary.Namespaces.GetXmlNamespacePrefix(ns.Value),
                     ns.Value);
                 return null;
             }
@@ -143,7 +138,7 @@ namespace Opc.Ua.SourceGeneration
             context.Out.WriteLine(
                 "<opc:Import Namespace=\"{0}\" Location=\"{1}.BinarySchema.bsd\"/>",
                 ns.Value,
-                m_validator.Dictionary.Namespaces.GetNamespacePrefix(ns.Value));
+                m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(ns.Value));
 
             return null;
         }
@@ -152,7 +147,7 @@ namespace Opc.Ua.SourceGeneration
         {
             if (context.Target is ModelDesign)
             {
-                if (m_validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
+                if (m_context.Validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
                 {
                     return context.TemplateString;
                 }
@@ -214,7 +209,7 @@ namespace Opc.Ua.SourceGeneration
         {
             if (context.Target is ModelDesign model)
             {
-                if (m_validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
+                if (m_context.Validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
                 {
                     return context.Template.Render();
                 }
@@ -233,8 +228,8 @@ namespace Opc.Ua.SourceGeneration
             {
                 context.Template.AddReplacement(Tokens.BaseType,
                     (dataType.BaseTypeNode as DataTypeDesign).GetBinaryDataType(
-                        m_validator.Dictionary.TargetNamespace,
-                        m_validator.Dictionary.Namespaces));
+                        m_context.Validator.Dictionary.TargetNamespace,
+                        m_context.Validator.Dictionary.Namespaces));
             }
 
             List<Parameter> fields = [];
@@ -256,7 +251,7 @@ namespace Opc.Ua.SourceGeneration
 
                 foreach (Parameter field in parent.Fields)
                 {
-                    if (m_validator.IsExcluded(field))
+                    if (m_context.Validator.IsExcluded(field))
                     {
                         continue;
                     }
@@ -363,8 +358,8 @@ namespace Opc.Ua.SourceGeneration
             BasicDataType basicType = dataType.BasicDataType;
 
             string fieldDataType = field.DataTypeNode.GetBinaryDataType(
-                m_validator.Dictionary.TargetNamespace,
-                m_validator.Dictionary.Namespaces);
+                m_context.Validator.Dictionary.TargetNamespace,
+                m_context.Validator.Dictionary.Namespaces);
 
             if (field.AllowSubTypes)
             {
@@ -398,8 +393,8 @@ namespace Opc.Ua.SourceGeneration
                     field.Name,
                     fieldDataType,
                     (field.Parent as DataTypeDesign).GetBinaryDataType(
-                        m_validator.Dictionary.TargetNamespace,
-                        m_validator.Dictionary.Namespaces));
+                        m_context.Validator.Dictionary.TargetNamespace,
+                        m_context.Validator.Dictionary.Namespaces));
             }
             else
             {
@@ -434,11 +429,9 @@ namespace Opc.Ua.SourceGeneration
 
         private IReadOnlyList<NodeDesign> GetListOfTypes()
         {
-            return [.. m_validator.GetNodeDesigns()];
+            return [.. m_context.Validator.GetNodeDesigns()];
         }
 
-        private readonly IFileSystem m_fileSystem;
-        private readonly string m_outputFolder;
-        private readonly ModelDesignValidator m_validator;
+        private readonly GeneratorContext m_context;
     }
 }

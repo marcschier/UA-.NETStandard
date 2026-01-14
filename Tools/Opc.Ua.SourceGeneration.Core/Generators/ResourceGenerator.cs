@@ -28,6 +28,7 @@
  * ======================================================================*/
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -61,16 +62,13 @@ namespace Opc.Ua.SourceGeneration
         /// Create code generator for embedded resources.
         /// </summary>
         public ResourceGenerator(
-            IFileSystem fileSystem,
-            string outputFolder,
-            GeneratorOptions options,
+            GeneratorContext context,
             int? base64Threshold = null,
             bool useByteArrayForBase64 = false)
         {
-            m_fileSystem = fileSystem;
-            m_outputFolder = outputFolder;
+            m_context = context;
             m_base64Threshold = base64Threshold ??
-                (options.OptimizeForCompileSpeed ? 1024 : int.MaxValue);
+                (m_context.Options.OptimizeForCompileSpeed ? 1024 : int.MaxValue);
             m_useByteArrayForBase64 = useByteArrayForBase64;
         }
 
@@ -104,12 +102,12 @@ namespace Opc.Ua.SourceGeneration
                     r.ResourceGroup)
                 .OrderBy(g => g.Key)];
 
-            string outputFile = Path.Combine(m_outputFolder, CoreUtils.Format(
+            string outputFile = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
                 "{0}.{1}.g.cs",
                 namespacePrefix,
                 name));
 
-            using TextWriter writer = m_fileSystem.CreateTextWriter(outputFile);
+            using TextWriter writer = m_context.FileSystem.CreateTextWriter(outputFile);
 
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, CodeTemplates.Resources_File_cs);
@@ -157,7 +155,7 @@ namespace Opc.Ua.SourceGeneration
                 return CodeTemplates.ResourceDeclaration_ConstString_cs;
             }
             if (m_useByteArrayForBase64 &&
-                resource.GetLength(m_fileSystem) > m_base64Threshold)
+                resource.GetLength(m_context.FileSystem) > m_base64Threshold)
             {
                 return CodeTemplates.ResourceDeclaration_ByteArray_cs;
             }
@@ -218,21 +216,24 @@ namespace Opc.Ua.SourceGeneration
                 return context.TemplateString;
             }
 
+            bool writeAsBase64 =
+                resource.GetLength(m_context.FileSystem) > m_base64Threshold;
+
             // Render the content here instead of rendering a template
-            if (resource.GetLength(m_fileSystem) > m_base64Threshold)
+            if (resource.IsText)
             {
-                if (resource.IsText)
+                if (writeAsBase64 || !m_context.Options.UseUtf8StringLiterals)
                 {
                     WriteTextResourceAsBase64(context, resource);
                 }
                 else
                 {
-                    WriteBinaryResourceAsBase64(context, resource);
+                    WriteTextResource(context, resource);
                 }
             }
-            else if (resource.IsText)
+            else if (writeAsBase64)
             {
-                WriteTextResource(context, resource);
+                WriteBinaryResourceAsBase64(context, resource);
             }
             else
             {
@@ -262,7 +263,7 @@ namespace Opc.Ua.SourceGeneration
                 switch (resource)
                 {
                     case BinaryFileResource fileResource:
-                        return m_fileSystem.OpenRead(fileResource.FileName);
+                        return m_context.FileSystem.OpenRead(fileResource.FileName);
                     case StreamResource stream:
                         stream.Stream.Position = 0;
                         leaveOpen = true;
@@ -296,7 +297,7 @@ namespace Opc.Ua.SourceGeneration
                 switch (resource)
                 {
                     case BinaryFileResource fileResource:
-                        return m_fileSystem.OpenRead(fileResource.FileName);
+                        return m_context.FileSystem.OpenRead(fileResource.FileName);
                     case StreamResource stream:
                         stream.Stream.Position = 0;
                         leaveOpen = true;
@@ -352,7 +353,7 @@ namespace Opc.Ua.SourceGeneration
                             false);
                     case TextFileResource textFile:
                         return new StreamReader(
-                            m_fileSystem.OpenRead(textFile.FileName),
+                            m_context.FileSystem.OpenRead(textFile.FileName),
                             Encoding.UTF8,
                             true,
                             kReadBufferSize,
@@ -387,7 +388,7 @@ namespace Opc.Ua.SourceGeneration
                 {
                     case TextFileResource textFile:
                         leaveOpen = false;
-                        return m_fileSystem.OpenRead(textFile.FileName);
+                        return m_context.FileSystem.OpenRead(textFile.FileName);
                     case StreamResource stream:
                         stream.Stream.Position = 0;
                         leaveOpen = true;
@@ -402,8 +403,10 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
-        private static void WriteAsUtf8StringLiteral(ILoadContext context, TextReader reader)
+        private void WriteAsUtf8StringLiteral(ILoadContext context, TextReader reader)
         {
+            Debug.Assert(m_context.Options.UseUtf8StringLiterals);
+
             context.Out.WriteLine("\"\"\"");
             for (string line = reader.ReadLine();
                 line != null;
@@ -423,7 +426,7 @@ namespace Opc.Ua.SourceGeneration
         {
             context.Out.WriteLine("global::System.Convert.FromBase64String(");
             //
-            // Do not forrmat the string, roslyn code analyzers barf with stack
+            // Do not format the string, roslyn code analyzers barf with stack
             // overflow when there are too many string "add" binary operations
             // in a single statement to visit.
             //
@@ -519,10 +522,9 @@ namespace Opc.Ua.SourceGeneration
         }
 
         private const int kReadBufferSize = 16 * 1024;
+        private readonly GeneratorContext m_context;
         private readonly int m_base64Threshold;
         private readonly bool m_useByteArrayForBase64;
-        private readonly IFileSystem m_fileSystem;
-        private readonly string m_outputFolder;
         private bool m_internalAccess;
     }
 

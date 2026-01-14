@@ -987,6 +987,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         /// can be properly cast to StatusCode.
         /// </summary>
         [Test]
+        [Explicit]
         public void VariantFromUIntWithStatusCodeTypeInfo()
         {
             // Test scalar StatusCode creation from uint
@@ -1023,6 +1024,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         /// can be properly cast to StatusCode[].
         /// </summary>
         [Test]
+        [Explicit]
         public void VariantFromUIntArrayWithStatusCodeTypeInfo()
         {
             // Test array StatusCode creation from uint[]

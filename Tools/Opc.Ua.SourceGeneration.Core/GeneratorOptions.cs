@@ -27,24 +27,34 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System.IO;
-using System.Xml;
+using System.Collections.Generic;
+using System.Threading;
 
-namespace Opc.Ua.Schema
+namespace Opc.Ua.SourceGeneration
 {
-    internal static class Extensions
+    /// <summary>
+    /// Generator options
+    /// </summary>
+    public sealed class GeneratorOptions
     {
         /// <summary>
-        /// Safe version for assignment of InnerXml.
+        /// Optimize generated code for compile speed.
         /// </summary>
-        /// <param name="doc">The XmlDocument.</param>
-        /// <param name="xml">The Xml document string.</param>
-        internal static void LoadInnerXml(this XmlDocument doc, string xml)
-        {
-            using var sreader = new StringReader(xml);
-            using var reader = XmlReader.Create(sreader, CoreUtils.DefaultXmlReaderSettings());
-            doc.XmlResolver = null;
-            doc.Load(reader);
-        }
+        public bool OptimizeForCompileSpeed { get; set; }
+
+        /// <summary>
+        /// Exclusions to apply on the input
+        /// </summary>
+        public IReadOnlyList<string> Exclusions { get; set; } = [];
+
+        /// <summary>
+        /// Generation should be cancelled
+        /// </summary>
+        public CancellationToken Cancellation { get; set; }
+
+        /// <summary>
+        /// Write utf8 string literals when needed
+        /// </summary>
+        public bool UseUtf8StringLiterals { get; set; } = true;
     }
 }

@@ -35,54 +35,6 @@ using Opc.Ua.Schema.Model;
 namespace Opc.Ua.SourceGeneration
 {
     /// <summary>
-    /// Generator options
-    /// </summary>
-    public sealed class GeneratorOptions
-    {
-        /// <summary>
-        /// Optimize generated code for compile speed.
-        /// </summary>
-        public bool OptimizeForCompileSpeed { get; set; }
-
-        /// <summary>
-        /// Exclusions to apply on the input
-        /// </summary>
-        public IReadOnlyList<string> Exclusions { get; set; } = [];
-
-        /// <summary>
-        /// Generation should be cancelled
-        /// </summary>
-        public CancellationToken Cancellation { get; set; }
-    }
-
-    /// <summary>
-    /// What part of the stack to generate
-    /// </summary>
-    [Flags]
-    public enum StackGenerationType
-    {
-        /// <summary>
-        /// Generate nothing
-        /// </summary>
-        None,
-
-        /// <summary>
-        /// Generate the .NET stack code
-        /// </summary>
-        Stack,
-
-        /// <summary>
-        /// Generate the core models
-        /// </summary>
-        Models,
-
-        /// <summary>
-        /// Generate both stack and models
-        /// </summary>
-        All
-    }
-
-    /// <summary>
     /// Source Generation API
     /// </summary>
     public static class Generators
@@ -122,14 +74,14 @@ namespace Opc.Ua.SourceGeneration
                 options.Exclusions,
                 telemetry,
                 useAllowSubtypes);
-
-            var generator = new ModelGenerator(
-                fileSystem,
-                outputDir,
-                modelDesign,
-                telemetry,
-                options);
-            generator.Emit();
+            Generate(new GeneratorContext
+            {
+                FileSystem = fileSystem,
+                OutputFolder = outputDir,
+                Validator = modelDesign,
+                Telemetry = telemetry,
+                Options = options
+            });
         }
 
         /// <summary>
@@ -138,16 +90,16 @@ namespace Opc.Ua.SourceGeneration
         /// <param name="nodesets">Nodesets to process</param>
         /// <param name="fileSystem">File system abstraction to use</param>
         /// <param name="outputDir">Output folder or null</param>
-        /// <param name="exclusions">Exclusion map</param>
         /// <param name="telemetry">Telemetry context for logging</param>
         /// <param name="options">Generator options</param>
+        /// <param name="useAllowSubtypes"></param>
         public static void GenerateCode(
             this NodesetFileCollection nodesets,
             IFileSystem fileSystem,
             string outputDir,
-            string[] exclusions,
             ITelemetryContext telemetry,
-            GeneratorOptions options = null)
+            GeneratorOptions options = null,
+            bool useAllowSubtypes = false)
         {
             if (nodesets.Files.Count == 0)
             {
@@ -159,7 +111,6 @@ namespace Opc.Ua.SourceGeneration
             fileSystem = typeof(Generators).Assembly
                 .AsFileSystem("Opc.Ua.SourceGeneration.Design")
                 .WithFallback(fileSystem);
-
             foreach (string modelUri in nodesets.ModelUris)
             {
                 List<string> designFilesForModel =
@@ -177,19 +128,21 @@ namespace Opc.Ua.SourceGeneration
                         DesignFiles = designFilesForModel
                     },
                     null,
-                    exclusions,
-                    telemetry);
-
-                var generator = new ModelGenerator(
-                    fileSystem,
-                    outputDir,
-                    modelDesign,
+                    options.Exclusions,
                     telemetry,
-                    options)
+                    useAllowSubtypes);
+
+                Generate(new GeneratorContext
                 {
-                    AvailableNodeSets = nodesets.Files
-                };
-                generator.Emit();
+                    FileSystem = fileSystem,
+                    OutputFolder = outputDir,
+                    Validator = modelDesign,
+                    Telemetry = telemetry,
+                    Options = options
+                });
+                // TODO {
+                // TODO     AvailableNodeSets = nodesets.Files
+                // TODO };
             }
         }
 
@@ -234,56 +187,65 @@ namespace Opc.Ua.SourceGeneration
                 telemetry,
                 false);
 
+            var generatorContext = new GeneratorContext
+            {
+                FileSystem = fileSystem,
+                OutputFolder = outputDir,
+                Validator = modelDesign,
+                Telemetry = telemetry,
+                Options = options
+            };
             if ((generatorType & StackGenerationType.Stack) != 0)
             {
-                var clientApiGenerator = new ClientApiGenerator(
-                    fileSystem,
-                    outputDir,
-                    modelDesign,
-                    options);
+                var clientApiGenerator = new ClientApiGenerator(generatorContext);
                 clientApiGenerator.Emit();
-                var serverApiGenerator = new ServerApiGenerator(
-                    fileSystem,
-                    outputDir,
-                    modelDesign,
-                    options);
+                var serverApiGenerator = new ServerApiGenerator(generatorContext);
                 serverApiGenerator.Emit();
-                var endpointsGenerator = new EndpointsGenerator(
-                    fileSystem,
-                    outputDir,
-                    modelDesign,
-                    options);
+                var endpointsGenerator = new EndpointsGenerator(generatorContext);
                 endpointsGenerator.Emit();
             }
 
             if ((generatorType & StackGenerationType.Models) != 0)
             {
-                var messagesGenerator = new MessagesGenerator(
-                    fileSystem,
-                    outputDir,
-                    modelDesign,
-                    options);
+                var messagesGenerator = new MessagesGenerator(generatorContext);
                 messagesGenerator.Emit();
-                var attributesGenerator = new AttributesGenerator(
-                    fileSystem,
-                    outputDir,
-                    options);
+                var attributesGenerator = new AttributesGenerator(generatorContext);
                 attributesGenerator.Emit();
-                var statusCodesGenerator = new StatusCodesGenerator(
-                    fileSystem,
-                    outputDir,
-                    options);
+                var statusCodesGenerator = new StatusCodesGenerator(generatorContext);
                 statusCodesGenerator.Emit();
 
-                var modelGenerator = new ModelGenerator(
-                    fileSystem,
-                    outputDir,
-                    modelDesign,
-                    telemetry,
-                    options);
-                modelGenerator.Emit(
-                    validateSchemas: !options.OptimizeForCompileSpeed);
+                Generate(generatorContext, !options.OptimizeForCompileSpeed);
             }
+        }
+
+        /// <summary>
+        /// Generates all files
+        /// </summary>
+        private static void Generate(GeneratorContext context, bool validateSchemas = false)
+        {
+            var constantsGenerator = new ConstantsGenerator(context);
+            constantsGenerator.Emit();
+            var nodeIdGenerator = new NodeIdGenerator(context);
+            nodeIdGenerator.Emit();
+            var classGenerator = new NodeStateGenerator(context);
+            classGenerator.Emit();
+            var dataTypesGenerator = new DataTypeGenerator(context);
+            dataTypesGenerator.Emit();
+            var xmlSchemaGenerator = new XmlSchemaGenerator(context);
+            TextFileResource xmlSchemaResource = xmlSchemaGenerator.Emit(
+                validateOutput: validateSchemas);
+            var binarySchemaGenerator = new BinarySchemaGenerator(context);
+            TextFileResource binarySchemaResource = binarySchemaGenerator.Emit(
+                validateOutput: validateSchemas);
+            var schemaResources = new ResourceGenerator(context);
+            schemaResources.Embed(
+                Constants.CoreNamespacePrefix,
+                "XmlSchemas",
+                false,
+                binarySchemaResource,
+                xmlSchemaResource);
+            var nodesetGenerator = new NodesetGenerator(context);
+            nodesetGenerator.Emit();
         }
     }
 }

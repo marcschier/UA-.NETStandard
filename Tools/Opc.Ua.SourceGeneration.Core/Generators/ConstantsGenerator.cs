@@ -38,21 +38,17 @@ using Opc.Ua.Types;
 namespace Opc.Ua.SourceGeneration
 {
     /// <summary>
-    /// Generates node id and browse name constants.
+    /// Generates namespace and browse name constants.
+    /// TODO: Use resource generator infrastructure.
     /// </summary>
     internal sealed class ConstantsGenerator
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ConstantsGenerator"/> class.
         /// </summary>
-        public ConstantsGenerator(
-            IFileSystem fileSystem,
-            string outputFolder,
-            ModelDesignValidator validator)
+        public ConstantsGenerator(GeneratorContext context)
         {
-            m_fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
-            m_outputFolder = outputFolder ?? throw new ArgumentNullException(nameof(outputFolder));
-            m_validator = validator ?? throw new ArgumentNullException(nameof(validator));
+            m_context = context;
         }
 
         /// <summary>
@@ -61,91 +57,52 @@ namespace Opc.Ua.SourceGeneration
         public void Emit()
         {
             SortedDictionary<string, string> browseNames = [];
-            foreach (NodeDesign node in m_validator.GetNodeDesigns())
+            foreach (NodeDesign node in m_context.Validator.GetNodeDesigns())
             {
                 CollectBrowseNames(node, browseNames);
             }
 
-            SortedDictionary<string, List<NodeDesign>> identifiers = GetIdentifiers();
-
-            if (browseNames.Count == 0 && identifiers.Count == 0)
+            if (browseNames.Count == 0)
             {
+                // Nothing to do
                 return;
             }
 
-            using TextWriter writer = GenerateFile(
-                m_outputFolder,
-                "Constants",
-                CodeTemplates.ConstantsFile_cs,
-                out Template template,
-                out List<string> namespaces);
+            using TextWriter writer = m_context.FileSystem.CreateTextWriter(
+                Path.Combine(m_context.OutputFolder, CoreUtils.Format(
+                    "{0}.Constants.g.cs",
+                    m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix)));
+
+            using var templateWriter = new TemplateWriter(writer);
+            var template = new Template(templateWriter, CodeTemplates.ConstantsFile_cs);
+            template.AddReplacement(
+                Tokens.Namespace,
+                m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(
+                    m_context.Validator.Dictionary.TargetNamespace));
+            template.AddReplacement(
+                Tokens.NamespaceUri,
+                m_context.Validator.Dictionary.Namespaces.GetConstantSymbolForNamespace(
+                    m_context.Validator.Dictionary.TargetNamespace));
+
+            template.AddReplacement(
+                Tokens.ListOfImports,
+                m_context.Validator.Dictionary.Namespaces,
+                LoadTemplate_NamespaceImports);
 
             template.AddReplacement(
                 Tokens.ListOfNamespaceUris,
-                CodeTemplates.NamespaceUri_cs,
-                namespaces,
-                WriteTemplate_CodeNamespaceUri);
+                CodeTemplates.NamespaceUriStrings_cs,
+                GetNamespaceUris(),
+                WriteTemplate_NamespaceUriStrings);
 
             template.AddReplacement(
                 Tokens.ListOfBrowseNames,
-                CodeTemplates.BrowseName_cs,
+                CodeTemplates.BrowseNames_cs,
                 browseNames.ToArray(),
                 LoadTemplate_BrowseNames,
                 WriteTemplate_BrowseNames);
 
-            template.AddReplacement(
-                Tokens.ListOfIdentifiers,
-                CodeTemplates.IdClass_cs,
-                identifiers,
-                LoadTemplate_IdClass,
-                WriteTemplate_IdClass);
-
-            template.AddReplacement(
-                Tokens.ListOfNodeIds,
-                CodeTemplates.NodeIdClass_cs,
-                identifiers,
-                LoadTemplate_IdClass,
-                WriteTemplate_NodeIdClass);
-
             template.Render();
-        }
-
-        private TextWriter GenerateFile(
-            string outputFolder,
-            string file,
-            TemplateString templateString,
-            out Template template,
-            out List<string> namespaces)
-        {
-            TextWriter writer = m_fileSystem.CreateTextWriter(Path.Combine(
-                outputFolder,
-                CoreUtils.Format("{0}.{1}.g.cs", m_validator.Dictionary.TargetNamespaceInfo.Prefix, file)));
-
-            using var templateWriter = new TemplateWriter(writer);
-            template = new Template(templateWriter, templateString);
-            template.AddReplacement(
-                Tokens.Namespace,
-                m_validator.Dictionary.Namespaces.GetNamespacePrefix(m_validator.Dictionary.TargetNamespace));
-            template.AddReplacement(
-                Tokens.NamespaceUri,
-                m_validator.Dictionary.Namespaces.GetConstantSymbolForNamespace(m_validator.Dictionary.TargetNamespace));
-
-            template.AddReplacement(
-                Tokens.ListOfImports,
-                m_validator.Dictionary.Namespaces,
-                LoadTemplate_NamespaceImports);
-
-            namespaces = [];
-            for (int ii = 0; ii < m_validator.Dictionary.Namespaces.Length; ii++)
-            {
-                namespaces.Add(m_validator.Dictionary.Namespaces[ii].Value);
-
-                if (!string.IsNullOrEmpty(m_validator.Dictionary.Namespaces[ii].XmlNamespace))
-                {
-                    namespaces.Add(m_validator.Dictionary.Namespaces[ii].XmlNamespace);
-                }
-            }
-            return writer;
         }
 
         private TemplateString LoadTemplate_NamespaceImports(ILoadContext context)
@@ -155,7 +112,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            if (ns.Value == m_validator.Dictionary.TargetNamespace)
+            if (ns.Value == m_context.Validator.Dictionary.TargetNamespace)
             {
                 return null;
             }
@@ -165,235 +122,11 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            string externalPrefix = m_validator.Dictionary.Namespaces.GetNamespacePrefix(ns.Value);
+            string externalPrefix = m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(ns.Value);
 
             context.Out.WriteLine("using {0};", externalPrefix);
 
             return null;
-        }
-
-        private TemplateString LoadTemplate_IdClass(ILoadContext context)
-        {
-            if (context.Target is not KeyValuePair<string, List<NodeDesign>> nodes)
-            {
-                return null;
-            }
-
-            if (nodes.Value == null || nodes.Value.Count == 0)
-            {
-                return null;
-            }
-
-            return context.TemplateString;
-        }
-
-        private bool WriteTemplate_IdClass(IWriteContext context)
-        {
-            if (context.Target is not KeyValuePair<string, List<NodeDesign>> nodes ||
-                nodes.Value == null)
-            {
-                return false;
-            }
-
-            context.Template.AddReplacement(Tokens.NodeClass, nodes.Key);
-            context.Template.AddReplacement(
-                Tokens.NamespacePrefix,
-                m_validator.Dictionary.Namespaces.GetNamespacePrefix(m_validator.Dictionary.TargetNamespace));
-            context.Template.AddReplacement(Tokens.Namespace, m_validator.Dictionary.TargetNamespace);
-
-            context.Template.AddReplacement(
-                Tokens.ListOfIdentifiers,
-                CodeTemplates.IdDeclaration_cs,
-                nodes.Value,
-                WriteTemplate_IdDeclaration);
-
-            // Collection reflection lookups.  Note if the identifiers are not assigned
-            // or duplicate, the reflection will be pointing to the last node design.
-            var numericIds = new Dictionary<uint, NodeDesign>();
-            foreach (NodeDesign item in nodes.Value.Where(n => n.NumericIdSpecified))
-            {
-                numericIds[item.NumericId] = item;
-            }
-            var stringIds = new Dictionary<string, NodeDesign>();
-            // Save time by not looping again if all numeric
-            if (numericIds.Count != nodes.Value.Count)
-            {
-                foreach (NodeDesign item in nodes.Value.Where(n => !n.NumericIdSpecified))
-                {
-                    if (!string.IsNullOrEmpty(item.StringId))
-                    {
-                        stringIds[item.StringId] = item;
-                    }
-                    else if (!string.IsNullOrEmpty(item.SymbolicId.Name))
-                    {
-                        stringIds[item.SymbolicId.Name] = item;
-                    }
-                }
-            }
-
-            // For simplicity do not emit reflection for mixed identifiers (yet)
-            // Prefer numeric if both are present and more numeric ids than strings
-            if (numericIds.Count > stringIds.Count)
-            {
-                context.Template.AddReplacement(
-                    Tokens.IdentifierReflection,
-                    CodeTemplates.Constants_Reflection_cs,
-                    [new KeyValuePair<string, List<NodeDesign>>(nodes.Key, [.. numericIds.Values])],
-                    WriteTemplate_IdClassReflection);
-            }
-            else if (stringIds.Count > 0)
-            {
-                context.Template.AddReplacement(
-                    Tokens.IdentifierReflection,
-                    CodeTemplates.Constants_Reflection_cs,
-                    [new KeyValuePair<string, List<NodeDesign>>(nodes.Key, [.. stringIds.Values])],
-                    WriteTemplate_IdClassReflection);
-            }
-
-            return context.Template.Render();
-        }
-
-        private bool WriteTemplate_NodeIdClass(IWriteContext context)
-        {
-            if (context.Target is not KeyValuePair<string, List<NodeDesign>> nodes ||
-                nodes.Value == null)
-            {
-                return false;
-            }
-
-            context.Template.AddReplacement(Tokens.NodeClass, nodes.Key);
-            context.Template.AddReplacement(
-                Tokens.NamespacePrefix,
-                m_validator.Dictionary.Namespaces.GetNamespacePrefix(m_validator.Dictionary.TargetNamespace));
-            context.Template.AddReplacement(Tokens.Namespace, m_validator.Dictionary.TargetNamespace);
-
-            context.Template.AddReplacement(
-                Tokens.ListOfIdentifiers,
-                m_validator.Dictionary.TargetNamespace != Namespaces.OpcUa ?
-                    CodeTemplates.NodeIdDeclarationAbsolute_cs :
-                    CodeTemplates.NodeIdDeclaration_cs,
-                nodes.Value,
-                WriteTemplate_IdDeclaration);
-
-            context.Template.AddReplacement(
-                Tokens.IdentifierReflection,
-                CodeTemplates.Constants_Reflection_cs,
-                [nodes],
-                WriteTemplate_NodeIdReflection);
-
-            return context.Template.Render();
-        }
-
-        private bool WriteTemplate_IdDeclaration(IWriteContext context)
-        {
-            if (context.Target is not NodeDesign node)
-            {
-                return false;
-            }
-
-            object id;
-            string idType;
-            if (node.NumericIdSpecified)
-            {
-                id = node.NumericId;
-                idType = "uint";
-            }
-            else if (!string.IsNullOrEmpty(node.StringId))
-            {
-                id = $"\"{node.StringId}\""; // TODO: Make string resource
-                idType = "string";
-            }
-            else
-            {
-                id = $"\"{node.SymbolicId.Name}\""; // TODO: Make string resource
-                idType = "string";
-            }
-
-            context.Template.AddReplacement(Tokens.NodeClass, node.GetNodeClassString());
-            context.Template.AddReplacement(Tokens.SymbolicName, node.SymbolicId.Name);
-            context.Template.AddReplacement(Tokens.Identifier, id);
-            context.Template.AddReplacement(
-                Tokens.NamespaceUri,
-                m_validator.Dictionary.Namespaces.GetConstantSymbolForNamespace(node.SymbolicId.Namespace));
-            context.Template.AddReplacement(
-                Tokens.NamespacePrefix,
-                m_validator.Dictionary.Namespaces.GetNamespacePrefix(node.SymbolicId.Namespace));
-            context.Template.AddReplacement(Tokens.IdType, idType);
-
-            return context.Template.Render();
-        }
-
-        private TemplateString LoadTemplate_IdentifierLookup(ILoadContext context)
-        {
-            if (context.Target is not NodeDesign node)
-            {
-                return null;
-            }
-
-            string symbolicId = node.SymbolicId.Name; // See above - should be SymbolicName.Name?
-
-            if (context.Token == Tokens.ListOfIdentifersToNames)
-            {
-                context.Out.WriteLine("lookup[{0}] = \"{0}\";", symbolicId);
-            }
-            else if (context.Token == Tokens.ListOfNamesToIdentifiers)
-            {
-                context.Out.WriteLine("lookup[\"{0}\"] = {0};", symbolicId);
-            }
-            return null;
-        }
-
-        private bool WriteTemplate_IdClassReflection(IWriteContext context)
-        {
-            if (context.Target is not KeyValuePair<string, List<NodeDesign>> nodes)
-            {
-                return false;
-            }
-
-            context.Template.AddReplacement(Tokens.ClassName, nodes.Key);
-            context.Template.AddReplacement(Tokens.IdType,
-                nodes.Value[0].NumericIdSpecified ?
-                    "uint" :
-                    "string");
-
-            context.Template.AddReplacement(
-                Tokens.ListOfIdentifersToNames,
-                nodes.Value,
-                LoadTemplate_IdentifierLookup);
-
-            context.Template.AddReplacement(
-                Tokens.ListOfNamesToIdentifiers,
-                nodes.Value,
-                LoadTemplate_IdentifierLookup);
-
-            return context.Template.Render();
-        }
-
-        private bool WriteTemplate_NodeIdReflection(IWriteContext context)
-        {
-            if (context.Target is not KeyValuePair<string, List<NodeDesign>> nodes)
-            {
-                return false;
-            }
-
-            context.Template.AddReplacement(Tokens.ClassName, CoreUtils.Format("{0}Ids", nodes.Key));
-            context.Template.AddReplacement(
-                Tokens.IdType,
-                m_validator.Dictionary.TargetNamespace == Namespaces.OpcUa ?
-                    "global::Opc.Ua.NodeId" :
-                    "global::Opc.Ua.ExpandedNodeId");
-
-            context.Template.AddReplacement(
-                Tokens.ListOfIdentifersToNames,
-                nodes.Value,
-                LoadTemplate_IdentifierLookup);
-
-            context.Template.AddReplacement(
-                Tokens.ListOfNamesToIdentifiers,
-                nodes.Value,
-                LoadTemplate_IdentifierLookup);
-
-            return context.Template.Render();
         }
 
         private TemplateString LoadTemplate_BrowseNames(ILoadContext context)
@@ -421,16 +154,16 @@ namespace Opc.Ua.SourceGeneration
             return context.Template.Render();
         }
 
-        private bool WriteTemplate_CodeNamespaceUri(IWriteContext context)
+        private bool WriteTemplate_NamespaceUriStrings(IWriteContext context)
         {
             if (context.Target is not string uri)
             {
                 return false;
             }
 
-            for (int ii = 0; ii < m_validator.Dictionary.Namespaces.Length; ii++)
+            for (int ii = 0; ii < m_context.Validator.Dictionary.Namespaces.Length; ii++)
             {
-                Namespace ns = m_validator.Dictionary.Namespaces[ii];
+                Namespace ns = m_context.Validator.Dictionary.Namespaces[ii];
 
                 if (uri != ns.Value && uri != ns.XmlNamespace)
                 {
@@ -457,7 +190,7 @@ namespace Opc.Ua.SourceGeneration
             NodeDesign node,
             SortedDictionary<string, string> browseNames)
         {
-            if (m_validator.IsExcluded(node))
+            if (m_context.Validator.IsExcluded(node))
             {
                 return;
             }
@@ -467,7 +200,7 @@ namespace Opc.Ua.SourceGeneration
                 return;
             }
 
-            if (node.SymbolicName.Namespace == m_validator.Dictionary.TargetNamespace)
+            if (node.SymbolicName.Namespace == m_context.Validator.Dictionary.TargetNamespace)
             {
                 browseNames[node.SymbolicName.Name] = node.BrowseName;
             }
@@ -479,12 +212,14 @@ namespace Opc.Ua.SourceGeneration
 
             foreach (NodeDesign child in node.Children.Items)
             {
-                if (m_validator.IsExcluded(child))
+                if (m_context.Validator.IsExcluded(child))
                 {
                     continue;
                 }
 
-                if (child.SymbolicName == new XmlQualifiedName(BrowseNames.DefaultInstanceBrowseName, Namespaces.OpcUa))
+                if (child.SymbolicName == new XmlQualifiedName(
+                    BrowseNames.DefaultInstanceBrowseName,
+                    Namespaces.OpcUa))
                 {
                     var variable = (VariableDesign)child;
 
@@ -496,7 +231,7 @@ namespace Opc.Ua.SourceGeneration
                     continue;
                 }
 
-                if (child.SymbolicName.Namespace == m_validator.Dictionary.TargetNamespace)
+                if (child.SymbolicName.Namespace == m_context.Validator.Dictionary.TargetNamespace)
                 {
                     if (browseNames.TryGetValue(child.SymbolicName.Name, out string browseName))
                     {
@@ -522,164 +257,20 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
-        private bool IsParentExcluded(NodeDesign root, KeyValuePair<string, HierarchyNode> child)
+        private List<string> GetNamespaceUris()
         {
-            string parentId = child.Key;
-
-            while (parentId != null)
+            List<string> namespaceUris = [];
+            for (int ii = 0; ii < m_context.Validator.Dictionary.Namespaces.Length; ii++)
             {
-                int index = parentId.LastIndexOf('_');
-
-                if (index > 0)
+                namespaceUris.Add(m_context.Validator.Dictionary.Namespaces[ii].Value);
+                if (!string.IsNullOrEmpty(m_context.Validator.Dictionary.Namespaces[ii].XmlNamespace))
                 {
-                    parentId = parentId[..index];
-                }
-
-                if (!root.Hierarchy.Nodes.TryGetValue(parentId, out HierarchyNode parent))
-                {
-                    return false;
-                }
-
-                if (m_validator.IsExcluded(parent.Instance))
-                {
-                    return true;
-                }
-
-                if (index <= 0)
-                {
-                    break;
+                    namespaceUris.Add(m_context.Validator.Dictionary.Namespaces[ii].XmlNamespace);
                 }
             }
-
-            return false;
+            return namespaceUris;
         }
 
-        private SortedDictionary<string, List<NodeDesign>> GetIdentifiers()
-        {
-            SortedDictionary<string, List<NodeDesign>> identifiers = [];
-
-            for (int ii = 0; ii < m_validator.Dictionary.Items.Length; ii++)
-            {
-                NodeDesign node = m_validator.Dictionary.Items[ii];
-
-                if (m_validator.IsExcluded(node))
-                {
-                    continue;
-                }
-
-                if (node is InstanceDesign instance &&
-                    instance.TypeDefinitionNode != null &&
-                    m_validator.IsExcluded(instance.TypeDefinitionNode))
-                {
-                    continue;
-                }
-
-                if (node.IsMethodTypeNode())
-                {
-                    continue;
-                }
-
-                string nodeClass = node.GetNodeClassString();
-
-                if (nodeClass == "EventType")
-                {
-                    nodeClass = "ObjectType";
-                }
-
-                if (!identifiers.TryGetValue(nodeClass, out List<NodeDesign> nodesWithinClass))
-                {
-                    identifiers[nodeClass] = nodesWithinClass = [];
-                }
-
-                if (!nodesWithinClass.Contains(node))
-                {
-                    nodesWithinClass.Add(node);
-                }
-
-                if (node.Hierarchy == null)
-                {
-                    continue;
-                }
-
-                foreach (KeyValuePair<string, HierarchyNode> current in node.Hierarchy.Nodes)
-                {
-                    if (string.IsNullOrEmpty(current.Key))
-                    {
-                        continue;
-                    }
-
-                    if (m_validator.IsExcluded(current.Value.Instance))
-                    {
-                        continue;
-                    }
-
-                    if (IsParentExcluded(node, current))
-                    {
-                        continue;
-                    }
-
-                    var method = current.Value.Instance as MethodDesign;
-
-                    if (method?.MethodDeclarationNode != null &&
-                        m_validator.IsExcluded(method?.MethodDeclarationNode))
-                    {
-                        continue;
-                    }
-
-                    if (node is TypeDesign)
-                    {
-                        if (!current.Value.ExplicitlyDefined)
-                        {
-                            if (current.Value.Inherited &&
-                                (current.Value.Instance == null ||
-                                    current.Value.Instance.BrowseName == current.Value.RelativePath))
-                            {
-                                continue;
-                            }
-
-                            if (current.Value.Instance is InstanceDesign child &&
-                                child.ModellingRule != ModellingRule.Mandatory)
-                            {
-                                continue;
-                            }
-                        }
-                    }
-
-                    if (node is InstanceDesign)
-                    {
-                        if (current.Value.Instance is not InstanceDesign child)
-                        {
-                            continue;
-                        }
-
-                        if (child.ModellingRule != ModellingRule.Mandatory)
-                        {
-                            continue;
-                        }
-                    }
-
-                    if (current.Value.Instance.NumericIdSpecified ?
-                        current.Value.Instance.NumericId == 0 : current.Value.Instance.StringId == null)
-                    {
-                        continue;
-                    }
-
-                    nodeClass = current.Value.Instance.GetNodeClassString();
-
-                    if (!identifiers.TryGetValue(nodeClass, out nodesWithinClass))
-                    {
-                        identifiers[nodeClass] = nodesWithinClass = [];
-                    }
-
-                    nodesWithinClass.Add(current.Value.Instance);
-                }
-            }
-
-            return identifiers;
-        }
-
-        private readonly IFileSystem m_fileSystem;
-        private readonly string m_outputFolder;
-        private readonly ModelDesignValidator m_validator;
+        private readonly GeneratorContext m_context;
     }
 }
