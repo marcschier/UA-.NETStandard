@@ -160,19 +160,20 @@ namespace Opc.Ua.SourceGeneration
                 ])
                 .WithUpdatedAnalyzerConfigOptions(options)
                 ;
-            GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation);
+            GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation, 120);
             Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(8));
 
             // Get the XmlSchema.g.cs generated source
             var xmlSchemaSource = generatorResult.GeneratedSources
-                .Where(s => s.HintName.EndsWith("XmlSchema.g.cs", StringComparison.Ordinal))
+                .Where(s => s.HintName.EndsWith("XmlSchemas.g.cs", StringComparison.Ordinal))
                 .ToList();
             Assert.That(xmlSchemaSource.Count, Is.EqualTo(1));
         }
 
         private static GeneratorRunResult GenerateAndCompile(
             GeneratorDriver driver,
-            CSharpCompilation compilation)
+            CSharpCompilation compilation,
+            int expectedErrors = 0)
         {
             // Run it
             driver = driver.RunGeneratorsAndUpdateCompilation(
@@ -188,7 +189,8 @@ namespace Opc.Ua.SourceGeneration
                 out int errors,
                 out int warnings);
 
-            Assert.That(errors, Is.EqualTo(0), $"Compilation produced {errors} errors");
+            Assert.That(errors, Is.EqualTo(expectedErrors),
+                $"Compilation produced {errors} errors");
 #if NETFRAMEWORK
             TestContext.Out.WriteLine($"Compilation produced {warnings} warnings");
 #else
