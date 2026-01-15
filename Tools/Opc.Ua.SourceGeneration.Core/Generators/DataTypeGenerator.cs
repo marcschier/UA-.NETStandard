@@ -132,7 +132,7 @@ namespace Opc.Ua.SourceGeneration
 
                     if (datatype.HasFields && datatype.Fields.Any(x => x.IsOptional))
                     {
-                        if (datatype.IsDerivedDataType(m_context.Validator.Dictionary.Namespaces))
+                        if (datatype.IsDerivedDataType())
                         {
                             return CodeTemplates.DataTypes_DerivedClassWithOptionalFields_cs;
                         }
@@ -140,7 +140,7 @@ namespace Opc.Ua.SourceGeneration
                         return CodeTemplates.DataTypes_ClassWithOptionalFields_cs;
                     }
 
-                    if (!datatype.IsDerivedDataType(m_context.Validator.Dictionary.Namespaces))
+                    if (!datatype.IsDerivedDataType())
                     {
                         return CodeTemplates.DataTypes_Class_cs;
                     }

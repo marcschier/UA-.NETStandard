@@ -31,6 +31,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Runtime.InteropServices.ComTypes;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -171,11 +172,26 @@ namespace Opc.Ua.Schema
         protected XmlSchema Load(string path, string namespaceUri, ValidationEventHandler handler)
         {
             // check if path specified in the file table.
-            if (namespaceUri != null &&
-                m_namespaceUriToLocationMapping.TryGetValue(namespaceUri, out string location))
+            if (namespaceUri != null)
             {
-                path = location;
+                // check if path specified in the file table.
+                if (m_namespaceUriToLocationMapping.TryGetValue(namespaceUri, out string location))
+                {
+                    path = location;
+                }
+
+                if (path == null)
+                {
+                    if (m_importFiles.TryGetValue(namespaceUri, out byte[] schemaBuffer))
+                    {
+                        using var istrm = new MemoryStream(schemaBuffer);
+                        return Load(istrm, handler);
+                    }
+                    throw new FileNotFoundException(CoreUtils.Format(
+                        "Missing schema location for namespace {0}", namespaceUri));
+                }
             }
+
             return Load(path, handler);
         }
 

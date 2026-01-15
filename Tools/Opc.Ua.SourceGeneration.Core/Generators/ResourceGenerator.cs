@@ -407,7 +407,8 @@ namespace Opc.Ua.SourceGeneration
         {
             Debug.Assert(m_context.Options.UseUtf8StringLiterals);
 
-            context.Out.WriteLine("\"\"\"");
+            context.Out.Write("\"\"\"");
+            var firstLine = true;
             for (string line = reader.ReadLine();
                 line != null;
                 line = reader.ReadLine())
@@ -416,6 +417,11 @@ namespace Opc.Ua.SourceGeneration
                 if (string.IsNullOrEmpty(line))
                 {
                     continue;
+                }
+                if (firstLine)
+                {
+                    // Cannot have multi line without writing anything
+                    context.Out.WriteLine();
                 }
                 context.Out.WriteLine(line);
             }

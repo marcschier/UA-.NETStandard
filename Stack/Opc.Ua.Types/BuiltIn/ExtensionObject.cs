@@ -812,7 +812,7 @@ namespace Opc.Ua
 
             foreach (ExtensionObject element in this)
             {
-                clone.Add(CoreUtils.Clone(element));
+                clone.Add(element);
             }
 
             return clone;

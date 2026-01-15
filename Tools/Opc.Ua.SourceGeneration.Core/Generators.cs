@@ -240,6 +240,7 @@ namespace Opc.Ua.SourceGeneration
             var dataTypesGenerator = new DataTypeGenerator(context);
             dataTypesGenerator.Emit();
 
+            // Generate schemas
             var xmlSchemaGenerator = new XmlSchemaGenerator(context);
             TextFileResource xmlSchemaResource = xmlSchemaGenerator.Emit(
                 validateOutput: validateSchemas);
@@ -254,6 +255,7 @@ namespace Opc.Ua.SourceGeneration
                 binarySchemaResource,
                 xmlSchemaResource);
 
+            // Must run after schema generation to initilize the dictionaries.
             var nodesetGenerator = new NodesetGenerator(
                 context,
                 embedNodeset: embedNodeSet2Xml);

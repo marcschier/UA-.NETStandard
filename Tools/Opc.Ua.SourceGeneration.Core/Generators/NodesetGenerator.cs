@@ -64,6 +64,7 @@ namespace Opc.Ua.SourceGeneration
         /// <inheritdoc/>
         public void Emit()
         {
+            string nsPrefix = m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix;
             var context = new SystemContext(m_context.Telemetry)
             {
                 NamespaceUris = m_context.Validator.Dictionary.NamespaceUris,
@@ -74,37 +75,33 @@ namespace Opc.Ua.SourceGeneration
             NodeStateCollection nodeStateCollection = [];
             NodeStateCollection nodeStateCollectionWithServices = [];
             Dictionary<uint, NodeStateCollection> subsets = [];
-            string nsPrefix = m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix;
 
-            for (int ii = 0; ii < m_context.Validator.Dictionary.Items.Length; ii++)
+            foreach (NodeDesign node in m_context.Validator.Dictionary.Items)
             {
-                NodeDesign node = m_context.Validator.Dictionary.Items[ii];
-
                 if (m_context.Validator.IsExcluded(node))
                 {
                     continue;
                 }
 
                 bool isInAddressSpace =
-                    !m_context.Validator.Dictionary.Items[ii].NotInAddressSpace;
+                    !node.NotInAddressSpace;
 
-                if (m_context.Validator.Dictionary.Items[ii] is InstanceDesign design2 &&
-                    design2.TypeDefinition != null &&
-                    design2.TypeDefinition.Name == "DataTypeEncodingType")
+                if (node is InstanceDesign instanceDesign &&
+                    instanceDesign.TypeDefinition != null &&
+                    instanceDesign.TypeDefinition.Name == "DataTypeEncodingType")
                 {
                     isInAddressSpace =
-                        design2.Parent == null ||
-                        !design2.Parent.NotInAddressSpace;
+                        instanceDesign.Parent == null ||
+                        !instanceDesign.Parent.NotInAddressSpace;
                 }
 
-                if (m_context.Validator.Dictionary.Items[ii] is MethodDesign design3 &&
-                    design3.SymbolicName.Name.EndsWith("MethodType", StringComparison.Ordinal))
+                if (node is MethodDesign methodDesign &&
+                    methodDesign.SymbolicName.Name.EndsWith("MethodType", StringComparison.Ordinal))
                 {
                     continue;
                 }
 
-                NodeState state = m_context.Validator.Dictionary.Items[ii].State;
-
+                NodeState state = node.State;
                 if (state != null)
                 {
                     if (node.Purpose == Schema.Model.DataTypePurpose.Testing)
@@ -132,14 +129,14 @@ namespace Opc.Ua.SourceGeneration
 
                     RemoveChildrenWithNoNodeId(context, state);
 
-                    if (m_context.Validator.Dictionary.Items[ii].PartNo != 0)
+                    if (node.PartNo != 0)
                     {
                         if (!subsets.TryGetValue(
-                            m_context.Validator.Dictionary.Items[ii].PartNo,
+                            node.PartNo,
                             out NodeStateCollection subset))
                         {
                             subset = [];
-                            subsets[m_context.Validator.Dictionary.Items[ii].PartNo] = subset;
+                            subsets[node.PartNo] = subset;
                         }
 
                         subset.Add(state);
@@ -162,7 +159,7 @@ namespace Opc.Ua.SourceGeneration
                         {
                             file = Path.Combine(
                                 m_context.OutputFolder,
-                                CoreUtils.Format("{0}..Types.xsd", nsPrefix));
+                                CoreUtils.Format("{0}.Types.xsd", nsPrefix));
                         }
 
                         if (references.Count > 0 &&
@@ -186,6 +183,11 @@ namespace Opc.Ua.SourceGeneration
                                 }
                                 else
                                 {
+                                    // TODO: Should throw as it should exist for type system to work
+                                    m_logger.LogWarning(
+                                        "Missing type system file: {File} for variable {Variable}",
+                                        file,
+                                        variable);
                                     variable.Value = null;
                                 }
                             }
@@ -298,13 +300,13 @@ namespace Opc.Ua.SourceGeneration
                 m_context.OutputFolder,
                 CoreUtils.Format("{0}.NodeIds.csv", nsPrefix));
             WriteIdentifiers(context, identifiersFilePath, nodeStateCollection);
-            resources.Add(identifiersFilePath.AsTextFileResource());
+            // resources.Add(new TextFileResource("Csv", identifiersFilePath));
 
             identifiersFilePath = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
                 "{0}.NodeIds.permissions.csv",
                 nsPrefix));
             WritePermissions(context, identifiersFilePath, nodeStateCollection);
-            resources.Add(identifiersFilePath.AsTextFileResource());
+            // resources.Add(new TextFileResource("Permission.Csv", identifiersFilePath));
 
             string outputFile = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
                 "{0}.NodeSet2.xml",
@@ -335,6 +337,7 @@ namespace Opc.Ua.SourceGeneration
                     m_context.Validator.Dictionary.TargetPublicationDate != DateTime.MinValue ?
                         m_context.Validator.Dictionary.TargetPublicationDate : DateTime.MinValue,
                     true);
+                resources.Add(new TextFileResource("Xml", outputFile));
 
                 if (m_context.Validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
                 {
@@ -351,22 +354,22 @@ namespace Opc.Ua.SourceGeneration
                                 m_context.Validator.Dictionary.TargetPublicationDate : DateTime.MinValue,
                             true);
                     }
-                    resources.Add(nodeSetFilePath.AsTextFileResource());
+                    resources.Add(new TextFileResource("Services.Xml", nodeSetFilePath));
 
                     identifiersFilePath = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
                         "{0}.NodeIds.Services.csv",
                         nsPrefix));
                     WriteIdentifiers(context, identifiersFilePath, nodeStateCollectionWithServices);
-                    resources.Add(identifiersFilePath.AsTextFileResource());
+                    // resources.Add(new TextFileResource("Services.Csv", nodeSetFilePath));
 
                     identifiersFilePath = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
                         "{0}.NodeIds.Services.permissions.csv",
                         nsPrefix));
                     WritePermissions(context, identifiersFilePath, nodeStateCollectionWithServices);
-                    resources.Add(identifiersFilePath.AsTextFileResource());
+                    // resources.Add(new TextFileResource("Services.Permissions.Csv", nodeSetFilePath));
                 }
             }
-            resources.Add(outputFile.AsTextFileResource());
+
             if (validateOutput)
             {
                 // Validate
@@ -631,11 +634,9 @@ namespace Opc.Ua.SourceGeneration
                 GetIdentifierListEntries(context, list, ii, name);
             }
 
-            IOrderedEnumerable<KeyValuePair<string, NodeState>> entries = list
-                .OrderBy(x => x.Value.NodeId);
-
             using TextWriter writer = m_context.FileSystem.CreateTextWriter(identifiersFilePath);
-            foreach (KeyValuePair<string, NodeState> ii in entries)
+            foreach (KeyValuePair<string, NodeState> ii in list
+                .OrderBy(x => x.Value.NodeId))
             {
                 NodeId nid = ii.Value.NodeId;
 
@@ -875,7 +876,7 @@ namespace Opc.Ua.SourceGeneration
         private string EncodingString => m_useXmlInitializers ? "Xml" : "Binary";
         private readonly bool m_useXmlInitializers;
         private readonly bool m_embedNodeset;
-        private readonly Microsoft.Extensions.Logging.ILogger<NodesetGenerator> m_logger;
+        private readonly ILogger m_logger;
         private readonly GeneratorContext m_context;
     }
 }

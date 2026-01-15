@@ -366,7 +366,7 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="ExtensionObject"/> value of the Variant</param>
         public Variant(ExtensionObject value)
         {
-            m_value = CoreUtils.Clone(value);
+            m_value = value;
             TypeInfo = TypeInfo.Scalars.ExtensionObject;
         }
 

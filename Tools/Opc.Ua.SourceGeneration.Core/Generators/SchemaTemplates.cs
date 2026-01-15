@@ -211,15 +211,16 @@ namespace Opc.Ua.SourceGeneration
               </xs:complexType>
               <xs:element name="ListOfByteString" type="tns:ListOfByteString" nillable="true"></xs:element>
 
+              <xs:complexType name="XmlElement">
+                <xs:sequence>
+                  <xs:any minOccurs="0" processContents="lax"/>
+                </xs:sequence>
+              </xs:complexType>
+              <xs:element name="XmlElement" type="tns:XmlElement" nillable="true"></xs:element>
+
               <xs:complexType name="ListOfXmlElement">
                 <xs:sequence>
-                  <xs:element name="XmlElement" minOccurs="0" maxOccurs="unbounded" nillable="true">
-                    <xs:complexType>
-                      <xs:sequence>
-                        <xs:any minOccurs="0" processContents="lax"/>
-                      </xs:sequence>
-                    </xs:complexType>
-                  </xs:element>
+                  <xs:element name="XmlElement" minOccurs="0" maxOccurs="unbounded" nillable="true" />
                 </xs:sequence>
               </xs:complexType>
               <xs:element name="ListOfXmlElement" type="tns:ListOfXmlElement" nillable="true"></xs:element>
@@ -466,10 +467,12 @@ namespace Opc.Ua.SourceGeneration
 
               <xs:complexType name="DataValue">
                 <xs:sequence>
-                  <xs:element name="Value" type="tns:Variant" minOccurs="0" nillable="true" />
+                  <xs:element name="Value" type="tns:Variant" minOccurs="0" />
                   <xs:element name="StatusCode" type="tns:StatusCode" minOccurs="0" />
                   <xs:element name="SourceTimestamp" type="xs:dateTime" minOccurs="0" />
+                  <xs:element name="SourcePicoseconds" type="xs:unsignedShort" minOccurs="0" />
                   <xs:element name="ServerTimestamp" type="xs:dateTime" minOccurs="0" />
+                  <xs:element name="ServerPicoseconds" type="xs:unsignedShort" minOccurs="0" />
                 </xs:sequence>
               </xs:complexType>
               <xs:element name="DataValue" type="tns:DataValue" nillable="true"/>

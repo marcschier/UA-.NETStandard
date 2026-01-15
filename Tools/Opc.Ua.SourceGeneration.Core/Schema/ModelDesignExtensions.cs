@@ -29,6 +29,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Xml;
@@ -81,28 +82,12 @@ namespace Opc.Ua.Schema.Model
             }
 
             // check if it is a built in data type.
-            if (dataType.SymbolicName.Namespace == "http://opcfoundation.org/UA/")
+            if (dataType.IsBasicDataType(out BasicDataType basicDataType))
             {
-#if NET8_0_OR_GREATER
-                foreach (string name in Enum.GetNames<BasicDataType>())
-#else
-                foreach (string name in Enum.GetNames(typeof(BasicDataType)))
-#endif
-                {
-                    if (name == dataType.SymbolicName.Name)
-                    {
-#if NET8_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
-                        return Enum.Parse<BasicDataType>(dataType.SymbolicName.Name);
-#else
-                        return (BasicDataType)Enum.Parse(
-                            typeof(BasicDataType),
-                            dataType.SymbolicName.Name);
-#endif
-                    }
-                }
+                return basicDataType;
             }
 
-            // recursively search hierarchy if conversion to enum fails.
+            // recursively search hierarchy if not base data type yet
             BasicDataType basicType = DetermineBasicDataType(
                 dataType.BaseTypeNode as DataTypeDesign);
 
@@ -234,7 +219,7 @@ namespace Opc.Ua.Schema.Model
         /// <summary>
         /// Returns the class name to use when creating an instance of the type.
         /// </summary>
-        public static bool IsDerivedDataType(this TypeDesign type, Namespace[] namespaces)
+        public static bool IsDerivedDataType(this TypeDesign type)
         {
             if (type is not DataTypeDesign || type.BaseTypeNode is not DataTypeDesign dtd)
             {
@@ -829,7 +814,7 @@ namespace Opc.Ua.Schema.Model
                         "global::Opc.Ua.QualifiedName.Parse(\"{0}\")",
                         qualifiedName);
                 case BasicDataType.LocalizedText:
-                    if (decodedValue is not Opc.Ua.LocalizedText localizedText ||
+                    if (decodedValue is not Ua.LocalizedText localizedText ||
                         localizedText.IsNullOrEmpty)
                     {
                         return "default";
@@ -1425,6 +1410,8 @@ namespace Opc.Ua.Schema.Model
                         return "ua:ListOfBoolean";
                     case BasicDataType.SByte:
                         return "ua:ListOfSByte";
+                    case BasicDataType.Byte:
+                        return "ua:ListOfByte";
                     case BasicDataType.Int16:
                         return "ua:ListOfInt16";
                     case BasicDataType.UInt16:
@@ -1758,6 +1745,36 @@ namespace Opc.Ua.Schema.Model
                         return true;
                 }
             }
+            return false;
+        }
+
+        private static bool IsBasicDataType(
+            this DataTypeDesign dataType,
+            out BasicDataType basicDataType)
+        {
+            if (dataType.SymbolicName.Namespace == "http://opcfoundation.org/UA/")
+            {
+#if NET8_0_OR_GREATER
+                foreach (string name in Enum.GetNames<BasicDataType>())
+#else
+                foreach (string name in Enum.GetNames(typeof(BasicDataType)))
+#endif
+                {
+                    if (name == dataType.SymbolicName.Name)
+                    {
+#if NET8_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+                        basicDataType = Enum.Parse<BasicDataType>(
+                            dataType.SymbolicName.Name);
+#else
+                        basicDataType = (BasicDataType)Enum.Parse(
+                            typeof(BasicDataType),
+                            dataType.SymbolicName.Name);
+#endif
+                        return true;
+                    }
+                }
+            }
+            basicDataType = default;
             return false;
         }
     }

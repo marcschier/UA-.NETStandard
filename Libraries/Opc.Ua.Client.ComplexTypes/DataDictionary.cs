@@ -146,9 +146,11 @@ namespace Opc.Ua.Client.ComplexTypes
             if (TypeSystemId == Objects.XmlSchema_TypeSystem)
             {
                 imports ??= [];
-                if (!imports.ContainsKey(Namespaces.OpcUa))
+                if (!imports.ContainsKey(Namespaces.OpcUaXsd))
                 {
-                    imports.Add(Namespaces.OpcUa, XmlSchemas.TypesXsd.ToArray());
+                    byte[] schema = XmlSchemas.TypesXsd.ToArray();
+                    imports.Add(Namespaces.OpcUaXsd, schema);
+                    imports.Add(Namespaces.OpcUa, schema);
                 }
                 var validator = new Schema.Xml.XmlSchemaValidator(imports);
 

@@ -26,6 +26,7 @@
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
+  <Import Project="..\..\Tools\Opc.Ua.SourceGeneration\OPCFoundation.Opc.Ua.SourceGeneration.props" />
   <PropertyGroup>
     <ModelSourceGeneratorVersion>v105</ModelSourceGeneratorVersion>
     <ModelSourceGeneratorExclude>Draft</ModelSourceGeneratorExclude>

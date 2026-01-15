@@ -129,6 +129,47 @@ namespace Opc.Ua.SourceGeneration
             Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(16));
         }
 
+        [Theory]
+        public void GenerateAndCompileTestDataDesignTest(
+            LanguageVersion languageVersion)
+        {
+            var generator = new ModelSourceGenerator();
+            var host = new ModelSourceGeneratorHoist(generator);
+
+            CSharpCompilation compilation = OptimizationLevel.Release.CreateCompilation()
+                .AddCode(new Dictionary<string, string>().WithOpcUaCore(), languageVersion);
+
+            var options = new AnalyzerOptionsProvider(
+                new Dictionary<string, string>
+                {
+                    ["build_property.ModelSourceGeneratorVersion"] = "v105",
+                    ["build_property.ModelSourceGeneratorExclude"] = "Draft",
+                    ["build_property.ModelSourceGeneratorUseAllowSubtypes"] =
+                        "true"
+                });
+
+            // Create the driver that executes the generator
+            GeneratorDriver driver = CSharpGeneratorDriver.Create(host)
+                .WithUpdatedParseOptions(new CSharpParseOptions()
+                    .WithKind(SourceCodeKind.Regular)
+                    .WithLanguageVersion(languageVersion))
+                .AddAdditionalTexts(
+                [
+                    EmbeddedText.From("TestDataDesign.xml"),
+                    EmbeddedText.From("TestDataDesign.csv")
+                ])
+                .WithUpdatedAnalyzerConfigOptions(options)
+                ;
+            GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation);
+            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(8));
+
+            // Get the XmlSchema.g.cs generated source
+            var xmlSchemaSource = generatorResult.GeneratedSources
+                .Where(s => s.HintName.EndsWith("XmlSchema.g.cs", StringComparison.Ordinal))
+                .ToList();
+            Assert.That(xmlSchemaSource.Count, Is.EqualTo(1));
+        }
+
         private static GeneratorRunResult GenerateAndCompile(
             GeneratorDriver driver,
             CSharpCompilation compilation)

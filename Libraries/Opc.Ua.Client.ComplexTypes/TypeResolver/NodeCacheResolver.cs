@@ -550,8 +550,8 @@ namespace Opc.Ua.Client.ComplexTypes
                 // return as a byte array.
                 return values[0].Value as byte[];
             }
-            catch (ServiceResultException ex) when (ex.StatusCode == StatusCodes
-                .BadEncodingLimitsExceeded)
+            catch (ServiceResultException ex) when
+                (ex.StatusCode == StatusCodes.BadEncodingLimitsExceeded)
             {
                 // Fall back to reading the byte string in chunks.
                 try
