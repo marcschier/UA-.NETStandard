@@ -38,20 +38,17 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Generates code based on a UA Type Dictionary.
     /// </summary>
-    internal class StatusCodesGenerator
+    internal class StatusCodesGenerator : IGenerator
     {
-        // Constructors
         /// <summary>
-        /// Generates the code from the contents of the address space.
+        /// Create status codes generator
         /// </summary>
         public StatusCodesGenerator(GeneratorContext context)
         {
             m_context = context;
         }
 
-        /// <summary>
-        /// Write status codes
-        /// </summary>
+        /// <inheritdoc/>
         public void Emit()
         {
             string fileName = Path.Combine(m_context.OutputFolder,

@@ -127,6 +127,7 @@ namespace Opc.Ua.SourceGeneration
                     m_telemetry,
                     generatorOptions,
                     m_options.UseAllowSubtypes,
+                    m_options.EmbedNodeSet2Xml,
                     [.. m_identifierFiles.Select(i => i.Path)]);
 
                 // Collect all generated cs files and produce them into the compilation

@@ -127,7 +127,7 @@
     </opc:Fields>
   </opc:DataType>
 
-  <opc:VariableType SymbolicName="ScalarStructureVariableType" DataType="ScalarStructureDataType" BaseType="ua:BaseDataVariableType" ValueRank="Scalar">
+  <opc:VariableType SymbolicName="ScalarStructureVariableType" DataType="ScalarStructureDataType" BaseType="ua:BaseDataVariableType">
     <opc:Children>
       <opc:Variable SymbolicName="BooleanValue" DataType="ua:Boolean" ModellingRule="Mandatory"/>
       <opc:Variable SymbolicName="SByteValue" DataType="ua:SByte" ModellingRule="Mandatory" />
@@ -641,13 +641,14 @@
     </opc:Fields>
   </opc:DataType>
 
-  <opc:VariableType SymbolicName="VectorVariableType" DataType="Vector" BaseType="ua:BaseDataVariableType" ValueRank="Scalar">
+  <opc:VariableType SymbolicName="VectorVariableType" DataType="Vector" BaseType="ua:BaseDataVariableType">
     <opc:Children>
       <opc:Property SymbolicName="X" DataType="ua:Double" ModellingRule="Mandatory"/>
       <opc:Property SymbolicName="Y" DataType="ua:Double" ModellingRule="Mandatory" />
       <opc:Property SymbolicName="Z" DataType="ua:Double" ModellingRule="Mandatory" />
     </opc:Children>
   </opc:VariableType>
+
 
   <opc:DataType SymbolicName="VectorUnion" BaseType="ua:Union" IsUnion="true">
     <opc:Fields>

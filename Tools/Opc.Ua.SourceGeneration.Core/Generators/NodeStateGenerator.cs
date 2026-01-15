@@ -41,15 +41,21 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Generates data types and node state classes.
     /// </summary>
-    internal sealed class NodeStateGenerator
+    internal sealed class NodeStateGenerator : IGenerator
     {
-        public NodeStateGenerator(GeneratorContext context, bool useXmlInitializers = false)
+        /// <summary>
+        /// Create node state generator
+        /// </summary>
+        public NodeStateGenerator(
+            GeneratorContext context,
+            bool useXmlInitializers = false)
         {
             m_context = context;
             m_messageContext = new ServiceMessageContext(context.Telemetry);
             m_useXmlInitializers = useXmlInitializers;
         }
 
+        /// <inheritdoc/>
         public void Emit()
         {
             m_initializers.Clear();
@@ -328,10 +334,12 @@ namespace Opc.Ua.SourceGeneration
                     variableType.DataTypeNode.SymbolicName.Name);
                 context.Template.AddReplacement(
                     Tokens.DataTypeNamespacePrefix,
-                    m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(variableType.DataTypeNode.SymbolicId.Namespace));
+                    m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(
+                        variableType.DataTypeNode.SymbolicId.Namespace));
                 context.Template.AddReplacement(
                     Tokens.DataTypeNamespaceUri,
-                    m_context.Validator.Dictionary.Namespaces.GetConstantSymbolForNamespace(variableType.DataTypeNode.SymbolicId.Namespace));
+                    m_context.Validator.Dictionary.Namespaces.GetConstantSymbolForNamespace(
+                        variableType.DataTypeNode.SymbolicId.Namespace));
 
                 context.Template.AddReplacement(
                     Tokens.TypedVariableType,

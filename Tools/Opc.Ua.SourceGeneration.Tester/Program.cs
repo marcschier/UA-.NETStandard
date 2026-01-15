@@ -42,14 +42,18 @@ namespace Opc.Ua.SourceGeneration.Tester
             Console.WriteLine("Opc.Ua.SourceGeneration Tester");
             Console.WriteLine("==============================");
 
-            string output = Path.Combine(Directory.GetCurrentDirectory(), "generated", "stack");
+            string output = Path.Combine(Directory.GetCurrentDirectory(), "generated");
             LocalFileSystem fs = LocalFileSystem.Instance;
-            // if (fs.Exists(output, true))
-            // {
-            //     fs.Delete(output, true);
-            // }
             Generators.GenerateStack(StackGenerationType.All, fs, output, new Telemetry());
-            Console.WriteLine("Stack generated.");
+            Console.WriteLine("Stack generation completed.");
+
+            Generators.GenerateCode(new DesignFileCollection
+            {
+                DesignFiles = [ Path.Combine(Directory.GetCurrentDirectory(), "TestDataDesign.xml") ],
+                IdentifierFilePath = Path.Combine(Directory.GetCurrentDirectory(), "TestDataDesign.csv"),
+                Options = new DesignFileOptions()
+            }, fs, output, new Telemetry(), embedNodeSet2Xml: true);
+            Console.WriteLine("Test design build completed.");
         }
 
         private sealed class Telemetry : TelemetryContextBase

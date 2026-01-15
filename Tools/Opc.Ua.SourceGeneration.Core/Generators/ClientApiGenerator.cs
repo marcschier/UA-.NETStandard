@@ -36,10 +36,10 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Generates client API code for the services defined in the model.
     /// </summary>
-    internal sealed class ClientApiGenerator
+    internal sealed class ClientApiGenerator : IGenerator
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientApiGenerator"/> class.
+        /// Create client api generator.
         /// </summary>
         public ClientApiGenerator(GeneratorContext context)
         {
@@ -56,9 +56,7 @@ namespace Opc.Ua.SourceGeneration
             new ServiceSet("Registration", ServiceCategory.Registration)
         ];
 
-        /// <summary>
-        /// Writes the classes that define the service types.
-        /// </summary>
+        /// <inheritdoc/>
         public void Emit()
         {
             List<ServiceSet> serviceSets = ServiceSets;

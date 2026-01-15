@@ -1070,25 +1070,7 @@ dotnet_diagnostic.ERP022.severity = none
 
 # exclude generated code
 
-[**/Generated/*.cs]
-generated_code = true
-dotnet_diagnostic.severity = none
-dotnet_analyzer.severity = none
-#dotnet_analyzer_diagnostic.category-roslynator.severity = none
-
-[**/*.{Classes,DataTypes,Constants,StatusCodes,Attributes}.cs]
-generated_code = true
-dotnet_diagnostic.severity = none
-dotnet_analyzer.severity = none
-#dotnet_analyzer_diagnostic.category-roslynator.severity = none
-
 [**/OPCBinarySchema.cs]
-generated_code = true
-dotnet_diagnostic.severity = none
-dotnet_analyzer.severity = none
-#dotnet_analyzer_diagnostic.category-roslynator.severity = none
-
-[**/*.g.cs]
 generated_code = true
 dotnet_diagnostic.severity = none
 dotnet_analyzer.severity = none

@@ -57,7 +57,8 @@ namespace Opc.Ua.SourceGeneration
         [Theory]
         public void GenerateAndCompileDemoModelXmlTest(
             LanguageVersion languageVersion,
-            OptimizationLevel optimizationLevel)
+            OptimizationLevel optimizationLevel,
+            bool embedNodeSet2Xml)
         {
             var generator = new ModelSourceGenerator();
             var host = new ModelSourceGeneratorHoist(generator);
@@ -70,7 +71,10 @@ namespace Opc.Ua.SourceGeneration
                 {
                     ["build_property.ModelSourceGeneratorVersion"] = "v105",
                     ["build_property.ModelSourceGeneratorExclude"] = "Draft",
-                    ["build_property.ModelSourceGeneratorUseAllowSubtypes"] = "true"
+                    ["build_property.ModelSourceGeneratorUseAllowSubtypes"] =
+                        "true",
+                    ["build_property.ModelSourceGeneratorEmbedNodeSet2Xml"] =
+                        embedNodeSet2Xml.ToString()
                 });
 
             // Create the driver the executes the generator
@@ -82,7 +86,15 @@ namespace Opc.Ua.SourceGeneration
                 .WithUpdatedAnalyzerConfigOptions(options)
                 ;
             GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation);
-            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(8));
+            if (!embedNodeSet2Xml)
+            {
+                Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(8));
+            }
+            else
+            {
+                // one extra for the embedded nodeset2.xml
+                Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(9));
+            }
         }
 
         [Theory]

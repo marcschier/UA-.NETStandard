@@ -31,6 +31,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using MemoryBuffer;
 using Opc.Ua;
 using Opc.Ua.Server;
 
@@ -283,13 +284,7 @@ namespace TestData
         /// </summary>
         protected override NodeStateCollection LoadPredefinedNodes(ISystemContext context)
         {
-            var predefinedNodes = new NodeStateCollection();
-            predefinedNodes.LoadFromBinaryResource(
-                context,
-                "Quickstarts.Servers.TestData.Generated.TestData.PredefinedNodes.uanodes",
-                GetType().GetTypeInfo().Assembly,
-                true);
-            return predefinedNodes;
+            return new NodeStateCollection().AddTestData(context);
         }
 
         /// <summary>

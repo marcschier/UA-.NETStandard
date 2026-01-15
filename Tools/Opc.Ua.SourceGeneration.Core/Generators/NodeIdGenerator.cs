@@ -39,7 +39,7 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Generates node identifier and corresponding NodeId/ExpandedNodeId constants.
     /// </summary>
-    internal sealed class NodeIdGenerator
+    internal sealed class NodeIdGenerator : IGenerator
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="NodeIdGenerator"/> class.
@@ -49,9 +49,7 @@ namespace Opc.Ua.SourceGeneration
             m_context = context;
         }
 
-        /// <summary>
-        /// Generates the identifiers file.
-        /// </summary>
+        /// <inheritdoc/>
         public void Emit()
         {
             SortedDictionary<string, List<NodeDesign>> identifiers = GetIdentifiers();

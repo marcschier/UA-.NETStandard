@@ -903,6 +903,11 @@ namespace Opc.Ua.Schema.Model
         /// </summary>
         public const char PathChar = '_';
 
+        /// <summary>
+        /// Static array for splitting
+        /// </summary>
+        public static readonly char[] PathChars = [PathChar];
+
         /// <inheritdoc/>
         public static bool operator ==(NodeDesign left, NodeDesign right)
         {

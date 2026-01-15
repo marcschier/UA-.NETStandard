@@ -36,7 +36,7 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Generates endpoint code based on a UA Type Dictionary.
     /// </summary>
-    internal sealed class EndpointsGenerator
+    internal sealed class EndpointsGenerator : IGenerator
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="EndpointsGenerator"/> class.
@@ -46,9 +46,7 @@ namespace Opc.Ua.SourceGeneration
             m_context = context;
         }
 
-        /// <summary>
-        /// Writes the classes and interfaces that implement a UA endpoint.
-        /// </summary>
+        /// <inheritdoc/>
         public void Emit()
         {
             List<ServiceSet> serviceSets =

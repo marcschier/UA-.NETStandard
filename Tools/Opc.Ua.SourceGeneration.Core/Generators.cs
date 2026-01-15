@@ -46,7 +46,8 @@ namespace Opc.Ua.SourceGeneration
         /// <param name="telemetry">Telemetry context for logging</param>
         /// <param name="options">Generator options</param>
         /// <param name="useAllowSubtypes">allow subtypes</param>
-        /// <param name="identifierFiles"></param>
+        /// <param name="embedNodeSet2Xml">embed nodeset2.xml files</param>
+        /// <param name="identifierFiles">Any additional csv files</param>
         public static void GenerateCode(
             this DesignFileCollection designFiles,
             IFileSystem fileSystem,
@@ -54,6 +55,7 @@ namespace Opc.Ua.SourceGeneration
             ITelemetryContext telemetry,
             GeneratorOptions options = null,
             bool useAllowSubtypes = false,
+            bool embedNodeSet2Xml = false,
             List<string> identifierFiles = null)
         {
             if (designFiles.DesignFiles.Count == 0)
@@ -81,7 +83,7 @@ namespace Opc.Ua.SourceGeneration
                     Validator = modelDesign,
                     Telemetry = telemetry,
                     Options = options
-                });
+                }, validateSchemas: false, embedNodeSet2Xml: embedNodeSet2Xml);
             }
         }
 
@@ -93,14 +95,16 @@ namespace Opc.Ua.SourceGeneration
         /// <param name="outputDir">Output folder or null</param>
         /// <param name="telemetry">Telemetry context for logging</param>
         /// <param name="options">Generator options</param>
-        /// <param name="useAllowSubtypes"></param>
+        /// <param name="useAllowSubtypes">allow subtypes</param>
+        /// <param name="embedNodeSet2Xml">embed nodeset2.xml files</param>
         public static void GenerateCode(
             this NodesetFileCollection nodesets,
             IFileSystem fileSystem,
             string outputDir,
             ITelemetryContext telemetry,
             GeneratorOptions options = null,
-            bool useAllowSubtypes = false)
+            bool useAllowSubtypes = false,
+            bool embedNodeSet2Xml = false)
         {
             if (nodesets.Files.Count == 0)
             {
@@ -139,7 +143,7 @@ namespace Opc.Ua.SourceGeneration
                     Validator = modelDesign,
                     Telemetry = telemetry,
                     Options = options
-                });
+                }, validateSchemas: false, embedNodeSet2Xml: embedNodeSet2Xml);
                 // TODO {
                 // TODO     AvailableNodeSets = nodesets.Files
                 // TODO };
@@ -170,7 +174,8 @@ namespace Opc.Ua.SourceGeneration
             ModelDesignValidator modelDesign = fileSystem.OpenModelDesign(
                 new DesignFileCollection
                 {
-                    DesignFiles = [
+                    DesignFiles =
+                    [
                         BuiltInDesignFiles.StandardTypesXml,
                         BuiltInDesignFiles.UACoreServicesXml
                     ],
@@ -214,14 +219,17 @@ namespace Opc.Ua.SourceGeneration
                 var statusCodesGenerator = new StatusCodesGenerator(generatorContext);
                 statusCodesGenerator.Emit();
 
-                Generate(generatorContext, !options.OptimizeForCompileSpeed);
+                Generate(generatorContext, !options.OptimizeForCompileSpeed, false);
             }
         }
 
         /// <summary>
         /// Generates all files
         /// </summary>
-        private static void Generate(GeneratorContext context, bool validateSchemas = false)
+        private static void Generate(
+            GeneratorContext context,
+            bool validateSchemas = false,
+            bool embedNodeSet2Xml = false)
         {
             var constantsGenerator = new ConstantsGenerator(context);
             constantsGenerator.Emit();
@@ -231,6 +239,7 @@ namespace Opc.Ua.SourceGeneration
             classGenerator.Emit();
             var dataTypesGenerator = new DataTypeGenerator(context);
             dataTypesGenerator.Emit();
+
             var xmlSchemaGenerator = new XmlSchemaGenerator(context);
             TextFileResource xmlSchemaResource = xmlSchemaGenerator.Emit(
                 validateOutput: validateSchemas);
@@ -244,7 +253,10 @@ namespace Opc.Ua.SourceGeneration
                 false,
                 binarySchemaResource,
                 xmlSchemaResource);
-            var nodesetGenerator = new NodesetGenerator(context);
+
+            var nodesetGenerator = new NodesetGenerator(
+                context,
+                embedNodeset: embedNodeSet2Xml);
             nodesetGenerator.Emit();
         }
     }

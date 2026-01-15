@@ -149,8 +149,8 @@ namespace Opc.Ua.SourceGeneration
                 ModelPublicationDate = options.ModelPublicationDate
             };
 
-            var identifierFilePath = designFiles.IdentifierFilePath;
-            validator.Validate(designFiles.DesignFiles, identifierFilePath, false);
+            string identifierFilePath = designFiles.IdentifierFilePath;
+            validator.Validate(designFiles.DesignFiles, identifierFilePath);
             return validator;
         }
     }

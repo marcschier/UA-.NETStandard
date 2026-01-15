@@ -35,7 +35,7 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Generates service message data type annotation for stack code.
     /// </summary>
-    internal sealed class MessagesGenerator
+    internal sealed class MessagesGenerator : IGenerator
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="MessagesGenerator"/> class.
@@ -45,9 +45,7 @@ namespace Opc.Ua.SourceGeneration
             m_context = context;
         }
 
-        /// <summary>
-        /// Attach the service interfaces to the partial data types.
-        /// </summary>
+        /// <inheritdoc/>
         public void Emit()
         {
             // get datatypes.

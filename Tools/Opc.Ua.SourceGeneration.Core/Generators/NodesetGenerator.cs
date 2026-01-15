@@ -30,6 +30,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Xml;
+using Microsoft.Extensions.Logging;
 using Opc.Ua.Export;
 using Opc.Ua.Schema.Model;
 using Opc.Ua.Types;
@@ -37,23 +40,29 @@ using Opc.Ua.Types;
 namespace Opc.Ua.SourceGeneration
 {
     /// <summary>
-    /// Address space generator
+    /// Generates the script that instantiates the address space node states
+    /// and optionally embeds the corresponding nodeset2.xml as resource.
+    /// TODO: Right now we use serialization to instantiate, but change this
+    /// to direct code generation.
     /// </summary>
-    internal sealed class NodesetGenerator
+    internal sealed class NodesetGenerator : IGenerator
     {
         /// <summary>
-        /// Loads the model design from the specified file and validates it.
+        /// Creates the nodeset generator
         /// </summary>
-        public NodesetGenerator(GeneratorContext context, bool useXmlInitializers = false)
+        public NodesetGenerator(
+            GeneratorContext context,
+            bool useXmlInitializers = false,
+            bool embedNodeset = false)
         {
             m_context = context;
             m_useXmlInitializers = useXmlInitializers;
+            m_embedNodeset = embedNodeset;
+            m_logger = m_context.Telemetry.CreateLogger<NodesetGenerator>();
         }
 
-        /// <summary>
-        /// Generates all files
-        /// </summary>
-        public void Emit(bool embedNodeset = false)
+        /// <inheritdoc/>
+        public void Emit()
         {
             var context = new SystemContext(m_context.Telemetry)
             {
@@ -62,9 +71,10 @@ namespace Opc.Ua.SourceGeneration
             };
 
             // collect the nodes to write.
-            NodeStateCollection collection = [];
-            NodeStateCollection collectionWithServices = [];
+            NodeStateCollection nodeStateCollection = [];
+            NodeStateCollection nodeStateCollectionWithServices = [];
             Dictionary<uint, NodeStateCollection> subsets = [];
+            string nsPrefix = m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix;
 
             for (int ii = 0; ii < m_context.Validator.Dictionary.Items.Length; ii++)
             {
@@ -75,13 +85,16 @@ namespace Opc.Ua.SourceGeneration
                     continue;
                 }
 
-                bool isInAddressSpace = !m_context.Validator.Dictionary.Items[ii].NotInAddressSpace;
+                bool isInAddressSpace =
+                    !m_context.Validator.Dictionary.Items[ii].NotInAddressSpace;
 
                 if (m_context.Validator.Dictionary.Items[ii] is InstanceDesign design2 &&
                     design2.TypeDefinition != null &&
                     design2.TypeDefinition.Name == "DataTypeEncodingType")
                 {
-                    isInAddressSpace = design2.Parent == null || !design2.Parent.NotInAddressSpace;
+                    isInAddressSpace =
+                        design2.Parent == null ||
+                        !design2.Parent.NotInAddressSpace;
                 }
 
                 if (m_context.Validator.Dictionary.Items[ii] is MethodDesign design3 &&
@@ -99,11 +112,11 @@ namespace Opc.Ua.SourceGeneration
                         continue;
                     }
 
-                    collectionWithServices.Add(state);
+                    nodeStateCollectionWithServices.Add(state);
 
                     if (isInAddressSpace)
                     {
-                        collection.Add(state);
+                        nodeStateCollection.Add(state);
                     }
 
                     List<BaseInstanceState> children = [];
@@ -125,7 +138,8 @@ namespace Opc.Ua.SourceGeneration
                             m_context.Validator.Dictionary.Items[ii].PartNo,
                             out NodeStateCollection subset))
                         {
-                            subsets[m_context.Validator.Dictionary.Items[ii].PartNo] = subset = [];
+                            subset = [];
+                            subsets[m_context.Validator.Dictionary.Items[ii].PartNo] = subset;
                         }
 
                         subset.Add(state);
@@ -148,7 +162,7 @@ namespace Opc.Ua.SourceGeneration
                         {
                             file = Path.Combine(
                                 m_context.OutputFolder,
-                                m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix + ".Types.xsd");
+                                CoreUtils.Format("{0}..Types.xsd", nsPrefix));
                         }
 
                         if (references.Count > 0 &&
@@ -156,7 +170,7 @@ namespace Opc.Ua.SourceGeneration
                         {
                             file = Path.Combine(
                                 m_context.OutputFolder,
-                                m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix + ".Types.bsd");
+                                CoreUtils.Format("{0}.Types.bsd", nsPrefix));
                         }
 
                         if (file != null)
@@ -186,12 +200,12 @@ namespace Opc.Ua.SourceGeneration
 
             string documentationFile = Path.Combine(
                 m_context.OutputFolder,
-                m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix + ".NodeSet2.documentation.csv");
+                CoreUtils.Format("{0}.NodeSet2.documentation.csv", nsPrefix));
             if (!m_context.FileSystem.Exists(documentationFile))
             {
                 documentationFile = Path.Combine(
                     m_context.OutputFolder,
-                    m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix + ".NodeSet2.Services.documentation.csv");
+                    CoreUtils.Format("{0}.NodeSet2.Services.documentation.csv", nsPrefix));
             }
 
             if (m_context.FileSystem.Exists(documentationFile))
@@ -200,7 +214,7 @@ namespace Opc.Ua.SourceGeneration
 
                 ushort namespaceIndex = 0;
 
-                foreach (NodeState ii in collectionWithServices)
+                foreach (NodeState ii in nodeStateCollectionWithServices)
                 {
                     index[ii.NodeId] = ii;
                     namespaceIndex = CollectNodes(context, index, ii);
@@ -223,37 +237,36 @@ namespace Opc.Ua.SourceGeneration
             // save as nodeset.
             string originalFile = Path.Combine(
                 m_context.OutputFolder,
-                m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix + ".NodeSet2.xml");
+                CoreUtils.Format("{0}.NodeSet2.xml", nsPrefix));
             if (m_context.Validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
             {
                 originalFile = CoreUtils.Format("{0}{1}{2}.NodeSet2.Services.xml",
                     m_context.OutputFolder,
                     Path.DirectorySeparatorChar,
-                    m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix);
+                    nsPrefix);
             }
 
-            // load existing file from xml.
+            // load existing file from xml - this is used if we generates modeldesign from nodeset.
             if (m_context.FileSystem.Exists(originalFile))
             {
                 try
                 {
-                    NodeStateCollection existingCollection = null;
+                    NodeStateCollection existingNodeStateCollection = null;
 
                     using (Stream istrm = m_context.FileSystem.OpenRead(originalFile))
                     {
                         var nodeSet = UANodeSet.Read(istrm);
-                        existingCollection = [];
-                        nodeSet.Import(context, existingCollection);
+                        existingNodeStateCollection = [];
+                        nodeSet.Import(context, existingNodeStateCollection);
                     }
 
                     Dictionary<NodeId, NodeState> map = [];
-                    IndexDocumentation(context, existingCollection, map);
+                    IndexDocumentation(context, existingNodeStateCollection, map);
 
-                    UpdateDocumentation(context, map, collection);
-
+                    UpdateDocumentation(context, map, nodeStateCollection);
                     if (m_context.Validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
                     {
-                        UpdateDocumentation(context, map, collectionWithServices);
+                        UpdateDocumentation(context, map, nodeStateCollectionWithServices);
                     }
                 }
                 catch
@@ -262,28 +275,126 @@ namespace Opc.Ua.SourceGeneration
                 }
             }
 
-            if (embedNodeset)
+            if (m_embedNodeset)
             {
                 // Generate nodeset2.xml files as source code (.g.cs)
-                var nodesetGenerator = new Nodeset2Generator(m_context);
-                IReadOnlyList<Resource> resources = nodesetGenerator.Emit(
-                    m_context.OutputFolder,
-                    context,
-                    collection,
-                    collectionWithServices);
-
-                // Pack as resources
-                var resourceGenerator = new ResourceGenerator(m_context);
-                resourceGenerator.Embed(
-                    m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix,
-                    "NodeSet2",
-                    false,
-                    [.. resources]);
+                EmbedNodeSet2Xml(context, nodeStateCollection, nodeStateCollectionWithServices);
             }
 
             // Embed predefined nodes and add helpers as source code (.g.cs)
-            EmbedPredefinedNodes(context, collection);
+            EmbedPredefinedNodes(context, nodeStateCollection);
             GenerateHelpers();
+        }
+
+        private void EmbedNodeSet2Xml(
+            SystemContext context,
+            NodeStateCollection nodeStateCollection,
+            NodeStateCollection nodeStateCollectionWithServices,
+            bool validateOutput = true)
+        {
+            string nsPrefix = m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix;
+            var resources = new List<Resource>();
+            string identifiersFilePath = Path.Combine(
+                m_context.OutputFolder,
+                CoreUtils.Format("{0}.NodeIds.csv", nsPrefix));
+            WriteIdentifiers(context, identifiersFilePath, nodeStateCollection);
+            resources.Add(identifiersFilePath.AsTextFileResource());
+
+            identifiersFilePath = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
+                "{0}.NodeIds.permissions.csv",
+                nsPrefix));
+            WritePermissions(context, identifiersFilePath, nodeStateCollection);
+            resources.Add(identifiersFilePath.AsTextFileResource());
+
+            string outputFile = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
+                "{0}.NodeSet2.xml",
+                nsPrefix));
+            using (Stream ostrm = m_context.FileSystem.OpenWrite(outputFile))
+            {
+                var model = new ModelTableEntry
+                {
+                    ModelUri = m_context.Validator.Dictionary.TargetNamespace,
+                    XmlSchemaUri = m_context.Validator.Dictionary.TargetXmlNamespace,
+                    Version = m_context.Validator.Dictionary.TargetVersion,
+                    ModelVersion = CoreUtils.FixupAsSemanticVersion(
+                        m_context.Validator.Dictionary.TargetVersion),
+                    PublicationDate = m_context.Validator.Dictionary.TargetPublicationDate,
+                    PublicationDateSpecified =
+                        m_context.Validator.Dictionary.TargetPublicationDateSpecified
+                };
+
+                if (m_context.Validator.Dictionary.Dependencies != null)
+                {
+                    model.RequiredModel = [.. m_context.Validator.Dictionary.Dependencies.Values];
+                }
+
+                nodeStateCollection.SaveAsNodeSet2(
+                    context,
+                    ostrm,
+                    model,
+                    m_context.Validator.Dictionary.TargetPublicationDate != DateTime.MinValue ?
+                        m_context.Validator.Dictionary.TargetPublicationDate : DateTime.MinValue,
+                    true);
+
+                if (m_context.Validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
+                {
+                    string nodeSetFilePath = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
+                        "{0}.NodeSet2.Services.xml",
+                        nsPrefix));
+                    using (Stream ostrm2 = m_context.FileSystem.OpenWrite(nodeSetFilePath))
+                    {
+                        nodeStateCollectionWithServices.SaveAsNodeSet2(
+                            context,
+                            ostrm2,
+                            model,
+                            m_context.Validator.Dictionary.TargetPublicationDate != DateTime.MinValue ?
+                                m_context.Validator.Dictionary.TargetPublicationDate : DateTime.MinValue,
+                            true);
+                    }
+                    resources.Add(nodeSetFilePath.AsTextFileResource());
+
+                    identifiersFilePath = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
+                        "{0}.NodeIds.Services.csv",
+                        nsPrefix));
+                    WriteIdentifiers(context, identifiersFilePath, nodeStateCollectionWithServices);
+                    resources.Add(identifiersFilePath.AsTextFileResource());
+
+                    identifiersFilePath = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
+                        "{0}.NodeIds.Services.permissions.csv",
+                        nsPrefix));
+                    WritePermissions(context, identifiersFilePath, nodeStateCollectionWithServices);
+                    resources.Add(identifiersFilePath.AsTextFileResource());
+                }
+            }
+            resources.Add(outputFile.AsTextFileResource());
+            if (validateOutput)
+            {
+                // Validate
+                using (Stream istrm = m_context.FileSystem.OpenRead(outputFile))
+                {
+                    UANodeSet.Validate(istrm, out IReadOnlyList<string> errors);
+                    foreach (string error in errors)
+                    {
+                        m_logger.LogError("Nodeset2 Validation Error: {Error}", error);
+                    }
+                }
+
+                // load as node set.
+                using (Stream istrm = m_context.FileSystem.OpenRead(outputFile))
+                {
+                    var nodeSet = UANodeSet.Read(istrm);
+                    var collection2 = new NodeStateCollection();
+                    nodeSet.Import(context, collection2);
+                }
+            }
+
+            // Pack as resources
+            var resourceGenerator = new ResourceGenerator(m_context);
+            resourceGenerator.Embed(
+                nsPrefix,
+                "NodeSet2",
+                false,
+                [.. resources]);
         }
 
         /// <summary>
@@ -355,10 +466,8 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            string externalPrefix = m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(ns.Value);
-
-            context.Out.WriteLine("using {0};", externalPrefix);
-
+            context.Out.WriteLine("using {0};",
+                m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(ns.Value));
             return null;
         }
 
@@ -394,9 +503,9 @@ namespace Opc.Ua.SourceGeneration
                 if (original.TryGetValue(node.NodeId, out NodeState existingNode))
                 {
                     node.NodeSetDocumentation =
-                            !string.IsNullOrWhiteSpace(existingNode.NodeSetDocumentation)
-                            ? existingNode.NodeSetDocumentation
-                            : null;
+                        !string.IsNullOrWhiteSpace(existingNode.NodeSetDocumentation)
+                        ? existingNode.NodeSetDocumentation
+                        : null;
                     node.Categories = existingNode.Categories;
                 }
 
@@ -404,6 +513,299 @@ namespace Opc.Ua.SourceGeneration
                 node.GetChildren(context, children);
                 UpdateDocumentation(context, original, children);
             }
+        }
+
+        private void WritePermissions(
+            SystemContext context,
+            string identifiersFilePath,
+            NodeStateCollection nodeStateCollection)
+        {
+            var list = new Dictionary<string, NodeState>();
+            NodeDesign[] nodes = [.. m_context.Validator.Nodes];
+
+            foreach (NodeState nodeState in nodeStateCollection)
+            {
+                string name = nodeState.SymbolicName;
+                if (name is "DefaultBinary" or "DefaultXml" or "DefaultJson")
+                {
+                    var design = nodeState.Handle as NodeDesign;
+                    name = design.SymbolicId.Name;
+                }
+                GetPermissionListEntries(context, list, nodeState, name);
+            }
+
+            IOrderedEnumerable<KeyValuePair<string, NodeState>> entries = list.OrderBy(x => x.Key);
+            using TextWriter writer = m_context.FileSystem.CreateTextWriter(identifiersFilePath);
+            foreach (KeyValuePair<string, NodeState> nodeStates in entries)
+            {
+                AccessRestrictionType? restrictions = FindAccessRestrictions(nodeStates.Value);
+                RolePermissionTypeCollection permissions = FindRolePermissions(nodeStates.Value);
+
+                if (permissions == null && restrictions == null)
+                {
+                    continue;
+                }
+
+                NodeId nid = nodeStates.Value.NodeId;
+
+                if (nid.IdType == IdType.Numeric)
+                {
+                    writer.Write($"{nodeStates.Key},{nid.IdentifierAsString},{nodeStates.Value.NodeClass}");
+                }
+                else if (nid.IdType == IdType.String)
+                {
+                    writer.Write($"{nodeStates.Key},\"{nid.IdentifierAsString}\",{nodeStates.Value.NodeClass}");
+                }
+
+                if (restrictions != null)
+                {
+                    writer.Write(",\"[");
+                    writer.Write(FormatAccessRestrictions((AccessRestrictionType)restrictions));
+                    writer.Write("]\"");
+                }
+                else
+                {
+                    writer.Write(",");
+                }
+
+                if (permissions != null)
+                {
+                    writer.Write(",\"{");
+                    bool start = true;
+                    foreach (RolePermissionType permission in permissions)
+                    {
+                        NodeDesign role = nodes
+                            .FirstOrDefault(x =>
+                                permission.RoleId.TryGetIdentifier(out uint numericId) &&
+                                x.NumericId == numericId &&
+                                x.SymbolicId.Namespace == Namespaces.OpcUa);
+
+                        role ??= nodes
+                            .FirstOrDefault(x =>
+                                permission.RoleId.TryGetIdentifier(out uint numericId) &&
+                                x.NumericId == numericId &&
+                                x.SymbolicId.Namespace != Namespaces.OpcUa &&
+                                x is InstanceDesign instance &&
+                                instance.TypeDefinition ==
+                                    new XmlQualifiedName("RoleType", Namespaces.OpcUa));
+                        if (!start)
+                        {
+                            writer.Write(",");
+                        }
+                        start = false;
+                        writer.Write("'");
+                        writer.Write(role?.DisplayName.Value ?? "Unknown");
+                        writer.Write("':'(");
+                        writer.Write(permission.Permissions);
+                        writer.Write(") ");
+                        writer.Write(FormatPermissions(permission.Permissions));
+                        writer.Write("'");
+                    }
+                    writer.Write("}\"");
+                }
+                else
+                {
+                    writer.Write(",");
+                }
+                writer.WriteLine();
+            }
+        }
+
+        private void WriteIdentifiers(
+            SystemContext context,
+            string identifiersFilePath,
+            NodeStateCollection nodes)
+        {
+            var list = new Dictionary<string, NodeState>();
+
+            foreach (NodeState ii in nodes)
+            {
+                string name = ii.SymbolicName;
+
+                if (name is "DefaultBinary" or "DefaultXml" or "DefaultJson")
+                {
+                    var design = ii.Handle as NodeDesign;
+                    name = design.SymbolicId.Name;
+                }
+
+                GetIdentifierListEntries(context, list, ii, name);
+            }
+
+            IOrderedEnumerable<KeyValuePair<string, NodeState>> entries = list
+                .OrderBy(x => x.Value.NodeId);
+
+            using TextWriter writer = m_context.FileSystem.CreateTextWriter(identifiersFilePath);
+            foreach (KeyValuePair<string, NodeState> ii in entries)
+            {
+                NodeId nid = ii.Value.NodeId;
+
+                if (nid.IdType == IdType.Numeric)
+                {
+                    writer.WriteLine($"{ii.Key},{nid.IdentifierAsString},{ii.Value.NodeClass}");
+                }
+                else if (nid.IdType == IdType.String)
+                {
+                    writer.WriteLine($"{ii.Key},\"{nid.IdentifierAsString}\",{ii.Value.NodeClass}");
+                }
+            }
+        }
+
+        private static void GetIdentifierListEntries(
+            SystemContext context,
+            Dictionary<string, NodeState> list,
+            NodeState node,
+            string parentPath)
+        {
+            if (node.NodeId.IsNullNodeId)
+            {
+                return;
+            }
+
+            list.Add(parentPath, node);
+
+            var children = new List<BaseInstanceState>();
+            node.GetChildren(context, children);
+
+            foreach (BaseInstanceState child in children)
+            {
+                GetIdentifierListEntries(
+                    context,
+                    list,
+                    child,
+                    $"{parentPath}_{child.SymbolicName}");
+            }
+        }
+
+        private static void GetPermissionListEntries(
+            SystemContext context,
+            Dictionary<string, NodeState> list,
+            NodeState node,
+            string parentPath)
+        {
+            if (node.NodeId.IsNullNodeId)
+            {
+                return;
+            }
+
+            list.Add(parentPath, node);
+
+            var children = new List<BaseInstanceState>();
+            node.GetChildren(context, children);
+
+            foreach (BaseInstanceState child in children)
+            {
+                GetPermissionListEntries(
+                    context,
+                    list,
+                    child,
+                    $"{parentPath}_{child.SymbolicName}");
+            }
+        }
+
+        private static void GetPermissionListEntries(
+            SystemContext context,
+            Dictionary<string, NodeState> list,
+            BaseInstanceState node,
+            string parentPath)
+        {
+            if (node.NodeId.IsNullNodeId)
+            {
+                return;
+            }
+
+            list.Add(parentPath, node);
+            var children = new List<BaseInstanceState>();
+            node.GetChildren(context, children);
+
+            foreach (BaseInstanceState child in children)
+            {
+                GetPermissionListEntries(
+                    context,
+                    list,
+                    child,
+                    $"{parentPath}_{child.SymbolicName}");
+            }
+        }
+
+        private static string FormatPermissions(uint flags)
+        {
+            var list = new List<PermissionType>();
+
+            if (flags == 0x1FFFF || (flags & (uint)PermissionType.AddReference) != 0)
+            {
+                return "All";
+            }
+
+            if (flags != 0)
+            {
+#if NET8_0_OR_GREATER
+                foreach (PermissionType value in Enum.GetValues<PermissionType>())
+#else
+                foreach (PermissionType value in Enum.GetValues(typeof(PermissionType)))
+#endif
+                {
+                    if (value != 0 && (flags & (uint)value) == (uint)value)
+                    {
+                        list.Add(value);
+                    }
+                }
+            }
+            else
+            {
+                list.Add(PermissionType.None);
+            }
+
+            return string.Join("|", list);
+        }
+
+        private static string FormatAccessRestrictions(AccessRestrictionType flags)
+        {
+            var list = new List<AccessRestrictionType>();
+            if (flags != 0)
+            {
+#if NET8_0_OR_GREATER
+                foreach (AccessRestrictionType value in Enum.GetValues<AccessRestrictionType>())
+#else
+                foreach (AccessRestrictionType value in Enum.GetValues(typeof(AccessRestrictionType)))
+#endif
+                {
+                    if (value != 0 && (flags & value) == value)
+                    {
+                        list.Add(value);
+                    }
+                }
+            }
+            else
+            {
+                list.Add(AccessRestrictionType.None);
+            }
+            return string.Join(",", list);
+        }
+
+        private static RolePermissionTypeCollection FindRolePermissions(NodeState node)
+        {
+            if (node.RolePermissions != null)
+            {
+                return node.RolePermissions;
+            }
+            //if (node is BaseInstanceState instance && instance.Parent != null)
+            //{
+            //    return FindRolePermissions(instance.Parent);
+            //}
+            return null;
+        }
+
+        private static AccessRestrictionType? FindAccessRestrictions(NodeState node)
+        {
+            if (node.AccessRestrictions != null)
+            {
+                return node.AccessRestrictions;
+            }
+            //if (node is BaseInstanceState instance && instance.Parent != null)
+            //{
+            //    return FindAccessRestrictions(instance.Parent);
+            //}
+            return null;
         }
 
         private static ushort CollectNodes(
@@ -459,7 +861,8 @@ namespace Opc.Ua.SourceGeneration
                         return true;
                     }
 
-                    if (!string.IsNullOrEmpty(node.Specification) && exclusion == node.Specification)
+                    if (!string.IsNullOrEmpty(node.Specification) &&
+                        exclusion == node.Specification)
                     {
                         return true;
                     }
@@ -471,6 +874,8 @@ namespace Opc.Ua.SourceGeneration
 
         private string EncodingString => m_useXmlInitializers ? "Xml" : "Binary";
         private readonly bool m_useXmlInitializers;
+        private readonly bool m_embedNodeset;
+        private readonly Microsoft.Extensions.Logging.ILogger<NodesetGenerator> m_logger;
         private readonly GeneratorContext m_context;
     }
 }

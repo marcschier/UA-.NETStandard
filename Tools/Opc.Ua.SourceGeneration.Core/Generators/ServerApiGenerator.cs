@@ -36,19 +36,17 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Generates server API code for the stack.
     /// </summary>
-    internal sealed class ServerApiGenerator
+    internal sealed class ServerApiGenerator : IGenerator
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ServerApiGenerator"/> class.
+        /// Create server API generator.
         /// </summary>
         public ServerApiGenerator(GeneratorContext context)
         {
             m_context = context;
         }
 
-        /// <summary>
-        /// Writes the classes and interfaces that implement a UA server.
-        /// </summary>
+        /// <inheritdoc/>
         public void Emit()
         {
             List<ServiceSet> serviceSets =

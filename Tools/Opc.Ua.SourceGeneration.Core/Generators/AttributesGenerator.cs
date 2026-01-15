@@ -38,19 +38,17 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Generates code based on a UA Type Dictionary.
     /// </summary>
-    internal class AttributesGenerator
+    internal class AttributesGenerator : IGenerator
     {
         /// <summary>
-        /// Generates the code from the contents of the address space.
+        /// Generates the attributes constants for nodes
         /// </summary>
         public AttributesGenerator(GeneratorContext context)
         {
             m_context = context;
         }
 
-        /// <summary>
-        /// Write attributes
-        /// </summary>
+        /// <inheritdoc/>
         public void Emit()
         {
             string fileName = Path.Combine(m_context.OutputFolder,

@@ -41,19 +41,17 @@ namespace Opc.Ua.SourceGeneration
     /// Generates namespace and browse name constants.
     /// TODO: Use resource generator infrastructure.
     /// </summary>
-    internal sealed class ConstantsGenerator
+    internal sealed class ConstantsGenerator : IGenerator
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConstantsGenerator"/> class.
+        /// Create constants generator
         /// </summary>
         public ConstantsGenerator(GeneratorContext context)
         {
             m_context = context;
         }
 
-        /// <summary>
-        /// Generates the constants file.
-        /// </summary>
+        /// <inheritdoc/>
         public void Emit()
         {
             SortedDictionary<string, string> browseNames = [];

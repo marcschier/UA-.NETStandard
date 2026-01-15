@@ -42,7 +42,7 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Generates data type model classes
     /// </summary>
-    internal sealed class DataTypeGenerator
+    internal sealed class DataTypeGenerator : IGenerator
     {
         public DataTypeGenerator(GeneratorContext context, bool useXmlInitializers = false)
         {
@@ -51,9 +51,7 @@ namespace Opc.Ua.SourceGeneration
             m_useXmlInitializers = useXmlInitializers;
         }
 
-        /// <summary>
-        /// Emit data type models
-        /// </summary>
+        /// <inheritdoc/>
         public void Emit()
         {
             List<DataTypeDesign> datatypes = GetDataTypes();

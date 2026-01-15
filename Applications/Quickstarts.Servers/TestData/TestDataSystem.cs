@@ -632,7 +632,7 @@ namespace TestData
 
             return new VectorWithOptionalFields
             {
-                EncodingMask = encodingMask,
+                EncodingMask = (uint)encodingMask,
                 X = (double)m_generator.GetRandom(BuiltInType.Double),
                 Y = (double)m_generator.GetRandom(BuiltInType.Double),
                 Z = (double)m_generator.GetRandom(BuiltInType.Double)
