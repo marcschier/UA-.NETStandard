@@ -53,6 +53,7 @@ namespace Opc.Ua.SourceGeneration.Tests
     [Category("SourceGeneration")]
     [SetCulture("en-us")]
     [SetUICulture("en-us")]
+    [Parallelizable(ParallelScope.All)]
     public class GeneratorDesignTests
     {
         [DatapointSource]
@@ -65,12 +66,15 @@ namespace Opc.Ua.SourceGeneration.Tests
         public LanguageVersion[] LanguageVersions =
         [
             LanguageVersion.CSharp11,
+#if TEST_ALL_LANG_VERSIONS
             LanguageVersion.CSharp12,
-            LanguageVersion.CSharp13
+            LanguageVersion.CSharp13,
          // LanguageVersion.CSharp14,
+#endif
         ];
 
         [Theory]
+        [Pairwise]
         public async Task GenerateAndCompileTestDataAsync(
             OptimizationLevel optimizationLevel,
             LanguageVersion languageVersion,

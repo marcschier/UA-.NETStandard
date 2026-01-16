@@ -53,6 +53,7 @@ namespace Opc.Ua.SourceGeneration.Tests
     [SetUICulture("en-us")]
     [MemoryDiagnoser]
     [DisassemblyDiagnoser]
+    [Parallelizable(ParallelScope.All)]
     public class GeneratorStackTests
     {
         [DatapointSource]

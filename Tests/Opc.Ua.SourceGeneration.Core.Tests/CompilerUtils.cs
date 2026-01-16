@@ -157,8 +157,10 @@ namespace Opc.Ua.SourceGeneration
         public static LanguageVersion[] SupportedLanguageVersions =>
         [
             LanguageVersion.CSharp8,
+#if TEST_ALL_LANG_VERSIONS
             LanguageVersion.CSharp9,
             LanguageVersion.CSharp10,
+#endif
             LanguageVersion.CSharp11,
             LanguageVersion.CSharp12,
             LanguageVersion.CSharp13
@@ -283,21 +285,32 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Check diagnostics
         /// </summary>
-        /// <param name="diagnostics"></param>
-        /// <param name="output"></param>
-        /// <param name="errorCount"></param>
-        /// <returns></returns>
         public static void Check(
             this ImmutableArray<Diagnostic> diagnostics,
             TextWriter output,
             out int errorCount,
-            out int warnCount)
+            out int warnCount,
+            bool filterLinkerAndReferenceErrors = false)
         {
             errorCount = 0;
             warnCount = 0;
             for (int ii = 0; ii < diagnostics.Length; ii++)
             {
                 Diagnostic diag = diagnostics[ii];
+                if (filterLinkerAndReferenceErrors &&
+                    (
+                     // diag.Id == "CS0234" ||
+                        diag.Id == "CS0246" ||
+                        diag.Id == "CS1729" ||
+                        diag.Id == "CS1501" ||
+                        diag.Id == "CS0103" ||
+                        diag.Id == "CS1503"
+                    ))
+                {
+                    // ignore missing reference and symbols errors
+                    continue;
+                }
+
                 string sev;
                 int beforeAfter;
                 switch (diag.Severity)
@@ -415,7 +428,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public const string OpcUaCoreStubs =
             """
-            #nullable enable
+#nullable enable
             using System;
             using System.Threading.Tasks;
             using System.Threading;
@@ -514,7 +527,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public const string OpcUa =
             """
-            #nullable enable
+#nullable enable
             using System.Reflection;
 
             [assembly: AssemblyVersionAttribute("4.3.2.1")]
@@ -530,6 +543,14 @@ namespace Opc.Ua.SourceGeneration
                     public const uint String = 0;
                     public const uint BaseDataType = 0;
                     public const uint Number = 0;
+                }
+                public static partial class Objects
+                {
+                    public const uint ModellingRule_Mandatory = 0;
+                    public const uint ModellingRule_Optional = 0;
+                    public const uint ModellingRule_ExposesItsArray = 0;
+                    public const uint ModellingRule_OptionalPlaceholder = 0;
+                    public const uint ModellingRule_MandatoryPlaceholder = 0;
                 }
                 public static partial class BrowseNames
                 {

@@ -36,12 +36,19 @@ using System.Xml;
 using Opc.Ua.Schema.Model;
 using Opc.Ua.Types;
 
+// TODO in order:
+// - Rewrite all direct write calls to use the already existing templates.
+// - Ensure the right namespace is used when calling the "Create" methods
+// - Use int/stirng constants for nodeIds, ExpandedNodeIds, browsenames from applicable namespaces
+// - Initialize variables with complex values from deserialized initialization strings
+// - Tie into existing node state factory pattern in server.
+// - Instantiate not just core states, but generated "derived" node state classes per namespace.
+// Ensure all tests are passing after each step.
 namespace Opc.Ua.SourceGeneration
 {
     /// <summary>
     /// Generates C# code that creates the server address space for a model design
     /// at runtime and makes server AOT compatible.
-    /// TODO: Tie into node state factory pattern.
     /// </summary>
     internal sealed class AddressSpaceGenerator : IGenerator
     {
@@ -269,7 +276,7 @@ namespace Opc.Ua.SourceGeneration
             writer.WriteLine("    state.ValueRank = {0};",
                 node.ValueRank.GetValueRankString(node.ArrayDimensions));
 
-            string arrayDims = GetArrayDimensionsCode(node.ValueRank, node.ArrayDimensions);
+            string arrayDims = node.ValueRank.GetArrayDimensionsAsCode(node.ArrayDimensions);
             if (!string.IsNullOrEmpty(arrayDims))
             {
                 writer.WriteLine("    state.ArrayDimensions = {0};", arrayDims);
@@ -491,14 +498,14 @@ namespace Opc.Ua.SourceGeneration
             writer.WriteLine("    state.ValueRank = {0};",
                 node.ValueRank.GetValueRankString(node.ArrayDimensions));
 
-            string arrayDims = GetArrayDimensionsCode(node.ValueRank, node.ArrayDimensions);
+            string arrayDims = node.ValueRank.GetArrayDimensionsAsCode(node.ArrayDimensions);
             if (!string.IsNullOrEmpty(arrayDims))
             {
                 writer.WriteLine("    state.ArrayDimensions = {0};", arrayDims);
             }
 
             // AccessLevel
-            writer.WriteLine("    state.AccessLevel = {0};", GetAccessLevelCode(node.AccessLevel));
+            writer.WriteLine("    state.AccessLevel = {0};", node.AccessLevel.GetAccessLevelAsCode());
             writer.WriteLine("    state.UserAccessLevel = state.AccessLevel;");
 
             // MinimumSamplingInterval
@@ -731,7 +738,7 @@ namespace Opc.Ua.SourceGeneration
                 return;
             }
 
-            string accessRestrictionsCode = GetAccessRestrictionsCode(node.AccessRestrictions);
+            string accessRestrictionsCode = node.AccessRestrictions.GetAccessRestrictionsAsCode();
             if (!string.IsNullOrEmpty(accessRestrictionsCode))
             {
                 writer.WriteLine("    state.AccessRestrictions = {0};", accessRestrictionsCode);
@@ -758,7 +765,7 @@ namespace Opc.Ua.SourceGeneration
 
                 if (roleNode != null)
                 {
-                    string permissionValue = GetPermissionTypeCode(rolePermission.Permission);
+                    string permissionValue = rolePermission.Permission.GetPermissionTypeAsCode();
                     writer.WriteLine("    state.RolePermissions.Add(new global::Opc.Ua.RolePermissionType");
                     writer.WriteLine("    {");
                     writer.WriteLine("        RoleId = {0},", GetNodeIdConstant(roleNode));
@@ -976,111 +983,6 @@ namespace Opc.Ua.SourceGeneration
                     qn.NamespaceIndex),
                 _ => null // Complex types would need special handling
             };
-        }
-
-        private static string GetAccessLevelCode(AccessLevel accessLevel)
-        {
-            return accessLevel switch
-            {
-                AccessLevel.Read => "global::Opc.Ua.AccessLevels.CurrentRead",
-                AccessLevel.Write => "global::Opc.Ua.AccessLevels.CurrentWrite",
-                AccessLevel.ReadWrite => "global::Opc.Ua.AccessLevels.CurrentReadOrWrite",
-                AccessLevel.HistoryRead => "global::Opc.Ua.AccessLevels.HistoryRead",
-                AccessLevel.HistoryWrite => "global::Opc.Ua.AccessLevels.HistoryWrite",
-                AccessLevel.HistoryReadWrite => "global::Opc.Ua.AccessLevels.HistoryReadOrWrite",
-                _ => "global::Opc.Ua.AccessLevels.None"
-            };
-        }
-
-        private static string GetArrayDimensionsCode(ValueRank valueRank, string arrayDimensions)
-        {
-            if (valueRank is < 0 and not ValueRank.OneOrMoreDimensions)
-            {
-                return null;
-            }
-
-            if (string.IsNullOrEmpty(arrayDimensions))
-            {
-                if (valueRank == ValueRank.Array)
-                {
-                    return "new global::Opc.Ua.ReadOnlyList<uint>(new uint[] { 0 })";
-                }
-
-                return null;
-            }
-
-            string[] tokens = arrayDimensions.Split([','], StringSplitOptions.RemoveEmptyEntries);
-
-            if (tokens == null || tokens.Length < 1)
-            {
-                return null;
-            }
-
-            return CoreUtils.Format(
-                "new global::Opc.Ua.ReadOnlyList<uint>(new uint[] {{ {0} }})",
-                string.Join(", ", tokens.Select(t =>
-                {
-                    if (uint.TryParse(t.Trim(), out uint val))
-                    {
-                        return val.ToString(CultureInfo.InvariantCulture);
-                    }
-                    return "0";
-                })));
-        }
-
-        private static string GetAccessRestrictionsCode(AccessRestrictions restrictions)
-        {
-            return restrictions switch
-            {
-                AccessRestrictions.SigningRequired => "global::Opc.Ua.AccessRestrictionType.SigningRequired",
-                AccessRestrictions.EncryptionRequired => "global::Opc.Ua.AccessRestrictionType.EncryptionRequired",
-                AccessRestrictions.SessionRequired => "global::Opc.Ua.AccessRestrictionType.SessionRequired",
-                AccessRestrictions.SessionWithSigningRequired =>
-                    "global::Opc.Ua.AccessRestrictionType.SigningRequired | global::Opc.Ua.AccessRestrictionType.SessionRequired",
-                AccessRestrictions.SessionWithEncryptionRequired =>
-                    "global::Opc.Ua.AccessRestrictionType.EncryptionRequired | global::Opc.Ua.AccessRestrictionType.SessionRequired",
-                _ => null
-            };
-        }
-
-        private static string GetPermissionTypeCode(Permissions[] permissions)
-        {
-            if (permissions == null || permissions.Length == 0)
-            {
-                return "global::Opc.Ua.PermissionType.None";
-            }
-
-            var parts = new List<string>();
-            foreach (Permissions p in permissions)
-            {
-                string part = p switch
-                {
-                    Permissions.Browse => "global::Opc.Ua.PermissionType.Browse",
-                    Permissions.Read => "global::Opc.Ua.PermissionType.Read",
-                    Permissions.Write => "global::Opc.Ua.PermissionType.Write",
-                    Permissions.Call => "global::Opc.Ua.PermissionType.Call",
-                    Permissions.ReadHistory => "global::Opc.Ua.PermissionType.ReadHistory",
-                    Permissions.InsertHistory => "global::Opc.Ua.PermissionType.InsertHistory",
-                    Permissions.ModifyHistory => "global::Opc.Ua.PermissionType.ModifyHistory",
-                    Permissions.DeleteHistory => "global::Opc.Ua.PermissionType.DeleteHistory",
-                    Permissions.ReceiveEvents => "global::Opc.Ua.PermissionType.ReceiveEvents",
-                    Permissions.AddNode => "global::Opc.Ua.PermissionType.AddNode",
-                    Permissions.DeleteNode => "global::Opc.Ua.PermissionType.DeleteNode",
-                    Permissions.AddReference => "global::Opc.Ua.PermissionType.AddReference",
-                    Permissions.RemoveReference => "global::Opc.Ua.PermissionType.RemoveReference",
-                    Permissions.ReadRolePermissions => "global::Opc.Ua.PermissionType.ReadRolePermissions",
-                    Permissions.WriteRolePermissions => "global::Opc.Ua.PermissionType.WriteRolePermissions",
-                    Permissions.WriteAttribute => "global::Opc.Ua.PermissionType.WriteAttribute",
-                    Permissions.WriteHistorizing => "global::Opc.Ua.PermissionType.WriteHistorizing",
-                    _ => null
-                };
-                if (part != null)
-                {
-                    parts.Add(part);
-                }
-            }
-
-            return parts.Count > 0 ? string.Join(" | ", parts) : "global::Opc.Ua.PermissionType.None";
         }
 
         private static string EscapeString(string value)
