@@ -34,71 +34,115 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using BenchmarkDotNet.Attributes;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
+using Opc.Ua.Schema.Binary;
+using Opc.Ua.Schema.Xml;
 using Opc.Ua.Tests;
+using Opc.Ua.Types;
 
 namespace Opc.Ua.SourceGeneration.Tests
 {
     /// <summary>
-    /// Test generating and compiling stack
+    /// Test generating and compiling model design
     /// </summary>
     [TestFixture]
     [Category("SourceGeneration")]
     [SetCulture("en-us")]
     [SetUICulture("en-us")]
-    [MemoryDiagnoser]
-    [DisassemblyDiagnoser]
-    public class GeneratorTests
+    public class GeneratorDesignTests
     {
         [DatapointSource]
         public OptimizationLevel[] OptimizationLevels = CompilerUtils.SupportedOptimizationLevels;
 
+        /// <summary>
+        /// Only support modern language versions
+        /// </summary>
         [DatapointSource]
-        public StackGenerationType[] GenerationTypes = [
-            StackGenerationType.None,
-            StackGenerationType.Stack,
-            StackGenerationType.Models,
-            StackGenerationType.All
+        public LanguageVersion[] LanguageVersions =
+        [
+            LanguageVersion.CSharp11,
+            LanguageVersion.CSharp12,
+            LanguageVersion.CSharp13
+         // LanguageVersion.CSharp14,
         ];
 
         [Theory]
-        public void GenerateStackTest(StackGenerationType generationType)
-        {
-            ITelemetryContext telemetry = NUnitTelemetryContext.Create(logLevel: LogLevel.Error);
-            GenerateStack(generationType, telemetry);
-        }
-
-        [Theory]
-        public async Task GenerateAndCompileStackTestAsync(
+        public async Task GenerateAndCompileTestDataAsync(
             OptimizationLevel optimizationLevel,
-            bool withAnalzers,
-            bool withNodeLoader)
+            LanguageVersion languageVersion,
+            bool withAnalyzers,
+            bool withNodeLoader,
+            bool embedNodeSet2Xml)
         {
-            // Generate
             ITelemetryContext telemetry = NUnitTelemetryContext.Create(logLevel: LogLevel.Error);
-            Dictionary<string, string> generatedText = GenerateStack(StackGenerationType.All, telemetry);
+            Dictionary<string, string> generatedText = GenerateCodeFromModel(
+                languageVersion,
+                embedNodeSet2Xml,
+                telemetry,
+                out Dictionary<string, string> generatedOther);
+            var generatedTextStack = GeneratorStackTests.GenerateStack(
+                StackGenerationType.Models,
+                telemetry,
+                out Dictionary<string, string> generatedStackOther);
+            foreach (KeyValuePair<string, string> item in generatedTextStack)
+            {
+                generatedText.Add(item.Key, item.Value);
+            }
             if (withNodeLoader)
             {
                 AddPredefinedNodeLoader(generatedText);
             }
 
+            var xmlSchemas = generatedOther
+                .Concat(generatedStackOther)
+                .Where(c => Path.GetExtension(c.Key) == ".xsd")
+                .Select(c => c.Value)
+                .ToList();
+            Assert.That(xmlSchemas.Count, Is.EqualTo(2));
+
+            // Validate xsd schemas
+            using (var xsd = new MemoryStream(Encoding.UTF8.GetBytes(xmlSchemas[0])))
+            {
+                var xmlValidator = new XmlSchemaValidator(new Dictionary<string, byte[]>
+                {
+                    ["http://opcfoundation.org/UA/2008/02/Types.xsd"] = Encoding.UTF8.GetBytes(xmlSchemas[1])
+                });
+                xmlValidator.Validate(xsd, telemetry.LoggerFactory.CreateLogger<XmlSchemaValidator>());
+            }
+
+            var binSchemas = generatedOther
+                .Concat(generatedStackOther)
+                .Where(c => Path.GetExtension(c.Key) == ".bsd")
+                .Select(c => c.Value)
+                .ToList();
+            Assert.That(binSchemas.Count, Is.EqualTo(2));
+
+            // Validate binary schema
+            using (var bsd = new MemoryStream(Encoding.UTF8.GetBytes(binSchemas[0])))
+            {
+                var binValidator = new BinarySchemaValidator(new Dictionary<string, byte[]>
+                {
+                    ["http://opcfoundation.org/UA/"] = Encoding.UTF8.GetBytes(binSchemas[1])
+                });
+                binValidator.Validate(bsd);
+            }
+
             // Parse and compile the generated code
-            var sw = Stopwatch.StartNew();
+            var sw = new Stopwatch();
             using var peStream = new MemoryStream();
             using var xmlStream = new MemoryStream();
             bool success = optimizationLevel
                 .CreateCompilation()
-                .AddCode(generatedText.WithOpcUaCoreStubs(), LanguageVersion.Latest) // Only support latest - internal use only
-                .WithAnalyzers(withAnalzers, out CompilationWithAnalyzers compilationWithAnalyzers)
+                .AddCode(generatedText.WithOpcUaCoreStubs(), languageVersion)
+                .WithAnalyzers(withAnalyzers, out CompilationWithAnalyzers compilationWithAnalyzers)
                 .Emit(peStream, xmlDocumentationStream: xmlStream)
                 .Check(TestContext.Out, out int errorCount, out int warnCount);
             TestContext.Out.WriteLine("Compilation completed in {0} ms", sw.ElapsedMilliseconds);
-            if (withAnalzers)
+            if (withAnalyzers)
             {
                 if (compilationWithAnalyzers == null)
                 {
@@ -121,72 +165,44 @@ namespace Opc.Ua.SourceGeneration.Tests
             Assert.That(xmlDoc, Is.Not.Null);
         }
 
-        [GlobalSetup(Target = nameof(GenerateToFile))]
-        [GlobalCleanup(Target = nameof(GenerateToFile))]
-        public void Setup()
+        [Theory]
+        public async Task GenerateTestDataWithCsharp8Async(bool embedNodeSet2Xml)
         {
-            try
-            {
-                Directory.Delete(Path.Combine(Directory.GetCurrentDirectory(), "Benchmark"), true);
-            }
-            catch
-            {
-                // Ignore
-            }
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create(logLevel: LogLevel.Error);
+            Dictionary<string, string> generatedText = GenerateCodeFromModel(
+                LanguageVersion.CSharp8,
+                embedNodeSet2Xml,
+                telemetry,
+                out _);
+            Assert.That(generatedText, Is.Not.Empty);
         }
 
-        [Benchmark]
-        public void GenerateToFile()
-        {
-            ITelemetryContext telemetry = NUnitTelemetryContext.CreateForBenchmarks(logLevel: LogLevel.Error);
-            Generators.GenerateStack(
-                StackGenerationType.All,
-                LocalFileSystem.Instance,
-                Path.Combine(Directory.GetCurrentDirectory(), "Benchmark"), telemetry);
-        }
-
-        [Benchmark]
-        public void GenerateToMemory()
-        {
-            ITelemetryContext telemetry = NUnitTelemetryContext.CreateForBenchmarks(logLevel: LogLevel.Error);
-            GenerateStack(StackGenerationType.All, telemetry);
-        }
-
-        [Benchmark]
-        [Arguments(OptimizationLevel.Release)]
-        [Arguments(OptimizationLevel.Debug)]
-        public void GenerateAndComile(OptimizationLevel optimizationLevel)
-        {
-            ITelemetryContext telemetry = NUnitTelemetryContext.CreateForBenchmarks(logLevel: LogLevel.Error);
-            Dictionary<string, string> generatedText = GenerateStack(StackGenerationType.All, telemetry);
-            using var peStream = new MemoryStream();
-            using var xmlStream = new MemoryStream();
-            bool success = optimizationLevel
-                .CreateCompilation("Opc.Ua.Test")
-                .AddCode(generatedText.WithOpcUaCoreStubs(), LanguageVersion.Latest)
-                .Emit(peStream, xmlDocumentationStream: xmlStream)
-                .Check(TestContext.Out, out int errorCount, out int warnCount);
-        }
-
-        /// <summary>
-        /// Generate stack code
-        /// </summary>
-        private static Dictionary<string, string> GenerateStack(
-            StackGenerationType generationType,
-            ITelemetryContext telemetry)
+        private static Dictionary<string, string> GenerateCodeFromModel(
+            LanguageVersion languageVersion,
+            bool embedNodeSet2Xml,
+            ITelemetryContext telemetry,
+            out Dictionary<string, string> nonSourceCode)
         {
             // Generate
             var sw = Stopwatch.StartNew();
             using var fileSystem = new VirtualFileSystem();
-            Generators.GenerateStack(generationType, fileSystem, string.Empty, telemetry);
+            Generators.GenerateCode(new DesignFileCollection
+            {
+                DesignFiles = [Path.Combine(Directory.GetCurrentDirectory(), "Resources", "TestDataDesign.xml")],
+                IdentifierFilePath = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "TestDataDesign.csv"),
+                Options = new DesignFileOptions()
+            }, fileSystem, string.Empty, telemetry, new GeneratorOptions
+            {
+                UseUtf8StringLiterals = languageVersion >= LanguageVersion.CSharp11
+            }, embedNodeSet2Xml: embedNodeSet2Xml);
+
             var generatedText = fileSystem.CreatedFiles
                 .Where(c => Path.GetExtension(c) == ".cs")
                 .ToDictionary(c => c, c => Encoding.UTF8.GetString(fileSystem.Get(c)));
-
             TestContext.Out.WriteLine("Generation completed in {0} ms", sw.ElapsedMilliseconds);
             Assert.That(generatedText.Values, Is.All.StartsWith("// <auto-generated />"));
 
-            var generatedOther = fileSystem.CreatedFiles
+            nonSourceCode = fileSystem.CreatedFiles
                 .Where(c => Path.GetExtension(c) != ".cs")
                 .ToDictionary(c => c, c => Encoding.UTF8.GetString(fileSystem.Get(c)));
             return generatedText;

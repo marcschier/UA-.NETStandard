@@ -30,9 +30,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NUnit.Framework;
 
 namespace Opc.Ua.SourceGeneration
@@ -159,19 +163,69 @@ namespace Opc.Ua.SourceGeneration
                 ])
                 .WithUpdatedAnalyzerConfigOptions(options)
                 ;
-            GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation);
+
+            // There will be 120 errors due to missing Opc.Ua dll reference
+            GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation, 120);
             Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(8));
 
-            // Get the XmlSchema.g.cs generated source
+            string testDataXmlSchema = ValidateXmlSchema(languageVersion, generatorResult);
+            Assert.That(testDataXmlSchema,
+                Does.Contain("<ua:Model ModelUri=\"http://test.org/UA/Data/\" Version=\"1.0.0\""));
+        }
+
+        private static string ValidateXmlSchema(
+            LanguageVersion languageVersion,
+            GeneratorRunResult generatorResult)
+        {
+            // Get the XmlSchemas.g.cs generated source which is what we care about
             var xmlSchemaSource = generatorResult.GeneratedSources
-                .Where(s => s.HintName.EndsWith("XmlSchema.g.cs", StringComparison.Ordinal))
+                .Where(s => s.HintName.EndsWith("XmlSchemas.g.cs", StringComparison.Ordinal))
                 .ToList();
             Assert.That(xmlSchemaSource.Count, Is.EqualTo(1));
+
+            // Parse the generated source and verify it contains expected schema
+            SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(xmlSchemaSource[0].SourceText);
+            SyntaxNode root = syntaxTree.GetRoot();
+            var classNodes = root.DescendantNodes()
+                .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.ClassDeclarationSyntax>()
+                .Where(c => c.Identifier.Text == "XmlSchemas")
+                .ToList();
+            Assert.That(classNodes.Count, Is.EqualTo(1));
+            ClassDeclarationSyntax classNode = classNodes[0];
+            var properrtyNodes = classNode.DescendantNodes()
+                .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.PropertyDeclarationSyntax>()
+                .Where(f => f.Identifier.Text == "TypesXsd")
+                .ToList();
+            Assert.That(properrtyNodes.Count, Is.EqualTo(1));
+
+            PropertyDeclarationSyntax propertyNode = properrtyNodes[0];
+            LiteralExpressionSyntax stringLiteral = propertyNode.DescendantNodes()
+                .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.LiteralExpressionSyntax>()
+                .FirstOrDefault();
+            Assert.That(stringLiteral, Is.Not.Null);
+            // Verify that the getter contains the expected schema string
+            var stringTokens = stringLiteral.ChildTokens().ToList();
+            Assert.That(stringTokens.Count, Is.EqualTo(1));
+            var stringLiteralText = stringTokens[0].ToFullString().Trim();
+            if (stringLiteralText.EndsWith("u8", StringComparison.Ordinal))
+            {
+                Assert.That(languageVersion, Is.GreaterThanOrEqualTo(LanguageVersion.CSharp11));
+                stringLiteralText = stringLiteralText.Substring(0, stringLiteralText.Length - 2);
+            }
+            stringLiteralText = stringLiteralText.Trim('"');
+            if (languageVersion < LanguageVersion.CSharp11)
+            {
+                // Base 64 encoded string is split into multiple lines
+                return Encoding.UTF8.GetString(
+                    Convert.FromBase64String(stringLiteralText));
+            }
+            return stringLiteralText;
         }
 
         private static GeneratorRunResult GenerateAndCompile(
             GeneratorDriver driver,
-            CSharpCompilation compilation)
+            CSharpCompilation compilation,
+            int expectedErrors = 0)
         {
             // Run it
             driver = driver.RunGeneratorsAndUpdateCompilation(
@@ -187,7 +241,8 @@ namespace Opc.Ua.SourceGeneration
                 out int errors,
                 out int warnings);
 
-            Assert.That(errors, Is.EqualTo(0), $"Compilation produced {errors} errors");
+            Assert.That(errors, Is.EqualTo(expectedErrors),
+                $"Compilation produced {errors} errors");
 #if NETFRAMEWORK
             TestContext.Out.WriteLine($"Compilation produced {warnings} warnings");
 #else

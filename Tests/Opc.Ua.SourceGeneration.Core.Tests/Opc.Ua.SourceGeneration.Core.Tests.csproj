@@ -34,6 +34,11 @@
     <Compile Include="..\Common\Logging.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\Tools\Opc.Ua.SourceGeneration.Core\Opc.Ua.SourceGeneration.Core.csproj" />
   </ItemGroup>
 </Project>

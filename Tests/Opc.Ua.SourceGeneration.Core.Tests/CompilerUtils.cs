@@ -341,10 +341,10 @@ namespace Opc.Ua.SourceGeneration
 
         public static CSharpCompilation WithAnalyzers(
             this CSharpCompilation compilation,
-            bool withAnalzers,
+            bool withAnalyzers,
             out CompilationWithAnalyzers compilationWithAnalyzers)
         {
-            if (withAnalzers)
+            if (withAnalyzers)
             {
                 try
                 {
