@@ -403,7 +403,10 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
-        private void WriteAsUtf8StringLiteral(ILoadContext context, TextReader reader)
+        private void WriteAsUtf8StringLiteral(
+            ILoadContext context,
+            TextReader reader,
+            bool trimLines = false)
         {
             Debug.Assert(m_context.Options.UseUtf8StringLiterals);
 
@@ -413,15 +416,19 @@ namespace Opc.Ua.SourceGeneration
                 line != null;
                 line = reader.ReadLine())
             {
-                line = line.Trim();
-                if (string.IsNullOrEmpty(line))
+                if (trimLines)
                 {
-                    continue;
+                    line = line.Trim();
+                    if (string.IsNullOrEmpty(line))
+                    {
+                        continue;
+                    }
                 }
                 if (firstLine)
                 {
                     // Cannot have multi line without writing anything
                     context.Out.WriteLine();
+                    firstLine = false;
                 }
                 context.Out.WriteLine(line);
             }
