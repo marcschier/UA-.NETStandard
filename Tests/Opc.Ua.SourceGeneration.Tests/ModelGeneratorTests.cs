@@ -30,6 +30,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -170,8 +172,6 @@ namespace Opc.Ua.SourceGeneration
             string testDataXmlSchema = ValidateXmlSchema(languageVersion, generatorResult);
             Assert.That(testDataXmlSchema,
                 Does.Contain("<ua:Model ModelUri=\"http://test.org/UA/Data/\" Version=\"1.0.0\""));
-
-            // TODO: Generate stack, extract schema, pass both into XmlSchemaValidator for validation
         }
 
         private static string ValidateXmlSchema(
