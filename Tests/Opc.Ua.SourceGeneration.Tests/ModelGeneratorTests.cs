@@ -144,8 +144,7 @@ namespace Opc.Ua.SourceGeneration
                 {
                     ["build_property.ModelSourceGeneratorVersion"] = "v105",
                     ["build_property.ModelSourceGeneratorExclude"] = "Draft",
-                    ["build_property.ModelSourceGeneratorUseAllowSubtypes"] =
-                        "true"
+                    ["build_property.ModelSourceGeneratorUseAllowSubtypes"] = "true"
                 });
 
             // Create the driver that executes the generator

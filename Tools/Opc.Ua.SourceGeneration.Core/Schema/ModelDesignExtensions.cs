@@ -1762,6 +1762,62 @@ namespace Opc.Ua.Schema.Model
             }
         }
 
+        /// <summary>
+        /// Maps the access level enumeration onto a code string.
+        /// </summary>
+        public static string GetAccessLevelCode(this AccessLevel accessLevel)
+        {
+            return accessLevel switch
+            {
+                AccessLevel.Read => "global::Opc.Ua.AccessLevels.CurrentRead",
+                AccessLevel.Write => "global::Opc.Ua.AccessLevels.CurrentWrite",
+                AccessLevel.ReadWrite => "global::Opc.Ua.AccessLevels.CurrentReadOrWrite",
+                AccessLevel.HistoryRead => "global::Opc.Ua.AccessLevels.HistoryRead",
+                AccessLevel.HistoryWrite => "global::Opc.Ua.AccessLevels.HistoryWrite",
+                AccessLevel.HistoryReadWrite => "global::Opc.Ua.AccessLevels.HistoryReadOrWrite",
+                _ => "global::Opc.Ua.AccessLevels.None"
+            };
+        }
+
+        /// <summary>
+        /// Maps the array dimensions onto code that creates the array.
+        /// </summary>
+        public static string GetArrayDimensionsCode(this ValueRank valueRank, string arrayDimensions)
+        {
+            if (valueRank is < 0 and not ValueRank.OneOrMoreDimensions)
+            {
+                return null;
+            }
+
+            if (string.IsNullOrEmpty(arrayDimensions))
+            {
+                if (valueRank == ValueRank.Array)
+                {
+                    return "new global::Opc.Ua.ReadOnlyList<uint>(new uint[] { 0 })";
+                }
+
+                return null;
+            }
+
+            string[] tokens = arrayDimensions.Split([','], StringSplitOptions.RemoveEmptyEntries);
+
+            if (tokens == null || tokens.Length < 1)
+            {
+                return null;
+            }
+
+            return CoreUtils.Format(
+                "new global::Opc.Ua.ReadOnlyList<uint>(new uint[] {{ {0} }})",
+                string.Join(", ", tokens.Select(t =>
+                {
+                    if (uint.TryParse(t.Trim(), out uint val))
+                    {
+                        return val.ToString(CultureInfo.InvariantCulture);
+                    }
+                    return "0";
+                })));
+        }
+
         private static bool IsBasicDataType(
             this DataTypeDesign dataType,
             out BasicDataType basicDataType)
