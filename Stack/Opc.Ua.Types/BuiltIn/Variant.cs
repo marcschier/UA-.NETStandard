@@ -1921,7 +1921,7 @@ namespace Opc.Ua
             }
             if (TypeInfo.BuiltInType != expectedType || TypeInfo.IsScalar)
             {
-                if (!Variant.IsConvertible(TypeInfo, new TypeInfo(expectedType, TypeInfo.ValueRank)))
+                if (!IsConvertible(TypeInfo, new TypeInfo(expectedType, TypeInfo.ValueRank)))
                 {
                     value = default;
                     return false;
@@ -1975,7 +1975,7 @@ namespace Opc.Ua
             }
             if (TypeInfo.BuiltInType != expectedType || !TypeInfo.IsScalar)
             {
-                if (!Variant.IsConvertible(TypeInfo, new TypeInfo(expectedType, TypeInfo.ValueRank)))
+                if (!IsConvertible(TypeInfo, new TypeInfo(expectedType, TypeInfo.ValueRank)))
                 {
                     value = default;
                     return false;
@@ -2010,7 +2010,7 @@ namespace Opc.Ua
                 return true;
             }
 
-            if (TryGetArray<T>(out T[] array, expectedType))
+            if (TryGetArray(out T[] array, expectedType))
             {
                 matrix = new Matrix(array, TypeInfo.BuiltInType);
                 return true;
@@ -2083,6 +2083,7 @@ namespace Opc.Ua
         /// <summary>
         /// Create a Variant from a Enum value.
         /// </summary>
+        /// <typeparam name="T"></typeparam>
         /// <param name="value">The Enum value to set
         /// this Variant to</param>
         public static Variant From<T>(T value) where T : Enum
@@ -4173,7 +4174,7 @@ namespace Opc.Ua
 
             if ((ourTypeInfo.ValueRank != otherTypeInfo.ValueRank ||
                 ourTypeInfo.BuiltInType != otherTypeInfo.BuiltInType) &&
-                !Variant.IsConvertible(ourTypeInfo, otherTypeInfo))
+                !IsConvertible(ourTypeInfo, otherTypeInfo))
             {
                 return false;
             }
@@ -4509,9 +4510,7 @@ namespace Opc.Ua
 
             static bool IsEnumeration(TypeInfo typeInfo)
             {
-                return
-                   typeInfo.BuiltInType == BuiltInType.Int32 ||
-                   typeInfo.BuiltInType == BuiltInType.Enumeration;
+                return typeInfo.BuiltInType is BuiltInType.Int32 or BuiltInType.Enumeration;
             }
         }
 

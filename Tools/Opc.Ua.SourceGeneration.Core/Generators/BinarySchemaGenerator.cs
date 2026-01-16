@@ -185,7 +185,7 @@ namespace Opc.Ua.SourceGeneration
             }
 #endif
 
-            if (dataType.Purpose == Schema.Model.DataTypePurpose.CodeGenerator)
+            if (dataType.Purpose == DataTypePurpose.CodeGenerator)
             {
                 return null;
             }

@@ -118,7 +118,7 @@ namespace Opc.Ua.SourceGeneration
                 .GroupBy(Path.GetDirectoryName)
                 .Select(g => new DesignFileCollection
                 {
-                    DesignFiles = g.ToList(),
+                    DesignFiles = [.. g],
                     IdentifierFilePath = idFiles.TryGetValue(g.Key, out List<string> files) ?
                         files.FirstOrDefault() : collection.IdentifierFilePath,
                     Options = collection.Options

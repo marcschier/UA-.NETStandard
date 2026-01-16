@@ -607,7 +607,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public DiagnosticInfo ReadDiagnosticInfo(string fieldName)
         {
-            return ReadDiagnosticInfo(fieldName, 0);
+            return ReadDiagnosticInfo(0);
         }
 
         /// <inheritdoc/>
@@ -1487,7 +1487,7 @@ namespace Opc.Ua
         /// Limits the InnerDiagnosticInfo nesting level.
         /// </summary>
         /// <exception cref="ServiceResultException"></exception>
-        private DiagnosticInfo ReadDiagnosticInfo(string fieldName, int depth)
+        private DiagnosticInfo ReadDiagnosticInfo(int depth)
         {
             if (depth >= DiagnosticInfo.MaxInnerDepth)
             {
@@ -1544,7 +1544,7 @@ namespace Opc.Ua
 
                 if ((encodingByte & (byte)DiagnosticInfoEncodingBits.InnerDiagnosticInfo) != 0)
                 {
-                    value.InnerDiagnosticInfo = ReadDiagnosticInfo(null, depth + 1) ??
+                    value.InnerDiagnosticInfo = ReadDiagnosticInfo(depth + 1) ??
                         new DiagnosticInfo();
                 }
 

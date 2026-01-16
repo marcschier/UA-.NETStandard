@@ -29,7 +29,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Xml;
@@ -1746,6 +1745,21 @@ namespace Opc.Ua.Schema.Model
                 }
             }
             return false;
+        }
+
+        public static Export.ReleaseStatus ToNodeSetReleaseStatus(
+            this ReleaseStatus releaseStatus)
+        {
+            switch (releaseStatus)
+            {
+                case ReleaseStatus.Deprecated:
+                    return Export.ReleaseStatus.Deprecated;
+                case ReleaseStatus.RC:
+                case ReleaseStatus.Draft:
+                    return Export.ReleaseStatus.Draft;
+                default:
+                    return Export.ReleaseStatus.Released;
+            }
         }
 
         private static bool IsBasicDataType(

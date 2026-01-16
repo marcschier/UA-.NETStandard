@@ -408,7 +408,7 @@ namespace Opc.Ua.SourceGeneration
             Debug.Assert(m_context.Options.UseUtf8StringLiterals);
 
             context.Out.Write("\"\"\"");
-            var firstLine = true;
+            bool firstLine = true;
             for (string line = reader.ReadLine();
                 line != null;
                 line = reader.ReadLine())

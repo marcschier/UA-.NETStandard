@@ -1416,7 +1416,7 @@ namespace Opc.Ua
                 NodeId nodeId => CompareTo(nodeId),
                 SerializableNodeId s => CompareTo(s.Value),
                 SerializableExpandedNodeId se => CompareTo(se.Value),
-                _ => -1,
+                _ => -1
             };
         }
 
