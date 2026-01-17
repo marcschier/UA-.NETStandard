@@ -36,14 +36,6 @@ using System.Xml;
 using Opc.Ua.Schema.Model;
 using Opc.Ua.Types;
 
-// TODO in order:
-// - Rewrite all direct write calls to use the already existing templates.
-// - Ensure the right namespace is used when calling the "Create" methods
-// - Use int/stirng constants for nodeIds, ExpandedNodeIds, browsenames from applicable namespaces
-// - Initialize variables with complex values from deserialized initialization strings
-// - Tie into existing node state factory pattern in server.
-// - Instantiate not just core states, but generated "derived" node state classes per namespace.
-// Ensure all tests are passing after each step.
 namespace Opc.Ua.SourceGeneration
 {
     /// <summary>
@@ -91,13 +83,15 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(
                 Tokens.ListOfNodeStateInitializers,
                 nodesToGenerate,
-                LoadTemplate_NodeStateAddCall);
+                LoadTemplate_NodeStateAddCall,
+                WriteTemplate_NodeStateAddCall);
 
             // Write the Create_XXX methods at class level
             template.AddReplacement(
                 Tokens.ListOfTypes,
                 nodesToGenerate,
-                LoadTemplate_NodeStateCreateMethod);
+                LoadTemplate_NodeStateCreateMethod,
+                WriteTemplate_NodeStateCreateMethod);
 
             template.Render();
         }
@@ -132,15 +126,24 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            // Skip excluded nodes
             if (m_context.Validator.IsExcluded(node))
             {
                 return null;
             }
 
-            // Write only the nodes.Add() call
-            context.Out.WriteLine("nodes.Add(Create_{0}(context));", GetSafeSymbolicName(node));
-            return null;
+            return CodeTemplates.NodeState_Create_cs;
+        }
+
+        private bool WriteTemplate_NodeStateAddCall(IWriteContext context)
+        {
+            if (context.Target is not NodeDesign node)
+            {
+                return false;
+            }
+
+            string symbolicName = GetSafeSymbolicName(node);
+            context.Template.AddReplacement(Tokens.SymbolicName, symbolicName);
+            return context.Template.Render();
         }
 
         private TemplateString LoadTemplate_NodeStateCreateMethod(ILoadContext context)
@@ -150,303 +153,511 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            // Skip excluded nodes
             if (m_context.Validator.IsExcluded(node))
             {
                 return null;
             }
 
-            // Write the node creation method
-            WriteNodeCreationMethod(context.Out, node, string.Empty);
-            return null;
+            return node switch
+            {
+                ObjectTypeDesign => CodeTemplates.NodeState_ObjectType_cs,
+                VariableTypeDesign => CodeTemplates.NodeState_VariableType_cs,
+                ReferenceTypeDesign => CodeTemplates.NodeState_ReferenceType_cs,
+                DataTypeDesign => CodeTemplates.NodeState_DataType_cs,
+                ObjectDesign => CodeTemplates.NodeState_Object_cs,
+                VariableDesign => CodeTemplates.NodeState_Variable_cs,
+                MethodDesign => CodeTemplates.NodeState_Method_cs,
+                ViewDesign => CodeTemplates.NodeState_View_cs,
+                _ => null
+            };
         }
 
-        private void WriteNodeCreationMethod(
-            ITemplateWriter writer,
-            NodeDesign node,
-            string parentSymbolicName)
+        private bool WriteTemplate_NodeStateCreateMethod(IWriteContext context)
         {
-            string symbolicName = GetSafeSymbolicName(node);
-            string methodSuffix = string.IsNullOrEmpty(parentSymbolicName)
-                ? symbolicName
-                : CoreUtils.Format("{0}_{1}", parentSymbolicName, node.SymbolicName.Name);
-            bool isChild = !string.IsNullOrEmpty(parentSymbolicName);
+            if (context.Target is not NodeDesign node)
+            {
+                return false;
+            }
 
+            string symbolicName = GetSafeSymbolicName(node);
+
+            // Common replacements for all node types
+            context.Template.AddReplacement(Tokens.SymbolicName, symbolicName);
+            context.Template.AddReplacement(Tokens.NodeIdConstant, GetNodeIdConstant(node));
+            context.Template.AddReplacement(Tokens.BrowseName, node.SymbolicName.Name);
+            context.Template.AddReplacement(
+                Tokens.BrowseNameValue,
+                GetBrowseNameValue(node));
+            context.Template.AddReplacement(
+                Tokens.BrowseNameNamespaceUri,
+                m_context.Validator.Dictionary.Namespaces.GetConstantSymbolForNamespace(
+                    node.SymbolicName.Namespace));
+            context.Template.AddReplacement(
+                Tokens.DisplayNameValue,
+                GetDisplayNameValue(node));
+            context.Template.AddReplacement(
+                Tokens.DescriptionValue,
+                GetDescriptionValue(node));
+            context.Template.AddReplacement(
+                Tokens.WriteMaskValue,
+                "global::Opc.Ua.AttributeWriteMask.None");
+            context.Template.AddReplacement(
+                Tokens.UserWriteMaskValue,
+                "global::Opc.Ua.AttributeWriteMask.None");
+
+            // Node type-specific replacements
             switch (node)
             {
                 case ObjectTypeDesign objectType:
-                    WriteObjectTypeCreation(writer, objectType, methodSuffix);
+                    WriteObjectTypeReplacements(context, objectType);
                     break;
                 case VariableTypeDesign variableType:
-                    WriteVariableTypeCreation(writer, variableType, methodSuffix);
+                    WriteVariableTypeReplacements(context, variableType);
                     break;
                 case ReferenceTypeDesign referenceType:
-                    WriteReferenceTypeCreation(writer, referenceType, methodSuffix);
+                    WriteReferenceTypeReplacements(context, referenceType);
                     break;
                 case DataTypeDesign dataType:
-                    WriteDataTypeCreation(writer, dataType, methodSuffix);
+                    WriteDataTypeReplacements(context, dataType);
                     break;
                 case ObjectDesign objectDesign:
-                    WriteObjectCreation(writer, objectDesign, methodSuffix, isChild);
+                    WriteObjectReplacements(context, objectDesign);
                     break;
                 case VariableDesign variableDesign:
-                    WriteVariableCreation(writer, variableDesign, methodSuffix, isChild);
+                    WriteVariableReplacements(context, variableDesign);
                     break;
                 case MethodDesign methodDesign:
-                    WriteMethodCreation(writer, methodDesign, methodSuffix, isChild);
+                    WriteMethodReplacements(context, methodDesign);
                     break;
                 case ViewDesign viewDesign:
-                    WriteViewCreation(writer, viewDesign, methodSuffix);
+                    WriteViewReplacements(context, viewDesign);
                     break;
             }
+
+            // Common optional properties
+            WriteOptionalPropertyReplacements(context, node);
+
+            // Role permissions
+            WriteRolePermissionsReplacement(context, node);
+
+            // Child nodes
+            WriteChildNodesReplacement(context, node, symbolicName);
+
+            return context.Template.Render();
         }
 
-        private void WriteObjectTypeCreation(
-            ITemplateWriter writer,
-            ObjectTypeDesign node,
-            string methodSuffix)
+        private void WriteObjectTypeReplacements(IWriteContext context, ObjectTypeDesign node)
         {
-            writer.WriteLine();
-            writer.WriteLine("/// <summary>");
-            writer.WriteLine("/// Creates the {0} ObjectType node state.", node.SymbolicName.Name);
-            writer.WriteLine("/// </summary>");
-            writer.WriteLine("private static global::Opc.Ua.BaseObjectTypeState Create_{0}(", methodSuffix);
-            writer.WriteLine("    global::Opc.Ua.ISystemContext context)");
-            writer.WriteLine("{");
-            writer.WriteLine("    var state = new global::Opc.Ua.BaseObjectTypeState();");
-
-            WriteCommonNodeProperties(writer, node);
-
-            // SuperTypeId
-            if (node.BaseTypeNode != null)
-            {
-                writer.WriteLine("    state.SuperTypeId = {0};", GetNodeIdConstant(node.BaseTypeNode));
-            }
-            else
-            {
-                writer.WriteLine("    state.SuperTypeId = global::Opc.Ua.NodeId.Null;");
-            }
-
-            writer.WriteLine("    state.IsAbstract = {0};", node.IsAbstract.AsBooleanString());
-
-            WriteTypeNodeOptionalProperties(writer, node);
-            WriteChildNodes(writer, node, methodSuffix);
-
-            writer.WriteLine("    return state;");
-            writer.WriteLine("}");
-
-            // Write child methods after parent method closes
-            WriteChildNodeMethods(writer, node, methodSuffix);
+            context.Template.AddReplacement(
+                Tokens.SuperTypeIdConstant,
+                node.BaseTypeNode != null
+                    ? GetNodeIdConstant(node.BaseTypeNode)
+                    : "global::Opc.Ua.NodeId.Null");
+            context.Template.AddReplacement(Tokens.IsAbstract, node.IsAbstract);
         }
 
-        private void WriteVariableTypeCreation(
-            ITemplateWriter writer,
-            VariableTypeDesign node,
-            string methodSuffix)
+        private void WriteVariableTypeReplacements(IWriteContext context, VariableTypeDesign node)
         {
-            writer.WriteLine();
-            writer.WriteLine("/// <summary>");
-            writer.WriteLine("/// Creates the {0} VariableType node state.", node.SymbolicName.Name);
-            writer.WriteLine("/// </summary>");
-            writer.WriteLine("private static global::Opc.Ua.BaseDataVariableTypeState Create_{0}(", methodSuffix);
-            writer.WriteLine("    global::Opc.Ua.ISystemContext context)");
-            writer.WriteLine("{");
-            writer.WriteLine("    var state = new global::Opc.Ua.BaseDataVariableTypeState();");
-
-            WriteCommonNodeProperties(writer, node);
-
-            // SuperTypeId
-            if (node.BaseTypeNode != null)
-            {
-                writer.WriteLine("    state.SuperTypeId = {0};", GetNodeIdConstant(node.BaseTypeNode));
-            }
-            else
-            {
-                writer.WriteLine("    state.SuperTypeId = global::Opc.Ua.NodeId.Null;");
-            }
-
-            writer.WriteLine("    state.IsAbstract = {0};", node.IsAbstract.AsBooleanString());
-
-            // DataType, ValueRank, ArrayDimensions
-            if (node.DataTypeNode != null)
-            {
-                writer.WriteLine("    state.DataType = {0};", GetNodeIdConstant(node.DataTypeNode));
-            }
-
-            writer.WriteLine("    state.ValueRank = {0};",
+            context.Template.AddReplacement(
+                Tokens.SuperTypeIdConstant,
+                node.BaseTypeNode != null
+                    ? GetNodeIdConstant(node.BaseTypeNode)
+                    : "global::Opc.Ua.NodeId.Null");
+            context.Template.AddReplacement(Tokens.IsAbstract, node.IsAbstract);
+            context.Template.AddReplacement(
+                Tokens.DataTypeIdConstant,
+                node.DataTypeNode != null
+                    ? GetNodeIdConstant(node.DataTypeNode)
+                    : "global::Opc.Ua.NodeId.Null");
+            context.Template.AddReplacement(
+                Tokens.ValueRank,
                 node.ValueRank.GetValueRankString(node.ArrayDimensions));
 
             string arrayDims = node.ValueRank.GetArrayDimensionsAsCode(node.ArrayDimensions);
-            if (!string.IsNullOrEmpty(arrayDims))
+            context.Template.AddReplacement(
+                Tokens.ArrayDimensions,
+                !string.IsNullOrEmpty(arrayDims)
+                    ? CoreUtils.Format("state.ArrayDimensions = {0};", arrayDims)
+                    : string.Empty);
+
+            context.Template.AddReplacement(
+                Tokens.ValueCode,
+                GetValueCodeReplacement(node.DecodedValue));
+        }
+
+        private void WriteReferenceTypeReplacements(IWriteContext context, ReferenceTypeDesign node)
+        {
+            context.Template.AddReplacement(
+                Tokens.SuperTypeIdConstant,
+                node.BaseTypeNode != null
+                    ? GetNodeIdConstant(node.BaseTypeNode)
+                    : "global::Opc.Ua.NodeId.Null");
+            context.Template.AddReplacement(Tokens.IsAbstract, node.IsAbstract);
+            context.Template.AddReplacement(Tokens.SymmetricValue, node.Symmetric);
+
+            context.Template.AddReplacement(
+                Tokens.InverseNameValue,
+                GetInverseNameValue(node));
+        }
+
+        private void WriteDataTypeReplacements(IWriteContext context, DataTypeDesign node)
+        {
+            context.Template.AddReplacement(
+                Tokens.SuperTypeIdConstant,
+                node.BaseTypeNode != null
+                    ? GetNodeIdConstant(node.BaseTypeNode)
+                    : "global::Opc.Ua.NodeId.Null");
+            context.Template.AddReplacement(Tokens.IsAbstract, node.IsAbstract);
+        }
+
+        private void WriteObjectReplacements(IWriteContext context, ObjectDesign node)
+        {
+            context.Template.AddReplacement(
+                Tokens.TypeDefinitionIdConstant,
+                node.TypeDefinitionNode != null
+                    ? GetNodeIdConstant(node.TypeDefinitionNode)
+                    : "global::Opc.Ua.NodeId.Null");
+            context.Template.AddReplacement(
+                Tokens.ReferenceTypeIdConstant,
+                GetReferenceTypeIdConstant(node.ReferenceType));
+            context.Template.AddReplacement(
+                Tokens.ModellingRuleIdConstant,
+                GetModellingRuleReplacement(node.ModellingRule));
+            context.Template.AddReplacement(
+                Tokens.EventNotifier,
+                node.SupportsEvents
+                    ? "global::Opc.Ua.EventNotifiers.SubscribeToEvents"
+                    : "global::Opc.Ua.EventNotifiers.None");
+        }
+
+        private void WriteVariableReplacements(IWriteContext context, VariableDesign node)
+        {
+            bool isProperty = node is PropertyDesign;
+            context.Template.AddReplacement(
+                Tokens.StateClassName,
+                isProperty
+                    ? "global::Opc.Ua.PropertyState"
+                    : "global::Opc.Ua.BaseDataVariableState");
+
+            context.Template.AddReplacement(
+                Tokens.TypeDefinitionIdConstant,
+                node.TypeDefinitionNode != null
+                    ? GetNodeIdConstant(node.TypeDefinitionNode)
+                    : "global::Opc.Ua.NodeId.Null");
+            context.Template.AddReplacement(
+                Tokens.ReferenceTypeIdConstant,
+                GetReferenceTypeIdConstant(node.ReferenceType));
+            context.Template.AddReplacement(
+                Tokens.ModellingRuleIdConstant,
+                GetModellingRuleReplacement(node.ModellingRule));
+            context.Template.AddReplacement(
+                Tokens.DataTypeIdConstant,
+                node.DataTypeNode != null
+                    ? GetNodeIdConstant(node.DataTypeNode)
+                    : "global::Opc.Ua.NodeId.Null");
+            context.Template.AddReplacement(
+                Tokens.ValueRank,
+                node.ValueRank.GetValueRankString(node.ArrayDimensions));
+
+            string arrayDims = node.ValueRank.GetArrayDimensionsAsCode(node.ArrayDimensions);
+            context.Template.AddReplacement(
+                Tokens.ArrayDimensions,
+                !string.IsNullOrEmpty(arrayDims)
+                    ? CoreUtils.Format("state.ArrayDimensions = {0};", arrayDims)
+                    : string.Empty);
+
+            context.Template.AddReplacement(
+                Tokens.AccessLevelValue,
+                node.AccessLevel.GetAccessLevelAsCode());
+            context.Template.AddReplacement(
+                Tokens.UserAccessLevelValue,
+                node.AccessLevel.GetAccessLevelAsCode());
+            context.Template.AddReplacement(
+                Tokens.MinimumSamplingIntervalValue,
+                node.MinimumSamplingInterval.ToString(CultureInfo.InvariantCulture));
+            context.Template.AddReplacement(Tokens.HistorizingValue, node.Historizing);
+
+            context.Template.AddReplacement(
+                Tokens.ValueCode,
+                GetValueCodeReplacement(node.DecodedValue));
+        }
+
+        private void WriteMethodReplacements(IWriteContext context, MethodDesign node)
+        {
+            context.Template.AddReplacement(
+                Tokens.ReferenceTypeIdConstant,
+                GetReferenceTypeIdConstant(node.ReferenceType));
+            context.Template.AddReplacement(
+                Tokens.ModellingRuleIdConstant,
+                GetModellingRuleReplacement(node.ModellingRule));
+
+            bool executable = !node.NonExecutable;
+            context.Template.AddReplacement(Tokens.ExecutableValue, executable);
+
+            context.Template.AddReplacement(
+                Tokens.MethodDeclarationIdConstant,
+                node.MethodDeclarationNode != null
+                    ? CoreUtils.Format(
+                        "state.MethodDeclarationId = {0};",
+                        GetNodeIdConstant(node.MethodDeclarationNode))
+                    : string.Empty);
+        }
+
+        private void WriteViewReplacements(IWriteContext context, ViewDesign node)
+        {
+            context.Template.AddReplacement(
+                Tokens.EventNotifier,
+                node.SupportsEvents
+                    ? "global::Opc.Ua.EventNotifiers.SubscribeToEvents"
+                    : "global::Opc.Ua.EventNotifiers.None");
+            context.Template.AddReplacement(Tokens.ContainsNoLoopsValue, node.ContainsNoLoops);
+        }
+
+        private void WriteOptionalPropertyReplacements(IWriteContext context, NodeDesign node)
+        {
+            // Release status
+            Export.ReleaseStatus releaseStatus = node.ReleaseStatus.ToNodeSetReleaseStatus();
+            context.Template.AddReplacement(
+                Tokens.ReleaseStatusValue,
+                releaseStatus != Export.ReleaseStatus.Released
+                    ? CoreUtils.Format(
+                        "state.ReleaseStatus = global::Opc.Ua.Export.ReleaseStatus.{0};",
+                        releaseStatus)
+                    : string.Empty);
+
+            // Categories
+            context.Template.AddReplacement(
+                Tokens.CategoriesValue,
+                !string.IsNullOrEmpty(node.Category)
+                    ? CoreUtils.Format(
+                        "state.Categories = new string[] {{ {0} }};",
+                        string.Join(
+                            ", ",
+                            node.Category.Split([',']).Select(c => CoreUtils.Format("\"{0}\"", c.Trim()))))
+                    : string.Empty);
+
+            // Specification
+            context.Template.AddReplacement(
+                Tokens.SpecificationValue,
+                node.PartNo != 0
+                    ? CoreUtils.Format("state.Specification = \"Part{0}\";", node.PartNo)
+                    : string.Empty);
+
+            // Access restrictions
+            context.Template.AddReplacement(
+                Tokens.AccessRestrictionsValue,
+                node.AccessRestrictionsSpecified
+                    ? CoreUtils.Format(
+                        "state.AccessRestrictions = {0};",
+                        node.AccessRestrictions.GetAccessRestrictionsAsCode())
+                    : string.Empty);
+        }
+
+        private void WriteRolePermissionsReplacement(IWriteContext context, NodeDesign node)
+        {
+            if (node.RolePermissions?.RolePermission == null ||
+                node.RolePermissions.RolePermission.Length == 0)
             {
-                writer.WriteLine("    state.ArrayDimensions = {0};", arrayDims);
+                context.Template.AddReplacement(Tokens.ListOfRolePermissions, string.Empty);
+                return;
             }
 
-            // Value
-            if (node.DecodedValue != null)
+            var rolePermissions = new List<RolePermission>();
+            foreach (RolePermission rp in node.RolePermissions.RolePermission)
             {
-                string valueCode = GetValueCode(node.DecodedValue);
-                if (!string.IsNullOrEmpty(valueCode))
+                ObjectDesign roleNode = m_context.Validator.FindNode<ObjectDesign>(
+                    rp.Role,
+                    rp.Role.Name,
+                    "RoleType");
+
+                if (roleNode != null)
                 {
-                    writer.WriteLine("    state.Value = {0};", valueCode);
+                    rolePermissions.Add(rp);
                 }
             }
 
-            WriteTypeNodeOptionalProperties(writer, node);
-            WriteChildNodes(writer, node, methodSuffix);
+            if (rolePermissions.Count == 0)
+            {
+                context.Template.AddReplacement(Tokens.ListOfRolePermissions, string.Empty);
+                return;
+            }
 
-            writer.WriteLine("    return state;");
-            writer.WriteLine("}");
-
-            // Write child methods after parent method closes
-            WriteChildNodeMethods(writer, node, methodSuffix);
+            context.Template.AddReplacement(
+                Tokens.ListOfRolePermissions,
+                CodeTemplates.NodeState_RolePermissionsInit_cs,
+                rolePermissions,
+                LoadTemplate_RolePermission,
+                WriteTemplate_RolePermission);
         }
 
-        private void WriteReferenceTypeCreation(
-            ITemplateWriter writer,
-            ReferenceTypeDesign node,
-            string methodSuffix)
+        private TemplateString LoadTemplate_RolePermission(ILoadContext context)
         {
-            writer.WriteLine();
-            writer.WriteLine("/// <summary>");
-            writer.WriteLine("/// Creates the {0} ReferenceType node state.", node.SymbolicName.Name);
-            writer.WriteLine("/// </summary>");
-            writer.WriteLine("private static global::Opc.Ua.ReferenceTypeState Create_{0}(", methodSuffix);
-            writer.WriteLine("    global::Opc.Ua.ISystemContext context)");
-            writer.WriteLine("{");
-            writer.WriteLine("    var state = new global::Opc.Ua.ReferenceTypeState();");
-
-            WriteCommonNodeProperties(writer, node);
-
-            // SuperTypeId
-            if (node.BaseTypeNode != null)
+            if (context.Target is not RolePermission)
             {
-                writer.WriteLine("    state.SuperTypeId = {0};", GetNodeIdConstant(node.BaseTypeNode));
-            }
-            else
-            {
-                writer.WriteLine("    state.SuperTypeId = global::Opc.Ua.NodeId.Null;");
+                return null;
             }
 
-            writer.WriteLine("    state.IsAbstract = {0};", node.IsAbstract.AsBooleanString());
-            writer.WriteLine("    state.Symmetric = {0};", node.Symmetric.AsBooleanString());
-
-            // InverseName
-            if (!node.Symmetric && node.InverseName != null)
-            {
-                writer.WriteLine("    state.InverseName = new global::Opc.Ua.LocalizedText(\"{0}\", string.Empty, \"{1}\");",
-                    EscapeString(node.InverseName.Key ?? string.Empty),
-                    EscapeString(node.InverseName.Value ?? string.Empty));
-            }
-            else if (node.Symmetric)
-            {
-                writer.WriteLine("    state.InverseName = global::Opc.Ua.LocalizedText.Null;");
-            }
-
-            WriteTypeNodeOptionalProperties(writer, node);
-
-            writer.WriteLine("    return state;");
-            writer.WriteLine("}");
+            return CodeTemplates.NodeState_RolePermission_cs;
         }
 
-        private void WriteDataTypeCreation(
-            ITemplateWriter writer,
-            DataTypeDesign node,
-            string methodSuffix)
+        private bool WriteTemplate_RolePermission(IWriteContext context)
         {
-            writer.WriteLine();
-            writer.WriteLine("/// <summary>");
-            writer.WriteLine("/// Creates the {0} DataType node state.", node.SymbolicName.Name);
-            writer.WriteLine("/// </summary>");
-            writer.WriteLine("private static global::Opc.Ua.DataTypeState Create_{0}(", methodSuffix);
-            writer.WriteLine("    global::Opc.Ua.ISystemContext context)");
-            writer.WriteLine("{");
-            writer.WriteLine("    var state = new global::Opc.Ua.DataTypeState();");
-
-            WriteCommonNodeProperties(writer, node);
-
-            // SuperTypeId
-            if (node.BaseTypeNode != null)
+            if (context.Target is not RolePermission rolePermission)
             {
-                writer.WriteLine("    state.SuperTypeId = {0};", GetNodeIdConstant(node.BaseTypeNode));
-            }
-            else
-            {
-                writer.WriteLine("    state.SuperTypeId = global::Opc.Ua.NodeId.Null;");
+                return false;
             }
 
-            writer.WriteLine("    state.IsAbstract = {0};", node.IsAbstract.AsBooleanString());
+            ObjectDesign roleNode = m_context.Validator.FindNode<ObjectDesign>(
+                rolePermission.Role,
+                rolePermission.Role.Name,
+                "RoleType");
 
-            WriteTypeNodeOptionalProperties(writer, node);
-            WriteChildNodes(writer, node, methodSuffix);
+            if (roleNode == null)
+            {
+                return false;
+            }
 
-            writer.WriteLine("    return state;");
-            writer.WriteLine("}");
+            context.Template.AddReplacement(
+                Tokens.RoleIdConstant,
+                GetNodeIdConstant(roleNode));
+            context.Template.AddReplacement(
+                Tokens.PermissionsValue,
+                CoreUtils.Format("(uint)({0})", rolePermission.Permission.GetPermissionTypeAsCode()));
 
-            // Write child methods after parent method closes
-            WriteChildNodeMethods(writer, node, methodSuffix);
+            return context.Template.Render();
         }
 
-        private void WriteObjectCreation(
+        private void WriteChildNodesReplacement(
+            IWriteContext context,
+            NodeDesign node,
+            string parentSymbolicName)
+        {
+            if (node.Children?.Items == null || node.Children.Items.Length == 0)
+            {
+                context.Template.AddReplacement(Tokens.ListOfChildNodeStates, string.Empty);
+                return;
+            }
+
+            var childNodes = node.Children.Items
+                .Where(child => !m_context.Validator.IsExcluded(child) &&
+                    child.ModellingRule is
+                    not ModellingRule.ExposesItsArray and
+                    not ModellingRule.MandatoryPlaceholder and
+                    not ModellingRule.OptionalPlaceholder)
+                .ToList();
+
+            if (childNodes.Count == 0)
+            {
+                context.Template.AddReplacement(Tokens.ListOfChildNodeStates, string.Empty);
+                return;
+            }
+
+            // For simplicity, we'll write children directly instead of using nested templates
+            // This is similar to the original approach but cleaner
+            context.Template.AddReplacement(
+                Tokens.ListOfChildNodeStates,
+                childNodes,
+                c => LoadTemplate_AddChildCall(c, parentSymbolicName),
+                c => WriteTemplate_AddChildCall(c, parentSymbolicName));
+
+            foreach (var child in childNodes)
+            {
+
+            }
+        }
+
+        private TemplateString LoadTemplate_AddChildCall(ILoadContext context, string parentSymbolicName)
+        {
+            if (context.Target is not InstanceDesign child)
+            {
+                return null;
+            }
+
+            string childMethodSuffix = CoreUtils.Format(
+                "{0}_{1}",
+                parentSymbolicName,
+                child.SymbolicName.Name);
+
+            context.Out.WriteLine(
+                "state.AddChild(Create_{0}(context, state));",
+                childMethodSuffix);
+
+            // Write the child method after the parent
+            WriteChildNodeMethod(context.Out, child, parentSymbolicName);
+
+            return null;
+        }
+
+        private bool WriteTemplate_AddChildCall(IWriteContext context, string parentSymbolicName)
+        {
+            if (context.Target is not InstanceDesign child)
+            {
+                return false;
+            }
+
+            context.Template.AddReplacement(Tokens.SymbolicName, parentSymbolicName);
+            context.Template.AddReplacement(Tokens.ChildName, child.SymbolicName.Name);
+            return context.Template.Render();
+        }
+
+        private void WriteChildNodeMethod(
+            ITemplateWriter writer,
+            InstanceDesign child,
+            string parentSymbolicName)
+        {
+            string childMethodSuffix = CoreUtils.Format(
+                "{0}_{1}",
+                parentSymbolicName,
+                child.SymbolicName.Name);
+
+            switch (child)
+            {
+                case ObjectDesign objectChild:
+                    WriteChildObjectMethod(writer, objectChild, childMethodSuffix);
+                    break;
+                case VariableDesign variableChild:
+                    WriteChildVariableMethod(writer, variableChild, childMethodSuffix);
+                    break;
+                case MethodDesign methodChild:
+                    WriteChildMethodMethod(writer, methodChild, childMethodSuffix);
+                    break;
+            }
+        }
+
+        private void WriteChildObjectMethod(
             ITemplateWriter writer,
             ObjectDesign node,
-            string methodSuffix,
-            bool isChild)
+            string methodSuffix)
         {
             writer.WriteLine();
-            writer.WriteLine("/// <summary>");
-            writer.WriteLine("/// Creates the {0} Object node state.", node.SymbolicName.Name);
-            writer.WriteLine("/// </summary>");
-
-            if (isChild)
-            {
-                writer.WriteLine("private static global::Opc.Ua.BaseObjectState Create_{0}(", methodSuffix);
-                writer.WriteLine("    global::Opc.Ua.ISystemContext context,");
-                writer.WriteLine("    global::Opc.Ua.NodeState parent)");
-                writer.WriteLine("{");
-                writer.WriteLine("    var state = new global::Opc.Ua.BaseObjectState(parent);");
-            }
-            else
-            {
-                writer.WriteLine("private static global::Opc.Ua.BaseObjectState Create_{0}(", methodSuffix);
-                writer.WriteLine("    global::Opc.Ua.ISystemContext context)");
-                writer.WriteLine("{");
-                writer.WriteLine("    var state = new global::Opc.Ua.BaseObjectState(null);");
-            }
-
-            WriteCommonNodeProperties(writer, node);
-
-            // TypeDefinitionId
-            if (node.TypeDefinitionNode != null)
-            {
-                writer.WriteLine("    state.TypeDefinitionId = {0};", GetNodeIdConstant(node.TypeDefinitionNode));
-            }
-
-            // ReferenceTypeId
-            writer.WriteLine("    state.ReferenceTypeId = {0};", GetReferenceTypeIdConstant(node.ReferenceType));
-
-            // ModellingRuleId
+            writer.WriteLine("private static global::Opc.Ua.BaseObjectState Create_{0}(", methodSuffix);
+            writer.WriteLine("    global::Opc.Ua.ISystemContext context,");
+            writer.WriteLine("    global::Opc.Ua.NodeState parent)");
+            writer.WriteLine("{");
+            writer.WriteLine("    var state = new global::Opc.Ua.BaseObjectState(parent);");
+            WriteCommonChildProperties(writer, node);
+            writer.WriteLine("    state.TypeDefinitionId = {0};",
+                node.TypeDefinitionNode != null
+                    ? GetNodeIdConstant(node.TypeDefinitionNode)
+                    : "global::Opc.Ua.NodeId.Null");
+            writer.WriteLine("    state.ReferenceTypeId = {0};",
+                GetReferenceTypeIdConstant(node.ReferenceType));
             WriteModellingRuleId(writer, node.ModellingRule);
-
-            // EventNotifier
             writer.WriteLine("    state.EventNotifier = {0};",
-                node.SupportsEvents ? "global::Opc.Ua.EventNotifiers.SubscribeToEvents" : "global::Opc.Ua.EventNotifiers.None");
-
-            WriteInstanceNodeOptionalProperties(writer, node);
+                node.SupportsEvents
+                    ? "global::Opc.Ua.EventNotifiers.SubscribeToEvents"
+                    : "global::Opc.Ua.EventNotifiers.None");
+            WriteInstanceOptionalProperties(writer, node);
             WriteChildNodes(writer, node, methodSuffix);
-
             writer.WriteLine("    return state;");
             writer.WriteLine("}");
-
-            // Write child methods after parent method closes
             WriteChildNodeMethods(writer, node, methodSuffix);
         }
 
-        private void WriteVariableCreation(
+        private void WriteChildVariableMethod(
             ITemplateWriter writer,
             VariableDesign node,
-            string methodSuffix,
-            bool isChild)
+            string methodSuffix)
         {
             bool isProperty = node is PropertyDesign;
             string stateClassName = isProperty
@@ -454,68 +665,35 @@ namespace Opc.Ua.SourceGeneration
                 : "global::Opc.Ua.BaseDataVariableState";
 
             writer.WriteLine();
-            writer.WriteLine("/// <summary>");
-            writer.WriteLine("/// Creates the {0} Variable node state.", node.SymbolicName.Name);
-            writer.WriteLine("/// </summary>");
-
-            if (isChild)
-            {
-                writer.WriteLine("private static global::Opc.Ua.BaseVariableState Create_{0}(", methodSuffix);
-                writer.WriteLine("    global::Opc.Ua.ISystemContext context,");
-                writer.WriteLine("    global::Opc.Ua.NodeState parent)");
-                writer.WriteLine("{");
-                writer.WriteLine("    var state = new {0}(parent);", stateClassName);
-            }
-            else
-            {
-                writer.WriteLine("private static global::Opc.Ua.BaseVariableState Create_{0}(", methodSuffix);
-                writer.WriteLine("    global::Opc.Ua.ISystemContext context)");
-                writer.WriteLine("{");
-                writer.WriteLine("    var state = new {0}(null);", stateClassName);
-            }
-
-            WriteCommonNodeProperties(writer, node);
-
-            // TypeDefinitionId
-            if (node.TypeDefinitionNode != null)
-            {
-                writer.WriteLine("    state.TypeDefinitionId = {0};", GetNodeIdConstant(node.TypeDefinitionNode));
-            }
-
-            // ReferenceTypeId
-            writer.WriteLine("    state.ReferenceTypeId = {0};", GetReferenceTypeIdConstant(node.ReferenceType));
-
-            // ModellingRuleId
+            writer.WriteLine("private static global::Opc.Ua.BaseVariableState Create_{0}(", methodSuffix);
+            writer.WriteLine("    global::Opc.Ua.ISystemContext context,");
+            writer.WriteLine("    global::Opc.Ua.NodeState parent)");
+            writer.WriteLine("{");
+            writer.WriteLine("    var state = new {0}(parent);", stateClassName);
+            WriteCommonChildProperties(writer, node);
+            writer.WriteLine("    state.TypeDefinitionId = {0};",
+                node.TypeDefinitionNode != null
+                    ? GetNodeIdConstant(node.TypeDefinitionNode)
+                    : "global::Opc.Ua.NodeId.Null");
+            writer.WriteLine("    state.ReferenceTypeId = {0};",
+                GetReferenceTypeIdConstant(node.ReferenceType));
             WriteModellingRuleId(writer, node.ModellingRule);
-
-            // DataType
-            if (node.DataTypeNode != null)
-            {
-                writer.WriteLine("    state.DataType = {0};", GetNodeIdConstant(node.DataTypeNode));
-            }
-
-            // ValueRank, ArrayDimensions
+            writer.WriteLine("    state.DataType = {0};",
+                node.DataTypeNode != null
+                    ? GetNodeIdConstant(node.DataTypeNode)
+                    : "global::Opc.Ua.NodeId.Null");
             writer.WriteLine("    state.ValueRank = {0};",
                 node.ValueRank.GetValueRankString(node.ArrayDimensions));
-
             string arrayDims = node.ValueRank.GetArrayDimensionsAsCode(node.ArrayDimensions);
             if (!string.IsNullOrEmpty(arrayDims))
             {
                 writer.WriteLine("    state.ArrayDimensions = {0};", arrayDims);
             }
-
-            // AccessLevel
             writer.WriteLine("    state.AccessLevel = {0};", node.AccessLevel.GetAccessLevelAsCode());
             writer.WriteLine("    state.UserAccessLevel = state.AccessLevel;");
-
-            // MinimumSamplingInterval
             writer.WriteLine("    state.MinimumSamplingInterval = {0};",
                 node.MinimumSamplingInterval.ToString(CultureInfo.InvariantCulture));
-
-            // Historizing
             writer.WriteLine("    state.Historizing = {0};", node.Historizing.AsBooleanString());
-
-            // Value
             if (node.DecodedValue != null)
             {
                 string valueCode = GetValueCode(node.DecodedValue);
@@ -524,113 +702,48 @@ namespace Opc.Ua.SourceGeneration
                     writer.WriteLine("    state.Value = {0};", valueCode);
                 }
             }
-
-            WriteInstanceNodeOptionalProperties(writer, node);
+            WriteInstanceOptionalProperties(writer, node);
             WriteChildNodes(writer, node, methodSuffix);
-
             writer.WriteLine("    return state;");
             writer.WriteLine("}");
-
-            // Write child methods after parent method closes
             WriteChildNodeMethods(writer, node, methodSuffix);
         }
 
-        private void WriteMethodCreation(
+        private void WriteChildMethodMethod(
             ITemplateWriter writer,
             MethodDesign node,
-            string methodSuffix,
-            bool isChild)
-        {
-            writer.WriteLine();
-            writer.WriteLine("/// <summary>");
-            writer.WriteLine("/// Creates the {0} Method node state.", node.SymbolicName.Name);
-            writer.WriteLine("/// </summary>");
-
-            if (isChild)
-            {
-                writer.WriteLine("private static global::Opc.Ua.MethodState Create_{0}(", methodSuffix);
-                writer.WriteLine("    global::Opc.Ua.ISystemContext context,");
-                writer.WriteLine("    global::Opc.Ua.NodeState parent)");
-                writer.WriteLine("{");
-                writer.WriteLine("    var state = new global::Opc.Ua.MethodState(parent);");
-            }
-            else
-            {
-                writer.WriteLine("private static global::Opc.Ua.MethodState Create_{0}(", methodSuffix);
-                writer.WriteLine("    global::Opc.Ua.ISystemContext context)");
-                writer.WriteLine("{");
-                writer.WriteLine("    var state = new global::Opc.Ua.MethodState(null);");
-            }
-
-            WriteCommonNodeProperties(writer, node);
-
-            // ReferenceTypeId
-            writer.WriteLine("    state.ReferenceTypeId = {0};", GetReferenceTypeIdConstant(node.ReferenceType));
-
-            // ModellingRuleId
-            WriteModellingRuleId(writer, node.ModellingRule);
-
-            // Executable
-            bool executable = !node.NonExecutable;
-            writer.WriteLine("    state.Executable = {0};", executable.AsBooleanString());
-            writer.WriteLine("    state.UserExecutable = {0};", executable.AsBooleanString());
-
-            // MethodDeclarationId
-            if (node.MethodDeclarationNode != null)
-            {
-                writer.WriteLine("    state.MethodDeclarationId = {0};", GetNodeIdConstant(node.MethodDeclarationNode));
-            }
-
-            WriteInstanceNodeOptionalProperties(writer, node);
-            WriteChildNodes(writer, node, methodSuffix);
-
-            writer.WriteLine("    return state;");
-            writer.WriteLine("}");
-
-            // Write child methods after parent method closes
-            WriteChildNodeMethods(writer, node, methodSuffix);
-        }
-
-        private void WriteViewCreation(
-            ITemplateWriter writer,
-            ViewDesign node,
             string methodSuffix)
         {
             writer.WriteLine();
-            writer.WriteLine("/// <summary>");
-            writer.WriteLine("/// Creates the {0} View node state.", node.SymbolicName.Name);
-            writer.WriteLine("/// </summary>");
-            writer.WriteLine("private static global::Opc.Ua.ViewState Create_{0}(", methodSuffix);
-            writer.WriteLine("    global::Opc.Ua.ISystemContext context)");
+            writer.WriteLine("private static global::Opc.Ua.MethodState Create_{0}(", methodSuffix);
+            writer.WriteLine("    global::Opc.Ua.ISystemContext context,");
+            writer.WriteLine("    global::Opc.Ua.NodeState parent)");
             writer.WriteLine("{");
-            writer.WriteLine("    var state = new global::Opc.Ua.ViewState();");
-
-            WriteCommonNodeProperties(writer, node);
-
-            // EventNotifier
-            writer.WriteLine("    state.EventNotifier = {0};",
-                node.SupportsEvents ? "global::Opc.Ua.EventNotifiers.SubscribeToEvents" : "global::Opc.Ua.EventNotifiers.None");
-
-            // ContainsNoLoops
-            writer.WriteLine("    state.ContainsNoLoops = {0};", node.ContainsNoLoops.AsBooleanString());
-
-            WriteTypeNodeOptionalProperties(writer, node);
-
+            writer.WriteLine("    var state = new global::Opc.Ua.MethodState(parent);");
+            WriteCommonChildProperties(writer, node);
+            writer.WriteLine("    state.ReferenceTypeId = {0};",
+                GetReferenceTypeIdConstant(node.ReferenceType));
+            WriteModellingRuleId(writer, node.ModellingRule);
+            bool executable = !node.NonExecutable;
+            writer.WriteLine("    state.Executable = {0};", executable.AsBooleanString());
+            writer.WriteLine("    state.UserExecutable = {0};", executable.AsBooleanString());
+            if (node.MethodDeclarationNode != null)
+            {
+                writer.WriteLine("    state.MethodDeclarationId = {0};",
+                    GetNodeIdConstant(node.MethodDeclarationNode));
+            }
+            WriteInstanceOptionalProperties(writer, node);
+            WriteChildNodes(writer, node, methodSuffix);
             writer.WriteLine("    return state;");
             writer.WriteLine("}");
+            WriteChildNodeMethods(writer, node, methodSuffix);
         }
 
-        private void WriteCommonNodeProperties(
-            ITemplateWriter writer,
-            NodeDesign node)
+        private void WriteCommonChildProperties(ITemplateWriter writer, NodeDesign node)
         {
-            // SymbolicName
             writer.WriteLine("    state.SymbolicName = \"{0}\";", node.SymbolicName.Name);
-
-            // NodeId
             writer.WriteLine("    state.NodeId = {0};", GetNodeIdConstant(node));
 
-            // BrowseName - use literal string for better portability
             string browseNameValue = !string.IsNullOrEmpty(node.BrowseName)
                 ? node.BrowseName
                 : node.SymbolicName.Name;
@@ -640,7 +753,6 @@ namespace Opc.Ua.SourceGeneration
             writer.WriteLine("        \"{0}\",", EscapeString(browseNameValue));
             writer.WriteLine("        context.NamespaceUris.GetIndexOrAppend({0}));", browseNameUri);
 
-            // DisplayName
             if (node.DisplayName != null)
             {
                 writer.WriteLine("    state.DisplayName = new global::Opc.Ua.LocalizedText(\"{0}\", string.Empty, \"{1}\");",
@@ -649,10 +761,10 @@ namespace Opc.Ua.SourceGeneration
             }
             else
             {
-                writer.WriteLine("    state.DisplayName = new global::Opc.Ua.LocalizedText(\"{0}\");", node.SymbolicName.Name);
+                writer.WriteLine("    state.DisplayName = new global::Opc.Ua.LocalizedText(\"{0}\");",
+                    node.SymbolicName.Name);
             }
 
-            // Description
             if (node.Description != null && !node.Description.IsAutogenerated)
             {
                 writer.WriteLine("    state.Description = new global::Opc.Ua.LocalizedText(\"{0}\", string.Empty, \"{1}\");",
@@ -660,23 +772,19 @@ namespace Opc.Ua.SourceGeneration
                     EscapeString(node.Description.Value?.Trim() ?? string.Empty));
             }
 
-            // WriteMask/UserWriteMask
             writer.WriteLine("    state.WriteMask = global::Opc.Ua.AttributeWriteMask.None;");
             writer.WriteLine("    state.UserWriteMask = global::Opc.Ua.AttributeWriteMask.None;");
         }
 
-        private void WriteTypeNodeOptionalProperties(
-            ITemplateWriter writer,
-            NodeDesign node)
+        private void WriteInstanceOptionalProperties(ITemplateWriter writer, InstanceDesign node)
         {
-            // ReleaseStatus
             Export.ReleaseStatus releaseStatus = node.ReleaseStatus.ToNodeSetReleaseStatus();
             if (releaseStatus != Export.ReleaseStatus.Released)
             {
-                writer.WriteLine("    state.ReleaseStatus = global::Opc.Ua.Export.ReleaseStatus.{0};", releaseStatus);
+                writer.WriteLine("    state.ReleaseStatus = global::Opc.Ua.Export.ReleaseStatus.{0};",
+                    releaseStatus);
             }
 
-            // Categories
             if (!string.IsNullOrEmpty(node.Category))
             {
                 string[] categories = node.Category.Split([',']);
@@ -684,72 +792,27 @@ namespace Opc.Ua.SourceGeneration
                     string.Join(", ", categories.Select(c => CoreUtils.Format("\"{0}\"", c.Trim()))));
             }
 
-            // Specification
             if (node.PartNo != 0)
             {
                 writer.WriteLine("    state.Specification = \"Part{0}\";", node.PartNo);
             }
 
-            // AccessRestrictions
-            WriteAccessRestrictions(writer, node);
+            if (node.AccessRestrictionsSpecified)
+            {
+                string accessRestrictionsCode = node.AccessRestrictions.GetAccessRestrictionsAsCode();
+                if (!string.IsNullOrEmpty(accessRestrictionsCode))
+                {
+                    writer.WriteLine("    state.AccessRestrictions = {0};", accessRestrictionsCode);
+                }
+            }
 
-            // RolePermissions
             WriteRolePermissions(writer, node);
         }
 
-        private void WriteInstanceNodeOptionalProperties(
-            ITemplateWriter writer,
-            InstanceDesign node)
+        private void WriteRolePermissions(ITemplateWriter writer, NodeDesign node)
         {
-            // ReleaseStatus
-            Export.ReleaseStatus releaseStatus = node.ReleaseStatus.ToNodeSetReleaseStatus();
-            if (releaseStatus != Export.ReleaseStatus.Released)
-            {
-                writer.WriteLine("    state.ReleaseStatus = global::Opc.Ua.Export.ReleaseStatus.{0};", releaseStatus);
-            }
-
-            // Categories
-            if (!string.IsNullOrEmpty(node.Category))
-            {
-                string[] categories = node.Category.Split([',']);
-                writer.WriteLine("    state.Categories = new string[] {{ {0} }};",
-                    string.Join(", ", categories.Select(c => CoreUtils.Format("\"{0}\"", c.Trim()))));
-            }
-
-            // Specification
-            if (node.PartNo != 0)
-            {
-                writer.WriteLine("    state.Specification = \"Part{0}\";", node.PartNo);
-            }
-
-            // AccessRestrictions
-            WriteAccessRestrictions(writer, node);
-
-            // RolePermissions
-            WriteRolePermissions(writer, node);
-        }
-
-        private static void WriteAccessRestrictions(
-            ITemplateWriter writer,
-            NodeDesign node)
-        {
-            if (!node.AccessRestrictionsSpecified)
-            {
-                return;
-            }
-
-            string accessRestrictionsCode = node.AccessRestrictions.GetAccessRestrictionsAsCode();
-            if (!string.IsNullOrEmpty(accessRestrictionsCode))
-            {
-                writer.WriteLine("    state.AccessRestrictions = {0};", accessRestrictionsCode);
-            }
-        }
-
-        private void WriteRolePermissions(
-            ITemplateWriter writer,
-            NodeDesign node)
-        {
-            if (node.RolePermissions?.RolePermission == null || node.RolePermissions.RolePermission.Length == 0)
+            if (node.RolePermissions?.RolePermission == null ||
+                node.RolePermissions.RolePermission.Length == 0)
             {
                 return;
             }
@@ -775,9 +838,7 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
-        private static void WriteModellingRuleId(
-            ITemplateWriter writer,
-            ModellingRule modellingRule)
+        private static void WriteModellingRuleId(ITemplateWriter writer, ModellingRule modellingRule)
         {
             string constant = modellingRule switch
             {
@@ -795,17 +856,13 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
-        private void WriteChildNodes(
-            ITemplateWriter writer,
-            NodeDesign node,
-            string parentMethodSuffix)
+        private void WriteChildNodes(ITemplateWriter writer, NodeDesign node, string parentMethodSuffix)
         {
             if (node.Children?.Items == null || node.Children.Items.Length == 0)
             {
                 return;
             }
 
-            // First, write the AddChild calls inside the parent method
             foreach (InstanceDesign child in node.Children.Items)
             {
                 if (m_context.Validator.IsExcluded(child))
@@ -813,7 +870,6 @@ namespace Opc.Ua.SourceGeneration
                     continue;
                 }
 
-                // Skip certain modelling rules
                 if (child.ModellingRule is ModellingRule.ExposesItsArray
                     or ModellingRule.MandatoryPlaceholder
                     or ModellingRule.OptionalPlaceholder)
@@ -830,21 +886,13 @@ namespace Opc.Ua.SourceGeneration
             }
         }
 
-        /// <summary>
-        /// Write child node creation methods after the parent method completes.
-        /// This must be called after the parent method's closing brace.
-        /// </summary>
-        private void WriteChildNodeMethods(
-            ITemplateWriter writer,
-            NodeDesign node,
-            string parentMethodSuffix)
+        private void WriteChildNodeMethods(ITemplateWriter writer, NodeDesign node, string parentMethodSuffix)
         {
             if (node.Children?.Items == null || node.Children.Items.Length == 0)
             {
                 return;
             }
 
-            // Now write all child creation methods (after the parent method)
             foreach (InstanceDesign child in node.Children.Items)
             {
                 if (m_context.Validator.IsExcluded(child))
@@ -859,7 +907,7 @@ namespace Opc.Ua.SourceGeneration
                     continue;
                 }
 
-                WriteNodeCreationMethod(writer, child, parentMethodSuffix);
+                WriteChildNodeMethod(writer, child, parentMethodSuffix);
             }
         }
 
@@ -874,7 +922,6 @@ namespace Opc.Ua.SourceGeneration
                     continue;
                 }
 
-                // Skip method type nodes that are not top-level
                 if (node.IsMethodTypeNode())
                 {
                     continue;
@@ -888,7 +935,6 @@ namespace Opc.Ua.SourceGeneration
 
         private static string GetSafeSymbolicName(NodeDesign node)
         {
-            // Create a safe method name from the symbolic name
             return node.SymbolicId.Name
                 .Replace(".", "_", StringComparison.Ordinal)
                 .Replace("-", "_", StringComparison.Ordinal);
@@ -904,7 +950,6 @@ namespace Opc.Ua.SourceGeneration
             string namespaceUri = m_context.Validator.Dictionary.Namespaces
                 .GetConstantSymbolForNamespace(node.SymbolicId.Namespace);
 
-            // Use numeric ID directly when available for more portable generated code
             if (node.NumericIdSpecified)
             {
                 return CoreUtils.Format(
@@ -912,7 +957,6 @@ namespace Opc.Ua.SourceGeneration
                     node.NumericId, namespaceUri);
             }
 
-            // Fall back to string ID if specified
             if (!string.IsNullOrEmpty(node.StringId))
             {
                 return CoreUtils.Format(
@@ -920,8 +964,6 @@ namespace Opc.Ua.SourceGeneration
                     EscapeString(node.StringId), namespaceUri);
             }
 
-            // Last resort: use symbolic ID name as string identifier
-            // This matches the behavior in NodeIdGenerator for nodes without explicit IDs
             return CoreUtils.Format(
                 "global::Opc.Ua.NodeId.Create(\"{0}\", {1}, context.NamespaceUris)",
                 EscapeString(node.SymbolicId.Name), namespaceUri);
@@ -946,6 +988,88 @@ namespace Opc.Ua.SourceGeneration
             return GetNodeIdConstant(node);
         }
 
+        private string GetBrowseNameValue(NodeDesign node)
+        {
+            string browseNameValue = !string.IsNullOrEmpty(node.BrowseName)
+                ? node.BrowseName
+                : node.SymbolicName.Name;
+            return CoreUtils.Format("\"{0}\"", EscapeString(browseNameValue));
+        }
+
+        private string GetDisplayNameValue(NodeDesign node)
+        {
+            if (node.DisplayName != null)
+            {
+                return CoreUtils.Format(
+                    "\"{0}\", string.Empty, \"{1}\"",
+                    EscapeString(node.DisplayName.Key ?? string.Empty),
+                    EscapeString(node.DisplayName.Value?.Trim() ?? node.SymbolicName.Name));
+            }
+
+            return CoreUtils.Format("\"{0}\"", node.SymbolicName.Name);
+        }
+
+        private static string GetDescriptionValue(NodeDesign node)
+        {
+            if (node.Description != null && !node.Description.IsAutogenerated)
+            {
+                return CoreUtils.Format(
+                    "state.Description = new global::Opc.Ua.LocalizedText(\"{0}\", string.Empty, \"{1}\");",
+                    EscapeString(node.Description.Key ?? string.Empty),
+                    EscapeString(node.Description.Value?.Trim() ?? string.Empty));
+            }
+
+            return string.Empty;
+        }
+
+        private static string GetInverseNameValue(ReferenceTypeDesign node)
+        {
+            if (!node.Symmetric && node.InverseName != null)
+            {
+                return CoreUtils.Format(
+                    "state.InverseName = new global::Opc.Ua.LocalizedText(\"{0}\", string.Empty, \"{1}\");",
+                    EscapeString(node.InverseName.Key ?? string.Empty),
+                    EscapeString(node.InverseName.Value ?? string.Empty));
+            }
+
+            if (node.Symmetric)
+            {
+                return "state.InverseName = global::Opc.Ua.LocalizedText.Null;";
+            }
+
+            return string.Empty;
+        }
+
+        private static string GetModellingRuleReplacement(ModellingRule modellingRule)
+        {
+            string constant = modellingRule switch
+            {
+                ModellingRule.Mandatory => "global::Opc.Ua.Objects.ModellingRule_Mandatory",
+                ModellingRule.Optional => "global::Opc.Ua.Objects.ModellingRule_Optional",
+                ModellingRule.MandatoryPlaceholder => "global::Opc.Ua.Objects.ModellingRule_MandatoryPlaceholder",
+                ModellingRule.OptionalPlaceholder => "global::Opc.Ua.Objects.ModellingRule_OptionalPlaceholder",
+                ModellingRule.ExposesItsArray => "global::Opc.Ua.Objects.ModellingRule_ExposesItsArray",
+                _ => null
+            };
+
+            return constant != null
+                ? CoreUtils.Format("state.ModellingRuleId = {0};", constant)
+                : string.Empty;
+        }
+
+        private static string GetValueCodeReplacement(object value)
+        {
+            if (value == null)
+            {
+                return string.Empty;
+            }
+
+            string valueCode = GetValueCode(value);
+            return !string.IsNullOrEmpty(valueCode)
+                ? CoreUtils.Format("state.Value = {0};", valueCode)
+                : string.Empty;
+        }
+
         private static string GetValueCode(object value)
         {
             if (value == null)
@@ -956,32 +1080,31 @@ namespace Opc.Ua.SourceGeneration
             return value switch
             {
                 bool b => b.AsBooleanString(),
-                byte b => CoreUtils.Format("(byte){0}", b),
-                sbyte sb => CoreUtils.Format("(sbyte){0}", sb),
-                short s => CoreUtils.Format("(short){0}", s),
-                ushort us => CoreUtils.Format("(ushort){0}", us),
+                byte b => CoreUtils.Format("(byte){0}", b.ToString(CultureInfo.InvariantCulture)),
+                sbyte sb => CoreUtils.Format("(sbyte){0}", sb.ToString(CultureInfo.InvariantCulture)),
+                short s => CoreUtils.Format("(short){0}", s.ToString(CultureInfo.InvariantCulture)),
+                ushort us => CoreUtils.Format("(ushort){0}", us.ToString(CultureInfo.InvariantCulture)),
                 int i => i.ToString(CultureInfo.InvariantCulture),
-                uint ui => CoreUtils.Format("{0}u", ui),
-                long l => CoreUtils.Format("{0}L", l),
-                ulong ul => CoreUtils.Format("{0}UL", ul),
+                uint ui => CoreUtils.Format("{0}u", ui.ToString(CultureInfo.InvariantCulture)),
+                long l => CoreUtils.Format("{0}L", l.ToString(CultureInfo.InvariantCulture)),
+                ulong ul => CoreUtils.Format("{0}UL", ul.ToString(CultureInfo.InvariantCulture)),
                 float f => CoreUtils.Format("{0}f", f.ToString(CultureInfo.InvariantCulture)),
                 double d => d.ToString(CultureInfo.InvariantCulture),
                 string s => CoreUtils.Format("\"{0}\"", EscapeString(s)),
                 DateTime dt => CoreUtils.Format(
                     "new global::System.DateTime({0}L, global::System.DateTimeKind.Utc)",
-                    dt.Ticks),
+                    dt.Ticks.ToString(CultureInfo.InvariantCulture)),
                 Guid g => CoreUtils.Format("new global::System.Guid(\"{0}\")", g),
                 byte[] bytes => CoreUtils.Format("new byte[] {{ {0} }}",
-                    string.Join(", ", bytes
-                        .Select(b => b.ToString(CultureInfo.InvariantCulture)))),
+                    string.Join(", ", bytes.Select(b => b.ToString(CultureInfo.InvariantCulture)))),
                 LocalizedText lt => CoreUtils.Format(
                     "new global::Opc.Ua.LocalizedText(\"{0}\")",
                     EscapeString(lt.Text ?? string.Empty)),
                 QualifiedName qn => CoreUtils.Format(
                     "new global::Opc.Ua.QualifiedName(\"{0}\", {1})",
                     EscapeString(qn.Name),
-                    qn.NamespaceIndex),
-                _ => null // Complex types would need special handling
+                    qn.NamespaceIndex.ToString(CultureInfo.InvariantCulture)),
+                _ => null
             };
         }
 

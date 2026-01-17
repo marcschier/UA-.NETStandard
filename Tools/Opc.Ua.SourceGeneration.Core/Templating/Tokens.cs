@@ -42,6 +42,7 @@ namespace Opc.Ua.SourceGeneration
         public static string BrowseName => nameof(BrowseName);
         public static string BrowseNameNamespacePrefix => nameof(BrowseNameNamespacePrefix);
         public static string BrowseNameNamespaceUri => nameof(BrowseNameNamespaceUri);
+        public static string BrowseNameValue => nameof(BrowseNameValue);
         public static string BuiltInTypes => nameof(BuiltInTypes);
         public static string ChildDataType => nameof(ChildDataType);
         public static string ChildName => nameof(ChildName);

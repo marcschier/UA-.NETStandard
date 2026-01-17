@@ -428,7 +428,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public const string OpcUaCoreStubs =
             """
-#nullable enable
+            #nullable enable
             using System;
             using System.Threading.Tasks;
             using System.Threading;
@@ -527,7 +527,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public const string OpcUa =
             """
-#nullable enable
+            #nullable enable
             using System.Reflection;
 
             [assembly: AssemblyVersionAttribute("4.3.2.1")]

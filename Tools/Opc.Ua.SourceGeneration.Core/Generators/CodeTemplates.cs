@@ -2544,7 +2544,7 @@ namespace Opc.Ua.SourceGeneration
                 state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
-                    {{Tokens.BrowseNameNamespacePrefix}}.BrowseNames.{{Tokens.BrowseName}},
+                    {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
                 state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
                 {{Tokens.DescriptionValue}}
@@ -2579,7 +2579,7 @@ namespace Opc.Ua.SourceGeneration
                 state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
-                    {{Tokens.BrowseNameNamespacePrefix}}.BrowseNames.{{Tokens.BrowseName}},
+                    {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
                 state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
                 {{Tokens.DescriptionValue}}
@@ -2618,7 +2618,7 @@ namespace Opc.Ua.SourceGeneration
                 state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
-                    {{Tokens.BrowseNameNamespacePrefix}}.BrowseNames.{{Tokens.BrowseName}},
+                    {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
                 state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
                 {{Tokens.DescriptionValue}}
@@ -2654,7 +2654,7 @@ namespace Opc.Ua.SourceGeneration
                 state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
-                    {{Tokens.BrowseNameNamespacePrefix}}.BrowseNames.{{Tokens.BrowseName}},
+                    {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
                 state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
                 {{Tokens.DescriptionValue}}
@@ -2689,7 +2689,7 @@ namespace Opc.Ua.SourceGeneration
                 state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
-                    {{Tokens.BrowseNameNamespacePrefix}}.BrowseNames.{{Tokens.BrowseName}},
+                    {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
                 state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
                 {{Tokens.DescriptionValue}}
@@ -2726,7 +2726,7 @@ namespace Opc.Ua.SourceGeneration
                 state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
-                    {{Tokens.BrowseNameNamespacePrefix}}.BrowseNames.{{Tokens.BrowseName}},
+                    {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
                 state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
                 {{Tokens.DescriptionValue}}
@@ -2760,7 +2760,7 @@ namespace Opc.Ua.SourceGeneration
                 state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
-                    {{Tokens.BrowseNameNamespacePrefix}}.BrowseNames.{{Tokens.BrowseName}},
+                    {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
                 state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
                 {{Tokens.DescriptionValue}}
@@ -2798,7 +2798,7 @@ namespace Opc.Ua.SourceGeneration
                 state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
-                    {{Tokens.BrowseNameNamespacePrefix}}.BrowseNames.{{Tokens.BrowseName}},
+                    {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
                 state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
                 {{Tokens.DescriptionValue}}
@@ -2858,7 +2858,7 @@ namespace Opc.Ua.SourceGeneration
                 state.SymbolicName = "{{Tokens.ChildName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
-                    {{Tokens.BrowseNameNamespacePrefix}}.BrowseNames.{{Tokens.BrowseName}},
+                    {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
                 state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
                 {{Tokens.DescriptionValue}}
@@ -2892,7 +2892,7 @@ namespace Opc.Ua.SourceGeneration
                 state.SymbolicName = "{{Tokens.ChildName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
-                    {{Tokens.BrowseNameNamespacePrefix}}.BrowseNames.{{Tokens.BrowseName}},
+                    {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
                 state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
                 {{Tokens.DescriptionValue}}
@@ -2933,7 +2933,7 @@ namespace Opc.Ua.SourceGeneration
                 state.SymbolicName = "{{Tokens.ChildName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
-                    {{Tokens.BrowseNameNamespacePrefix}}.BrowseNames.{{Tokens.BrowseName}},
+                    {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
                 state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
                 {{Tokens.DescriptionValue}}
