@@ -31,10 +31,12 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json.Serialization;
 using Opc.Ua.Types;
+using static Opc.Ua.LoggerUtils;
 
 namespace Opc.Ua
 {
@@ -94,7 +96,7 @@ namespace Opc.Ua
         /// <summary>
         /// The index of the namespace URI in the server's namespace array.
         /// </summary>
-        public ushort NamespaceIndex { get; }
+        public ushort NamespaceIndex => m_i.m_ns;
 
         /// <summary>
         /// The type of node identifier used.
@@ -109,15 +111,15 @@ namespace Opc.Ua
         /// </list>
         /// </remarks>
         /// <seealso cref="IdType"/>
-        public IdType IdType { get; }
+        public IdType IdType => (IdType)m_i.m_type;
 
         /// <summary>
         /// Create null node id.
         /// </summary>
         private NodeId(IdType idType = IdType.Numeric)
         {
-            NamespaceIndex = 0;
-            IdType = idType;
+            m_i.m_ns = 0;
+            m_i.m_type = (byte)idType;
             m_identifier = null;
         }
 
@@ -127,8 +129,8 @@ namespace Opc.Ua
         /// <param name="value">The numeric value of the id</param>
         public NodeId(uint value)
         {
-            NamespaceIndex = 0;
-            IdType = IdType.Numeric;
+            m_i.m_ns = 0;
+            m_i.m_type = (byte)IdType.Numeric;
             m_identifier = value;
         }
 
@@ -142,8 +144,8 @@ namespace Opc.Ua
         /// <seealso cref="WithNamespaceIndex"/>
         public NodeId(uint value, ushort namespaceIndex)
         {
-            NamespaceIndex = namespaceIndex;
-            IdType = IdType.Numeric;
+            m_i.m_ns = namespaceIndex;
+            m_i.m_type = (byte)IdType.Numeric;
             m_identifier = value;
         }
 
@@ -156,8 +158,8 @@ namespace Opc.Ua
         /// node belongs to</param>
         public NodeId(string value, ushort namespaceIndex)
         {
-            NamespaceIndex = namespaceIndex;
-            IdType = IdType.String;
+            m_i.m_ns = namespaceIndex;
+            m_i.m_type = (byte)IdType.String;
             m_identifier = value;
         }
 
@@ -167,8 +169,8 @@ namespace Opc.Ua
         /// <param name="value">The new Guid value of this nodes Id.</param>
         public NodeId(Guid value)
         {
-            NamespaceIndex = 0;
-            IdType = IdType.Guid;
+            m_i.m_ns = 0;
+            m_i.m_type = (byte)IdType.Guid;
             m_identifier = value;
         }
 
@@ -180,8 +182,8 @@ namespace Opc.Ua
         /// node belongs to</param>
         public NodeId(Guid value, ushort namespaceIndex)
         {
-            NamespaceIndex = namespaceIndex;
-            IdType = IdType.Guid;
+            m_i.m_ns = namespaceIndex;
+            m_i.m_type = (byte)IdType.Guid;
             m_identifier = value;
         }
 
@@ -192,8 +194,8 @@ namespace Opc.Ua
         /// this Node's ID</param>
         public NodeId(byte[] value)
         {
-            NamespaceIndex = 0;
-            IdType = IdType.Opaque;
+            m_i.m_ns = 0;
+            m_i.m_type = (byte)IdType.Opaque;
             if (value != null)
             {
                 byte[] copy = new byte[value.Length];
@@ -216,8 +218,8 @@ namespace Opc.Ua
         /// node belongs to</param>
         public NodeId(byte[] value, ushort namespaceIndex)
         {
-            NamespaceIndex = namespaceIndex;
-            IdType = IdType.Opaque;
+            m_i.m_ns = namespaceIndex;
+            m_i.m_type = (byte)IdType.Opaque;
             if (value != null)
             {
                 byte[] copy = new byte[value.Length];
@@ -268,7 +270,7 @@ namespace Opc.Ua
                 default:
                     throw new ArgumentException("Identifier type not supported.", nameof(value));
             }
-            NamespaceIndex = namespaceIndex;
+            m_i.m_ns = namespaceIndex;
         }
 
         /// <summary>
@@ -1699,7 +1701,7 @@ namespace Opc.Ua
         /// <summary>
         /// Identifier as numberic
         /// </summary>
-        internal uint NumericIdentifier => m_identifier == null ? 0 : (uint)m_identifier;
+        internal uint NumericIdentifier => m_identifier == null ? m_i.m_numeric : 0;
 
         /// <summary>
         /// Identifier as Guid
@@ -1827,7 +1829,25 @@ namespace Opc.Ua
             return index;
         }
 
+        /// <summary>
+        /// Trick the runtime to layout the struct (which is forced
+        /// to auto layout due to types used) in the order we want.
+        /// If we added members after ReadOnlyMemory, the runtime
+        /// would reorder to start with our members with the read
+        /// only memory struct last.
+        /// </summary>
+        internal struct Inner
+        {
+            public uint m_numeric;
+            public ushort m_ns;
+            public byte m_type;
+            public byte m_eoe; // Extra data for extension object use
+        }
+
+#pragma warning disable IDE0032 // Use auto property
         private readonly object m_identifier;
+        private readonly Inner m_i;
+#pragma warning restore IDE0032 // Use auto property
     }
 
     /// <summary>
