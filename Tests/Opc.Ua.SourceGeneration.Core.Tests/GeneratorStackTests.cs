@@ -27,7 +27,9 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -39,7 +41,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.Extensions.Logging;
+using Moq;
 using NUnit.Framework;
+using Opc.Ua.Schema.Model;
 using Opc.Ua.Tests;
 
 namespace Opc.Ua.SourceGeneration.Tests
@@ -59,7 +63,8 @@ namespace Opc.Ua.SourceGeneration.Tests
         public OptimizationLevel[] OptimizationLevels = CompilerUtils.SupportedOptimizationLevels;
 
         [DatapointSource]
-        public StackGenerationType[] GenerationTypes = [
+        public StackGenerationType[] GenerationTypes =
+        [
             StackGenerationType.None,
             StackGenerationType.Stack,
             StackGenerationType.Models,

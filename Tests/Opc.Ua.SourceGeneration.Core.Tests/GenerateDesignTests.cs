@@ -42,7 +42,6 @@ using NUnit.Framework;
 using Opc.Ua.Schema.Binary;
 using Opc.Ua.Schema.Xml;
 using Opc.Ua.Tests;
-using Opc.Ua.Types;
 
 namespace Opc.Ua.SourceGeneration.Tests
 {
@@ -84,7 +83,7 @@ namespace Opc.Ua.SourceGeneration.Tests
                 embedNodeSet2Xml,
                 telemetry,
                 out Dictionary<string, string> generatedOther);
-            var generatedTextStack = GeneratorStackTests.GenerateStack(
+            Dictionary<string, string> generatedTextStack = GeneratorStackTests.GenerateStack(
                 StackGenerationType.Models,
                 telemetry,
                 out Dictionary<string, string> generatedStackOther);

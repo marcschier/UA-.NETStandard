@@ -30,7 +30,7 @@
 using System.IO;
 using NUnit.Framework;
 
-namespace Opc.Ua.SourceGeneration.Tests.Templating
+namespace Opc.Ua.SourceGeneration.Templating.Tests
 {
     [TestFixture]
     public class TemplateClassTests
