@@ -31,12 +31,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json.Serialization;
 using Opc.Ua.Types;
-using static Opc.Ua.LoggerUtils;
 
 namespace Opc.Ua
 {
@@ -96,7 +94,7 @@ namespace Opc.Ua
         /// <summary>
         /// The index of the namespace URI in the server's namespace array.
         /// </summary>
-        public ushort NamespaceIndex => m_i.m_ns;
+        public ushort NamespaceIndex => m_inner.NamespaceIdx;
 
         /// <summary>
         /// The type of node identifier used.
@@ -111,15 +109,16 @@ namespace Opc.Ua
         /// </list>
         /// </remarks>
         /// <seealso cref="IdType"/>
-        public IdType IdType => (IdType)m_i.m_type;
+        public IdType IdType => (IdType)m_inner.Type;
 
         /// <summary>
         /// Create null node id.
         /// </summary>
         private NodeId(IdType idType = IdType.Numeric)
         {
-            m_i.m_ns = 0;
-            m_i.m_type = (byte)idType;
+            m_inner.NamespaceIdx = 0;
+            m_inner.Type = (byte)idType;
+            m_inner.Numeric = 0;
             m_identifier = null;
         }
 
@@ -129,9 +128,10 @@ namespace Opc.Ua
         /// <param name="value">The numeric value of the id</param>
         public NodeId(uint value)
         {
-            m_i.m_ns = 0;
-            m_i.m_type = (byte)IdType.Numeric;
-            m_identifier = value;
+            m_inner.NamespaceIdx = 0;
+            m_inner.Type = (byte)IdType.Numeric;
+            m_inner.Numeric = value;
+            m_identifier = null;
         }
 
         /// <summary>
@@ -144,9 +144,10 @@ namespace Opc.Ua
         /// <seealso cref="WithNamespaceIndex"/>
         public NodeId(uint value, ushort namespaceIndex)
         {
-            m_i.m_ns = namespaceIndex;
-            m_i.m_type = (byte)IdType.Numeric;
-            m_identifier = value;
+            m_inner.NamespaceIdx = namespaceIndex;
+            m_inner.Type = (byte)IdType.Numeric;
+            m_inner.Numeric = value;
+            m_identifier = null;
         }
 
         /// <summary>
@@ -158,8 +159,9 @@ namespace Opc.Ua
         /// node belongs to</param>
         public NodeId(string value, ushort namespaceIndex)
         {
-            m_i.m_ns = namespaceIndex;
-            m_i.m_type = (byte)IdType.String;
+            m_inner.NamespaceIdx = namespaceIndex;
+            m_inner.Type = (byte)IdType.String;
+            m_inner.Numeric = 0;
             m_identifier = value;
         }
 
@@ -169,8 +171,9 @@ namespace Opc.Ua
         /// <param name="value">The new Guid value of this nodes Id.</param>
         public NodeId(Guid value)
         {
-            m_i.m_ns = 0;
-            m_i.m_type = (byte)IdType.Guid;
+            m_inner.NamespaceIdx = 0;
+            m_inner.Type = (byte)IdType.Guid;
+            m_inner.Numeric = 0;
             m_identifier = value;
         }
 
@@ -182,8 +185,9 @@ namespace Opc.Ua
         /// node belongs to</param>
         public NodeId(Guid value, ushort namespaceIndex)
         {
-            m_i.m_ns = namespaceIndex;
-            m_i.m_type = (byte)IdType.Guid;
+            m_inner.NamespaceIdx = namespaceIndex;
+            m_inner.Type = (byte)IdType.Guid;
+            m_inner.Numeric = 0;
             m_identifier = value;
         }
 
@@ -194,8 +198,9 @@ namespace Opc.Ua
         /// this Node's ID</param>
         public NodeId(byte[] value)
         {
-            m_i.m_ns = 0;
-            m_i.m_type = (byte)IdType.Opaque;
+            m_inner.NamespaceIdx = 0;
+            m_inner.Type = (byte)IdType.Opaque;
+            m_inner.Numeric = 0;
             if (value != null)
             {
                 byte[] copy = new byte[value.Length];
@@ -218,8 +223,9 @@ namespace Opc.Ua
         /// node belongs to</param>
         public NodeId(byte[] value, ushort namespaceIndex)
         {
-            m_i.m_ns = namespaceIndex;
-            m_i.m_type = (byte)IdType.Opaque;
+            m_inner.NamespaceIdx = namespaceIndex;
+            m_inner.Type = (byte)IdType.Opaque;
+            m_inner.Numeric = 0;
             if (value != null)
             {
                 byte[] copy = new byte[value.Length];
@@ -268,9 +274,11 @@ namespace Opc.Ua
                     this = SetIdentifier(IdType.Opaque, value);
                     break;
                 default:
-                    throw new ArgumentException("Identifier type not supported.", nameof(value));
+                    throw new ArgumentException(
+                        "Identifier type not supported.",
+                        nameof(value));
             }
-            m_i.m_ns = namespaceIndex;
+            m_inner.NamespaceIdx = namespaceIndex;
         }
 
         /// <summary>
@@ -1418,7 +1426,7 @@ namespace Opc.Ua
                 NodeId nodeId => CompareTo(nodeId),
                 SerializableNodeId s => CompareTo(s.Value),
                 SerializableExpandedNodeId se => CompareTo(se.Value),
-                _ => -1,
+                _ => -1
             };
         }
 
@@ -1463,7 +1471,7 @@ namespace Opc.Ua
             return obj switch
             {
                 null => IsNullNodeId,
-                int n => n < 0 ? false : Equals((uint)n),
+                int n => n >= 0 && Equals((uint)n),
                 uint n => Equals(n),
                 Guid g => Equals(g),
                 byte[] b => Equals(b),
@@ -1701,7 +1709,7 @@ namespace Opc.Ua
         /// <summary>
         /// Identifier as numberic
         /// </summary>
-        internal uint NumericIdentifier => m_identifier == null ? m_i.m_numeric : 0;
+        internal uint NumericIdentifier => m_identifier == null ? m_inner.Numeric : 0;
 
         /// <summary>
         /// Identifier as Guid
@@ -1832,21 +1840,20 @@ namespace Opc.Ua
         /// <summary>
         /// Trick the runtime to layout the struct (which is forced
         /// to auto layout due to types used) in the order we want.
-        /// If we added members after ReadOnlyMemory, the runtime
-        /// would reorder to start with our members with the read
-        /// only memory struct last.
         /// </summary>
         internal struct Inner
         {
-            public uint m_numeric;
-            public ushort m_ns;
-            public byte m_type;
-            public byte m_eoe; // Extra data for extension object use
+            public uint Numeric;
+            public ushort NamespaceIdx;
+            public byte Type;
+
+            /// <summary> Implicit padding </summary>
+            public byte Reserved;
         }
 
 #pragma warning disable IDE0032 // Use auto property
         private readonly object m_identifier;
-        private readonly Inner m_i;
+        private readonly Inner m_inner;
 #pragma warning restore IDE0032 // Use auto property
     }
 
@@ -1973,92 +1980,6 @@ namespace Opc.Ua
             set => Value = NodeId.Parse(value);
         }
     }
-#if FALSE
-    /// <summary>
-    /// A collection of NodeIds.
-    /// </summary>
-    [CollectionDataContract(
-        Name = "ListOfNodeId",
-        Namespace = Namespaces.OpcUaXsd,
-        ItemName = "NodeId")]
-    public class SerializableNodeIdCollection :
-        List<NodeId>,
-        ICollection<NodeId>,
-        ISurrogateFor<NodeIdCollection>
-    {
-        /// <inheritdoc/>
-        public SerializableNodeIdCollection()
-        {
-        }
-
-        /// <inheritdoc/>
-        public SerializableNodeIdCollection(NodeIdCollection collection)
-            : this(collection.Select(n => new SerializableNodeId(n)))
-        {
-        }
-
-        /// <inheritdoc/>
-        public SerializableNodeIdCollection(IEnumerable<SerializableNodeId> collection)
-            : base(collection)
-        {
-        }
-
-        /// <inheritdoc/>
-        public SerializableNodeIdCollection(int capacity)
-            : base(capacity)
-        {
-        }
-
-        /// <inheritdoc/>
-        public NodeIdCollection Value =>
-            [.. ((IEnumerable<SerializableNodeId>)this).Select(n => n.Value)];
-
-        /// <inheritdoc/>
-        public object GetValue()
-        {
-            return Value;
-        }
-
-        /// <inheritdoc/>
-        public void Add(NodeId item)
-        {
-            Add(new SerializableNodeId(item));
-        }
-
-        /// <inheritdoc/>
-        public bool IsReadOnly => false;
-
-        /// <inheritdoc/>
-        public bool Contains(NodeId item)
-        {
-            return false;
-        }
-
-        /// <inheritdoc/>
-        public void CopyTo(NodeId[] array, int arrayIndex)
-        {
-        }
-
-        /// <inheritdoc/>
-        public bool Remove(NodeId item)
-        {
-            return false;
-        }
-
-        /// <inheritdoc/>
-        IEnumerator<NodeId> IEnumerable<NodeId>.GetEnumerator()
-        {
-            return Value.GetEnumerator();
-        }
-
-        /// <inheritdoc/>
-        public static implicit operator SerializableNodeIdCollection(
-            SerializableNodeId[] values)
-        {
-            return values == null ? [] : [..values];
-        }
-    }
-#endif
 
     /// <summary>
     /// Node id parse errors

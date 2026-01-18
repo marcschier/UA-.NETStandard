@@ -35,6 +35,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -137,7 +138,7 @@ namespace Opc.Ua
         public Variant(Matrix value)
         {
             m_value = value;
-            TypeInfo = value.TypeInfo;
+            m_typeInfo = value.TypeInfo;
         }
 
         /// <summary>
@@ -146,8 +147,8 @@ namespace Opc.Ua
         /// <param name="value">The value of the variant</param>
         public Variant(bool value)
         {
-            m_value = value;
-            TypeInfo = TypeInfo.Scalars.Boolean;
+            m_union.Boolean = value;
+            m_typeInfo = TypeInfo.Scalars.Boolean;
         }
 
         /// <summary>
@@ -156,8 +157,8 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="sbyte"/> value of the Variant</param>
         public Variant(sbyte value)
         {
-            m_value = value;
-            TypeInfo = TypeInfo.Scalars.SByte;
+            m_union.SByte = value;
+            m_typeInfo = TypeInfo.Scalars.SByte;
         }
 
         /// <summary>
@@ -166,8 +167,8 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="byte"/> value of the Variant</param>
         public Variant(byte value)
         {
-            m_value = value;
-            TypeInfo = TypeInfo.Scalars.Byte;
+            m_union.Byte = value;
+            m_typeInfo = TypeInfo.Scalars.Byte;
         }
 
         /// <summary>
@@ -176,8 +177,8 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="short"/> value of the Variant</param>
         public Variant(short value)
         {
-            m_value = value;
-            TypeInfo = TypeInfo.Scalars.Int16;
+            m_union.Int16 = value;
+            m_typeInfo = TypeInfo.Scalars.Int16;
         }
 
         /// <summary>
@@ -186,8 +187,8 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="ushort"/> value of the Variant</param>
         public Variant(ushort value)
         {
-            m_value = value;
-            TypeInfo = TypeInfo.Scalars.UInt16;
+            m_union.UInt16 = value;
+            m_typeInfo = TypeInfo.Scalars.UInt16;
         }
 
         /// <summary>
@@ -196,18 +197,8 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="int"/> value of the Variant</param>
         public Variant(int value)
         {
-            m_value = value;
-            TypeInfo = TypeInfo.Scalars.Int32;
-        }
-
-        /// <summary>
-        /// Creates a new variant with a <see cref="Enum"/> value
-        /// </summary>
-        /// <param name="value">The <see cref="Enum"/> value of the Variant</param>
-        public Variant(Enum value)
-        {
-            m_value = value;
-            TypeInfo = TypeInfo.Scalars.Enumeration;
+            m_union.Int32 = value;
+            m_typeInfo = TypeInfo.Scalars.Int32;
         }
 
         /// <summary>
@@ -216,8 +207,8 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="uint"/> value of the Variant</param>
         public Variant(uint value)
         {
-            m_value = value;
-            TypeInfo = TypeInfo.Scalars.UInt32;
+            m_union.UInt32 = value;
+            m_typeInfo = TypeInfo.Scalars.UInt32;
         }
 
         /// <summary>
@@ -226,8 +217,8 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="long"/> value of the Variant</param>
         public Variant(long value)
         {
-            m_value = value;
-            TypeInfo = TypeInfo.Scalars.Int64;
+            m_union.Int64 = value;
+            m_typeInfo = TypeInfo.Scalars.Int64;
         }
 
         /// <summary>
@@ -236,8 +227,8 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="ulong"/> value of the Variant</param>
         public Variant(ulong value)
         {
-            m_value = value;
-            TypeInfo = TypeInfo.Scalars.UInt64;
+            m_union.UInt64 = value;
+            m_typeInfo = TypeInfo.Scalars.UInt64;
         }
 
         /// <summary>
@@ -246,8 +237,8 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="float"/> value of the Variant</param>
         public Variant(float value)
         {
-            m_value = value;
-            TypeInfo = TypeInfo.Scalars.Float;
+            m_union.Float = value;
+            m_typeInfo = TypeInfo.Scalars.Float;
         }
 
         /// <summary>
@@ -256,8 +247,8 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="double"/> value of the Variant</param>
         public Variant(double value)
         {
-            m_value = value;
-            TypeInfo = TypeInfo.Scalars.Double;
+            m_union.Double = value;
+            m_typeInfo = TypeInfo.Scalars.Double;
         }
 
         /// <summary>
@@ -267,7 +258,7 @@ namespace Opc.Ua
         public Variant(string value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Scalars.String;
+            m_typeInfo = TypeInfo.Scalars.String;
         }
 
         /// <summary>
@@ -276,8 +267,8 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="DateTime"/> value of the Variant</param>
         public Variant(DateTime value)
         {
-            m_value = value;
-            TypeInfo = TypeInfo.Scalars.DateTime;
+            m_union.DateTime = value;
+            m_typeInfo = TypeInfo.Scalars.DateTime;
         }
 
         /// <summary>
@@ -287,7 +278,7 @@ namespace Opc.Ua
         public Variant(Uuid value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Scalars.Guid;
+            m_typeInfo = TypeInfo.Scalars.Guid;
         }
 
         /// <summary>
@@ -297,7 +288,7 @@ namespace Opc.Ua
         public Variant(byte[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Scalars.ByteString;
+            m_typeInfo = TypeInfo.Scalars.ByteString;
         }
 
         /// <summary>
@@ -307,7 +298,7 @@ namespace Opc.Ua
         public Variant(XmlElement value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Scalars.XmlElement;
+            m_typeInfo = TypeInfo.Scalars.XmlElement;
         }
 
         /// <summary>
@@ -317,7 +308,7 @@ namespace Opc.Ua
         public Variant(NodeId value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Scalars.NodeId;
+            m_typeInfo = TypeInfo.Scalars.NodeId;
         }
 
         /// <summary>
@@ -327,7 +318,7 @@ namespace Opc.Ua
         public Variant(ExpandedNodeId value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Scalars.ExpandedNodeId;
+            m_typeInfo = TypeInfo.Scalars.ExpandedNodeId;
         }
 
         /// <summary>
@@ -336,8 +327,9 @@ namespace Opc.Ua
         /// <param name="value">The <see cref="StatusCode"/> value of the Variant</param>
         public Variant(StatusCode value)
         {
-            m_value = value;
-            TypeInfo = TypeInfo.Scalars.StatusCode;
+            m_union.UInt32 = value.Code;
+            m_value = value.SymbolicId;
+            m_typeInfo = TypeInfo.Scalars.StatusCode;
         }
 
         /// <summary>
@@ -347,7 +339,7 @@ namespace Opc.Ua
         public Variant(QualifiedName value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Scalars.QualifiedName;
+            m_typeInfo = TypeInfo.Scalars.QualifiedName;
         }
 
         /// <summary>
@@ -357,7 +349,7 @@ namespace Opc.Ua
         public Variant(LocalizedText value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Scalars.LocalizedText;
+            m_typeInfo = TypeInfo.Scalars.LocalizedText;
         }
 
         /// <summary>
@@ -367,7 +359,7 @@ namespace Opc.Ua
         public Variant(ExtensionObject value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Scalars.ExtensionObject;
+            m_typeInfo = TypeInfo.Scalars.ExtensionObject;
         }
 
         /// <summary>
@@ -377,7 +369,7 @@ namespace Opc.Ua
         public Variant(DataValue value)
         {
             m_value = CoreUtils.Clone(value);
-            TypeInfo = TypeInfo.Scalars.DataValue;
+            m_typeInfo = TypeInfo.Scalars.DataValue;
         }
 
         /// <summary>
@@ -387,7 +379,7 @@ namespace Opc.Ua
         public Variant(bool[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.Boolean;
+            m_typeInfo = TypeInfo.Arrays.Boolean;
         }
 
         /// <summary>
@@ -397,7 +389,7 @@ namespace Opc.Ua
         public Variant(sbyte[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.SByte;
+            m_typeInfo = TypeInfo.Arrays.SByte;
         }
 
         /// <summary>
@@ -407,7 +399,7 @@ namespace Opc.Ua
         public Variant(short[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.Int16;
+            m_typeInfo = TypeInfo.Arrays.Int16;
         }
 
         /// <summary>
@@ -417,7 +409,7 @@ namespace Opc.Ua
         public Variant(ushort[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.UInt16;
+            m_typeInfo = TypeInfo.Arrays.UInt16;
         }
 
         /// <summary>
@@ -427,7 +419,7 @@ namespace Opc.Ua
         public Variant(int[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.Int32;
+            m_typeInfo = TypeInfo.Arrays.Int32;
         }
 
         /// <summary>
@@ -438,7 +430,7 @@ namespace Opc.Ua
         public Variant(Enum[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.Enumeration;
+            m_typeInfo = TypeInfo.Arrays.Enumeration;
         }
 
         /// <summary>
@@ -448,7 +440,7 @@ namespace Opc.Ua
         public Variant(uint[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.UInt32;
+            m_typeInfo = TypeInfo.Arrays.UInt32;
         }
 
         /// <summary>
@@ -458,7 +450,7 @@ namespace Opc.Ua
         public Variant(long[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.Int64;
+            m_typeInfo = TypeInfo.Arrays.Int64;
         }
 
         /// <summary>
@@ -468,7 +460,7 @@ namespace Opc.Ua
         public Variant(ulong[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.UInt64;
+            m_typeInfo = TypeInfo.Arrays.UInt64;
         }
 
         /// <summary>
@@ -478,7 +470,7 @@ namespace Opc.Ua
         public Variant(float[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.Float;
+            m_typeInfo = TypeInfo.Arrays.Float;
         }
 
         /// <summary>
@@ -488,7 +480,7 @@ namespace Opc.Ua
         public Variant(double[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.Double;
+            m_typeInfo = TypeInfo.Arrays.Double;
         }
 
         /// <summary>
@@ -498,7 +490,7 @@ namespace Opc.Ua
         public Variant(string[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.String;
+            m_typeInfo = TypeInfo.Arrays.String;
         }
 
         /// <summary>
@@ -508,7 +500,7 @@ namespace Opc.Ua
         public Variant(DateTime[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.DateTime;
+            m_typeInfo = TypeInfo.Arrays.DateTime;
         }
 
         /// <summary>
@@ -518,7 +510,7 @@ namespace Opc.Ua
         public Variant(Uuid[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.Guid;
+            m_typeInfo = TypeInfo.Arrays.Guid;
         }
 
         /// <summary>
@@ -528,7 +520,7 @@ namespace Opc.Ua
         public Variant(byte[][] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.ByteString;
+            m_typeInfo = TypeInfo.Arrays.ByteString;
         }
 
         /// <summary>
@@ -538,7 +530,7 @@ namespace Opc.Ua
         public Variant(XmlElement[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.XmlElement;
+            m_typeInfo = TypeInfo.Arrays.XmlElement;
         }
 
         /// <summary>
@@ -548,7 +540,7 @@ namespace Opc.Ua
         public Variant(NodeId[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.NodeId;
+            m_typeInfo = TypeInfo.Arrays.NodeId;
         }
 
         /// <summary>
@@ -558,7 +550,7 @@ namespace Opc.Ua
         public Variant(ExpandedNodeId[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.ExpandedNodeId;
+            m_typeInfo = TypeInfo.Arrays.ExpandedNodeId;
         }
 
         /// <summary>
@@ -568,7 +560,7 @@ namespace Opc.Ua
         public Variant(StatusCode[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.StatusCode;
+            m_typeInfo = TypeInfo.Arrays.StatusCode;
         }
 
         /// <summary>
@@ -578,7 +570,7 @@ namespace Opc.Ua
         public Variant(QualifiedName[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.QualifiedName;
+            m_typeInfo = TypeInfo.Arrays.QualifiedName;
         }
 
         /// <summary>
@@ -588,7 +580,7 @@ namespace Opc.Ua
         public Variant(LocalizedText[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.LocalizedText;
+            m_typeInfo = TypeInfo.Arrays.LocalizedText;
         }
 
         /// <summary>
@@ -598,7 +590,7 @@ namespace Opc.Ua
         public Variant(ExtensionObject[] value)
         {
             m_value = CoreUtils.Clone(value);
-            TypeInfo = TypeInfo.Arrays.ExtensionObject;
+            m_typeInfo = TypeInfo.Arrays.ExtensionObject;
         }
 
         /// <summary>
@@ -608,7 +600,7 @@ namespace Opc.Ua
         public Variant(DataValue[] value)
         {
             m_value = CoreUtils.Clone(value);
-            TypeInfo = TypeInfo.Arrays.DataValue;
+            m_typeInfo = TypeInfo.Arrays.DataValue;
         }
 
         /// <summary>
@@ -618,7 +610,7 @@ namespace Opc.Ua
         public Variant(Variant[] value)
         {
             m_value = value;
-            TypeInfo = TypeInfo.Arrays.Variant;
+            m_typeInfo = TypeInfo.Arrays.Variant;
         }
 
         /// <summary>
@@ -630,7 +622,7 @@ namespace Opc.Ua
         public Variant(object value, TypeInfo typeInfo)
         {
             m_value = value is ICloneable clonable ? clonable.Clone() : value;
-            TypeInfo = typeInfo;
+            m_typeInfo = typeInfo;
 
             // check for null values.
             if (m_value == null)
@@ -646,7 +638,8 @@ namespace Opc.Ua
             {
                 switch (typeInfo.BuiltInType)
                 {
-                    // handle special types that can be converted to something the variant supports.
+                    // handle special types that can be converted to something the
+                    // variant supports.
                     case BuiltInType.Null:
                         // check for enumerated value.
                         if (m_value.GetType().GetTypeInfo().IsEnum)
@@ -658,7 +651,7 @@ namespace Opc.Ua
                         // check for matrix
                         if (m_value is Matrix m)
                         {
-                            TypeInfo = m.TypeInfo;
+                            m_typeInfo = m.TypeInfo;
                             break;
                         }
                         // not supported.
@@ -828,7 +821,7 @@ namespace Opc.Ua
                             "Arrays of the type '{0}' cannot be stored in a Variant object.",
                             m_value.GetType().FullName));
                 }
-                TypeInfo = matrix.TypeInfo;
+                m_typeInfo = matrix.TypeInfo;
             }
             DebugCheck(m_value, TypeInfo);
         }
@@ -841,7 +834,7 @@ namespace Opc.Ua
         public Variant(Array array, TypeInfo typeInfo)
         {
             m_value = array;
-            TypeInfo = typeInfo;
+            m_typeInfo = typeInfo;
 
             if (typeInfo.ValueRank > 1)
             {
@@ -913,9 +906,6 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the object with an object array value.
-        /// </summary>
-        /// <summary>
         /// Creates a new variant with a <see cref="object"/>-array value
         /// </summary>
         /// <param name="value">The <see cref="object"/>-array value
@@ -923,7 +913,7 @@ namespace Opc.Ua
         public Variant(object[] value)
         {
             m_value = null;
-            TypeInfo = TypeInfo.Arrays.Variant;
+            m_typeInfo = TypeInfo.Arrays.Variant;
             if (value != null)
             {
                 var anyValues = new Variant[value.Length];
@@ -934,6 +924,18 @@ namespace Opc.Ua
                 m_value = anyValues;
             }
         }
+
+#if NET8_0_OR_GREATER
+        /// <summary>
+        /// Private constructor for internal use.
+        /// </summary>
+        private Variant(Union union, TypeInfo typeInfo, object value = null)
+        {
+            m_union = union;
+            m_value = value;
+            m_typeInfo = typeInfo;
+        }
+#endif
 
         /// <summary>
         /// Box the value stored in the Variant as object
@@ -947,7 +949,7 @@ namespace Opc.Ua
             }
             if (TypeInfo.IsScalar)
             {
-                // Handle built-in value type null values
+                // Handle built-in type value-types without another check
                 switch (TypeInfo.BuiltInType)
                 {
                     case BuiltInType.NodeId:
@@ -958,8 +960,60 @@ namespace Opc.Ua
                         return m_value is LocalizedText l ? l : default;
                     case BuiltInType.QualifiedName:
                         return m_value is QualifiedName q ? q : default;
+                    case BuiltInType.ExtensionObject:
+                        return m_value is ExtensionObject o ? o : default;
+                    case BuiltInType.Boolean:
+                        return m_union.Boolean;
+                    case BuiltInType.SByte:
+                        return m_union.SByte;
+                    case BuiltInType.Byte:
+                        return m_union.Byte;
+                    case BuiltInType.Int16:
+                        return m_union.Int16;
+                    case BuiltInType.UInt16:
+                        return m_union.UInt16;
+                    case BuiltInType.Int32:
+                        return m_union.Int32;
+                    case BuiltInType.UInt32:
+                        return m_union.UInt32;
+                    case BuiltInType.Int64:
+                        return m_union.Int64;
+                    case BuiltInType.UInt64:
+                        return m_union.UInt64;
+                    case BuiltInType.Float:
+                        return m_union.Float;
+                    case BuiltInType.Double:
+                        return m_union.Double;
+                    case BuiltInType.DateTime:
+                        return m_union.DateTime;
                     case BuiltInType.StatusCode:
-                        return m_value is StatusCode s ? s : default;
+                        return m_value is string s ?
+                            new StatusCode(m_union.UInt32, s) :
+                            new StatusCode(m_union.UInt32);
+#if NET8_0_OR_GREATER
+                    case BuiltInType.Enumeration:
+                        if (m_value is Type enumType)
+                        {
+                            Type type = enumType.GetEnumUnderlyingType();
+                            if (type == typeof(int) || type == typeof(uint))
+                            {
+                                return Enum.ToObject(enumType, m_union.Int32);
+                            }
+                            if (type == typeof(byte) || type == typeof(sbyte))
+                            {
+                                return Enum.ToObject(enumType, m_union.Byte);
+                            }
+                            if (type == typeof(short) || type == typeof(ushort))
+                            {
+                                return Enum.ToObject(enumType, m_union.Int16);
+                            }
+                            if (type == typeof(long) || type == typeof(ulong))
+                            {
+                                return Enum.ToObject(enumType, m_union.Int64);
+                            }
+                        }
+                        return m_union.Int32;
+#endif
                 }
             }
             return m_value;
@@ -987,18 +1041,97 @@ namespace Opc.Ua
         /// The type information for the matrix.
         /// </summary>
         [JsonPropertyName("TypeInfo")]
-        public TypeInfo TypeInfo { get; }
+        public TypeInfo TypeInfo => m_typeInfo;
 
-        /// <summary>
-        /// Returns a unique hashcode for the object.
-        /// </summary>
+        /// <inheritdoc/>
         public override int GetHashCode()
         {
-            if (!IsNull)
+            if (IsNull)
             {
-                return AsBoxedObject().GetHashCode();
+                return 0;
             }
-            return 0;
+            if (TypeInfo.IsScalar)
+            {
+                return TypeInfo.BuiltInType switch
+                {
+                    BuiltInType.Null => 0,
+                    BuiltInType.Boolean or
+                    BuiltInType.SByte or
+                    BuiltInType.Byte or
+                    BuiltInType.Int16 or
+                    BuiltInType.UInt16 or
+                    BuiltInType.Int32 or
+                    BuiltInType.UInt32 or
+                    BuiltInType.DateTime or
+                    BuiltInType.StatusCode or
+                    BuiltInType.Float => m_union.Int32,
+#if NET8_0_OR_GREATER
+                    BuiltInType.Enumeration or
+#endif
+                    BuiltInType.Int64 or
+                    BuiltInType.UInt64 or
+                    BuiltInType.Double => m_union.UInt64.GetHashCode(),
+                    _ => m_value?.GetHashCode() ?? 0
+                };
+            }
+            if (TypeInfo.IsArray)
+            {
+                return TypeInfo.BuiltInType switch
+                {
+                    BuiltInType.Boolean => SequenceEqualityComparer<bool>.Default
+                        .GetHashCode(m_value as bool[]),
+                    BuiltInType.SByte => SequenceEqualityComparer<sbyte>.Default
+                        .GetHashCode(m_value as sbyte[]),
+                    BuiltInType.Byte => SequenceEqualityComparer<byte>.Default
+                        .GetHashCode(m_value as byte[]),
+                    BuiltInType.Int16 => SequenceEqualityComparer<short>.Default
+                        .GetHashCode(m_value as short[]),
+                    BuiltInType.UInt16 => SequenceEqualityComparer<ushort>.Default
+                        .GetHashCode(m_value as ushort[]),
+                    BuiltInType.Int32 => SequenceEqualityComparer<int>.Default
+                        .GetHashCode(m_value as int[]),
+                    BuiltInType.UInt32 => SequenceEqualityComparer<uint>.Default
+                        .GetHashCode(m_value as uint[]),
+                    BuiltInType.Int64 => SequenceEqualityComparer<long>.Default
+                        .GetHashCode(m_value as long[]),
+                    BuiltInType.UInt64 => SequenceEqualityComparer<ulong>.Default
+                        .GetHashCode(m_value as ulong[]),
+                    BuiltInType.Float => SequenceEqualityComparer<float>.Default
+                        .GetHashCode(m_value as float[]),
+                    BuiltInType.Double => SequenceEqualityComparer<double>.Default
+                        .GetHashCode(m_value as double[]),
+                    BuiltInType.DateTime => DateTimeArrayComparer.Default
+                        .GetHashCode(m_value as DateTime[]),
+                    BuiltInType.StatusCode => ArrayEqualityComparer<StatusCode>.Default
+                        .GetHashCode(m_value as StatusCode[]),
+                    BuiltInType.Guid => SequenceEqualityComparer<Uuid>.Default
+                        .GetHashCode(m_value as Uuid[]),
+                    BuiltInType.XmlElement => XmlElementArrayStringEqualityComparer.Default
+                        .GetHashCode(m_value as XmlElement[]),
+                    BuiltInType.String => ArrayEqualityComparer<string>.Default
+                        .GetHashCode(m_value as string[]),
+                    BuiltInType.NodeId => ArrayEqualityComparer<NodeId>.Default
+                        .GetHashCode(m_value as NodeId[]),
+                    BuiltInType.ExpandedNodeId => ArrayEqualityComparer<ExpandedNodeId>.Default
+                        .GetHashCode(m_value as ExpandedNodeId[]),
+                    BuiltInType.QualifiedName => ArrayEqualityComparer<QualifiedName>.Default
+                        .GetHashCode(m_value as QualifiedName[]),
+                    BuiltInType.LocalizedText => ArrayEqualityComparer<LocalizedText>.Default
+                        .GetHashCode(m_value as LocalizedText[]),
+                    BuiltInType.ExtensionObject => ArrayEqualityComparer<ExtensionObject>.Default
+                        .GetHashCode(m_value as ExtensionObject[]),
+                    BuiltInType.DataValue => ArrayEqualityComparer<DataValue>.Default
+                        .GetHashCode(m_value as DataValue[]),
+                    BuiltInType.DiagnosticInfo => ArrayEqualityComparer<DiagnosticInfo>
+                        .Default.GetHashCode(m_value as DiagnosticInfo[]),
+                    BuiltInType.Variant => ArrayEqualityComparer<Variant>.Default
+                        .GetHashCode(m_value as Variant[]),
+                    BuiltInType.ByteString => ByteStringArrayEqualityComparer.Default
+                        .GetHashCode(m_value as byte[][]),
+                    _ => 0,
+                };
+            }
+            return m_value?.GetHashCode() ?? 0;
         }
 
         /// <summary>
@@ -1423,7 +1556,7 @@ namespace Opc.Ua
         /// </param>
         public bool TryGet(out bool value)
         {
-            return TryGetScalar(out value, BuiltInType.Boolean);
+            return TryGetScalar(in m_union.Boolean, out value, BuiltInType.Boolean);
         }
 
         /// <summary>
@@ -1433,7 +1566,7 @@ namespace Opc.Ua
         /// </param>
         public bool TryGet(out sbyte value)
         {
-            return TryGetScalar(out value, BuiltInType.SByte);
+            return TryGetScalar(in m_union.SByte, out value, BuiltInType.SByte);
         }
 
         /// <summary>
@@ -1443,7 +1576,7 @@ namespace Opc.Ua
         /// </param>
         public bool TryGet(out byte value)
         {
-            return TryGetScalar(out value, BuiltInType.Byte);
+            return TryGetScalar(in m_union.Byte, out value, BuiltInType.Byte);
         }
 
         /// <summary>
@@ -1453,7 +1586,7 @@ namespace Opc.Ua
         /// </param>
         public bool TryGet(out short value)
         {
-            return TryGetScalar(out value, BuiltInType.Int16);
+            return TryGetScalar(in m_union.Int16, out value, BuiltInType.Int16);
         }
 
         /// <summary>
@@ -1463,7 +1596,7 @@ namespace Opc.Ua
         /// </param>
         public bool TryGet(out ushort value)
         {
-            return TryGetScalar(out value, BuiltInType.UInt16);
+            return TryGetScalar(in m_union.UInt16, out value, BuiltInType.UInt16);
         }
 
         /// <summary>
@@ -1473,7 +1606,7 @@ namespace Opc.Ua
         /// </param>
         public bool TryGet(out int value)
         {
-            return TryGetScalar(out value, BuiltInType.Int32);
+            return TryGetScalar(in m_union.Int32, out value, BuiltInType.Int32);
         }
 
         /// <summary>
@@ -1484,7 +1617,54 @@ namespace Opc.Ua
         /// </param>
         public bool TryGet<T>(out T value) where T : Enum
         {
-            return TryGetScalar(out value, BuiltInType.Enumeration);
+#if NET8_0_OR_GREATER
+            // On .net we convert between the base type of the
+            // enum and the enum type using reinterpret casting
+            if (TypeInfo.IsScalar &&
+                TypeInfo.BuiltInType is
+                BuiltInType.Enumeration or
+                BuiltInType.Int32)
+            {
+                switch (Unsafe.SizeOf<T>())
+                {
+                    case sizeof(byte):
+                        byte b = m_union.Byte;
+                        value = Unsafe.As<byte, T>(ref b);
+                        return true;
+                    case sizeof(ushort):
+                        ushort u16 = m_union.UInt16;
+                        value = Unsafe.As<ushort, T>(ref u16);
+                        return true;
+                    case sizeof(ulong):
+                        ulong u64 = m_union.UInt64;
+                        value = Unsafe.As<ulong, T>(ref u64);
+                        return true;
+                    case sizeof(uint):
+                        uint u32 = m_union.UInt32;
+                        value = Unsafe.As<uint, T>(ref u32);
+                        return true;
+                }
+            }
+            value = default;
+            return false;
+#else
+            // On net framework we always box. However, we still need
+            // to account for variant being initialized via int32.
+            if (TryGetScalar(out value, BuiltInType.Enumeration))
+            {
+                return true;
+            }
+            if (TryGet(out int int32Value))
+            {
+                value = (T)Convert.ChangeType(
+                    int32Value,
+                    typeof(T),
+                    CultureInfo.InvariantCulture);
+                return true;
+            }
+            value = default;
+            return false;
+#endif
         }
 
         /// <summary>
@@ -1494,7 +1674,7 @@ namespace Opc.Ua
         /// </param>
         public bool TryGet(out uint value)
         {
-            return TryGetScalar(out value, BuiltInType.UInt32);
+            return TryGetScalar(in m_union.UInt32, out value, BuiltInType.UInt32);
         }
 
         /// <summary>
@@ -1504,7 +1684,7 @@ namespace Opc.Ua
         /// </param>
         public bool TryGet(out long value)
         {
-            return TryGetScalar(out value, BuiltInType.Int64);
+            return TryGetScalar(in m_union.Int64, out value, BuiltInType.Int64);
         }
 
         /// <summary>
@@ -1514,7 +1694,7 @@ namespace Opc.Ua
         /// </param>
         public bool TryGet(out ulong value)
         {
-            return TryGetScalar(out value, BuiltInType.UInt64);
+            return TryGetScalar(in m_union.UInt64, out value, BuiltInType.UInt64);
         }
 
         /// <summary>
@@ -1524,7 +1704,7 @@ namespace Opc.Ua
         /// </param>
         public bool TryGet(out float value)
         {
-            return TryGetScalar(out value, BuiltInType.Float);
+            return TryGetScalar(in m_union.Float, out value, BuiltInType.Float);
         }
 
         /// <summary>
@@ -1534,7 +1714,7 @@ namespace Opc.Ua
         /// </param>
         public bool TryGet(out double value)
         {
-            return TryGetScalar(out value, BuiltInType.Double);
+            return TryGetScalar(in m_union.Double, out value, BuiltInType.Double);
         }
 
         /// <summary>
@@ -1554,7 +1734,7 @@ namespace Opc.Ua
         /// </param>
         public bool TryGet(out DateTime value)
         {
-            return TryGetScalar(out value, BuiltInType.DateTime);
+            return TryGetScalar(in m_union.DateTime, out value, BuiltInType.DateTime);
         }
 
         /// <summary>
@@ -1616,15 +1796,15 @@ namespace Opc.Ua
         /// </param>
         public bool TryGet(out StatusCode value)
         {
-            if (TryGetScalar(out value, BuiltInType.StatusCode))
+            if (TypeInfo.IsScalar &&
+                TypeInfo.BuiltInType is BuiltInType.StatusCode or BuiltInType.UInt32)
             {
+                value = m_value is string s ?
+                    new StatusCode(m_union.UInt32, s) :
+                    new StatusCode(m_union.UInt32);
                 return true;
             }
-            if (TryGetScalar(out uint uintValue, BuiltInType.UInt32))
-            {
-                value = new StatusCode(uintValue);
-                return true;
-            }
+            value = default;
             return false;
         }
 
@@ -1921,7 +2101,7 @@ namespace Opc.Ua
             }
             if (TypeInfo.BuiltInType != expectedType || TypeInfo.IsScalar)
             {
-                if (!Variant.IsConvertible(TypeInfo, new TypeInfo(expectedType, TypeInfo.ValueRank)))
+                if (!IsConvertible(TypeInfo, new TypeInfo(expectedType, TypeInfo.ValueRank)))
                 {
                     value = default;
                     return false;
@@ -1963,19 +2143,31 @@ namespace Opc.Ua
         }
 
         /// <summary>
+        /// Convert to array of type
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        private bool TryGetScalar<T>(
+            scoped ref readonly T data,
+            out T value,
+            BuiltInType builtInType,
+            T defaultValue = default!)
+        {
+            bool success = TypeInfo.BuiltInType == builtInType && TypeInfo.IsScalar;
+            value = success ? data : defaultValue;
+            return success;
+        }
+
+        /// <summary>
         /// Try get scalar value
         /// </summary>
         /// <typeparam name="T"></typeparam>
         public bool TryGetScalar<T>(out T value, BuiltInType expectedType)
         {
-            if (m_value == null)
-            {
-                value = default;
-                return false;
-            }
             if (TypeInfo.BuiltInType != expectedType || !TypeInfo.IsScalar)
             {
-                if (!Variant.IsConvertible(TypeInfo, new TypeInfo(expectedType, TypeInfo.ValueRank)))
+                // But it could be convertable from one to the other, ie change type will work.
+                if (!IsConvertible(TypeInfo, new TypeInfo(expectedType, TypeInfo.ValueRank)))
                 {
                     value = default;
                     return false;
@@ -1984,6 +2176,11 @@ namespace Opc.Ua
             else if (m_value is T variable)
             {
                 value = variable;
+                return true;
+            }
+            if (m_value == null)
+            {
+                value = default;
                 return true;
             }
             try
@@ -2083,11 +2280,34 @@ namespace Opc.Ua
         /// <summary>
         /// Create a Variant from a Enum value.
         /// </summary>
+        /// <typeparam name="T"></typeparam>
         /// <param name="value">The Enum value to set
         /// this Variant to</param>
         public static Variant From<T>(T value) where T : Enum
         {
+#if NET8_0_OR_GREATER
+            Union data = default;
+            switch (Unsafe.SizeOf<T>())
+            {
+                case sizeof(byte):
+                    data.Byte = Unsafe.As<T, byte>(ref value);
+                    break;
+                case sizeof(ushort):
+                    data.UInt16 = Unsafe.As<T, ushort>(ref value);
+                    break;
+                case sizeof(ulong):
+                    data.UInt64 = Unsafe.As<T, ulong>(ref value);
+                    break;
+                case sizeof(uint):
+                    data.UInt32 = Unsafe.As<T, uint>(ref value);
+                    break;
+                default:
+                    return new Variant(value);
+            }
+            return new Variant(data, TypeInfo.Scalars.Enumeration, typeof(T));
+#else
             return new Variant(value);
+#endif
         }
 
         /// <summary>
@@ -4507,12 +4727,8 @@ namespace Opc.Ua
                    (typeInfo.BuiltInType == BuiltInType.ByteString && typeInfo.IsScalar);
             }
 
-            static bool IsEnumeration(TypeInfo typeInfo)
-            {
-                return
-                   typeInfo.BuiltInType == BuiltInType.Int32 ||
-                   typeInfo.BuiltInType == BuiltInType.Enumeration;
-            }
+            static bool IsEnumeration(TypeInfo typeInfo) =>
+                typeInfo.BuiltInType is BuiltInType.Int32 or BuiltInType.Enumeration;
         }
 
         [Conditional("DEBUG")]
@@ -4560,7 +4776,63 @@ namespace Opc.Ua
             }
         }
 
+        [StructLayout(LayoutKind.Explicit, Size = 8)]
+        internal struct Union
+        {
+            [FieldOffset(0)]
+            public bool Boolean;
+
+            [FieldOffset(0)]
+            public sbyte SByte;
+
+            [FieldOffset(0)]
+            public byte Byte;
+
+            [FieldOffset(0)]
+            public short Int16;
+
+            [FieldOffset(0)]
+            public ushort UInt16;
+
+            [FieldOffset(0)]
+            public int Int32;
+
+            [FieldOffset(0)]
+            public uint UInt32;
+
+            [FieldOffset(0)]
+            public long Int64;
+
+            [FieldOffset(0)]
+            public ulong UInt64;
+
+            [FieldOffset(0)]
+            public float Float;
+
+            [FieldOffset(0)]
+            public double Double;
+
+            [FieldOffset(0)]
+            public DateTime DateTime;
+
+            /// <summary>
+            /// In case of array offset into it
+            /// </summary>
+            [FieldOffset(0)]
+            public int Index;
+
+            /// <summary>
+            /// In case of array length from offset
+            /// </summary>
+            [FieldOffset(4)]
+            public int Length;
+        }
+
+#pragma warning disable IDE0032 // Use auto property
         private readonly object m_value;
+        private readonly Union m_union;
+        private readonly TypeInfo m_typeInfo;
+#pragma warning restore IDE0032 // Use auto property
     }
 
     /// <summary>

@@ -95,14 +95,14 @@ namespace Opc.Ua
         public bool IsNullQn => NamespaceIndex == 0 && string.IsNullOrEmpty(Name);
 
         /// <summary>
-        /// The index of the namespace that qualifies the name.
-        /// </summary>
-        public ushort NamespaceIndex { get; }
-
-        /// <summary>
         /// The unqualified name.
         /// </summary>
         public string Name { get; }
+
+        /// <summary>
+        /// The index of the namespace that qualifies the name.
+        /// </summary>
+        public ushort NamespaceIndex { get; }
 
         /// <summary>
         /// Create a new QualifiedName with the specified NamespaceIndex

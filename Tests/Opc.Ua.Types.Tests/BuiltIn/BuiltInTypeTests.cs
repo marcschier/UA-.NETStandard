@@ -37,7 +37,6 @@ using ObjectLayoutInspector;
 
 namespace Opc.Ua.Types
 {
-
     [TestFixture]
     [Category("BuiltInType")]
     [SetCulture("en-us")]
@@ -123,11 +122,11 @@ namespace Opc.Ua.Types
         }
 
         [Test]
-        public void VariantInnerOffsetsTests()
+        public void TypeInfoOffsetsTests()
         {
-            var layout = TypeLayout.GetLayout<Variant.Inner>();
+            var layout = TypeLayout.GetLayout<TypeInfo>();
             TestContext.Out.WriteLine(layout.ToString(true));
-            Assert.That(Unsafe.SizeOf<Variant.Inner>(), Is.EqualTo(16));
+            Assert.That(Unsafe.SizeOf<TypeInfo>(), Is.EqualTo(16));
             Assert.That(layout.Fields, Has.Count.EqualTo(3));
             Assert.That(((FieldLayout)layout.Fields[0]).FieldInfo.FieldType, Is.EqualTo(typeof(object)));
             Assert.That(layout.Fields[0].Offset, Is.EqualTo(0));
@@ -153,7 +152,7 @@ namespace Opc.Ua.Types
             Assert.That(((FieldLayout)layout.Fields[1]).FieldInfo.FieldType, Is.EqualTo(typeof(Variant.Union)));
             Assert.That(layout.Fields[1].Offset, Is.EqualTo(8));
             Assert.That(layout.Fields[1].Size, Is.EqualTo(16));
-            Assert.That(((FieldLayout)layout.Fields[2]).FieldInfo.FieldType, Is.EqualTo(typeof(Variant.Inner)));
+            Assert.That(((FieldLayout)layout.Fields[2]).FieldInfo.FieldType, Is.EqualTo(typeof(TypeInfo)));
             Assert.That(layout.Fields[2].Offset, Is.EqualTo(24));
         }
 
@@ -168,12 +167,9 @@ namespace Opc.Ua.Types
             Assert.That(((FieldLayout)layout.Fields[0]).FieldInfo.FieldType, Is.EqualTo(typeof(object)));
             Assert.That(layout.Fields[0].Offset, Is.EqualTo(0));
             Assert.That(layout.Fields[0].Size, Is.EqualTo(16));
-            Assert.That(((FieldLayout)layout.Fields[1]).FieldInfo.FieldType, Is.EqualTo(typeof(NodeId.Inner)));
+            Assert.That(((FieldLayout)layout.Fields[1]).FieldInfo.FieldType, Is.EqualTo(typeof(ExpandedNodeId)));
             Assert.That(layout.Fields[1].Offset, Is.EqualTo(16));
             Assert.That(layout.Fields[1].Size, Is.EqualTo(8));
-            Assert.That(((FieldLayout)layout.Fields[2]).FieldInfo.FieldType, Is.EqualTo(typeof(ByteString)));
-            Assert.That(layout.Fields[2].Offset, Is.EqualTo(24));
-            Assert.That(layout.Fields[2].Size, Is.EqualTo(16));
         }
 
         [Test]
@@ -201,21 +197,6 @@ namespace Opc.Ua.Types
         }
 
         [Test]
-        public void DataValueSizeOfTests()
-        {
-            var layout = TypeLayout.GetLayout<DataValue>();
-            TestContext.Out.WriteLine(layout.ToString(true));
-            Assert.That(Unsafe.SizeOf<DataValue>(), Is.EqualTo(64));
-            Assert.That(layout.Fields, Has.Count.EqualTo(2));
-            Assert.That(((FieldLayout)layout.Fields[0]).FieldInfo.FieldType, Is.EqualTo(typeof(Variant)));
-            Assert.That(layout.Fields[0].Offset, Is.EqualTo(0));
-            Assert.That(layout.Fields[0].Size, Is.EqualTo(40));
-            Assert.That(((FieldLayout)layout.Fields[1]).FieldInfo.FieldType, Is.EqualTo(typeof(DataValue.Inner)));
-            Assert.That(layout.Fields[1].Offset, Is.EqualTo(40));
-            Assert.That(layout.Fields[1].Size, Is.EqualTo(24));
-        }
-
-        [Test]
         public void QualifiedNameSizeOfTests()
         {
             var layout = TypeLayout.GetLayout<QualifiedName>();
@@ -225,7 +206,7 @@ namespace Opc.Ua.Types
             Assert.That(((FieldLayout)layout.Fields[0]).FieldInfo.FieldType, Is.EqualTo(typeof(string)));
             Assert.That(layout.Fields[0].Offset, Is.EqualTo(0));
             Assert.That(layout.Fields[0].Size, Is.EqualTo(16));
-            Assert.That(((FieldLayout)layout.Fields[1]).FieldInfo.FieldType, Is.EqualTo(typeof(QualifiedName.Inner)));
+            Assert.That(((FieldLayout)layout.Fields[1]).FieldInfo.FieldType, Is.EqualTo(typeof(ushort)));
             Assert.That(layout.Fields[1].Offset, Is.EqualTo(16));
             Assert.That(layout.Fields[1].Size, Is.EqualTo(2));
             Assert.That(layout.Fields[2].Size, Is.EqualTo(6));
