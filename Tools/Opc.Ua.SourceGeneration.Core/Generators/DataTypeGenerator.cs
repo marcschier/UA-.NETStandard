@@ -37,7 +37,6 @@ using Opc.Ua.Types;
 
 namespace Opc.Ua.SourceGeneration
 {
-
     /// <summary>
     /// Generates data type model classes
     /// </summary>

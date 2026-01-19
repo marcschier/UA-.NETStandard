@@ -2207,7 +2207,7 @@ namespace Opc.Ua
                 return true;
             }
 
-            if (TryGetArray<T>(out T[] array, expectedType))
+            if (TryGetArray(out T[] array, expectedType))
             {
                 matrix = new Matrix(array, TypeInfo.BuiltInType);
                 return true;
@@ -4393,7 +4393,7 @@ namespace Opc.Ua
 
             if ((ourTypeInfo.ValueRank != otherTypeInfo.ValueRank ||
                 ourTypeInfo.BuiltInType != otherTypeInfo.BuiltInType) &&
-                !Variant.IsConvertible(ourTypeInfo, otherTypeInfo))
+                !IsConvertible(ourTypeInfo, otherTypeInfo))
             {
                 return false;
             }

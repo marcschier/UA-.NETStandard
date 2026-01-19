@@ -239,6 +239,8 @@ namespace Opc.Ua.SourceGeneration
             classGenerator.Emit();
             var dataTypesGenerator = new DataTypeGenerator(context);
             dataTypesGenerator.Emit();
+            var nodeStateCodeGenerator = new AddressSpaceGenerator(context);
+            nodeStateCodeGenerator.Emit();
 
             // Generate schemas
             var xmlSchemaGenerator = new XmlSchemaGenerator(context);

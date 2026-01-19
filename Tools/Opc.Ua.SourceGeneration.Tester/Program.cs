@@ -49,7 +49,7 @@ namespace Opc.Ua.SourceGeneration.Tester
 
             Generators.GenerateCode(new DesignFileCollection
             {
-                DesignFiles = [ Path.Combine(Directory.GetCurrentDirectory(), "TestDataDesign.xml") ],
+                DesignFiles = [Path.Combine(Directory.GetCurrentDirectory(), "TestDataDesign.xml")],
                 IdentifierFilePath = Path.Combine(Directory.GetCurrentDirectory(), "TestDataDesign.csv"),
                 Options = new DesignFileOptions()
             }, fs, output, new Telemetry(), embedNodeSet2Xml: true);

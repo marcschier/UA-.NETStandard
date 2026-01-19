@@ -150,19 +150,6 @@ namespace Opc.Ua.Schema.Model
         }
 
         /// <summary>
-        /// Finds the data type with the specified name.
-        /// </summary>
-        public NodeDesign FindType(XmlQualifiedName typeName)
-        {
-            if (!m_nodes.TryGetValue(typeName, out NodeDesign node))
-            {
-                return null;
-            }
-
-            return node;
-        }
-
-        /// <summary>
         /// Validate model designs
         /// </summary>
         /// <exception cref="ArgumentException"></exception>
@@ -283,6 +270,95 @@ namespace Opc.Ua.Schema.Model
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Find nodedesign of type T
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public T FindNode<T>(
+            XmlQualifiedName symbolicId,
+            string sourceName,
+            string referenceName) where T : NodeDesign
+        {
+            if (!TryFindNode(
+                symbolicId,
+                sourceName,
+                referenceName,
+                out T target))
+            {
+                throw Exception(
+                    "The {0} reference for node {1} is not the expected type: {2}.",
+                    referenceName,
+                    sourceName,
+                    typeof(T).Name);
+            }
+            return target;
+        }
+
+        /// <summary>
+        /// Find node design
+        /// </summary>
+        public NodeDesign FindNode(
+            XmlQualifiedName symbolicId,
+            string sourceName,
+            string referenceName)
+        {
+            if (!TryFindNode(
+                symbolicId,
+                sourceName,
+                referenceName,
+                out NodeDesign target))
+            {
+                throw Exception(
+                    "The {0} reference for node {1} is not valid: {2}.",
+                    referenceName,
+                    sourceName,
+                    symbolicId.Name);
+            }
+            return target;
+        }
+
+        /// <summary>
+        /// Find nodedesign of type T
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public bool TryFindNode<T>(
+            XmlQualifiedName symbolicId,
+            string sourceName,
+            string referenceName,
+            out T target) where T : NodeDesign
+        {
+            if (!TryFindNode(
+                symbolicId,
+                sourceName,
+                referenceName,
+                out NodeDesign node) || node is not T design)
+            {
+                target = default;
+                return false;
+            }
+            target = design;
+            return true;
+        }
+
+        /// <summary>
+        /// Find node design
+        /// </summary>
+        public bool TryFindNode(
+            XmlQualifiedName symbolicId,
+            string sourceName,
+            string referenceName,
+            out NodeDesign target)
+        {
+            if (IsNull(symbolicId))
+            {
+                throw Exception(
+                    "The {0} reference for node is missing: {1}.",
+                    referenceName,
+                    sourceName);
+            }
+            return m_nodes.TryGetValue(symbolicId, out target);
         }
 
         /// <summary>
@@ -452,10 +528,7 @@ namespace Opc.Ua.Schema.Model
             UpdateNamespaceObject(Dictionary);
 
             // update the references.
-            foreach (NodeDesign node in Dictionary.Items)
-            {
-                CreateNodeState(node, Dictionary.NamespaceUris);
-            }
+            new ModelDesignToNodeState(this, m_context).AddNodeStatesToDesign();
 
             UpdateRolePermissions();
         }
@@ -628,10 +701,7 @@ namespace Opc.Ua.Schema.Model
             UpdateNamespaceObject(Dictionary);
 
             // update the references.
-            foreach (NodeDesign node in Dictionary.Items)
-            {
-                CreateNodeState(node, Dictionary.NamespaceUris);
-            }
+            new ModelDesignToNodeState(this, m_context).AddNodeStatesToDesign();
 
             UpdateRolePermissions();
         }
@@ -712,12 +782,9 @@ namespace Opc.Ua.Schema.Model
             LoadNodes(model);
 
             // assigning identifiers.
-            if (identifierFilePath == null)
-            {
-                identifierFilePath = Path.Combine(
-                    Path.GetDirectoryName(designFilePath),
-                    Path.GetFileNameWithoutExtension(designFilePath) + ".csv");
-            }
+            identifierFilePath ??= Path.Combine(
+                Path.GetDirectoryName(designFilePath),
+                Path.GetFileNameWithoutExtension(designFilePath) + ".csv");
             AssignIdentifiers(model, identifierFilePath);
             return model;
         }
@@ -4677,49 +4744,6 @@ namespace Opc.Ua.Schema.Model
                 "TargetId");
         }
 
-        private T FindNode<T>(
-            XmlQualifiedName symbolicId,
-            string sourceName,
-            string referenceName) where T : NodeDesign
-        {
-            NodeDesign target = FindNode(symbolicId, sourceName, referenceName);
-
-            if (target is not T design)
-            {
-                throw Exception(
-                    "The {0} reference for node {1} is not the expected type: {2}.",
-                    referenceName,
-                    sourceName,
-                    typeof(T).Name);
-            }
-            return design;
-        }
-
-        private NodeDesign FindNode(
-            XmlQualifiedName symbolicId,
-            string sourceName,
-            string referenceName)
-        {
-            if (IsNull(symbolicId))
-            {
-                throw Exception(
-                    "The {0} reference for node is missing: {1}.",
-                    referenceName,
-                    sourceName);
-            }
-
-            if (!m_nodes.TryGetValue(symbolicId, out NodeDesign target))
-            {
-                throw Exception(
-                    "The {0} reference for node {1} is not valid: {2}.",
-                    referenceName,
-                    sourceName,
-                    symbolicId.Name);
-            }
-
-            return target;
-        }
-
         private bool IsTypeOf(TypeDesign type, XmlQualifiedName superType)
         {
             if (type.SymbolicId == superType)
@@ -4837,287 +4861,6 @@ namespace Opc.Ua.Schema.Model
             return NodeClass.Unspecified;
         }
 
-#if UNUSED
-        /// <summary>
-        /// Updates the instance declarations for all nodes.
-        /// </summary>
-        private void UpdateOverriddenNodes(TypeDesign type)
-        {
-            if (type == null)
-            {
-                return;
-            }
-
-            UpdateOverriddenNodes(type.BaseTypeNode);
-
-            if (type.HasChildren)
-            {
-                foreach (InstanceDesign child in type.Children.Items)
-                {
-                    child.OveriddenNode = FindOverriddenNode(type.BaseTypeNode, child);
-
-                    if (child.OveriddenNode != null)
-                    {
-                        UpdateFromTemplate(child, child.OveriddenNode);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Updates the instance declarations for all nodes.
-        /// </summary>
-        private static InstanceDesign FindOverriddenNode(TypeDesign type, InstanceDesign node)
-        {
-            if (type == null)
-            {
-                return null;
-            }
-
-            if (type.HasChildren)
-            {
-                foreach (InstanceDesign child in type.Children.Items)
-                {
-                    if (child.BrowseName == node.BrowseName && child.SymbolicName.Namespace == node.SymbolicName.Namespace)
-                    {
-                        return child;
-                    }
-                }
-            }
-
-            return FindOverriddenNode(type.BaseTypeNode, node);
-        }
-
-        /// <summary>
-        /// Updates the instance with attributes from its parent.
-        /// </summary>
-        private void UpdateFromTemplate(InstanceDesign instance, InstanceDesign source)
-        {
-            if (instance.GetType() != source.GetType())
-            {
-                throw Exception("The declaration for the node has a different type: {0}.", instance.SymbolicId.Name);
-            }
-
-            instance.DisplayName = source.DisplayName;
-            instance.Description = source.Description;
-
-            if (instance is VariableDesign variable)
-            {
-                var declaration = source as VariableDesign;
-
-                variable.AccessLevel = declaration.AccessLevel;
-                variable.MinimumSamplingInterval = declaration.MinimumSamplingInterval;
-                variable.Historizing = declaration.Historizing;
-
-                if (variable.ValueRank == ValueRank.ScalarOrArray)
-                {
-                    variable.ValueRank = declaration.ValueRank;
-                }
-
-                if (variable.DataType == kBaseDataTypeQn)
-                {
-                    variable.DataType = declaration.DataType;
-                    variable.DataTypeNode = declaration.DataTypeNode;
-                }
-
-                if (!IsTypeOf(variable.TypeDefinitionNode, declaration.TypeDefinition))
-                {
-                    variable.TypeDefinitionNode = declaration.TypeDefinitionNode;
-                    variable.TypeDefinition = declaration.TypeDefinition;
-                }
-            }
-
-            if (instance is ObjectDesign objectd)
-            {
-                var declaration = source as ObjectDesign;
-
-                objectd.SupportsEvents = declaration.SupportsEvents;
-
-                if (!IsTypeOf(objectd.TypeDefinitionNode, declaration.TypeDefinition))
-                {
-                    objectd.TypeDefinitionNode = declaration.TypeDefinitionNode;
-                    objectd.TypeDefinition = declaration.TypeDefinition;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Updates the instance declarations for all nodes.
-        /// </summary>
-        private void UpdateInstanceDefinitions(NodeDesign node, bool instanceDeclarationRequired)
-        {
-            if (node is InstanceDesign instance)
-            {
-                instance.InstanceDeclarationNode = FindInstanceDeclaration(instance) as InstanceDesign;
-
-                if (instanceDeclarationRequired && instance.InstanceDeclarationNode == null)
-                {
-                    throw Exception("Cannot add new children to an instance declaration. Create a new type instead: {0}", instance.SymbolicId.Name);
-                }
-
-                if (instance.InstanceDeclarationNode != null)
-                {
-                    UpdateFromTemplate(instance, instance.InstanceDeclarationNode);
-                }
-            }
-
-            if (node.HasChildren)
-            {
-                foreach (NodeDesign child in node.Children.Items)
-                {
-                    UpdateInstanceDefinitions(child, instanceDeclarationRequired);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Finds the instance declaration for a child node.
-        /// </summary>
-        private static NodeDesign FindInstanceDeclaration(NodeDesign node)
-        {
-            return FindInstanceDeclarationInParent(node, new Stack<NodeDesign>());
-        }
-
-        /// <summary>
-        /// Follows the parents until a type is found.
-        /// </summary>
-        private static NodeDesign FindInstanceDeclarationInParent(NodeDesign node, Stack<NodeDesign> path)
-        {
-            if (node.Parent is InstanceDesign)
-            {
-                path.Push(node);
-                return FindInstanceDeclarationInParent(node.Parent, path);
-            }
-
-            if (node is InstanceDesign instance && path.Count > 0)
-            {
-                TypeDesign type = instance.TypeDefinitionNode;
-
-                while (type != null)
-                {
-                    NodeDesign declaration = FindInstanceDeclarationInType(type, path);
-
-                    if (declaration != null)
-                    {
-                        return declaration;
-                    }
-
-                    type = type.BaseTypeNode;
-                }
-            }
-
-            // child does not exist anywhere.
-            return null;
-        }
-
-        /// <summary>
-        /// Follows the browse paths until an instance is found.
-        /// </summary>
-        private static NodeDesign FindInstanceDeclarationInType(NodeDesign node, Stack<NodeDesign> path)
-        {
-            if (path.Count == 0)
-            {
-                return node;
-            }
-
-            NodeDesign next = path.Pop();
-
-            if (node.HasChildren)
-            {
-                foreach (NodeDesign child in node.Children.Items)
-                {
-                    if (child.BrowseName == next.BrowseName && child.SymbolicName.Namespace == next.SymbolicName.Namespace)
-                    {
-                        return FindInstanceDeclarationInType(child, path);
-                    }
-                }
-            }
-
-            path.Push(next);
-
-            // try following the tree under the type definition instead.
-
-            if (node is InstanceDesign instance)
-            {
-                TypeDesign type = instance.TypeDefinitionNode;
-
-                while (type != null)
-                {
-                    NodeDesign declaration = FindInstanceDeclarationInType(type, path);
-
-                    if (declaration != null)
-                    {
-                        return declaration;
-                    }
-
-                    type = type.BaseTypeNode;
-                }
-            }
-
-            // child does not exist anywhere.
-            return null;
-        }
-#endif
-
-        /// <summary>
-        /// Maps the event notifier flag onto a byte.
-        /// </summary>
-        private static byte ConstructEventNotifier(bool supportsEvents)
-        {
-            if (supportsEvents)
-            {
-                return EventNotifiers.SubscribeToEvents;
-            }
-
-            return EventNotifiers.None;
-        }
-
-        /// <summary>
-        /// Maps the access level enumeration onto a byte.
-        /// </summary>
-        private static byte ConstructAccessLevel(AccessLevel accessLevel)
-        {
-            switch (accessLevel)
-            {
-                case AccessLevel.Read:
-                    return AccessLevels.CurrentRead;
-                case AccessLevel.Write:
-                    return AccessLevels.CurrentWrite;
-                case AccessLevel.ReadWrite:
-                    return AccessLevels.CurrentReadOrWrite;
-                case AccessLevel.HistoryRead:
-                    return AccessLevels.HistoryRead;
-                case AccessLevel.HistoryWrite:
-                    return AccessLevels.HistoryWrite;
-                case AccessLevel.HistoryReadWrite:
-                    return AccessLevels.HistoryReadOrWrite;
-            }
-
-            return AccessLevels.None;
-        }
-
-        /// <summary>
-        /// Maps the modelling rule enumeration onto a string.
-        /// </summary>
-        private static NodeId ConstructModellingRule(ModellingRule modellingRule)
-        {
-            switch (modellingRule)
-            {
-                case ModellingRule.Mandatory:
-                    return Objects.ModellingRule_Mandatory;
-                case ModellingRule.Optional:
-                    return Objects.ModellingRule_Optional;
-                case ModellingRule.MandatoryPlaceholder:
-                    return Objects.ModellingRule_MandatoryPlaceholder;
-                case ModellingRule.OptionalPlaceholder:
-                    return Objects.ModellingRule_OptionalPlaceholder;
-                case ModellingRule.ExposesItsArray:
-                    return Objects.ModellingRule_ExposesItsArray;
-            }
-
-            return default;
-        }
-
         /// <summary>
         /// Maps the value rank enumeration onto a integer.
         /// </summary>
@@ -5192,21 +4935,6 @@ namespace Opc.Ua.Schema.Model
             return dimensions;
         }
 
-        /// <summary>
-        /// Maps the array dimensions onto a constant declaration..
-        /// </summary>
-        private static ReadOnlyList<uint> ConstructArrayDimensions(ValueRank valueRank, string arrayDimensions)
-        {
-            UInt32Collection dimensions = ConstructArrayDimensionsRW(valueRank, arrayDimensions);
-
-            if (dimensions != null)
-            {
-                return new ReadOnlyList<uint>(dimensions);
-            }
-
-            return null;
-        }
-
         private NodeId ConstructNodeId(NodeDesign node, NamespaceTable namespaceUris)
         {
             int index;
@@ -5250,21 +4978,6 @@ namespace Opc.Ua.Schema.Model
             return new NodeId(node.NumericId, (ushort)index);
         }
 
-        private NodeId ConstructNodeId(XmlQualifiedName nodeId, NamespaceTable namespaceUris)
-        {
-            if (nodeId == null)
-            {
-                return NodeId.Null;
-            }
-
-            if (!m_nodes.TryGetValue(nodeId, out NodeDesign node))
-            {
-                return NodeId.Null;
-            }
-
-            return ConstructNodeId(node, namespaceUris);
-        }
-
         /// <summary>
         /// Returns the browse path to the instance.
         /// </summary>
@@ -5294,7 +5007,9 @@ namespace Opc.Ua.Schema.Model
             return mergedType;
         }
 
-        private static void MergeTypes(TypeDesign mergedType, TypeDesign type)
+        private static void MergeTypes(
+            TypeDesign mergedType,
+            TypeDesign type)
         {
             mergedType.SymbolicId = type.SymbolicId;
             mergedType.SymbolicName = type.SymbolicName;
@@ -5329,7 +5044,9 @@ namespace Opc.Ua.Schema.Model
             }
         }
 
-        private static void MergeTypes(VariableTypeDesign mergedType, VariableTypeDesign variableType)
+        private static void MergeTypes(
+            VariableTypeDesign mergedType,
+            VariableTypeDesign variableType)
         {
             if (variableType.DecodedValue != null)
             {
@@ -5373,7 +5090,9 @@ namespace Opc.Ua.Schema.Model
             }
         }
 
-        private static void MergeTypes(ObjectTypeDesign mergedType, ObjectTypeDesign objectType)
+        private static void MergeTypes(
+            ObjectTypeDesign mergedType,
+            ObjectTypeDesign objectType)
         {
             if (objectType.SupportsEventsSpecified)
             {
@@ -5382,7 +5101,10 @@ namespace Opc.Ua.Schema.Model
             }
         }
 
-        private NodeDesign CreateMergedInstance(XmlQualifiedName rootId, string relativePath, NodeDesign source)
+        private NodeDesign CreateMergedInstance(
+            XmlQualifiedName rootId,
+            string relativePath,
+            NodeDesign source)
         {
             m_logger.LogDebug("Merging Instance: {Root} {Path} {Source}", rootId.Name, relativePath, source.SymbolicId.Name);
 
@@ -5456,7 +5178,8 @@ namespace Opc.Ua.Schema.Model
             return mergedInstance;
         }
 
-        private static ObjectDesign CreateMergedInstance(ObjectTypeDesign type)
+        private static ObjectDesign CreateMergedInstance(
+            ObjectTypeDesign type)
         {
             var objectd = new ObjectDesign
             {
@@ -5480,7 +5203,8 @@ namespace Opc.Ua.Schema.Model
             return objectd;
         }
 
-        private static VariableDesign CreateMergedInstance(VariableTypeDesign type)
+        private static VariableDesign CreateMergedInstance(
+            VariableTypeDesign type)
         {
             var variable = new VariableDesign
             {
@@ -5515,7 +5239,9 @@ namespace Opc.Ua.Schema.Model
             return variable;
         }
 
-        private void UpdateMergedInstance(InstanceDesign mergedInstance, NodeDesign source)
+        private void UpdateMergedInstance(
+            InstanceDesign mergedInstance,
+            NodeDesign source)
         {
             m_logger.LogDebug(
                 "Updated Merged Instance: {Instance} {Source}",
@@ -5735,7 +5461,9 @@ namespace Opc.Ua.Schema.Model
             }
         }
 
-        private static void UpdateMergedInstance(ObjectDesign mergedObject, ObjectTypeDesign objectType)
+        private static void UpdateMergedInstance(
+            ObjectDesign mergedObject,
+            ObjectTypeDesign objectType)
         {
             mergedObject.TypeDefinition = objectType.SymbolicId;
             mergedObject.TypeDefinitionNode = objectType;
@@ -5758,7 +5486,9 @@ namespace Opc.Ua.Schema.Model
             }
         }
 
-        private static void UpdateMergedInstance(MethodDesign mergedMethod, MethodDesign method)
+        private static void UpdateMergedInstance(
+            MethodDesign mergedMethod,
+            MethodDesign method)
         {
             if (method.NonExecutableSpecified)
             {
@@ -5778,7 +5508,9 @@ namespace Opc.Ua.Schema.Model
             }
         }
 
-        private static void UpdateMergedInstance(ObjectDesign mergedObject, ObjectDesign objectd)
+        private static void UpdateMergedInstance(
+            ObjectDesign mergedObject,
+            ObjectDesign objectd)
         {
             if (objectd.TypeDefinition != null &&
                 objectd.TypeDefinition != s_baseObjectTypeQn)
@@ -5978,6 +5710,211 @@ namespace Opc.Ua.Schema.Model
                     SetOverriddenNodes(instance, string.Empty, nodes, depth + 1);
                     break;
             }
+        }
+
+        private void TranslateReferences(
+            string currentPath,
+            NodeDesign source,
+            List<HierarchyReference> references,
+            bool suppressInverseHierarchicalAtTypeLevel,
+            bool inherited)
+        {
+            if (source.References == null || source.References.Length == 0)
+            {
+                return;
+            }
+
+            for (int ii = 0; ii < source.References.Length; ii++)
+            {
+                if (source.References[ii].ReferenceType ==
+                    new XmlQualifiedName("HasModelParent", Namespaces.OpcUa))
+                {
+                    continue;
+                }
+
+                // suppress inhierited non-hierarchial references.
+                if (inherited &&
+                    m_nodes.TryGetValue(source.References[ii].ReferenceType, out NodeDesign target))
+                {
+                    var referenceType = target as ReferenceTypeDesign;
+
+                    bool found = false;
+
+                    while (referenceType != null)
+                    {
+                        if (referenceType.SymbolicName ==
+                            new XmlQualifiedName("NonHierarchicalReferences", Namespaces.OpcUa))
+                        {
+                            found = true;
+                            break;
+                        }
+
+                        referenceType = referenceType.BaseTypeNode as ReferenceTypeDesign;
+                    }
+
+                    if (found)
+                    {
+                        continue;
+                    }
+                }
+
+                if (suppressInverseHierarchicalAtTypeLevel &&
+                    source.References[ii].IsInverse &&
+                    source.References[ii].ReferenceType ==
+                        new XmlQualifiedName("Organizes", Namespaces.OpcUa))
+                {
+                    continue;
+                }
+
+                HierarchyReference reference = TranslateReference(
+                    currentPath,
+                    source.SymbolicId,
+                    source.References[ii]);
+
+                references.Add(reference);
+
+                m_logger.LogDebug(
+                    "Translated Reference: {Source} => {Reference} => {Target}",
+                    string.IsNullOrEmpty(reference.SourcePath) ?
+                        source.SymbolicId.Name :
+                        reference.SourcePath,
+                    reference.ReferenceType.Name,
+                    reference.TargetId != null ?
+                        reference.TargetId.Name :
+                        reference.TargetPath);
+            }
+        }
+
+        private static HierarchyReference TranslateReference(
+            string currentPath,
+            XmlQualifiedName sourceId,
+            Reference reference)
+        {
+            currentPath ??= string.Empty;
+
+            var mergedReference = new HierarchyReference
+            {
+                SourcePath = currentPath,
+                ReferenceType = reference.ReferenceType,
+                IsInverse = reference.IsInverse,
+                TargetId = reference.TargetId
+            };
+
+            if (reference.TargetId == null ||
+                sourceId.Namespace != reference.TargetId.Namespace ||
+                reference.ReferenceType == new XmlQualifiedName("HasEncoding", Namespaces.OpcUa))
+            {
+                return mergedReference;
+            }
+
+            string[] currentPathParts = currentPath.Split(
+                NodeDesign.PathChars,
+                StringSplitOptions.RemoveEmptyEntries);
+            string[] sourceIdParts = sourceId.Name.Split(
+                NodeDesign.PathChars,
+                StringSplitOptions.RemoveEmptyEntries);
+            string[] targetIdParts = reference.TargetId.Name.Split(
+                NodeDesign.PathChars,
+                StringSplitOptions.RemoveEmptyEntries);
+
+            // find the common root in the type declaration.
+            string[] targetPath = null;
+            string[] sourcePath = null;
+
+            if (sourceIdParts.Length == 0 ||
+                targetIdParts.Length == 0 ||
+                targetIdParts[0] != sourceIdParts[0])
+            {
+                return mergedReference;
+            }
+
+            for (int ii = 0; ii < sourceIdParts.Length; ii++)
+            {
+                if (ii >= targetIdParts.Length)
+                {
+                    sourcePath = new string[sourceIdParts.Length - ii];
+                    Array.Copy(sourceIdParts, ii, sourcePath, 0, sourcePath.Length);
+                    targetPath = [];
+                    break;
+                }
+
+                if (targetIdParts[ii] != sourceIdParts[ii])
+                {
+                    sourcePath = new string[sourceIdParts.Length - ii];
+                    Array.Copy(sourceIdParts, ii, sourcePath, 0, sourcePath.Length);
+                    targetPath = new string[targetIdParts.Length - ii];
+                    Array.Copy(targetIdParts, ii, targetPath, 0, targetPath.Length);
+                    break;
+                }
+            }
+
+            // no common root.
+            if (sourcePath == null)
+            {
+                sourcePath = [];
+                targetPath = new string[targetIdParts.Length - sourceIdParts.Length];
+                Array.Copy(targetIdParts, sourceIdParts.Length, targetPath, 0, targetPath.Length);
+            }
+
+            // find the new root.
+            string[] targetRoot = null;
+
+            for (int ii = 1; ii <= sourcePath.Length - 1; ii++)
+            {
+                if (ii > currentPathParts.Length)
+                {
+                    return mergedReference;
+                }
+
+                if (currentPathParts[^ii] != sourcePath[^ii])
+                {
+                    targetRoot = new string[currentPathParts.Length - ii];
+                    Array.Copy(currentPathParts, 0, targetRoot, 0, targetRoot.Length);
+                    break;
+                }
+            }
+
+            // no common root.
+            if (targetRoot == null)
+            {
+                if (currentPathParts.Length < sourcePath.Length)
+                {
+                    return mergedReference;
+                }
+
+                targetRoot = new string[currentPathParts.Length - sourcePath.Length];
+                Array.Copy(currentPathParts, 0, targetRoot, 0, targetRoot.Length);
+            }
+
+            var builder = new StringBuilder();
+
+            for (int ii = 0; ii < targetRoot.Length; ii++)
+            {
+                if (builder.Length > 0)
+                {
+                    builder.Append(NodeDesign.PathChar);
+                }
+
+                builder.Append(targetRoot[ii]);
+            }
+
+            if (targetPath != null)
+            {
+                for (int ii = 0; ii < targetPath.Length; ii++)
+                {
+                    if (builder.Length > 0)
+                    {
+                        builder.Append(NodeDesign.PathChar);
+                    }
+
+                    builder.Append(targetPath[ii]);
+                }
+            }
+
+            mergedReference.TargetId = null;
+            mergedReference.TargetPath = builder.ToString();
+
+            return mergedReference;
         }
 
         /// <summary>
@@ -6220,211 +6157,6 @@ namespace Opc.Ua.Schema.Model
             }
         }
 
-        private void TranslateReferences(
-            string currentPath,
-            NodeDesign source,
-            List<HierarchyReference> references,
-            bool suppressInverseHierarchicalAtTypeLevel,
-            bool inherited)
-        {
-            if (source.References == null || source.References.Length == 0)
-            {
-                return;
-            }
-
-            for (int ii = 0; ii < source.References.Length; ii++)
-            {
-                if (source.References[ii].ReferenceType ==
-                    new XmlQualifiedName("HasModelParent", Namespaces.OpcUa))
-                {
-                    continue;
-                }
-
-                // suppress inhierited non-hierarchial references.
-                if (inherited &&
-                    m_nodes.TryGetValue(source.References[ii].ReferenceType, out NodeDesign target))
-                {
-                    var referenceType = target as ReferenceTypeDesign;
-
-                    bool found = false;
-
-                    while (referenceType != null)
-                    {
-                        if (referenceType.SymbolicName ==
-                            new XmlQualifiedName("NonHierarchicalReferences", Namespaces.OpcUa))
-                        {
-                            found = true;
-                            break;
-                        }
-
-                        referenceType = referenceType.BaseTypeNode as ReferenceTypeDesign;
-                    }
-
-                    if (found)
-                    {
-                        continue;
-                    }
-                }
-
-                if (suppressInverseHierarchicalAtTypeLevel &&
-                    source.References[ii].IsInverse &&
-                    source.References[ii].ReferenceType ==
-                        new XmlQualifiedName("Organizes", Namespaces.OpcUa))
-                {
-                    continue;
-                }
-
-                HierarchyReference reference = TranslateReference(
-                    currentPath,
-                    source.SymbolicId,
-                    source.References[ii]);
-
-                references.Add(reference);
-
-                m_logger.LogDebug(
-                    "Translated Reference: {Source} => {Reference} => {Target}",
-                    string.IsNullOrEmpty(reference.SourcePath) ?
-                        source.SymbolicId.Name :
-                        reference.SourcePath,
-                    reference.ReferenceType.Name,
-                    reference.TargetId != null ?
-                        reference.TargetId.Name :
-                        reference.TargetPath);
-            }
-        }
-
-        private static HierarchyReference TranslateReference(
-            string currentPath,
-            XmlQualifiedName sourceId,
-            Reference reference)
-        {
-            currentPath ??= string.Empty;
-
-            var mergedReference = new HierarchyReference
-            {
-                SourcePath = currentPath,
-                ReferenceType = reference.ReferenceType,
-                IsInverse = reference.IsInverse,
-                TargetId = reference.TargetId
-            };
-
-            if (reference.TargetId == null ||
-                sourceId.Namespace != reference.TargetId.Namespace ||
-                reference.ReferenceType == new XmlQualifiedName("HasEncoding", Namespaces.OpcUa))
-            {
-                return mergedReference;
-            }
-
-            string[] currentPathParts = currentPath.Split(
-                NodeDesign.PathChars,
-                StringSplitOptions.RemoveEmptyEntries);
-            string[] sourceIdParts = sourceId.Name.Split(
-                NodeDesign.PathChars,
-                StringSplitOptions.RemoveEmptyEntries);
-            string[] targetIdParts = reference.TargetId.Name.Split(
-                NodeDesign.PathChars,
-                StringSplitOptions.RemoveEmptyEntries);
-
-            // find the common root in the type declaration.
-            string[] targetPath = null;
-            string[] sourcePath = null;
-
-            if (sourceIdParts.Length == 0 ||
-                targetIdParts.Length == 0 ||
-                targetIdParts[0] != sourceIdParts[0])
-            {
-                return mergedReference;
-            }
-
-            for (int ii = 0; ii < sourceIdParts.Length; ii++)
-            {
-                if (ii >= targetIdParts.Length)
-                {
-                    sourcePath = new string[sourceIdParts.Length - ii];
-                    Array.Copy(sourceIdParts, ii, sourcePath, 0, sourcePath.Length);
-                    targetPath = [];
-                    break;
-                }
-
-                if (targetIdParts[ii] != sourceIdParts[ii])
-                {
-                    sourcePath = new string[sourceIdParts.Length - ii];
-                    Array.Copy(sourceIdParts, ii, sourcePath, 0, sourcePath.Length);
-                    targetPath = new string[targetIdParts.Length - ii];
-                    Array.Copy(targetIdParts, ii, targetPath, 0, targetPath.Length);
-                    break;
-                }
-            }
-
-            // no common root.
-            if (sourcePath == null)
-            {
-                sourcePath = [];
-                targetPath = new string[targetIdParts.Length - sourceIdParts.Length];
-                Array.Copy(targetIdParts, sourceIdParts.Length, targetPath, 0, targetPath.Length);
-            }
-
-            // find the new root.
-            string[] targetRoot = null;
-
-            for (int ii = 1; ii <= sourcePath.Length - 1; ii++)
-            {
-                if (ii > currentPathParts.Length)
-                {
-                    return mergedReference;
-                }
-
-                if (currentPathParts[^ii] != sourcePath[^ii])
-                {
-                    targetRoot = new string[currentPathParts.Length - ii];
-                    Array.Copy(currentPathParts, 0, targetRoot, 0, targetRoot.Length);
-                    break;
-                }
-            }
-
-            // no common root.
-            if (targetRoot == null)
-            {
-                if (currentPathParts.Length < sourcePath.Length)
-                {
-                    return mergedReference;
-                }
-
-                targetRoot = new string[currentPathParts.Length - sourcePath.Length];
-                Array.Copy(currentPathParts, 0, targetRoot, 0, targetRoot.Length);
-            }
-
-            var builder = new StringBuilder();
-
-            for (int ii = 0; ii < targetRoot.Length; ii++)
-            {
-                if (builder.Length > 0)
-                {
-                    builder.Append(NodeDesign.PathChar);
-                }
-
-                builder.Append(targetRoot[ii]);
-            }
-
-            if (targetPath != null)
-            {
-                for (int ii = 0; ii < targetPath.Length; ii++)
-                {
-                    if (builder.Length > 0)
-                    {
-                        builder.Append(NodeDesign.PathChar);
-                    }
-
-                    builder.Append(targetPath[ii]);
-                }
-            }
-
-            mergedReference.TargetId = null;
-            mergedReference.TargetPath = builder.ToString();
-
-            return mergedReference;
-        }
-
         /// <summary>
         /// Collects all of children for a node.
         /// </summary>
@@ -6605,1140 +6337,6 @@ namespace Opc.Ua.Schema.Model
         }
 
         /// <summary>
-        /// Removes the modelling rules for instances.
-        /// </summary>
-        private void ClearModellingRules(BaseInstanceState root)
-        {
-            if (root == null)
-            {
-                return;
-            }
-
-            root.ModellingRuleId = default;
-
-            var design = root.Handle as NodeDesign;
-
-            if (root.RolePermissions == null || root.RolePermissions.Count == 0)
-            {
-                root.RolePermissions = ImportRolePermissions(
-                    design.DefaultRolePermissions,
-                    Dictionary.NamespaceUris);
-            }
-
-            root.AccessRestrictions ??= ImportAccessRestrictions(
-                design.DefaultAccessRestrictions,
-                design.DefaultAccessRestrictionsSpecified);
-
-            var context = new SystemContext(m_telemetry)
-            {
-                NamespaceUris = m_context.NamespaceUris
-            };
-
-            var children = new List<BaseInstanceState>();
-            root.GetChildren(context, children);
-
-            for (int ii = 0; ii < children.Count; ii++)
-            {
-                ClearModellingRules(children[ii]);
-            }
-        }
-
-        private static Export.ReleaseStatus ToReleaseStatus(ReleaseStatus input)
-        {
-            switch (input)
-            {
-                case ReleaseStatus.Deprecated:
-                    return Export.ReleaseStatus.Deprecated;
-                case ReleaseStatus.RC:
-                case ReleaseStatus.Draft:
-                    return Export.ReleaseStatus.Draft;
-                default:
-                    return Export.ReleaseStatus.Released;
-            }
-        }
-
-        private void CreateNodeState(NodeDesign root, NamespaceTable namespaceUris)
-        {
-            if (root is InstanceDesign)
-            {
-                root.State = CreateNodeState(
-                    null,
-                    string.Empty,
-                    root.Hierarchy,
-                    root.Hierarchy.NodeList[0].Instance,
-                    false,
-                    false,
-                    namespaceUris);
-
-                ClearModellingRules(root.State as BaseInstanceState);
-            }
-            else
-            {
-                root.State = CreateNodeState(
-                    null,
-                    string.Empty,
-                    root.Hierarchy,
-                    root,
-                    true,
-                    true,
-                    namespaceUris);
-
-                root.State.Categories = null;
-                root.State.ReleaseStatus = ToReleaseStatus(root.ReleaseStatus);
-
-                if (!string.IsNullOrEmpty(root.Category))
-                {
-                    root.State.Categories = root.Category.Split([',']);
-                }
-
-                if (root.PartNo != 0)
-                {
-                    root.State.Specification = $"Part{root.PartNo}";
-                }
-            }
-
-            root.State.Extensions = root.Extensions;
-
-            if (root.Hierarchy != null &&
-                root is TypeDesign &&
-                root.Hierarchy.Nodes.TryGetValue(string.Empty, out HierarchyNode hierarchyNode))
-            {
-                if (hierarchyNode.Identifier != null)
-                {
-                    if (hierarchyNode.Identifier is uint numericId)
-                    {
-                        hierarchyNode.Instance.NumericId = numericId;
-                        hierarchyNode.Instance.NumericIdSpecified = true;
-                    }
-                    else if (hierarchyNode.Identifier is string stringId)
-                    {
-                        hierarchyNode.Instance.StringId = stringId;
-                    }
-                    else
-                    {
-                        throw Exception("Invalid identifier {0}", hierarchyNode.Identifier);
-                    }
-                }
-
-                root.InstanceState = hierarchyNode.Instance.State = CreateNodeState(
-                    null,
-                    string.Empty,
-                    root.Hierarchy,
-                    hierarchyNode.Instance,
-                    false,
-                    false,
-                    namespaceUris);
-
-                if (root.InstanceState.ReleaseStatus == Export.ReleaseStatus.Released ||
-                    root.InstanceState.Categories != null)
-                {
-                    root.InstanceState.Categories = null;
-                    root.InstanceState.ReleaseStatus = ToReleaseStatus(
-                        hierarchyNode.Instance.ReleaseStatus);
-
-                    if (!string.IsNullOrEmpty(root.Category))
-                    {
-                        root.InstanceState.Categories = root.Category.Split([',']);
-                    }
-
-                    if (root.PartNo != 0)
-                    {
-                        root.InstanceState.Specification = $"Part{root.PartNo}";
-                    }
-                }
-
-                ClearModellingRules(hierarchyNode.Instance.State as BaseInstanceState);
-            }
-        }
-
-        private NodeState CreateNodeState(
-            NodeState parent,
-            string basePath,
-            Hierarchy hierarchy,
-            NodeDesign root,
-            bool explicitOnly,
-            bool isTypeDefinition,
-            NamespaceTable namespaceUris)
-        {
-            m_logger.LogDebug("Creating NodeState: {Name}", root.SymbolicId.Name);
-
-            NodeState state = null;
-
-            switch (root)
-            {
-                case ObjectTypeDesign objectTypeDesign:
-                    state = CreateNodeState(objectTypeDesign, namespaceUris);
-                    break;
-                case VariableTypeDesign variableTypeDesign:
-                    state = CreateNodeState(variableTypeDesign, namespaceUris);
-                    break;
-                case ReferenceTypeDesign referenceTypeDesign:
-                    state = CreateNodeState(referenceTypeDesign, namespaceUris);
-                    break;
-                case ObjectDesign objectDesign:
-                    state = CreateNodeState(parent, objectDesign, namespaceUris);
-                    break;
-                case VariableDesign variableDesign:
-                    state = CreateNodeState(parent, variableDesign, namespaceUris);
-                    break;
-                case DataTypeDesign dataTypeDesign:
-                    state = CreateNodeState(dataTypeDesign, namespaceUris);
-                    break;
-                case MethodDesign methodDesign:
-                    state = CreateNodeState(parent, methodDesign, namespaceUris);
-                    break;
-                case ViewDesign viewDesign:
-                    state = CreateNodeState(viewDesign);
-                    break;
-            }
-
-            state.SymbolicName = root.SymbolicName.Name;
-            state.NodeId = ConstructNodeId(root, namespaceUris);
-            state.BrowseName = new QualifiedName(
-                root.BrowseName,
-                (ushort)namespaceUris.GetIndex(root.SymbolicName.Namespace));
-            state.DisplayName = new Ua.LocalizedText(
-                root.DisplayName.Key,
-                string.Empty,
-                root.DisplayName.Value?.Trim());
-
-            if (root.Description != null && !root.Description.IsAutogenerated)
-            {
-                state.Description = new Ua.LocalizedText(
-                    root.Description.Key,
-                    string.Empty,
-                    root.Description.Value?.Trim());
-            }
-
-            state.WriteMask = AttributeWriteMask.None;
-            state.UserWriteMask = AttributeWriteMask.None;
-            state.AccessRestrictions = ImportAccessRestrictions(
-                root.AccessRestrictions,
-                root.AccessRestrictionsSpecified);
-            state.RolePermissions = ImportRolePermissions(
-                root.RolePermissions,
-                namespaceUris);
-            state.Extensions = root.Extensions;
-
-            if (state is MethodState method)
-            {
-                var design = (MethodDesign)root;
-
-                if (design.MethodDeclarationNode != null)
-                {
-                    method.MethodDeclarationId = ConstructNodeId(
-                        design.MethodDeclarationNode,
-                        namespaceUris);
-                }
-            }
-
-            if (hierarchy == null)
-            {
-                return state;
-            }
-
-            for (int ii = 0; ii < hierarchy.References.Count; ii++)
-            {
-                HierarchyReference reference = hierarchy.References[ii];
-
-                if (reference.SourcePath != basePath && reference.TargetPath != basePath)
-                {
-                    continue;
-                }
-
-                NodeId referenceTypeId = ConstructNodeId(reference.ReferenceType, namespaceUris);
-                bool isInverse = reference.IsInverse;
-
-                if (reference.TargetId != null)
-                {
-                    if (!isTypeDefinition &&
-                        m_nodes.TryGetValue(reference.TargetId, out NodeDesign node) &&
-                        node is InstanceDesign instance &&
-                        (instance.ModellingRule == ModellingRule.MandatoryPlaceholder ||
-                            instance.ModellingRule == ModellingRule.OptionalPlaceholder))
-                    {
-                        continue;
-                    }
-
-                    NodeId targetId = ConstructNodeId(reference.TargetId, namespaceUris);
-
-                    if (!state.ReferenceExists(referenceTypeId, isInverse, targetId))
-                    {
-                        state.AddReference(referenceTypeId, isInverse, targetId);
-                    }
-
-                    continue;
-                }
-
-                if (reference.TargetPath != null && reference.TargetPath.Length == 0 && parent != null)
-                {
-                    if (!state.ReferenceExists(referenceTypeId, isInverse, parent.NodeId))
-                    {
-                        state.AddReference(referenceTypeId, isInverse, parent.NodeId);
-                    }
-
-                    continue;
-                }
-
-                if (reference.SourcePath == basePath)
-                {
-                    if (!hierarchy.Nodes.TryGetValue(reference.TargetPath, out HierarchyNode target))
-                    {
-                        continue;
-                    }
-
-                    if (!target.ExplicitlyDefined && isTypeDefinition)
-                    {
-                        continue;
-                    }
-
-                    NodeId targetId = ConstructNodeId(target.Instance, namespaceUris);
-
-                    if (!target.Instance.NumericIdSpecified || target.Instance.NumericId == 0)
-                    {
-                        target.Instance.StringId = target.Instance.SymbolicId.Name;
-                        targetId = ConstructNodeId(target.Instance, namespaceUris);
-                    }
-
-                    if (!state.ReferenceExists(referenceTypeId, isInverse, targetId))
-                    {
-                        state.AddReference(referenceTypeId, isInverse, targetId);
-                    }
-
-                    continue;
-                }
-
-                if (!hierarchy.Nodes.TryGetValue(reference.SourcePath, out HierarchyNode source))
-                {
-                    continue;
-                }
-
-                if (!source.ExplicitlyDefined && isTypeDefinition)
-                {
-                    continue;
-                }
-
-                NodeId sourceId = ConstructNodeId(source.Instance, namespaceUris);
-
-                if (!source.Instance.NumericIdSpecified || source.Instance.NumericId == 0)
-                {
-                    source.Instance.StringId = source.Instance.SymbolicId.Name;
-                    sourceId = ConstructNodeId(source.Instance, namespaceUris);
-                }
-
-                if (!state.ReferenceExists(referenceTypeId, !isInverse, sourceId))
-                {
-                    state.AddReference(referenceTypeId, !isInverse, sourceId);
-                }
-            }
-
-            for (int ii = 0; ii < hierarchy.NodeList.Count; ii++)
-            {
-                HierarchyNode current = hierarchy.NodeList[ii];
-
-                if (explicitOnly && !current.ExplicitlyDefined)
-                {
-                    continue;
-                }
-
-                string childPath = current.RelativePath;
-
-                // only looking for nodes in the current tree.
-                if (!childPath.StartsWith(basePath, StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                // ignore reference to the current base node.
-                if (childPath == basePath)
-                {
-                    continue;
-                }
-
-                // relative should always end in the name of the current instance.
-                if (!childPath.EndsWith(current.Instance.SymbolicName.Name, StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                // get the parent path.
-                if (childPath.Length <= current.Instance.SymbolicName.Name.Length)
-                {
-                    if (!string.IsNullOrEmpty(basePath))
-                    {
-                        continue;
-                    }
-                }
-                else
-                {
-                    int idx = childPath.Length - current.Instance.SymbolicName.Name.Length - 1;
-                    string parentPath = current.RelativePath[..idx];
-
-                    if (parentPath != basePath)
-                    {
-                        continue;
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(basePath))
-                {
-                    childPath = childPath[(basePath.Length + 1)..];
-                    childPath = CoreUtils.Format(
-                        "{0}{1}{2}",
-                        basePath,
-                        NodeDesign.PathChar,
-                        childPath);
-                }
-
-                if (!explicitOnly && current.Instance is InstanceDesign instance)
-                {
-                    if (!isTypeDefinition &&
-                        !current.ExplicitlyDefined &&
-                        instance.ModellingRule != ModellingRule.Mandatory &&
-                        instance.ModellingRule != ModellingRule.Optional)
-                    {
-                        continue;
-                    }
-
-                    if (!current.ExplicitlyDefined &&
-                        instance.ModellingRule != ModellingRule.Mandatory &&
-                        instance.ModellingRule != ModellingRule.None &&
-                        instance.ModellingRule != ModellingRule.ExposesItsArray &&
-                        instance.ModellingRule != ModellingRule.OptionalPlaceholder &&
-                        instance.ModellingRule != ModellingRule.MandatoryPlaceholder)
-                    {
-                        continue;
-                    }
-                }
-
-                if (isTypeDefinition &&
-                    !current.ExplicitlyDefined &&
-                    current.Inherited &&
-                    current.AdHocInstance)
-                {
-                    // this assumes that ad-hoc instances are not more than one level deep.
-                    // i.e. a type defines folder and adds a few instances but does not
-                    // defined subfolders.
-                    // need a better way to identify when to suppress inherited adhoc instances.
-                    if (!basePath.Contains(NodeDesign.PathChar, StringComparison.Ordinal))
-                    {
-                        continue;
-                    }
-                }
-
-                current.Instance.State = CreateNodeState(
-                    state,
-                    childPath,
-                    hierarchy,
-                    current.Instance,
-                    false,
-                    isTypeDefinition,
-                    namespaceUris);
-
-                if (current.Instance.State is BaseInstanceState child)
-                {
-                    if (root is DataTypeDesign or ViewDesign or ReferenceTypeDesign)
-                    {
-                        child.ModellingRuleId = default;
-                        state.AddChild(child);
-                    }
-                    else if (explicitOnly)
-                    {
-                        if (current.ExplicitlyDefined)
-                        {
-                            state.AddChild(child);
-                        }
-                    }
-                    else if (isTypeDefinition)
-                    {
-                        if (child.ModellingRuleId == ObjectIds.ModellingRule_Mandatory)
-                        {
-                            state.AddChild(child);
-                        }
-                        else if (current.ExplicitlyDefined &&
-                            child.ModellingRuleId == ObjectIds.ModellingRule_Optional)
-                        {
-                            state.AddChild(child);
-                        }
-                        else if (current.ExplicitlyDefined &&
-                            (child.ModellingRuleId == ObjectIds.ModellingRule_ExposesItsArray ||
-                                child.ModellingRuleId == ObjectIds.ModellingRule_OptionalPlaceholder ||
-                                child.ModellingRuleId == ObjectIds.ModellingRule_MandatoryPlaceholder))
-                        {
-                            state.AddChild(child);
-                        }
-                        else if (current.StaticValue && !current.Inherited)
-                        {
-                            state.AddChild(child);
-                        }
-                    }
-                    else if (child.ModellingRuleId == ObjectIds.ModellingRule_Mandatory)
-                    {
-                        state.AddChild(child);
-                    }
-                    else if (current.ExplicitlyDefined)
-                    {
-                        state.AddChild(child);
-                    }
-                }
-            }
-
-            return state;
-        }
-
-        private BaseObjectTypeState CreateNodeState(
-            ObjectTypeDesign root,
-            NamespaceTable namespaceUris)
-        {
-            var state = new BaseObjectTypeState
-            {
-                Handle = root
-            };
-
-            if (root.BaseTypeNode != null)
-            {
-                state.SuperTypeId = ConstructNodeId(root.BaseTypeNode, namespaceUris);
-            }
-            else
-            {
-                state.SuperTypeId = default;
-            }
-
-            state.IsAbstract = root.IsAbstract;
-
-            return state;
-        }
-
-        private NodeId GetDataType(VariableTypeDesign type, NamespaceTable namespaceUris)
-        {
-            if (!UseAllowSubtypes)
-            {
-                DataTypeDesign dataType = FindNode<DataTypeDesign>(
-                    type.DataType,
-                    type.SymbolicId.Name,
-                    "DataType");
-                return ConstructNodeId(dataType, namespaceUris);
-            }
-
-            return ConstructNodeId(type.DataTypeNode, namespaceUris);
-        }
-
-        private NodeId GetDataType(Parameter field, NamespaceTable namespaceUris)
-        {
-            if (!UseAllowSubtypes)
-            {
-                DataTypeDesign dataType = FindNode<DataTypeDesign>(
-                    field.DataType,
-                    field.Name,
-                    "DataType");
-                return ConstructNodeId(dataType, namespaceUris);
-            }
-
-            return ConstructNodeId(field.DataTypeNode, namespaceUris);
-        }
-
-        private NodeId GetDataType(
-            VariableDesign instance,
-            NamespaceTable namespaceUris)
-        {
-            if (!UseAllowSubtypes)
-            {
-                DataTypeDesign dataType = FindNode<DataTypeDesign>(
-                    instance.DataType,
-                    instance.SymbolicId.Name,
-                    "DataType");
-                return ConstructNodeId(dataType, namespaceUris);
-            }
-
-            return ConstructNodeId(instance.DataTypeNode, namespaceUris);
-        }
-
-        private BaseDataVariableTypeState CreateNodeState(
-            VariableTypeDesign root,
-            NamespaceTable namespaceUris)
-        {
-            var state = new BaseDataVariableTypeState
-            {
-                Handle = root
-            };
-
-            if (root.BaseTypeNode != null)
-            {
-                state.SuperTypeId = ConstructNodeId(
-                    root.BaseTypeNode,
-                    namespaceUris);
-            }
-            else
-            {
-                state.SuperTypeId = default;
-            }
-
-            VariableDesign mergedInstance = null;
-
-            Hierarchy hierarchy = root.Hierarchy;
-
-            if (hierarchy != null &&
-                hierarchy.Nodes.TryGetValue(string.Empty, out HierarchyNode node))
-            {
-                mergedInstance = node.Instance as VariableDesign;
-            }
-
-            state.IsAbstract = root.IsAbstract;
-
-            if (mergedInstance != null)
-            {
-                state.Value = mergedInstance.DecodedValue;
-                state.DataType = GetDataType(
-                    mergedInstance,
-                    namespaceUris);
-                state.ValueRank = ConstructValueRank(
-                    mergedInstance.ValueRank,
-                    mergedInstance.ArrayDimensions);
-                state.ArrayDimensions = ConstructArrayDimensions(
-                    mergedInstance.ValueRank,
-                    mergedInstance.ArrayDimensions);
-            }
-            else
-            {
-                state.Value = root.DecodedValue;
-                state.DataType = GetDataType(
-                    root,
-                    namespaceUris);
-                state.ValueRank = ConstructValueRank(
-                    root.ValueRank,
-                    root.ArrayDimensions);
-                state.ArrayDimensions = ConstructArrayDimensions(
-                    root.ValueRank,
-                    root.ArrayDimensions);
-            }
-
-            return state;
-        }
-
-        private ReferenceTypeState CreateNodeState(
-            ReferenceTypeDesign root,
-            NamespaceTable namespaceUris)
-        {
-            var state = new ReferenceTypeState
-            {
-                Handle = root
-            };
-
-            if (root.BaseTypeNode != null)
-            {
-                state.SuperTypeId = ConstructNodeId(
-                    root.BaseTypeNode,
-                    namespaceUris);
-            }
-            else
-            {
-                state.SuperTypeId = default;
-            }
-
-            state.IsAbstract = root.IsAbstract;
-            state.Symmetric = root.Symmetric;
-
-            if (state.Symmetric)
-            {
-                state.InverseName = Ua.LocalizedText.Null;
-            }
-            else
-            {
-                state.InverseName = new Ua.LocalizedText(
-                    root.InverseName.Key,
-                    string.Empty, root.
-                    InverseName.Value);
-            }
-
-            return state;
-        }
-
-        private DataTypeState CreateNodeState(
-            DataTypeDesign root,
-            NamespaceTable namespaceUris)
-        {
-            var state = new DataTypeState
-            {
-                Handle = root
-            };
-
-            if (root.BaseTypeNode != null)
-            {
-                state.SuperTypeId = ConstructNodeId(root.BaseTypeNode, namespaceUris);
-            }
-            else
-            {
-                state.SuperTypeId = default;
-            }
-
-            state.IsAbstract = root.IsAbstract;
-            state.Purpose =
-                (Export.DataTypePurpose)(int)(root.Purpose == DataTypePurpose.Testing ?
-                    DataTypePurpose.CodeGenerator :
-                    root.Purpose);
-            if (root.BasicDataType is BasicDataType.Enumeration or BasicDataType.UserDefined)
-            {
-                root.Fields ??= [];
-
-                DataTypeDefinition definition = null;
-
-                if (root.BasicDataType == BasicDataType.UserDefined && root.IsStructure)
-                {
-                    var sd = new StructureDefinition();
-
-                    if (root.BaseTypeNode is DataTypeDesign baseType)
-                    {
-                        sd.BaseDataType = ConstructNodeId(baseType, namespaceUris);
-                    }
-
-                    sd.StructureType = StructureType.Structure;
-
-                    if (root.IsUnion)
-                    {
-                        sd.StructureType = StructureType.Union;
-                    }
-
-                    foreach (Parameter field in root.Fields)
-                    {
-                        if (field.IsOptional)
-                        {
-                            sd.StructureType = StructureType.StructureWithOptionalFields;
-                            break;
-                        }
-
-                        if (field.AllowSubTypes)
-                        {
-                            if (root.IsUnion)
-                            {
-                                sd.StructureType = StructureType.UnionWithSubtypedValues;
-                                break;
-                            }
-
-                            sd.StructureType = StructureType.StructureWithSubtypedValues;
-                            break;
-                        }
-                    }
-
-                    sd.FirstExplicitFieldIndex = GetStructureDefinitionFields(
-                        sd,
-                        root,
-                        namespaceUris);
-                    definition = sd;
-                }
-
-                if (root.BasicDataType == BasicDataType.Enumeration && root.IsEnumeration)
-                {
-                    var ed = new EnumDefinition
-                    {
-                        IsOptionSet = root.IsOptionSet
-                    };
-
-                    var enumFields = new List<EnumField>();
-
-                    if (root.Fields != null && root.Fields.Length > 0)
-                    {
-                        foreach (Parameter field in root.Fields)
-                        {
-                            EnumField enumField;
-
-                            if (root.IsOptionSet)
-                            {
-                                long bit = 1;
-                                int value = 0;
-
-                                while (field.Identifier > 0 && bit <= long.MaxValue)
-                                {
-                                    if ((bit & (long)field.Identifier) != 0)
-                                    {
-                                        break;
-                                    }
-
-                                    bit <<= 1;
-                                    value++;
-                                }
-
-                                enumField = new EnumField
-                                {
-                                    Name = field.Name,
-                                    DisplayName = new Ua.LocalizedText(field.Name),
-                                    Value = value
-                                };
-                            }
-                            else
-                            {
-                                enumField = new EnumField
-                                {
-                                    Name = field.Name,
-                                    DisplayName = new Ua.LocalizedText(field.Name),
-                                    Value = (long)field.Identifier
-                                };
-                            }
-
-                            if (field.Description != null &&
-                                !field.Description.IsAutogenerated)
-                            {
-                                enumField.Description = new Ua.LocalizedText(
-                                    field.Description.Value?.Trim());
-                            }
-
-                            enumFields.Add(enumField);
-                        }
-
-                        ed.Fields = enumFields.ToArray();
-                    }
-
-                    definition = ed;
-                }
-
-                state.DataTypeDefinition = new ExtensionObject(definition);
-            }
-
-            return state;
-        }
-
-        private int GetStructureDefinitionFields(
-            StructureDefinition sd,
-            DataTypeDesign dataType,
-            NamespaceTable namespaceUris)
-        {
-            if (dataType == null || dataType.Fields == null)
-            {
-                return sd.Fields.Count;
-            }
-
-            if (dataType.BaseTypeNode is DataTypeDesign baseType)
-            {
-                GetStructureDefinitionFields(sd, baseType, namespaceUris);
-            }
-
-            int start = sd.Fields.Count;
-
-            if (dataType.Fields != null && dataType.Fields.Length > 0)
-            {
-                // inherit optional fields flag if derived structure contains no
-                // optional fields
-                if (sd.StructureType == StructureType.Structure &&
-                    dataType.Fields?.Any(f => f.IsOptional) == true)
-                {
-                    sd.StructureType = StructureType.StructureWithOptionalFields;
-                }
-
-                foreach (Parameter field in dataType.Fields)
-                {
-                    var structureField = new StructureField
-                    {
-                        Name = field.Name,
-                        DataType = GetDataType(
-                            field,
-                            namespaceUris),
-                        ValueRank = ConstructValueRank(
-                            field.ValueRank,
-                            field.ArrayDimensions),
-                        ArrayDimensions = ConstructArrayDimensionsRW(
-                            field.ValueRank,
-                            field.ArrayDimensions)
-                    };
-
-                    if (sd.StructureType == StructureType.StructureWithOptionalFields)
-                    {
-                        structureField.IsOptional = field.IsOptional;
-                    }
-                    else if (sd.StructureType is
-                        StructureType.StructureWithSubtypedValues or
-                        StructureType.UnionWithSubtypedValues)
-                    {
-                        structureField.IsOptional = field.AllowSubTypes;
-                    }
-
-                    if (field.Description != null && !field.Description.IsAutogenerated)
-                    {
-                        structureField.Description =
-                            new Ua.LocalizedText(field.Description.Value.Trim());
-                    }
-
-                    sd.Fields.Add(structureField);
-                }
-            }
-
-            return start;
-        }
-
-        private BaseObjectState CreateNodeState(
-            NodeState parent,
-            ObjectDesign root,
-            NamespaceTable namespaceUris)
-        {
-            var state = new BaseObjectState(parent)
-            {
-                Handle = root,
-
-                TypeDefinitionId = ConstructNodeId(
-                    root.TypeDefinitionNode,
-                    namespaceUris),
-                ReferenceTypeId = ConstructNodeId(
-                    root.ReferenceType,
-                    namespaceUris),
-                ModellingRuleId = ConstructModellingRule(
-                    root.ModellingRule),
-                EventNotifier = ConstructEventNotifier(
-                    root.SupportsEvents),
-                Categories = null,
-                ReleaseStatus = ToReleaseStatus(root.ReleaseStatus),
-                DesignToolOnly = root.DesignToolOnly
-            };
-
-            if (!string.IsNullOrEmpty(root.Category))
-            {
-                state.Categories = root.Category.Split([',']);
-            }
-
-            if (root.PartNo != 0)
-            {
-                state.Specification = $"Part{root.PartNo}";
-            }
-
-            if (root.NumericIdSpecified)
-            {
-                state.NumericId = root.NumericId;
-            }
-
-            return state;
-        }
-
-        private static ViewState CreateNodeState(ViewDesign root)
-        {
-            var state = new ViewState
-            {
-                Handle = root,
-                EventNotifier = ConstructEventNotifier(root.SupportsEvents),
-                ContainsNoLoops = root.ContainsNoLoops,
-                Categories = null,
-                ReleaseStatus = ToReleaseStatus(root.ReleaseStatus)
-            };
-
-            if (!string.IsNullOrEmpty(root.Category))
-            {
-                state.Categories = root.Category.Split([',']);
-            }
-
-            if (root.PartNo != 0)
-            {
-                state.Specification = $"Part{root.PartNo}";
-            }
-
-            return state;
-        }
-
-        private MethodState CreateNodeState(
-            NodeState parent,
-            MethodDesign root,
-            NamespaceTable namespaceUris)
-        {
-            var state = new MethodState(parent)
-            {
-                Handle = root,
-
-                ReferenceTypeId = ConstructNodeId(root.ReferenceType, namespaceUris),
-                ModellingRuleId = ConstructModellingRule(root.ModellingRule)
-            };
-            state.Executable = state.UserExecutable = !root.NonExecutable;
-            state.Categories = null;
-            state.ReleaseStatus = ToReleaseStatus(root.ReleaseStatus);
-            state.MethodDeclarationId = ConstructNodeId(
-                root.MethodDeclarationNode,
-                namespaceUris);
-
-            if (!string.IsNullOrEmpty(root.Category))
-            {
-                state.Categories = root.Category.Split([',']);
-            }
-
-            if (root.PartNo != 0)
-            {
-                state.Specification = $"Part{root.PartNo}";
-            }
-
-            if (root.NumericIdSpecified)
-            {
-                state.NumericId = root.NumericId;
-            }
-
-            return state;
-        }
-
-        private ExtensionObject SetTypeId(ExtensionObject e, NamespaceTable namespaceUris)
-        {
-            XmlQualifiedName qname = null;
-
-            if (e.Body is XmlElement element)
-            {
-                // determine the data type of the element.
-                qname = new XmlQualifiedName(element.LocalName, element.NamespaceURI);
-
-                string prefix = element.GetPrefixOfNamespace(Namespaces.XmlSchemaInstance);
-                string xsitype = element.GetAttribute(prefix + ":type");
-
-                if (!string.IsNullOrEmpty(xsitype))
-                {
-                    int index = xsitype.IndexOf(':', StringComparison.Ordinal);
-
-                    if (index > 0)
-                    {
-                        qname = new XmlQualifiedName(
-                            xsitype[(index + 1)..],
-                            element.GetNamespaceOfPrefix(xsitype[..index]));
-                    }
-                    else
-                    {
-                        qname = new XmlQualifiedName(
-                            xsitype[(index + 1)..],
-                            element.NamespaceURI);
-                    }
-                }
-            }
-            else if (e.Body is IEncodeable encodeable)
-            {
-                qname = TypeInfo.GetXmlName(encodeable.GetType());
-            }
-
-            if (FindType(qname) is DataTypeDesign dataTypeNode)
-            {
-                uint numericId = dataTypeNode.NumericId;
-                int namespaceIndex = namespaceUris.GetIndex(qname.Namespace);
-
-                // look up XML encoding id.
-                if (dataTypeNode.HasEncodings)
-                {
-                    foreach (EncodingDesign encoding in dataTypeNode.Encodings)
-                    {
-                        ObjectDesign encodingNode = FindNode<ObjectDesign>(
-                            encoding.SymbolicId,
-                            encoding.SymbolicId.Name,
-                            "Encoding");
-
-                        if (encodingNode != null &&
-                            encodingNode.SymbolicName.Name == "DefaultXml")
-                        {
-                            numericId = encodingNode.NumericId;
-                            namespaceIndex = namespaceUris.GetIndex(
-                                encodingNode.SymbolicId.Namespace);
-                            break;
-                        }
-                    }
-                }
-
-                if (namespaceIndex >= 0)
-                {
-                    return e.WithTypeId(new NodeId(numericId, (ushort)namespaceIndex));
-                }
-            }
-            return e;
-        }
-
-        private BaseVariableState CreateNodeState(
-            NodeState parent,
-            VariableDesign root,
-            NamespaceTable namespaceUris)
-        {
-            BaseVariableState state;
-
-            if (root is PropertyDesign)
-            {
-                state = new PropertyState(parent);
-            }
-            else
-            {
-                state = new BaseDataVariableState(parent);
-            }
-
-            state.Handle = root;
-            state.TypeDefinitionId = ConstructNodeId(
-                root.TypeDefinitionNode,
-                namespaceUris);
-            state.ReferenceTypeId = ConstructNodeId(
-                root.ReferenceType,
-                namespaceUris);
-            state.ModellingRuleId = ConstructModellingRule(
-                root.ModellingRule);
-            state.Categories = null;
-            state.ReleaseStatus = ToReleaseStatus(root.ReleaseStatus);
-            state.DesignToolOnly = root.DesignToolOnly;
-            state.WriteMask = root.WriteAccess != 0 ?
-                (AttributeWriteMask)root.WriteAccess :
-                AttributeWriteMask.None;
-
-            if (!string.IsNullOrEmpty(root.Category))
-            {
-                state.Categories = root.Category.Split([',']);
-            }
-
-            if (root.PartNo != 0)
-            {
-                state.Specification = $"Part{root.PartNo}";
-            }
-
-            if (root.NumericIdSpecified)
-            {
-                state.NumericId = root.NumericId;
-            }
-
-            state.Value = root.DecodedValue;
-            state.DataType = GetDataType(root, namespaceUris);
-            state.ValueRank = ConstructValueRank(
-                root.ValueRank,
-                root.ArrayDimensions);
-            state.ArrayDimensions = ConstructArrayDimensions(
-                root.ValueRank,
-                root.ArrayDimensions);
-            state.AccessLevel = ConstructAccessLevel(
-                root.AccessLevel);
-            state.UserAccessLevel = state.AccessLevel;
-            state.MinimumSamplingInterval = root.MinimumSamplingInterval;
-            state.Historizing = root.Historizing;
-
-            if (root.DecodedValue is ExtensionObject extensionObject)
-            {
-                root.DecodedValue = SetTypeId(extensionObject, namespaceUris);
-            }
-
-            if (root.DecodedValue is ExtensionObject[] extensionObjects)
-            {
-                root.DecodedValue = extensionObjects
-                    .Select(extensionObject => SetTypeId(
-                        extensionObject,
-                        namespaceUris))
-                    .ToArray();
-            }
-
-            if (root.DecodedValue is IList<Argument> argument)
-            {
-                for (int ii = 0; ii < argument.Count; ii++)
-                {
-                    string namespaceUri = Namespaces.OpcUa;
-
-                    if (!argument[ii].DataType.TryGetIdentifier(out string name))
-                    {
-                        continue;
-                    }
-
-                    int index = name.LastIndexOf(':');
-
-                    if (index != -1)
-                    {
-                        namespaceUri = name[..index];
-                        name = name[(index + 1)..];
-                    }
-
-                    argument[ii].DataType = ConstructNodeId(
-                        new XmlQualifiedName(name, namespaceUri),
-                        namespaceUris);
-                }
-            }
-
-            return state;
-        }
-
-        /// <summary>
         /// Allocates identifiers
         /// </summary>
         private sealed class IdAllocator
@@ -7801,20 +6399,25 @@ namespace Opc.Ua.Schema.Model
 
         private static readonly XmlQualifiedName s_baseDataTypeQn =
             new("BaseDataType", Namespaces.OpcUa);
+
         private static readonly XmlQualifiedName s_structureQn =
             new("Structure", Namespaces.OpcUa);
-        // private static readonly XmlQualifiedName s_xmlElementQn =
-        //     new("XmlElement", Namespaces.OpcUa);
+
         private static readonly XmlQualifiedName s_byteStringQn =
             new("ByteString", Namespaces.OpcUa);
+
         private static readonly XmlQualifiedName s_baseObjectTypeQn =
             new("BaseObjectType", Namespaces.OpcUa);
+
         private static readonly XmlQualifiedName s_baseDataVariableTypeQn =
             new("BaseDataVariableType", Namespaces.OpcUa);
+
         private static readonly XmlQualifiedName s_referencesQn =
             new("References", Namespaces.OpcUa);
+
         private static readonly XmlQualifiedName s_enumerationQn =
             new("Enumeration", Namespaces.OpcUa);
+
         private static readonly XmlQualifiedName s_unionQn =
             new("Union", Namespaces.OpcUa);
 

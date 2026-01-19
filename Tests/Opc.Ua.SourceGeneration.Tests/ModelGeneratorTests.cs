@@ -92,12 +92,12 @@ namespace Opc.Ua.SourceGeneration
             GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation);
             if (!embedNodeSet2Xml)
             {
-                Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(8));
+                Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(9));
             }
             else
             {
                 // one extra for the embedded nodeset2.xml
-                Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(9));
+                Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(10));
             }
         }
 
@@ -130,7 +130,7 @@ namespace Opc.Ua.SourceGeneration
                 .WithUpdatedAnalyzerConfigOptions(options)
                 ;
             GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation);
-            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(16));
+            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(18));
         }
 
         [Theory]
@@ -148,8 +148,7 @@ namespace Opc.Ua.SourceGeneration
                 {
                     ["build_property.ModelSourceGeneratorVersion"] = "v105",
                     ["build_property.ModelSourceGeneratorExclude"] = "Draft",
-                    ["build_property.ModelSourceGeneratorUseAllowSubtypes"] =
-                        "true"
+                    ["build_property.ModelSourceGeneratorUseAllowSubtypes"] = "true"
                 });
 
             // Create the driver that executes the generator
@@ -166,8 +165,8 @@ namespace Opc.Ua.SourceGeneration
                 ;
 
             // There will be 120 errors due to missing Opc.Ua dll reference
-            GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation, 120);
-            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(8));
+            GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation, true);
+            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(9));
 
             string testDataXmlSchema = ValidateXmlSchema(languageVersion, generatorResult);
             Assert.That(testDataXmlSchema,
@@ -226,7 +225,7 @@ namespace Opc.Ua.SourceGeneration
         private static GeneratorRunResult GenerateAndCompile(
             GeneratorDriver driver,
             CSharpCompilation compilation,
-            int expectedErrors = 0)
+            bool filterLinkerAndReferenceErrors = false)
         {
             // Run it
             driver = driver.RunGeneratorsAndUpdateCompilation(
@@ -240,9 +239,10 @@ namespace Opc.Ua.SourceGeneration
             outputCompilation.GetDiagnostics().Check(
                 TestContext.Out,
                 out int errors,
-                out int warnings);
+                out int warnings,
+                filterLinkerAndReferenceErrors);
 
-            Assert.That(errors, Is.EqualTo(expectedErrors),
+            Assert.That(errors, Is.EqualTo(0),
                 $"Compilation produced {errors} errors");
 #if NETFRAMEWORK
             TestContext.Out.WriteLine($"Compilation produced {warnings} warnings");
