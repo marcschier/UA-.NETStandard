@@ -4041,7 +4041,6 @@ namespace Quickstarts.ReferenceServer
             variable.Historizing = false;
             variable.Value = TypeInfo.GetDefaultValue((uint)dataType, valueRank, Server.TypeTree);
             variable.StatusCode = StatusCodes.Good;
-            variable.Timestamp = DateTime.UtcNow;
 
             if (valueRank == ValueRanks.OneDimension)
             {
@@ -4173,7 +4172,6 @@ namespace Quickstarts.ReferenceServer
                 TypeInfo.GetDefaultValue(dataType, valueRank, Server.TypeTree);
 
             variable.StatusCode = StatusCodes.Good;
-            variable.Timestamp = DateTime.UtcNow;
             // The latest UNECE version (Rev 11, published in 2015) is available here:
             // http://www.opcfoundation.org/UA/EngineeringUnits/UNECE/rec20_latest_08052015.zip
             variable.EngineeringUnits.Value = new EUInformation(
@@ -4230,7 +4228,6 @@ namespace Quickstarts.ReferenceServer
             variable.Historizing = false;
             variable.Value = (bool)GetNewValue(variable);
             variable.StatusCode = StatusCodes.Good;
-            variable.Timestamp = DateTime.UtcNow;
 
             variable.TrueState.Value = trueState;
             variable.TrueState.AccessLevel = AccessLevels.CurrentReadOrWrite;
@@ -4274,7 +4271,6 @@ namespace Quickstarts.ReferenceServer
             variable.Historizing = false;
             variable.Value = (uint)0;
             variable.StatusCode = StatusCodes.Good;
-            variable.Timestamp = DateTime.UtcNow;
             variable.OnWriteValue = OnWriteDiscrete;
 
             var strings = new LocalizedText[values.Length];
@@ -4335,7 +4331,6 @@ namespace Quickstarts.ReferenceServer
             variable.Historizing = false;
             variable.Value = (uint)0;
             variable.StatusCode = StatusCodes.Good;
-            variable.Timestamp = DateTime.UtcNow;
             variable.OnWriteValue = OnWriteValueDiscrete;
 
             // there are two enumerations for this type:
@@ -4595,7 +4590,6 @@ namespace Quickstarts.ReferenceServer
             };
             variable.Value = GetNewValue(variable);
             variable.StatusCode = StatusCodes.Good;
-            variable.Timestamp = DateTime.UtcNow;
 
             if (valueRank == ValueRanks.OneDimension)
             {
