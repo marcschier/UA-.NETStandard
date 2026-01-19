@@ -39,7 +39,7 @@
   </ItemGroup>
   <ItemGroup Condition="'$(NoErrorProneAnalyzers)' == '' AND '$(BuildingInsideVisualStudio)' != 'true'">
     <PackageReference Include="ErrorProne.NET.CoreAnalyzers" PrivateAssets="All" />
-    <PackageReference Include="ErrorProne.NET.Structs" PrivateAssets="All" />
+    <!--<PackageReference Include="ErrorProne.NET.Structs" PrivateAssets="All" />-->
   </ItemGroup>
   <PropertyGroup>
     <NoWarn>$(NoWarn);NU1510</NoWarn>
