@@ -2523,9 +2523,9 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Template for a single node state creation call
         /// </summary>
-        public static readonly TemplateString NodeState_Create_cs = TemplateString.Parse(
+        public static readonly TemplateString NodeState_Add_cs = TemplateString.Parse(
             $$"""
-            nodes.Add(Create_{{Tokens.SymbolicName}}(context));
+            nodes.Add(Create_{{Tokens.SymbolicId}}(context));
 
             """);
 
@@ -2537,7 +2537,7 @@ namespace Opc.Ua.SourceGeneration
             /// <summary>
             /// Creates the {{Tokens.SymbolicName}} ObjectType node state.
             /// </summary>
-            private static global::Opc.Ua.BaseObjectTypeState Create_{{Tokens.SymbolicName}}(
+            private static global::Opc.Ua.BaseObjectTypeState Create_{{Tokens.SymbolicId}}(
                 global::Opc.Ua.ISystemContext context)
             {
                 var state = new global::Opc.Ua.BaseObjectTypeState();
@@ -2562,6 +2562,8 @@ namespace Opc.Ua.SourceGeneration
                 return state;
             }
 
+            {{Tokens.ListOfChildTypes}}
+
             """);
 
         /// <summary>
@@ -2572,7 +2574,7 @@ namespace Opc.Ua.SourceGeneration
             /// <summary>
             /// Creates the {{Tokens.SymbolicName}} VariableType node state.
             /// </summary>
-            private static global::Opc.Ua.BaseDataVariableTypeState Create_{{Tokens.SymbolicName}}(
+            private static global::Opc.Ua.BaseDataVariableTypeState Create_{{Tokens.SymbolicId}}(
                 global::Opc.Ua.ISystemContext context)
             {
                 var state = new global::Opc.Ua.BaseDataVariableTypeState();
@@ -2601,6 +2603,8 @@ namespace Opc.Ua.SourceGeneration
                 return state;
             }
 
+            {{Tokens.ListOfChildTypes}}
+
             """);
 
         /// <summary>
@@ -2611,7 +2615,7 @@ namespace Opc.Ua.SourceGeneration
             /// <summary>
             /// Creates the {{Tokens.SymbolicName}} ReferenceType node state.
             /// </summary>
-            private static global::Opc.Ua.ReferenceTypeState Create_{{Tokens.SymbolicName}}(
+            private static global::Opc.Ua.ReferenceTypeState Create_{{Tokens.SymbolicId}}(
                 global::Opc.Ua.ISystemContext context)
             {
                 var state = new global::Opc.Ua.ReferenceTypeState();
@@ -2647,7 +2651,7 @@ namespace Opc.Ua.SourceGeneration
             /// <summary>
             /// Creates the {{Tokens.SymbolicName}} DataType node state.
             /// </summary>
-            private static global::Opc.Ua.DataTypeState Create_{{Tokens.SymbolicName}}(
+            private static global::Opc.Ua.DataTypeState Create_{{Tokens.SymbolicId}}(
                 global::Opc.Ua.ISystemContext context)
             {
                 var state = new global::Opc.Ua.DataTypeState();
@@ -2672,6 +2676,8 @@ namespace Opc.Ua.SourceGeneration
                 return state;
             }
 
+            {{Tokens.ListOfChildTypes}}
+
             """);
 
         /// <summary>
@@ -2682,7 +2688,7 @@ namespace Opc.Ua.SourceGeneration
             /// <summary>
             /// Creates the {{Tokens.SymbolicName}} Object node state.
             /// </summary>
-            private static global::Opc.Ua.BaseObjectState Create_{{Tokens.SymbolicName}}(
+            private static global::Opc.Ua.BaseObjectState Create_{{Tokens.SymbolicId}}(
                 global::Opc.Ua.ISystemContext context)
             {
                 var state = new global::Opc.Ua.BaseObjectState(null);
@@ -2709,6 +2715,8 @@ namespace Opc.Ua.SourceGeneration
                 return state;
             }
 
+            {{Tokens.ListOfChildTypes}}
+
             """);
 
         /// <summary>
@@ -2719,7 +2727,7 @@ namespace Opc.Ua.SourceGeneration
             /// <summary>
             /// Creates the {{Tokens.SymbolicName}} View node state.
             /// </summary>
-            private static global::Opc.Ua.ViewState Create_{{Tokens.SymbolicName}}(
+            private static global::Opc.Ua.ViewState Create_{{Tokens.SymbolicId}}(
                 global::Opc.Ua.ISystemContext context)
             {
                 var state = new global::Opc.Ua.ViewState();
@@ -2753,7 +2761,7 @@ namespace Opc.Ua.SourceGeneration
             /// <summary>
             /// Creates the {{Tokens.SymbolicName}} Method node state.
             /// </summary>
-            private static global::Opc.Ua.MethodState Create_{{Tokens.SymbolicName}}(
+            private static global::Opc.Ua.MethodState Create_{{Tokens.SymbolicId}}(
                 global::Opc.Ua.ISystemContext context)
             {
                 var state = new global::Opc.Ua.MethodState(null);
@@ -2781,6 +2789,8 @@ namespace Opc.Ua.SourceGeneration
                 return state;
             }
 
+            {{Tokens.ListOfChildTypes}}
+
             """);
 
         /// <summary>
@@ -2791,7 +2801,7 @@ namespace Opc.Ua.SourceGeneration
             /// <summary>
             /// Creates the {{Tokens.SymbolicName}} Variable node state.
             /// </summary>
-            private static global::Opc.Ua.BaseVariableState Create_{{Tokens.SymbolicName}}(
+            private static global::Opc.Ua.BaseVariableState Create_{{Tokens.SymbolicId}}(
                 global::Opc.Ua.ISystemContext context)
             {
                 var state = new {{Tokens.StateClassName}}(null);
@@ -2825,23 +2835,7 @@ namespace Opc.Ua.SourceGeneration
                 return state;
             }
 
-            """);
-
-        /// <summary>
-        /// Template for adding a reference
-        /// </summary>
-        public static readonly TemplateString NodeState_AddReference_cs = TemplateString.Parse(
-            $$"""
-            state.AddReference({{Tokens.ReferenceTypeIdConstant}}, {{Tokens.IsInverse}}, {{Tokens.TargetNodeIdConstant}});
-
-            """);
-
-        /// <summary>
-        /// Template for adding a child node state
-        /// </summary>
-        public static readonly TemplateString NodeState_AddChild_cs = TemplateString.Parse(
-            $$"""
-            state.AddChild(Create_{{Tokens.SymbolicName}}_{{Tokens.ChildName}}(context, state));
+            {{Tokens.ListOfChildTypes}}
 
             """);
 
@@ -2850,12 +2844,15 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public static readonly TemplateString NodeState_ChildObject_cs = TemplateString.Parse(
             $$"""
-            private static global::Opc.Ua.BaseObjectState Create_{{Tokens.SymbolicName}}_{{Tokens.ChildName}}(
+            /// <summary>
+            /// Creates the {{Tokens.SymbolicName}} child Object node state.
+            /// </summary>
+            private static global::Opc.Ua.BaseObjectState Create_{{Tokens.SymbolicId}}(
                 global::Opc.Ua.ISystemContext context,
                 global::Opc.Ua.NodeState parent)
             {
                 var state = new global::Opc.Ua.BaseObjectState(parent);
-                state.SymbolicName = "{{Tokens.ChildName}}";
+                state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
@@ -2870,12 +2867,15 @@ namespace Opc.Ua.SourceGeneration
                 state.EventNotifier = {{Tokens.EventNotifier}};
                 {{Tokens.ReleaseStatusValue}}
                 {{Tokens.CategoriesValue}}
+                {{Tokens.SpecificationValue}}
                 {{Tokens.AccessRestrictionsValue}}
                 {{Tokens.ListOfRolePermissions}}
                 {{Tokens.ListOfReferences}}
                 {{Tokens.ListOfChildNodeStates}}
                 return state;
             }
+
+            {{Tokens.ListOfChildTypes}}
 
             """);
 
@@ -2884,12 +2884,15 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public static readonly TemplateString NodeState_ChildVariable_cs = TemplateString.Parse(
             $$"""
-            private static global::Opc.Ua.BaseVariableState Create_{{Tokens.SymbolicName}}_{{Tokens.ChildName}}(
+            /// <summary>
+            /// Creates the {{Tokens.SymbolicName}} Variable child node state.
+            /// </summary>
+            private static global::Opc.Ua.BaseVariableState Create_{{Tokens.SymbolicId}}(
                 global::Opc.Ua.ISystemContext context,
                 global::Opc.Ua.NodeState parent)
             {
                 var state = new {{Tokens.StateClassName}}(parent);
-                state.SymbolicName = "{{Tokens.ChildName}}";
+                state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
@@ -2911,12 +2914,15 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.ValueCode}}
                 {{Tokens.ReleaseStatusValue}}
                 {{Tokens.CategoriesValue}}
+                {{Tokens.SpecificationValue}}
                 {{Tokens.AccessRestrictionsValue}}
                 {{Tokens.ListOfRolePermissions}}
                 {{Tokens.ListOfReferences}}
                 {{Tokens.ListOfChildNodeStates}}
                 return state;
             }
+
+            {{Tokens.ListOfChildTypes}}
 
             """);
 
@@ -2925,12 +2931,15 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public static readonly TemplateString NodeState_ChildMethod_cs = TemplateString.Parse(
             $$"""
-            private static global::Opc.Ua.MethodState Create_{{Tokens.SymbolicName}}_{{Tokens.ChildName}}(
+            /// <summary>
+            /// Creates the {{Tokens.SymbolicName}} child Method node state.
+            /// </summary>
+            private static global::Opc.Ua.MethodState Create_{{Tokens.SymbolicId}}(
                 global::Opc.Ua.ISystemContext context,
                 global::Opc.Ua.NodeState parent)
             {
                 var state = new global::Opc.Ua.MethodState(parent);
-                state.SymbolicName = "{{Tokens.ChildName}}";
+                state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
@@ -2946,12 +2955,45 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.MethodDeclarationIdConstant}}
                 {{Tokens.ReleaseStatusValue}}
                 {{Tokens.CategoriesValue}}
+                {{Tokens.SpecificationValue}}
                 {{Tokens.AccessRestrictionsValue}}
                 {{Tokens.ListOfRolePermissions}}
                 {{Tokens.ListOfReferences}}
                 {{Tokens.ListOfChildNodeStates}}
                 return state;
             }
+
+            {{Tokens.ListOfChildTypes}}
+
+            """);
+
+        /// <summary>
+        /// Template for adding a reference
+        /// </summary>
+        public static readonly TemplateString NodeState_AddReference_cs = TemplateString.Parse(
+            $$"""
+            state.AddReference({{Tokens.ReferenceTypeIdConstant}}, {{Tokens.IsInverse}}, {{Tokens.TargetNodeIdConstant}});
+
+            """);
+
+        /// <summary>
+        /// Template for adding a child node state
+        /// </summary>
+        public static readonly TemplateString NodeState_AddChild_cs = TemplateString.Parse(
+            $$"""
+            state.AddChild(Create_{{Tokens.SymbolicId}}(context, state));
+
+            """);
+
+        /// <summary>
+        /// Template for role permissions collection initialization
+        /// </summary>
+        public static readonly TemplateString NodeState_RolePermissions_cs = TemplateString.Parse(
+            $$"""
+            state.RolePermissions = new global::Opc.Ua.RolePermissionTypeCollection
+            {
+                {{Tokens.ListOfRolePermissions}}
+            };
 
             """);
 
@@ -2960,11 +3002,11 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public static readonly TemplateString NodeState_RolePermission_cs = TemplateString.Parse(
             $$"""
-            state.RolePermissions.Add(new global::Opc.Ua.RolePermissionType
+            new global::Opc.Ua.RolePermissionType
             {
                 RoleId = {{Tokens.RoleIdConstant}},
                 Permissions = {{Tokens.PermissionsValue}}
-            });
+            },
 
             """);
 
@@ -3056,15 +3098,6 @@ namespace Opc.Ua.SourceGeneration
             $$"""
             state.Value = {{Tokens.ValueCode}};
 
-            """);
-
-        /// <summary>
-        /// Template for role permissions collection initialization
-        /// </summary>
-        public static readonly TemplateString NodeState_RolePermissionsInit_cs = TemplateString.Parse(
-            $$"""
-            state.RolePermissions = new global::Opc.Ua.RolePermissionTypeCollection();
-            {{Tokens.ListOfRolePermissions}}
             """);
     }
 }

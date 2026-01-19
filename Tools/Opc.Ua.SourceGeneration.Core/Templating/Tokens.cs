@@ -171,6 +171,7 @@ namespace Opc.Ua.SourceGeneration
         public static string EqualityComparer => nameof(EqualityComparer);
         public static string ListOfNodeStateInitializers => nameof(ListOfNodeStateInitializers);
         public static string ListOfChildNodeStates => nameof(ListOfChildNodeStates);
+        public static string ListOfChildTypes => nameof(ListOfChildTypes);
         public static string ListOfReferences => nameof(ListOfReferences);
         public static string NodeIdConstant => nameof(NodeIdConstant);
         public static string SuperTypeIdConstant => nameof(SuperTypeIdConstant);

@@ -98,15 +98,32 @@ namespace Opc.Ua.Schema.Model
         /// <inheritdoc/>
         public bool Equals(ListOfChildren other)
         {
-            return other is not null &&
-                ArrayEqualityComparer<InstanceDesign>.Default.Equals(Items, other.Items);
+            if (other is null || other.Items.Length != Items.Length)
+            {
+                return false;
+            }
+
+            // Only compare symbolicid to prevent circular loops
+            for (int ii = 0; ii < Items.Length; ii++)
+            {
+                if (!XmlQualifiedNameEqualityComparer.Default.Equals(
+                    Items[ii].SymbolicId,
+                    other.Items[ii].SymbolicId))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         /// <inheritdoc/>
         public override int GetHashCode()
         {
             var hash = new HashCode();
-            hash.Add(Items, ArrayEqualityComparer<InstanceDesign>.Default);
+            foreach (InstanceDesign child in Items)
+            {
+                hash.Add(XmlQualifiedNameEqualityComparer.Default.GetHashCode(child.SymbolicId));
+            }
             return hash.ToHashCode();
         }
 
