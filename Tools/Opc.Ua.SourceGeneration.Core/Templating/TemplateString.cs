@@ -119,15 +119,33 @@ namespace Opc.Ua.SourceGeneration
     /// </summary>
     internal class ParsedTemplateString : FormattableString
     {
+        public const int MaxLiteralLength = 1 * 1024 * 1024;
+        public const int MaxFormattedCount = 16 * 1024;
+
+        /// <summary>
+        /// Created parsed template
+        /// </summary>
         public ParsedTemplateString(int literalLength, int formattedCount)
         {
+            if (literalLength > MaxLiteralLength || literalLength < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(literalLength));
+            }
+            if (formattedCount > MaxFormattedCount || formattedCount < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(formattedCount));
+            }
             LiteralLength = literalLength;
             FormattedCount = formattedCount;
-            m_operations = new List<Op>(literalLength + formattedCount);
+            m_operations = new List<Op>(formattedCount * 2);
         }
 
+        /// <summary>
+        /// Create from raw string. Null is treated as empty string
+        /// </summary>
         public static ParsedTemplateString FromString(string rawString)
         {
+            rawString ??= string.Empty;
             var parsed = new ParsedTemplateString(rawString.Length, 0);
             parsed.AddLiteral(rawString);
             return parsed;

@@ -110,15 +110,15 @@ namespace Opc.Ua.Configuration.Tests
 
             var securityConfiguration = new SecurityConfiguration
             {
-                ApplicationCertificates = new CertificateIdentifierCollection
-                {
+                ApplicationCertificates =
+                [
                     new CertificateIdentifier
                     {
                         StoreType = CertificateStoreType.Directory,
                         StorePath = "pki/own",
                         CertificateType = ObjectTypeIds.RsaSha256ApplicationCertificateType
                     }
-                },
+                ],
                 TrustedPeerCertificates = new CertificateTrustList { StorePath = "Test" },
                 TrustedIssuerCertificates = new CertificateTrustList { StorePath = "Test" }
             };
@@ -201,15 +201,15 @@ namespace Opc.Ua.Configuration.Tests
                 ApplicationType = ApplicationType.Server,
                 SecurityConfiguration = new SecurityConfiguration
                 {
-                    ApplicationCertificates = new CertificateIdentifierCollection
-                    {
+                    ApplicationCertificates =
+                    [
                         new CertificateIdentifier
                         {
                             StoreType = CertificateStoreType.Directory,
                             StorePath = "pki/own",
                             CertificateType = ObjectTypeIds.RsaSha256ApplicationCertificateType
                         }
-                    },
+                    ],
                     TrustedPeerCertificates = new CertificateTrustList { StorePath = "Test" },
                     TrustedIssuerCertificates = new CertificateTrustList { StorePath = "Test" }
                 }
@@ -316,8 +316,7 @@ namespace Opc.Ua.Configuration.Tests
 
             // First set legacy to mark deprecated, then set the modern collection.
             configuration.SecurityConfiguration.ApplicationCertificate = legacyCert;
-            configuration.SecurityConfiguration.ApplicationCertificates =
-                new CertificateIdentifierCollection { modernCert };
+            configuration.SecurityConfiguration.ApplicationCertificates = [modernCert];
 
             string xml;
             using (var stream = new MemoryStream())

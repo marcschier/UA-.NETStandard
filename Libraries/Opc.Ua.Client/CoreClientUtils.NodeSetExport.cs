@@ -30,7 +30,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace Opc.Ua.Client
 {
@@ -94,7 +93,7 @@ namespace Opc.Ua.Client
                 return null;
             }
 
-            NodeState? nodeState = null;
+            NodeState? nodeState;
 
             switch (node.NodeClass)
             {
@@ -296,7 +295,7 @@ namespace Opc.Ua.Client
             // Handle references - nodeState is guaranteed to be non-null here
             if (node is ILocalNode localNodeWithRefs)
             {
-                var references = localNodeWithRefs.References;
+                IReferenceCollection references = localNodeWithRefs.References;
                 if (references != null && references.Count > 0)
                 {
                     foreach (IReference reference in references)

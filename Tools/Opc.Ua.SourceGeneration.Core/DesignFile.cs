@@ -27,6 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -96,10 +97,16 @@ namespace Opc.Ua.SourceGeneration
         /// Get design file groups for processing. A group is a set of design files
         /// in the same common folder with an optional csv file included.
         /// </summary>
+        /// <exception cref="ArgumentNullException"><paramref name="collection"/>
+        /// is <c>null</c>.</exception>
         public static IEnumerable<DesignFileCollection> Group(
             this DesignFileCollection collection,
             List<string> identifierFiles = null)
         {
+            if (collection is null)
+            {
+                throw new ArgumentNullException(nameof(collection));
+            }
             var idFiles = new Dictionary<string, List<string>>();
             if (identifierFiles != null)
             {
@@ -108,7 +115,7 @@ namespace Opc.Ua.SourceGeneration
                     string dir = Path.GetDirectoryName(idFile);
                     if (!idFiles.TryGetValue(dir, out List<string> value))
                     {
-                        value = new List<string>();
+                        value = [];
                         idFiles[dir] = value;
                     }
                     value.Add(idFile);

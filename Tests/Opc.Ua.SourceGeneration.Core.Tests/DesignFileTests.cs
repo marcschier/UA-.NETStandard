@@ -39,25 +39,29 @@ namespace Opc.Ua.SourceGeneration.Tests
     /// Unit tests for <see cref = "DesignFileExtensions"/> class.
     /// </summary>
     [TestFixture]
+    [Category("Api")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
     public class DesignFileExtensionsTests
     {
         /// <summary>
         /// Tests that Group throws ArgumentNullException when collection parameter is null.
         /// </summary>
         [Test]
-        public void Group_NullCollection_ThrowsNullReferenceException()
+        public void Group_NullCollection_ThrowsArgumentNullException()
         {
             // Arrange
             DesignFileCollection collection = null;
             // Act & Assert
-            Assert.Throws<NullReferenceException>(() => collection.Group().ToList());
+            Assert.Throws<ArgumentNullException>(() => collection.Group().ToList());
         }
 
         /// <summary>
         /// Tests that Group throws NullReferenceException when DesignFiles property is null.
         /// </summary>
         [Test]
-        public void Group_NullDesignFiles_ThrowsNullReferenceException()
+        public void Group_NullDesignFiles_ThrowsArgumentNullException()
         {
             // Arrange
             var collection = new DesignFileCollection
@@ -67,7 +71,7 @@ namespace Opc.Ua.SourceGeneration.Tests
                 Options = null
             };
             // Act & Assert
-            Assert.Throws<NullReferenceException>(() => collection.Group().ToList());
+            Assert.Throws<ArgumentNullException>(() => collection.Group().ToList());
         }
 
         /// <summary>
@@ -79,7 +83,7 @@ namespace Opc.Ua.SourceGeneration.Tests
             // Arrange
             var collection = new DesignFileCollection
             {
-                DesignFiles = new List<string>(),
+                DesignFiles = [],
                 IdentifierFilePath = null,
                 Options = null
             };
@@ -104,10 +108,10 @@ namespace Opc.Ua.SourceGeneration.Tests
             };
             var collection = new DesignFileCollection
             {
-                DesignFiles = new List<string>
-                {
+                DesignFiles =
+                [
                     designFile
-                },
+                ],
                 IdentifierFilePath = "global.csv",
                 Options = options
             };
@@ -244,7 +248,7 @@ namespace Opc.Ua.SourceGeneration.Tests
                 Options = null
             };
             // Act
-            var result = collection.Group(new List<string>()).ToList();
+            var result = collection.Group([]).ToList();
             // Assert
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Count, Is.EqualTo(1));

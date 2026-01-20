@@ -40,6 +40,10 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
     /// Unit tests for the DataTypeGenerator class.
     /// </summary>
     [TestFixture]
+    [Category("Generator")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
     public class DataTypeGeneratorTests
     {
         /// <summary>
@@ -56,7 +60,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             var mockTelemetry = new Mock<ITelemetryContext>(MockBehavior.Strict);
             var mockOptions = new Mock<GeneratorOptions>(MockBehavior.Strict);
 
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign>());
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([]);
 
             var context = new GeneratorContext
             {
@@ -473,7 +477,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             var mockTelemetry = new Mock<ITelemetryContext>(MockBehavior.Strict);
             var mockOptions = new Mock<GeneratorOptions>(MockBehavior.Strict);
 
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign>());
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([]);
 
             var context = new GeneratorContext
             {
@@ -499,13 +503,13 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         /// Expected result: NullReferenceException is thrown.
         /// </summary>
         [Test]
-        public void Constructor_NullContext_ThrowsNullReferenceException()
+        public void Constructor_NullContext_ThrowsArgumentNullException()
         {
             // Arrange
             GeneratorContext context = null;
 
             // Act & Assert
-            Assert.Throws<NullReferenceException>(() => new DataTypeGenerator(context));
+            Assert.Throws<ArgumentNullException>(() => new DataTypeGenerator(context));
         }
 
         /// <summary>
@@ -604,7 +608,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         /// Expected result: NullReferenceException is thrown when creating ServiceMessageContext.
         /// </summary>
         [Test]
-        public void Constructor_ContextWithNullTelemetry_ThrowsNullReferenceException()
+        public void Constructor_ContextWithNullTelemetry_ThrowsArgumentNullException()
         {
             // Arrange
             var mockFileSystem = new Mock<IFileSystem>();
@@ -621,7 +625,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             };
 
             // Act & Assert
-            Assert.Throws<NullReferenceException>(() => new DataTypeGenerator(context));
+            Assert.Throws<ArgumentNullException>(() => new DataTypeGenerator(context));
         }
     }
 }

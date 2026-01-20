@@ -36,6 +36,10 @@ using NUnit.Framework;
 namespace Opc.Ua.SourceGeneration.Templating.Tests
 {
     [TestFixture]
+    [Category("Templating")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
     public class TemplateStringTests
     {
         [Test]
@@ -101,12 +105,10 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         }
 
         /// <summary>
-        /// Tests that Parse creates a valid TemplateString with default struct initialization.
-        /// Input: Default TemplateParser struct (all fields zero)
-        /// Expected: Non-null TemplateString with non-null ParsedTemplate
+        /// Tests that Parse creates with default parerser
         /// </summary>
         [Test]
-        public void Parse_DefaultStructInitialization_CreatesValidTemplateString()
+        public void Parse_DefaultStructInitialization_ReturnsNullParsedTemplateString()
         {
             // Arrange
             var parser = default(TemplateParser);
@@ -116,7 +118,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
 
             // Assert
             Assert.That(result, Is.Not.Null);
-            Assert.That(result.ParsedTemplate, Is.Not.Null);
+            Assert.That(result.ParsedTemplate, Is.Null);
         }
 
         /// <summary>
@@ -267,7 +269,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         public void Parse_ParserWithMaxValues_CreatesValidTemplateString()
         {
             // Arrange
-            var parser = new TemplateParser(int.MaxValue, int.MaxValue);
+            var parser = new TemplateParser(ParsedTemplateString.MaxLiteralLength, ParsedTemplateString.MaxFormattedCount);
 
             // Act
             var result = TemplateString.Parse(parser);
@@ -275,29 +277,8 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             // Assert
             Assert.That(result, Is.Not.Null);
             Assert.That(result.ParsedTemplate, Is.Not.Null);
-            Assert.That(result.ParsedTemplate.LiteralLength, Is.EqualTo(int.MaxValue));
-            Assert.That(result.ParsedTemplate.FormattedCount, Is.EqualTo(int.MaxValue));
-        }
-
-        /// <summary>
-        /// Tests that Parse creates a valid TemplateString with parser initialized with negative values.
-        /// Input: Parser initialized with negative values for literalLength and formattedCount
-        /// Expected: Non-null TemplateString (negative values are accepted by constructor)
-        /// </summary>
-        [Test]
-        public void Parse_ParserWithNegativeValues_CreatesValidTemplateString()
-        {
-            // Arrange
-            var parser = new TemplateParser(-1, -1);
-
-            // Act
-            var result = TemplateString.Parse(parser);
-
-            // Assert
-            Assert.That(result, Is.Not.Null);
-            Assert.That(result.ParsedTemplate, Is.Not.Null);
-            Assert.That(result.ParsedTemplate.LiteralLength, Is.EqualTo(-1));
-            Assert.That(result.ParsedTemplate.FormattedCount, Is.EqualTo(-1));
+            Assert.That(result.ParsedTemplate.LiteralLength, Is.EqualTo(ParsedTemplateString.MaxLiteralLength));
+            Assert.That(result.ParsedTemplate.FormattedCount, Is.EqualTo(ParsedTemplateString.MaxFormattedCount));
         }
 
         /// <summary>

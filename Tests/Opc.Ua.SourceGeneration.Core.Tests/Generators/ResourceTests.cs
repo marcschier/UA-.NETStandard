@@ -36,7 +36,11 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
     /// Unit tests for the Resource class.
     /// </summary>
     [TestFixture]
-    public partial class ResourceTests
+    [Category("Generator")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
+    public class ResourceTests
     {
         /// <summary>
         /// Tests GetNameForFile with a simple filename containing a single dot.
@@ -483,7 +487,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         /// Tests that the constructor throws NullReferenceException when resourceName is null.
         /// </summary>
         [Test]
-        public void Constructor_NullResourceName_ThrowsNullReferenceException()
+        public void Constructor_NullResourceName_ThrowsArgumentNullException()
         {
             // Arrange
             const string resourceName = null;
@@ -494,7 +498,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
                 3
             ];
             // Act & Assert
-            Assert.Throws<NullReferenceException>(() => new BinaryResource(resourceName, data, false));
+            Assert.Throws<ArgumentNullException>(() => new BinaryResource(resourceName, data, false));
         }
 
         /// <summary>

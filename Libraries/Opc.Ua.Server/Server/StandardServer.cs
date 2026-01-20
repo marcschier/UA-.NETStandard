@@ -2207,7 +2207,8 @@ namespace Opc.Ua.Server
                                 {
                                     m_logger.LogWarning(
                                         "Could not cleanly close connection with LDS. Exception={ErrorMessage}",
-                                        e.Message);}
+                                        e.Message);
+                                }
                             }
                         }
                     }

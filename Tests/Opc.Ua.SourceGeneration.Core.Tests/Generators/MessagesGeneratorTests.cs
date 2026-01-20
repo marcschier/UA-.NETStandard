@@ -37,7 +37,11 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
     /// Unit tests for the <see cref="MessagesGenerator"/> class.
     /// </summary>
     [TestFixture]
-    public partial class MessagesGeneratorTests
+    [Category("Generator")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
+    public class MessagesGeneratorTests
     {
         /// <summary>
         /// Tests that the constructor successfully creates an instance when provided with a valid GeneratorContext.

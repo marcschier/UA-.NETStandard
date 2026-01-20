@@ -35,7 +35,11 @@ namespace Opc.Ua.Schema.Model.Tests
     /// Unit tests for the <see cref="LocalizedText"/> class Equals method.
     /// </summary>
     [TestFixture]
-    public partial class LocalizedTextTests
+    [Category("ModelDesign")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
+    public class LocalizedTextTests
     {
         /// <summary>
         /// Tests that Equals returns false when comparing with null.

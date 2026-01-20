@@ -36,7 +36,11 @@ namespace Opc.Ua.Schema.Model.Tests
     /// Unit tests for the Reference class.
     /// </summary>
     [TestFixture]
-    public partial class ReferenceTests
+    [Category("ModelDesign")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
+    public class ReferenceTests
     {
         /// <summary>
         /// Tests that GetHashCode returns the same value for equal objects with all properties set.

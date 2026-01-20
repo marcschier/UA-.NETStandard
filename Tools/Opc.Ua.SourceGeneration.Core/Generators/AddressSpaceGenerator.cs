@@ -33,7 +33,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml;
-using System.Xml.Linq;
 using Opc.Ua.Schema.Model;
 using Opc.Ua.Types;
 
@@ -50,7 +49,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public AddressSpaceGenerator(GeneratorContext context)
         {
-            m_context = context;
+            m_context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         /// <inheritdoc/>
@@ -437,7 +436,7 @@ namespace Opc.Ua.SourceGeneration
                     : null);
         }
 
-        private void AddViewReplacements(IWriteContext context, ViewDesign node)
+        private static void AddViewReplacements(IWriteContext context, ViewDesign node)
         {
             context.Template.AddReplacement(
                 Tokens.EventNotifier,
@@ -447,7 +446,7 @@ namespace Opc.Ua.SourceGeneration
             context.Template.AddReplacement(Tokens.ContainsNoLoopsValue, node.ContainsNoLoops);
         }
 
-        private void AddOptionalPropertyReplacements(IWriteContext context, NodeDesign node)
+        private static void AddOptionalPropertyReplacements(IWriteContext context, NodeDesign node)
         {
             // Release status
             Export.ReleaseStatus releaseStatus = node.ReleaseStatus.ToNodeSetReleaseStatus();
@@ -480,12 +479,12 @@ namespace Opc.Ua.SourceGeneration
                     : null);
 
             // Access restrictions
+            var accessRestrictions = !node.AccessRestrictionsSpecified ? null :
+                node.AccessRestrictions.GetAccessRestrictionsAsCode();
             context.Template.AddReplacement(
                 Tokens.AccessRestrictionsValue,
-                node.AccessRestrictionsSpecified
-                    ? CoreUtils.Format(
-                        "state.AccessRestrictions = {0};",
-                        node.AccessRestrictions.GetAccessRestrictionsAsCode())
+                accessRestrictions != null
+                    ? CoreUtils.Format("state.AccessRestrictions = {0};", accessRestrictions)
                     : null);
         }
 

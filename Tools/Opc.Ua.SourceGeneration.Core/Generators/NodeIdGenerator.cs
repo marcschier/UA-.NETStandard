@@ -27,6 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -45,7 +46,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public NodeIdGenerator(GeneratorContext context)
         {
-            m_context = context;
+            m_context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         /// <inheritdoc/>

@@ -43,7 +43,7 @@ namespace Quickstarts.Servers
     {
         private static readonly JsonSerializerSettings s_settings = new()
         {
-            ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore, // Uses equality which does not work with Variant.
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore, // Uses equality which does not work with Variant.
             TypeNameHandling = TypeNameHandling.All,
             Converters = { new ExtensionObjectConverter(), new NumericRangeConverter() }
         };

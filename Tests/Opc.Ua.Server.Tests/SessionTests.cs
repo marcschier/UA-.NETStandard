@@ -20,7 +20,7 @@ namespace Opc.Ua.Server.Tests
                 StandardServer server = fixture.Server;
 
                 (RequestHeader requestHeader, SecureChannelContext secureChannelContext) =
-                    await ServerFixtureUtils.CreateAndActivateSessionAsync(server, "UpdateDiagnosticCountersTest").ConfigureAwait(false);
+                    await server.CreateAndActivateSessionAsync("UpdateDiagnosticCountersTest").ConfigureAwait(false);
 
                 ISession session = server.CurrentInstance.SessionManager.GetSession(requestHeader.AuthenticationToken);
                 Assert.NotNull(session, "Session should exist after Create/Activate.");
@@ -63,7 +63,7 @@ namespace Opc.Ua.Server.Tests
                 StandardServer server = fixture.Server;
 
                 (RequestHeader requestHeader, SecureChannelContext secureChannelContext) =
-                    await ServerFixtureUtils.CreateAndActivateSessionAsync(server, "UpdateDiagnosticCountersIgnoredTest").ConfigureAwait(false);
+                    await server.CreateAndActivateSessionAsync("UpdateDiagnosticCountersIgnoredTest").ConfigureAwait(false);
 
                 ISession session = server.CurrentInstance.SessionManager.GetSession(requestHeader.AuthenticationToken);
                 Assert.NotNull(session, "Session should exist after Create/Activate.");

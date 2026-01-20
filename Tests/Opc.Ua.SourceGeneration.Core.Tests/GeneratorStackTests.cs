@@ -52,7 +52,7 @@ namespace Opc.Ua.SourceGeneration.Tests
     /// Test generating and compiling stack
     /// </summary>
     [TestFixture]
-    [Category("SourceGeneration")]
+    [Category("Api")]
     [SetCulture("en-us")]
     [SetUICulture("en-us")]
     [MemoryDiagnoser]

@@ -229,10 +229,8 @@ namespace Opc.Ua.Client.ComplexTypes.Tests.Types
             MemoryStreamType memoryStreamType,
             StructureType structureType)
         {
-            ExpandedNodeId nodeId;
-            Type complexType;
-            (nodeId, complexType) = TypeDictionary[structureType];
-            IEncodeable emittedType = Activator.CreateInstance(complexType) as IEncodeable;
+            (_, Type complexType) = TypeDictionary[structureType];
+            var emittedType = Activator.CreateInstance(complexType) as IEncodeable;
             var baseType = emittedType as BaseComplexType;
             FillStructWithValues(baseType, true, NameSpaceUris);
 

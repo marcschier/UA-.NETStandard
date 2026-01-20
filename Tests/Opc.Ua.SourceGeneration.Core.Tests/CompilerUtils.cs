@@ -299,7 +299,7 @@ namespace Opc.Ua.SourceGeneration
                 Diagnostic diag = diagnostics[ii];
                 if (filterLinkerAndReferenceErrors &&
                     (
-                     // diag.Id == "CS0234" ||
+                        // diag.Id == "CS0234" ||
                         diag.Id == "CS0246" ||
                         diag.Id == "CS1729" ||
                         diag.Id == "CS1501" ||

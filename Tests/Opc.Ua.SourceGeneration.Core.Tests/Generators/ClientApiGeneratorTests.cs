@@ -37,7 +37,11 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
     /// Unit tests for the ClientApiGenerator class.
     /// </summary>
     [TestFixture]
-    public partial class ClientApiGeneratorTests
+    [Category("Generator")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
+    public class ClientApiGeneratorTests
     {
         /// <summary>
         /// Tests that the constructor successfully creates an instance when provided with a valid GeneratorContext.
@@ -51,7 +55,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             var mockFileSystem = new Mock<IFileSystem>();
             var mockTelemetry = new Mock<ITelemetryContext>();
             var mockValidator = new Mock<ModelDesignValidator>();
-            var mockOptions = new Mock<GeneratorOptions>();
+            var mockOptions = new GeneratorOptions();
 
             var context = new GeneratorContext
             {
@@ -59,7 +63,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
                 OutputFolder = "TestOutput",
                 Validator = mockValidator.Object,
                 Telemetry = mockTelemetry.Object,
-                Options = mockOptions.Object
+                Options = mockOptions
             };
 
             // Act

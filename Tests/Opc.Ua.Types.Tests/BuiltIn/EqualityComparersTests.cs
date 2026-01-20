@@ -170,8 +170,10 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         [Test]
         public void NodeIdComparerCanBeUsedInHashSet()
         {
-            var hashSet = new HashSet<NodeId>(NodeIdComparer.Default);
-            hashSet.Add(new NodeId(123, 1));
+            var hashSet = new HashSet<NodeId>(NodeIdComparer.Default)
+            {
+                new NodeId(123, 1)
+            };
             Assert.That(hashSet.Contains(new NodeId(123, 1)), Is.True);
             Assert.That(hashSet.Contains(new NodeId(456, 1)), Is.False);
         }
@@ -518,8 +520,10 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         [Test]
         public void ByteStringEqualityComparerCanBeUsedInHashSet()
         {
-            var hashSet = new HashSet<byte[]>(ByteStringEqualityComparer.Default);
-            hashSet.Add([1, 2, 3]);
+            var hashSet = new HashSet<byte[]>(ByteStringEqualityComparer.Default)
+            {
+                ([1, 2, 3])
+            };
             Assert.That(hashSet.Contains([1, 2, 3]), Is.True);
             Assert.That(hashSet.Contains([4, 5, 6]), Is.False);
         }
@@ -1049,8 +1053,10 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         public void XmlQualifiedNameEqualityComparerCanBeUsedInHashSet()
         {
             var hashSet =
-                new HashSet<XmlQualifiedName>(XmlQualifiedNameEqualityComparer.Default);
-            hashSet.Add(new XmlQualifiedName("test", "http://example.com"));
+                new HashSet<XmlQualifiedName>(XmlQualifiedNameEqualityComparer.Default)
+                {
+                    new XmlQualifiedName("test", "http://example.com")
+                };
             Assert.That(
                 hashSet.Contains(new XmlQualifiedName("test", "http://example.com")),
                 Is.True);

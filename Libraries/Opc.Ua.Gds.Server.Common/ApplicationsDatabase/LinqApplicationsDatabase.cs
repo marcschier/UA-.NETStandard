@@ -471,9 +471,9 @@ namespace Opc.Ua.Gds.Server.Database.Linq
                         if (applicationType == 2 &&
                             result.ApplicationType != (int)ApplicationType.Client &&
                             result.ApplicationType != (int)ApplicationType.ClientAndServer)
-                        {
-                            continue;
-                        }
+                    {
+                        continue;
+                    }
 
                     IEnumerable<ServerEndpoint> endpoints =
                         from ii in ServerEndpoints

@@ -41,6 +41,10 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
     /// Unit tests for the <see cref = "TextResource"/> class.
     /// </summary>
     [TestFixture]
+    [Category("Generator")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
     public class TextResourceTests
     {
         /// <summary>
@@ -275,7 +279,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
     /// Unit tests for <see cref = "BinaryResource"/>.
     /// </summary>
     [TestFixture]
-    public partial class BinaryResourceTests
+    public class BinaryResourceTests
     {
         /// <summary>
         /// Tests GetLength returns zero for an empty byte array.
@@ -376,12 +380,12 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         /// Expected: Throws NullReferenceException.
         /// </summary>
         [Test]
-        public void GetLength_NullData_ThrowsNullReferenceException()
+        public void GetLength_NullData_ThrowsArgumentNullException()
         {
             // Arrange
             var resource = new BinaryResource("TestResource", null);
             // Act & Assert
-            Assert.Throws<NullReferenceException>(() => resource.GetLength(null));
+            Assert.Throws<ArgumentNullException>(() => resource.GetLength(null));
         }
     }
 
@@ -419,12 +423,12 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         /// Tests that GetLength throws NullReferenceException when fileSystem parameter is null.
         /// </summary>
         [Test]
-        public void GetLength_NullFileSystem_ThrowsNullReferenceException()
+        public void GetLength_NullFileSystem_ThrowsArgumentNullException()
         {
             // Arrange
             var resource = new TextFileResource("TestResource", "test.txt");
             // Act & Assert
-            Assert.Throws<NullReferenceException>(() => resource.GetLength(null));
+            Assert.Throws<ArgumentNullException>(() => resource.GetLength(null));
         }
 
         /// <summary>
@@ -757,12 +761,12 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         /// Expected: NullReferenceException is thrown.
         /// </summary>
         [Test]
-        public void Constructor_NullContext_ThrowsNullReferenceException()
+        public void Constructor_NullContext_ThrowsArgumentNullException()
         {
             // Arrange
             GeneratorContext context = null;
             // Act & Assert
-            Assert.Throws<NullReferenceException>(() => new ResourceGenerator(context));
+            Assert.Throws<ArgumentNullException>(() => new ResourceGenerator(context));
         }
 
         /// <summary>

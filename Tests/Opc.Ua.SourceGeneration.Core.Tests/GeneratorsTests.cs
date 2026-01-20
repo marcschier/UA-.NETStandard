@@ -39,6 +39,10 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
     /// Unit tests for the Generators.GenerateCode method
     /// </summary>
     [TestFixture]
+    [Category("Api")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
     public class GeneratorsTests
     {
         /// <summary>
@@ -52,7 +56,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             // Arrange
             var designFiles = new DesignFileCollection
             {
-                DesignFiles = new List<string>()
+                DesignFiles = []
             };
             var mockFileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
             var mockTelemetry = new Mock<ITelemetryContext>(MockBehavior.Strict);
@@ -77,7 +81,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             // Arrange
             var designFiles = new DesignFileCollection
             {
-                DesignFiles = new List<string> { "design1.xml" }
+                DesignFiles = ["design1.xml"]
             };
             var mockFileSystem = new Mock<IFileSystem>();
             var mockCombinedFileSystem = new Mock<IFileSystem>();
@@ -116,7 +120,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             // Arrange
             var designFiles = new DesignFileCollection
             {
-                DesignFiles = new List<string> { "design1.xml" }
+                DesignFiles = ["design1.xml"]
             };
             var mockFileSystem = new Mock<IFileSystem>();
             var mockCombinedFileSystem = new Mock<IFileSystem>();
@@ -124,7 +128,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             var mockModelDesignValidator = new Mock<ModelDesignValidator>();
             var options = new GeneratorOptions
             {
-                Exclusions = new List<string> { "exclusion1", "exclusion2" }
+                Exclusions = ["exclusion1", "exclusion2"]
             };
             const string outputDir = "output";
 
@@ -159,7 +163,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             // Arrange
             var designFiles = new DesignFileCollection
             {
-                DesignFiles = new List<string> { "C:\\designs\\design1.xml" }
+                DesignFiles = ["C:\\designs\\design1.xml"]
             };
             var mockFileSystem = new Mock<IFileSystem>();
             var mockCombinedFileSystem = new Mock<IFileSystem>();
@@ -198,11 +202,11 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             // Arrange
             var designFiles = new DesignFileCollection
             {
-                DesignFiles = new List<string>
-                {
+                DesignFiles =
+                [
                     "C:\\designs\\dir1\\design1.xml",
                     "C:\\designs\\dir2\\design2.xml"
-                }
+                ]
             };
             var mockFileSystem = new Mock<IFileSystem>();
             var mockCombinedFileSystem = new Mock<IFileSystem>();
@@ -242,7 +246,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             // Arrange
             var designFiles = new DesignFileCollection
             {
-                DesignFiles = new List<string> { "design1.xml" }
+                DesignFiles = ["design1.xml"]
             };
             var mockFileSystem = new Mock<IFileSystem>();
             var mockCombinedFileSystem = new Mock<IFileSystem>();
@@ -285,7 +289,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             // Arrange
             var designFiles = new DesignFileCollection
             {
-                DesignFiles = new List<string> { "design1.xml" }
+                DesignFiles = ["design1.xml"]
             };
             var mockFileSystem = new Mock<IFileSystem>();
             var mockCombinedFileSystem = new Mock<IFileSystem>();
@@ -328,7 +332,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             // Arrange
             var designFiles = new DesignFileCollection
             {
-                DesignFiles = new List<string> { "C:\\designs\\design1.xml" }
+                DesignFiles = ["C:\\designs\\design1.xml"]
             };
             var mockFileSystem = new Mock<IFileSystem>();
             var mockCombinedFileSystem = new Mock<IFileSystem>();
@@ -372,7 +376,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             // Arrange
             var designFiles = new DesignFileCollection
             {
-                DesignFiles = new List<string> { "design1.xml" }
+                DesignFiles = ["design1.xml"]
             };
             var mockFileSystem = new Mock<IFileSystem>();
             var mockCombinedFileSystem = new Mock<IFileSystem>();
@@ -412,7 +416,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             // Arrange
             var designFiles = new DesignFileCollection
             {
-                DesignFiles = new List<string> { "design1.xml" }
+                DesignFiles = ["design1.xml"]
             };
             var mockFileSystem = new Mock<IFileSystem>();
             var mockCombinedFileSystem = new Mock<IFileSystem>();
@@ -450,7 +454,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             // Arrange
             var designFiles = new DesignFileCollection
             {
-                DesignFiles = new List<string> { "design1.xml" }
+                DesignFiles = ["design1.xml"]
             };
             var mockFileSystem = new Mock<IFileSystem>();
             var mockCombinedFileSystem = new Mock<IFileSystem>();
@@ -486,7 +490,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             // Arrange
             var designFiles = new DesignFileCollection
             {
-                DesignFiles = new List<string> { "design1.xml" }
+                DesignFiles = ["design1.xml"]
             };
             var mockFileSystem = new Mock<IFileSystem>();
             var mockCombinedFileSystem = new Mock<IFileSystem>();
@@ -889,7 +893,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             const string outputDir = "output";
 
             // Act & Assert
-            Assert.Throws<NullReferenceException>(() => Generators.GenerateStack(
+            Assert.Throws<ArgumentNullException>(() => Generators.GenerateStack(
                 StackGenerationType.None,
                 null,
                 outputDir,
@@ -908,7 +912,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             const string outputDir = "output";
 
             // Act & Assert
-            Assert.Throws<NullReferenceException>(() => Generators.GenerateStack(
+            Assert.Throws<ArgumentNullException>(() => Generators.GenerateStack(
                 StackGenerationType.None,
                 mockFileSystem.Object,
                 outputDir,

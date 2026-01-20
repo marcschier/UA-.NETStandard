@@ -40,6 +40,10 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
     /// Unit tests for the <see cref="ConstantsGenerator"/> class.
     /// </summary>
     [TestFixture]
+    [Category("Generator")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
     public class ConstantsGeneratorTests
     {
         /// <summary>
@@ -54,7 +58,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             var mockFileSystem = new Mock<IFileSystem>();
             var mockTelemetry = new Mock<ITelemetryContext>();
             var mockValidator = new Mock<ModelDesignValidator>();
-            var mockOptions = new Mock<GeneratorOptions>();
+            var mockOptions = new GeneratorOptions();
 
             var context = new GeneratorContext
             {
@@ -62,7 +66,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
                 OutputFolder = "output",
                 Validator = mockValidator.Object,
                 Telemetry = mockTelemetry.Object,
-                Options = mockOptions.Object
+                Options = mockOptions
             };
 
             // Act
@@ -100,7 +104,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             // Arrange
             GeneratorContext mockContext = CreateMockGeneratorContext();
             var mockValidator = Mock.Get(mockContext.Validator);
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign>());
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([]);
 
             var generator = new ConstantsGenerator(mockContext);
 
@@ -125,7 +129,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             GeneratorContext mockContext = CreateMockGeneratorContext();
             var mockValidator = Mock.Get(mockContext.Validator);
             NodeDesign mockNodeDesign = CreateMockNodeDesign("ExcludedNode", "http://different.namespace.com");
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign> { mockNodeDesign });
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([mockNodeDesign]);
             mockValidator.Setup(v => v.IsExcluded(mockNodeDesign)).Returns(false);
 
             var generator = new ConstantsGenerator(mockContext);
@@ -151,7 +155,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             GeneratorContext mockContext = CreateMockGeneratorContext();
             var mockValidator = Mock.Get(mockContext.Validator);
             NodeDesign mockNodeDesign = CreateMockNodeDesign("TestNode", "http://test.namespace.com");
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign> { mockNodeDesign });
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([mockNodeDesign]);
             mockValidator.Setup(v => v.IsExcluded(mockNodeDesign)).Returns(false);
 
             var mockTextWriter = new Mock<TextWriter>();
@@ -184,7 +188,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             GeneratorContext mockContext = CreateMockGeneratorContext();
             var mockValidator = Mock.Get(mockContext.Validator);
             NodeDesign mockNodeDesign = CreateMockNodeDesign("TestNode", "http://test.namespace.com");
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign> { mockNodeDesign });
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([mockNodeDesign]);
             mockValidator.Setup(v => v.IsExcluded(mockNodeDesign)).Returns(false);
 
             string expectedPath = Path.Combine("/output", "TestPrefix.Constants.g.cs");
@@ -249,7 +253,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             GeneratorContext mockContext = CreateMockGeneratorContext();
             var mockValidator = Mock.Get(mockContext.Validator);
             NodeDesign mockNodeDesign = CreateMockNodeDesign("TestNode", "http://test.namespace.com");
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign> { mockNodeDesign });
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([mockNodeDesign]);
             mockValidator.Setup(v => v.IsExcluded(mockNodeDesign)).Returns(false);
 
             var mockTextWriter = new Mock<TextWriter>();
@@ -276,7 +280,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             GeneratorContext mockContext = CreateMockGeneratorContext(outputFolder: null);
             var mockValidator = Mock.Get(mockContext.Validator);
             NodeDesign mockNodeDesign = CreateMockNodeDesign("TestNode", "http://test.namespace.com");
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign> { mockNodeDesign });
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([mockNodeDesign]);
             mockValidator.Setup(v => v.IsExcluded(mockNodeDesign)).Returns(false);
 
             var mockTextWriter = new Mock<TextWriter>();
@@ -301,7 +305,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             GeneratorContext mockContext = CreateMockGeneratorContext(outputFolder: string.Empty);
             var mockValidator = Mock.Get(mockContext.Validator);
             NodeDesign mockNodeDesign = CreateMockNodeDesign("TestNode", "http://test.namespace.com");
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign> { mockNodeDesign });
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([mockNodeDesign]);
             mockValidator.Setup(v => v.IsExcluded(mockNodeDesign)).Returns(false);
 
             var mockTextWriter = new Mock<TextWriter>();
@@ -326,7 +330,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             GeneratorContext mockContext = CreateMockGeneratorContext(outputFolder: "   ");
             var mockValidator = Mock.Get(mockContext.Validator);
             NodeDesign mockNodeDesign = CreateMockNodeDesign("TestNode", "http://test.namespace.com");
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign> { mockNodeDesign });
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([mockNodeDesign]);
             mockValidator.Setup(v => v.IsExcluded(mockNodeDesign)).Returns(false);
 
             var mockTextWriter = new Mock<TextWriter>();
@@ -352,7 +356,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             GeneratorContext mockContext = CreateMockGeneratorContext(outputFolder: longPath);
             var mockValidator = Mock.Get(mockContext.Validator);
             NodeDesign mockNodeDesign = CreateMockNodeDesign("TestNode", "http://test.namespace.com");
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign> { mockNodeDesign });
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([mockNodeDesign]);
             mockValidator.Setup(v => v.IsExcluded(mockNodeDesign)).Returns(false);
 
             var mockTextWriter = new Mock<TextWriter>();
@@ -377,7 +381,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             GeneratorContext mockContext = CreateMockGeneratorContext(outputFolder: "/path/with/special:chars*?");
             var mockValidator = Mock.Get(mockContext.Validator);
             NodeDesign mockNodeDesign = CreateMockNodeDesign("TestNode", "http://test.namespace.com");
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign> { mockNodeDesign });
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([mockNodeDesign]);
             mockValidator.Setup(v => v.IsExcluded(mockNodeDesign)).Returns(false);
 
             var mockTextWriter = new Mock<TextWriter>();
@@ -402,7 +406,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             GeneratorContext mockContext = CreateMockGeneratorContext(prefix: null);
             var mockValidator = Mock.Get(mockContext.Validator);
             NodeDesign mockNodeDesign = CreateMockNodeDesign("TestNode", "http://test.namespace.com");
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign> { mockNodeDesign });
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([mockNodeDesign]);
             mockValidator.Setup(v => v.IsExcluded(mockNodeDesign)).Returns(false);
 
             var mockTextWriter = new Mock<TextWriter>();
@@ -427,7 +431,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             GeneratorContext mockContext = CreateMockGeneratorContext(prefix: string.Empty);
             var mockValidator = Mock.Get(mockContext.Validator);
             NodeDesign mockNodeDesign = CreateMockNodeDesign("TestNode", "http://test.namespace.com");
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign> { mockNodeDesign });
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([mockNodeDesign]);
             mockValidator.Setup(v => v.IsExcluded(mockNodeDesign)).Returns(false);
 
             var mockTextWriter = new Mock<TextWriter>();
@@ -452,7 +456,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             GeneratorContext mockContext = CreateMockGeneratorContext(namespacesArray: []);
             var mockValidator = Mock.Get(mockContext.Validator);
             NodeDesign mockNodeDesign = CreateMockNodeDesign("TestNode", "http://test.namespace.com");
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign> { mockNodeDesign });
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([mockNodeDesign]);
             mockValidator.Setup(v => v.IsExcluded(mockNodeDesign)).Returns(false);
 
             var mockTextWriter = new Mock<TextWriter>();
@@ -503,14 +507,13 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             return mockContext.Object;
         }
 
-        private NodeDesign CreateMockNodeDesign(string name, string namespaceUri)
+        private static NodeDesign CreateMockNodeDesign(string name, string namespaceUri)
         {
-            var mockNodeDesign = new Mock<NodeDesign>();
-            var symbolicName = new XmlQualifiedName(name, namespaceUri);
-            mockNodeDesign.SetupGet(n => n.SymbolicName).Returns(symbolicName);
-            mockNodeDesign.SetupGet(n => n.BrowseName).Returns(name);
-            mockNodeDesign.SetupGet(n => n.HasChildren).Returns(false);
-            return mockNodeDesign.Object;
+            var mockNodeDesign = new NodeDesign();
+            mockNodeDesign.SymbolicName = new XmlQualifiedName(name, namespaceUri);
+            mockNodeDesign.BrowseName = name;
+            mockNodeDesign.HasChildren = false;
+            return mockNodeDesign;
         }
     }
 }

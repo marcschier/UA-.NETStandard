@@ -1165,7 +1165,7 @@ namespace Opc.Ua.Client
             lock (m_cache)
             {
                 // Group monitored items by their triggering item
-                triggeringGroups = new Dictionary<uint, List<uint>>();
+                triggeringGroups = [];
                 foreach (MonitoredItem item in m_monitoredItems.Values)
                 {
                     if (item.TriggeredItems != null && item.TriggeredItems.Count > 0)
@@ -1369,7 +1369,7 @@ namespace Opc.Ua.Client
             lock (m_cache)
             {
                 // Initialize the triggered items collection if needed
-                triggeringItem.TriggeredItems ??= new UInt32Collection();
+                triggeringItem.TriggeredItems ??= [];
 
                 // Add new links
                 if (clientHandlesToAdd.Count > 0)

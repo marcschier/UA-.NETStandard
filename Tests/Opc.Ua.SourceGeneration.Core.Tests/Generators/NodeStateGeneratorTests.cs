@@ -42,6 +42,10 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
     /// Unit tests for <see cref="NodeStateGenerator"/> class.
     /// </summary>
     [TestFixture]
+    [Category("Generator")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
     public class NodeStateGeneratorTests
     {
         /// <summary>
@@ -124,13 +128,13 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         /// Verifies that null context causes exception when accessing context.Telemetry property.
         /// </summary>
         [Test]
-        public void Constructor_WithNullContext_ThrowsNullReferenceException()
+        public void Constructor_WithNullContext_ThrowsArgumentNullException()
         {
             // Arrange
             GeneratorContext context = null;
 
             // Act & Assert
-            Assert.Throws<NullReferenceException>(() => new NodeStateGenerator(context));
+            Assert.Throws<ArgumentNullException>(() => new NodeStateGenerator(context));
         }
 
         /// <summary>
@@ -138,7 +142,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         /// Verifies that ServiceMessageContext constructor fails with null telemetry.
         /// </summary>
         [Test]
-        public void Constructor_WithNullTelemetry_ThrowsNullReferenceException()
+        public void Constructor_WithNullTelemetry_ThrowsArgumentNullException()
         {
             // Arrange
             var mockFileSystem = new Mock<IFileSystem>();
@@ -155,7 +159,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             };
 
             // Act & Assert
-            Assert.Throws<NullReferenceException>(() => new NodeStateGenerator(context));
+            Assert.Throws<ArgumentNullException>(() => new NodeStateGenerator(context));
         }
 
         /// <summary>

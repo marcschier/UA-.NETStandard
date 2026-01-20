@@ -292,6 +292,7 @@ namespace Opc.Ua.Security.Certificates
 #endif
         }
 
+#if NET6_0_OR_GREATER
         /// <summary>
         /// Converts ECDSA signature from DER format to IEEE P1363 format.
         /// </summary>
@@ -353,5 +354,6 @@ namespace Opc.Ua.Security.Certificates
             }
             return data;
         }
+#endif
     }
 }

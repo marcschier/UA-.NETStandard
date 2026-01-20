@@ -674,7 +674,7 @@ namespace Opc.Ua.Client.ComplexTypes
                                         item.Name,
                                         missingTypeIds == null ?
                                             string.Empty :
-                                            string.Join(",", missingTypeIds.Select(id => id.ToString()).ToArray()));
+                                            string.Join(",", [.. missingTypeIds.Select(id => id.ToString())]));
                                 }
                             }
                         }

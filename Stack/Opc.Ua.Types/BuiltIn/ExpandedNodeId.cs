@@ -63,7 +63,7 @@ namespace Opc.Ua
         public ExpandedNodeId(
             NodeId nodeId,
             string namespaceUri = null,
-            uint serverIndex = 0)
+            uint serverIndex = 0u)
         {
             m_data.NamespaceUri = namespaceUri;
             m_data.ServerIndex = serverIndex;
@@ -88,7 +88,7 @@ namespace Opc.Ua
         public ExpandedNodeId(
             uint value,
             string namespaceUri = null,
-            uint serverIndex = 0)
+            uint serverIndex = 0u)
         {
             m_data.NamespaceUri = namespaceUri;
             m_data.ServerIndex = serverIndex;
@@ -109,7 +109,7 @@ namespace Opc.Ua
             uint value,
             ushort namespaceIndex,
             string namespaceUri = null,
-            uint serverIndex = 0)
+            uint serverIndex = 0u)
         {
             m_data.NamespaceUri = namespaceUri;
             m_data.ServerIndex = serverIndex;
@@ -130,7 +130,7 @@ namespace Opc.Ua
         public ExpandedNodeId(
             string value,
             string namespaceUri,
-            uint serverIndex = 0)
+            uint serverIndex = 0u)
         {
             m_data.NamespaceUri = namespaceUri;
             m_data.ServerIndex = serverIndex;
@@ -153,7 +153,7 @@ namespace Opc.Ua
             string value,
             ushort namespaceIndex,
             string namespaceUri = null,
-            uint serverIndex = 0)
+            uint serverIndex = 0u)
         {
             m_data.NamespaceUri = namespaceUri;
             m_data.ServerIndex = serverIndex;
@@ -174,7 +174,7 @@ namespace Opc.Ua
         public ExpandedNodeId(
             Guid value,
             string namespaceUri = null,
-            uint serverIndex = 0)
+            uint serverIndex = 0u)
         {
             m_data.NamespaceUri = namespaceUri;
             m_data.ServerIndex = serverIndex;
@@ -195,7 +195,7 @@ namespace Opc.Ua
             Guid value,
             ushort namespaceIndex,
             string namespaceUri = null,
-            uint serverIndex = 0)
+            uint serverIndex = 0u)
         {
             m_data.NamespaceUri = namespaceUri;
             m_data.ServerIndex = serverIndex;
@@ -215,7 +215,7 @@ namespace Opc.Ua
         public ExpandedNodeId(
             byte[] value,
             string namespaceUri = null,
-            uint serverIndex = 0)
+            uint serverIndex = 0u)
         {
             m_data.NamespaceUri = namespaceUri;
             m_data.ServerIndex = serverIndex;
@@ -236,7 +236,7 @@ namespace Opc.Ua
             byte[] value,
             ushort namespaceIndex,
             string namespaceUri = null,
-            uint serverIndex = 0)
+            uint serverIndex = 0u)
         {
             m_data.NamespaceUri = namespaceUri;
             m_data.ServerIndex = serverIndex;
@@ -282,8 +282,7 @@ namespace Opc.Ua
         /// <summary>
         /// The namespace that qualifies the node identifier.
         /// </summary>
-        public string NamespaceUri
-            => (m_data.NamespaceUri as string) ?? string.Empty;
+        public string NamespaceUri => m_data.NamespaceUri as string;
 
         /// <summary>
         /// The index of the server where the node exists.

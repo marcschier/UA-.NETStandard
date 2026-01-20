@@ -425,7 +425,7 @@ namespace Opc.Ua.Gds.Server
                     m_telemetry,
                     ct)
                     .ConfigureAwait(false);
-                var subjectName = pkcs10CertificationRequest.Subject;
+                X500DistinguishedName subjectName = pkcs10CertificationRequest.Subject;
 
                 ICertificateBuilder builder = CertificateBuilder
                     .Create(subjectName)

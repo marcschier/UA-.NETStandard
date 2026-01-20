@@ -50,7 +50,7 @@ namespace Opc.Ua.SourceGeneration
             GeneratorContext context,
             bool useXmlInitializers = false)
         {
-            m_context = context;
+            m_context = context ?? throw new ArgumentNullException(nameof(context));
             m_messageContext = new ServiceMessageContext(context.Telemetry);
             m_useXmlInitializers = useXmlInitializers;
         }
@@ -272,7 +272,7 @@ namespace Opc.Ua.SourceGeneration
                     variableType.ValueRank = ValueRank.Scalar;
                 }
 
-                if (!variableType.DataTypeNode.IsRequiredParameterInTemplates(variableType.ValueRank))
+                if (!variableType.DataTypeNode.IsTemplateParameterRequired(variableType.ValueRank))
                 {
                     context.Template.AddReplacement(Tokens.BaseT, string.Empty);
                 }
@@ -396,7 +396,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            if (variableType.DataTypeNode.IsRequiredParameterInTemplates(variableType.ValueRank))
+            if (variableType.DataTypeNode.IsTemplateParameterRequired(variableType.ValueRank))
             {
                 return null;
             }

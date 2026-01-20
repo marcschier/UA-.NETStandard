@@ -178,39 +178,39 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         {
             return new SurrogateCollectionContract
             {
-                NodeIds = new NodeIdCollection
-                {
+                NodeIds =
+                [
                     new NodeId((uint)(10 + index), 1),
                     new NodeId($"node-{index}", 2)
-                },
-                ExpandedNodeIds = new ExpandedNodeIdCollection
-                {
+                ],
+                ExpandedNodeIds =
+                [
                     new ExpandedNodeId((uint)(20 + index), 3, Namespaces.OpcUa, (uint)(index + 1))
-                },
-                Uuids = new UuidCollection
-                {
+                ],
+                Uuids =
+                [
                     Uuid.NewUuid(),
                     Uuid.NewUuid()
-                },
-                StatusCodes = new StatusCodeCollection
-                {
+                ],
+                StatusCodes =
+                [
                     StatusCodeConstants.Good,
                     StatusCodeConstants.BadEncodingError
-                },
-                QualifiedNames = new QualifiedNameCollection
-                {
+                ],
+                QualifiedNames =
+                [
                     new QualifiedName($"coll-qn-{index}", 4)
-                },
-                Variants = new VariantCollection
-                {
+                ],
+                Variants =
+                [
                     new Variant($"variant-{index}"),
                     new Variant(index + 42)
-                },
-                LocalizedTexts = new LocalizedTextCollection
-                {
+                ],
+                LocalizedTexts =
+                [
                     new LocalizedText("en-US", $"localized-{index}"),
                     new LocalizedText("de-DE", $"lokalisiert-{index}")
-                }
+                ]
             };
         }
 

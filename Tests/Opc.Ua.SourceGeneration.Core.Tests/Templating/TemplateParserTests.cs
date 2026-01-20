@@ -38,7 +38,12 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
     /// <summary>
     /// Unit tests for the TemplateParser.AppendLiteral method.
     /// </summary>
-    public partial class TemplateParserTests
+    [TestFixture]
+    [Category("Templating")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
+    public class TemplateParserTests
     {
         /// <summary>
         /// Tests that AppendLiteral correctly adds an empty string literal without creating any operations.
@@ -55,19 +60,6 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             // Assert
             var operations = parser.Parsed.Operations.ToList();
             Assert.That(operations, Is.Empty);
-        }
-
-        /// <summary>
-        /// Tests that AppendLiteral throws NullReferenceException when given a null string.
-        /// </summary>
-        [Test]
-        public void AppendLiteral_NullString_ThrowsNullReferenceException()
-        {
-            // Arrange
-            var parser = new TemplateParser(0, 0);
-
-            // Act & Assert
-            Assert.Throws<NullReferenceException>(() => parser.AppendLiteral(null));
         }
 
         /// <summary>
@@ -114,7 +106,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             Assert.That(operations[0].LineNumber, Is.EqualTo(0));
             Assert.That(operations[1].Type, Is.EqualTo(ParsedTemplateString.OpType.LineBreak));
             Assert.That(operations[1].Item, Is.EqualTo(Environment.NewLine));
-            Assert.That(operations[1].Offset, Is.EqualTo(0));
+            Assert.That(operations[1].Offset, Is.EqualTo(5));
             Assert.That(operations[1].LineNumber, Is.EqualTo(0));
             Assert.That(operations[2].Type, Is.EqualTo(ParsedTemplateString.OpType.Literal));
             Assert.That(operations[2].Item, Is.EqualTo("World"));
@@ -302,7 +294,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var operations = parser.Parsed.Operations.ToList();
             Assert.That(operations, Has.Count.EqualTo(3));
             Assert.That(operations[0].Offset, Is.EqualTo(0));
-            Assert.That(operations[1].Offset, Is.EqualTo(0));
+            Assert.That(operations[1].Offset, Is.EqualTo(5)); // lb
             Assert.That(operations[2].Offset, Is.EqualTo(0));
         }
 
@@ -341,14 +333,12 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
 
             // Assert
             var operations = parser.Parsed.Operations.ToList();
-            Assert.That(operations, Has.Count.EqualTo(4));
+            Assert.That(operations, Has.Count.EqualTo(3));
             Assert.That(operations[0].Type, Is.EqualTo(ParsedTemplateString.OpType.Literal));
-            Assert.That(operations[0].Item, Is.EqualTo("Hello"));
-            Assert.That(operations[1].Type, Is.EqualTo(ParsedTemplateString.OpType.WhiteSpace));
-            Assert.That(operations[1].Item, Is.EqualTo("  "));
-            Assert.That(operations[2].Type, Is.EqualTo(ParsedTemplateString.OpType.LineBreak));
-            Assert.That(operations[3].Type, Is.EqualTo(ParsedTemplateString.OpType.Literal));
-            Assert.That(operations[3].Item, Is.EqualTo("World"));
+            Assert.That(operations[0].Item, Is.EqualTo("Hello  "));
+            Assert.That(operations[1].Type, Is.EqualTo(ParsedTemplateString.OpType.LineBreak));
+            Assert.That(operations[2].Type, Is.EqualTo(ParsedTemplateString.OpType.Literal));
+            Assert.That(operations[2].Item, Is.EqualTo("World"));
         }
 
         /// <summary>
@@ -760,21 +750,6 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         }
 
         /// <summary>
-        /// Tests that AppendFormatted throws NullReferenceException when null string is passed.
-        /// This tests a potential bug where null values are not handled properly.
-        /// </summary>
-        [Test]
-        public void AppendFormatted_NullString_ThrowsNullReferenceException()
-        {
-            // Arrange
-            var parser = new TemplateParser(0, 1);
-            const string nullValue = null;
-
-            // Act & Assert
-            Assert.Throws<NullReferenceException>(() => parser.AppendFormatted(nullValue));
-        }
-
-        /// <summary>
         /// Tests that AppendFormatted correctly handles very long strings.
         /// </summary>
         [Test]
@@ -920,7 +895,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var operations = parser.Parsed.Operations.ToList();
             Assert.That(operations, Has.Count.EqualTo(1));
             Assert.That(operations[0].Type, Is.EqualTo(ParsedTemplateString.OpType.Value));
-            Assert.That(operations[0].Item, Is.EqualTo(value.ToString(CultureInfo.InvariantCulture)));
+            Assert.That(operations[0].Item, Is.EqualTo(value.ToString(CultureInfo.CurrentCulture)));
         }
 
         /// <summary>
@@ -1274,7 +1249,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             string result = parser.GetFormattedText();
 
             // Assert
-            Assert.That(result, Is.EqualTo("Infinity: Infinity"));
+            Assert.That(result, Is.EqualTo($"Infinity: {double.PositiveInfinity}"));
         }
 
         /// <summary>
@@ -1292,7 +1267,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             string result = parser.GetFormattedText();
 
             // Assert
-            Assert.That(result, Is.EqualTo("NegInf: -Infinity"));
+            Assert.That(result, Is.EqualTo($"NegInf: {double.NegativeInfinity}"));
         }
 
         /// <summary>

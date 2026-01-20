@@ -1564,7 +1564,7 @@ namespace Opc.Ua.Client.Tests
         /// </summary>
         [Test]
         [Order(1100)]
-        public async Task ConcurrentCreateItemsNoDuplicates()
+        public async Task ConcurrentCreateItemsNoDuplicatesAsync()
         {
             var subscription = new TestableSubscription(Session.DefaultSubscription);
             Session.AddSubscription(subscription);
@@ -1587,19 +1587,19 @@ namespace Opc.Ua.Client.Tests
 
             // Simulate concurrent CreateItemsAsync calls
             // Use 3 concurrent tasks to ensure at least 2 will race with each other
-            const int ConcurrentTasks = 3;
+            const int concurrentTasks = 3;
             var tasks = new List<Task<IList<MonitoredItem>>>();
-            for (int i = 0; i < ConcurrentTasks; i++)
+            for (int i = 0; i < concurrentTasks; i++)
             {
                 tasks.Add(Task.Run(() =>
                     subscription.CreateItemsAsync(CancellationToken.None)));
             }
 
-            var results = await Task.WhenAll(tasks).ConfigureAwait(false);
+            IList<MonitoredItem>[] results = await Task.WhenAll(tasks).ConfigureAwait(false);
 
             // Verify that all items were created exactly once
             int totalCreated = 0;
-            foreach (var item in items)
+            foreach (MonitoredItem item in items)
             {
                 if (item.Status.Created)
                 {
@@ -1615,7 +1615,7 @@ namespace Opc.Ua.Client.Tests
             // Verify that each result list contains only the items that were actually created
             // by that specific call (should be empty for concurrent calls after the first)
             int nonEmptyResults = 0;
-            foreach (var result in results)
+            foreach (IList<MonitoredItem> result in results)
             {
                 if (result.Count > 0)
                 {

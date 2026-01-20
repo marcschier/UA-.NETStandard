@@ -129,7 +129,7 @@ namespace Opc.Ua.SourceGeneration
             {
                 foreach (string ii in list)
                 {
-                    string element = ii.Trim();
+                    string element = ii?.Trim();
 
                     if (!string.IsNullOrEmpty(element))
                     {

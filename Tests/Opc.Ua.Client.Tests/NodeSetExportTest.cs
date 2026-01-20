@@ -27,7 +27,6 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -49,7 +48,7 @@ namespace Opc.Ua.Client.Tests
     [TestFixtureSource(nameof(FixtureArgs))]
     public class NodeSetExportTest : ClientTestFramework
     {
-        public static readonly new object[] FixtureArgs =
+        public static new readonly object[] FixtureArgs =
         [
             new object[] { Utils.UriSchemeOpcTcp }
         ];
@@ -100,7 +99,7 @@ namespace Opc.Ua.Client.Tests
         /// Test exporting nodes to NodeSet2 XML.
         /// </summary>
         [Test]
-        public async Task ExportNodesToNodeSet2()
+        public async Task ExportNodesToNodeSet2Async()
         {
             // Browse to get some nodes
             var browser = new Browser(Session)
@@ -145,7 +144,7 @@ namespace Opc.Ua.Client.Tests
                 }
 
                 // Verify the file was created and has content
-                FileInfo fileInfo = new FileInfo(tempFile);
+                var fileInfo = new FileInfo(tempFile);
                 Assert.IsTrue(fileInfo.Exists, "NodeSet2 file should exist");
                 Assert.Greater(fileInfo.Length, 0, "NodeSet2 file should not be empty");
 
@@ -171,7 +170,7 @@ namespace Opc.Ua.Client.Tests
         /// Test exporting different node types to NodeSet2 XML.
         /// </summary>
         [Test]
-        public async Task ExportDifferentNodeTypes()
+        public async Task ExportDifferentNodeTypesAsync()
         {
             var allNodes = new List<INode>();
 
@@ -247,7 +246,7 @@ namespace Opc.Ua.Client.Tests
         /// Test exporting and re-importing nodes.
         /// </summary>
         [Test]
-        public async Task ExportAndReimportNodes()
+        public async Task ExportAndReimportNodesAsync()
         {
             var allNodes = new List<INode>();
 

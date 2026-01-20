@@ -1497,7 +1497,7 @@ namespace Quickstarts
                         {
                             try
                             {
-                                var currentTime = field.GetDateTime();
+                                DateTime currentTime = field.GetDateTime();
                                 TimeSpan timeSpan = currentTime - m_lastEventTime;
                                 m_lastEventTime = currentTime;
                                 m_processedEvents++;

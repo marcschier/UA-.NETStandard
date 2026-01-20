@@ -39,17 +39,22 @@ namespace Opc.Ua.Security.Certificates
     /// </summary>
     public static class Pkcs10Utils
     {
-        // OID for PKCS#9 Extension Request attribute
-        private const string Pkcs9AtExtensionRequest = "1.2.840.113549.1.9.14";
+        /// <summary>
+        /// OID for PKCS#9 Extension Request attribute
+        /// </summary>
+        private const string kPkcs9AtExtensionRequest = "1.2.840.113549.1.9.14";
 
-        // OID for Subject Alternative Name extension
-        private const string SubjectAlternativeNameOid = "2.5.29.17";
+        /// <summary>
+        /// OID for Subject Alternative Name extension
+        /// </summary>
+        private const string kSubjectAlternativeNameOid = "2.5.29.17";
 
         /// <summary>
         /// Extracts the Subject Alternative Name extension from CSR attributes.
         /// </summary>
         /// <param name="attributes">The CSR attributes encoded as DER bytes.</param>
         /// <returns>The X509SubjectAltNameExtension if found; otherwise, null.</returns>
+        /// <exception cref="CryptographicException"></exception>
         public static X509SubjectAltNameExtension GetSubjectAltNameExtension(byte[] attributes)
         {
             if (attributes == null || attributes.Length == 0)
@@ -78,7 +83,7 @@ namespace Opc.Ua.Security.Certificates
                     AsnReader valuesReader = attributeReader.ReadSetOf();
 
                     // Check if this is an Extension Request attribute
-                    if (attributeOid == Pkcs9AtExtensionRequest)
+                    if (attributeOid == kPkcs9AtExtensionRequest)
                     {
                         // The extension request contains a SEQUENCE of extensions
                         AsnReader extensionsSequenceReader = valuesReader.ReadSequence();
@@ -102,10 +107,10 @@ namespace Opc.Ua.Security.Certificates
                             byte[] extensionValue = extensionReader.ReadOctetString();
 
                             // Check if this is the Subject Alternative Name extension
-                            if (extensionOid == SubjectAlternativeNameOid)
+                            if (extensionOid == kSubjectAlternativeNameOid)
                             {
                                 var asnEncodedData = new AsnEncodedData(
-                                    SubjectAlternativeNameOid,
+                                    kSubjectAlternativeNameOid,
                                     extensionValue);
                                 return new X509SubjectAltNameExtension(asnEncodedData, critical);
                             }

@@ -37,6 +37,10 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
     /// Unit tests for the ServerApiGenerator class.
     /// </summary>
     [TestFixture]
+    [Category("Generator")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
     public class ServerApiGeneratorTests
     {
         /// <summary>

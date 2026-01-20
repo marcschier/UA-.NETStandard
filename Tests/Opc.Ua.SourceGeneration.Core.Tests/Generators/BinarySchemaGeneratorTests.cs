@@ -40,7 +40,11 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
     /// Unit tests for the BinarySchemaGenerator class.
     /// </summary>
     [TestFixture]
-    public partial class BinarySchemaGeneratorTests
+    [Category("Generator")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
+    public class BinarySchemaGeneratorTests
     {
         /// <summary>
         /// Tests that Emit with validateOutput false generates schema file and returns TextFileResource without validation.
@@ -212,7 +216,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             var mockFileSystem = new Mock<IFileSystem>();
             var mockValidator = new Mock<ModelDesignValidator>();
             var mockTelemetry = new Mock<ITelemetryContext>();
-            var mockOptions = new Mock<GeneratorOptions>();
+            var mockOptions = new GeneratorOptions();
 
             var context = new GeneratorContext
             {
@@ -220,7 +224,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
                 OutputFolder = "test-output",
                 Validator = mockValidator.Object,
                 Telemetry = mockTelemetry.Object,
-                Options = mockOptions.Object
+                Options = mockOptions
             };
 
             // Act
@@ -266,7 +270,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             mockContext.Setup(c => c.FileSystem).Returns(mockFileSystem.Object);
             mockContext.Setup(c => c.Validator).Returns(mockValidator.Object);
             mockValidator.Setup(v => v.Dictionary).Returns(mockDictionary.Object);
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign>());
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([]);
             mockDictionary.Setup(d => d.TargetNamespace).Returns(targetNamespace);
             mockDictionary.Setup(d => d.Namespaces).Returns(namespaces);
 
@@ -393,7 +397,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             mockContext.Setup(c => c.FileSystem).Returns(mockFileSystem.Object);
             mockContext.Setup(c => c.Validator).Returns(mockValidator.Object);
             mockValidator.Setup(v => v.Dictionary).Returns(mockDictionary.Object);
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign>());
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([]);
             mockDictionary.Setup(d => d.TargetNamespace).Returns(targetNamespace);
             mockDictionary.Setup(d => d.Namespaces).Returns(namespaces);
 
@@ -426,7 +430,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             mockContext.Setup(c => c.FileSystem).Returns(mockFileSystem.Object);
             mockContext.Setup(c => c.Validator).Returns(mockValidator.Object);
             mockValidator.Setup(v => v.Dictionary).Returns(mockDictionary.Object);
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign>());
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([]);
             mockDictionary.Setup(d => d.TargetNamespace).Returns(targetNamespace);
             mockDictionary.Setup(d => d.Namespaces).Returns(emptyNamespaces);
 
@@ -464,7 +468,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             mockContext.Setup(c => c.FileSystem).Returns(mockFileSystem.Object);
             mockContext.Setup(c => c.Validator).Returns(mockValidator.Object);
             mockValidator.Setup(v => v.Dictionary).Returns(mockDictionary.Object);
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign>());
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([]);
             mockDictionary.Setup(d => d.TargetNamespace).Returns(targetNamespace);
             mockDictionary.Setup(d => d.Namespaces).Returns(namespaces);
 
@@ -497,7 +501,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             mockContext.Setup(c => c.FileSystem).Returns(mockFileSystem.Object);
             mockContext.Setup(c => c.Validator).Returns(mockValidator.Object);
             mockValidator.Setup(v => v.Dictionary).Returns(mockDictionary.Object);
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign>());
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([]);
             mockDictionary.Setup(d => d.TargetNamespace).Returns((string)null);
             mockDictionary.Setup(d => d.Namespaces).Returns(namespaces);
 
@@ -529,7 +533,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             mockContext.Setup(c => c.FileSystem).Returns(mockFileSystem.Object);
             mockContext.Setup(c => c.Validator).Returns(mockValidator.Object);
             mockValidator.Setup(v => v.Dictionary).Returns(mockDictionary.Object);
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign>());
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([]);
             mockDictionary.Setup(d => d.TargetNamespace).Returns(string.Empty);
             mockDictionary.Setup(d => d.Namespaces).Returns(namespaces);
 
@@ -564,7 +568,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             mockContext.Setup(c => c.FileSystem).Returns(mockFileSystem.Object);
             mockContext.Setup(c => c.Validator).Returns(mockValidator.Object);
             mockValidator.Setup(v => v.Dictionary).Returns(mockDictionary.Object);
-            mockValidator.Setup(v => v.GetNodeDesigns()).Returns(new List<NodeDesign>());
+            mockValidator.Setup(v => v.GetNodeDesigns()).Returns([]);
             mockDictionary.Setup(d => d.TargetNamespace).Returns(targetNamespace);
             mockDictionary.Setup(d => d.Namespaces).Returns(namespaces);
 

@@ -3031,10 +3031,11 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                 new Variant(
                     new Matrix(
                         new Uuid[] {
-                            new Uuid(),
-                            new Uuid(),
-                            new Uuid(),
-                            new Uuid() },
+                            new(),
+                            new(),
+                            new(),
+                            new()
+                        },
                         BuiltInType.Guid,
                         2,
                         2)));

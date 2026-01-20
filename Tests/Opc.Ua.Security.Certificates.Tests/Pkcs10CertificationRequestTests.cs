@@ -82,7 +82,7 @@ namespace Opc.Ua.Security.Certificates.Tests
         public void CreateAndParseRsaCsr()
         {
             const string subject = "CN=Test RSA CSR, O=OPC Foundation";
-            string applicationUri = "urn:localhost:opcfoundation.org:TestRsaCsr";
+            const string applicationUri = "urn:localhost:opcfoundation.org:TestRsaCsr";
             string[] domainNames = ["localhost", "127.0.0.1"];
 
             // Create a certificate to generate CSR from
@@ -120,7 +120,7 @@ namespace Opc.Ua.Security.Certificates.Tests
         public void CreateAndParseEcdsaCsrP256()
         {
             const string subject = "CN=Test ECDSA P256 CSR, O=OPC Foundation";
-            string applicationUri = "urn:localhost:opcfoundation.org:TestEcdsaCsr";
+            const string applicationUri = "urn:localhost:opcfoundation.org:TestEcdsaCsr";
             string[] domainNames = ["localhost", "127.0.0.1"];
 
             // Create a certificate to generate CSR from
@@ -183,7 +183,7 @@ namespace Opc.Ua.Security.Certificates.Tests
         public void ParseCsrWithTamperedSignatureFails()
         {
             const string subject = "CN=Test Tampered CSR, O=OPC Foundation";
-            string applicationUri = "urn:localhost:opcfoundation.org:TestTamperedCsr";
+            const string applicationUri = "urn:localhost:opcfoundation.org:TestTamperedCsr";
             string[] domainNames = ["localhost"];
 
             // Create a certificate to generate CSR from
@@ -215,7 +215,7 @@ namespace Opc.Ua.Security.Certificates.Tests
         public void ParseCsrAndExtractSubjectAltName()
         {
             const string subject = "CN=Test SAN CSR, O=OPC Foundation";
-            string applicationUri = "urn:localhost:opcfoundation.org:TestSanCsr";
+            const string applicationUri = "urn:localhost:opcfoundation.org:TestSanCsr";
             string[] domainNames = ["localhost", "testhost.local", "192.168.1.1"];
 
             // Create a certificate to generate CSR from

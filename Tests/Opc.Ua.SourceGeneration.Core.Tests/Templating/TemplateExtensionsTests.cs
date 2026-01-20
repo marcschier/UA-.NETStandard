@@ -40,6 +40,10 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
     /// Unit tests for <see cref="TemplateExtensions"/> class.
     /// </summary>
     [TestFixture]
+    [Category("Templating")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
     public class TemplateExtensionsTests
     {
         /// <summary>
@@ -134,7 +138,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             const string replacement = "testReplacement";
             TemplateString templateString = null;
             IEnumerable targets = new List<object> { "target1" };
-            TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
+            static TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -315,7 +319,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             const string replacement = "testReplacement";
             TemplateString templateString = "test template";
             IEnumerable targets = new List<object> { "target1" };
-            TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
+            static TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -336,7 +340,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             const string replacement = "testReplacement";
             TemplateString templateString = "test template";
             IEnumerable targets = new List<object> { "target1" };
-            bool onWrite(IWriteContext context) => true;
+            static bool onWrite(IWriteContext context) => true;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -457,8 +461,8 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, TemplateString.Empty);
             const string replacement = "   ";
-            IReadOnlyList<object> targets = new List<object> { new() };
-            TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
+            IReadOnlyList<object> targets = [new()];
+            static TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -478,7 +482,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var template = new Template(templateWriter, TemplateString.Empty);
             const string replacement = "TestReplacement";
             IReadOnlyList<object> targets = null;
-            TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
+            static TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -497,8 +501,8 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, TemplateString.Empty);
             const string replacement = "TestReplacement";
-            IReadOnlyList<object> targets = new List<object>();
-            TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
+            IReadOnlyList<object> targets = [];
+            static TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -518,7 +522,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, TemplateString.Empty);
             const string replacement = "TestReplacement";
-            IReadOnlyList<object> targets = new List<object> { new() };
+            IReadOnlyList<object> targets = [new()];
             LoadTemplateEventHandler onLoad = null;
 
             // Act & Assert
@@ -538,8 +542,8 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, TemplateString.Empty);
             const string replacement = "TestReplacement";
-            IReadOnlyList<object> targets = new List<object> { new() };
-            TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
+            IReadOnlyList<object> targets = [new()];
+            static TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -558,8 +562,8 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, TemplateString.Empty);
             const string replacement = "TestReplacement";
-            IReadOnlyList<object> targets = new List<object> { "TargetItem" };
-            TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
+            IReadOnlyList<object> targets = ["TargetItem"];
+            static TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -578,8 +582,8 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, TemplateString.Empty);
             const string replacement = "TestReplacement";
-            IReadOnlyList<object> targets = new List<object> { "Target1", "Target2", "Target3" };
-            TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
+            IReadOnlyList<object> targets = ["Target1", "Target2", "Target3"];
+            static TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -598,8 +602,8 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, TemplateString.Empty);
             const string replacement = "Test@Replacement#123!";
-            IReadOnlyList<object> targets = new List<object> { new() };
-            TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
+            IReadOnlyList<object> targets = [new()];
+            static TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -618,8 +622,8 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, TemplateString.Empty);
             string replacement = new('A', 10000);
-            IReadOnlyList<object> targets = new List<object> { new() };
-            TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
+            IReadOnlyList<object> targets = [new()];
+            static TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -638,8 +642,8 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, TemplateString.Empty);
             const string replacement = "TestReplacement";
-            IReadOnlyList<object> targets = new List<object> { null, new(), null };
-            TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
+            IReadOnlyList<object> targets = [null, new(), null];
+            static TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -661,8 +665,8 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var template = new Template(templateWriter, "base template");
             const string replacement = "test";
             TemplateString templateString = null;
-            IReadOnlyList<object> targets = new List<object> { new() };
-            bool onWrite(IWriteContext context) => true;
+            IReadOnlyList<object> targets = [new()];
+            static bool onWrite(IWriteContext context) => true;
 
             // Act & Assert
             ArgumentException ex = Assert.Throws<ArgumentException>(() =>
@@ -686,7 +690,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             const string replacement = "test";
             TemplateString templateString = "test template";
             IReadOnlyList<object> targets = null;
-            bool onWrite(IWriteContext context) => true;
+            static bool onWrite(IWriteContext context) => true;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -707,8 +711,8 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var template = new Template(templateWriter, "base template");
             const string replacement = "test";
             TemplateString templateString = "test template";
-            IReadOnlyList<object> targets = new List<object> { new() };
-            bool onWrite(IWriteContext context) => true;
+            IReadOnlyList<object> targets = [new()];
+            static bool onWrite(IWriteContext context) => true;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -729,8 +733,8 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var template = new Template(templateWriter, "base template");
             const string replacement = "test";
             TemplateString templateString = "test template";
-            IReadOnlyList<object> targets = new List<object>();
-            bool onWrite(IWriteContext context) => true;
+            IReadOnlyList<object> targets = [];
+            static bool onWrite(IWriteContext context) => true;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -751,8 +755,8 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var template = new Template(templateWriter, "base template");
             const string replacement = "test";
             TemplateString templateString = "test template";
-            IReadOnlyList<object> targets = new List<object> { new(), new(), new() };
-            bool onWrite(IWriteContext context) => true;
+            IReadOnlyList<object> targets = [new(), new(), new()];
+            static bool onWrite(IWriteContext context) => true;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -774,8 +778,8 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var template = new Template(templateWriter, "base template");
             const string replacement = "   ";
             TemplateString templateString = "test template";
-            IReadOnlyList<object> targets = new List<object> { new() };
-            bool onWrite(IWriteContext context) => true;
+            IReadOnlyList<object> targets = [new()];
+            static bool onWrite(IWriteContext context) => true;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -796,8 +800,8 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var template = new Template(templateWriter, "base template");
             const string replacement = "!@#$%^&*()_+-=[]{}|;':\",./<>?";
             TemplateString templateString = "test template";
-            IReadOnlyList<object> targets = new List<object> { new() };
-            bool onWrite(IWriteContext context) => true;
+            IReadOnlyList<object> targets = [new()];
+            static bool onWrite(IWriteContext context) => true;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -818,8 +822,8 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var template = new Template(templateWriter, "base template");
             const string replacement = "test";
             TemplateString templateString = string.Empty;
-            IReadOnlyList<object> targets = new List<object> { new() };
-            bool onWrite(IWriteContext context) => true;
+            IReadOnlyList<object> targets = [new()];
+            static bool onWrite(IWriteContext context) => true;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -841,7 +845,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             const string replacement = "test";
             TemplateString templateString = "test template";
             IReadOnlyList<object> targets = new object[] { new(), new() };
-            bool onWrite(IWriteContext context) => true;
+            static bool onWrite(IWriteContext context) => true;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -881,7 +885,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var template = new Template(writer, TemplateString.Empty);
             const string replacement = "TestReplacement";
             IEnumerable targets = new List<object> { "target1", "target2" };
-            TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
+            static TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -919,7 +923,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var template = new Template(writer, TemplateString.Empty);
             const string replacement = "TestReplacement";
             IEnumerable targets = "SingleStringTarget";
-            TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
+            static TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -937,7 +941,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var template = new Template(writer, TemplateString.Empty);
             const string replacement = "TestReplacement";
             IEnumerable targets = new List<object> { "singleItem" };
-            TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
+            static TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -960,7 +964,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var writer = new TemplateWriter(new StringWriter());
             var template = new Template(writer, TemplateString.Empty);
             IEnumerable targets = new List<object> { "target1" };
-            TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
+            static TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -978,7 +982,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var template = new Template(writer, TemplateString.Empty);
             const string replacement = "TestReplacement";
             IEnumerable targets = new ArrayList { 1, "string", 3.14, true };
-            TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
+            static TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -1003,7 +1007,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
                 true,
                 new()
             };
-            TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
+            static TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -1058,7 +1062,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var template = new Template(writer, TemplateString.Empty);
             const string replacement = "TestReplacement";
             IEnumerable targets = new[] { "target1", "target2", "target3" };
-            TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
+            static TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -1076,7 +1080,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             var template = new Template(writer, TemplateString.Empty);
             const string replacement = "TestReplacement";
             IEnumerable targets = new List<object> { "target1", "target1", "target1" };
-            TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
+            static TemplateString onLoad(ILoadContext context) => TemplateString.Empty;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -1093,8 +1097,8 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             Template template = CreateTestTemplate();
             const string replacement = "TestReplacement";
             TemplateString templateString = null;
-            IReadOnlyList<object> targets = new List<object> { new() };
-            TemplateString onLoad(ILoadContext context) => "loaded";
+            IReadOnlyList<object> targets = [new()];
+            static TemplateString onLoad(ILoadContext context) => "loaded";
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -1111,7 +1115,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             Template template = CreateTestTemplate();
             const string replacement = "TestReplacement";
             TemplateString templateString = "test template content";
-            IReadOnlyList<object> targets = new List<object> { "target1", "target2" };
+            IReadOnlyList<object> targets = ["target1", "target2"];
             LoadTemplateEventHandler onLoad = null;
             WriteTemplateEventHandler onWrite = null;
 
@@ -1130,7 +1134,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             Template template = CreateTestTemplate();
             const string replacement = "TestReplacement";
             TemplateString templateString = "test";
-            IReadOnlyList<object> targets = new List<object> { "target" };
+            IReadOnlyList<object> targets = ["target"];
             TemplateString onLoad(ILoadContext context) => "loaded";
             bool onWrite(IWriteContext context) => true;
 
@@ -1149,8 +1153,8 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             Template template = CreateTestTemplate();
             const string replacement = "TestReplacement";
             TemplateString templateString = "test";
-            IReadOnlyList<object> targets = new List<object>();
-            bool onWrite(IWriteContext context) => true;
+            IReadOnlyList<object> targets = [];
+            static bool onWrite(IWriteContext context) => true;
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -1167,7 +1171,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             Template template = CreateTestTemplate();
             const string replacement = "Test@#$%Replacement!";
             TemplateString templateString = "test";
-            IReadOnlyList<object> targets = new List<object>();
+            IReadOnlyList<object> targets = [];
 
             // Act & Assert
             Assert.DoesNotThrow(() =>
@@ -1184,7 +1188,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             Template template = CreateTestTemplate();
             const string replacement = "TestReplacement";
             TemplateString templateString = string.Empty;
-            IReadOnlyList<object> targets = new List<object>();
+            IReadOnlyList<object> targets = [];
 
             // Act & Assert
             Assert.DoesNotThrow(() =>

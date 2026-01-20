@@ -36,10 +36,15 @@ namespace Opc.Ua.Schema.Model.Tests
     /// Unit tests for DictionaryDesign.GetHashCode method.
     /// </summary>
     [TestFixture]
-    public partial class DictionaryDesignTests
+    [Category("ModelDesign")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
+    public class DictionaryDesignTests
     {
         /// <summary>
-        /// Tests that GetHashCode returns consistent value when called multiple times on the same object.
+        /// Tests that GetHashCode returns consistent value when called multiple times
+        /// on the same object.
         /// Input: Same DictionaryDesign instance.
         /// Expected: Hash code remains the same across multiple calls.
         /// </summary>
@@ -205,8 +210,10 @@ namespace Opc.Ua.Schema.Model.Tests
         }
 
         /// <summary>
-        /// Tests that GetHashCode returns different values for one null and one non-null EncodingName.
-        /// Input: Two DictionaryDesign objects, one with null EncodingName, one with non-null.
+        /// Tests that GetHashCode returns different values for one null and
+        /// one non-null EncodingName.
+        /// Input: Two DictionaryDesign objects, one with null EncodingName,
+        /// one with non-null.
         /// Expected: Different hash codes.
         /// </summary>
         [Test]
@@ -334,7 +341,8 @@ namespace Opc.Ua.Schema.Model.Tests
         }
 
         /// <summary>
-        /// Tests that Equals returns true when both instances have different but equivalent EncodingName.
+        /// Tests that Equals returns true when both instances have different but
+        /// equivalent EncodingName.
         /// </summary>
         [Test]
         public void Equals_DifferentButEquivalentEncodingName_ReturnsTrue()
@@ -461,7 +469,8 @@ namespace Opc.Ua.Schema.Model.Tests
         }
 
         /// <summary>
-        /// Tests that Equals returns false when base properties differ even if EncodingName is same.
+        /// Tests that Equals returns false when base properties differ even if
+        /// EncodingName is same.
         /// </summary>
         [Test]
         public void Equals_DifferentBaseProperties_ReturnsFalse()
@@ -626,7 +635,8 @@ namespace Opc.Ua.Schema.Model.Tests
         }
 
         /// <summary>
-        /// Tests that Equals returns true when comparing two DictionaryDesign instances with same EncodingName.
+        /// Tests that Equals returns true when comparing two DictionaryDesign instances
+        /// with same EncodingName.
         /// </summary>
         [Test]
         public void Equals_SameEncodingName_ReturnsTrue()
@@ -650,7 +660,8 @@ namespace Opc.Ua.Schema.Model.Tests
         }
 
         /// <summary>
-        /// Tests that Equals returns false when comparing two DictionaryDesign instances with different EncodingName local names.
+        /// Tests that Equals returns false when comparing two DictionaryDesign instances
+        /// with different EncodingName local names.
         /// </summary>
         [Test]
         public void Equals_DifferentEncodingNameLocalName_ReturnsFalse()
@@ -673,7 +684,8 @@ namespace Opc.Ua.Schema.Model.Tests
         }
 
         /// <summary>
-        /// Tests that Equals returns false when second DictionaryDesign has null EncodingName and the first has a value.
+        /// Tests that Equals returns false when second DictionaryDesign has null
+        /// EncodingName and the first has a value.
         /// </summary>
         [Test]
         public void Equals_SecondEncodingNameNull_ReturnsFalse()
@@ -696,7 +708,8 @@ namespace Opc.Ua.Schema.Model.Tests
         }
 
         /// <summary>
-        /// Tests that Equals returns true when comparing with empty EncodingName (empty string local name and namespace).
+        /// Tests that Equals returns true when comparing with empty EncodingName
+        /// (empty string local name and namespace).
         /// </summary>
         [Test]
         public void Equals_EmptyEncodingName_ReturnsTrue()
@@ -719,7 +732,8 @@ namespace Opc.Ua.Schema.Model.Tests
         }
 
         /// <summary>
-        /// Tests that Equals returns true when comparing with EncodingName containing special characters.
+        /// Tests that Equals returns true when comparing with EncodingName
+        /// containing special characters.
         /// </summary>
         [Test]
         public void Equals_EncodingNameWithSpecialCharacters_ReturnsTrue()

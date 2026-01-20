@@ -27,6 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -44,7 +45,7 @@ namespace Opc.Ua.SourceGeneration
     {
         public DataTypeGenerator(GeneratorContext context, bool useXmlInitializers = false)
         {
-            m_context = context;
+            m_context = context ?? throw new ArgumentNullException(nameof(context));
             m_messageContext = new ServiceMessageContext(context.Telemetry);
             m_useXmlInitializers = useXmlInitializers;
         }

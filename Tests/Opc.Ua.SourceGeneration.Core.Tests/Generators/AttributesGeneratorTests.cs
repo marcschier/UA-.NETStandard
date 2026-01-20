@@ -38,6 +38,10 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
     /// Unit tests for the <see cref = "AttributesGenerator"/> class.
     /// </summary>
     [TestFixture]
+    [Category("Generator")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
     public class AttributesGeneratorTests
     {
         /// <summary>
@@ -46,12 +50,12 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         /// Expected: NullReferenceException when attempting to access context members.
         /// </summary>
         [Test]
-        public void Constructor_NullContext_ThrowsNullReferenceException()
+        public void Constructor_NullContext_ThrowsArgumentNullException()
         {
             // Arrange
             GeneratorContext context = null;
             // Act & Assert
-            Assert.Throws<NullReferenceException>(() => new AttributesGenerator(context));
+            Assert.Throws<ArgumentNullException>(() => new AttributesGenerator(context));
         }
 
         /// <summary>
@@ -133,14 +137,14 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             var mockFileSystem = new Mock<IFileSystem>();
             var mockTelemetry = new Mock<ITelemetryContext>();
             var mockValidator = new Mock<ModelDesignValidator>();
-            var mockOptions = new Mock<GeneratorOptions>();
+            var mockOptions = new GeneratorOptions();
             var context = new GeneratorContext
             {
                 FileSystem = mockFileSystem.Object,
                 OutputFolder = "output",
                 Validator = mockValidator.Object,
                 Telemetry = mockTelemetry.Object,
-                Options = mockOptions.Object
+                Options = mockOptions
             };
             // Act
             var generator = new AttributesGenerator(context);

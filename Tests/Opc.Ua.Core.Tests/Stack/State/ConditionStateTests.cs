@@ -352,7 +352,9 @@ namespace Opc.Ua.Core.Tests.Stack.State
         {
             public bool EvaluateCalled { get; private set; }
 
-            public TestConditionStateWithCustomRetain(NodeState parent) : base(parent) { }
+            public TestConditionStateWithCustomRetain(NodeState parent) : base(parent)
+            {
+            }
 
             protected override void EvaluateRetainStateOnEnable(ISystemContext context)
             {

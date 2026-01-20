@@ -38,19 +38,20 @@ using PubSubEncoding = Opc.Ua.PubSub.Encoding;
 namespace Opc.Ua.PubSub.Tests.Encoding
 {
     /// <summary>
+    /// <para>
     /// Tests for JsonDataSetMessage encoding behavior.
     /// Validates correct handling of zero values vs StatusCode.Good per OPC UA Part 6 specification.
-    ///
+    /// </para>
+    /// <para>
     /// Note: JsonDataSetMessage currently only supports Reversible and NonReversible encoding modes.
     /// Compact and Verbose encoding modes are not yet supported for PubSub messages because
     /// the encoder throws when trying to modify ForceNamespaceUri property with these modes.
+    /// </para>
     /// </summary>
     [TestFixture]
     [Parallelizable]
     public class JsonDataSetMessageTests
     {
-        #region Regression Tests - UInt32 Zero Value Preservation (DataValue Mode)
-
         /// <summary>
         /// Regression test: UInt32 value of 0 must not be confused with StatusCode.Good
         /// and must be preserved in DataValue mode with Reversible encoding.
@@ -86,10 +87,6 @@ namespace Opc.Ua.PubSub.Tests.Encoding
             Assert.That(fieldObj["Value"]?.Value<uint>(), Is.EqualTo(0u),
                 "UInt32 zero value must be preserved in NonReversible encoding.");
         }
-
-        #endregion
-
-        #region Regression Tests - UInt32 Zero Value Preservation (RawData Mode)
 
         /// <summary>
         /// Regression test: UInt32 value of 0 must be preserved in RawData mode.
@@ -130,10 +127,6 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                 "UInt32 zero value must be preserved in RawData mode with NonReversible encoding.");
         }
 
-        #endregion
-
-        #region Regression Tests - UInt32 Zero Value Preservation (Variant Mode)
-
         /// <summary>
         /// In Variant mode (FieldContentMask.None), values are encoded with type information.
         /// UInt32 zero should still be preserved as it's a valid value.
@@ -157,10 +150,6 @@ namespace Opc.Ua.PubSub.Tests.Encoding
             Assert.That(variantObj["Body"]?.Value<uint>(), Is.EqualTo(0u),
                 "UInt32 zero value must be preserved in Variant Body.");
         }
-
-        #endregion
-
-        #region StatusCode.Good Encoding Tests
 
         /// <summary>
         /// Verify that a real StatusCode.Good value results in null/omitted Value
@@ -248,11 +237,6 @@ namespace Opc.Ua.PubSub.Tests.Encoding
             Assert.That(valueToken, Is.Not.Null, "Bad StatusCode value should be present in NonReversible encoding.");
         }
 
-        #endregion
-
-
-        #region Helper Methods
-
         private static Field CreateField(string name, BuiltInType builtInType, object value)
         {
             return new Field
@@ -310,7 +294,5 @@ namespace Opc.Ua.PubSub.Tests.Encoding
             var payload = (root["Payload"] as JObject) ?? root;
             return payload?[fieldName] as JObject;
         }
-
-        #endregion
     }
 }

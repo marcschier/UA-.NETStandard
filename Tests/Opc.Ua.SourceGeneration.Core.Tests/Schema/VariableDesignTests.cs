@@ -36,7 +36,11 @@ namespace Opc.Ua.Schema.Model.Tests
     /// Unit tests for VariableDesign.Equals method
     /// </summary>
     [TestFixture]
-    public partial class VariableDesignTests
+    [Category("ModelDesign")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
+    public class VariableDesignTests
     {
         /// <summary>
         /// Tests that Equals returns false when comparing with null.
@@ -900,11 +904,11 @@ namespace Opc.Ua.Schema.Model.Tests
             // Arrange
             var variableDesign = new VariableDesign
             {
-                SymbolicName = new XmlQualifiedName("TestVariable", "http://test.org")
+                SymbolicName = new XmlQualifiedName("TestVariable1", "http://test.org")
             };
             var instanceDesign = new PropertyDesign
             {
-                SymbolicName = new XmlQualifiedName("TestVariable", "http://test.org")
+                SymbolicName = new XmlQualifiedName("TestVariable2", "http://test.org")
             };
 
             // Act

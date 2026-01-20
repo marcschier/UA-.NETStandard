@@ -66,7 +66,7 @@ namespace Opc.Ua.SourceGeneration
             int? base64Threshold = null,
             bool useByteArrayForBase64 = false)
         {
-            m_context = context;
+            m_context = context ?? throw new ArgumentNullException(nameof(context));
             m_base64Threshold = base64Threshold ??
                 (m_context.Options.OptimizeForCompileSpeed ? 1024 : int.MaxValue);
             m_useByteArrayForBase64 = useByteArrayForBase64;

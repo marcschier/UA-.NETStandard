@@ -242,8 +242,7 @@ namespace Opc.Ua.SourceGeneration
                 out int warnings,
                 filterLinkerAndReferenceErrors);
 
-            Assert.That(errors, Is.EqualTo(0),
-                $"Compilation produced {errors} errors");
+            Assert.That(errors, Is.EqualTo(0), $"Compilation produced {errors} errors");
 #if NETFRAMEWORK
             TestContext.Out.WriteLine($"Compilation produced {warnings} warnings");
 #else

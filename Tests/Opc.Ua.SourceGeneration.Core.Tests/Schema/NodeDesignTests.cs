@@ -38,7 +38,11 @@ namespace Opc.Ua.Schema.Model.Tests
     /// Unit tests for the NodeDesign class Equals(object) method.
     /// </summary>
     [TestFixture]
-    public partial class NodeDesignTests
+    [Category("ModelDesign")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
+    public class NodeDesignTests
     {
         /// <summary>
         /// Tests that Equals returns false when comparing with null.
@@ -348,10 +352,28 @@ namespace Opc.Ua.Schema.Model.Tests
         }
 
         /// <summary>
-        /// Tests that Equals returns false when comparing with derived type object cast to object.
+        /// Tests that Equals returns false when comparing with derived type object
+        /// cast to object.
         /// </summary>
         [Test]
         public void Equals_DerivedTypeObjectDesign_ReturnsFalseWhenDifferent()
+        {
+            // Arrange
+            var nodeDesign = new NodeDesign { BrowseName = "TestNode" };
+            var objectDesign = new ObjectDesign { BrowseName = "ObjectNode" };
+
+            // Act
+            bool result = nodeDesign.Equals((object)objectDesign);
+
+            // Assert
+            Assert.That(result, Is.False);
+        }
+
+        /// <summary>
+        /// Tests that Equals returns true when comparing with derived type
+        /// </summary>
+        [Test]
+        public void Equals_DerivedTypeObjectDesign_ReturnsTrueWhenSameBaseProperties()
         {
             // Arrange
             var nodeDesign = new NodeDesign { BrowseName = "TestNode" };
@@ -361,8 +383,9 @@ namespace Opc.Ua.Schema.Model.Tests
             bool result = nodeDesign.Equals((object)objectDesign);
 
             // Assert
-            Assert.That(result, Is.False);
+            Assert.That(result, Is.True);
         }
+
 
         /// <summary>
         /// Tests that Equals returns true when comparing with empty string BrowseName.
@@ -995,9 +1018,6 @@ namespace Opc.Ua.Schema.Model.Tests
             XmlQualifiedName parentId = null;
 
             // Act
-            
-
-            // Assert
             return NodeDesign.CreateSymbolicId(parentId, childName);
         }
 
@@ -1015,9 +1035,6 @@ namespace Opc.Ua.Schema.Model.Tests
             var parentId = new XmlQualifiedName(parentName);
 
             // Act
-            
-
-            // Assert
             return NodeDesign.CreateSymbolicId(parentId, childName);
         }
 
@@ -1034,9 +1051,6 @@ namespace Opc.Ua.Schema.Model.Tests
             var parentId = new XmlQualifiedName(parentName);
 
             // Act
-            
-
-            // Assert
             return NodeDesign.CreateSymbolicId(parentId, childName);
         }
 
@@ -1052,9 +1066,6 @@ namespace Opc.Ua.Schema.Model.Tests
             var parentId = new XmlQualifiedName(parentName ?? string.Empty);
 
             // Act
-            
-
-            // Assert
             return NodeDesign.CreateSymbolicId(parentId, childName);
         }
 
@@ -1071,9 +1082,6 @@ namespace Opc.Ua.Schema.Model.Tests
             var parentId = new XmlQualifiedName(parentName);
 
             // Act
-            
-
-            // Assert
             return NodeDesign.CreateSymbolicId(parentId, childName);
         }
 
@@ -1090,9 +1098,6 @@ namespace Opc.Ua.Schema.Model.Tests
             var parentId = new XmlQualifiedName(parentName);
 
             // Act
-            
-
-            // Assert
             return NodeDesign.CreateSymbolicId(parentId, childName);
         }
 
@@ -1832,8 +1837,8 @@ namespace Opc.Ua.Schema.Model.Tests
         public void GetHashCode_DifferentChildren_ReturnsDifferentHashCode()
         {
             // Arrange
-            var node1 = new NodeDesign { Children = new ListOfChildren() };
-            var node2 = new NodeDesign { Children = null };
+            var node1 = new NodeDesign { Children = new ListOfChildren { Items = [new ObjectDesign()] } };
+            var node2 = new NodeDesign { Children = new ListOfChildren() };
 
             // Act
             int hashCode1 = node1.GetHashCode();
@@ -1841,6 +1846,26 @@ namespace Opc.Ua.Schema.Model.Tests
 
             // Assert
             Assert.That(hashCode1, Is.Not.EqualTo(hashCode2));
+        }
+
+        /// <summary>
+        /// Tests that GetHashCode returns different values when Children differs.
+        /// Verifies that changes to the Children property affect the hash code.
+        /// Expected result: Different hash codes for different Children values.
+        /// </summary>
+        [Test]
+        public void GetHashCode_NoChildren_ReturnsSameHashCode()
+        {
+            // Arrange
+            var node1 = new NodeDesign { Children = null };
+            var node2 = new NodeDesign { Children = new ListOfChildren() };
+
+            // Act
+            int hashCode1 = node1.GetHashCode();
+            int hashCode2 = node2.GetHashCode();
+
+            // Assert
+            Assert.That(hashCode1, Is.EqualTo(hashCode2));
         }
 
         /// <summary>

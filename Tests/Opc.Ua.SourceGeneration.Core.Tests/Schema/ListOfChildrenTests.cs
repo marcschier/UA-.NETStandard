@@ -36,7 +36,11 @@ namespace Opc.Ua.Schema.Model.Tests
     /// Unit tests for the ListOfChildren class.
     /// </summary>
     [TestFixture]
-    public partial class ListOfChildrenTests
+    [Category("ModelDesign")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
+    public class ListOfChildrenTests
     {
         /// <summary>
         /// Tests that Equals returns false when comparing with null.
@@ -79,24 +83,27 @@ namespace Opc.Ua.Schema.Model.Tests
         }
 
         /// <summary>
-        /// Tests that Equals returns false when both instances have null Items arrays.
+        /// Tests that Equals returns true when both instances have null Items arrays.
         /// </summary>
         [Test]
-        public void Equals_BothItemsNull_ReturnsFalse()
+        public void Equals_BothItemsNull_ReturnsTrue()
         {
             // Arrange
             var instance1 = new ListOfChildren { Items = null };
             var instance2 = new ListOfChildren { Items = null };
 
             // Act
-            bool result = instance1.Equals(instance2);
+            bool result1 = instance1.Equals(instance2);
+            bool result2 = instance1.Equals((object)instance2);
 
             // Assert
-            Assert.That(result, Is.False);
+            Assert.That(result1, Is.True);
+            Assert.That(result2, Is.True);
         }
 
         /// <summary>
-        /// Tests that Equals returns false when this instance has null Items and other has non-null Items.
+        /// Tests that Equals returns false when this instance has null Items and other
+        /// has non-null Items.
         /// </summary>
         [Test]
         public void Equals_ThisItemsNullOtherItemsNotNull_ReturnsFalse()
@@ -155,7 +162,7 @@ namespace Opc.Ua.Schema.Model.Tests
             // Arrange
             var sharedItem = new ObjectDesign
             {
-                SymbolicName = new XmlQualifiedName("TestObject")
+                SymbolicId = new XmlQualifiedName("TestObject")
             };
             var instance1 = new ListOfChildren { Items = [sharedItem] };
             var instance2 = new ListOfChildren { Items = [sharedItem] };
@@ -176,15 +183,15 @@ namespace Opc.Ua.Schema.Model.Tests
             // Arrange
             var item1 = new ObjectDesign
             {
-                SymbolicName = new XmlQualifiedName("Object1")
+                SymbolicId = new XmlQualifiedName("Object1")
             };
             var item2 = new VariableDesign
             {
-                SymbolicName = new XmlQualifiedName("Variable1")
+                SymbolicId = new XmlQualifiedName("Variable1")
             };
             var item3 = new PropertyDesign
             {
-                SymbolicName = new XmlQualifiedName("Property1")
+                SymbolicId = new XmlQualifiedName("Property1")
             };
 
             var instance1 = new ListOfChildren { Items = [item1, item2, item3] };
@@ -229,11 +236,11 @@ namespace Opc.Ua.Schema.Model.Tests
             // Arrange
             var item1 = new ObjectDesign
             {
-                SymbolicName = new XmlQualifiedName("Object1")
+                SymbolicId = new XmlQualifiedName("Object1")
             };
             var item2 = new ObjectDesign
             {
-                SymbolicName = new XmlQualifiedName("Object2")
+                SymbolicId = new XmlQualifiedName("Object2")
             };
 
             var instance1 = new ListOfChildren { Items = [item1] };
@@ -255,11 +262,11 @@ namespace Opc.Ua.Schema.Model.Tests
             // Arrange
             var item1 = new ObjectDesign
             {
-                SymbolicName = new XmlQualifiedName("Object1")
+                SymbolicId = new XmlQualifiedName("Object1")
             };
             var item2 = new VariableDesign
             {
-                SymbolicName = new XmlQualifiedName("Variable1")
+                SymbolicId = new XmlQualifiedName("Variable1")
             };
 
             var instance1 = new ListOfChildren { Items = [item1, item2] };
@@ -298,15 +305,15 @@ namespace Opc.Ua.Schema.Model.Tests
             // Arrange
             var object1 = new ObjectDesign
             {
-                SymbolicName = new XmlQualifiedName("Object1")
+                SymbolicId = new XmlQualifiedName("Object1")
             };
             var variable1 = new VariableDesign
             {
-                SymbolicName = new XmlQualifiedName("Variable1")
+                SymbolicId = new XmlQualifiedName("Variable1")
             };
             var method1 = new MethodDesign
             {
-                SymbolicName = new XmlQualifiedName("Method1")
+                SymbolicId = new XmlQualifiedName("Method1")
             };
 
             var instance1 = new ListOfChildren { Items = [object1, variable1, method1] };
@@ -396,25 +403,6 @@ namespace Opc.Ua.Schema.Model.Tests
         }
 
         /// <summary>
-        /// Tests that Equals returns true when both instances have null Items.
-        /// Input: Two instances with null Items arrays
-        /// Expected: true
-        /// </summary>
-        [Test]
-        public void Equals_BothItemsNull_ReturnsTrue()
-        {
-            // Arrange
-            var listOfChildren1 = new ListOfChildren { Items = null };
-            var listOfChildren2 = new ListOfChildren { Items = null };
-
-            // Act
-            bool result = listOfChildren1.Equals((object)listOfChildren2);
-
-            // Assert
-            Assert.That(result, Is.True);
-        }
-
-        /// <summary>
         /// Tests that Equals returns false when one instance has null Items and the other has non-null Items.
         /// Input: First instance with null Items, second with non-null Items
         /// Expected: false
@@ -461,7 +449,7 @@ namespace Opc.Ua.Schema.Model.Tests
         public void Equals_SingleElementArraysSameInstance_ReturnsTrue()
         {
             // Arrange
-            var propertyDesign = new PropertyDesign { SymbolicName = new System.Xml.XmlQualifiedName("Test") };
+            var propertyDesign = new PropertyDesign { SymbolicId = new XmlQualifiedName("Test") };
             var listOfChildren1 = new ListOfChildren { Items = [propertyDesign] };
             var listOfChildren2 = new ListOfChildren { Items = [propertyDesign] };
 
@@ -505,11 +493,11 @@ namespace Opc.Ua.Schema.Model.Tests
             // Arrange
             var listOfChildren1 = new ListOfChildren
             {
-                Items = [new PropertyDesign { SymbolicName = new System.Xml.XmlQualifiedName("Test1") }]
+                Items = [new PropertyDesign { SymbolicId = new XmlQualifiedName("Test1") }]
             };
             var listOfChildren2 = new ListOfChildren
             {
-                Items = [new PropertyDesign { SymbolicName = new System.Xml.XmlQualifiedName("Test2") }]
+                Items = [new PropertyDesign { SymbolicId = new XmlQualifiedName("Test2") }]
             };
 
             // Act
@@ -528,8 +516,8 @@ namespace Opc.Ua.Schema.Model.Tests
         public void Equals_MultipleEqualElements_ReturnsTrue()
         {
             // Arrange
-            var property1 = new PropertyDesign { SymbolicName = new System.Xml.XmlQualifiedName("Test1") };
-            var property2 = new PropertyDesign { SymbolicName = new System.Xml.XmlQualifiedName("Test2") };
+            var property1 = new PropertyDesign { SymbolicId = new XmlQualifiedName("Test1") };
+            var property2 = new PropertyDesign { SymbolicId = new XmlQualifiedName("Test2") };
             var listOfChildren1 = new ListOfChildren { Items = [property1, property2] };
             var listOfChildren2 = new ListOfChildren { Items = [property1, property2] };
 
@@ -549,7 +537,7 @@ namespace Opc.Ua.Schema.Model.Tests
         public void Equals_CastToObject_ReturnsTrue()
         {
             // Arrange
-            var property = new PropertyDesign { SymbolicName = new System.Xml.XmlQualifiedName("Test") };
+            var property = new PropertyDesign { SymbolicId = new XmlQualifiedName("Test") };
             var listOfChildren1 = new ListOfChildren { Items = [property] };
             object listOfChildren2 = new ListOfChildren { Items = [property] };
 
@@ -576,7 +564,7 @@ namespace Opc.Ua.Schema.Model.Tests
             int hashCode = listOfChildren.GetHashCode();
 
             // Assert
-            Assert.That(hashCode, Is.Not.Zero);
+            Assert.That(hashCode, Is.Zero);
         }
 
         /// <summary>
@@ -595,7 +583,7 @@ namespace Opc.Ua.Schema.Model.Tests
             int hashCode = listOfChildren.GetHashCode();
 
             // Assert
-            Assert.That(hashCode, Is.Not.Zero);
+            Assert.That(hashCode, Is.Zero);
         }
 
         /// <summary>
@@ -688,14 +676,15 @@ namespace Opc.Ua.Schema.Model.Tests
         public void GetHashCode_EqualItemsArrays_ReturnsSameHashCode()
         {
             // Arrange
-            var instance = new InstanceDesign();
+            var instance1 = new InstanceDesign();
+            var instance2 = new InstanceDesign();
             var listOfChildren1 = new ListOfChildren
             {
-                Items = [instance]
+                Items = [instance1]
             };
             var listOfChildren2 = new ListOfChildren
             {
-                Items = [instance]
+                Items = [instance2]
             };
 
             // Act
@@ -707,14 +696,15 @@ namespace Opc.Ua.Schema.Model.Tests
         }
 
         /// <summary>
-        /// Tests that GetHashCode likely returns different hash codes for objects with different items.
+        /// Tests that GetHashCode likely returns different hash codes for objects
+        /// with different items.
         /// </summary>
         [Test]
         public void GetHashCode_DifferentItems_LikelyReturnsDifferentHashCode()
         {
             // Arrange
-            var instance1 = new InstanceDesign();
-            var instance2 = new InstanceDesign();
+            var instance1 = new InstanceDesign { SymbolicId = new XmlQualifiedName("Instance1") };
+            var instance2 = new InstanceDesign { SymbolicId = new XmlQualifiedName("Instance2") };
             var listOfChildren1 = new ListOfChildren
             {
                 Items = [instance1]
@@ -734,10 +724,10 @@ namespace Opc.Ua.Schema.Model.Tests
         }
 
         /// <summary>
-        /// Tests that GetHashCode returns different hash codes for null Items vs empty array.
+        /// Tests that GetHashCode returns same hash codes for null Items vs empty array.
         /// </summary>
         [Test]
-        public void GetHashCode_NullVsEmptyArray_ReturnsDifferentHashCode()
+        public void GetHashCode_NullVsEmptyArray_ReturnsSameHashCode()
         {
             // Arrange
             var listOfChildren1 = new ListOfChildren { Items = null };
@@ -748,7 +738,8 @@ namespace Opc.Ua.Schema.Model.Tests
             int hashCode2 = listOfChildren2.GetHashCode();
 
             // Assert
-            Assert.That(hashCode1, Is.Not.EqualTo(hashCode2));
+            Assert.That(hashCode1, Is.EqualTo(hashCode2));
+            Assert.That(hashCode1, Is.EqualTo(0));
         }
 
         /// <summary>

@@ -27,7 +27,6 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-
 using System;
 using System.Globalization;
 using System.Linq;
@@ -35,7 +34,7 @@ using System.Runtime.CompilerServices;
 using NUnit.Framework;
 using ObjectLayoutInspector;
 
-namespace Opc.Ua.Types
+namespace Opc.Ua.Types.Tests.BuiltIn
 {
     [TestFixture]
     [Category("BuiltInType")]
@@ -55,9 +54,9 @@ namespace Opc.Ua.Types
         {
             var layout = TypeLayout.GetLayout<DateTime>();
             TestContext.Out.WriteLine(layout.ToString(true));
-            Assert.That(Unsafe.SizeOf<DateTime>(), Is.EqualTo(Unsafe.SizeOf<int>()));
-            Assert.That(layout.Fields, Has.Count.EqualTo(1));
-            Assert.That(((FieldLayout)layout.Fields[0]).FieldInfo.FieldType, Is.EqualTo(typeof(long)));
+            Assert.That(Unsafe.SizeOf<DateTime>(), Is.EqualTo(Unsafe.SizeOf<ulong>()));
+            Assert.That(layout.Fields, Has.Length.EqualTo(1));
+            Assert.That(((FieldLayout)layout.Fields[0]).FieldInfo.FieldType, Is.EqualTo(typeof(ulong)));
             Assert.That(layout.Fields[0].Offset, Is.EqualTo(0));
             Assert.That(layout.Fields[0].Size, Is.EqualTo(8));
         }
@@ -67,12 +66,15 @@ namespace Opc.Ua.Types
         {
             var layout = TypeLayout.GetLayout<StatusCode>();
             TestContext.Out.WriteLine(layout.ToString(true));
-            Assert.That(Unsafe.SizeOf<StatusCode>(), Is.EqualTo(Unsafe.SizeOf<uint>()));
-            Assert.That(Unsafe.SizeOf<uint>(), Is.EqualTo(4));
-            Assert.That(layout.Fields, Has.Count.EqualTo(1));
-            Assert.That(((FieldLayout)layout.Fields[0]).FieldInfo.FieldType, Is.EqualTo(typeof(uint)));
+            Assert.That(Unsafe.SizeOf<StatusCode>(), Is.EqualTo(16));
+            Assert.That(layout.Fields, Has.Length.EqualTo(3)); // Todo: Remove padding
+
+            Assert.That(((FieldLayout)layout.Fields[0]).FieldInfo.FieldType, Is.EqualTo(typeof(string)));
             Assert.That(layout.Fields[0].Offset, Is.EqualTo(0));
-            Assert.That(layout.Fields[0].Size, Is.EqualTo(4));
+            Assert.That(layout.Fields[0].Size, Is.EqualTo(8));
+            Assert.That(((FieldLayout)layout.Fields[1]).FieldInfo.FieldType, Is.EqualTo(typeof(uint)));
+            Assert.That(layout.Fields[1].Offset, Is.EqualTo(8));
+            Assert.That(layout.Fields[1].Size, Is.EqualTo(4));
         }
 
         [Test]
@@ -81,10 +83,10 @@ namespace Opc.Ua.Types
             var layout = TypeLayout.GetLayout<NodeId>();
             TestContext.Out.WriteLine(layout.ToString(true));
             Assert.That(Unsafe.SizeOf<NodeId>(), Is.EqualTo(16));
-            Assert.That(layout.Fields, Has.Count.EqualTo(2));
+            Assert.That(layout.Fields, Has.Length.EqualTo(2));
             Assert.That(((FieldLayout)layout.Fields[0]).FieldInfo.FieldType, Is.EqualTo(typeof(object)));
             Assert.That(layout.Fields[0].Offset, Is.EqualTo(0));
-            // Assert.That(((FieldLayout)layout.Fields[1]).FieldInfo.FieldType, Is.EqualTo(typeof(NodeId.Inner)));
+            Assert.That(((FieldLayout)layout.Fields[1]).FieldInfo.FieldType, Is.EqualTo(typeof(NodeId.Inner)));
             Assert.That(layout.Fields[1].Offset, Is.EqualTo(8));
         }
 
@@ -93,12 +95,12 @@ namespace Opc.Ua.Types
         {
             var layout = TypeLayout.GetLayout<ExpandedNodeId>();
             TestContext.Out.WriteLine(layout.ToString(true));
-            Assert.That(Unsafe.SizeOf<ExpandedNodeId>(), Is.EqualTo(Unsafe.SizeOf<Variant>()));
-            Assert.That(layout.Fields, Has.Count.EqualTo(2));
+            Assert.That(Unsafe.SizeOf<ExpandedNodeId>(), Is.EqualTo(32));
+            Assert.That(layout.Fields, Has.Length.EqualTo(2));
             Assert.That(((FieldLayout)layout.Fields[0]).FieldInfo.FieldType, Is.EqualTo(typeof(NodeId)));
             Assert.That(layout.Fields[0].Offset, Is.EqualTo(0));
             Assert.That(layout.Fields[0].Size, Is.EqualTo(16));
-            // Assert.That(((FieldLayout)layout.Fields[1]).FieldInfo.FieldType, Is.EqualTo(typeof(ExpandedNodeId.Inner)));
+            Assert.That(((FieldLayout)layout.Fields[1]).FieldInfo.FieldType, Is.EqualTo(typeof(ExpandedNodeId.Inner)));
             Assert.That(layout.Fields[1].Offset, Is.EqualTo(16));
             Assert.That(layout.Fields[1].Size, Is.EqualTo(16));
         }
@@ -109,11 +111,11 @@ namespace Opc.Ua.Types
             var layout = TypeLayout.GetLayout<ExpandedNodeId.Inner>();
             TestContext.Out.WriteLine(layout.ToString(true));
             Assert.That(Unsafe.SizeOf<ExpandedNodeId.Inner>(), Is.EqualTo(16));
-            Assert.That(layout.Fields, Has.Count.EqualTo(3));
+            Assert.That(layout.Fields, Has.Length.EqualTo(3));
             Assert.That(((FieldLayout)layout.Fields[0]).FieldInfo.FieldType, Is.EqualTo(typeof(object)));
             Assert.That(layout.Fields[0].Offset, Is.EqualTo(0));
             Assert.That(layout.Fields[0].Size, Is.EqualTo(8));
-            Assert.That(((FieldLayout)layout.Fields[1]).FieldInfo.FieldType, Is.EqualTo(typeof(int)));
+            Assert.That(((FieldLayout)layout.Fields[1]).FieldInfo.FieldType, Is.EqualTo(typeof(uint)));
             Assert.That(layout.Fields[1].Offset, Is.EqualTo(8));
             Assert.That(layout.Fields[1].Size, Is.EqualTo(4));
             Assert.That(((FieldLayout)layout.Fields[2]).FieldInfo.FieldType, Is.EqualTo(typeof(uint)));
@@ -126,16 +128,17 @@ namespace Opc.Ua.Types
         {
             var layout = TypeLayout.GetLayout<TypeInfo>();
             TestContext.Out.WriteLine(layout.ToString(true));
-            Assert.That(Unsafe.SizeOf<TypeInfo>(), Is.EqualTo(16));
-            Assert.That(layout.Fields, Has.Count.EqualTo(3));
-            Assert.That(((FieldLayout)layout.Fields[0]).FieldInfo.FieldType, Is.EqualTo(typeof(object)));
+            Assert.That(Unsafe.SizeOf<TypeInfo>(), Is.EqualTo(4));
+            Assert.That(layout.Fields, Has.Length.EqualTo(3));
+            Assert.That(((FieldLayout)layout.Fields[0]).FieldInfo.FieldType, Is.EqualTo(typeof(short)));
             Assert.That(layout.Fields[0].Offset, Is.EqualTo(0));
-            Assert.That(layout.Fields[0].Size, Is.EqualTo(8));
-            Assert.That(((FieldLayout)layout.Fields[1]).FieldInfo.FieldType, Is.EqualTo(typeof(int)));
-            Assert.That(layout.Fields[1].Offset, Is.EqualTo(8));
-            Assert.That(layout.Fields[1].Size, Is.EqualTo(4));
-            Assert.That(layout.Fields[2].Offset, Is.EqualTo(12));
-            Assert.That(layout.Fields[2].Size, Is.EqualTo(4));
+            Assert.That(layout.Fields[0].Size, Is.EqualTo(2));
+            Assert.That(((FieldLayout)layout.Fields[1]).FieldInfo.FieldType, Is.EqualTo(typeof(byte)));
+            Assert.That(layout.Fields[1].Offset, Is.EqualTo(2));
+            Assert.That(layout.Fields[1].Size, Is.EqualTo(1));
+            Assert.That(((FieldLayout)layout.Fields[2]).FieldInfo.FieldType, Is.EqualTo(typeof(byte)));
+            Assert.That(layout.Fields[2].Offset, Is.EqualTo(3));
+            Assert.That(layout.Fields[2].Size, Is.EqualTo(1));
         }
 
         [Test]
@@ -143,17 +146,20 @@ namespace Opc.Ua.Types
         {
             var layout = TypeLayout.GetLayout<Variant>();
             TestContext.Out.WriteLine(layout.ToString(true));
-            Assert.That(Unsafe.SizeOf<Variant>(), Is.EqualTo(40));
-            Assert.That(Unsafe.SizeOf<Variant>() >= Unsafe.SizeOf<NodeId>(), Is.True);
-            Assert.That(layout.Fields, Has.Count.EqualTo(3));
+            Assert.That(Unsafe.SizeOf<Variant>(), Is.EqualTo(24));
+
+            Assert.That(layout.Fields, Has.Length.EqualTo(4)); // TODO: Remove 4 byte padding field
+            Assert.That(layout.Fields[3].Offset, Is.EqualTo(20));
+
             Assert.That(((FieldLayout)layout.Fields[0]).FieldInfo.FieldType, Is.EqualTo(typeof(object)));
             Assert.That(layout.Fields[0].Offset, Is.EqualTo(0));
             Assert.That(layout.Fields[0].Size, Is.EqualTo(8));
             Assert.That(((FieldLayout)layout.Fields[1]).FieldInfo.FieldType, Is.EqualTo(typeof(Variant.Union)));
             Assert.That(layout.Fields[1].Offset, Is.EqualTo(8));
-            Assert.That(layout.Fields[1].Size, Is.EqualTo(16));
+            Assert.That(layout.Fields[1].Size, Is.EqualTo(8));
             Assert.That(((FieldLayout)layout.Fields[2]).FieldInfo.FieldType, Is.EqualTo(typeof(TypeInfo)));
-            Assert.That(layout.Fields[2].Offset, Is.EqualTo(24));
+            Assert.That(layout.Fields[2].Offset, Is.EqualTo(16));
+            Assert.That(layout.Fields[2].Size, Is.EqualTo(4));
         }
 
         [Test]
@@ -162,14 +168,13 @@ namespace Opc.Ua.Types
             var layout = TypeLayout.GetLayout<ExtensionObject>();
             TestContext.Out.WriteLine(layout.ToString(true));
             Assert.That(Unsafe.SizeOf<ExtensionObject>(), Is.EqualTo(40));
-            Assert.That(Unsafe.SizeOf<Variant>() >= Unsafe.SizeOf<ExtensionObject>(), Is.True);
-            Assert.That(layout.Fields, Has.Count.EqualTo(3));
+            Assert.That(layout.Fields, Has.Length.EqualTo(2));
             Assert.That(((FieldLayout)layout.Fields[0]).FieldInfo.FieldType, Is.EqualTo(typeof(object)));
             Assert.That(layout.Fields[0].Offset, Is.EqualTo(0));
-            Assert.That(layout.Fields[0].Size, Is.EqualTo(16));
+            Assert.That(layout.Fields[0].Size, Is.EqualTo(8));
             Assert.That(((FieldLayout)layout.Fields[1]).FieldInfo.FieldType, Is.EqualTo(typeof(ExpandedNodeId)));
-            Assert.That(layout.Fields[1].Offset, Is.EqualTo(16));
-            Assert.That(layout.Fields[1].Size, Is.EqualTo(8));
+            Assert.That(layout.Fields[1].Offset, Is.EqualTo(8));
+            Assert.That(layout.Fields[1].Size, Is.EqualTo(32));
         }
 
         [Test]
@@ -186,14 +191,16 @@ namespace Opc.Ua.Types
             var layout = TypeLayout.GetLayout<LocalizedText>();
             TestContext.Out.WriteLine(layout.ToString(true));
             Assert.That(Unsafe.SizeOf<LocalizedText>(), Is.EqualTo(24));
-            Assert.That(layout.Fields, Has.Count.EqualTo(3));
+            Assert.That(layout.Fields, Has.Length.EqualTo(3));
             Assert.That(((FieldLayout)layout.Fields[0]).FieldInfo.FieldType, Is.EqualTo(typeof(string)));
             Assert.That(layout.Fields[0].Offset, Is.EqualTo(0));
-            Assert.That(layout.Fields[0].Size, Is.EqualTo(16));
+            Assert.That(layout.Fields[0].Size, Is.EqualTo(8));
             Assert.That(((FieldLayout)layout.Fields[1]).FieldInfo.FieldType, Is.EqualTo(typeof(string)));
-            Assert.That(layout.Fields[1].Offset, Is.EqualTo(16));
-            Assert.That(layout.Fields[1].Size, Is.EqualTo(4));
-            Assert.That(layout.Fields[2].Size, Is.EqualTo(4));
+            Assert.That(layout.Fields[1].Offset, Is.EqualTo(8));
+            Assert.That(layout.Fields[1].Size, Is.EqualTo(8));
+            Assert.That(((FieldLayout)layout.Fields[2]).FieldInfo.FieldType, Is.EqualTo(typeof(LocalizedTextFormatAndTranslation)));
+            Assert.That(layout.Fields[2].Offset, Is.EqualTo(16));
+            Assert.That(layout.Fields[2].Size, Is.EqualTo(8));
         }
 
         [Test]
@@ -201,14 +208,15 @@ namespace Opc.Ua.Types
         {
             var layout = TypeLayout.GetLayout<QualifiedName>();
             TestContext.Out.WriteLine(layout.ToString(true));
-            Assert.That(Unsafe.SizeOf<QualifiedName>(), Is.EqualTo(24));
-            Assert.That(layout.Fields, Has.Count.EqualTo(3));
+            Assert.That(Unsafe.SizeOf<QualifiedName>(), Is.EqualTo(16));
+            Assert.That(layout.Fields, Has.Length.EqualTo(3)); // TODO: Remove padding
             Assert.That(((FieldLayout)layout.Fields[0]).FieldInfo.FieldType, Is.EqualTo(typeof(string)));
             Assert.That(layout.Fields[0].Offset, Is.EqualTo(0));
-            Assert.That(layout.Fields[0].Size, Is.EqualTo(16));
+            Assert.That(layout.Fields[0].Size, Is.EqualTo(8));
             Assert.That(((FieldLayout)layout.Fields[1]).FieldInfo.FieldType, Is.EqualTo(typeof(ushort)));
-            Assert.That(layout.Fields[1].Offset, Is.EqualTo(16));
+            Assert.That(layout.Fields[1].Offset, Is.EqualTo(8));
             Assert.That(layout.Fields[1].Size, Is.EqualTo(2));
+
             Assert.That(layout.Fields[2].Size, Is.EqualTo(6));
         }
     }

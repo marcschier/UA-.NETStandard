@@ -27,6 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using System.Text;
 using System.Xml;
 
 namespace Opc.Ua.SourceGeneration
@@ -52,6 +53,111 @@ namespace Opc.Ua.SourceGeneration
             }
 
             return CoreUtils.Format("{0}{1}", char.ToLowerInvariant(name[0]), name[1..]);
+        }
+
+        /// <summary>
+        /// Convert string to a safe symbol for dotnet use
+        /// </summary>
+        /// <returns></returns>
+        public static string ToSafeSymbolName(
+            this string name,
+            bool toLowerCamelCase = false,
+            string prefix = null)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return name;
+            }
+            var buffer = new StringBuilder();
+            foreach (var c in name)
+            {
+                if (char.IsWhiteSpace(c))
+                {
+                    continue;
+                }
+                if (toLowerCamelCase)
+                {
+                    buffer.Append(char.ToLowerInvariant(c));
+                    toLowerCamelCase = false;
+                    continue;
+                }
+                buffer.Append(c);
+            }
+            var symbol = buffer.ToString();
+            if (!string.IsNullOrEmpty(prefix))
+            {
+                return prefix + symbol;
+            }
+            switch (symbol)
+            {
+                case "event":
+                case "params":
+                case "object":
+                case "class":
+                case "struct":
+                case "record":
+                case "void":
+                case "private":
+                case "protected":
+                case "public":
+                case "internal":
+                case "static":
+                case "readonly":
+                case "const":
+                case "null":
+                case "sealed":
+                case "override":
+                case "virtual":
+                case "interface":
+                case "enum":
+                case "namespace":
+                case "using":
+                case "new":
+                case "this":
+                case "base":
+                case "if":
+                case "else":
+                case "for":
+                case "foreach":
+                case "while":
+                case "do":
+                case "switch":
+                case "case":
+                case "default":
+                case "break":
+                case "continue":
+                case "return":
+                case "try":
+                case "catch":
+                case "finally":
+                case "throw":
+                case "in":
+                case "ref":
+                case "out":
+                case "set":
+                case "get":
+                case "value":
+                case "var":
+                case "dynamic":
+                case "async":
+                case "await":
+                case "string":
+                case "byte":
+                case "sbyte":
+                case "char":
+                case "bool":
+                case "short":
+                case "ushort":
+                case "uint":
+                case "ulong":
+                case "int":
+                case "long":
+                case "float":
+                case "double":
+                case "decimal":
+                    return "@" + symbol;
+            }
+            return symbol;
         }
 
         /// <summary>

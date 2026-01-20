@@ -114,28 +114,28 @@ namespace Opc.Ua.SourceGeneration
         public void Write(string text)
         {
             WriteWhiteSpaceIfNeeded();
-            m_writer.Write(text);
+            m_writer.Write(text ?? string.Empty);
         }
 
         /// <inheritdoc/>
         public void Write(string format, object arg1)
         {
             WriteWhiteSpaceIfNeeded();
-            m_writer.Write(format, arg1);
+            m_writer.Write(format ?? string.Empty, arg1);
         }
 
         /// <inheritdoc/>
         public void Write(string format, object arg1, object arg2)
         {
             WriteWhiteSpaceIfNeeded();
-            m_writer.Write(format, arg1, arg2);
+            m_writer.Write(format ?? string.Empty, arg1, arg2);
         }
 
         /// <inheritdoc/>
         public void Write(string format, object arg1, object arg2, object arg3)
         {
             WriteWhiteSpaceIfNeeded();
-            m_writer.Write(format, arg1, arg2, arg3);
+            m_writer.Write(format ?? string.Empty, arg1, arg2, arg3);
         }
 
         /// <inheritdoc/>
@@ -148,7 +148,7 @@ namespace Opc.Ua.SourceGeneration
         public void WriteLine(string text)
         {
             WriteWhiteSpaceIfNeeded();
-            m_writer.Write(text);
+            m_writer.Write(text ?? string.Empty);
             WriteNewLine(int.MaxValue);
         }
 
@@ -156,7 +156,7 @@ namespace Opc.Ua.SourceGeneration
         public void WriteLine(string text, params object[] args)
         {
             WriteWhiteSpaceIfNeeded();
-            m_writer.Write(text, args);
+            m_writer.Write(text ?? string.Empty, args ?? []);
             WriteNewLine(int.MaxValue);
         }
 

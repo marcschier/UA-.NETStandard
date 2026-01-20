@@ -35,7 +35,12 @@ using Opc.Ua.Schema.Model;
 
 namespace Opc.Ua.SourceGeneration.Generator.Tests
 {
-    public partial class XmlSchemaGeneratorTests
+    [TestFixture]
+    [Category("Generator")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
+    public class XmlSchemaGeneratorTests
     {
         /// <summary>
         /// Tests that Emit returns a valid TextFileResource with correct file path and resource name when validateOutput is false.

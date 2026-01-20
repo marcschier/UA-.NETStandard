@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml;
+using Opc.Ua.Export;
 using Opc.Ua.SourceGeneration;
 using Opc.Ua.Types;
 
@@ -145,13 +146,13 @@ namespace Opc.Ua.Schema.Model
 
             // check if the variable type restricted the datatype to eliminate the
             // need for a template parameter.
-            if (variableType.DataTypeNode.IsRequiredParameterInTemplates(variableType.ValueRank))
+            if (variableType.DataTypeNode.IsTemplateParameterRequired(variableType.ValueRank))
             {
                 return CoreUtils.Format("{0}State", FixClassName(variableType));
             }
 
             // check if the variable instance did not restrict the datatype.
-            if (!variable.DataTypeNode.IsRequiredParameterInTemplates(variable.ValueRank))
+            if (!variable.DataTypeNode.IsTemplateParameterRequired(variable.ValueRank))
             {
                 return CoreUtils.Format("{0}State", FixClassName(variableType));
             }
@@ -159,23 +160,11 @@ namespace Opc.Ua.Schema.Model
             // instance restricted the datatype but the type did not not.
             BasicDataType basicType = variable.DataTypeNode.BasicDataType;
 
-            string scalarName;
-            switch (basicType)
-            {
-                case BasicDataType.UserDefined:
-                    scalarName = FixClassName(variable.DataTypeNode);
-                    break;
-                case BasicDataType.Structure:
-                    scalarName = "global::Opc.Ua.ExtensionObject";
-                    break;
-                default:
-                    scalarName = GetDotNetTypeName(
-                        variable.DataTypeNode,
-                        targetNamespace,
-                        namespaces,
-                        nullable: NullableAnnotation.NonNullable);
-                    break;
-            }
+            string scalarName = GetDotNetTypeName(
+                variable.DataTypeNode,
+                targetNamespace,
+                namespaces,
+                nullable: NullableAnnotation.NonNullable);
 
             if (variable.ValueRank == ValueRank.Array)
             {
@@ -199,28 +188,41 @@ namespace Opc.Ua.Schema.Model
         /// <summary>
         /// Returns the class name to use when creating an instance of the type.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         public static string GetBaseClassName(this TypeDesign type, Namespace[] namespaces)
         {
-            if (type is not DataTypeDesign dataType || type.BaseTypeNode == null)
+            if (type?.BaseTypeNode?.SymbolicName == null)
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
+
+            if (type is not DataTypeDesign dataType ||
+                type.BaseTypeNode is not DataTypeDesign dtd)
             {
                 return type.BaseTypeNode.SymbolicName.Name;
             }
 
-            if (((DataTypeDesign)dataType.BaseTypeNode).BasicDataType == BasicDataType.Structure)
+            if (dtd.BasicDataType == BasicDataType.Structure)
             {
                 return "global::Opc.Ua.IEncodeable";
             }
 
-            string ns = namespaces.GetNamespacePrefix(type.BaseTypeNode.SymbolicId.Namespace);
-            return ns + "." + type.BaseTypeNode.SymbolicName.Name;
+            string ns = namespaces.GetNamespacePrefix(dtd.SymbolicId.Namespace);
+            return ns + "." + dtd.SymbolicName.Name;
         }
 
         /// <summary>
         /// Returns the class name to use when creating an instance of the type.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         public static bool IsDerivedDataType(this TypeDesign type)
         {
-            if (type is not DataTypeDesign || type.BaseTypeNode is not DataTypeDesign dtd)
+            if (type is null)
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
+            if (type is not DataTypeDesign ||
+                type.BaseTypeNode is not DataTypeDesign dtd)
             {
                 return true;
             }
@@ -249,16 +251,30 @@ namespace Opc.Ua.Schema.Model
         /// <summary>
         /// Returns a constant string for the namespace uri.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
         public static string GetConstantSymbolForNamespace(
             this Namespace[] namespaces,
             string namespaceUri)
         {
-            Namespace ns = namespaces.GetNamespace(namespaceUri);
-            if (ns != null)
+            if (namespaces is null)
             {
-                return CoreUtils.Format("global::{1}.Namespaces.{0}", ns.Name, ns.Prefix);
+                throw new ArgumentNullException(nameof(namespaces));
             }
-            return null;
+            Namespace ns = namespaces.GetNamespace(namespaceUri);
+            if (ns == null)
+            {
+                return null;
+            }
+            if (string.IsNullOrWhiteSpace(ns.Name))
+            {
+                throw new ArgumentException("Found namespace has no name");
+            }
+            if (string.IsNullOrWhiteSpace(ns.Prefix)) // TODO: should this work?
+            {
+                return CoreUtils.Format("Namespaces.{0}", ns.Name);
+            }
+            return CoreUtils.Format("global::{0}.Namespaces.{1}", ns.Prefix, ns.Name);
         }
 
         public static bool IsOverriddenWithSameClass(
@@ -266,6 +282,11 @@ namespace Opc.Ua.Schema.Model
             string targetNamespace,
             Namespace[] namespaces)
         {
+            if (instance is null)
+            {
+                throw new ArgumentNullException(nameof(instance));
+            }
+
             if (!instance.IsOverridden())
             {
                 return false;
@@ -304,7 +325,7 @@ namespace Opc.Ua.Schema.Model
 
         public static string EnsureUniqueEnumName(this Parameter target)
         {
-            if (target?.Parent is DataTypeDesign dt && dt.HasFields)
+            if (target?.Parent is DataTypeDesign dt && dt.HasFields && dt.Fields != null)
             {
                 HashSet<string> names = [];
 
@@ -340,15 +361,11 @@ namespace Opc.Ua.Schema.Model
         /// </summary>
         public static string GetChildFieldName(this Parameter field)
         {
-            if (field == null)
+            if (string.IsNullOrEmpty(field?.Name))
             {
                 return string.Empty;
             }
-
-            return CoreUtils.Format(
-                "m_{0}{1}",
-                field.Name[..1].ToLowerInvariant(),
-                field.Name[1..]);
+            return field.Name.ToSafeSymbolName(true, "m_");
         }
 
         /// <summary>
@@ -356,15 +373,13 @@ namespace Opc.Ua.Schema.Model
         /// </summary>
         public static string GetChildFieldName(this InstanceDesign instance)
         {
-            if (instance == null)
+            if (string.IsNullOrEmpty(instance?.SymbolicName?.Name))
             {
                 return string.Empty;
             }
 
-            string name = CoreUtils.Format(
-                "m_{0}{1}",
-                instance.SymbolicName.Name[..1].ToLowerInvariant(),
-                instance.SymbolicName.Name[1..]);
+            string name = instance.SymbolicName.Name.ToSafeSymbolName(true, "m_");
+
             if (instance is MethodDesign)
             {
                 return CoreUtils.Format("{0}Method", name);
@@ -376,11 +391,22 @@ namespace Opc.Ua.Schema.Model
         /// <summary>
         /// Fixes class names for nodes.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
         public static string FixClassName(this TypeDesign node)
         {
+            if (node is null)
+            {
+                throw new ArgumentNullException(nameof(node));
+            }
+
             if (node is DataTypeDesign)
             {
-                return node.SymbolicId.Name;
+                if (node.SymbolicId?.Name is not null)
+                {
+                    return node.SymbolicId.Name;
+                }
+                throw new ArgumentException("Symbolic Id is null");
             }
 
             if (node is ObjectTypeDesign objectType &&
@@ -394,7 +420,10 @@ namespace Opc.Ua.Schema.Model
             {
                 return "BaseDataVariable";
             }
-
+            if (node.ClassName is null)
+            {
+                throw new ArgumentException("Class name is null");
+            }
             return node.ClassName;
         }
 
@@ -457,8 +486,13 @@ namespace Opc.Ua.Schema.Model
         /// <summary>
         /// Maps the event notifier flag onto a string.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         public static string GetEventNotifierString(this ObjectTypeDesign objectType)
         {
+            if (objectType is null)
+            {
+                throw new ArgumentNullException(nameof(objectType));
+            }
             if (objectType.SupportsEvents)
             {
                 return "global::Opc.Ua.EventNotifiers.SubscribeToEvents";
@@ -500,18 +534,24 @@ namespace Opc.Ua.Schema.Model
                 case ValueRank.ScalarOrOneDimension:
                     return "global::Opc.Ua.ValueRanks.ScalarOrOneDimension";
                 case ValueRank.OneOrMoreDimensions:
-                    if (string.IsNullOrEmpty(arrayDimensions))
+                    if (string.IsNullOrWhiteSpace(arrayDimensions))
                     {
                         return "global::Opc.Ua.ValueRanks.OneOrMoreDimensions";
                     }
 
-                    string[] dimensions = arrayDimensions.Split([','], StringSplitOptions.RemoveEmptyEntries);
+                    // TODO: "is ,,, not considered 3 dim?
 
-                    if (dimensions.Length == 1)
+                    string[] dimensions = arrayDimensions.Split([','], StringSplitOptions.RemoveEmptyEntries);
+                    var dims = dimensions.Length + 1;
+                    if (dims == 1)
+                    {
+                        return "global::Opc.Ua.ValueRanks.OneDimension";
+                    }
+                    if (dims == 2)
                     {
                         return "global::Opc.Ua.ValueRanks.TwoDimensions";
                     }
-                    return CoreUtils.Format("{0}", dimensions.Length + 1);
+                    return CoreUtils.Format("{0}", dims);
             }
 
             return "global::Opc.Ua.ValueRanks.Any";
@@ -584,6 +624,10 @@ namespace Opc.Ua.Schema.Model
             this DataTypeDesign dataType,
             ValueRank valueRank)
         {
+            if (dataType is null)
+            {
+                throw new ArgumentNullException(nameof(dataType));
+            }
             if (valueRank != ValueRank.Scalar)
             {
                 return false;
@@ -663,6 +707,13 @@ namespace Opc.Ua.Schema.Model
                     if (decodedValue is not bool boolValue)
                     {
                         boolValue = false;
+                    }
+                    // If decoded value was passed, but no type info, set to concrete
+                    // type so that we correctly handle the default value below.
+                    // Otherwise fall to the back compat path that inverts the value.
+                    else if (decodedValueType.IsUnknown)
+                    {
+                        decodedValueType = TypeInfo.Scalars.Boolean;
                     }
 
                     if (defaultValue != null &&
@@ -1020,6 +1071,11 @@ namespace Opc.Ua.Schema.Model
                     {
                         Namespace ns = namespaces
                             .FirstOrDefault(x => x.Value == datatype.SymbolicId.Namespace);
+                        if (string.IsNullOrWhiteSpace(ns?.Prefix))
+                        {
+                            throw new ArgumentException(
+                                $"Namespace {datatype.SymbolicId.Namespace} cannot be resolved");
+                        }
                         typeName = $"{ns.Prefix}.{datatype.SymbolicName.Name}";
                     }
                     else
@@ -1172,7 +1228,7 @@ namespace Opc.Ua.Schema.Model
         /// <summary>
         /// Whether a template parameter is required.
         /// </summary>
-        public static bool IsRequiredParameterInTemplates(
+        public static bool IsTemplateParameterRequired(
             this DataTypeDesign dataType,
             ValueRank valueRank)
         {
@@ -1198,8 +1254,13 @@ namespace Opc.Ua.Schema.Model
         /// <summary>
         /// Is overridden instance.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         public static bool IsOverridden(this InstanceDesign instance)
         {
+            if (instance is null)
+            {
+                throw new ArgumentNullException(nameof(instance));
+            }
             return instance.OveriddenNode != null &&
                 instance.ModellingRule != ModellingRule.None &&
                 instance.ModellingRule != ModellingRule.ExposesItsArray &&
@@ -1271,6 +1332,7 @@ namespace Opc.Ua.Schema.Model
         /// <summary>
         /// Returns a name qualified with a namespace prefix.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         public static string GetPrefixedName(this XmlQualifiedName qname, List<string> namespaceUris)
         {
             if (qname.IsNull())
@@ -1283,6 +1345,10 @@ namespace Opc.Ua.Schema.Model
                 return CoreUtils.Format("ua:{0}", qname.Name);
             }
 
+            if (namespaceUris is null)
+            {
+                throw new ArgumentNullException(nameof(namespaceUris));
+            }
             int index = namespaceUris.IndexOf(qname.Namespace);
 
             if (index > 0)
@@ -1587,7 +1653,7 @@ namespace Opc.Ua.Schema.Model
                         return CoreUtils.Format("xs:int");
                     }
 
-                    string prefix = "tns";
+                    string prefix = null;
 
                     if (dataType.SymbolicName.Namespace != targetNamespace)
                     {
@@ -1615,7 +1681,7 @@ namespace Opc.Ua.Schema.Model
                         }
                     }
 
-                    return CoreUtils.Format("{0}:{1}", prefix, dataType.SymbolicName.Name);
+                    return CoreUtils.Format("{0}:{1}", prefix ?? "tns", dataType.SymbolicName.Name);
             }
         }
 
@@ -1687,7 +1753,7 @@ namespace Opc.Ua.Schema.Model
 
         public static bool IsMethodTypeNode(this NodeDesign node)
         {
-            if (node == null)
+            if (node?.SymbolicId is null)
             {
                 return false;
             }
@@ -1701,7 +1767,15 @@ namespace Opc.Ua.Schema.Model
                 symbol = symbol[..index];
             }
 
-            return symbol.EndsWith("MethodType", StringComparison.Ordinal);
+            if (!symbol.EndsWith("MethodType", StringComparison.Ordinal))
+            {
+                return false;
+            }
+            if (node is not MethodDesign)
+            {
+                return true;
+            }
+            return true;
         }
 
         public static bool IsPartOfOpcUaTypesLibrary(this DataTypeDesign dataType)

@@ -37,6 +37,10 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
     /// Tests for <see cref="NodeIdGenerator"/>.
     /// </summary>
     [TestFixture]
+    [Category("Generator")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
     public class NodeIdGeneratorTests
     {
         /// <summary>

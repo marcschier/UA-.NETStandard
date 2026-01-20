@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Moq;
@@ -43,6 +44,10 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
     /// Unit tests for the <see cref="NodeDocumentationMap"/> class.
     /// </summary>
     [TestFixture]
+    [Category("SourceGeneration")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
     public class NodeDocumentationMapTests
     {
         /// <summary>
@@ -963,7 +968,7 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
             // Assert
             Assert.That(result, Is.Not.Null);
             Assert.That(result, Is.Empty);
-            mockFileSystem.Verify(fs => fs.CreateTextReader(It.IsAny<string>()), Times.Never);
+            mockFileSystem.Verify(fs => fs.OpenRead(It.IsAny<string>()), Times.Never);
         }
 
         /// <summary>
@@ -985,7 +990,7 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
             // Assert
             Assert.That(result, Is.Not.Null);
             Assert.That(result, Is.Empty);
-            mockFileSystem.Verify(fs => fs.CreateTextReader(It.IsAny<string>()), Times.Never);
+            mockFileSystem.Verify(fs => fs.OpenRead(It.IsAny<string>()), Times.Never);
         }
 
         /// <summary>
@@ -999,8 +1004,7 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
             // Arrange
             var mockFileSystem = new Mock<IFileSystem>();
             const string csvContent = "Id,Name,Link,ConformanceUnits\n1,TestNode,\" http://test.com \",\"Unit1,Unit2\"";
-            var stringReader = new StringReader(csvContent);
-            mockFileSystem.Setup(fs => fs.CreateTextReader("file1.csv")).Returns(stringReader);
+            mockFileSystem.Setup(fs => fs.OpenRead("file1.csv")).Returns(StreamFromString(csvContent));
             var reader = new NodeDocumentationReader(mockFileSystem.Object);
 
             // Act
@@ -1012,7 +1016,7 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
             Assert.That(result[0].Id, Is.EqualTo(1u));
             Assert.That(result[0].Name, Is.EqualTo("TestNode"));
             Assert.That(result[0].Link, Is.EqualTo("http://test.com"));
-            mockFileSystem.Verify(fs => fs.CreateTextReader("file1.csv"), Times.Once);
+            mockFileSystem.Verify(fs => fs.OpenRead("file1.csv"), Times.Once);
         }
 
         /// <summary>
@@ -1028,9 +1032,9 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
             const string csvContent1 = "Id,Name,Link,ConformanceUnits\n1,Node1,\" http://node1.com \",\"Unit1\"";
             const string csvContent2 = "Id,Name,Link,ConformanceUnits\n2,Node2,\" http://node2.com \",\"Unit2\"";
             const string csvContent3 = "Id,Name,Link,ConformanceUnits\n3,Node3,\" http://node3.com \",\"Unit3\"";
-            mockFileSystem.Setup(fs => fs.CreateTextReader("file1.csv")).Returns(new StringReader(csvContent1));
-            mockFileSystem.Setup(fs => fs.CreateTextReader("file2.csv")).Returns(new StringReader(csvContent2));
-            mockFileSystem.Setup(fs => fs.CreateTextReader("file3.csv")).Returns(new StringReader(csvContent3));
+            mockFileSystem.Setup(fs => fs.OpenRead("file1.csv")).Returns(StreamFromString(csvContent1));
+            mockFileSystem.Setup(fs => fs.OpenRead("file2.csv")).Returns(StreamFromString(csvContent2));
+            mockFileSystem.Setup(fs => fs.OpenRead("file3.csv")).Returns(StreamFromString(csvContent3));
             var reader = new NodeDocumentationReader(mockFileSystem.Object);
 
             // Act
@@ -1045,7 +1049,7 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
             Assert.That(result[1].Name, Is.EqualTo("Node2"));
             Assert.That(result[2].Id, Is.EqualTo(3u));
             Assert.That(result[2].Name, Is.EqualTo("Node3"));
-            mockFileSystem.Verify(fs => fs.CreateTextReader(It.IsAny<string>()), Times.Exactly(3));
+            mockFileSystem.Verify(fs => fs.OpenRead(It.IsAny<string>()), Times.Exactly(3));
         }
 
         /// <summary>
@@ -1062,7 +1066,7 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
                 "10,Node10,\" http://node10.com \",\"UnitA\"\n" +
                 "20,Node20,\" http://node20.com \",\"UnitB\"\n" +
                 "30,Node30,\" http://node30.com \",\"UnitC\"";
-            mockFileSystem.Setup(fs => fs.CreateTextReader("file.csv")).Returns(new StringReader(csvContent));
+            mockFileSystem.Setup(fs => fs.OpenRead("file.csv")).Returns(StreamFromString(csvContent));
             var reader = new NodeDocumentationReader(mockFileSystem.Object);
 
             // Act
@@ -1086,7 +1090,7 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
         {
             // Arrange
             var mockFileSystem = new Mock<IFileSystem>();
-            mockFileSystem.Setup(fs => fs.CreateTextReader("nonexistent.csv"))
+            mockFileSystem.Setup(fs => fs.OpenRead("nonexistent.csv"))
                 .Throws(new FileNotFoundException("File not found", "nonexistent.csv"));
             var reader = new NodeDocumentationReader(mockFileSystem.Object);
 
@@ -1104,7 +1108,7 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
         {
             // Arrange
             var mockFileSystem = new Mock<IFileSystem>();
-            mockFileSystem.Setup(fs => fs.CreateTextReader(null))
+            mockFileSystem.Setup(fs => fs.OpenRead(null))
                 .Throws(new ArgumentNullException("filepath"));
             var reader = new NodeDocumentationReader(mockFileSystem.Object);
 
@@ -1122,7 +1126,7 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
         {
             // Arrange
             var mockFileSystem = new Mock<IFileSystem>();
-            mockFileSystem.Setup(fs => fs.CreateTextReader(string.Empty))
+            mockFileSystem.Setup(fs => fs.OpenRead(string.Empty))
                 .Throws(new ArgumentException("filepath cannot be empty", "filepath"));
             var reader = new NodeDocumentationReader(mockFileSystem.Object);
 
@@ -1140,7 +1144,7 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
         {
             // Arrange
             var mockFileSystem = new Mock<IFileSystem>();
-            mockFileSystem.Setup(fs => fs.CreateTextReader("   "))
+            mockFileSystem.Setup(fs => fs.OpenRead("   "))
                 .Throws(new ArgumentException("filepath cannot be whitespace", "filepath"));
             var reader = new NodeDocumentationReader(mockFileSystem.Object);
 
@@ -1159,14 +1163,14 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
             // Arrange
             var mockFileSystem = new Mock<IFileSystem>();
             const string csvContent = "Id,Name,Link,ConformanceUnits\n1,Node1,\" http://node1.com \",\"Unit1\"";
-            mockFileSystem.Setup(fs => fs.CreateTextReader("valid.csv")).Returns(new StringReader(csvContent));
-            mockFileSystem.Setup(fs => fs.CreateTextReader("invalid.csv"))
+            mockFileSystem.Setup(fs => fs.OpenRead("valid.csv")).Returns(StreamFromString(csvContent));
+            mockFileSystem.Setup(fs => fs.OpenRead("invalid.csv"))
                 .Throws(new FileNotFoundException("File not found", "invalid.csv"));
             var reader = new NodeDocumentationReader(mockFileSystem.Object);
 
             // Act & Assert
             Assert.Throws<FileNotFoundException>(() => reader.Load("valid.csv", "invalid.csv"));
-            mockFileSystem.Verify(fs => fs.CreateTextReader("valid.csv"), Times.Once);
+            mockFileSystem.Verify(fs => fs.OpenRead("valid.csv"), Times.Once);
         }
 
         /// <summary>
@@ -1181,7 +1185,7 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
             var mockFileSystem = new Mock<IFileSystem>();
             string longPath = new('a', 10000);
             const string csvContent = "Id,Name,Link,ConformanceUnits\n1,Node1,\" http://node1.com \",\"Unit1\"";
-            mockFileSystem.Setup(fs => fs.CreateTextReader(longPath)).Returns(new StringReader(csvContent));
+            mockFileSystem.Setup(fs => fs.OpenRead(longPath)).Returns(StreamFromString(csvContent));
             var reader = new NodeDocumentationReader(mockFileSystem.Object);
 
             // Act
@@ -1190,7 +1194,7 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
             // Assert
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Count, Is.EqualTo(1));
-            mockFileSystem.Verify(fs => fs.CreateTextReader(longPath), Times.Once);
+            mockFileSystem.Verify(fs => fs.OpenRead(longPath), Times.Once);
         }
 
         /// <summary>
@@ -1205,7 +1209,7 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
             var mockFileSystem = new Mock<IFileSystem>();
             const string specialPath = "file with spaces & symbols @#$.csv";
             const string csvContent = "Id,Name,Link,ConformanceUnits\n1,Node1,\" http://node1.com \",\"Unit1\"";
-            mockFileSystem.Setup(fs => fs.CreateTextReader(specialPath)).Returns(new StringReader(csvContent));
+            mockFileSystem.Setup(fs => fs.OpenRead(specialPath)).Returns(StreamFromString(csvContent));
             var reader = new NodeDocumentationReader(mockFileSystem.Object);
 
             // Act
@@ -1214,7 +1218,7 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
             // Assert
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Count, Is.EqualTo(1));
-            mockFileSystem.Verify(fs => fs.CreateTextReader(specialPath), Times.Once);
+            mockFileSystem.Verify(fs => fs.OpenRead(specialPath), Times.Once);
         }
 
         /// <summary>
@@ -1228,7 +1232,7 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
             // Arrange
             var mockFileSystem = new Mock<IFileSystem>();
             const string csvContent = "Id,Name,Link,ConformanceUnits\n1,Node1,\"  http://test.com  \",\"Unit1\"";
-            mockFileSystem.Setup(fs => fs.CreateTextReader("file.csv")).Returns(new StringReader(csvContent));
+            mockFileSystem.Setup(fs => fs.OpenRead("file.csv")).Returns(StreamFromString(csvContent));
             var reader = new NodeDocumentationReader(mockFileSystem.Object);
 
             // Act
@@ -1251,7 +1255,7 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
             // Arrange
             var mockFileSystem = new Mock<IFileSystem>();
             const string csvContent = "Id,Name,Link,ConformanceUnits";
-            mockFileSystem.Setup(fs => fs.CreateTextReader("empty.csv")).Returns(new StringReader(csvContent));
+            mockFileSystem.Setup(fs => fs.OpenRead("empty.csv")).Returns(StreamFromString(csvContent));
             var reader = new NodeDocumentationReader(mockFileSystem.Object);
 
             // Act
@@ -1275,7 +1279,7 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
             const string csvContent = "Id,Name,Link,ConformanceUnits\n" +
                 "0,Node0,\" http://node0.com \",\"Unit0\"\n" +
                 "4294967295,NodeMax,\" http://nodemax.com \",\"UnitMax\"";
-            mockFileSystem.Setup(fs => fs.CreateTextReader("file.csv")).Returns(new StringReader(csvContent));
+            mockFileSystem.Setup(fs => fs.OpenRead("file.csv")).Returns(StreamFromString(csvContent));
             var reader = new NodeDocumentationReader(mockFileSystem.Object);
 
             // Act
@@ -1348,6 +1352,11 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
             Assert.That(reader3, Is.Not.Null);
             Assert.That(reader1, Is.Not.SameAs(reader2));
             Assert.That(reader2, Is.Not.SameAs(reader3));
+        }
+
+        private MemoryStream StreamFromString(string str)
+        {
+            return new MemoryStream(Encoding.UTF8.GetBytes(str ?? string.Empty));
         }
     }
 }

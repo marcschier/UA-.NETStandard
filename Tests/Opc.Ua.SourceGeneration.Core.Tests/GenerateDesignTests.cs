@@ -49,10 +49,10 @@ namespace Opc.Ua.SourceGeneration.Tests
     /// Test generating and compiling model design
     /// </summary>
     [TestFixture]
-    [Category("SourceGeneration")]
+    [Category("Api")]
     [SetCulture("en-us")]
     [SetUICulture("en-us")]
-    [Parallelizable(ParallelScope.All)]
+    [Parallelizable]
     public class GeneratorDesignTests
     {
         [DatapointSource]

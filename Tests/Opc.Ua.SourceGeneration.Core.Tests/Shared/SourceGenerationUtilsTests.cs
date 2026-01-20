@@ -37,6 +37,10 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
     /// Unit tests for the <see cref="SourceGenerationUtils"/> class.
     /// </summary>
     [TestFixture]
+    [Category("SourceGeneration")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
     public class SourceGenerationUtilsTests
     {
         /// <summary>

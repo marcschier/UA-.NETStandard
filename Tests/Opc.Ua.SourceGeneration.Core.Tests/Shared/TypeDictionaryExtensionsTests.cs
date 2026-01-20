@@ -36,6 +36,10 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
     /// Unit tests for TypeDictionaryExtensions class.
     /// </summary>
     [TestFixture]
+    [Category("ModelDesign")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
     public class TypeDictionaryExtensionsTests
     {
         /// <summary>
@@ -318,7 +322,7 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
         /// Tests that GetDescription handles text array with all null elements.
         /// </summary>
         [Test]
-        public void GetDescription_AllNullElements_ReturnsConcatenatedSpaces()
+        public void GetDescription_AllNullElements_ReturnsEmptyString()
         {
             // Arrange
             var documentation = new Documentation
@@ -330,7 +334,7 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
             string result = documentation.GetDescription();
 
             // Assert
-            Assert.That(result, Is.EqualTo("  "));
+            Assert.That(result, Is.EqualTo(string.Empty));
         }
 
         /// <summary>

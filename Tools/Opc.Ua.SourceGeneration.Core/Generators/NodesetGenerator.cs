@@ -55,7 +55,7 @@ namespace Opc.Ua.SourceGeneration
             bool useXmlInitializers = false,
             bool embedNodeset = false)
         {
-            m_context = context;
+            m_context = context ?? throw new ArgumentNullException(nameof(context));
             m_useXmlInitializers = useXmlInitializers;
             m_embedNodeset = embedNodeset;
             m_logger = m_context.Telemetry.CreateLogger<NodesetGenerator>();

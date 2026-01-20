@@ -621,11 +621,8 @@ namespace Opc.Ua
         [JsonConstructor]
         public Variant(object value, TypeInfo typeInfo)
         {
-            m_value = value is ICloneable clonable ? clonable.Clone() : value;
-            m_typeInfo = typeInfo;
-
             // check for null values.
-            if (m_value == null)
+            if (value == null)
             {
                 // m_value = typeInfo.IsScalar ?
                 //      TypeInfo.GetDefaultValue(typeInfo.BuiltInType) :
@@ -633,33 +630,108 @@ namespace Opc.Ua
                 return;
             }
 
+            if (typeInfo.IsUnknown || typeInfo.BuiltInType == BuiltInType.Null)
+            {
+                typeInfo = TypeInfo.Construct(value);
+            }
+
+            // check for matrix
+            if (value is Matrix m)
+            {
+                typeInfo = m.TypeInfo;
+            }
+
+            m_typeInfo = typeInfo;
+            m_value = value is ICloneable clonable ? clonable.Clone() : value;
+            m_union.UInt64 = 0ul;
+
             // handle scalar values.
             if (typeInfo.IsScalar)
             {
                 switch (typeInfo.BuiltInType)
                 {
-                    // handle special types that can be converted to something the
-                    // variant supports.
-                    case BuiltInType.Null:
-                        // check for enumerated value.
-                        if (m_value.GetType().GetTypeInfo().IsEnum)
+#if NET8_0_OR_GREATER
+                    case BuiltInType.Enumeration:
+                        Type enumType = value.GetType();
+                        Type type = enumType.GetEnumUnderlyingType();
+                        if (type == typeof(int) || type == typeof(uint))
                         {
-                            this = From(Convert.ToInt32(m_value, CultureInfo.InvariantCulture));
-                            break;
+                            m_union.Int32 = Convert.ToInt32(value, CultureInfo.InvariantCulture);
                         }
-
-                        // check for matrix
-                        if (m_value is Matrix m)
+                        else if (type == typeof(byte) || type == typeof(sbyte))
                         {
-                            m_typeInfo = m.TypeInfo;
-                            break;
+                            m_union.Byte = Convert.ToByte(value, CultureInfo.InvariantCulture);
                         }
-                        // not supported.
-                        throw new ServiceResultException(
-                            StatusCodes.BadNotSupported,
-                            CoreUtils.Format(
-                                "The type '{0}' cannot be stored in a Variant object.",
-                                m_value.GetType().FullName));
+                        else if (type == typeof(short) || type == typeof(ushort))
+                        {
+                            m_union.Int16 = Convert.ToInt16(value, CultureInfo.InvariantCulture);
+                        }
+                        else if (type == typeof(long) || type == typeof(ulong))
+                        {
+                            m_union.Int64 = Convert.ToInt64(value, CultureInfo.InvariantCulture);
+                        }
+                        else
+                        {
+                            throw ServiceResultException.Unexpected(
+                                "Unexpected enum base type {0} that cannot be stored.", type);
+                        }
+                        m_value = enumType;
+                        return;
+#endif
+                    case BuiltInType.Boolean:
+                        m_union.Boolean = Convert.ToBoolean(m_value, CultureInfo.InvariantCulture);
+                        m_value = null;
+                        return;
+                    case BuiltInType.Byte:
+                        m_union.Byte = Convert.ToByte(m_value, CultureInfo.InvariantCulture);
+                        m_value = null;
+                        return;
+                    case BuiltInType.SByte:
+                        m_union.SByte = Convert.ToSByte(m_value, CultureInfo.InvariantCulture);
+                        m_value = null;
+                        return;
+                    case BuiltInType.Int16:
+                        m_union.Int16 = Convert.ToInt16(m_value, CultureInfo.InvariantCulture);
+                        m_value = null;
+                        return;
+                    case BuiltInType.UInt16:
+                        m_union.UInt16 = Convert.ToUInt16(m_value, CultureInfo.InvariantCulture);
+                        m_value = null;
+                        return;
+                    case BuiltInType.Int32:
+                        m_union.Int32 = Convert.ToInt32(m_value, CultureInfo.InvariantCulture);
+                        m_value = null;
+                        return;
+                    case BuiltInType.UInt32:
+                        m_union.UInt32 = Convert.ToUInt32(m_value, CultureInfo.InvariantCulture);
+                        m_value = null;
+                        return;
+                    case BuiltInType.Int64:
+                        m_union.Int64 = Convert.ToInt64(m_value, CultureInfo.InvariantCulture);
+                        m_value = null;
+                        return;
+                    case BuiltInType.UInt64:
+                        m_union.UInt64 = Convert.ToUInt64(m_value, CultureInfo.InvariantCulture);
+                        m_value = null;
+                        return;
+                    case BuiltInType.Float:
+                        m_union.Float = Convert.ToSingle(m_value, CultureInfo.InvariantCulture);
+                        m_value = null;
+                        return;
+                    case BuiltInType.Double:
+                        m_union.Double = Convert.ToDouble(m_value, CultureInfo.InvariantCulture);
+                        m_value = null;
+                        return;
+                    case BuiltInType.DateTime:
+                        m_union.DateTime = Convert.ToDateTime(m_value, CultureInfo.InvariantCulture);
+                        m_value = null;
+                        return;
+                    case BuiltInType.StatusCode:
+                        StatusCode statusCode = m_value is StatusCode sc ? sc :
+                            new StatusCode(Convert.ToUInt32(m_value, CultureInfo.InvariantCulture));
+                        m_union.UInt32 = statusCode.Code;
+                        m_value = statusCode.SymbolicId;
+                        return;
                     // convert encodeables to extension objects.
                     case BuiltInType.ExtensionObject:
                         if (m_value is IEncodeable encodeable)
@@ -682,11 +754,18 @@ namespace Opc.Ua
                         // We treat passing a variant as a copy operation as variants
                         // are not supported inside variants other than as array or matrix
                         this = (Variant)m_value;
-                        break;
+                        return;
                     case BuiltInType.DiagnosticInfo:
                         // https://reference.opcfoundation.org/Core/Part6/v104/docs/5.1.6
                         throw ServiceResultException.Unexpected(
                             "Diagnostic info not supported inside Variants");
+                    case BuiltInType.Null:
+                        // not supported.
+                        throw new ServiceResultException(
+                            StatusCodes.BadNotSupported,
+                            CoreUtils.Format(
+                                "The type '{0}' cannot be stored in a Variant object.",
+                                m_value.GetType().FullName));
                     // just save the value.
                     case > BuiltInType.Null and <= BuiltInType.Enumeration:
                         break;
@@ -745,24 +824,24 @@ namespace Opc.Ua
                     // handle special types that can be converted to something the variant supports.
                     case BuiltInType.Null:
                         // check for enumerated value.
-                        if (!array.GetType().GetElementType().GetTypeInfo().IsEnum)
+                        if (array.GetType().GetElementType().GetTypeInfo().IsEnum)
                         {
-                            // not supported.
-                            throw new ServiceResultException(
-                                StatusCodes.BadNotSupported,
-                                CoreUtils.Format(
-                                    "The type '{0}' cannot be stored in a Variant object.",
-                                    array.GetType().FullName));
+                            int[] values = new int[array.Length];
+                            for (int ii = 0; ii < array.Length; ii++)
+                            {
+                                values[ii] = Convert.ToInt32(
+                                    array.GetValue(ii),
+                                    CultureInfo.InvariantCulture);
+                            }
+                            m_value = values;
+                            break;
                         }
-                        int[] values = new int[array.Length];
-                        for (int ii = 0; ii < array.Length; ii++)
-                        {
-                            values[ii] = Convert.ToInt32(
-                                array.GetValue(ii),
-                                CultureInfo.InvariantCulture);
-                        }
-                        m_value = values;
-                        break;
+                        // not supported.
+                        throw new ServiceResultException(
+                            StatusCodes.BadNotSupported,
+                            CoreUtils.Format(
+                                "The type '{0}' cannot be stored in a Variant object.",
+                                array.GetType().FullName));
                     // convert encodeables to extension objects.
                     case BuiltInType.ExtensionObject:
                         if (array is IEncodeable[] encodeables)
@@ -833,6 +912,11 @@ namespace Opc.Ua
         /// <param name="typeInfo">The type information for the value.</param>
         public Variant(Array array, TypeInfo typeInfo)
         {
+            if (typeInfo.IsUnknown || typeInfo.BuiltInType == BuiltInType.Null)
+            {
+                typeInfo = TypeInfo.Construct(array);
+            }
+
             m_value = array;
             m_typeInfo = typeInfo;
 
@@ -847,24 +931,24 @@ namespace Opc.Ua
                 // handle special types that can be converted to something the variant supports.
                 case BuiltInType.Null:
                     // check for enumerated value.
-                    if (!array.GetType().GetElementType().GetTypeInfo().IsEnum)
+                    if (array.GetType().GetElementType().GetTypeInfo().IsEnum)
                     {
-                        // not supported.
-                        throw new ServiceResultException(
-                            StatusCodes.BadNotSupported,
-                            CoreUtils.Format(
-                                "The type '{0}' cannot be stored in a Variant object.",
-                                array.GetType().FullName));
+                        int[] values = new int[array.Length];
+                        for (int ii = 0; ii < array.Length; ii++)
+                        {
+                            values[ii] = Convert.ToInt32(
+                                array.GetValue(ii),
+                                CultureInfo.InvariantCulture);
+                        }
+                        m_value = values;
+                        break;
                     }
-                    int[] values = new int[array.Length];
-                    for (int ii = 0; ii < array.Length; ii++)
-                    {
-                        values[ii] = Convert.ToInt32(
-                            array.GetValue(ii),
-                            CultureInfo.InvariantCulture);
-                    }
-                    m_value = values;
-                    break;
+                    // not supported.
+                    throw new ServiceResultException(
+                        StatusCodes.BadNotSupported,
+                        CoreUtils.Format(
+                            "The type '{0}' cannot be stored in a Variant object.",
+                            array.GetType().FullName));
                 // convert encodeables to extension objects.
                 case BuiltInType.ExtensionObject:
                     if (array is IEncodeable[] encodeables)
@@ -881,6 +965,17 @@ namespace Opc.Ua
                     if (array is Guid[] guids)
                     {
                         m_value = ((UuidCollection)guids).ToArray();
+                    }
+                    break;
+                case BuiltInType.StatusCode:
+                    if (array is uint[] codes)
+                    {
+                        var statusCodes = new StatusCode[codes.Length];
+                        for (int ii = 0; ii < codes.Length; ii++)
+                        {
+                            statusCodes[ii] = new StatusCode(codes[ii]);
+                        }
+                        m_value = statusCodes;
                     }
                     break;
                 // convert objects to variants objects.
@@ -1606,7 +1701,13 @@ namespace Opc.Ua
         /// </param>
         public bool TryGet(out int value)
         {
-            return TryGetScalar(in m_union.Int32, out value, BuiltInType.Int32);
+            return
+                TryGetScalar(in m_union.Int32, out value, BuiltInType.Int32) ||
+#if NET8_0_OR_GREATER
+                TryGetScalar(in m_union.Int32, out value, BuiltInType.Enumeration);
+#else
+                TryGetScalar(out value, BuiltInType.Enumeration);
+#endif
         }
 
         /// <summary>
@@ -1674,7 +1775,9 @@ namespace Opc.Ua
         /// </param>
         public bool TryGet(out uint value)
         {
-            return TryGetScalar(in m_union.UInt32, out value, BuiltInType.UInt32);
+            return
+                TryGetScalar(in m_union.UInt32, out value, BuiltInType.UInt32) ||
+                TryGetScalar(in m_union.UInt32, out value, BuiltInType.StatusCode);
         }
 
         /// <summary>
@@ -2162,7 +2265,7 @@ namespace Opc.Ua
         /// Try get scalar value
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public bool TryGetScalar<T>(out T value, BuiltInType expectedType)
+        private bool TryGetScalar<T>(out T value, BuiltInType expectedType)
         {
             if (TypeInfo.BuiltInType != expectedType || !TypeInfo.IsScalar)
             {
@@ -2538,7 +2641,7 @@ namespace Opc.Ua
         /// this Variant to</param>
         public static Variant From<T>(T[] value) where T : Enum
         {
-            return new Variant(value);
+            return new Variant(value, TypeInfo.Arrays.Enumeration);
         }
 
         /// <summary>
@@ -3570,13 +3673,15 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public bool Equals(byte[] value)
         {
-            return TryGet(out byte[] v) && SequenceEqualityComparer<byte>.Default.Equals(v, value);
+            return TryGet(out byte[] v) &&
+                SequenceEqualityComparer<byte>.Default.Equals(v, value);
         }
 
         /// <inheritdoc/>
         public bool Equals(XmlElement value)
         {
-            return TryGet(out XmlElement v) && XmlElementStringEqualityComparer.Default.Equals(v, value);
+            return TryGet(out XmlElement v) &&
+                XmlElementStringEqualityComparer.Default.Equals(v, value);
         }
 
         /// <inheritdoc/>

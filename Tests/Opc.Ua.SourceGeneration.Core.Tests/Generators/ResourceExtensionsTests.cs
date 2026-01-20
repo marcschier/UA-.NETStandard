@@ -36,6 +36,10 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
     /// Unit tests for <see cref = "ResourceExtensions"/>.
     /// </summary>
     [TestFixture]
+    [Category("Generator")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
     public class ResourceExtensionsTests
     {
         /// <summary>
@@ -288,7 +292,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         public void AsTextFileResource_VeryLongFileName_ReturnsTextFileResource()
         {
             // Arrange
-            string fileName = new string ('a', 500) + ".txt";
+            string fileName = new string('a', 500) + ".txt";
             // Act
             TextFileResource result = fileName.AsTextFileResource();
             // Assert
@@ -565,7 +569,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         public void ToBinaryFileResource_VeryLongFileName_CreatesValidResource()
         {
             // Arrange
-            string fileName = new string ('a', 500) + ".xml";
+            string fileName = new string('a', 500) + ".xml";
             // Act
             var result = fileName.ToBinaryFileResource();
             // Assert

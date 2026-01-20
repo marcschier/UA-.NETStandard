@@ -35,6 +35,10 @@ namespace Opc.Ua.Schema.Model.Tests
     /// Unit tests for the <see cref="Service"/> class GetHashCode method.
     /// </summary>
     [TestFixture]
+    [Category("ModelDesign")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
     public class ServiceTests
     {
         /// <summary>

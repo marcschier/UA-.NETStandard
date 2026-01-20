@@ -39,6 +39,10 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
     /// Unit tests for the <see cref = "NodesetGenerator"/> class.
     /// </summary>
     [TestFixture]
+    [Category("Generator")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
     public sealed class NodesetGeneratorTests
     {
         /// <summary>
@@ -192,12 +196,12 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         /// Expected: NullReferenceException is thrown when attempting to access the Telemetry property.
         /// </summary>
         [Test]
-        public void Constructor_NullContext_ThrowsNullReferenceException()
+        public void Constructor_NullContext_ThrowsArgumentNullException()
         {
             // Arrange
             GeneratorContext context = null;
             // Act & Assert
-            Assert.Throws<NullReferenceException>(() => new NodesetGenerator(context));
+            Assert.Throws<ArgumentNullException>(() => new NodesetGenerator(context));
         }
 
         /// <summary>
@@ -206,12 +210,12 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         /// Expected: NullReferenceException is thrown when attempting to access the Telemetry property.
         /// </summary>
         [Test]
-        public void Constructor_NullContextWithParameters_ThrowsNullReferenceException()
+        public void Constructor_NullContextWithParameters_ThrowsArgumentNullException()
         {
             // Arrange
             GeneratorContext context = null;
             // Act & Assert
-            Assert.Throws<NullReferenceException>(() => new NodesetGenerator(context, useXmlInitializers: true, embedNodeset: true));
+            Assert.Throws<ArgumentNullException>(() => new NodesetGenerator(context, useXmlInitializers: true, embedNodeset: true));
         }
 
         /// <summary>
@@ -220,7 +224,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         /// Expected: NullReferenceException is thrown when attempting to access Telemetry.GetLoggerFactory().
         /// </summary>
         [Test]
-        public void Constructor_NullTelemetry_ThrowsNullReferenceException()
+        public void Constructor_NullTelemetry_ThrowsArgumentNullException()
         {
             // Arrange
             var context = new GeneratorContext
@@ -232,7 +236,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
                 Options = Mock.Of<GeneratorOptions>()
             };
             // Act & Assert
-            Assert.Throws<NullReferenceException>(() => new NodesetGenerator(context));
+            Assert.Throws<ArgumentNullException>(() => new NodesetGenerator(context));
         }
     }
 }

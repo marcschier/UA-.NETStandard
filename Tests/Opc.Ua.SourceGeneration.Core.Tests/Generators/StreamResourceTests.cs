@@ -38,6 +38,10 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
     /// Unit tests for <see cref = "StreamResource"/>.
     /// </summary>
     [TestFixture]
+    [Category("Generator")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
     public class StreamResourceTests
     {
         /// <summary>
@@ -114,13 +118,13 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         /// This tests an edge case where the record is constructed with a null stream.
         /// </summary>
         [Test]
-        public void GetLength_NullStream_ThrowsNullReferenceException()
+        public void GetLength_NullStream_ThrowsArgumentNullException()
         {
             // Arrange
             var resource = new StreamResource("TestResource", null, false);
             var mockFileSystem = new Mock<IFileSystem>();
             // Act & Assert
-            Assert.Throws<NullReferenceException>(() => resource.GetLength(mockFileSystem.Object));
+            Assert.Throws<ArgumentNullException>(() => resource.GetLength(mockFileSystem.Object));
         }
 
         /// <summary>

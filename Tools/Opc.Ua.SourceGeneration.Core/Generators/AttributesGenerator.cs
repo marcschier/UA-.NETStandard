@@ -45,7 +45,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public AttributesGenerator(GeneratorContext context)
         {
-            m_context = context;
+            m_context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         /// <inheritdoc/>

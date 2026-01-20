@@ -35,7 +35,12 @@ namespace Opc.Ua.Schema.Model.Tests
     /// <summary>
     /// Unit tests for ObjectTypeDesign class
     /// </summary>
-    public partial class ObjectTypeDesignTests
+    [TestFixture]
+    [Category("ModelDesign")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
+    public class ObjectTypeDesignTests
     {
         /// <summary>
         /// Tests that Equals returns false when comparing to null.

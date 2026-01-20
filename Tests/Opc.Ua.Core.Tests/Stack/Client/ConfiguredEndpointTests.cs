@@ -256,7 +256,7 @@ namespace Opc.Ua.Core.Tests.Stack.Client
                 "MatchEndpoints",
                 BindingFlags.NonPublic | BindingFlags.Static,
                 null,
-                new[] { typeof(EndpointDescriptionCollection), typeof(Uri), typeof(MessageSecurityMode), typeof(string) },
+                [typeof(EndpointDescriptionCollection), typeof(Uri), typeof(MessageSecurityMode), typeof(string)],
                 null
             );
 
@@ -264,7 +264,7 @@ namespace Opc.Ua.Core.Tests.Stack.Client
 
             return (EndpointDescriptionCollection)matchEndpointsMethod.Invoke(
                 null,
-                new object[] { collection, endpointUrl, securityMode, securityPolicyUri }
+                [collection, endpointUrl, securityMode, securityPolicyUri]
             );
         }
     }

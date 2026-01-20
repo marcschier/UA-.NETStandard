@@ -253,7 +253,7 @@ namespace Opc.Ua.Client.Tests
 
             // check on all reference type ids
             var refTypeDictionary = ReferenceTypeIds.Identifiers
-                .ToDictionary(f => ReferenceTypeIds.GetBrowseName(f), f => f);
+                .ToDictionary(ReferenceTypeIds.GetBrowseName, f => f);
 
             TestContext.Out.WriteLine("Testing {0} references", refTypeDictionary.Count);
             foreach (KeyValuePair<string, NodeId> property in refTypeDictionary)
