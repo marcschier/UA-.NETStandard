@@ -28,6 +28,7 @@
  * ======================================================================*/
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using Opc.Ua.Schema.Model;
@@ -38,29 +39,34 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Generates XML schema files from model designs.
     /// </summary>
-    internal sealed class XmlSchemaGenerator
+    internal sealed class XmlSchemaGenerator : IGenerator
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="XmlSchemaGenerator"/> class.
         /// </summary>
-        public XmlSchemaGenerator(GeneratorContext context)
+        public XmlSchemaGenerator(IGeneratorContext context)
         {
             m_context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         /// <summary>
+        /// Validate schema output after generation.
+        /// </summary>
+        public bool ValidateOutput { get; set; }
+
+        /// <summary>
         /// Generates the XML schema file for the supplied nodes.
         /// </summary>
-        public TextFileResource Emit(bool validateOutput = false)
+        public IEnumerable<Resource> Emit()
         {
-            string namespacePrefix = m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix;
+            string namespacePrefix = m_context.ModelDesign.TargetNamespace.Prefix;
             string schemaFile = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
                 "{0}.Types.xsd",
                 namespacePrefix));
 
             WriteTemplate_XmlSchema(schemaFile);
 
-            if (validateOutput)
+            if (ValidateOutput)
             {
                 // Validate generated file
                 var validator = new Schema.Xml.XmlSchemaValidator2(
@@ -69,7 +75,7 @@ namespace Opc.Ua.SourceGeneration
                 validator.Validate(schemaFile);
             }
 
-            return schemaFile.AsTextFileResource(namespacePrefix);
+            return [schemaFile.AsTextFileResource(namespacePrefix)];
         }
 
         private void WriteTemplate_XmlSchema(string fileName)
@@ -78,45 +84,45 @@ namespace Opc.Ua.SourceGeneration
             var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, SchemaTemplates.XmlSchema_File_xml);
 
-            if (!string.IsNullOrEmpty(m_context.Validator.Dictionary.TargetNamespaceInfo.XmlNamespace))
+            if (!string.IsNullOrEmpty(m_context.ModelDesign.TargetNamespace.XmlNamespace))
             {
                 template.AddReplacement(
                     Tokens.Namespace,
-                    m_context.Validator.Dictionary.TargetNamespaceInfo.XmlNamespace);
+                    m_context.ModelDesign.TargetNamespace.XmlNamespace);
             }
             else
             {
                 template.AddReplacement(
                     Tokens.Namespace,
-                    m_context.Validator.Dictionary.TargetNamespaceInfo.Value);
+                    m_context.ModelDesign.TargetNamespace.Value);
             }
 
-            template.AddReplacement(Tokens.TargetVersion, m_context.Validator.Dictionary.TargetVersion);
-            template.AddReplacement(Tokens.ModelUri, m_context.Validator.Dictionary.TargetNamespaceInfo.Value);
+            template.AddReplacement(Tokens.TargetVersion, m_context.ModelDesign.TargetVersion);
+            template.AddReplacement(Tokens.ModelUri, m_context.ModelDesign.TargetNamespace.Value);
             template.AddReplacement(Tokens.TargetPublicationDate, XmlConvert.ToString(
-                m_context.Validator.Dictionary.TargetPublicationDate,
+                m_context.ModelDesign.TargetPublicationDate ?? DateTime.MinValue,
                 XmlDateTimeSerializationMode.Utc));
 
             template.AddReplacement(
                 Tokens.XmlnsS0ListOfNamespaces,
-                m_context.Validator.Dictionary.Namespaces,
+                m_context.ModelDesign.Namespaces,
                 LoadTemplate_Imports);
 
             template.AddReplacement(
                 Tokens.Imports,
-                m_context.Validator.Dictionary.Namespaces,
+                m_context.ModelDesign.Namespaces,
                 LoadTemplate_Imports);
 
             template.AddReplacement(
                 Tokens.BuiltInTypes,
                 SchemaTemplates.XmlSchema_BuiltInTypes_xsd,
-                [m_context.Validator.Dictionary],
+                [m_context.ModelDesign],
                 LoadTemplate_DataType,
                 WriteTemplate_DataType);
 
             template.AddReplacement(
                 Tokens.ListOfTypes,
-                [.. m_context.Validator.GetNodeDesigns()],
+                [.. m_context.ModelDesign.GetNodeDesigns()],
                 LoadTemplate_DataType,
                 WriteTemplate_DataType);
 
@@ -130,7 +136,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            if (ns.Value == m_context.Validator.Dictionary.TargetNamespace)
+            if (ns.Value == m_context.ModelDesign.TargetNamespace.Value)
             {
                 return null;
             }
@@ -150,7 +156,7 @@ namespace Opc.Ua.SourceGeneration
 
                 context.Out.WriteLine(
                     "xmlns:{0}=\"{1}\"",
-                    m_context.Validator.Dictionary.Namespaces.GetXmlNamespacePrefix(ns.Value),
+                    m_context.ModelDesign.Namespaces.GetXmlNamespacePrefix(ns.Value),
                     uri);
 
                 return null;
@@ -163,9 +169,9 @@ namespace Opc.Ua.SourceGeneration
 
         private TemplateString LoadTemplate_DataType(ILoadContext context)
         {
-            if (context.Target is ModelDesign)
+            if (context.Target is IModelDesign design)
             {
-                if (m_context.Validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
+                if (design.TargetNamespace.Value == Namespaces.OpcUa)
                 {
                     return context.TemplateString;
                 }
@@ -234,9 +240,9 @@ namespace Opc.Ua.SourceGeneration
 
         private bool WriteTemplate_DataType(IWriteContext context)
         {
-            if (context.Target is ModelDesign model)
+            if (context.Target is IModelDesign design)
             {
-                if (m_context.Validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
+                if (design.TargetNamespace.Value == Namespaces.OpcUa)
                 {
                     return context.Template.Render();
                 }
@@ -255,8 +261,8 @@ namespace Opc.Ua.SourceGeneration
             {
                 context.Template.AddReplacement(Tokens.BaseType, baseType.GetXmlDataType(
                     ValueRank.Scalar,
-                    m_context.Validator.Dictionary.TargetNamespace,
-                    m_context.Validator.Dictionary.Namespaces));
+                    m_context.ModelDesign.TargetNamespace.Value,
+                    m_context.ModelDesign.Namespaces));
             }
 
             context.Template.AddReplacement(Tokens.TypeName, dataType.SymbolicName.Name);
@@ -266,8 +272,8 @@ namespace Opc.Ua.SourceGeneration
                 context.Template.AddReplacement(Tokens.XsRestrictionBaseType,
                     baseType.GetXmlDataType(
                         ValueRank.Scalar,
-                        m_context.Validator.Dictionary.TargetNamespace,
-                        m_context.Validator.Dictionary.Namespaces));
+                        m_context.ModelDesign.TargetNamespace.Value,
+                        m_context.ModelDesign.Namespaces));
             }
             else
             {
@@ -351,8 +357,8 @@ namespace Opc.Ua.SourceGeneration
             {
                 string fieldDataType = field.DataTypeNode.GetXmlDataType(
                     field.ValueRank,
-                    m_context.Validator.Dictionary.TargetNamespace,
-                    m_context.Validator.Dictionary.Namespaces);
+                    m_context.ModelDesign.TargetNamespace.Value,
+                    m_context.ModelDesign.Namespaces);
 
                 if (basicType == BasicDataType.UserDefined && field.AllowSubTypes)
                 {
@@ -382,8 +388,8 @@ namespace Opc.Ua.SourceGeneration
                                 field.Name,
                                 field.DataTypeNode.GetXmlDataType(
                                     field.ValueRank,
-                                    m_context.Validator.Dictionary.TargetNamespace,
-                                    m_context.Validator.Dictionary.Namespaces));
+                                    m_context.ModelDesign.TargetNamespace.Value,
+                                    m_context.ModelDesign.Namespaces));
                         break;
                     case BasicDataType.Guid:
                     case BasicDataType.StatusCode:
@@ -392,14 +398,14 @@ namespace Opc.Ua.SourceGeneration
                                 field.Name,
                                 field.DataTypeNode.GetXmlDataType(
                                     field.ValueRank,
-                                    m_context.Validator.Dictionary.TargetNamespace,
-                                    m_context.Validator.Dictionary.Namespaces));
+                                    m_context.ModelDesign.TargetNamespace.Value,
+                                    m_context.ModelDesign.Namespaces));
                         break;
                     case BasicDataType.UserDefined:
                         string fieldDataType = field.DataTypeNode.GetXmlDataType(
                                 field.ValueRank,
-                                m_context.Validator.Dictionary.TargetNamespace,
-                                m_context.Validator.Dictionary.Namespaces);
+                                m_context.ModelDesign.TargetNamespace.Value,
+                                m_context.ModelDesign.Namespaces);
 
                         if (field.AllowSubTypes)
                         {
@@ -416,8 +422,8 @@ namespace Opc.Ua.SourceGeneration
                                 field.Name,
                                 field.DataTypeNode.GetXmlDataType(
                                     field.ValueRank,
-                                    m_context.Validator.Dictionary.TargetNamespace,
-                                    m_context.Validator.Dictionary.Namespaces));
+                                    m_context.ModelDesign.TargetNamespace.Value,
+                                    m_context.ModelDesign.Namespaces));
                         break;
                 }
             }
@@ -483,6 +489,6 @@ namespace Opc.Ua.SourceGeneration
             return context.Template.Render();
         }
 
-        private readonly GeneratorContext m_context;
+        private readonly IGeneratorContext m_context;
     }
 }

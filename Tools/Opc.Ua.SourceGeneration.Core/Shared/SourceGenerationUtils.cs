@@ -69,7 +69,7 @@ namespace Opc.Ua.SourceGeneration
                 return name;
             }
             var buffer = new StringBuilder();
-            foreach (var c in name)
+            foreach (char c in name)
             {
                 if (char.IsWhiteSpace(c))
                 {
@@ -83,7 +83,7 @@ namespace Opc.Ua.SourceGeneration
                 }
                 buffer.Append(c);
             }
-            var symbol = buffer.ToString();
+            string symbol = buffer.ToString();
             if (!string.IsNullOrEmpty(prefix))
             {
                 return prefix + symbol;

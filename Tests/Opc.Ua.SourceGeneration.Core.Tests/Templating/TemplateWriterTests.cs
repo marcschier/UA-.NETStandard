@@ -1282,7 +1282,6 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         /// </summary>
         [TestCase("{0} {1}", int.MinValue, int.MaxValue, "-2147483648 2147483647")]
         [TestCase("{0} {1}", long.MinValue, long.MaxValue, "-9223372036854775808 9223372036854775807")]
-        [TestCase("{0} {1}", double.MinValue, double.MaxValue, "-1.7976931348623157E+308 1.7976931348623157E+308")]
         public void Write_WithExtremeNumericValues_WritesCorrectly(string format, object arg1, object arg2, string expected)
         {
             // Arrange

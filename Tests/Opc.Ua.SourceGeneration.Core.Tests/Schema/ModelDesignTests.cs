@@ -995,8 +995,7 @@ namespace Opc.Ua.Schema.Model.Tests
         }
 
         /// <summary>
-        /// Tests that GetHashCode returns different hash codes for empty vs null arrays.
-        /// Verifies that null and empty arrays produce different hash codes.
+        /// Validates that empty arrays vs null array hash code computation.
         /// </summary>
         [Test]
         public void GetHashCode_EmptyVsNullArrays_ReturnsDifferentHashCode()

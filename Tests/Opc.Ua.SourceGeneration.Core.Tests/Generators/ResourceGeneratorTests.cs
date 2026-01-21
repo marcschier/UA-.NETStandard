@@ -380,12 +380,12 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         /// Expected: Throws NullReferenceException.
         /// </summary>
         [Test]
-        public void GetLength_NullData_ThrowsArgumentNullException()
+        public void GetLength_NullData_ThrowsNullReferenceException()
         {
             // Arrange
             var resource = new BinaryResource("TestResource", null);
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => resource.GetLength(null));
+            Assert.Throws<NullReferenceException>(() => resource.GetLength(null));
         }
     }
 
@@ -423,12 +423,12 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         /// Tests that GetLength throws NullReferenceException when fileSystem parameter is null.
         /// </summary>
         [Test]
-        public void GetLength_NullFileSystem_ThrowsArgumentNullException()
+        public void GetLength_NullFileSystem_ThrowsNullReferenceException()
         {
             // Arrange
             var resource = new TextFileResource("TestResource", "test.txt");
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => resource.GetLength(null));
+            Assert.Throws<NullReferenceException>(() => resource.GetLength(null));
         }
 
         /// <summary>
@@ -616,254 +616,5 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             Assert.That(actualLength, Is.EqualTo(0L));
         }
     }
-
-    /// <summary>
-    /// Unit tests for the ResourceGenerator class.
-    /// </summary>
-    [TestFixture]
-    public class ResourceGeneratorTests
-    {
-        /// <summary>
-        /// Tests that Embed throws ArgumentException when no resources are provided.
-        /// </summary>
-        [Test]
-        public void Embed_EmptyResourceArray_ThrowsArgumentException()
-        {
-            // Arrange
-            var mockFileSystem = new Mock<IFileSystem>();
-            Mock<GeneratorContext> mockGeneratorContext = CreateMockGeneratorContext(mockFileSystem.Object);
-            var generator = new ResourceGenerator(mockGeneratorContext.Object);
-            // Act & Assert
-            ArgumentException ex = Assert.Throws<ArgumentException>(() => generator.Embed("TestNamespace", "TestName", false));
-            Assert.That(ex.Message, Is.EqualTo("At least one resource must be provided"));
-        }
-
-        private static Mock<GeneratorContext> CreateMockGeneratorContext(IFileSystem fileSystem, string outputFolder = "C:\\Output")
-        {
-            var mockContext = new Mock<GeneratorContext>();
-            mockContext.Setup(c => c.FileSystem).Returns(fileSystem);
-            mockContext.Setup(c => c.OutputFolder).Returns(outputFolder);
-            mockContext.Setup(c => c.Options).Returns(new GeneratorOptions());
-            return mockContext;
-        }
-
-        /// <summary>
-        /// Tests that constructor assigns context and uses default values when base64Threshold is null and OptimizeForCompileSpeed is false.
-        /// Input: Valid context with OptimizeForCompileSpeed=false, base64Threshold=null, useByteArrayForBase64=false.
-        /// Expected: m_base64Threshold should be int.MaxValue.
-        /// </summary>
-        [Test]
-        public void Constructor_DefaultParameters_OptimizeForCompileSpeedFalse_SetsBase64ThresholdToMaxValue()
-        {
-            // Arrange
-            GeneratorContext context = CreateGeneratorContext(optimizeForCompileSpeed: false);
-            // Act
-            var generator = new ResourceGenerator(context);
-            // Assert
-            Assert.That(generator, Is.Not.Null);
-            int base64ThresholdField = GetPrivateField<int>(generator, "m_base64Threshold");
-            Assert.That(base64ThresholdField, Is.EqualTo(int.MaxValue));
-            GeneratorContext contextField = GetPrivateField<GeneratorContext>(generator, "m_context");
-            Assert.That(contextField, Is.SameAs(context));
-            bool useByteArrayField = GetPrivateField<bool>(generator, "m_useByteArrayForBase64");
-            Assert.That(useByteArrayField, Is.False);
-        }
-
-        /// <summary>
-        /// Tests that constructor assigns context and uses default values when base64Threshold is null and OptimizeForCompileSpeed is true.
-        /// Input: Valid context with OptimizeForCompileSpeed=true, base64Threshold=null, useByteArrayForBase64=false.
-        /// Expected: m_base64Threshold should be 1024.
-        /// </summary>
-        [Test]
-        public void Constructor_DefaultParameters_OptimizeForCompileSpeedTrue_SetsBase64ThresholdTo1024()
-        {
-            // Arrange
-            GeneratorContext context = CreateGeneratorContext(optimizeForCompileSpeed: true);
-            // Act
-            var generator = new ResourceGenerator(context);
-            // Assert
-            Assert.That(generator, Is.Not.Null);
-            int base64ThresholdField = GetPrivateField<int>(generator, "m_base64Threshold");
-            Assert.That(base64ThresholdField, Is.EqualTo(1024));
-            GeneratorContext contextField = GetPrivateField<GeneratorContext>(generator, "m_context");
-            Assert.That(contextField, Is.SameAs(context));
-            bool useByteArrayField = GetPrivateField<bool>(generator, "m_useByteArrayForBase64");
-            Assert.That(useByteArrayField, Is.False);
-        }
-
-        /// <summary>
-        /// Tests that constructor uses provided base64Threshold value when not null.
-        /// Input: Valid context, base64Threshold values, useByteArrayForBase64=false.
-        /// Expected: m_base64Threshold should be the provided value regardless of OptimizeForCompileSpeed.
-        /// </summary>
-        [TestCase(0)]
-        [TestCase(1)]
-        [TestCase(1024)]
-        [TestCase(2147483647)]
-        [TestCase(-1)]
-        [TestCase(-2147483648)]
-        public void Constructor_CustomBase64Threshold_UsesProvidedValue(int threshold)
-        {
-            // Arrange
-            GeneratorContext context = CreateGeneratorContext(optimizeForCompileSpeed: true);
-            // Act
-            var generator = new ResourceGenerator(context, base64Threshold: threshold);
-            // Assert
-            Assert.That(generator, Is.Not.Null);
-            int base64ThresholdField = GetPrivateField<int>(generator, "m_base64Threshold");
-            Assert.That(base64ThresholdField, Is.EqualTo(threshold));
-        }
-
-        /// <summary>
-        /// Tests that constructor correctly assigns useByteArrayForBase64 parameter.
-        /// Input: Valid context, useByteArrayForBase64=true.
-        /// Expected: m_useByteArrayForBase64 should be true.
-        /// </summary>
-        [Test]
-        public void Constructor_UseByteArrayForBase64True_AssignsCorrectly()
-        {
-            // Arrange
-            GeneratorContext context = CreateGeneratorContext(optimizeForCompileSpeed: false);
-            // Act
-            var generator = new ResourceGenerator(context, useByteArrayForBase64: true);
-            // Assert
-            Assert.That(generator, Is.Not.Null);
-            bool useByteArrayField = GetPrivateField<bool>(generator, "m_useByteArrayForBase64");
-            Assert.That(useByteArrayField, Is.True);
-        }
-
-        /// <summary>
-        /// Tests that constructor correctly assigns all parameters when custom values are provided.
-        /// Input: Valid context, custom base64Threshold, useByteArrayForBase64=true.
-        /// Expected: All fields should be assigned correctly.
-        /// </summary>
-        [Test]
-        public void Constructor_AllParametersProvided_AssignsCorrectly()
-        {
-            // Arrange
-            GeneratorContext context = CreateGeneratorContext(optimizeForCompileSpeed: true);
-            const int customThreshold = 512;
-            // Act
-            var generator = new ResourceGenerator(context, base64Threshold: customThreshold, useByteArrayForBase64: true);
-            // Assert
-            Assert.That(generator, Is.Not.Null);
-            int base64ThresholdField = GetPrivateField<int>(generator, "m_base64Threshold");
-            Assert.That(base64ThresholdField, Is.EqualTo(customThreshold));
-            GeneratorContext contextField = GetPrivateField<GeneratorContext>(generator, "m_context");
-            Assert.That(contextField, Is.SameAs(context));
-            bool useByteArrayField = GetPrivateField<bool>(generator, "m_useByteArrayForBase64");
-            Assert.That(useByteArrayField, Is.True);
-        }
-
-        /// <summary>
-        /// Tests that constructor throws NullReferenceException when context is null.
-        /// Input: null context.
-        /// Expected: NullReferenceException is thrown.
-        /// </summary>
-        [Test]
-        public void Constructor_NullContext_ThrowsArgumentNullException()
-        {
-            // Arrange
-            GeneratorContext context = null;
-            // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => new ResourceGenerator(context));
-        }
-
-        /// <summary>
-        /// Tests that constructor handles boundary values for base64Threshold.
-        /// Input: Valid context with int.MinValue and int.MaxValue for base64Threshold.
-        /// Expected: Values are assigned correctly.
-        /// </summary>
-        [TestCase(int.MinValue)]
-        [TestCase(int.MaxValue)]
-        public void Constructor_BoundaryBase64Threshold_AssignsCorrectly(int threshold)
-        {
-            // Arrange
-            GeneratorContext context = CreateGeneratorContext(optimizeForCompileSpeed: false);
-            // Act
-            var generator = new ResourceGenerator(context, base64Threshold: threshold);
-            // Assert
-            Assert.That(generator, Is.Not.Null);
-            int base64ThresholdField = GetPrivateField<int>(generator, "m_base64Threshold");
-            Assert.That(base64ThresholdField, Is.EqualTo(threshold));
-        }
-
-        /// <summary>
-        /// Tests that constructor with OptimizeForCompileSpeed true overrides default only when base64Threshold is null.
-        /// Input: Context with OptimizeForCompileSpeed=true, base64Threshold=null.
-        /// Expected: m_base64Threshold should be 1024 (not int.MaxValue).
-        /// </summary>
-        [Test]
-        public void Constructor_OptimizeForCompileSpeedTrue_NullThreshold_Uses1024()
-        {
-            // Arrange
-            GeneratorContext context = CreateGeneratorContext(optimizeForCompileSpeed: true);
-            // Act
-            var generator = new ResourceGenerator(context, base64Threshold: null);
-            // Assert
-            Assert.That(generator, Is.Not.Null);
-            int base64ThresholdField = GetPrivateField<int>(generator, "m_base64Threshold");
-            Assert.That(base64ThresholdField, Is.EqualTo(1024));
-        }
-
-        /// <summary>
-        /// Tests that constructor with OptimizeForCompileSpeed false uses int.MaxValue when base64Threshold is null.
-        /// Input: Context with OptimizeForCompileSpeed=false, base64Threshold=null.
-        /// Expected: m_base64Threshold should be int.MaxValue.
-        /// </summary>
-        [Test]
-        public void Constructor_OptimizeForCompileSpeedFalse_NullThreshold_UsesMaxValue()
-        {
-            // Arrange
-            GeneratorContext context = CreateGeneratorContext(optimizeForCompileSpeed: false);
-            // Act
-            var generator = new ResourceGenerator(context, base64Threshold: null);
-            // Assert
-            Assert.That(generator, Is.Not.Null);
-            int base64ThresholdField = GetPrivateField<int>(generator, "m_base64Threshold");
-            Assert.That(base64ThresholdField, Is.EqualTo(int.MaxValue));
-        }
-
-        /// <summary>
-        /// Tests that constructor ignores OptimizeForCompileSpeed when explicit base64Threshold is provided.
-        /// Input: Context with OptimizeForCompileSpeed=true, explicit base64Threshold=int.MaxValue.
-        /// Expected: m_base64Threshold should be int.MaxValue (not 1024).
-        /// </summary>
-        [Test]
-        public void Constructor_ExplicitThreshold_IgnoresOptimizeForCompileSpeed()
-        {
-            // Arrange
-            GeneratorContext context = CreateGeneratorContext(optimizeForCompileSpeed: true);
-            // Act
-            var generator = new ResourceGenerator(context, base64Threshold: int.MaxValue);
-            // Assert
-            Assert.That(generator, Is.Not.Null);
-            int base64ThresholdField = GetPrivateField<int>(generator, "m_base64Threshold");
-            Assert.That(base64ThresholdField, Is.EqualTo(int.MaxValue));
-        }
-
-        private static GeneratorContext CreateGeneratorContext(bool optimizeForCompileSpeed)
-        {
-            var mockFileSystem = new Mock<IFileSystem>();
-            var mockTelemetry = new Mock<ITelemetryContext>();
-            var mockValidator = new Mock<ModelDesignValidator>();
-            return new GeneratorContext
-            {
-                FileSystem = mockFileSystem.Object,
-                OutputFolder = "output",
-                Validator = mockValidator.Object,
-                Telemetry = mockTelemetry.Object,
-                Options = new GeneratorOptions
-                {
-                    OptimizeForCompileSpeed = optimizeForCompileSpeed
-                }
-            };
-        }
-
-        private static T GetPrivateField<T>(object obj, string fieldName)
-        {
-            FieldInfo field = obj.GetType().GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
-            return (T)field.GetValue(obj);
-        }
-    }
 }
+

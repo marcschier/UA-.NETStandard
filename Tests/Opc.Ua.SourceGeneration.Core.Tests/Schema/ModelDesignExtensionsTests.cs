@@ -618,7 +618,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
             Namespace[] namespaces = [];
             var mockContext = new Mock<IServiceMessageContext>();
-            var mockDefaultValue = new XmlDocument().CreateElement("Root");
+            XmlElement mockDefaultValue = new XmlDocument().CreateElement("Root");
 
             // Act
             string result = mockDataType.GetDefaultDotNetValue(
@@ -648,7 +648,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
             Namespace[] namespaces = [];
             var mockContext = new Mock<IServiceMessageContext>();
-            var mockDefaultValue = new XmlDocument().CreateElement("test");
+            XmlElement mockDefaultValue = new XmlDocument().CreateElement("test");
 
             // Act
             string result = mockDataType.GetDefaultDotNetValue(

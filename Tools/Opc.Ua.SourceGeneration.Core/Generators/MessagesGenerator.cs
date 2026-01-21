@@ -28,6 +28,7 @@
  * ======================================================================*/
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Opc.Ua.Schema.Model;
 
@@ -41,24 +42,25 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Initializes a new instance of the <see cref="MessagesGenerator"/> class.
         /// </summary>
-        public MessagesGenerator(GeneratorContext context)
+        public MessagesGenerator(IGeneratorContext context)
         {
             m_context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         /// <inheritdoc/>
-        public void Emit()
+        public IEnumerable<Resource> Emit()
         {
             // get datatypes.
-            Service[] serviceTypes = m_context.Validator.GetListOfServices();
+            Service[] serviceTypes = m_context.ModelDesign.GetListOfServices();
             if (serviceTypes.Length == 0)
             {
-                return;
+                return null;
             }
 
-            using TextWriter writer = m_context.FileSystem.CreateTextWriter(Path.Combine(
+            string fileName = Path.Combine(
                 m_context.OutputFolder,
-                CoreUtils.Format("{0}.Messages.g.cs", Constants.CoreNamespacePrefix)));
+                CoreUtils.Format("{0}.Messages.g.cs", Constants.CoreNamespacePrefix));
+            using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, CodeTemplates.Messages_File_cs);
 
@@ -71,6 +73,7 @@ namespace Opc.Ua.SourceGeneration
                 WriteTemplate_ServiceMessage);
 
             template.Render();
+            return [fileName.AsTextFileResource()];
         }
 
         /// <summary>
@@ -89,6 +92,6 @@ namespace Opc.Ua.SourceGeneration
             return context.Template.Render();
         }
 
-        private readonly GeneratorContext m_context;
+        private readonly IGeneratorContext m_context;
     }
 }

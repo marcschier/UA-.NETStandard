@@ -28,6 +28,7 @@
  * ======================================================================*/
 
 using System.Collections.Generic;
+using System.Linq;
 using Opc.Ua.Schema.Model;
 
 namespace Opc.Ua.SourceGeneration
@@ -71,7 +72,7 @@ namespace Opc.Ua.SourceGeneration
 
             foreach (DesignFileCollection model in designFiles.Group(identifierFiles))
             {
-                ModelDesignValidator modelDesign = fileSystem.OpenModelDesign(
+                IModelDesign modelDesign = fileSystem.OpenModelDesign(
                     model,
                     options.Exclusions,
                     telemetry,
@@ -80,7 +81,7 @@ namespace Opc.Ua.SourceGeneration
                 {
                     FileSystem = fileSystem,
                     OutputFolder = outputDir,
-                    Validator = modelDesign,
+                    ModelDesign = modelDesign,
                     Telemetry = telemetry,
                     Options = options
                 }, validateSchemas: false, embedNodeSet2Xml: embedNodeSet2Xml);
@@ -127,7 +128,7 @@ namespace Opc.Ua.SourceGeneration
                     continue;
                 }
                 // The rest of the input is processed as design files
-                ModelDesignValidator modelDesign = fileSystem.OpenModelDesign(
+                IModelDesign modelDesign = fileSystem.OpenModelDesign(
                     new DesignFileCollection
                     {
                         DesignFiles = designFilesForModel
@@ -140,7 +141,7 @@ namespace Opc.Ua.SourceGeneration
                 {
                     FileSystem = fileSystem,
                     OutputFolder = outputDir,
-                    Validator = modelDesign,
+                    ModelDesign = modelDesign,
                     Telemetry = telemetry,
                     Options = options
                 }, validateSchemas: false, embedNodeSet2Xml: embedNodeSet2Xml);
@@ -171,7 +172,7 @@ namespace Opc.Ua.SourceGeneration
                 .AsFileSystem("Opc.Ua.SourceGeneration.Design")
                 .WithFallback(fileSystem);
 
-            ModelDesignValidator modelDesign = fileSystem.OpenModelDesign(
+            IModelDesign modelDesign = fileSystem.OpenModelDesign(
                 new DesignFileCollection
                 {
                     DesignFiles =
@@ -196,7 +197,7 @@ namespace Opc.Ua.SourceGeneration
             {
                 FileSystem = fileSystem,
                 OutputFolder = outputDir,
-                Validator = modelDesign,
+                ModelDesign = modelDesign,
                 Telemetry = telemetry,
                 Options = options
             };
@@ -243,19 +244,22 @@ namespace Opc.Ua.SourceGeneration
             nodeStateCodeGenerator.Emit();
 
             // Generate schemas
-            var xmlSchemaGenerator = new XmlSchemaGenerator(context);
-            TextFileResource xmlSchemaResource = xmlSchemaGenerator.Emit(
-                validateOutput: validateSchemas);
-            var binarySchemaGenerator = new BinarySchemaGenerator(context);
-            TextFileResource binarySchemaResource = binarySchemaGenerator.Emit(
-                validateOutput: validateSchemas);
+            var xmlSchemaGenerator = new XmlSchemaGenerator(context)
+            {
+                ValidateOutput = validateSchemas
+            };
+            IEnumerable<Resource> xmlSchemaResource = xmlSchemaGenerator.Emit();
+            var binarySchemaGenerator = new BinarySchemaGenerator(context)
+            {
+                ValidateOutput = validateSchemas
+            };
+            IEnumerable<Resource> binarySchemaResource = binarySchemaGenerator.Emit();
             var schemaResources = new ResourceGenerator(context);
             schemaResources.Embed(
-                context.Validator.Dictionary.TargetNamespaceInfo.Prefix,
+                context.ModelDesign.TargetNamespace.Prefix,
                 "XmlSchemas",
                 false,
-                binarySchemaResource,
-                xmlSchemaResource);
+                [.. binarySchemaResource, .. xmlSchemaResource]);
 
             // Must run after schema generation to initilize the dictionaries.
             var nodesetGenerator = new NodesetGenerator(

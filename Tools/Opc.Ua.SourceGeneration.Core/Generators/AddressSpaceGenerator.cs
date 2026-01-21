@@ -47,36 +47,34 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Creates the generator
         /// </summary>
-        public AddressSpaceGenerator(GeneratorContext context)
+        public AddressSpaceGenerator(IGeneratorContext context)
         {
             m_context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         /// <inheritdoc/>
-        public void Emit()
+        public IEnumerable<Resource> Emit()
         {
             List<NodeDesign> nodesToGenerate = GetNodesToGenerate();
             if (nodesToGenerate.Count == 0)
             {
-                return;
+                return null;
             }
 
-            using TextWriter writer = m_context.FileSystem.CreateTextWriter(
-                Path.Combine(m_context.OutputFolder, CoreUtils.Format(
+            string fileName = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
                     "{0}.AddressSpace.g.cs",
-                    m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix)));
-
+                    m_context.ModelDesign.TargetNamespace.Prefix));
+            using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, CodeTemplates.AddressSpaceFile_cs);
 
             template.AddReplacement(
                 Tokens.Namespace,
-                m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(
-                    m_context.Validator.Dictionary.TargetNamespace));
+                m_context.ModelDesign.TargetNamespace.Prefix);
 
             template.AddReplacement(
                 Tokens.ListOfImports,
-                m_context.Validator.Dictionary.Namespaces,
+                m_context.ModelDesign.Namespaces,
                 LoadTemplate_NamespaceImports);
 
             // Write the methods to fill node state collection
@@ -94,6 +92,7 @@ namespace Opc.Ua.SourceGeneration
                 WriteTemplate_ListOfNodeStateFactories);
 
             template.Render();
+            return [fileName.AsTextFileResource()];
         }
 
         private TemplateString LoadTemplate_NamespaceImports(ILoadContext context)
@@ -103,7 +102,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            if (ns.Value == m_context.Validator.Dictionary.TargetNamespace)
+            if (ns.Value == m_context.ModelDesign.TargetNamespace.Value)
             {
                 return null;
             }
@@ -114,7 +113,7 @@ namespace Opc.Ua.SourceGeneration
             }
 
             string externalPrefix =
-                m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(ns.Value);
+                m_context.ModelDesign.Namespaces.GetNamespacePrefix(ns.Value);
             context.Out.WriteLine("using {0};", externalPrefix);
             return null;
         }
@@ -179,7 +178,7 @@ namespace Opc.Ua.SourceGeneration
                 GetBrowseNameValue(node));
             context.Template.AddReplacement(
                 Tokens.BrowseNameNamespaceUri,
-                m_context.Validator.Dictionary.Namespaces.GetConstantSymbolForNamespace(
+                m_context.ModelDesign.Namespaces.GetConstantSymbolForNamespace(
                     node.SymbolicName.Namespace));
             context.Template.AddReplacement(
                 Tokens.DisplayNameValue,
@@ -479,7 +478,7 @@ namespace Opc.Ua.SourceGeneration
                     : null);
 
             // Access restrictions
-            var accessRestrictions = !node.AccessRestrictionsSpecified ? null :
+            string accessRestrictions = !node.AccessRestrictionsSpecified ? null :
                 node.AccessRestrictions.GetAccessRestrictionsAsCode();
             context.Template.AddReplacement(
                 Tokens.AccessRestrictionsValue,
@@ -505,7 +504,7 @@ namespace Opc.Ua.SourceGeneration
                 return false;
             }
 
-            ObjectDesign roleNode = m_context.Validator.FindNode<ObjectDesign>(
+            ObjectDesign roleNode = m_context.ModelDesign.FindNode<ObjectDesign>(
                 rolePermission.Role,
                 rolePermission.Role.Name,
                 "RoleType");
@@ -529,9 +528,9 @@ namespace Opc.Ua.SourceGeneration
         {
             var nodes = new List<NodeDesign>();
 
-            foreach (NodeDesign node in m_context.Validator.Dictionary.Items)
+            foreach (NodeDesign node in m_context.ModelDesign.Nodes)
             {
-                if (!m_context.Validator.IsExcluded(node) && !node.IsMethodTypeNode())
+                if (!m_context.ModelDesign.IsExcluded(node) && !node.IsMethodTypeNode())
                 {
                     nodes.Add(node);
                 }
@@ -548,7 +547,7 @@ namespace Opc.Ua.SourceGeneration
             }
 
             return [.. parent.Children.Items
-                .Where(child => !m_context.Validator.IsExcluded(child) &&
+                .Where(child => !m_context.ModelDesign.IsExcluded(child) &&
                     child.ModellingRule is
                     not ModellingRule.ExposesItsArray and
                     not ModellingRule.MandatoryPlaceholder and
@@ -562,7 +561,7 @@ namespace Opc.Ua.SourceGeneration
             {
                 foreach (RolePermission rp in node.RolePermissions.RolePermission)
                 {
-                    ObjectDesign roleNode = m_context.Validator.FindNode<ObjectDesign>(
+                    ObjectDesign roleNode = m_context.ModelDesign.FindNode<ObjectDesign>(
                         rp.Role,
                         rp.Role.Name,
                         "RoleType");
@@ -583,7 +582,7 @@ namespace Opc.Ua.SourceGeneration
                 return "global::Opc.Ua.NodeId.Null";
             }
 
-            string namespaceUri = m_context.Validator.Dictionary.Namespaces
+            string namespaceUri = m_context.ModelDesign.Namespaces
                 .GetConstantSymbolForNamespace(node.SymbolicId.Namespace);
 
             if (node.NumericIdSpecified)
@@ -612,7 +611,7 @@ namespace Opc.Ua.SourceGeneration
                 return "global::Opc.Ua.NodeId.Null";
             }
 
-            NodeDesign node = m_context.Validator.FindNode(
+            NodeDesign node = m_context.ModelDesign.FindNode(
                 referenceType,
                 referenceType.Name,
                 "<ReferenceType>");
@@ -759,6 +758,6 @@ namespace Opc.Ua.SourceGeneration
                 .Replace("\t", "\\t", StringComparison.Ordinal);
         }
 
-        private readonly GeneratorContext m_context;
+        private readonly IGeneratorContext m_context;
     }
 }

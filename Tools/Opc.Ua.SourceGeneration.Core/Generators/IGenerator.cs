@@ -27,6 +27,8 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using System.Collections.Generic;
+
 namespace Opc.Ua.SourceGeneration
 {
     /// <summary>
@@ -37,6 +39,6 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Emit the generated code.
         /// </summary>
-        void Emit();
+        IEnumerable<Resource> Emit();
     }
 }

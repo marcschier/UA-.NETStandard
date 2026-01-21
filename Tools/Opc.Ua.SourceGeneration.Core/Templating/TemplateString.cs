@@ -127,11 +127,11 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public ParsedTemplateString(int literalLength, int formattedCount)
         {
-            if (literalLength > MaxLiteralLength || literalLength < 0)
+            if (literalLength is > MaxLiteralLength or < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(literalLength));
             }
-            if (formattedCount > MaxFormattedCount || formattedCount < 0)
+            if (formattedCount is > MaxFormattedCount or < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(formattedCount));
             }

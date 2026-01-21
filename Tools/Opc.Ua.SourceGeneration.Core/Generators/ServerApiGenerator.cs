@@ -42,13 +42,13 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Create server API generator.
         /// </summary>
-        public ServerApiGenerator(GeneratorContext context)
+        public ServerApiGenerator(IGeneratorContext context)
         {
             m_context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         /// <inheritdoc/>
-        public void Emit()
+        public IEnumerable<Resource> Emit()
         {
             List<ServiceSet> serviceSets =
             [
@@ -56,9 +56,10 @@ namespace Opc.Ua.SourceGeneration
                 new ServiceSet("Discovery", ServiceCategory.Discovery, ServiceCategory.Registration)
             ];
 
-            using TextWriter writer = m_context.FileSystem.CreateTextWriter(Path.Combine(
+            string fileName = Path.Combine(
                 m_context.OutputFolder,
-                CoreUtils.Format("{0}.ServerBase.g.cs", Constants.CoreNamespacePrefix)));
+                CoreUtils.Format("{0}.ServerBase.g.cs", Constants.CoreNamespacePrefix));
+            using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, CodeTemplates.ServerApi_File_cs);
 
@@ -72,6 +73,7 @@ namespace Opc.Ua.SourceGeneration
                 WriteTemplate_ServerApiServiceSet);
 
             template.Render();
+            return [fileName.AsTextFileResource()];
         }
 
         /// <summary>
@@ -84,7 +86,7 @@ namespace Opc.Ua.SourceGeneration
                 return false;
             }
 
-            Service[] serviceTypes = m_context.Validator.GetListOfServices(serviceSet.Categories);
+            Service[] serviceTypes = m_context.ModelDesign.GetListOfServices(serviceSet.Categories);
             if (serviceTypes.Length == 0)
             {
                 return false;
@@ -213,8 +215,8 @@ namespace Opc.Ua.SourceGeneration
                     DataTypeDesign datatype = field.DataTypeNode;
                     string typeName = datatype.GetDotNetTypeName(
                         field.ValueRank,
-                        m_context.Validator.Dictionary.TargetNamespace,
-                        m_context.Validator.Dictionary.Namespaces,
+                        m_context.ModelDesign.TargetNamespace.Value,
+                        m_context.ModelDesign.Namespaces,
                         nullable: NullableAnnotation.Nullable);
 
                     types.Add(typeName);
@@ -253,6 +255,6 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         private sealed record class ServiceSet(string Name, params ServiceCategory[] Categories);
 
-        private readonly GeneratorContext m_context;
+        private readonly IGeneratorContext m_context;
     }
 }

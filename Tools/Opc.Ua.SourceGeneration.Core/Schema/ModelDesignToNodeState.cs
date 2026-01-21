@@ -46,11 +46,11 @@ namespace Opc.Ua.Schema.Model
         /// Intializes the object with default values.
         /// </summary>
         public ModelDesignToNodeState(
-            ModelDesignValidator validator,
+            IModelDesign modelDesign,
             IServiceMessageContext context)
         {
             m_logger = context.Telemetry.CreateLogger<ModelDesignToNodeState>();
-            m_validator = validator;
+            m_modelDesign = modelDesign;
             m_context = new SystemContext(context.Telemetry)
             {
                 NamespaceUris = context.NamespaceUris
@@ -60,12 +60,12 @@ namespace Opc.Ua.Schema.Model
         /// <summary>
         /// Create node states for the items in the model design
         /// </summary>
-        public void AddNodeStatesToDesign()
+        public void AttachNodeStatesToNodeDesigns()
         {
             // update the references.
-            foreach (NodeDesign node in m_validator.Dictionary.Items)
+            foreach (NodeDesign node in m_modelDesign.Nodes)
             {
-                CreateNodeState(node, m_validator.Dictionary.NamespaceUris);
+                CreateNodeState(node, m_modelDesign.NamespaceUris);
             }
         }
 
@@ -807,7 +807,7 @@ namespace Opc.Ua.Schema.Model
                 if (reference.TargetId != null)
                 {
                     if (!isTypeDefinition &&
-                        m_validator.TryFindNode(
+                        m_modelDesign.TryFindNode(
                             reference.TargetId,
                             root.SymbolicId.Name,
                             "TargetId",
@@ -1079,7 +1079,7 @@ namespace Opc.Ua.Schema.Model
                 qname = TypeInfo.GetXmlName(encodeable.GetType());
             }
 
-            if (m_validator.TryFindNode(
+            if (m_modelDesign.TryFindNode(
                 qname,
                 qname.Name,
                 "DataType",
@@ -1093,7 +1093,7 @@ namespace Opc.Ua.Schema.Model
                 {
                     foreach (EncodingDesign encoding in dataTypeNode.Encodings)
                     {
-                        ObjectDesign encodingNode = m_validator.FindNode<ObjectDesign>(
+                        ObjectDesign encodingNode = m_modelDesign.FindNode<ObjectDesign>(
                             encoding.SymbolicId,
                             encoding.SymbolicId.Name,
                             "Encoding");
@@ -1198,7 +1198,7 @@ namespace Opc.Ua.Schema.Model
                 {
                     var role = new RolePermissionType();
 
-                    ObjectDesign roleNode = m_validator.FindNode<ObjectDesign>(
+                    ObjectDesign roleNode = m_modelDesign.FindNode<ObjectDesign>(
                         ii.Role,
                         ii.Role.Name,
                         "RoleType");
@@ -1508,7 +1508,7 @@ namespace Opc.Ua.Schema.Model
                 return NodeId.Null;
             }
 
-            NodeDesign node = m_validator.FindNode(nodeId, nodeId.Name, "<NodeId>");
+            NodeDesign node = m_modelDesign.FindNode(nodeId, nodeId.Name, "<NodeId>");
             if (node == null)
             {
                 return NodeId.Null;
@@ -1536,7 +1536,7 @@ namespace Opc.Ua.Schema.Model
             {
                 instanceState.RolePermissions = ConstructRolePermissions(
                     design.DefaultRolePermissions,
-                    m_validator.Dictionary.NamespaceUris);
+                    m_modelDesign.NamespaceUris);
             }
 
             instanceState.AccessRestrictions ??= ConstructAccessRestrictions(
@@ -1556,9 +1556,9 @@ namespace Opc.Ua.Schema.Model
             VariableTypeDesign type,
             NamespaceTable namespaceUris)
         {
-            if (!m_validator.UseAllowSubtypes)
+            if (!m_modelDesign.UseAllowSubtypes)
             {
-                DataTypeDesign dataType = m_validator.FindNode<DataTypeDesign>(
+                DataTypeDesign dataType = m_modelDesign.FindNode<DataTypeDesign>(
                     type.DataType,
                     type.SymbolicId.Name,
                     "DataType");
@@ -1572,9 +1572,9 @@ namespace Opc.Ua.Schema.Model
             Parameter field,
             NamespaceTable namespaceUris)
         {
-            if (!m_validator.UseAllowSubtypes)
+            if (!m_modelDesign.UseAllowSubtypes)
             {
-                DataTypeDesign dataType = m_validator.FindNode<DataTypeDesign>(
+                DataTypeDesign dataType = m_modelDesign.FindNode<DataTypeDesign>(
                     field.DataType,
                     field.Name,
                     "DataType");
@@ -1588,9 +1588,9 @@ namespace Opc.Ua.Schema.Model
             VariableDesign instance,
             NamespaceTable namespaceUris)
         {
-            if (!m_validator.UseAllowSubtypes)
+            if (!m_modelDesign.UseAllowSubtypes)
             {
-                DataTypeDesign dataType = m_validator.FindNode<DataTypeDesign>(
+                DataTypeDesign dataType = m_modelDesign.FindNode<DataTypeDesign>(
                     instance.DataType,
                     instance.SymbolicId.Name,
                     "DataType");
@@ -1601,7 +1601,7 @@ namespace Opc.Ua.Schema.Model
         }
 
         private readonly ILogger m_logger;
-        private readonly ModelDesignValidator m_validator;
+        private readonly IModelDesign m_modelDesign;
         private readonly SystemContext m_context;
     }
 }

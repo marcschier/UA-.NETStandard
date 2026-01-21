@@ -51,7 +51,7 @@ namespace Opc.Ua.SourceGeneration
         /// Creates the nodeset generator
         /// </summary>
         public NodesetGenerator(
-            GeneratorContext context,
+            IGeneratorContext context,
             bool useXmlInitializers = false,
             bool embedNodeset = false)
         {
@@ -62,12 +62,13 @@ namespace Opc.Ua.SourceGeneration
         }
 
         /// <inheritdoc/>
-        public void Emit()
+        public IEnumerable<Resource> Emit()
         {
-            string nsPrefix = m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix;
+            var fileNames = new List<string>();
+            string nsPrefix = m_context.ModelDesign.TargetNamespace.Prefix;
             var context = new SystemContext(m_context.Telemetry)
             {
-                NamespaceUris = m_context.Validator.Dictionary.NamespaceUris,
+                NamespaceUris = m_context.ModelDesign.NamespaceUris,
                 ServerUris = new StringTable()
             };
 
@@ -76,9 +77,9 @@ namespace Opc.Ua.SourceGeneration
             NodeStateCollection nodeStateCollectionWithServices = [];
             Dictionary<uint, NodeStateCollection> subsets = [];
 
-            foreach (NodeDesign node in m_context.Validator.Dictionary.Items)
+            foreach (NodeDesign node in m_context.ModelDesign.Nodes)
             {
-                if (m_context.Validator.IsExcluded(node))
+                if (m_context.ModelDesign.IsExcluded(node))
                 {
                     continue;
                 }
@@ -95,6 +96,7 @@ namespace Opc.Ua.SourceGeneration
                         !instanceDesign.Parent.NotInAddressSpace;
                 }
 
+                // TODO: Test with if (node.IsMethodTypeDesign()) which should be the same
                 if (node is MethodDesign methodDesign &&
                     methodDesign.SymbolicName.Name.EndsWith("MethodType", StringComparison.Ordinal))
                 {
@@ -240,7 +242,7 @@ namespace Opc.Ua.SourceGeneration
             string originalFile = Path.Combine(
                 m_context.OutputFolder,
                 CoreUtils.Format("{0}.NodeSet2.xml", nsPrefix));
-            if (m_context.Validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
+            if (m_context.ModelDesign.TargetNamespace.Value == Namespaces.OpcUa)
             {
                 originalFile = CoreUtils.Format("{0}{1}{2}.NodeSet2.Services.xml",
                     m_context.OutputFolder,
@@ -266,7 +268,7 @@ namespace Opc.Ua.SourceGeneration
                     IndexDocumentation(context, existingNodeStateCollection, map);
 
                     UpdateDocumentation(context, map, nodeStateCollection);
-                    if (m_context.Validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
+                    if (m_context.ModelDesign.TargetNamespace.Value == Namespaces.OpcUa)
                     {
                         UpdateDocumentation(context, map, nodeStateCollectionWithServices);
                     }
@@ -280,32 +282,41 @@ namespace Opc.Ua.SourceGeneration
             if (m_embedNodeset)
             {
                 // Generate nodeset2.xml files as source code (.g.cs)
-                EmbedNodeSet2Xml(context, nodeStateCollection, nodeStateCollectionWithServices);
+                EmbedNodeSet2Xml(
+                    context,
+                    nodeStateCollection,
+                    nodeStateCollectionWithServices,
+                    fileNames);
             }
 
             // Embed predefined nodes and add helpers as source code (.g.cs)
             EmbedPredefinedNodes(context, nodeStateCollection);
-            GenerateHelpers();
+            GenerateHelpers(fileNames);
+
+            return fileNames.Select(fileName => fileName.AsTextFileResource());
         }
 
         private void EmbedNodeSet2Xml(
             SystemContext context,
             NodeStateCollection nodeStateCollection,
             NodeStateCollection nodeStateCollectionWithServices,
+            List<string> fileNames,
             bool validateOutput = true)
         {
-            string nsPrefix = m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix;
+            string nsPrefix = m_context.ModelDesign.TargetNamespace.Prefix;
             var resources = new List<Resource>();
             string identifiersFilePath = Path.Combine(
                 m_context.OutputFolder,
                 CoreUtils.Format("{0}.NodeIds.csv", nsPrefix));
             WriteIdentifiers(context, identifiersFilePath, nodeStateCollection);
+            fileNames.Add(identifiersFilePath);
             // resources.Add(new TextFileResource("Csv", identifiersFilePath));
 
             identifiersFilePath = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
                 "{0}.NodeIds.permissions.csv",
                 nsPrefix));
             WritePermissions(context, identifiersFilePath, nodeStateCollection);
+            fileNames.Add(identifiersFilePath);
             // resources.Add(new TextFileResource("Permission.Csv", identifiersFilePath));
 
             string outputFile = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
@@ -315,31 +326,25 @@ namespace Opc.Ua.SourceGeneration
             {
                 var model = new ModelTableEntry
                 {
-                    ModelUri = m_context.Validator.Dictionary.TargetNamespace,
-                    XmlSchemaUri = m_context.Validator.Dictionary.TargetXmlNamespace,
-                    Version = m_context.Validator.Dictionary.TargetVersion,
+                    ModelUri = m_context.ModelDesign.TargetNamespace.Value,
+                    XmlSchemaUri = m_context.ModelDesign.TargetNamespace.XmlNamespace,
+                    Version = m_context.ModelDesign.TargetVersion,
                     ModelVersion = CoreUtils.FixupAsSemanticVersion(
-                        m_context.Validator.Dictionary.TargetVersion),
-                    PublicationDate = m_context.Validator.Dictionary.TargetPublicationDate,
-                    PublicationDateSpecified =
-                        m_context.Validator.Dictionary.TargetPublicationDateSpecified
+                        m_context.ModelDesign.TargetVersion),
+                    PublicationDate = m_context.ModelDesign.TargetPublicationDate ?? DateTime.MinValue,
+                    PublicationDateSpecified = m_context.ModelDesign.TargetPublicationDate.HasValue,
+                    RequiredModel = [.. m_context.ModelDesign.Dependencies]
                 };
-
-                if (m_context.Validator.Dictionary.Dependencies != null)
-                {
-                    model.RequiredModel = [.. m_context.Validator.Dictionary.Dependencies.Values];
-                }
 
                 nodeStateCollection.SaveAsNodeSet2(
                     context,
                     ostrm,
                     model,
-                    m_context.Validator.Dictionary.TargetPublicationDate != DateTime.MinValue ?
-                        m_context.Validator.Dictionary.TargetPublicationDate : DateTime.MinValue,
+                    m_context.ModelDesign.TargetPublicationDate ?? DateTime.MinValue,
                     true);
                 resources.Add(new TextFileResource("Xml", outputFile));
 
-                if (m_context.Validator.Dictionary.TargetNamespace == Namespaces.OpcUa)
+                if (m_context.ModelDesign.TargetNamespace.Value == Namespaces.OpcUa)
                 {
                     string nodeSetFilePath = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
                         "{0}.NodeSet2.Services.xml",
@@ -350,10 +355,10 @@ namespace Opc.Ua.SourceGeneration
                             context,
                             ostrm2,
                             model,
-                            m_context.Validator.Dictionary.TargetPublicationDate != DateTime.MinValue ?
-                                m_context.Validator.Dictionary.TargetPublicationDate : DateTime.MinValue,
+                            m_context.ModelDesign.TargetPublicationDate ?? DateTime.MinValue,
                             true);
                     }
+                    fileNames.Add(nodeSetFilePath);
                     resources.Add(new TextFileResource("Services.Xml", nodeSetFilePath));
 
                     identifiersFilePath = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
@@ -361,12 +366,14 @@ namespace Opc.Ua.SourceGeneration
                         nsPrefix));
                     WriteIdentifiers(context, identifiersFilePath, nodeStateCollectionWithServices);
                     // resources.Add(new TextFileResource("Services.Csv", nodeSetFilePath));
+                    fileNames.Add(identifiersFilePath);
 
                     identifiersFilePath = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
                         "{0}.NodeIds.Services.permissions.csv",
                         nsPrefix));
                     WritePermissions(context, identifiersFilePath, nodeStateCollectionWithServices);
                     // resources.Add(new TextFileResource("Services.Permissions.Csv", nodeSetFilePath));
+                    fileNames.Add(identifiersFilePath);
                 }
             }
 
@@ -420,7 +427,7 @@ namespace Opc.Ua.SourceGeneration
             var predefinedNodesInitializer =
                 new StreamResource("Nodes", ostrm, m_useXmlInitializers);
             initializers.Embed(
-                m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix,
+                m_context.ModelDesign.TargetNamespace.Prefix,
                 "Predefined",
                 internalAccess: true,
                 predefinedNodesInitializer);
@@ -429,19 +436,20 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Generate helpers
         /// </summary>
-        private void GenerateHelpers()
+        private void GenerateHelpers(List<string> fileNames)
         {
-            string nsPrefix = m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix;
+            string nsPrefix = m_context.ModelDesign.TargetNamespace.Prefix;
+            string fileName = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
+                "{0}.Helpers.g.cs",
+                nsPrefix));
             // Add helpers
-            using TextWriter writer = m_context.FileSystem.CreateTextWriter(Path.Combine(
-                m_context.OutputFolder,
-                nsPrefix + ".Helpers.g.cs"));
+            using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, CodeTemplates.Helpers_File_cs);
 
             template.AddReplacement(
                 Tokens.ListOfImports,
-                m_context.Validator.Dictionary.Namespaces,
+                m_context.ModelDesign.Namespaces,
                 LoadTemplate_NamespaceImports);
 
             template.AddReplacement(Tokens.NamespacePrefix, nsPrefix);
@@ -450,6 +458,7 @@ namespace Opc.Ua.SourceGeneration
             template.AddReplacement(Tokens.Encoding, EncodingString);
 
             template.Render();
+            fileNames.Add(fileName);
         }
 
         private TemplateString LoadTemplate_NamespaceImports(ILoadContext context)
@@ -459,7 +468,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            if (ns.Value == m_context.Validator.Dictionary.TargetNamespace)
+            if (ns.Value == m_context.ModelDesign.TargetNamespace.Value)
             {
                 return null;
             }
@@ -470,7 +479,7 @@ namespace Opc.Ua.SourceGeneration
             }
 
             context.Out.WriteLine("using {0};",
-                m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(ns.Value));
+                m_context.ModelDesign.Namespaces.GetNamespacePrefix(ns.Value));
             return null;
         }
 
@@ -524,7 +533,7 @@ namespace Opc.Ua.SourceGeneration
             NodeStateCollection nodeStateCollection)
         {
             var list = new Dictionary<string, NodeState>();
-            NodeDesign[] nodes = [.. m_context.Validator.Nodes];
+            NodeDesign[] nodes = [.. m_context.ModelDesign.GetNodeDesigns()];
 
             foreach (NodeState nodeState in nodeStateCollection)
             {
@@ -877,6 +886,6 @@ namespace Opc.Ua.SourceGeneration
         private readonly bool m_useXmlInitializers;
         private readonly bool m_embedNodeset;
         private readonly ILogger m_logger;
-        private readonly GeneratorContext m_context;
+        private readonly IGeneratorContext m_context;
     }
 }

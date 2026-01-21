@@ -322,16 +322,16 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         }
 
         /// <summary>
-        /// Tests that AsTextFileResource throws ArgumentNullException when fileName is null.
-        /// Expected: ArgumentNullException.
+        /// Tests that AsTextFileResource throws NullReferenceException when fileName is null.
+        /// Expected: NullReferenceException.
         /// </summary>
         [Test]
-        public void AsTextFileResource_NullFileName_ThrowsArgumentNullException()
+        public void AsTextFileResource_NullFileName_ThrowsNullReferenceException()
         {
             // Arrange
             const string fileName = null;
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => fileName.AsTextFileResource());
+            Assert.Throws<NullReferenceException>(() => fileName.AsTextFileResource());
         }
 
         /// <summary>
@@ -440,15 +440,15 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         }
 
         /// <summary>
-        /// Tests that ToBinaryFileResource throws ArgumentNullException when fileName is null.
+        /// Tests that ToBinaryFileResource throws NullReferenceException when fileName is null.
         /// </summary>
         [Test]
-        public void ToBinaryFileResource_NullFileName_ThrowsArgumentNullException()
+        public void ToBinaryFileResource_NullFileName_ThrowsNullReferenceException()
         {
             // Arrange
             const string fileName = null;
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => fileName.ToBinaryFileResource());
+            Assert.Throws<NullReferenceException>(() => fileName.ToBinaryFileResource());
         }
 
         /// <summary>

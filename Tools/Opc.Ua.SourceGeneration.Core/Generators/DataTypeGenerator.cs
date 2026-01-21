@@ -43,7 +43,7 @@ namespace Opc.Ua.SourceGeneration
     /// </summary>
     internal sealed class DataTypeGenerator : IGenerator
     {
-        public DataTypeGenerator(GeneratorContext context, bool useXmlInitializers = false)
+        public DataTypeGenerator(IGeneratorContext context, bool useXmlInitializers = false)
         {
             m_context = context ?? throw new ArgumentNullException(nameof(context));
             m_messageContext = new ServiceMessageContext(context.Telemetry);
@@ -51,33 +51,32 @@ namespace Opc.Ua.SourceGeneration
         }
 
         /// <inheritdoc/>
-        public void Emit()
+        public IEnumerable<Resource> Emit()
         {
             List<DataTypeDesign> datatypes = GetDataTypes();
             if (datatypes.Count == 0)
             {
-                return;
+                return null;
             }
 
-            using TextWriter writer = m_context.FileSystem.CreateTextWriter(
-                Path.Combine(m_context.OutputFolder, CoreUtils.Format(
-                    "{0}.DataTypes.g.cs",
-                    m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix)));
+            string fileName = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
+                "{0}.DataTypes.g.cs",
+                m_context.ModelDesign.TargetNamespace.Prefix));
+            using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
 
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, CodeTemplates.TypesFile_cs);
             template.AddReplacement(
                 Tokens.Namespace,
-                m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(
-                    m_context.Validator.Dictionary.TargetNamespace));
+                m_context.ModelDesign.TargetNamespace.Prefix);
             template.AddReplacement(
                 Tokens.NamespaceUri,
-                m_context.Validator.Dictionary.Namespaces.GetConstantSymbolForNamespace(
-                    m_context.Validator.Dictionary.TargetNamespace));
+                m_context.ModelDesign.Namespaces.GetConstantSymbolForNamespace(
+                    m_context.ModelDesign.TargetNamespace.Value));
 
             template.AddReplacement(
                 Tokens.ListOfImports,
-                m_context.Validator.Dictionary.Namespaces,
+                m_context.ModelDesign.Namespaces,
                 LoadTemplate_NamespaceImports);
             template.AddReplacement(
                 Tokens.ListOfTypes,
@@ -86,6 +85,7 @@ namespace Opc.Ua.SourceGeneration
                 WriteTemplate_ListOfTypes);
 
             template.Render();
+            return [fileName.AsTextFileResource()];
         }
 
         private TemplateString LoadTemplate_NamespaceImports(ILoadContext context)
@@ -95,7 +95,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            if (ns.Value == m_context.Validator.Dictionary.TargetNamespace)
+            if (ns.Value == m_context.ModelDesign.TargetNamespace.Value)
             {
                 return null;
             }
@@ -105,7 +105,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            string externalPrefix = m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(ns.Value);
+            string externalPrefix = m_context.ModelDesign.Namespaces.GetNamespacePrefix(ns.Value);
 
             context.Out.WriteLine("using {0};", externalPrefix);
 
@@ -181,15 +181,15 @@ namespace Opc.Ua.SourceGeneration
             context.Template.AddReplacement(Tokens.TypeName, dataType.SymbolicName.Name);
             context.Template.AddReplacement(
                 Tokens.NamespaceUri,
-                m_context.Validator.Dictionary.Namespaces.GetConstantSymbolForNamespace(
+                m_context.ModelDesign.Namespaces.GetConstantSymbolForNamespace(
                     dataType.SymbolicName.Namespace));
             context.Template.AddReplacement(
                 Tokens.NamespacePrefix,
-                m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(
+                m_context.ModelDesign.Namespaces.GetNamespacePrefix(
                     dataType.SymbolicId.Namespace));
             context.Template.AddReplacement(
                 Tokens.XmlNamespaceUri,
-                m_context.Validator.Dictionary.Namespaces.GetConstantForXmlNamespace(
+                m_context.ModelDesign.Namespaces.GetConstantForXmlNamespace(
                     dataType.SymbolicId.Namespace));
 
             context.Template.AddReplacement(
@@ -197,11 +197,11 @@ namespace Opc.Ua.SourceGeneration
                 dataType.SymbolicName.Name);
             context.Template.AddReplacement(
                 Tokens.BrowseNameNamespacePrefix,
-                m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(
+                m_context.ModelDesign.Namespaces.GetNamespacePrefix(
                     dataType.SymbolicName.Namespace));
             context.Template.AddReplacement(
                 Tokens.BrowseNameNamespaceUri,
-                m_context.Validator.Dictionary.Namespaces.GetConstantSymbolForNamespace(
+                m_context.ModelDesign.Namespaces.GetConstantSymbolForNamespace(
                     dataType.SymbolicName.Namespace));
 
             context.Template.AddReplacement(
@@ -209,14 +209,14 @@ namespace Opc.Ua.SourceGeneration
                   dataType.ClassName);
             context.Template.AddReplacement(
                 Tokens.BaseType,
-                dataType.GetBaseClassName(m_context.Validator.Dictionary.Namespaces));
+                dataType.GetBaseClassName(m_context.ModelDesign.Namespaces));
             context.Template.AddReplacement(
                 Tokens.BaseTypeNamespacePrefix,
-                m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(
+                m_context.ModelDesign.Namespaces.GetNamespacePrefix(
                     dataType.BaseTypeNode.SymbolicId.Namespace));
             context.Template.AddReplacement(
                 Tokens.BaseTypeNamespaceUri,
-                m_context.Validator.Dictionary.Namespaces.GetConstantSymbolForNamespace(
+                m_context.ModelDesign.Namespaces.GetConstantSymbolForNamespace(
                     dataType.BaseTypeNode.SymbolicId.Namespace));
             context.Template.AddReplacement(
                 Tokens.BaseClassName,
@@ -309,7 +309,12 @@ namespace Opc.Ua.SourceGeneration
                 };
             foreach (KeyValuePair<string, string> kv in encodings)
             {
-                bool isEncodingPartOfModel = m_context.Validator.Dictionary.Items.Any(x =>
+                // bool isEncodingPartOfModel = m_context.ModelDesign.TryFindNode(
+                //     new XmlQualifiedName(kv.Value, dataType.SymbolicName.Namespace),
+                //     kv.Key,
+                //     "HasEncoding",
+                //     out NodeDesign encodingNode);
+                bool isEncodingPartOfModel = m_context.ModelDesign.Nodes.Any(x =>
                     x.SymbolicId.Name == kv.Value &&
                     x.SymbolicId.Namespace == dataType.SymbolicName.Namespace);
                 if (!isEncodingPartOfModel)
@@ -416,7 +421,7 @@ namespace Opc.Ua.SourceGeneration
 
             context.Template.AddReplacement(
                 Tokens.XmlNamespaceUri,
-                m_context.Validator.Dictionary.Namespaces.GetConstantForXmlNamespace(
+                m_context.ModelDesign.Namespaces.GetConstantForXmlNamespace(
                     dataType.SymbolicId.Namespace));
             context.Template.AddReplacement(Tokens.BrowseName, dataType.SymbolicName.Name);
 
@@ -434,8 +439,8 @@ namespace Opc.Ua.SourceGeneration
                 "private {0} {1};",
                 field.DataTypeNode.GetDotNetTypeName(
                     field.ValueRank,
-                    m_context.Validator.Dictionary.TargetNamespace,
-                    m_context.Validator.Dictionary.Namespaces,
+                    m_context.ModelDesign.TargetNamespace.Value,
+                    m_context.ModelDesign.Namespaces,
                     nullable: NullableAnnotation.NullableExceptDataTypes),
                 field.GetChildFieldName());
 
@@ -551,8 +556,8 @@ namespace Opc.Ua.SourceGeneration
                             functionName = "Encodeable";
                             elementName = field.DataTypeNode.GetDotNetTypeName(
                                 ValueRank.Scalar,
-                                m_context.Validator.Dictionary.TargetNamespace,
-                                m_context.Validator.Dictionary.Namespaces,
+                                m_context.ModelDesign.TargetNamespace.Value,
+                                m_context.ModelDesign.Namespaces,
                                 nullable: NullableAnnotation.NonNullable);
                             break;
                         }
@@ -568,8 +573,8 @@ namespace Opc.Ua.SourceGeneration
                     {
                         elementName = field.DataTypeNode.GetDotNetTypeName(
                             ValueRank.Scalar,
-                            m_context.Validator.Dictionary.TargetNamespace,
-                            m_context.Validator.Dictionary.Namespaces,
+                            m_context.ModelDesign.TargetNamespace.Value,
+                            m_context.ModelDesign.Namespaces,
                             nullable: NullableAnnotation.NonNullable);
                         context.Out.WriteLine(
                             "encoder.WriteEnumeratedArray({0}, {1}.ToArray(), typeof({2}));",
@@ -635,8 +640,8 @@ namespace Opc.Ua.SourceGeneration
                     functionName = "Encodeable";
                     elementName = field.DataTypeNode.GetDotNetTypeName(
                         ValueRank.Scalar,
-                        m_context.Validator.Dictionary.TargetNamespace,
-                        m_context.Validator.Dictionary.Namespaces,
+                        m_context.ModelDesign.TargetNamespace.Value,
+                        m_context.ModelDesign.Namespaces,
                         nullable: NullableAnnotation.NonNullable);
 
                     if (field.ValueRank == ValueRank.Array)
@@ -738,8 +743,8 @@ namespace Opc.Ua.SourceGeneration
                             functionName = "Encodeable";
                             elementName = field.DataTypeNode.GetDotNetTypeName(
                                 ValueRank.Scalar,
-                                m_context.Validator.Dictionary.TargetNamespace,
-                                m_context.Validator.Dictionary.Namespaces,
+                                m_context.ModelDesign.TargetNamespace.Value,
+                                m_context.ModelDesign.Namespaces,
                                 nullable: NullableAnnotation.NonNullable);
                             break;
                         }
@@ -751,8 +756,8 @@ namespace Opc.Ua.SourceGeneration
                     functionName = "Enumerated";
                     elementName = field.DataTypeNode.GetDotNetTypeName(
                         ValueRank.Scalar,
-                        m_context.Validator.Dictionary.TargetNamespace,
-                        m_context.Validator.Dictionary.Namespaces,
+                        m_context.ModelDesign.TargetNamespace.Value,
+                        m_context.ModelDesign.Namespaces,
                         nullable: NullableAnnotation.NonNullable);
                     break;
                 case BasicDataType.UserDefined:
@@ -761,8 +766,8 @@ namespace Opc.Ua.SourceGeneration
                         context.Out.Write($"{valueName} = ");
                         elementName = field.DataTypeNode.GetDotNetTypeName(
                             ValueRank.Scalar,
-                            m_context.Validator.Dictionary.TargetNamespace,
-                            m_context.Validator.Dictionary.Namespaces,
+                            m_context.ModelDesign.TargetNamespace.Value,
+                            m_context.ModelDesign.Namespaces,
                             nullable: NullableAnnotation.NonNullable);
 
                         if (field.ValueRank == ValueRank.Array)
@@ -806,8 +811,8 @@ namespace Opc.Ua.SourceGeneration
                     functionName = "Encodeable";
                     elementName = field.DataTypeNode.GetDotNetTypeName(
                         ValueRank.Scalar,
-                        m_context.Validator.Dictionary.TargetNamespace,
-                        m_context.Validator.Dictionary.Namespaces,
+                        m_context.ModelDesign.TargetNamespace.Value,
+                        m_context.ModelDesign.Namespaces,
                         nullable: NullableAnnotation.NonNullable);
                     break;
             }
@@ -915,8 +920,8 @@ namespace Opc.Ua.SourceGeneration
                 field.GetChildFieldName(),
                 field.DataTypeNode.GetDotNetTypeName(
                     field.ValueRank,
-                    m_context.Validator.Dictionary.TargetNamespace,
-                    m_context.Validator.Dictionary.Namespaces,
+                    m_context.ModelDesign.TargetNamespace.Value,
+                    m_context.ModelDesign.Namespaces,
                     nullable: NullableAnnotation.NullableExceptDataTypes));
 
             if (dataType.IsUnion)
@@ -940,8 +945,8 @@ namespace Opc.Ua.SourceGeneration
                 field.DefaultValue,
                 null,
                 true,
-                m_context.Validator.Dictionary.TargetNamespace,
-                m_context.Validator.Dictionary.Namespaces,
+                m_context.ModelDesign.TargetNamespace.Value,
+                m_context.ModelDesign.Namespaces,
                 m_messageContext);
 
             context.Out.WriteLine("{0} = {1};", field.GetChildFieldName(), value);
@@ -993,8 +998,8 @@ namespace Opc.Ua.SourceGeneration
             context.Template.AddReplacement(Tokens.EnumerationName, field.EnsureUniqueEnumName());
             context.Template.AddReplacement(Tokens.TypeName, field.DataTypeNode.GetDotNetTypeName(
                 field.ValueRank,
-                m_context.Validator.Dictionary.TargetNamespace,
-                m_context.Validator.Dictionary.Namespaces,
+                m_context.ModelDesign.TargetNamespace.Value,
+                m_context.ModelDesign.Namespaces,
                 nullable: NullableAnnotation.NullableExceptDataTypes));
             context.Template.AddReplacement(Tokens.FieldName, field.GetChildFieldName());
             context.Template.AddReplacement(Tokens.IsRequired, isRequired ? "true" : "false");
@@ -1005,8 +1010,8 @@ namespace Opc.Ua.SourceGeneration
                 null,
                 null,
                 true,
-                m_context.Validator.Dictionary.TargetNamespace,
-                m_context.Validator.Dictionary.Namespaces,
+                m_context.ModelDesign.TargetNamespace.Value,
+                m_context.ModelDesign.Namespaces,
                 m_messageContext));
             context.Template.AddReplacement(Tokens.Identifier, field.Identifier.ToString(CultureInfo.InvariantCulture));
 
@@ -1045,7 +1050,7 @@ namespace Opc.Ua.SourceGeneration
 
             foreach (Parameter child in dataType.Fields)
             {
-                if (!m_context.Validator.IsExcluded(child))
+                if (!m_context.ModelDesign.IsExcluded(child))
                 {
                     fields.Add(child);
                 }
@@ -1057,7 +1062,7 @@ namespace Opc.Ua.SourceGeneration
         private List<DataTypeDesign> GetDataTypes()
         {
             List<DataTypeDesign> datatypes = [];
-            foreach (NodeDesign node in m_context.Validator.GetNodeDesigns())
+            foreach (NodeDesign node in m_context.ModelDesign.GetNodeDesigns())
             {
                 if (node is DataTypeDesign dataTypeDesign &&
                     !dataTypeDesign.IsPartOfOpcUaTypesLibrary())
@@ -1071,7 +1076,7 @@ namespace Opc.Ua.SourceGeneration
         private string EncodingString => m_useXmlInitializers ? "Xml" : "Binary";
 
         private readonly IServiceMessageContext m_messageContext;
-        private readonly GeneratorContext m_context;
+        private readonly IGeneratorContext m_context;
         private readonly bool m_useXmlInitializers;
     }
 }

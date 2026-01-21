@@ -32,7 +32,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml;
-using Opc.Ua.Export;
 using Opc.Ua.SourceGeneration;
 using Opc.Ua.Types;
 
@@ -158,8 +157,6 @@ namespace Opc.Ua.Schema.Model
             }
 
             // instance restricted the datatype but the type did not not.
-            BasicDataType basicType = variable.DataTypeNode.BasicDataType;
-
             string scalarName = GetDotNetTypeName(
                 variable.DataTypeNode,
                 targetNamespace,
@@ -197,7 +194,7 @@ namespace Opc.Ua.Schema.Model
             }
 
             if (type is not DataTypeDesign dataType ||
-                type.BaseTypeNode is not DataTypeDesign dtd)
+                dataType.BaseTypeNode is not DataTypeDesign dtd)
             {
                 return type.BaseTypeNode.SymbolicName.Name;
             }
@@ -542,7 +539,7 @@ namespace Opc.Ua.Schema.Model
                     // TODO: "is ,,, not considered 3 dim?
 
                     string[] dimensions = arrayDimensions.Split([','], StringSplitOptions.RemoveEmptyEntries);
-                    var dims = dimensions.Length + 1;
+                    int dims = dimensions.Length + 1;
                     if (dims == 1)
                     {
                         return "global::Opc.Ua.ValueRanks.OneDimension";
@@ -620,6 +617,7 @@ namespace Opc.Ua.Schema.Model
         /// <summary>
         /// If the data type is a value type in .NET.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         public static bool IsDotNetValueType(
             this DataTypeDesign dataType,
             ValueRank valueRank)
@@ -993,6 +991,7 @@ namespace Opc.Ua.Schema.Model
         /// <summary>
         /// Returns system type for a basic data type.
         /// </summary>
+        /// <exception cref="ArgumentException"></exception>
         public static string GetDotNetTypeName(
             this DataTypeDesign datatype,
             string targetNamespace,

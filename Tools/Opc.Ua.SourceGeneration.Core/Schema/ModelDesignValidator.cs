@@ -45,10 +45,10 @@ namespace Opc.Ua.Schema.Model
     /// <summary>
     /// Generates files used to describe data types.
     /// </summary>
-    public class ModelDesignValidator : SchemaValidator
+    public class ModelDesignValidator : SchemaValidator, IModelDesign
     {
         /// <summary>
-        /// Intializes the object with default values.
+        /// Create model design validator
         /// </summary>
         public ModelDesignValidator(
             IFileSystem fileSystem,
@@ -66,40 +66,37 @@ namespace Opc.Ua.Schema.Model
             m_standardVersion = standardVersion;
         }
 
+        /// <inheritdoc/>
+        public IEnumerable<ModelTableEntry> Dependencies => m_dependencies.Values;
+
+        /// <inheritdoc/>
+        public Namespace[] Namespaces => m_dictionary?.Namespaces;
+
+        /// <inheritdoc/>
+        public Namespace TargetNamespace { get; private set; }
+
+        /// <inheritdoc/>
+        public DateTime? TargetPublicationDate =>
+            m_dictionary.TargetPublicationDateSpecified &&
+            m_dictionary.TargetPublicationDate != DateTime.MinValue ?
+                m_dictionary.TargetPublicationDate : null;
+
+        /// <inheritdoc/>
+        public string TargetVersion => m_dictionary.TargetVersion;
+
+        /// <inheritdoc/>
+        public bool UseAllowSubtypes { get; set; }
+
+        /// <inheritdoc/>
+        public NamespaceTable NamespaceUris { get; private set; }
+
+        /// <inheritdoc/>
+        public NodeDesign[] Nodes => m_dictionary.Items;
+
         /// <summary>
         /// Max recursion
         /// </summary>
         public int MaxRecursionDepth { get; set; } = 100;
-
-        /// <summary>
-        /// Design file paths
-        /// </summary>
-        public Dictionary<string, string> DesignFilePaths { get; private set; } = [];
-
-        /// <summary>
-        /// The dictionary that was validated.
-        /// </summary>
-        public ModelDesign Dictionary { get; private set; }
-
-        /// <summary>
-        /// The dictionary that was validated.
-        /// </summary>
-        public IEnumerable<NodeDesign> Nodes => m_nodes.Values;
-
-        /// <summary>
-        /// Default role permissions
-        /// </summary>
-        public Dictionary<string, RolePermissionSet> DefaultRolePermissions { get; set; } = [];
-
-        /// <summary>
-        /// Default access permissions
-        /// </summary>
-        public Dictionary<string, AccessRestrictions?> DefaultAccessRestrictions { get; set; } = [];
-
-        /// <summary>
-        /// Use the true type instead of ExtensionObject when subtypes are allowed.
-        /// </summary>
-        public bool UseAllowSubtypes { get; set; }
 
         /// <summary>
         /// Is Release candidate
@@ -117,25 +114,11 @@ namespace Opc.Ua.Schema.Model
         public string ModelPublicationDate { get; set; }
 
         /// <summary>
-        /// Returns a list of nodes with nodes excluded per exclusion criteria.
-        /// </summary>
-        public IEnumerable<NodeDesign> GetNodeDesigns()
-        {
-            foreach (NodeDesign node in Dictionary.Items)
-            {
-                if (!IsExcluded(node) && !node.IsDeclaration)
-                {
-                    yield return node;
-                }
-            }
-        }
-
-        /// <summary>
         /// Returns a list of services filter by their service category.
         /// </summary>
         public Service[] GetListOfServices(params ServiceCategory[] serviceCategories)
         {
-            return [.. Nodes
+            return [.. m_nodes.Values
                 .OfType<DataTypeDesign>()
                 .Where(x =>
                     !IsExcluded(x) &&
@@ -147,6 +130,23 @@ namespace Opc.Ua.Schema.Model
                     ))
                 .Select(x => x.Service)
                 .Distinct()];
+        }
+
+        /// <summary>
+        /// Returns a list of nodes in the design that should be
+        /// used to generate code for
+        /// </summary>
+        public IEnumerable<NodeDesign> GetNodeDesigns()
+        {
+            foreach (NodeDesign node in m_dictionary.Items)
+            {
+                // Fiter nodes that are only declared but not part
+                // of code generation
+                if (!IsExcluded(node) && !node.IsDeclaration)
+                {
+                    yield return node;
+                }
+            }
         }
 
         /// <summary>
@@ -273,76 +273,6 @@ namespace Opc.Ua.Schema.Model
         }
 
         /// <summary>
-        /// Find nodedesign of type T
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public T FindNode<T>(
-            XmlQualifiedName symbolicId,
-            string sourceName,
-            string referenceName) where T : NodeDesign
-        {
-            if (!TryFindNode(
-                symbolicId,
-                sourceName,
-                referenceName,
-                out T target))
-            {
-                throw Exception(
-                    "The {0} reference for node {1} is not the expected type: {2}.",
-                    referenceName,
-                    sourceName,
-                    typeof(T).Name);
-            }
-            return target;
-        }
-
-        /// <summary>
-        /// Find node design
-        /// </summary>
-        public NodeDesign FindNode(
-            XmlQualifiedName symbolicId,
-            string sourceName,
-            string referenceName)
-        {
-            if (!TryFindNode(
-                symbolicId,
-                sourceName,
-                referenceName,
-                out NodeDesign target))
-            {
-                throw Exception(
-                    "The {0} reference for node {1} is not valid: {2}.",
-                    referenceName,
-                    sourceName,
-                    symbolicId.Name);
-            }
-            return target;
-        }
-
-        /// <summary>
-        /// Find nodedesign of type T
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public bool TryFindNode<T>(
-            XmlQualifiedName symbolicId,
-            string sourceName,
-            string referenceName,
-            out T target) where T : NodeDesign
-        {
-            if (!TryFindNode(
-                symbolicId,
-                sourceName,
-                referenceName,
-                out NodeDesign node) || node is not T design)
-            {
-                target = default;
-                return false;
-            }
-            target = design;
-            return true;
-        }
-
-        /// <summary>
         /// Find node design
         /// </summary>
         public bool TryFindNode(
@@ -378,11 +308,11 @@ namespace Opc.Ua.Schema.Model
             m_namespaceTables = [];
             m_nodesByNodeId = [];
             m_browseNames = [];
-            DesignFilePaths = [];
+            m_designFilePaths = [];
 
             LoadBuiltInModel();
 
-            DesignFilePaths[Namespaces.OpcUa] = string.Empty;
+            m_designFilePaths[Ua.Types.Namespaces.OpcUa] = string.Empty;
 
             // load the design files.
             List<Namespace> namespaces = GetNamespaceList(designFilePaths);
@@ -443,12 +373,12 @@ namespace Opc.Ua.Schema.Model
             }
 
             // mark the target namespace as found.
-            DesignFilePaths[targetModel.TargetNamespace] = inputPath;
+            m_designFilePaths[targetModel.TargetNamespace] = inputPath;
 
             // load any included design files.
             if (targetModel.Namespaces != null)
             {
-                targetModel.Dependencies = [];
+                m_dependencies = [];
 
                 for (int ii = 0; ii < targetModel.Namespaces.Length; ii++)
                 {
@@ -473,7 +403,7 @@ namespace Opc.Ua.Schema.Model
                                 DateTimeStyles.None) :
                             null;
 
-                        targetModel.Dependencies[ns.Value] = new ModelTableEntry
+                        m_dependencies[ns.Value] = new ModelTableEntry
                         {
                             ModelUri = ns.Value,
                             XmlSchemaUri = ns.XmlNamespace,
@@ -489,9 +419,7 @@ namespace Opc.Ua.Schema.Model
                     {
                         continue;
                     }
-                    if (!targetModel.Dependencies.TryGetValue(
-                        ns.Value,
-                        out ModelTableEntry modelInfo))
+                    if (!m_dependencies.TryGetValue(ns.Value, out ModelTableEntry modelInfo))
                     {
                         continue;
                     }
@@ -513,22 +441,22 @@ namespace Opc.Ua.Schema.Model
             }
 
             // save the dictionary in a member variable during processing.
-            Dictionary = targetModel;
+            m_dictionary = targetModel;
 
             // build table of namespaces.
-            UpdateNamespaceTables(Dictionary);
-            Dictionary.TargetXmlNamespace = GetXmlNamespace(Dictionary.TargetNamespace);
+            UpdateNamespaceTables(m_dictionary);
+            m_dictionary.TargetXmlNamespace = GetXmlNamespace(m_dictionary.TargetNamespace);
 
-            if (Dictionary.Items == null || Dictionary.Items.Length == 0)
+            if (m_dictionary.Items == null || m_dictionary.Items.Length == 0)
             {
                 m_logger.LogWarning("Nothing to do because design file has no entries.");
                 return;
             }
 
-            UpdateNamespaceObject(Dictionary);
+            UpdateNamespaceObject(m_dictionary);
 
             // update the references.
-            new ModelDesignToNodeState(this, m_context).AddNodeStatesToDesign();
+            new ModelDesignToNodeState(this, m_context).AttachNodeStatesToNodeDesigns();
 
             UpdateRolePermissions();
         }
@@ -549,34 +477,34 @@ namespace Opc.Ua.Schema.Model
             m_nodesByNodeId = [];
             m_browseNames = [];
             m_startId = 15000;
-            DesignFilePaths = new Dictionary<string, string>
+            m_designFilePaths = new Dictionary<string, string>
             {
-                [Namespaces.OpcUa] = string.Empty
+                [Ua.Types.Namespaces.OpcUa] = string.Empty
             };
 
             // load the design files.
             m_logger.LogInformation("Loading StandardTypes...");
-            ModelDesign model = Load<ModelDesign>(
+            ModelDesign targetModel = Load<ModelDesign>(
                 BuiltInDesignFiles.BuiltInTypesXml);
-            model.Items ??= [];
+            targetModel.Items ??= [];
 
             for (int ii = 0; ii < designFilePaths.Count; ii++)
             {
-                model = LoadCoreDesignFile(model, designFilePaths[ii]);
+                targetModel = LoadCoreDesignFile(targetModel, designFilePaths[ii]);
             }
 
             // set a default xml namespace.
-            if (string.IsNullOrEmpty(model.TargetXmlNamespace))
+            if (string.IsNullOrEmpty(targetModel.TargetXmlNamespace))
             {
-                model.TargetXmlNamespace = model.TargetNamespace;
+                targetModel.TargetXmlNamespace = targetModel.TargetNamespace;
 
                 if (!string.IsNullOrEmpty(ModelVersion))
                 {
-                    model.TargetVersion = ModelVersion;
+                    targetModel.TargetVersion = ModelVersion;
                 }
                 else
                 {
-                    ModelVersion = model.TargetVersion;
+                    ModelVersion = targetModel.TargetVersion;
                 }
 
                 if (!string.IsNullOrEmpty(ModelPublicationDate))
@@ -585,7 +513,7 @@ namespace Opc.Ua.Schema.Model
                         ModelPublicationDate,
                         CultureInfo.InvariantCulture,
                         DateTimeStyles.None);
-                    model.TargetPublicationDate = new DateTime(
+                    targetModel.TargetPublicationDate = new DateTime(
                         dt.Year,
                         dt.Month,
                         dt.Day,
@@ -593,12 +521,12 @@ namespace Opc.Ua.Schema.Model
                         0,
                         0,
                         DateTimeKind.Utc);
-                    model.TargetPublicationDateSpecified = true;
+                    targetModel.TargetPublicationDateSpecified = true;
                 }
                 else
                 {
-                    ModelPublicationDate = model.TargetPublicationDateSpecified ?
-                        model.TargetPublicationDate.ToString(
+                    ModelPublicationDate = targetModel.TargetPublicationDateSpecified ?
+                        targetModel.TargetPublicationDate.ToString(
                             "yyyy-MM-dd",
                             CultureInfo.InvariantCulture) :
                         null;
@@ -606,18 +534,18 @@ namespace Opc.Ua.Schema.Model
             }
 
             // mark the target namespace as found.
-            DesignFilePaths[model.TargetNamespace] = inputPath;
+            m_designFilePaths[targetModel.TargetNamespace] = inputPath;
 
             // load any included design files.
-            if (model.Namespaces != null)
+            if (targetModel.Namespaces != null)
             {
-                model.Dependencies = [];
+                m_dependencies = [];
 
-                for (int ii = 0; ii < model.Namespaces.Length; ii++)
+                for (int ii = 0; ii < targetModel.Namespaces.Length; ii++)
                 {
-                    Namespace ns = model.Namespaces[ii];
+                    Namespace ns = targetModel.Namespaces[ii];
 
-                    if (ns.Value != model.TargetNamespace)
+                    if (ns.Value != targetModel.TargetNamespace)
                     {
                         DateTime? pd = ns.PublicationDate != null ?
                             DateTime.Parse(
@@ -626,7 +554,7 @@ namespace Opc.Ua.Schema.Model
                                 DateTimeStyles.None) :
                             null;
 
-                        model.Dependencies[ns.Value] = new ModelTableEntry
+                        m_dependencies[ns.Value] = new ModelTableEntry
                         {
                             ModelUri = ns.Value,
                             XmlSchemaUri = ns.XmlNamespace,
@@ -642,7 +570,7 @@ namespace Opc.Ua.Schema.Model
                     {
                         continue;
                     }
-                    if (!model.Dependencies.TryGetValue(ns.Value, out ModelTableEntry modelInfo))
+                    if (!m_dependencies.TryGetValue(ns.Value, out ModelTableEntry modelInfo))
                     {
                         continue;
                     }
@@ -663,18 +591,18 @@ namespace Opc.Ua.Schema.Model
             }
 
             // save the model in a member variable during processing.
-            Dictionary = model;
+            m_dictionary = targetModel;
 
             // build table of namespaces.
-            UpdateNamespaceTables(Dictionary);
-            Dictionary.TargetXmlNamespace = GetXmlNamespace(Dictionary.TargetNamespace);
+            UpdateNamespaceTables(m_dictionary);
+            m_dictionary.TargetXmlNamespace = GetXmlNamespace(m_dictionary.TargetNamespace);
 
             // import types from target dictionary.
             var nodes = new List<NodeDesign>();
 
-            foreach (NodeDesign node in Dictionary.Items)
+            foreach (NodeDesign node in m_dictionary.Items)
             {
-                if (Import(Dictionary, node, null))
+                if (Import(m_dictionary, node, null))
                 {
                     nodes.Add(node);
                 }
@@ -686,22 +614,22 @@ namespace Opc.Ua.Schema.Model
                 return;
             }
 
-            Dictionary.Items = [.. nodes];
+            m_dictionary.Items = [.. nodes];
 
             // do additional fix up after import.
-            ValidateDictionary(Dictionary);
+            ValidateDictionary(m_dictionary);
 
             // validate node in target dictionary.
-            foreach (NodeDesign node in Dictionary.Items)
+            foreach (NodeDesign node in m_dictionary.Items)
             {
                 node.Hierarchy = BuildInstanceHierarchy(node, 0);
             }
 
-            AssignIdentifiers(Dictionary, identifierFilePath);
-            UpdateNamespaceObject(Dictionary);
+            AssignIdentifiers(m_dictionary, identifierFilePath);
+            UpdateNamespaceObject(m_dictionary);
 
             // update the references.
-            new ModelDesignToNodeState(this, m_context).AddNodeStatesToDesign();
+            new ModelDesignToNodeState(this, m_context).AttachNodeStatesToNodeDesigns();
 
             UpdateRolePermissions();
         }
@@ -898,7 +826,7 @@ namespace Opc.Ua.Schema.Model
                     return s_baseDataTypeQn;
             }
 
-            return new XmlQualifiedName(typeName.Name, Namespaces.OpcUa);
+            return new XmlQualifiedName(typeName.Name, Ua.Types.Namespaces.OpcUa);
         }
 
         private void ImportFields(DataTypeDesign design, FieldType[] fields)
@@ -932,7 +860,7 @@ namespace Opc.Ua.Schema.Model
 
             if (namespaceUri == "http://opcfoundation.org/UA/Core/")
             {
-                namespaceUri = Namespaces.OpcUa;
+                namespaceUri = Ua.Types.Namespaces.OpcUa;
             }
 
             var nodes = new List<NodeDesign>();
@@ -1072,7 +1000,7 @@ namespace Opc.Ua.Schema.Model
                         }
                         else
                         {
-                            design.BaseType = new XmlQualifiedName("UInt32", Namespaces.OpcUa);
+                            design.BaseType = new XmlQualifiedName("UInt32", Ua.Types.Namespaces.OpcUa);
                         }
                     }
 
@@ -1097,7 +1025,7 @@ namespace Opc.Ua.Schema.Model
             var model = new ModelDesign
             {
                 Items = [.. nodes],
-                TargetNamespace = Namespaces.OpcUa
+                TargetNamespace = Ua.Types.Namespaces.OpcUa
             };
             model.TargetNamespace = validator.Dictionary.TargetVersion;
             model.TargetPublicationDate = validator.Dictionary.TargetPublicationDate;
@@ -1204,13 +1132,13 @@ namespace Opc.Ua.Schema.Model
 
             if (input.DefaultRolePermissions != null)
             {
-                DefaultRolePermissions[input.SymbolicId.Name] =
+                m_defaultRolePermissions[input.SymbolicId.Name] =
                     input.DefaultRolePermissions;
             }
 
             if (input.DefaultAccessRestrictionsSpecified)
             {
-                DefaultAccessRestrictions[input.SymbolicId.Name] =
+                m_defaultAccessRestrictions[input.SymbolicId.Name] =
                     input.DefaultAccessRestrictions;
             }
 
@@ -1255,12 +1183,12 @@ namespace Opc.Ua.Schema.Model
             {
                 AddDataTypeDictionary(
                     dictionary,
-                    dictionary.TargetNamespaceInfo,
+                    TargetNamespace,
                     EncodingType.Binary,
                     nodes);
                 AddDataTypeDictionary(
                     dictionary,
-                    dictionary.TargetNamespaceInfo,
+                    TargetNamespace,
                     EncodingType.Xml,
                     nodes);
 
@@ -1268,7 +1196,7 @@ namespace Opc.Ua.Schema.Model
                 {
                     AddDataTypeDictionary(
                         dictionary,
-                        dictionary.TargetNamespaceInfo,
+                        TargetNamespace,
                         EncodingType.Json,
                         nodes);
                 }
@@ -1326,7 +1254,7 @@ namespace Opc.Ua.Schema.Model
                     if (metadata != null &&
                         metadata.TypeDefinition != new XmlQualifiedName(
                             "NamespaceMetadataType",
-                            Namespaces.OpcUa))
+                            Ua.Types.Namespaces.OpcUa))
                     {
                         metadata = null;
                     }
@@ -1396,21 +1324,21 @@ namespace Opc.Ua.Schema.Model
                         variable.DecodedValue = ranges.ToArray();
                     }
 
-                    if (Dictionary.TargetPublicationDateSpecified)
+                    if (m_dictionary.TargetPublicationDateSpecified)
                     {
                         if (child.Instance.BrowseName == BrowseNames.NamespacePublicationDate)
                         {
                             var variable = child.Instance as VariableDesign;
-                            variable.DecodedValue = Dictionary.TargetPublicationDate;
+                            variable.DecodedValue = m_dictionary.TargetPublicationDate;
                         }
                     }
 
-                    if (!string.IsNullOrEmpty(Dictionary.TargetVersion))
+                    if (!string.IsNullOrEmpty(m_dictionary.TargetVersion))
                     {
                         if (child.Instance.BrowseName == BrowseNames.NamespaceVersion)
                         {
                             var variable = child.Instance as VariableDesign;
-                            variable.DecodedValue = Dictionary.TargetVersion;
+                            variable.DecodedValue = m_dictionary.TargetVersion;
                         }
                     }
                 }
@@ -1433,7 +1361,7 @@ namespace Opc.Ua.Schema.Model
             }
         }
 
-        private static void UpdateNamespaceTables(ModelDesign dictionary)
+        private void UpdateNamespaceTables(ModelDesign dictionary)
         {
             // build table of namespaces.
             Namespace targetNamespace = null;
@@ -1453,15 +1381,15 @@ namespace Opc.Ua.Schema.Model
                         targetNamespace = current;
                     }
 
-                    if (current.Value != Namespaces.OpcUa)
+                    if (current.Value != Ua.Types.Namespaces.OpcUa)
                     {
                         namespaceUris.GetIndexOrAppend(dictionary.Namespaces[ii].Value);
                     }
                 }
             }
 
-            dictionary.NamespaceUris = namespaceUris;
-            dictionary.TargetNamespaceInfo = targetNamespace;
+            NamespaceUris = dictionary.NamespaceUris = namespaceUris;
+            TargetNamespace = targetNamespace;
         }
 
         private ModelDesign LoadCoreDesignFile(
@@ -1753,7 +1681,7 @@ namespace Opc.Ua.Schema.Model
 
                 foreach (Namespace ns in fileNamespaces)
                 {
-                    if (ns.Value != Namespaces.OpcUa)
+                    if (ns.Value != Ua.Types.Namespaces.OpcUa)
                     {
                         MergeNamespace(namespaces, ns);
                     }
@@ -1768,7 +1696,7 @@ namespace Opc.Ua.Schema.Model
                         break;
                     }
 
-                    if (ns.Value == Namespaces.OpcUa)
+                    if (ns.Value == Ua.Types.Namespaces.OpcUa)
                     {
                         continue;
                     }
@@ -1803,7 +1731,7 @@ namespace Opc.Ua.Schema.Model
         private string GetXmlNamespace(string modelUri)
         {
             string ns = (
-                from x in Dictionary.Namespaces
+                from x in m_dictionary.Namespaces
                 where x.Value == modelUri
                 select x.XmlNamespace).FirstOrDefault();
 
@@ -1866,8 +1794,8 @@ namespace Opc.Ua.Schema.Model
 
                 AddProperty(
                     method,
-                    new XmlQualifiedName("InputArguments", Namespaces.OpcUa),
-                    new XmlQualifiedName("Argument", Namespaces.OpcUa),
+                    new XmlQualifiedName("InputArguments", Ua.Types.Namespaces.OpcUa),
+                    new XmlQualifiedName("Argument", Ua.Types.Namespaces.OpcUa),
                     ValueRank.Array,
                     [(uint)arguments.Count],
                     arguments.ToArray(),
@@ -1906,8 +1834,8 @@ namespace Opc.Ua.Schema.Model
 
                 AddProperty(
                     method,
-                    new XmlQualifiedName("OutputArguments", Namespaces.OpcUa),
-                    new XmlQualifiedName("Argument", Namespaces.OpcUa),
+                    new XmlQualifiedName("OutputArguments", Ua.Types.Namespaces.OpcUa),
+                    new XmlQualifiedName("Argument", Ua.Types.Namespaces.OpcUa),
                     ValueRank.Array,
                     [(uint)arguments.Count],
                     arguments.ToArray(),
@@ -1972,8 +1900,8 @@ namespace Opc.Ua.Schema.Model
 
                 AddProperty(
                     dataType,
-                    new XmlQualifiedName("OptionSetValues", Namespaces.OpcUa),
-                    new XmlQualifiedName("LocalizedText", Namespaces.OpcUa),
+                    new XmlQualifiedName("OptionSetValues", Ua.Types.Namespaces.OpcUa),
+                    new XmlQualifiedName("LocalizedText", Ua.Types.Namespaces.OpcUa),
                     ValueRank.Array,
                     [(uint)values.Count],
                     values.ToArray(),
@@ -2018,8 +1946,8 @@ namespace Opc.Ua.Schema.Model
 
                     AddProperty(
                         dataType,
-                        new XmlQualifiedName("EnumStrings", Namespaces.OpcUa),
-                        new XmlQualifiedName("LocalizedText", Namespaces.OpcUa),
+                        new XmlQualifiedName("EnumStrings", Ua.Types.Namespaces.OpcUa),
+                        new XmlQualifiedName("LocalizedText", Ua.Types.Namespaces.OpcUa),
                         ValueRank.Array,
                         [(uint)values.Count],
                         values.ToArray(),
@@ -2054,8 +1982,8 @@ namespace Opc.Ua.Schema.Model
 
                     AddProperty(
                         dataType,
-                        new XmlQualifiedName("EnumValues", Namespaces.OpcUa),
-                        new XmlQualifiedName("EnumValueType", Namespaces.OpcUa),
+                        new XmlQualifiedName("EnumValues", Ua.Types.Namespaces.OpcUa),
+                        new XmlQualifiedName("EnumValueType", Ua.Types.Namespaces.OpcUa),
                         ValueRank.Array,
                         [(uint)values.Count],
                         values.ToArray(),
@@ -2113,13 +2041,13 @@ namespace Opc.Ua.Schema.Model
                 dictionary.WriteAccess = 0;
                 dictionary.TypeDefinition = new XmlQualifiedName(
                     "DataTypeDictionaryType",
-                    Namespaces.OpcUa);
-                dictionary.TypeDefinitionNode = FindNode<VariableTypeDesign>(
+                    Ua.Types.Namespaces.OpcUa);
+                dictionary.TypeDefinitionNode = this.FindNode<VariableTypeDesign>(
                     dictionary.TypeDefinition,
                     dictionary.SymbolicId.Name,
                     "TypeDefinition");
                 dictionary.DataType = s_byteStringQn;
-                dictionary.DataTypeNode = FindNode<DataTypeDesign>(
+                dictionary.DataTypeNode = this.FindNode<DataTypeDesign>(
                     dictionary.DataType,
                     dictionary.SymbolicId.Name,
                     "DataType");
@@ -2138,7 +2066,7 @@ namespace Opc.Ua.Schema.Model
                     dictionary.ReleaseStatus = ReleaseStatus.Deprecated;
                 }
 
-                if (ns.Value == Namespaces.OpcUa)
+                if (ns.Value == Ua.Types.Namespaces.OpcUa)
                 {
                     dictionary.PartNo = 5;
                 }
@@ -2147,7 +2075,7 @@ namespace Opc.Ua.Schema.Model
                 {
                     ReferenceType = new XmlQualifiedName(
                         "HasComponent",
-                        Namespaces.OpcUa),
+                        Ua.Types.Namespaces.OpcUa),
                     IsInverse = true,
                     IsOneWay = false
                 };
@@ -2156,21 +2084,21 @@ namespace Opc.Ua.Schema.Model
                 {
                     reference.TargetId = new XmlQualifiedName(
                         "XmlSchema_TypeSystem",
-                        Namespaces.OpcUa);
+                        Ua.Types.Namespaces.OpcUa);
                 }
                 else
                 {
                     reference.TargetId = new XmlQualifiedName(
                         "OPCBinarySchema_TypeSystem",
-                        Namespaces.OpcUa);
+                        Ua.Types.Namespaces.OpcUa);
                 }
 
                 dictionary.References = [reference];
 
                 AddProperty(
                     dictionary,
-                    new XmlQualifiedName("NamespaceUri", Namespaces.OpcUa),
-                    new XmlQualifiedName("String", Namespaces.OpcUa),
+                    new XmlQualifiedName("NamespaceUri", Ua.Types.Namespaces.OpcUa),
+                    new XmlQualifiedName("String", Ua.Types.Namespaces.OpcUa),
                     ValueRank.Scalar,
                     null,
                     namespaceUri,
@@ -2180,8 +2108,8 @@ namespace Opc.Ua.Schema.Model
                 {
                     AddProperty(
                         dictionary,
-                        new XmlQualifiedName("Deprecated", Namespaces.OpcUa),
-                        new XmlQualifiedName("Boolean", Namespaces.OpcUa),
+                        new XmlQualifiedName("Deprecated", Ua.Types.Namespaces.OpcUa),
+                        new XmlQualifiedName("Boolean", Ua.Types.Namespaces.OpcUa),
                         ValueRank.Scalar,
                         null,
                         true,
@@ -2226,7 +2154,7 @@ namespace Opc.Ua.Schema.Model
             var property = new PropertyDesign
             {
                 Parent = parent,
-                ReferenceType = new XmlQualifiedName("HasProperty", Namespaces.OpcUa),
+                ReferenceType = new XmlQualifiedName("HasProperty", Ua.Types.Namespaces.OpcUa),
                 ModellingRule = ModellingRule.Mandatory,
                 ModellingRuleSpecified = true,
                 SymbolicId = new XmlQualifiedName(
@@ -2243,13 +2171,13 @@ namespace Opc.Ua.Schema.Model
             property.WriteAccess = 0;
             property.TypeDefinition = new XmlQualifiedName(
                 "PropertyType",
-                Namespaces.OpcUa);
-            property.TypeDefinitionNode = FindNode<VariableTypeDesign>(
+                Ua.Types.Namespaces.OpcUa);
+            property.TypeDefinitionNode = this.FindNode<VariableTypeDesign>(
                 property.TypeDefinition,
                 property.SymbolicId.Name,
                 "TypeDefinition");
             property.DataType = dataType;
-            property.DataTypeNode = FindNode<DataTypeDesign>(
+            property.DataTypeNode = this.FindNode<DataTypeDesign>(
                 property.DataType,
                 property.SymbolicId.Name,
                 "DataType");
@@ -2309,7 +2237,7 @@ namespace Opc.Ua.Schema.Model
                     Parent = dictionary,
                     ReferenceType = new XmlQualifiedName(
                         "HasComponent",
-                        Namespaces.OpcUa),
+                        Ua.Types.Namespaces.OpcUa),
                     ModellingRule = ModellingRule.Mandatory,
                     ModellingRuleSpecified = true,
                     SymbolicId = new XmlQualifiedName(
@@ -2330,15 +2258,15 @@ namespace Opc.Ua.Schema.Model
                 description.WriteAccess = 0;
                 description.TypeDefinition = new XmlQualifiedName(
                     "DataTypeDescriptionType",
-                    Namespaces.OpcUa);
-                description.TypeDefinitionNode = FindNode<VariableTypeDesign>(
+                    Ua.Types.Namespaces.OpcUa);
+                description.TypeDefinitionNode = this.FindNode<VariableTypeDesign>(
                     description.TypeDefinition,
                     description.SymbolicId.Name,
                     "TypeDefinition");
                 description.DataType = new XmlQualifiedName(
                     "String",
-                    Namespaces.OpcUa);
-                description.DataTypeNode = FindNode<DataTypeDesign>(
+                    Ua.Types.Namespaces.OpcUa);
+                description.DataTypeNode = this.FindNode<DataTypeDesign>(
                     description.DataType,
                     description.SymbolicId.Name,
                     "DataType");
@@ -2415,7 +2343,7 @@ namespace Opc.Ua.Schema.Model
                 encoding.SymbolicId = new XmlQualifiedName(
                     dataType.SymbolicId.Name + "_Encoding_DefaultXml",
                     dataType.SymbolicId.Namespace);
-                encoding.SymbolicName = new XmlQualifiedName("DefaultXml", Namespaces.OpcUa);
+                encoding.SymbolicName = new XmlQualifiedName("DefaultXml", Ua.Types.Namespaces.OpcUa);
                 encoding.BrowseName = "Default XML";
             }
             else if (encodingType == EncodingType.Json)
@@ -2423,7 +2351,7 @@ namespace Opc.Ua.Schema.Model
                 encoding.SymbolicId = new XmlQualifiedName(
                     dataType.SymbolicId.Name + "_Encoding_DefaultJson",
                     dataType.SymbolicId.Namespace);
-                encoding.SymbolicName = new XmlQualifiedName("DefaultJson", Namespaces.OpcUa);
+                encoding.SymbolicName = new XmlQualifiedName("DefaultJson", Ua.Types.Namespaces.OpcUa);
                 encoding.BrowseName = "Default JSON";
             }
             else
@@ -2431,7 +2359,7 @@ namespace Opc.Ua.Schema.Model
                 encoding.SymbolicId = new XmlQualifiedName(
                     dataType.SymbolicId.Name + "_Encoding_DefaultBinary",
                     dataType.SymbolicId.Namespace);
-                encoding.SymbolicName = new XmlQualifiedName("DefaultBinary", Namespaces.OpcUa);
+                encoding.SymbolicName = new XmlQualifiedName("DefaultBinary", Ua.Types.Namespaces.OpcUa);
                 encoding.BrowseName = "Default Binary";
             }
 
@@ -2443,8 +2371,8 @@ namespace Opc.Ua.Schema.Model
             encoding.WriteAccess = 0;
             encoding.TypeDefinition = new XmlQualifiedName(
                 "DataTypeEncodingType",
-                Namespaces.OpcUa);
-            encoding.TypeDefinitionNode = FindNode<ObjectTypeDesign>(
+                Ua.Types.Namespaces.OpcUa);
+            encoding.TypeDefinitionNode = this.FindNode<ObjectTypeDesign>(
                 encoding.TypeDefinition,
                 encoding.SymbolicId.Name,
                 "TypeDefinition");
@@ -2459,7 +2387,7 @@ namespace Opc.Ua.Schema.Model
 
             var reference1 = new Reference
             {
-                ReferenceType = new XmlQualifiedName("HasEncoding", Namespaces.OpcUa),
+                ReferenceType = new XmlQualifiedName("HasEncoding", Ua.Types.Namespaces.OpcUa),
                 IsInverse = true,
                 IsOneWay = false,
                 TargetId = dataType.SymbolicId,
@@ -2470,7 +2398,7 @@ namespace Opc.Ua.Schema.Model
             {
                 var reference2 = new Reference
                 {
-                    ReferenceType = new XmlQualifiedName("HasDescription", Namespaces.OpcUa),
+                    ReferenceType = new XmlQualifiedName("HasDescription", Ua.Types.Namespaces.OpcUa),
                     IsInverse = false,
                     IsOneWay = false,
                     TargetId = description.SymbolicId,
@@ -2876,7 +2804,7 @@ namespace Opc.Ua.Schema.Model
             {
                 ImportType(typeDesign);
 
-                if (node.SymbolicId.Namespace == Namespaces.OpcUa)
+                if (node.SymbolicId.Namespace == Ua.Types.Namespaces.OpcUa)
                 {
                     node.Description = null;
                 }
@@ -2886,7 +2814,7 @@ namespace Opc.Ua.Schema.Model
             {
                 ImportInstance(instanceDesign);
 
-                if (parent != null && parent.SymbolicId.Namespace == Namespaces.OpcUa)
+                if (parent != null && parent.SymbolicId.Namespace == Ua.Types.Namespaces.OpcUa)
                 {
                     node.Description = null;
                 }
@@ -3008,7 +2936,7 @@ namespace Opc.Ua.Schema.Model
 
             if (node is InstanceDesign instance && !IsNull(instance.Declaration))
             {
-                InstanceDesign declaration = FindNode<InstanceDesign>(
+                InstanceDesign declaration = this.FindNode<InstanceDesign>(
                     instance.Declaration,
                     instance.Declaration.Name,
                     "Declaration");
@@ -3057,7 +2985,7 @@ namespace Opc.Ua.Schema.Model
                     }
                 }
 
-                string ns = Dictionary.TargetNamespace;
+                string ns = m_dictionary.TargetNamespace;
 
                 if (!IsNull(node.SymbolicId))
                 {
@@ -3122,7 +3050,7 @@ namespace Opc.Ua.Schema.Model
             }
 
             // add a decription.
-            if (node.Description?.Value != null && node.SymbolicId.Namespace != Namespaces.OpcUa)
+            if (node.Description?.Value != null && node.SymbolicId.Namespace != Ua.Types.Namespaces.OpcUa)
             {
                 node.Description.Value = node.Description.Value.Trim();
 
@@ -3167,7 +3095,7 @@ namespace Opc.Ua.Schema.Model
 
                 if (objectType.SymbolicName != s_baseObjectTypeQn)
                 {
-                    objectType.BaseTypeNode = FindNode<ObjectTypeDesign>(
+                    objectType.BaseTypeNode = this.FindNode<ObjectTypeDesign>(
                         objectType.BaseType,
                         objectType.SymbolicId.Name,
                         "BaseType");
@@ -3189,15 +3117,15 @@ namespace Opc.Ua.Schema.Model
                 }
                 else if (type.BaseType == null)
                 {
-                    if (type.SymbolicId != new XmlQualifiedName("BaseVariableType", Namespaces.OpcUa))
+                    if (type.SymbolicId != new XmlQualifiedName("BaseVariableType", Ua.Types.Namespaces.OpcUa))
                     {
                         type.BaseType = s_baseDataVariableTypeQn;
                     }
                 }
 
-                if (variableType.SymbolicName != new XmlQualifiedName("BaseVariableType", Namespaces.OpcUa))
+                if (variableType.SymbolicName != new XmlQualifiedName("BaseVariableType", Ua.Types.Namespaces.OpcUa))
                 {
-                    variableType.BaseTypeNode = FindNode<VariableTypeDesign>(
+                    variableType.BaseTypeNode = this.FindNode<VariableTypeDesign>(
                         variableType.BaseType,
                         variableType.SymbolicId.Name,
                         "BaseType");
@@ -3286,7 +3214,7 @@ namespace Opc.Ua.Schema.Model
 
                 if (dataType.SymbolicName != s_baseDataTypeQn)
                 {
-                    dataType.BaseTypeNode = FindNode<DataTypeDesign>(
+                    dataType.BaseTypeNode = this.FindNode<DataTypeDesign>(
                         dataType.BaseType,
                         dataType.SymbolicId.Name,
                         "BaseType");
@@ -3333,7 +3261,7 @@ namespace Opc.Ua.Schema.Model
 
                 if (referenceType.SymbolicName != s_referencesQn)
                 {
-                    referenceType.BaseTypeNode = FindNode<ReferenceTypeDesign>(
+                    referenceType.BaseTypeNode = this.FindNode<ReferenceTypeDesign>(
                         referenceType.BaseType,
                         referenceType.SymbolicId.Name,
                         "BaseType");
@@ -3584,7 +3512,7 @@ namespace Opc.Ua.Schema.Model
                 {
                     var role = new RolePermissionType();
 
-                    ObjectDesign roleNode = FindNode<ObjectDesign>(
+                    ObjectDesign roleNode = this.FindNode<ObjectDesign>(
                         ii.Role,
                         ii.Role.Name,
                         "RoleType");
@@ -3720,7 +3648,7 @@ namespace Opc.Ua.Schema.Model
 
             var list = new List<NodeState>();
 
-            foreach (NodeDesign ii in Dictionary.Items)
+            foreach (NodeDesign ii in m_dictionary.Items)
             {
                 CollectInstances(context, list, ii.State);
             }
@@ -3733,7 +3661,7 @@ namespace Opc.Ua.Schema.Model
                     {
                         RolePermissionSet rolePermissions = FindDefaultPermissions(
                             instance,
-                            DefaultRolePermissions);
+                            m_defaultRolePermissions);
 
                         if (rolePermissions != null)
                         {
@@ -3747,7 +3675,7 @@ namespace Opc.Ua.Schema.Model
                     {
                         AccessRestrictions? accessRestrictions = FindDefaultPermissions(
                             instance,
-                            DefaultAccessRestrictions);
+                            m_defaultAccessRestrictions);
 
                         if (accessRestrictions != null)
                         {
@@ -3917,12 +3845,12 @@ namespace Opc.Ua.Schema.Model
                 if (instance is PropertyDesign)
                 {
                     instance.ReferenceType =
-                        new XmlQualifiedName("HasProperty", Namespaces.OpcUa);
+                        new XmlQualifiedName("HasProperty", Ua.Types.Namespaces.OpcUa);
                 }
                 else
                 {
                     instance.ReferenceType =
-                        new XmlQualifiedName("HasComponent", Namespaces.OpcUa);
+                        new XmlQualifiedName("HasComponent", Ua.Types.Namespaces.OpcUa);
                 }
             }
 
@@ -3932,7 +3860,7 @@ namespace Opc.Ua.Schema.Model
                 if (instance is PropertyDesign)
                 {
                     instance.TypeDefinition =
-                        new XmlQualifiedName("PropertyType", Namespaces.OpcUa);
+                        new XmlQualifiedName("PropertyType", Ua.Types.Namespaces.OpcUa);
                 }
                 else if (instance is VariableDesign)
                 {
@@ -4026,12 +3954,12 @@ namespace Opc.Ua.Schema.Model
             var property = new PropertyDesign
             {
                 Parent = method,
-                ReferenceType = new XmlQualifiedName("HasProperty", Namespaces.OpcUa),
-                TypeDefinition = new XmlQualifiedName("PropertyType", Namespaces.OpcUa),
+                ReferenceType = new XmlQualifiedName("HasProperty", Ua.Types.Namespaces.OpcUa),
+                TypeDefinition = new XmlQualifiedName("PropertyType", Ua.Types.Namespaces.OpcUa),
                 SymbolicId = new XmlQualifiedName(
                     NodeDesign.CreateSymbolicId(method.SymbolicId.Name, type),
                     method.SymbolicId.Namespace),
-                SymbolicName = new XmlQualifiedName(type, Namespaces.OpcUa)
+                SymbolicName = new XmlQualifiedName(type, Ua.Types.Namespaces.OpcUa)
             };
 
             // use the name to assign a browse name.
@@ -4039,7 +3967,7 @@ namespace Opc.Ua.Schema.Model
 
             property.AccessLevel = AccessLevel.Read;
             property.ValueRank = ValueRank.Array;
-            property.DataType = new XmlQualifiedName("Argument", Namespaces.OpcUa);
+            property.DataType = new XmlQualifiedName("Argument", Ua.Types.Namespaces.OpcUa);
             property.DecodedValue = null;
             property.DefaultValue = null;
             property.DisplayName = new LocalizedText
@@ -4056,12 +3984,12 @@ namespace Opc.Ua.Schema.Model
             property.ModellingRule = ModellingRule.Mandatory;
             property.WriteAccess = 0;
 
-            property.DataTypeNode = FindNode<DataTypeDesign>(
+            property.DataTypeNode = this.FindNode<DataTypeDesign>(
                 property.DataType,
                 method.SymbolicId.Name,
                 "DataType");
 
-            property.TypeDefinitionNode = FindNode<VariableTypeDesign>(
+            property.TypeDefinitionNode = this.FindNode<VariableTypeDesign>(
                 property.TypeDefinition,
                 method.SymbolicId.Name,
                 "VariableType");
@@ -4304,7 +4232,7 @@ namespace Opc.Ua.Schema.Model
                 }
                 */
 
-                variableType.DataTypeNode = FindNode<DataTypeDesign>(
+                variableType.DataTypeNode = this.FindNode<DataTypeDesign>(
                     variableType.DataType,
                     type.SymbolicId.Name,
                     "DataType");
@@ -4344,7 +4272,7 @@ namespace Opc.Ua.Schema.Model
 
                             if (ii != null && ii != baseType.DataType)
                             {
-                                DataTypeDesign parent = FindNode<DataTypeDesign>(
+                                DataTypeDesign parent = this.FindNode<DataTypeDesign>(
                                     ii,
                                     variableType.SymbolicId.Name,
                                     "DataType");
@@ -4420,16 +4348,16 @@ namespace Opc.Ua.Schema.Model
                     {
                         EncodingDesign xmlEncoding = CreateEncoding(
                             dataType,
-                            new XmlQualifiedName("DefaultXml", Namespaces.OpcUa));
+                            new XmlQualifiedName("DefaultXml", Ua.Types.Namespaces.OpcUa));
                         EncodingDesign binaryEncoding = CreateEncoding(
                             dataType,
-                            new XmlQualifiedName("DefaultBinary", Namespaces.OpcUa));
+                            new XmlQualifiedName("DefaultBinary", Ua.Types.Namespaces.OpcUa));
 
                         if (m_standardVersion != SpecificationVersion.V103)
                         {
                             EncodingDesign jsonEncoding = CreateEncoding(
                                 dataType,
-                                new XmlQualifiedName("DefaultJson", Namespaces.OpcUa));
+                                new XmlQualifiedName("DefaultJson", Ua.Types.Namespaces.OpcUa));
                             dataType.Encodings = [xmlEncoding, binaryEncoding, jsonEncoding];
                         }
                         else
@@ -4481,7 +4409,7 @@ namespace Opc.Ua.Schema.Model
             // set the reference type.
             if (instance.ReferenceType == null && instance.Parent != null)
             {
-                ReferenceTypeDesign referenceType = FindNode<ReferenceTypeDesign>(
+                ReferenceTypeDesign referenceType = this.FindNode<ReferenceTypeDesign>(
                     instance.ReferenceType,
                     instance.SymbolicId.Name,
                     "ReferenceType");
@@ -4496,7 +4424,7 @@ namespace Opc.Ua.Schema.Model
 
             if (instance is ObjectDesign objectd)
             {
-                objectd.TypeDefinitionNode = FindNode<ObjectTypeDesign>(
+                objectd.TypeDefinitionNode = this.FindNode<ObjectTypeDesign>(
                     instance.TypeDefinition,
                     instance.SymbolicId.Name,
                     "TypeDefinition");
@@ -4538,7 +4466,7 @@ namespace Opc.Ua.Schema.Model
                     throw Exception("The Property ({0}) has children defined.", variable.SymbolicId.Name);
                 }
 
-                variable.TypeDefinitionNode = FindNode<VariableTypeDesign>(
+                variable.TypeDefinitionNode = this.FindNode<VariableTypeDesign>(
                     instance.TypeDefinition,
                     instance.SymbolicId.Name,
                     "TypeDefinition");
@@ -4587,7 +4515,7 @@ namespace Opc.Ua.Schema.Model
                     //}
                 }
 
-                variable.DataTypeNode = FindNode<DataTypeDesign>(
+                variable.DataTypeNode = this.FindNode<DataTypeDesign>(
                     variable.DataType,
                     instance.SymbolicId.Name,
                     "DataType");
@@ -4615,7 +4543,7 @@ namespace Opc.Ua.Schema.Model
             {
                 if (instance.TypeDefinition != null)
                 {
-                    method.MethodType = FindNode<MethodDesign>(
+                    method.MethodType = this.FindNode<MethodDesign>(
                         instance.TypeDefinition,
                         instance.SymbolicId.Name,
                         "TypeDefinition");
@@ -4694,30 +4622,16 @@ namespace Opc.Ua.Schema.Model
             {
                 foreach (Parameter parameter in parameters)
                 {
-                    parameter.DataTypeNode = FindNode<DataTypeDesign>(
+                    parameter.DataTypeNode = this.FindNode<DataTypeDesign>(
                         parameter.DataType,
                         node.SymbolicId.Name,
                         "DataType");
 
-                    // if (IsTypeOf(parameter.DataTypeNode, s_xmlElementQn))
-                    // {
-                    //     // Fixes: https://mantis.opcfoundation.org/view.php?id=7393
-                    //     // A sequence of Unicode characters that is an XML element.
-                    //     // This built-in type shall not have subtypes.
-                    //     // This built-in is deprecated.
-                    //     // XML data should be passed in as ByteString.
-                    //     // Convert any xml element type to byte string when compiling
-                    //     parameter.DataTypeNode = FindNode<DataTypeDesign>(
-                    //         s_byteStringQn,
-                    //         node.SymbolicId.Name,
-                    //         "DataType");
-                    // }
-                    // else
                     if (IsTypeOf(parameter.DataTypeNode, s_structureQn) &&
                         parameter.AllowSubTypes &&
                         !UseAllowSubtypes)
                     {
-                        parameter.DataTypeNode = FindNode<DataTypeDesign>(
+                        parameter.DataTypeNode = this.FindNode<DataTypeDesign>(
                             s_structureQn,
                             node.SymbolicId.Name,
                             "DataType");
@@ -4728,7 +4642,7 @@ namespace Opc.Ua.Schema.Model
 
         private void ValidateReference(Reference reference)
         {
-            ReferenceTypeDesign referenceType = FindNode<ReferenceTypeDesign>(
+            ReferenceTypeDesign referenceType = this.FindNode<ReferenceTypeDesign>(
                 reference.ReferenceType,
                 reference.SourceNode.SymbolicId.Name,
                 "ReferenceType");
@@ -4738,7 +4652,7 @@ namespace Opc.Ua.Schema.Model
                 m_logger.LogWarning("Reference type {Name} not found", reference.ReferenceType);
             }
 
-            reference.TargetNode = FindNode(
+            reference.TargetNode = this.FindNode(
                 reference.TargetId,
                 reference.SourceNode.SymbolicId.Name,
                 "TargetId");
@@ -4788,10 +4702,13 @@ namespace Opc.Ua.Schema.Model
             // use the name to assign a browse name.
             SetBrowseName(encoding);
 
-            encoding.TypeDefinition = new XmlQualifiedName("DataTypeEncodingType", Namespaces.OpcUa);
+            encoding.TypeDefinition = new XmlQualifiedName("DataTypeEncodingType", Ua.Types.Namespaces.OpcUa);
             encoding.Parent = dataType;
 
-            encoding.TypeDefinitionNode = FindNode<ObjectTypeDesign>(encoding.TypeDefinition, encoding.SymbolicId.Name, "DataTypeEncodingType");
+            encoding.TypeDefinitionNode = this.FindNode<ObjectTypeDesign>(
+                encoding.TypeDefinition,
+                encoding.SymbolicId.Name,
+                "DataTypeEncodingType");
 
             // add a display name.
             if (encoding.DisplayName == null ||
@@ -5593,13 +5510,13 @@ namespace Opc.Ua.Schema.Model
                     // special handling for built-in properties.
                     var propertyName = new XmlQualifiedName(
                         "EnumStrings",
-                        Namespaces.OpcUa);
+                        Ua.Types.Namespaces.OpcUa);
 
                     if (instance is PropertyDesign &&
                         instance.SymbolicName == propertyName)
                     {
-                        instance.OveriddenNode = FindNode<VariableDesign>(
-                            new XmlQualifiedName("EnumStrings", Namespaces.OpcUa),
+                        instance.OveriddenNode = this.FindNode<VariableDesign>(
+                            new XmlQualifiedName("EnumStrings", Ua.Types.Namespaces.OpcUa),
                             instance.SymbolicId.Name,
                             propertyName.Name);
                     }
@@ -5727,7 +5644,7 @@ namespace Opc.Ua.Schema.Model
             for (int ii = 0; ii < source.References.Length; ii++)
             {
                 if (source.References[ii].ReferenceType ==
-                    new XmlQualifiedName("HasModelParent", Namespaces.OpcUa))
+                    new XmlQualifiedName("HasModelParent", Ua.Types.Namespaces.OpcUa))
                 {
                     continue;
                 }
@@ -5743,7 +5660,7 @@ namespace Opc.Ua.Schema.Model
                     while (referenceType != null)
                     {
                         if (referenceType.SymbolicName ==
-                            new XmlQualifiedName("NonHierarchicalReferences", Namespaces.OpcUa))
+                            new XmlQualifiedName("NonHierarchicalReferences", Ua.Types.Namespaces.OpcUa))
                         {
                             found = true;
                             break;
@@ -5761,7 +5678,7 @@ namespace Opc.Ua.Schema.Model
                 if (suppressInverseHierarchicalAtTypeLevel &&
                     source.References[ii].IsInverse &&
                     source.References[ii].ReferenceType ==
-                        new XmlQualifiedName("Organizes", Namespaces.OpcUa))
+                        new XmlQualifiedName("Organizes", Ua.Types.Namespaces.OpcUa))
                 {
                     continue;
                 }
@@ -5802,7 +5719,7 @@ namespace Opc.Ua.Schema.Model
 
             if (reference.TargetId == null ||
                 sourceId.Namespace != reference.TargetId.Namespace ||
-                reference.ReferenceType == new XmlQualifiedName("HasEncoding", Namespaces.OpcUa))
+                reference.ReferenceType == new XmlQualifiedName("HasEncoding", Ua.Types.Namespaces.OpcUa))
             {
                 return mergedReference;
             }
@@ -6056,7 +5973,7 @@ namespace Opc.Ua.Schema.Model
 
             if (parent.TypeDefinition != null && parent is MethodDesign)
             {
-                MethodDesign methodType = FindNode<MethodDesign>(
+                MethodDesign methodType = this.FindNode<MethodDesign>(
                     parent.TypeDefinition,
                     parent.SymbolicId.Name,
                     "MethodType");
@@ -6357,7 +6274,7 @@ namespace Opc.Ua.Schema.Model
             /// </summary>
             public uint FindUnusedId(string ns, bool isImplicitlyDefined = false)
             {
-                if (ns == Namespaces.OpcUa)
+                if (ns == Ua.Types.Namespaces.OpcUa)
                 {
                     return FindUnusedId(ref m_lastBuiltInId);
                 }
@@ -6398,29 +6315,30 @@ namespace Opc.Ua.Schema.Model
         }
 
         private static readonly XmlQualifiedName s_baseDataTypeQn =
-            new("BaseDataType", Namespaces.OpcUa);
+            new("BaseDataType", Ua.Types.Namespaces.OpcUa);
 
         private static readonly XmlQualifiedName s_structureQn =
-            new("Structure", Namespaces.OpcUa);
+            new("Structure", Ua.Types.Namespaces.OpcUa);
 
         private static readonly XmlQualifiedName s_byteStringQn =
-            new("ByteString", Namespaces.OpcUa);
+            new("ByteString", Ua.Types.Namespaces.OpcUa);
 
         private static readonly XmlQualifiedName s_baseObjectTypeQn =
-            new("BaseObjectType", Namespaces.OpcUa);
+            new("BaseObjectType", Ua.Types.Namespaces.OpcUa);
 
         private static readonly XmlQualifiedName s_baseDataVariableTypeQn =
-            new("BaseDataVariableType", Namespaces.OpcUa);
+            new("BaseDataVariableType", Ua.Types.Namespaces.OpcUa);
 
         private static readonly XmlQualifiedName s_referencesQn =
-            new("References", Namespaces.OpcUa);
+            new("References", Ua.Types.Namespaces.OpcUa);
 
         private static readonly XmlQualifiedName s_enumerationQn =
-            new("Enumeration", Namespaces.OpcUa);
+            new("Enumeration", Ua.Types.Namespaces.OpcUa);
 
         private static readonly XmlQualifiedName s_unionQn =
-            new("Union", Namespaces.OpcUa);
+            new("Union", Ua.Types.Namespaces.OpcUa);
 
+        private uint m_startId;
         private readonly SpecificationVersion m_standardVersion;
         private readonly ITelemetryContext m_telemetry;
         private readonly ILogger m_logger;
@@ -6428,10 +6346,14 @@ namespace Opc.Ua.Schema.Model
         private Dictionary<string, string[]> m_namespaceTables;
         private Dictionary<NodeId, NodeDesign> m_nodesByNodeId;
         private Dictionary<uint, NodeDesign> m_identifiers;
-        private uint m_startId;
         private Dictionary<XmlQualifiedName, string> m_browseNames = [];
         private readonly ServiceMessageContext m_context;
         private readonly IReadOnlyList<string> m_exclusions;
         private readonly Dictionary<XmlQualifiedName, NodeId> m_symbolicIdToNodeId = [];
+        private ModelDesign m_dictionary;
+        private Dictionary<string, ModelTableEntry> m_dependencies = [];
+        private readonly Dictionary<string, RolePermissionSet> m_defaultRolePermissions = [];
+        private readonly Dictionary<string, AccessRestrictions?> m_defaultAccessRestrictions = [];
+        private Dictionary<string, string> m_designFilePaths = [];
     }
 }

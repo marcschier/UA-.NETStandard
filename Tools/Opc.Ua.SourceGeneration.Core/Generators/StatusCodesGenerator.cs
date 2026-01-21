@@ -43,13 +43,13 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Create status codes generator
         /// </summary>
-        public StatusCodesGenerator(GeneratorContext context)
+        public StatusCodesGenerator(IGeneratorContext context)
         {
             m_context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         /// <inheritdoc/>
-        public void Emit()
+        public IEnumerable<Resource> Emit()
         {
             string fileName = Path.Combine(m_context.OutputFolder,
                 CoreUtils.Format("{0}.StatusCodes.g.cs", Constants.CoreNamespacePrefix));
@@ -134,6 +134,7 @@ namespace Opc.Ua.SourceGeneration
                 WriteTemplate_StatusCodeInterning);
 
             template.Render();
+            return [fileName.AsTextFileResource()];
         }
 
         /// <summary>
@@ -277,6 +278,6 @@ namespace Opc.Ua.SourceGeneration
             return identifiers;
         }
 
-        private readonly GeneratorContext m_context;
+        private readonly IGeneratorContext m_context;
     }
 }

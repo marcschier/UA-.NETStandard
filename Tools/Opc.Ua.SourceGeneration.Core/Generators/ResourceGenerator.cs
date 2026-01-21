@@ -62,7 +62,7 @@ namespace Opc.Ua.SourceGeneration
         /// Create code generator for embedded resources.
         /// </summary>
         public ResourceGenerator(
-            GeneratorContext context,
+            IGeneratorContext context,
             int? base64Threshold = null,
             bool useByteArrayForBase64 = false)
         {
@@ -535,7 +535,7 @@ namespace Opc.Ua.SourceGeneration
         }
 
         private const int kReadBufferSize = 16 * 1024;
-        private readonly GeneratorContext m_context;
+        private readonly IGeneratorContext m_context;
         private readonly int m_base64Threshold;
         private readonly bool m_useByteArrayForBase64;
         private bool m_internalAccess;

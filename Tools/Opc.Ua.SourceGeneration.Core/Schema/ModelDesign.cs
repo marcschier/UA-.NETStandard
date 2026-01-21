@@ -503,12 +503,6 @@ namespace Opc.Ua.Schema.Model
     public partial class ModelDesign : IEquatable<ModelDesign>
     {
         /// <summary>
-        /// Target namespace information
-        /// </summary>
-        [XmlIgnore]
-        public Namespace TargetNamespaceInfo { get; set; }
-
-        /// <summary>
         /// Namespace table
         /// </summary>
         [XmlIgnore]
@@ -527,12 +521,6 @@ namespace Opc.Ua.Schema.Model
         /// </summary>
         [XmlIgnore]
         public bool IsSourceNodeSet { get; set; }
-
-        /// <summary>
-        /// Dependencies
-        /// </summary>
-        [XmlIgnore]
-        public Dictionary<string, Export.ModelTableEntry> Dependencies { get; set; }
 
         /// <inheritdoc/>
         public override bool Equals(object obj)

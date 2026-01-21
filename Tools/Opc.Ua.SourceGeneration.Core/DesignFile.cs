@@ -135,7 +135,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Validates the model design files
         /// </summary>
-        public static ModelDesignValidator OpenModelDesign(
+        public static IModelDesign OpenModelDesign(
             this IFileSystem fileSystem,
             DesignFileCollection designFiles,
             IReadOnlyList<string> exclusions,

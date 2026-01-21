@@ -46,16 +46,16 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Create constants generator
         /// </summary>
-        public ConstantsGenerator(GeneratorContext context)
+        public ConstantsGenerator(IGeneratorContext context)
         {
             m_context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         /// <inheritdoc/>
-        public void Emit()
+        public IEnumerable<Resource> Emit()
         {
             SortedDictionary<string, string> browseNames = [];
-            foreach (NodeDesign node in m_context.Validator.GetNodeDesigns())
+            foreach (NodeDesign node in m_context.ModelDesign.GetNodeDesigns())
             {
                 CollectBrowseNames(node, browseNames);
             }
@@ -63,28 +63,27 @@ namespace Opc.Ua.SourceGeneration
             if (browseNames.Count == 0)
             {
                 // Nothing to do
-                return;
+                return null;
             }
 
-            using TextWriter writer = m_context.FileSystem.CreateTextWriter(
-                Path.Combine(m_context.OutputFolder, CoreUtils.Format(
-                    "{0}.Constants.g.cs",
-                    m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix)));
+            string fileName = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
+                "{0}.Constants.g.cs",
+                m_context.ModelDesign.TargetNamespace.Prefix));
+            using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
 
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, CodeTemplates.ConstantsFile_cs);
             template.AddReplacement(
                 Tokens.Namespace,
-                m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(
-                    m_context.Validator.Dictionary.TargetNamespace));
+                m_context.ModelDesign.TargetNamespace.Prefix);
             template.AddReplacement(
                 Tokens.NamespaceUri,
-                m_context.Validator.Dictionary.Namespaces.GetConstantSymbolForNamespace(
-                    m_context.Validator.Dictionary.TargetNamespace));
+                m_context.ModelDesign.Namespaces.GetConstantSymbolForNamespace(
+                    m_context.ModelDesign.TargetNamespace.Value));
 
             template.AddReplacement(
                 Tokens.ListOfImports,
-                m_context.Validator.Dictionary.Namespaces,
+                m_context.ModelDesign.Namespaces,
                 LoadTemplate_NamespaceImports);
 
             template.AddReplacement(
@@ -101,6 +100,7 @@ namespace Opc.Ua.SourceGeneration
                 WriteTemplate_BrowseNames);
 
             template.Render();
+            return [fileName.AsTextFileResource()];
         }
 
         private TemplateString LoadTemplate_NamespaceImports(ILoadContext context)
@@ -110,7 +110,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            if (ns.Value == m_context.Validator.Dictionary.TargetNamespace)
+            if (ns.Value == m_context.ModelDesign.TargetNamespace.Value)
             {
                 return null;
             }
@@ -120,7 +120,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            string externalPrefix = m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(ns.Value);
+            string externalPrefix = m_context.ModelDesign.Namespaces.GetNamespacePrefix(ns.Value);
 
             context.Out.WriteLine("using {0};", externalPrefix);
 
@@ -159,9 +159,9 @@ namespace Opc.Ua.SourceGeneration
                 return false;
             }
 
-            for (int ii = 0; ii < m_context.Validator.Dictionary.Namespaces.Length; ii++)
+            for (int ii = 0; ii < m_context.ModelDesign.Namespaces.Length; ii++)
             {
-                Namespace ns = m_context.Validator.Dictionary.Namespaces[ii];
+                Namespace ns = m_context.ModelDesign.Namespaces[ii];
 
                 if (uri != ns.Value && uri != ns.XmlNamespace)
                 {
@@ -188,7 +188,7 @@ namespace Opc.Ua.SourceGeneration
             NodeDesign node,
             SortedDictionary<string, string> browseNames)
         {
-            if (m_context.Validator.IsExcluded(node))
+            if (m_context.ModelDesign.IsExcluded(node))
             {
                 return;
             }
@@ -198,7 +198,7 @@ namespace Opc.Ua.SourceGeneration
                 return;
             }
 
-            if (node.SymbolicName.Namespace == m_context.Validator.Dictionary.TargetNamespace)
+            if (node.SymbolicName.Namespace == m_context.ModelDesign.TargetNamespace.Value)
             {
                 browseNames[node.SymbolicName.Name] = node.BrowseName;
             }
@@ -210,7 +210,7 @@ namespace Opc.Ua.SourceGeneration
 
             foreach (NodeDesign child in node.Children.Items)
             {
-                if (m_context.Validator.IsExcluded(child))
+                if (m_context.ModelDesign.IsExcluded(child))
                 {
                     continue;
                 }
@@ -229,7 +229,7 @@ namespace Opc.Ua.SourceGeneration
                     continue;
                 }
 
-                if (child.SymbolicName.Namespace == m_context.Validator.Dictionary.TargetNamespace)
+                if (child.SymbolicName.Namespace == m_context.ModelDesign.TargetNamespace.Value)
                 {
                     if (browseNames.TryGetValue(child.SymbolicName.Name, out string browseName))
                     {
@@ -258,17 +258,17 @@ namespace Opc.Ua.SourceGeneration
         private List<string> GetNamespaceUris()
         {
             List<string> namespaceUris = [];
-            for (int ii = 0; ii < m_context.Validator.Dictionary.Namespaces.Length; ii++)
+            for (int ii = 0; ii < m_context.ModelDesign.Namespaces.Length; ii++)
             {
-                namespaceUris.Add(m_context.Validator.Dictionary.Namespaces[ii].Value);
-                if (!string.IsNullOrEmpty(m_context.Validator.Dictionary.Namespaces[ii].XmlNamespace))
+                namespaceUris.Add(m_context.ModelDesign.Namespaces[ii].Value);
+                if (!string.IsNullOrEmpty(m_context.ModelDesign.Namespaces[ii].XmlNamespace))
                 {
-                    namespaceUris.Add(m_context.Validator.Dictionary.Namespaces[ii].XmlNamespace);
+                    namespaceUris.Add(m_context.ModelDesign.Namespaces[ii].XmlNamespace);
                 }
             }
             return namespaceUris;
         }
 
-        private readonly GeneratorContext m_context;
+        private readonly IGeneratorContext m_context;
     }
 }

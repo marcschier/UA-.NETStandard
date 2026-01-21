@@ -44,40 +44,38 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Initializes a new instance of the <see cref="NodeIdGenerator"/> class.
         /// </summary>
-        public NodeIdGenerator(GeneratorContext context)
+        public NodeIdGenerator(IGeneratorContext context)
         {
             m_context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         /// <inheritdoc/>
-        public void Emit()
+        public IEnumerable<Resource> Emit()
         {
             SortedDictionary<string, List<NodeDesign>> identifiers = GetIdentifiers();
             if (identifiers.Count == 0)
             {
                 // Nothing to do
-                return;
+                return null;
             }
+            string fileName = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
+                "{0}.Identifiers.g.cs",
+                m_context.ModelDesign.TargetNamespace.Prefix));
 
-            using TextWriter writer = m_context.FileSystem.CreateTextWriter(
-                Path.Combine(m_context.OutputFolder, CoreUtils.Format(
-                    "{0}.Identifiers.g.cs",
-                    m_context.Validator.Dictionary.TargetNamespaceInfo.Prefix)));
-
+            using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, CodeTemplates.IdentifiersFile_cs);
             template.AddReplacement(
                 Tokens.Namespace,
-                m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(
-                    m_context.Validator.Dictionary.TargetNamespace));
+                m_context.ModelDesign.TargetNamespace.Prefix);
             template.AddReplacement(
                 Tokens.NamespaceUri,
-                m_context.Validator.Dictionary.Namespaces.GetConstantSymbolForNamespace(
-                    m_context.Validator.Dictionary.TargetNamespace));
+                m_context.ModelDesign.Namespaces.GetConstantSymbolForNamespace(
+                    m_context.ModelDesign.TargetNamespace.Value));
 
             template.AddReplacement(
                 Tokens.ListOfImports,
-                m_context.Validator.Dictionary.Namespaces,
+                m_context.ModelDesign.Namespaces,
                 LoadTemplate_NamespaceImports);
 
             template.AddReplacement(
@@ -95,6 +93,7 @@ namespace Opc.Ua.SourceGeneration
                 WriteTemplate_NodeIdPerNodeClass);
 
             template.Render();
+            return [fileName.AsTextFileResource()];
         }
 
         private TemplateString LoadTemplate_NamespaceImports(ILoadContext context)
@@ -104,7 +103,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            if (ns.Value == m_context.Validator.Dictionary.TargetNamespace)
+            if (ns.Value == m_context.ModelDesign.TargetNamespace.Value)
             {
                 return null;
             }
@@ -114,7 +113,7 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            string externalPrefix = m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(ns.Value);
+            string externalPrefix = m_context.ModelDesign.Namespaces.GetNamespacePrefix(ns.Value);
 
             context.Out.WriteLine("using {0};", externalPrefix);
 
@@ -147,8 +146,10 @@ namespace Opc.Ua.SourceGeneration
             context.Template.AddReplacement(Tokens.NodeClass, nodes.Key);
             context.Template.AddReplacement(
                 Tokens.NamespacePrefix,
-                m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(m_context.Validator.Dictionary.TargetNamespace));
-            context.Template.AddReplacement(Tokens.Namespace, m_context.Validator.Dictionary.TargetNamespace);
+                m_context.ModelDesign.TargetNamespace.Prefix);
+            context.Template.AddReplacement(
+                Tokens.Namespace,
+                m_context.ModelDesign.TargetNamespace.Value);
 
             context.Template.AddReplacement(
                 Tokens.ListOfIdentifiers,
@@ -213,15 +214,14 @@ namespace Opc.Ua.SourceGeneration
             context.Template.AddReplacement(Tokens.NodeClass, nodes.Key);
             context.Template.AddReplacement(
                 Tokens.NamespacePrefix,
-                m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(
-                    m_context.Validator.Dictionary.TargetNamespace));
+                m_context.ModelDesign.TargetNamespace.Prefix);
             context.Template.AddReplacement(
                 Tokens.Namespace,
-                m_context.Validator.Dictionary.TargetNamespace);
+                m_context.ModelDesign.TargetNamespace.Value);
 
             context.Template.AddReplacement(
                 Tokens.ListOfIdentifiers,
-                m_context.Validator.Dictionary.TargetNamespace != Namespaces.OpcUa ?
+                m_context.ModelDesign.TargetNamespace.Value != Namespaces.OpcUa ?
                     CodeTemplates.NodeIdDeclarationAbsolute_cs :
                     CodeTemplates.NodeIdDeclaration_cs,
                 nodes.Value,
@@ -266,11 +266,11 @@ namespace Opc.Ua.SourceGeneration
             context.Template.AddReplacement(Tokens.Identifier, id);
             context.Template.AddReplacement(
                 Tokens.NamespaceUri,
-                m_context.Validator.Dictionary.Namespaces.GetConstantSymbolForNamespace(
+                m_context.ModelDesign.Namespaces.GetConstantSymbolForNamespace(
                     node.SymbolicId.Namespace));
             context.Template.AddReplacement(
                 Tokens.NamespacePrefix,
-                m_context.Validator.Dictionary.Namespaces.GetNamespacePrefix(
+                m_context.ModelDesign.Namespaces.GetNamespacePrefix(
                     node.SymbolicId.Namespace));
             context.Template.AddReplacement(Tokens.IdType, idType);
 
@@ -336,7 +336,7 @@ namespace Opc.Ua.SourceGeneration
 
             context.Template.AddReplacement(
                 Tokens.IdType,
-                m_context.Validator.Dictionary.TargetNamespace == Namespaces.OpcUa ?
+                m_context.ModelDesign.TargetNamespace.Value == Namespaces.OpcUa ?
                     "global::Opc.Ua.NodeId" :
                     "global::Opc.Ua.ExpandedNodeId");
 
@@ -371,7 +371,7 @@ namespace Opc.Ua.SourceGeneration
                     return false;
                 }
 
-                if (m_context.Validator.IsExcluded(parent.Instance))
+                if (m_context.ModelDesign.IsExcluded(parent.Instance))
                 {
                     return true;
                 }
@@ -389,18 +389,18 @@ namespace Opc.Ua.SourceGeneration
         {
             SortedDictionary<string, List<NodeDesign>> identifiers = [];
 
-            for (int ii = 0; ii < m_context.Validator.Dictionary.Items.Length; ii++)
+            for (int ii = 0; ii < m_context.ModelDesign.Nodes.Length; ii++)
             {
-                NodeDesign node = m_context.Validator.Dictionary.Items[ii];
+                NodeDesign node = m_context.ModelDesign.Nodes[ii];
 
-                if (m_context.Validator.IsExcluded(node))
+                if (m_context.ModelDesign.IsExcluded(node))
                 {
                     continue;
                 }
 
                 if (node is InstanceDesign instance &&
                     instance.TypeDefinitionNode != null &&
-                    m_context.Validator.IsExcluded(instance.TypeDefinitionNode))
+                    m_context.ModelDesign.IsExcluded(instance.TypeDefinitionNode))
                 {
                     continue;
                 }
@@ -439,7 +439,7 @@ namespace Opc.Ua.SourceGeneration
                         continue;
                     }
 
-                    if (m_context.Validator.IsExcluded(current.Value.Instance))
+                    if (m_context.ModelDesign.IsExcluded(current.Value.Instance))
                     {
                         continue;
                     }
@@ -452,7 +452,7 @@ namespace Opc.Ua.SourceGeneration
                     var method = current.Value.Instance as MethodDesign;
 
                     if (method?.MethodDeclarationNode != null &&
-                        m_context.Validator.IsExcluded(method?.MethodDeclarationNode))
+                        m_context.ModelDesign.IsExcluded(method?.MethodDeclarationNode))
                     {
                         continue;
                     }
@@ -510,6 +510,6 @@ namespace Opc.Ua.SourceGeneration
             return identifiers;
         }
 
-        private readonly GeneratorContext m_context;
+        private readonly IGeneratorContext m_context;
     }
 }

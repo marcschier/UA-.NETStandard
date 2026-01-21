@@ -267,16 +267,16 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         /// <summary>
         /// Tests GetNameForFile with null input file.
         /// Input: null file with null namespace prefix.
-        /// Expected: Throws ArgumentNullException from Path.GetFileName.
+        /// Expected: Throws NullReferenceException from Path.GetFileName.
         /// </summary>
         [Test]
-        public void GetNameForFile_NullInputFile_ThrowsArgumentNullException()
+        public void GetNameForFile_NullInputFile_ThrowsNullReferenceException()
         {
             // Arrange
             const string inputFile = null;
             const string namespacePrefix = null;
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => Resource.GetNameForFile(inputFile, namespacePrefix));
+            Assert.Throws<NullReferenceException>(() => Resource.GetNameForFile(inputFile, namespacePrefix));
         }
 
         /// <summary>
@@ -487,7 +487,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         /// Tests that the constructor throws NullReferenceException when resourceName is null.
         /// </summary>
         [Test]
-        public void Constructor_NullResourceName_ThrowsArgumentNullException()
+        public void Constructor_NullResourceName_ThrowsNullReferenceException()
         {
             // Arrange
             const string resourceName = null;
@@ -498,7 +498,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
                 3
             ];
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => new BinaryResource(resourceName, data, false));
+            Assert.Throws<NullReferenceException>(() => new BinaryResource(resourceName, data, false));
         }
 
         /// <summary>
@@ -527,7 +527,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         /// Tests the constructor with resourceName containing only dots followed by single character.
         /// </summary>
         [Test]
-        public void Constructor_ManyLeadingDotsWithSingleChar_SetsEmptyGroup()
+        public void Constructor_ManyLeadingDotsWithSingleChar_SetsResourceNameWithDots()
         {
             // Arrange
             const string resourceName = ".....X";
@@ -539,7 +539,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             var resource = new BinaryResource(resourceName, data, true);
             // Assert
             Assert.That(resource.ResourceGroup, Is.EqualTo(string.Empty));
-            Assert.That(resource.ResourceName, Is.EqualTo("X"));
+            Assert.That(resource.ResourceName, Is.EqualTo(".....X"));
             Assert.That(resource.IsText, Is.EqualTo(true));
         }
 

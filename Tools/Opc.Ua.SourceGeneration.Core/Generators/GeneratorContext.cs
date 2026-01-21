@@ -34,7 +34,7 @@ namespace Opc.Ua.SourceGeneration
     /// <summary>
     /// Context for all generators
     /// </summary>
-    internal sealed record class GeneratorContext
+    internal sealed record class GeneratorContext : IGeneratorContext
     {
         /// <summary>
         /// File system to use
@@ -49,7 +49,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Model design validated
         /// </summary>
-        public required ModelDesignValidator Validator { get; init; }
+        public required IModelDesign ModelDesign { get; init; }
 
         /// <summary>
         /// Telemetry context for logging
