@@ -60,26 +60,13 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
 
         private static IEnumerable<TestCaseData> IsNullTestCases()
         {
-            yield return new TestCaseData(null, true)
-                .SetName("IsNull_NullQualifiedName_ReturnsTrue");
-
-            yield return new TestCaseData(new XmlQualifiedName(null), true)
-                .SetName("IsNull_QualifiedNameWithNullName_ReturnsTrue");
-
-            yield return new TestCaseData(new XmlQualifiedName(string.Empty), true)
-                .SetName("IsNull_QualifiedNameWithEmptyName_ReturnsTrue");
-
-            yield return new TestCaseData(new XmlQualifiedName("ValidName"), false)
-                .SetName("IsNull_QualifiedNameWithValidName_ReturnsFalse");
-
-            yield return new TestCaseData(new XmlQualifiedName("ValidName", "http://namespace.com"), false)
-                .SetName("IsNull_QualifiedNameWithValidNameAndNamespace_ReturnsFalse");
-
-            yield return new TestCaseData(new XmlQualifiedName("   "), false)
-                .SetName("IsNull_QualifiedNameWithWhitespaceName_ReturnsFalse");
-
-            yield return new TestCaseData(new XmlQualifiedName(" \t\n\r "), false)
-                .SetName("IsNull_QualifiedNameWithWhitespaceOnlyName_ReturnsFalse");
+            yield return new TestCaseData(null, true);
+            yield return new TestCaseData(new XmlQualifiedName(null), true);
+            yield return new TestCaseData(new XmlQualifiedName(string.Empty), true);
+            yield return new TestCaseData(new XmlQualifiedName("ValidName"), false);
+            yield return new TestCaseData(new XmlQualifiedName("ValidName", "http://namespace.com"), false);
+            yield return new TestCaseData(new XmlQualifiedName("   "), false);
+            yield return new TestCaseData(new XmlQualifiedName(" \t\n\r "), false);
         }
 
         /// <summary>
