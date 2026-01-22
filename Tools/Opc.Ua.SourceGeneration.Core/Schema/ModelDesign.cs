@@ -1934,4 +1934,25 @@ namespace Opc.Ua.Schema.Model
         /// </summary>
         Test
     }
+
+    /// <summary>
+    /// Core standard versions
+    /// </summary>
+    public enum SpecificationVersion
+    {
+        /// <summary>
+        /// Version 1.03
+        /// </summary>
+        V103 = 103,
+
+        /// <summary>
+        /// Version 1.04
+        /// </summary>
+        V104 = 104,
+
+        /// <summary>
+        /// Version 1.05
+        /// </summary>
+        V105 = 105
+    }
 }

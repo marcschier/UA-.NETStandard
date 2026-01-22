@@ -92,12 +92,12 @@ namespace Opc.Ua.SourceGeneration
             GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation);
             if (!embedNodeSet2Xml)
             {
-                Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(9));
+                Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(8));
             }
             else
             {
                 // one extra for the embedded nodeset2.xml
-                Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(10));
+                Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(9));
             }
         }
 
@@ -130,7 +130,7 @@ namespace Opc.Ua.SourceGeneration
                 .WithUpdatedAnalyzerConfigOptions(options)
                 ;
             GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation);
-            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(18));
+            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(16));
         }
 
         [Theory]
@@ -166,7 +166,7 @@ namespace Opc.Ua.SourceGeneration
 
             // There will be 120 errors due to missing Opc.Ua dll reference
             GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation, true);
-            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(9));
+            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(8));
 
             string testDataXmlSchema = ValidateXmlSchema(languageVersion, generatorResult);
             Assert.That(testDataXmlSchema,

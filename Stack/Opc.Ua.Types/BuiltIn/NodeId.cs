@@ -161,7 +161,8 @@ namespace Opc.Ua
         {
             m_inner.NamespaceIdx = namespaceIndex;
             m_inner.Type = (byte)IdType.String;
-            m_inner.Numeric = 0;
+            m_inner.Numeric = value == null ? 0u :
+                (uint)value.GetHashCode(StringComparison.Ordinal);
             m_identifier = value;
         }
 
@@ -173,7 +174,8 @@ namespace Opc.Ua
         {
             m_inner.NamespaceIdx = 0;
             m_inner.Type = (byte)IdType.Guid;
-            m_inner.Numeric = 0;
+            m_inner.Numeric =
+                value == Guid.Empty ? 0u : (uint)value.GetHashCode();
             m_identifier = value;
         }
 
@@ -187,7 +189,8 @@ namespace Opc.Ua
         {
             m_inner.NamespaceIdx = namespaceIndex;
             m_inner.Type = (byte)IdType.Guid;
-            m_inner.Numeric = 0;
+            m_inner.Numeric =
+                value == Guid.Empty ? 0u : (uint)value.GetHashCode();
             m_identifier = value;
         }
 
@@ -200,15 +203,17 @@ namespace Opc.Ua
         {
             m_inner.NamespaceIdx = 0;
             m_inner.Type = (byte)IdType.Opaque;
-            m_inner.Numeric = 0;
             if (value != null)
             {
                 byte[] copy = new byte[value.Length];
                 Array.Copy(value, copy, value.Length);
+                m_inner.Numeric =
+                    (uint)ByteStringEqualityComparer.Default.GetHashCode(copy);
                 m_identifier = copy;
             }
             else
             {
+                m_inner.Numeric = 0;
                 m_identifier = null;
             }
         }
@@ -225,15 +230,17 @@ namespace Opc.Ua
         {
             m_inner.NamespaceIdx = namespaceIndex;
             m_inner.Type = (byte)IdType.Opaque;
-            m_inner.Numeric = 0;
             if (value != null)
             {
                 byte[] copy = new byte[value.Length];
                 Array.Copy(value, copy, value.Length);
+                m_inner.Numeric =
+                    (uint)ByteStringEqualityComparer.Default.GetHashCode(copy);
                 m_identifier = copy;
             }
             else
             {
+                m_inner.Numeric = 0;
                 m_identifier = null;
             }
         }
@@ -1235,11 +1242,12 @@ namespace Opc.Ua
         {
             if (IsNullNodeId)
             {
-                // Makes no sense to update a null node with nspace index
+                // Makes no sense to update a null node with namespace index
                 return this;
             }
             return IdType switch
             {
+                // TODO: avoid recalculation of hashcode
                 IdType.String => new NodeId(StringIdentifier, value),
                 IdType.Guid => new NodeId(GuidIdentifier, value),
                 IdType.Opaque => new NodeId(OpaqueIdentifer, value),
@@ -1278,7 +1286,7 @@ namespace Opc.Ua
         /// </summary>
         public NodeId WithIdentifier(byte[] value)
         {
-            return new NodeId(CoreUtils.Clone(value), NamespaceIndex);
+            return new NodeId(value, NamespaceIndex);
         }
 
         /// <summary>
@@ -1513,7 +1521,7 @@ namespace Opc.Ua
                 case IdType.Guid:
                     return GuidIdentifier == other.GuidIdentifier;
                 case IdType.Opaque:
-                    return OpaqueIdentifer.SequenceEqual(other.OpaqueIdentifer);
+                    return ByteStringEqualityComparer.Default.Equals(other.OpaqueIdentifer);
             }
             return false;
         }
@@ -1579,6 +1587,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public override int GetHashCode()
         {
+#if NO_HASH_CACHE
             if (IsNullNodeId)
             {
                 return 0;
@@ -1610,6 +1619,9 @@ namespace Opc.Ua
                     break;
             }
             return hashCode.ToHashCode();
+#else
+            return (int)m_inner.Numeric ^ (m_inner.NamespaceIdx >> 16);
+#endif
         }
 
         /// <inheritdoc/>

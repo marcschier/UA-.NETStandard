@@ -170,6 +170,7 @@ namespace Opc.Ua.SourceGeneration
         public static string IdentifierReflection => nameof(IdentifierReflection);
         public static string EqualityComparer => nameof(EqualityComparer);
         public static string ListOfNodeStateInitializers => nameof(ListOfNodeStateInitializers);
+        public static string ListOfNodeStateFactories => nameof(ListOfNodeStateFactories);
         public static string ListOfChildNodeStates => nameof(ListOfChildNodeStates);
         public static string ListOfChildTypes => nameof(ListOfChildTypes);
         public static string ListOfReferences => nameof(ListOfReferences);

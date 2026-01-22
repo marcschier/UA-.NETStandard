@@ -29,9 +29,15 @@
 
 using System;
 using System.IO;
+using System.Linq;
+using System.Text;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using Opc.Ua.Schema.Model;
+using Opc.Ua.Tests;
 
 namespace Opc.Ua.SourceGeneration.Generator.Tests
 {
@@ -45,17 +51,12 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
     [Parallelizable]
     public class NodeStateGeneratorTests
     {
-        private Mock<IFileSystem> _mockFileSystem;
-        private Mock<IModelDesign> _mockModelDesign;
-        private Mock<ITelemetryContext> _mockTelemetry;
-        private GeneratorContext _context;
-
         [SetUp]
         public void SetUp()
         {
-            _mockFileSystem = new Mock<IFileSystem>();
-            _mockModelDesign = new Mock<IModelDesign>();
-            _mockTelemetry = new Mock<ITelemetryContext>();
+            m_mockFileSystem = new Mock<IFileSystem>();
+            m_mockModelDesign = new Mock<IModelDesign>();
+            m_mockTelemetry = new Mock<ITelemetryContext>();
 
             // Setup default namespace
             var targetNamespace = new Namespace
@@ -64,8 +65,8 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
                 Prefix = "Test",
                 Name = "TestNamespace"
             };
-            _mockModelDesign.Setup(m => m.TargetNamespace).Returns(targetNamespace);
-            _mockModelDesign.Setup(m => m.Namespaces).Returns([targetNamespace]);
+            m_mockModelDesign.Setup(m => m.TargetNamespace).Returns(targetNamespace);
+            m_mockModelDesign.Setup(m => m.Namespaces).Returns([targetNamespace]);
         }
 
         /// <summary>
@@ -88,17 +89,17 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         public void Constructor_ValidContext_CreatesInstance()
         {
             // Arrange
-            _context = new GeneratorContext
+            m_context = new GeneratorContext
             {
-                FileSystem = _mockFileSystem.Object,
+                FileSystem = m_mockFileSystem.Object,
                 OutputFolder = "TestOutput",
-                ModelDesign = _mockModelDesign.Object,
-                Telemetry = _mockTelemetry.Object,
+                ModelDesign = m_mockModelDesign.Object,
+                Telemetry = m_mockTelemetry.Object,
                 Options = new GeneratorOptions()
             };
 
             // Act
-            var generator = new NodeStateGenerator(_context);
+            var generator = new NodeStateGenerator(m_context);
 
             // Assert
             Assert.That(generator, Is.Not.Null);
@@ -111,17 +112,17 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         public void Constructor_WithUseXmlInitializersTrue_CreatesInstance()
         {
             // Arrange
-            _context = new GeneratorContext
+            m_context = new GeneratorContext
             {
-                FileSystem = _mockFileSystem.Object,
+                FileSystem = m_mockFileSystem.Object,
                 OutputFolder = "TestOutput",
-                ModelDesign = _mockModelDesign.Object,
-                Telemetry = _mockTelemetry.Object,
+                ModelDesign = m_mockModelDesign.Object,
+                Telemetry = m_mockTelemetry.Object,
                 Options = new GeneratorOptions()
             };
 
             // Act
-            var generator = new NodeStateGenerator(_context, useXmlInitializers: true);
+            var generator = new NodeStateGenerator(m_context, useXmlInitializers: true);
 
             // Assert
             Assert.That(generator, Is.Not.Null);
@@ -134,27 +135,124 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         public void Emit_NoNodeStateClasses_ReturnsEarlyWithoutCreatingFiles()
         {
             // Arrange
-            _mockModelDesign.Setup(m => m.GetNodeDesigns()).Returns([]);
+            m_mockModelDesign.Setup(m => m.GetNodeDesigns()).Returns([]);
 
-            _context = new GeneratorContext
+            m_context = new GeneratorContext
             {
-                FileSystem = _mockFileSystem.Object,
+                FileSystem = m_mockFileSystem.Object,
                 OutputFolder = "TestOutput",
-                ModelDesign = _mockModelDesign.Object,
-                Telemetry = _mockTelemetry.Object,
+                ModelDesign = m_mockModelDesign.Object,
+                Telemetry = m_mockTelemetry.Object,
                 Options = new GeneratorOptions()
             };
 
-            var generator = new NodeStateGenerator(_context);
+            var generator = new NodeStateGenerator(m_context);
 
             // Act
             generator.Emit();
 
             // Assert - OpenWrite should not be called when there are no node state classes
-            _mockFileSystem.Verify(
+            m_mockFileSystem.Verify(
                 fs => fs.OpenWrite(It.IsAny<string>()),
                 Times.Never,
                 "OpenWrite should not be called when there are no node state classes");
         }
+
+        [Test]
+        public void GenerateAddressSpaceCodeTest()
+        {
+            // Arrange
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create(logLevel: LogLevel.Error);
+            using var fileSystem = new VirtualFileSystem();
+
+            // Act - Generate full stack
+            Generators.GenerateStack(StackGenerationType.All, fileSystem, string.Empty, telemetry);
+
+            // Assert - NodeState file should be created
+            var generatedFiles = fileSystem.CreatedFiles
+                .Where(c => c.EndsWith(".NodeStates.g.cs", StringComparison.Ordinal))
+                .ToList();
+
+            Assert.That(generatedFiles, Is.Not.Empty,
+                "NodeStates.g.cs file should be generated");
+
+            foreach (string file in generatedFiles)
+            {
+                string content = Encoding.UTF8.GetString(fileSystem.Get(file));
+                TestContext.Out.WriteLine("Generated file: {0} ({1} bytes)", file, content.Length);
+
+                // Verify basic structure
+                Assert.That(content, Does.Contain("// <auto-generated />"),
+                    "Generated code should have auto-generated header");
+                Assert.That(content, Does.Contain("public static partial class AddressSpace"),
+                    "Generated code should contain AddressSpace class");
+                Assert.That(content, Does.Contain("public static global::Opc.Ua.NodeStateCollection GetAddressSpace"),
+                    "Generated code should contain GetAddressSpace method");
+            }
+        }
+
+        [Test]
+        public void GeneratedAddressSpaceCodeCompilesTest()
+        {
+            // Arrange
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create(logLevel: LogLevel.Error);
+            using var fileSystem = new VirtualFileSystem();
+
+            // Act - Generate stack
+            Generators.GenerateStack(StackGenerationType.All, fileSystem, string.Empty, telemetry);
+
+            // Get all generated C# files
+            var generatedText = fileSystem.CreatedFiles
+                .Where(c => Path.GetExtension(c) == ".cs")
+                .ToDictionary(c => c, c => Encoding.UTF8.GetString(fileSystem.Get(c)));
+
+            // Verify generated code compiles
+            using var peStream = new MemoryStream();
+            bool success = OptimizationLevel.Debug
+                .CreateCompilation()
+                .AddCode(generatedText.WithOpcUaCoreStubs(), LanguageVersion.Latest)
+                .Emit(peStream)
+                .Check(TestContext.Out, out int errorCount, out int warnCount);
+
+            // Assert
+            Assert.That(success, Is.True,
+                $"Generated NodeStates should compile without errors. Errors: {errorCount}, Warnings: {warnCount}");
+        }
+
+        [Test]
+        public void AddressSpaceCodeGeneratesCorrectMethodSignatures()
+        {
+            // Arrange
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create(logLevel: LogLevel.Error);
+            using var fileSystem = new VirtualFileSystem();
+
+            // Act
+            Generators.GenerateStack(StackGenerationType.All, fileSystem, string.Empty, telemetry);
+
+            // Find AddressSpace files
+            var predefinedNodesFiles = fileSystem.CreatedFiles
+                .Where(c => c.EndsWith(".NodeStates.g.cs", StringComparison.Ordinal))
+                .ToList();
+
+            Assert.That(predefinedNodesFiles, Is.Not.Empty);
+
+            foreach (string file in predefinedNodesFiles)
+            {
+                string content = Encoding.UTF8.GetString(fileSystem.Get(file));
+
+                // Check for proper method signatures
+                Assert.That(content, Does.Contain("global::Opc.Ua.ISystemContext context"),
+                    "Methods should use ISystemContext parameter");
+                Assert.That(content, Does.Contain("state.NodeId ="),
+                    "Code should set NodeId property");
+                Assert.That(content, Does.Contain("state.BrowseName ="),
+                    "Code should set BrowseName property");
+            }
+        }
+
+        private Mock<IFileSystem> m_mockFileSystem;
+        private Mock<IModelDesign> m_mockModelDesign;
+        private Mock<ITelemetryContext> m_mockTelemetry;
+        private GeneratorContext m_context;
     }
 }

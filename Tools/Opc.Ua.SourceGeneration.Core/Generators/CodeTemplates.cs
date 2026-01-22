@@ -112,7 +112,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Base data type and node state files
         /// </summary>
-        public static readonly TemplateString TypesFile_cs = TemplateString.Parse(
+        public static readonly TemplateString DataTypesFile_cs = TemplateString.Parse(
             $$"""
             {{Tokens.Header}}
 
@@ -2487,7 +2487,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Main file template for predefined nodes code generation
         /// </summary>
-        public static readonly TemplateString AddressSpaceFile_cs = TemplateString.Parse(
+        public static readonly TemplateString NodeStatesFile_cs = TemplateString.Parse(
             $$"""
             {{Tokens.Header}}
 
@@ -2495,6 +2495,8 @@ namespace Opc.Ua.SourceGeneration
 
             namespace {{Tokens.Namespace}}
             {
+                {{Tokens.ListOfTypes}}
+
                 /// <summary>
                 /// Provides methods to create the Address Space for the {{Tokens.Namespace}} namespace.
                 /// </summary>
@@ -2515,7 +2517,7 @@ namespace Opc.Ua.SourceGeneration
                         return nodes;
                     }
 
-                    {{Tokens.ListOfTypes}}
+                    {{Tokens.ListOfNodeStateFactories}}
                 }
             }
             """);

@@ -232,17 +232,6 @@ namespace Opc.Ua.SourceGeneration
             bool validateSchemas = false,
             bool embedNodeSet2Xml = false)
         {
-            var constantsGenerator = new ConstantsGenerator(context);
-            constantsGenerator.Emit();
-            var nodeIdGenerator = new NodeIdGenerator(context);
-            nodeIdGenerator.Emit();
-            var classGenerator = new NodeStateGenerator(context);
-            classGenerator.Emit();
-            var dataTypesGenerator = new DataTypeGenerator(context);
-            dataTypesGenerator.Emit();
-            var nodeStateCodeGenerator = new AddressSpaceGenerator(context);
-            nodeStateCodeGenerator.Emit();
-
             // Generate schemas
             var xmlSchemaGenerator = new XmlSchemaGenerator(context)
             {
@@ -262,8 +251,15 @@ namespace Opc.Ua.SourceGeneration
                 [.. binarySchemaResource, .. xmlSchemaResource]);
 
             // Must run after schema generation to initilize the dictionaries.
-            var nodesetGenerator = new NodesetGenerator(
-                context,
+            var constantsGenerator = new ConstantsGenerator(context);
+            constantsGenerator.Emit();
+            var nodeIdGenerator = new NodeIdGenerator(context);
+            nodeIdGenerator.Emit();
+            var nodeStateCodeGenerator = new NodeStateGenerator(context);
+            nodeStateCodeGenerator.Emit();
+            var dataTypesGenerator = new DataTypeGenerator(context);
+            dataTypesGenerator.Emit();
+            var nodesetGenerator = new NodesetGenerator(context,
                 embedNodeset: embedNodeSet2Xml);
             nodesetGenerator.Emit();
         }
