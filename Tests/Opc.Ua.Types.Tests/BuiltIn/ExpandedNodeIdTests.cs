@@ -90,7 +90,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             Assert.AreEqual(123, nodeIdText.TryGetIdentifier(out uint n1) ? n1 : 0);
 
             // explicit conversion;
-            ExpandedNodeId inodeIdText = (ExpandedNodeId)text;
+            var inodeIdText = (ExpandedNodeId)text;
             Assert.AreEqual(nodeIdText, inodeIdText);
 
             // implicit conversion;
@@ -137,7 +137,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             Assert.AreEqual(123, id.TryGetIdentifier(out uint n2) ? n2 : 0);
             Assert.AreEqual(321, id.NamespaceIndex);
             Assert.IsNull(id.NamespaceUri);
-            Assert.AreEqual($"svr=2;ns=321;i=123", id.ToString());
+            Assert.AreEqual("svr=2;ns=321;i=123", id.ToString());
 
             id = new ExpandedNodeId(123, namespaceUri, 2);
             Assert.AreEqual(2, id.ServerIndex);

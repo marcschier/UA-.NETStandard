@@ -27,6 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using System;
 using NUnit.Framework;
 using Assert = NUnit.Framework.Legacy.ClassicAssert;
 
@@ -188,16 +189,17 @@ namespace Opc.Ua.Core.Tests.Types.Constants
         public void GetDataTypeId_WellKnownEncodeableTypes_ReturnsSpecificDataTypeIds()
         {
             // Test various well-known types that implement IEncodeable
-            var testCases = new[]
-            {
+
+            (Type, uint)[] testCases =
+            [
                 (typeof(EUInformation), DataTypes.EUInformation),
                 (typeof(Range), DataTypes.Range),
                 (typeof(Argument), DataTypes.Argument),
                 (typeof(EnumValueType), DataTypes.EnumValueType),
                 (typeof(TimeZoneDataType), DataTypes.TimeZoneDataType)
-            };
+            ];
 
-            foreach (var (type, expectedId) in testCases)
+            foreach ((Type type, uint expectedId) in testCases)
             {
                 NodeId dataTypeId = TypeInfo.GetDataTypeId(type);
 

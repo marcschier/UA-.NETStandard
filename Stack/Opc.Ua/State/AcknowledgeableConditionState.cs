@@ -81,10 +81,7 @@ namespace Opc.Ua
                 UpdateStateAfterUnconfirm(context);
             }
 
-            if (ConfirmedState != null)
-            {
-                ConfirmedState.Timestamp = DateTime.UtcNow;
-            }
+            ConfirmedState?.Timestamp = DateTime.UtcNow;
 
             ClearChangeMasks(context, includeChildren: true);
         }

@@ -27,8 +27,6 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
-
 namespace Opc.Ua.Server
 {
     /// <summary>
@@ -90,6 +88,7 @@ namespace Opc.Ua.Server
         /// <summary>
         /// Finds the specified and checks if it is of the expected type.
         /// </summary>
+        /// <typeparam name="T">Type of node state</typeparam>
         /// <returns>Returns null if not found or not of the correct type.</returns>
         T FindPredefinedNode<T>(NodeId nodeId) where T : NodeState;
 

@@ -30,7 +30,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -668,7 +667,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             object[] args = ArrayOf(CreateDefaultValue(descriptor.ValueType));
 
             Assert.That(method, Is.Not.Null, $"TryGet overload for {descriptor.Name} should exist");
-            bool success = (bool)method!.Invoke(variant, args);
+            bool success = (bool)method.Invoke(variant, args);
 
             Assert.That(success, Is.True);
             AssertValueEquality(values, args[0]);
@@ -684,7 +683,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             object[] args = ArrayOf(CreateDefaultValue(descriptor.ValueType));
 
             Assert.That(method, Is.Not.Null, $"Get method {descriptor.GetMethodName} should exist");
-            object result = method!.Invoke(variant, args);
+            object result = method.Invoke(variant, args);
             AssertValueEquality(value, result);
         }
 
@@ -698,7 +697,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             object[] args = ArrayOf(CreateDefaultValue(descriptor.ValueType));
 
             Assert.That(method, Is.Not.Null, $"Get method {descriptor.GetMethodName} should exist");
-            object result = method!.Invoke(variant, args);
+            object result = method.Invoke(variant, args);
             AssertValueEquality(values, result);
         }
 
@@ -711,7 +710,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             MethodInfo method = typeof(Variant).GetMethod(descriptor.GetMethodName, ArrayOf(descriptor.ValueType));
             object[] args = ArrayOf(CloneValue(defaultValue));
 
-            object result = method!.Invoke(variant, args);
+            object result = method.Invoke(variant, args);
             AssertValueEquality(defaultValue, result);
         }
 
@@ -724,7 +723,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             MethodInfo method = typeof(Variant).GetMethod(descriptor.GetMethodName, ArrayOf(descriptor.ValueType));
             object[] args = ArrayOf(CloneValue(defaultValue));
 
-            object result = method!.Invoke(variant, args);
+            object result = method.Invoke(variant, args);
             AssertValueEquality(defaultValue, result);
         }
 
@@ -768,7 +767,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             var values = (Array)descriptor.CreateValue();
             var variant = new Variant(values);
             Type elementType = descriptor.ValueType.GetElementType() ?? descriptor.ValueType;
-            MethodInfo method = typeof(Variant).GetMethod(nameof(Variant.TryGetArray))!
+            MethodInfo method = typeof(Variant).GetMethod(nameof(Variant.TryGetArray))
                 .MakeGenericMethod(elementType);
             object[] args = ArrayOf(CreateDefaultValue(descriptor.ValueType), descriptor.TypeInfo.BuiltInType);
 
@@ -788,7 +787,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         public void GenericTryGetArray_FailsForWrongBuiltInType()
         {
             var variant = new Variant(ArrayOf(1, 2));
-            MethodInfo method = typeof(Variant).GetMethod(nameof(Variant.TryGetArray))!
+            MethodInfo method = typeof(Variant).GetMethod(nameof(Variant.TryGetArray))
                 .MakeGenericMethod(typeof(int));
             object[] args = ArrayOf<object>(null, BuiltInType.String);
 
@@ -802,7 +801,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             var matrix = new Matrix(ArrayOf(1f, 2f, 3f, 4f), BuiltInType.Float, 2, 2);
             var variant = new Variant(matrix);
             object[] args = ArrayOf<object>(null, BuiltInType.Float);
-            MethodInfo method = typeof(Variant).GetMethod(nameof(Variant.TryGetMatrix))!
+            MethodInfo method = typeof(Variant).GetMethod(nameof(Variant.TryGetMatrix))
                 .MakeGenericMethod(typeof(float));
 
             bool success = (bool)method.Invoke(variant, args);
@@ -820,7 +819,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             };
             var variant = new Variant(data);
             object[] args = ArrayOf<object>(null, BuiltInType.Double);
-            MethodInfo method = typeof(Variant).GetMethod(nameof(Variant.TryGetMatrix))!
+            MethodInfo method = typeof(Variant).GetMethod(nameof(Variant.TryGetMatrix))
                 .MakeGenericMethod(typeof(double));
 
             bool success = (bool)method.Invoke(variant, args);
@@ -1076,7 +1075,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
 
         private static Variant InvokeVariantFrom(object value)
         {
-            MethodInfo method = typeof(Variant).GetMethod(nameof(Variant.From), ArrayOf(value.GetType()))!;
+            MethodInfo method = typeof(Variant).GetMethod(nameof(Variant.From), ArrayOf(value.GetType()));
             return (Variant)method.Invoke(null, ArrayOf(value));
         }
 
@@ -1112,7 +1111,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         {
             if (type.IsValueType)
             {
-                return Activator.CreateInstance(type)!;
+                return Activator.CreateInstance(type);
             }
 
             return null;
@@ -1128,7 +1127,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         {
             if (value is Array array)
             {
-                var clone = Array.CreateInstance(array.GetType().GetElementType()!, array.Length);
+                var clone = Array.CreateInstance(array.GetType().GetElementType(), array.Length);
                 for (int i = 0; i < array.Length; i++)
                 {
                     clone.SetValue(CloneValue(array.GetValue(i)), i);

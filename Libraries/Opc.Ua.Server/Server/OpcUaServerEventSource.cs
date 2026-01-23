@@ -27,7 +27,6 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
 using System.Diagnostics.Tracing;
 
 namespace Opc.Ua.Server

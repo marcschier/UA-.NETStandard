@@ -172,7 +172,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         {
             var hashSet = new HashSet<NodeId>(NodeIdComparer.Default)
             {
-                new NodeId(123, 1)
+                new(123, 1)
             };
             Assert.That(hashSet.Contains(new NodeId(123, 1)), Is.True);
             Assert.That(hashSet.Contains(new NodeId(456, 1)), Is.False);
@@ -520,10 +520,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
         [Test]
         public void ByteStringEqualityComparerCanBeUsedInHashSet()
         {
-            var hashSet = new HashSet<byte[]>(ByteStringEqualityComparer.Default)
-            {
-                ([1, 2, 3])
-            };
+            var hashSet = new HashSet<byte[]>([[1, 2, 3]], ByteStringEqualityComparer.Default);
             Assert.That(hashSet.Contains([1, 2, 3]), Is.True);
             Assert.That(hashSet.Contains([4, 5, 6]), Is.False);
         }
@@ -1055,7 +1052,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
             var hashSet =
                 new HashSet<XmlQualifiedName>(XmlQualifiedNameEqualityComparer.Default)
                 {
-                    new XmlQualifiedName("test", "http://example.com")
+                    new("test", "http://example.com")
                 };
             Assert.That(
                 hashSet.Contains(new XmlQualifiedName("test", "http://example.com")),

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using NUnit.Framework;
 using Assert = NUnit.Framework.Legacy.ClassicAssert;
 
@@ -24,7 +23,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
                 { "de-DE", "Hallo" } };
 
             // Act
-            var localizedText = new LocalizedText(translations).AsMultiLanguage();
+            LocalizedText localizedText = new LocalizedText(translations).AsMultiLanguage();
 
             // Assert
             Assert.IsTrue(localizedText.IsMultiLanguage, "Should be mul locale");

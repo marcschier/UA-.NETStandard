@@ -1462,7 +1462,7 @@ namespace Opc.Ua
 
                 try
                 {
-                    var serializer = CoreUtils.CreateDataContractSerializer<T>();
+                    DataContractSerializer serializer = CoreUtils.CreateDataContractSerializer<T>();
                     return (T)serializer.ReadObject(reader);
                 }
                 finally
@@ -1505,7 +1505,7 @@ namespace Opc.Ua
                     try
                     {
                         using IDisposable scope = AmbientMessageContext.SetScopedContext(telemetry);
-                        var serializer = CoreUtils.CreateDataContractSerializer<T>();
+                        DataContractSerializer serializer = CoreUtils.CreateDataContractSerializer<T>();
                         serializer.WriteObject(writer, value);
                     }
                     finally

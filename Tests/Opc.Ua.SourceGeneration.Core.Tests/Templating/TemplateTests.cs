@@ -635,6 +635,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             Assert.That(result, Is.True);
             Assert.That(writer.ToString(), Is.EqualTo(longString));
         }
+
         [Test]
         public void Template_CanBeCreated_ReturnsNotNull()
         {

@@ -82,7 +82,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
                 .Throws<FormatException>(() => extensionObject.ToString("123", null));
             Assert.NotNull(extensionObjectString);
             // IsEqual operator
-            var clonedExtensionObject = extensionObject.WithTypeId(new ExpandedNodeId(333));
+            ExtensionObject clonedExtensionObject = extensionObject.WithTypeId(new ExpandedNodeId(333));
             Assert.AreNotEqual(extensionObject, clonedExtensionObject);
             Assert.AreNotEqual(extensionObject, extensionObject_Default);
             Assert.AreNotEqual(extensionObject, new object());

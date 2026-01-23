@@ -30,8 +30,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -187,30 +185,32 @@ namespace Opc.Ua.SourceGeneration
             SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(xmlSchemaSource[0].SourceText);
             SyntaxNode root = syntaxTree.GetRoot();
             var classNodes = root.DescendantNodes()
-                .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.ClassDeclarationSyntax>()
+                .OfType<ClassDeclarationSyntax>()
                 .Where(c => c.Identifier.Text == "XmlSchemas")
                 .ToList();
             Assert.That(classNodes.Count, Is.EqualTo(1));
             ClassDeclarationSyntax classNode = classNodes[0];
             var properrtyNodes = classNode.DescendantNodes()
-                .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.PropertyDeclarationSyntax>()
+                .OfType<PropertyDeclarationSyntax>()
                 .Where(f => f.Identifier.Text == "TypesXsd")
                 .ToList();
             Assert.That(properrtyNodes.Count, Is.EqualTo(1));
 
             PropertyDeclarationSyntax propertyNode = properrtyNodes[0];
             LiteralExpressionSyntax stringLiteral = propertyNode.DescendantNodes()
-                .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.LiteralExpressionSyntax>()
+                .OfType<LiteralExpressionSyntax>()
                 .FirstOrDefault();
             Assert.That(stringLiteral, Is.Not.Null);
             // Verify that the getter contains the expected schema string
             var stringTokens = stringLiteral.ChildTokens().ToList();
             Assert.That(stringTokens.Count, Is.EqualTo(1));
-            var stringLiteralText = stringTokens[0].ToFullString().Trim();
+            string stringLiteralText = stringTokens[0].ToFullString().Trim();
             if (stringLiteralText.EndsWith("u8", StringComparison.Ordinal))
             {
                 Assert.That(languageVersion, Is.GreaterThanOrEqualTo(LanguageVersion.CSharp11));
+#pragma warning disable IDE0057 // No range available
                 stringLiteralText = stringLiteralText.Substring(0, stringLiteralText.Length - 2);
+#pragma warning restore IDE0057 // No range available
             }
             stringLiteralText = stringLiteralText.Trim('"');
             if (languageVersion < LanguageVersion.CSharp11)

@@ -45,17 +45,17 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
     [Parallelizable]
     public class NodesetGeneratorTests
     {
-        private Mock<IFileSystem> _mockFileSystem;
-        private Mock<IModelDesign> _mockModelDesign;
-        private Mock<ITelemetryContext> _mockTelemetry;
-        private GeneratorContext _context;
+        private Mock<IFileSystem> m_mockFileSystem;
+        private Mock<IModelDesign> m_mockModelDesign;
+        private Mock<ITelemetryContext> m_mockTelemetry;
+        private GeneratorContext m_context;
 
         [SetUp]
         public void SetUp()
         {
-            _mockFileSystem = new Mock<IFileSystem>();
-            _mockModelDesign = new Mock<IModelDesign>();
-            _mockTelemetry = new Mock<ITelemetryContext>();
+            m_mockFileSystem = new Mock<IFileSystem>();
+            m_mockModelDesign = new Mock<IModelDesign>();
+            m_mockTelemetry = new Mock<ITelemetryContext>();
 
             // Setup default namespace
             var targetNamespace = new Namespace
@@ -64,10 +64,10 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
                 Prefix = "Test",
                 Name = "TestNamespace"
             };
-            _mockModelDesign.Setup(m => m.TargetNamespace).Returns(targetNamespace);
-            _mockModelDesign.Setup(m => m.Namespaces).Returns([targetNamespace]);
-            _mockModelDesign.Setup(m => m.Nodes).Returns([]);
-            _mockModelDesign.Setup(m => m.NamespaceUris).Returns(new NamespaceTable());
+            m_mockModelDesign.Setup(m => m.TargetNamespace).Returns(targetNamespace);
+            m_mockModelDesign.Setup(m => m.Namespaces).Returns([targetNamespace]);
+            m_mockModelDesign.Setup(m => m.Nodes).Returns([]);
+            m_mockModelDesign.Setup(m => m.NamespaceUris).Returns(new NamespaceTable());
         }
 
         /// <summary>
@@ -90,17 +90,17 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         public void Constructor_ValidContext_CreatesInstance()
         {
             // Arrange
-            _context = new GeneratorContext
+            m_context = new GeneratorContext
             {
-                FileSystem = _mockFileSystem.Object,
+                FileSystem = m_mockFileSystem.Object,
                 OutputFolder = "TestOutput",
-                ModelDesign = _mockModelDesign.Object,
-                Telemetry = _mockTelemetry.Object,
+                ModelDesign = m_mockModelDesign.Object,
+                Telemetry = m_mockTelemetry.Object,
                 Options = new GeneratorOptions()
             };
 
             // Act
-            var generator = new NodesetGenerator(_context);
+            var generator = new NodesetGenerator(m_context);
 
             // Assert
             Assert.That(generator, Is.Not.Null);
@@ -113,17 +113,17 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         public void Constructor_WithUseXmlInitializersTrue_CreatesInstance()
         {
             // Arrange
-            _context = new GeneratorContext
+            m_context = new GeneratorContext
             {
-                FileSystem = _mockFileSystem.Object,
+                FileSystem = m_mockFileSystem.Object,
                 OutputFolder = "TestOutput",
-                ModelDesign = _mockModelDesign.Object,
-                Telemetry = _mockTelemetry.Object,
+                ModelDesign = m_mockModelDesign.Object,
+                Telemetry = m_mockTelemetry.Object,
                 Options = new GeneratorOptions()
             };
 
             // Act
-            var generator = new NodesetGenerator(_context, useXmlInitializers: true);
+            var generator = new NodesetGenerator(m_context, useXmlInitializers: true);
 
             // Assert
             Assert.That(generator, Is.Not.Null);
@@ -136,17 +136,17 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         public void Constructor_WithEmbedNodesetTrue_CreatesInstance()
         {
             // Arrange
-            _context = new GeneratorContext
+            m_context = new GeneratorContext
             {
-                FileSystem = _mockFileSystem.Object,
+                FileSystem = m_mockFileSystem.Object,
                 OutputFolder = "TestOutput",
-                ModelDesign = _mockModelDesign.Object,
-                Telemetry = _mockTelemetry.Object,
+                ModelDesign = m_mockModelDesign.Object,
+                Telemetry = m_mockTelemetry.Object,
                 Options = new GeneratorOptions()
             };
 
             // Act
-            var generator = new NodesetGenerator(_context, embedNodeset: true);
+            var generator = new NodesetGenerator(m_context, embedNodeset: true);
 
             // Assert
             Assert.That(generator, Is.Not.Null);
@@ -159,17 +159,17 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         public void Constructor_WithBothFlagsTrue_CreatesInstance()
         {
             // Arrange
-            _context = new GeneratorContext
+            m_context = new GeneratorContext
             {
-                FileSystem = _mockFileSystem.Object,
+                FileSystem = m_mockFileSystem.Object,
                 OutputFolder = "TestOutput",
-                ModelDesign = _mockModelDesign.Object,
-                Telemetry = _mockTelemetry.Object,
+                ModelDesign = m_mockModelDesign.Object,
+                Telemetry = m_mockTelemetry.Object,
                 Options = new GeneratorOptions()
             };
 
             // Act
-            var generator = new NodesetGenerator(_context, useXmlInitializers: true, embedNodeset: true);
+            var generator = new NodesetGenerator(m_context, useXmlInitializers: true, embedNodeset: true);
 
             // Assert
             Assert.That(generator, Is.Not.Null);
@@ -182,25 +182,25 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         public void Emit_NoNodes_CreatesFiles()
         {
             // Arrange
-            _mockFileSystem.Setup(fs => fs.OpenWrite(It.IsAny<string>()))
+            m_mockFileSystem.Setup(fs => fs.OpenWrite(It.IsAny<string>()))
                 .Returns(() => new MemoryStream());
 
-            _context = new GeneratorContext
+            m_context = new GeneratorContext
             {
-                FileSystem = _mockFileSystem.Object,
+                FileSystem = m_mockFileSystem.Object,
                 OutputFolder = "C:\\output",
-                ModelDesign = _mockModelDesign.Object,
-                Telemetry = _mockTelemetry.Object,
+                ModelDesign = m_mockModelDesign.Object,
+                Telemetry = m_mockTelemetry.Object,
                 Options = new GeneratorOptions()
             };
 
-            var generator = new NodesetGenerator(_context);
+            var generator = new NodesetGenerator(m_context);
 
             // Act
             generator.Emit();
 
             // Assert - OpenWrite should be called at least once for the nodeset file
-            _mockFileSystem.Verify(fs => fs.OpenWrite(It.IsAny<string>()), Times.AtLeastOnce);
+            m_mockFileSystem.Verify(fs => fs.OpenWrite(It.IsAny<string>()), Times.AtLeastOnce);
         }
     }
 }

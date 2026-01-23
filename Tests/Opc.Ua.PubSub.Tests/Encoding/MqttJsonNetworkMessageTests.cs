@@ -2331,9 +2331,9 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                     // check dataValues values
                     string fieldName = fieldEncoded.FieldMetaData.Name;
 
-                    var encodedExpandedNodeId =
+                    ExpandedNodeId encodedExpandedNodeId =
                         dataValueEncoded.Value is ExpandedNodeId ee ? ee : default;
-                    var decodedExpandedNodeId =
+                    ExpandedNodeId decodedExpandedNodeId =
                         dataValueDecoded.Value is ExpandedNodeId de ? de : default;
                     if (!encodedExpandedNodeId.IsNull &&
                         !encodedExpandedNodeId.IsAbsolute &&

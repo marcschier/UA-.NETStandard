@@ -32,7 +32,6 @@ using System.Collections.Generic;
 using System.Xml;
 using Moq;
 using NUnit.Framework;
-using Opc.Ua.Export;
 using Opc.Ua.Types;
 
 namespace Opc.Ua.Schema.Model.Tests
@@ -119,10 +118,9 @@ namespace Opc.Ua.Schema.Model.Tests
             // Arrange
             var mockDataType = new DataTypeDesign
             {
-                IsOptionSet = false
+                IsOptionSet = false,
+                SymbolicName = new XmlQualifiedName(basicType.ToString(), "http://opcfoundation.org/UA/")
             };
-
-            mockDataType.SymbolicName = new XmlQualifiedName(basicType.ToString(), "http://opcfoundation.org/UA/");
 
             // Act
             BasicDataType result = mockDataType.DetermineBasicDataType();
@@ -140,16 +138,16 @@ namespace Opc.Ua.Schema.Model.Tests
             // Arrange
             var mockBaseType = new DataTypeDesign
             {
-                IsOptionSet = false
+                IsOptionSet = false,
+                SymbolicName = new XmlQualifiedName("Int32", "http://opcfoundation.org/UA/")
             };
-            mockBaseType.SymbolicName = new XmlQualifiedName("Int32", "http://opcfoundation.org/UA/");
 
             var mockDataType = new DataTypeDesign
             {
-                IsOptionSet = false
+                IsOptionSet = false,
+                SymbolicName = new XmlQualifiedName("CustomInt32", "http://custom.org/UA/"),
+                BaseTypeNode = mockBaseType
             };
-            mockDataType.SymbolicName = new XmlQualifiedName("CustomInt32", "http://custom.org/UA/");
-            mockDataType.BaseTypeNode = mockBaseType;
 
             // Act
             BasicDataType result = mockDataType.DetermineBasicDataType();
@@ -167,16 +165,16 @@ namespace Opc.Ua.Schema.Model.Tests
             // Arrange
             var mockBaseType = new DataTypeDesign
             {
-                IsOptionSet = false
+                IsOptionSet = false,
+                SymbolicName = new XmlQualifiedName("Structure", "http://opcfoundation.org/UA/")
             };
-            mockBaseType.SymbolicName = new XmlQualifiedName("Structure", "http://opcfoundation.org/UA/");
 
             var mockDataType = new DataTypeDesign
             {
-                IsOptionSet = false
+                IsOptionSet = false,
+                SymbolicName = new XmlQualifiedName("CustomStructure", "http://custom.org/UA/"),
+                BaseTypeNode = mockBaseType
             };
-            mockDataType.SymbolicName = new XmlQualifiedName("CustomStructure", "http://custom.org/UA/");
-            mockDataType.BaseTypeNode = mockBaseType;
 
             // Act
             BasicDataType result = mockDataType.DetermineBasicDataType();
@@ -194,23 +192,23 @@ namespace Opc.Ua.Schema.Model.Tests
             // Arrange
             var mockGrandParent = new DataTypeDesign
             {
-                IsOptionSet = false
+                IsOptionSet = false,
+                SymbolicName = new XmlQualifiedName("String", "http://opcfoundation.org/UA/")
             };
-            mockGrandParent.SymbolicName = new XmlQualifiedName("String", "http://opcfoundation.org/UA/");
 
             var mockParent = new DataTypeDesign
             {
-                IsOptionSet = false
+                IsOptionSet = false,
+                SymbolicName = new XmlQualifiedName("CustomString1", "http://custom.org/UA/"),
+                BaseTypeNode = mockGrandParent
             };
-            mockParent.SymbolicName = new XmlQualifiedName("CustomString1", "http://custom.org/UA/");
-            mockParent.BaseTypeNode = mockGrandParent;
 
             var mockDataType = new DataTypeDesign
             {
-                IsOptionSet = false
+                IsOptionSet = false,
+                SymbolicName = new XmlQualifiedName("CustomString2", "http://custom.org/UA/"),
+                BaseTypeNode = mockParent
             };
-            mockDataType.SymbolicName = new XmlQualifiedName("CustomString2", "http://custom.org/UA/");
-            mockDataType.BaseTypeNode = mockParent;
 
             // Act
             BasicDataType result = mockDataType.DetermineBasicDataType();
@@ -228,10 +226,10 @@ namespace Opc.Ua.Schema.Model.Tests
             // Arrange
             var mockDataType = new DataTypeDesign
             {
-                IsOptionSet = false
+                IsOptionSet = false,
+                SymbolicName = new XmlQualifiedName("CustomType", "http://custom.org/UA/"),
+                BaseTypeNode = null
             };
-            mockDataType.SymbolicName = new XmlQualifiedName("CustomType", "http://custom.org/UA/");
-            mockDataType.BaseTypeNode = null;
 
             // Act
             BasicDataType result = mockDataType.DetermineBasicDataType();
@@ -249,23 +247,23 @@ namespace Opc.Ua.Schema.Model.Tests
             // Arrange
             var mockGrandParent = new DataTypeDesign
             {
-                IsOptionSet = false
+                IsOptionSet = false,
+                SymbolicName = new XmlQualifiedName("Structure", "http://opcfoundation.org/UA/")
             };
-            mockGrandParent.SymbolicName = new XmlQualifiedName("Structure", "http://opcfoundation.org/UA/");
 
             var mockParent = new DataTypeDesign
             {
-                IsOptionSet = false
+                IsOptionSet = false,
+                SymbolicName = new XmlQualifiedName("CustomStructure1", "http://custom.org/UA/"),
+                BaseTypeNode = mockGrandParent
             };
-            mockParent.SymbolicName = new XmlQualifiedName("CustomStructure1", "http://custom.org/UA/");
-            mockParent.BaseTypeNode = mockGrandParent;
 
             var mockDataType = new DataTypeDesign
             {
-                IsOptionSet = false
+                IsOptionSet = false,
+                SymbolicName = new XmlQualifiedName("CustomStructure2", "http://custom.org/UA/"),
+                BaseTypeNode = mockParent
             };
-            mockDataType.SymbolicName = new XmlQualifiedName("CustomStructure2", "http://custom.org/UA/");
-            mockDataType.BaseTypeNode = mockParent;
 
             // Act
             BasicDataType result = mockDataType.DetermineBasicDataType();
@@ -284,10 +282,10 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockBaseType = new TypeDesign();
             var mockDataType = new DataTypeDesign
             {
-                IsOptionSet = false
+                IsOptionSet = false,
+                SymbolicName = new XmlQualifiedName("CustomType", "http://custom.org/UA/"),
+                BaseTypeNode = mockBaseType
             };
-            mockDataType.SymbolicName = new XmlQualifiedName("CustomType", "http://custom.org/UA/");
-            mockDataType.BaseTypeNode = mockBaseType;
 
             // Act
             BasicDataType result = mockDataType.DetermineBasicDataType();
@@ -305,16 +303,16 @@ namespace Opc.Ua.Schema.Model.Tests
             // Arrange
             var mockBaseType = new DataTypeDesign
             {
-                IsOptionSet = false
+                IsOptionSet = false,
+                SymbolicName = new XmlQualifiedName("BaseDataType", "http://opcfoundation.org/UA/")
             };
-            mockBaseType.SymbolicName = new XmlQualifiedName("BaseDataType", "http://opcfoundation.org/UA/");
 
             var mockDataType = new DataTypeDesign
             {
-                IsOptionSet = false
+                IsOptionSet = false,
+                SymbolicName = new XmlQualifiedName("CustomType", "http://custom.org/UA/"),
+                BaseTypeNode = mockBaseType
             };
-            mockDataType.SymbolicName = new XmlQualifiedName("CustomType", "http://custom.org/UA/");
-            mockDataType.BaseTypeNode = mockBaseType;
 
             // Act
             BasicDataType result = mockDataType.DetermineBasicDataType();
@@ -330,7 +328,7 @@ namespace Opc.Ua.Schema.Model.Tests
         public void GetNodeClassString_VariableDesign_ReturnsVariable()
         {
             // Arrange
-            VariableDesign node = new VariableDesign();
+            var node = new VariableDesign();
 
             // Act
             string result = node.GetNodeClassString();
@@ -346,7 +344,7 @@ namespace Opc.Ua.Schema.Model.Tests
         public void GetNodeClassString_VariableTypeDesign_ReturnsVariableType()
         {
             // Arrange
-            VariableTypeDesign node = new VariableTypeDesign();
+            var node = new VariableTypeDesign();
 
             // Act
             string result = node.GetNodeClassString();
@@ -362,7 +360,7 @@ namespace Opc.Ua.Schema.Model.Tests
         public void GetNodeClassString_ObjectDesign_ReturnsObject()
         {
             // Arrange
-            ObjectDesign node = new ObjectDesign();
+            var node = new ObjectDesign();
 
             // Act
             string result = node.GetNodeClassString();
@@ -378,7 +376,7 @@ namespace Opc.Ua.Schema.Model.Tests
         public void GetNodeClassString_ObjectTypeDesign_ReturnsObjectType()
         {
             // Arrange
-            ObjectTypeDesign node = new ObjectTypeDesign();
+            var node = new ObjectTypeDesign();
 
             // Act
             string result = node.GetNodeClassString();
@@ -394,7 +392,7 @@ namespace Opc.Ua.Schema.Model.Tests
         public void GetNodeClassString_ReferenceTypeDesign_ReturnsReferenceType()
         {
             // Arrange
-            ReferenceTypeDesign node = new ReferenceTypeDesign();
+            var node = new ReferenceTypeDesign();
 
             // Act
             string result = node.GetNodeClassString();
@@ -410,7 +408,7 @@ namespace Opc.Ua.Schema.Model.Tests
         public void GetNodeClassString_DataTypeDesign_ReturnsDataType()
         {
             // Arrange
-            DataTypeDesign node = new DataTypeDesign();
+            var node = new DataTypeDesign();
 
             // Act
             string result = node.GetNodeClassString();
@@ -426,7 +424,7 @@ namespace Opc.Ua.Schema.Model.Tests
         public void GetNodeClassString_MethodDesign_ReturnsMethod()
         {
             // Arrange
-            MethodDesign node = new MethodDesign();
+            var node = new MethodDesign();
 
             // Act
             string result = node.GetNodeClassString();
@@ -442,7 +440,7 @@ namespace Opc.Ua.Schema.Model.Tests
         public void GetNodeClassString_ViewDesign_ReturnsView()
         {
             // Arrange
-            ViewDesign node = new ViewDesign();
+            var node = new ViewDesign();
 
             // Act
             string result = node.GetNodeClassString();
@@ -458,7 +456,7 @@ namespace Opc.Ua.Schema.Model.Tests
         public void GetNodeClassString_BaseNodeDesign_ReturnsNode()
         {
             // Arrange
-            NodeDesign node = new NodeDesign();
+            var node = new NodeDesign();
 
             // Act
             string result = node.GetNodeClassString();
@@ -943,7 +941,7 @@ namespace Opc.Ua.Schema.Model.Tests
         /// </summary>
         [TestCase((long)0, "(long)0")]
         [TestCase(9223372036854775807, "(long)9223372036854775807")]
-        [TestCase((-9223372036854775808), "(long)-9223372036854775808")]
+        [TestCase(-9223372036854775808, "(long)-9223372036854775808")]
         public void GetDefaultDotNetValue_Int64WithValidValue_ReturnsFormattedCast(long value, string expected)
         {
             // Arrange
@@ -1878,13 +1876,13 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockDataType = new DataTypeDesign
             {
                 BasicDataType = BasicDataType.Enumeration,
-                SymbolicId = new XmlQualifiedName("TestEnum", "http://test.namespace")
+                SymbolicId = new XmlQualifiedName("TestEnum", "http://test.namespace"),
+                BaseTypeNode = new TypeDesign
+                {
+                    SymbolicId = new XmlQualifiedName("OptionSet", Namespaces.OpcUa)
+                },
+                SymbolicName = new XmlQualifiedName("TestEnum", "http://test.namespace")
             };
-            mockDataType.BaseTypeNode = new TypeDesign
-            {
-                SymbolicId = new XmlQualifiedName("OptionSet", Namespaces.OpcUa)
-            };
-            mockDataType.SymbolicName = new XmlQualifiedName("TestEnum", "http://test.namespace");
             Namespace[] namespaces = [];
             var mockContext = new Mock<IServiceMessageContext>();
 
@@ -1913,13 +1911,13 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockDataType = new DataTypeDesign
             {
                 BasicDataType = BasicDataType.Enumeration,
-                SymbolicId = new XmlQualifiedName("TestEnum", "http://test.namespace")
+                SymbolicId = new XmlQualifiedName("TestEnum", "http://test.namespace"),
+                BaseTypeNode = new TypeDesign
+                {
+                    SymbolicId = new XmlQualifiedName("SomeOtherBase", Namespaces.OpcUa)
+                },
+                IsOptionSet = true
             };
-            mockDataType.BaseTypeNode = new TypeDesign
-            {
-                SymbolicId = new XmlQualifiedName("SomeOtherBase", Namespaces.OpcUa)
-            };
-            mockDataType.IsOptionSet = true;
             Namespace[] namespaces = [];
             var mockContext = new Mock<IServiceMessageContext>();
 
@@ -1948,14 +1946,14 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockDataType = new DataTypeDesign
             {
                 BasicDataType = BasicDataType.Enumeration,
-                SymbolicId = new XmlQualifiedName("TestEnum", "http://test.namespace")
+                SymbolicId = new XmlQualifiedName("TestEnum", "http://test.namespace"),
+                BaseTypeNode = new TypeDesign
+                {
+                    SymbolicId = new XmlQualifiedName("SomeOtherBase", Namespaces.OpcUa)
+                },
+                IsOptionSet = false,
+                SymbolicName = new XmlQualifiedName("TestEnum", "http://test.namespace")
             };
-            mockDataType.BaseTypeNode = new TypeDesign
-            {
-                SymbolicId = new XmlQualifiedName("SomeOtherBase", Namespaces.OpcUa)
-            };
-            mockDataType.IsOptionSet = false;
-            mockDataType.SymbolicName = new XmlQualifiedName("TestEnum", "http://test.namespace");
             var mockField = new Parameter
             {
                 Name = "FirstValue"
@@ -4166,10 +4164,13 @@ namespace Opc.Ua.Schema.Model.Tests
         public void GetBaseClassName_NonDataTypeDesignWithValidBaseTypeNode_ReturnsSymbolicName()
         {
             // Arrange
-            var mockType = new TypeDesign();
-            var mockBaseType = new TypeDesign();
-            mockBaseType.SymbolicName = new XmlQualifiedName("BaseTypeName", "http://test.org");
-            mockType.BaseTypeNode = mockBaseType;
+            var mockType = new TypeDesign
+            {
+                BaseTypeNode = new TypeDesign
+                {
+                    SymbolicName = new XmlQualifiedName("BaseTypeName", "http://test.org")
+                }
+            };
             Namespace[] namespaces = [];
 
             // Act
@@ -4207,11 +4208,13 @@ namespace Opc.Ua.Schema.Model.Tests
         public void GetBaseClassName_DataTypeDesignWithStructureBasicType_ReturnsIEncodeable()
         {
             // Arrange
-            var mockDataType = new DataTypeDesign();
-            mockDataType.BaseTypeNode = new DataTypeDesign
+            var mockDataType = new DataTypeDesign
             {
-                BasicDataType = BasicDataType.Structure,
-                SymbolicName = new XmlQualifiedName("Structure", "http://test.org")
+                BaseTypeNode = new DataTypeDesign
+                {
+                    BasicDataType = BasicDataType.Structure,
+                    SymbolicName = new XmlQualifiedName("Structure", "http://test.org")
+                }
             };
             Namespace[] namespaces = [];
 
@@ -4385,10 +4388,12 @@ namespace Opc.Ua.Schema.Model.Tests
         public void GetBaseClassName_NonDataTypeDesignWithNullSymbolicName_ThrowsArgumentNullException()
         {
             // Arrange
-            var mockType = new TypeDesign();
-            mockType.BaseTypeNode = new TypeDesign
+            var mockType = new TypeDesign
             {
-                SymbolicName = null
+                BaseTypeNode = new TypeDesign
+                {
+                    SymbolicName = null
+                }
             };
             Namespace[] namespaces = [];
 
@@ -5624,7 +5629,7 @@ namespace Opc.Ua.Schema.Model.Tests
             // Arrange
             string longName = new string('A', 1000) + "PropertyName";
             var field = new Parameter { Name = longName };
-            string expected = $"m_a{longName.Substring(1)}";
+            string expected = $"m_a{longName[1..]}";
 
             // Act
             string result = field.GetChildFieldName();
@@ -8564,9 +8569,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsPartOfOpcUaTypesLibrary_NonOpcUaNamespace_ReturnsFalse()
         {
             // Arrange
-            var mockDataType = new DataTypeDesign();
-            mockDataType.SymbolicId = new XmlQualifiedName("TestType", "http://example.org/CustomNamespace/");
-            mockDataType.NumericId = DataTypes.Argument;
+            var mockDataType = new DataTypeDesign
+            {
+                SymbolicId = new XmlQualifiedName("TestType", "http://example.org/CustomNamespace/"),
+                NumericId = DataTypes.Argument
+            };
 
             // Act
             bool result = mockDataType.IsPartOfOpcUaTypesLibrary();
@@ -8582,9 +8589,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsPartOfOpcUaTypesLibrary_OpcUaNamespaceWithUnlistedNumericId_ReturnsFalse()
         {
             // Arrange
-            var mockDataType = new DataTypeDesign();
-            mockDataType.SymbolicId = new XmlQualifiedName("TestType", Namespaces.OpcUa);
-            mockDataType.NumericId = 999999u;
+            var mockDataType = new DataTypeDesign
+            {
+                SymbolicId = new XmlQualifiedName("TestType", Namespaces.OpcUa),
+                NumericId = 999999u
+            };
 
             // Act
             bool result = mockDataType.IsPartOfOpcUaTypesLibrary();
@@ -8600,9 +8609,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsPartOfOpcUaTypesLibrary_AccessRestrictionType_ReturnsTrue()
         {
             // Arrange
-            var mockDataType = new DataTypeDesign();
-            mockDataType.SymbolicId = new XmlQualifiedName("AccessRestrictionType", Namespaces.OpcUa);
-            mockDataType.NumericId = DataTypes.AccessRestrictionType;
+            var mockDataType = new DataTypeDesign
+            {
+                SymbolicId = new XmlQualifiedName("AccessRestrictionType", Namespaces.OpcUa),
+                NumericId = DataTypes.AccessRestrictionType
+            };
 
             // Act
             bool result = mockDataType.IsPartOfOpcUaTypesLibrary();
@@ -8678,9 +8689,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsPartOfOpcUaTypesLibrary_UnsupportedOpcUaDataTypes_ReturnsFalse(uint numericId)
         {
             // Arrange
-            var mockDataType = new DataTypeDesign();
-            mockDataType.SymbolicId = new XmlQualifiedName("TestType", Namespaces.OpcUa);
-            mockDataType.NumericId = numericId;
+            var mockDataType = new DataTypeDesign
+            {
+                SymbolicId = new XmlQualifiedName("TestType", Namespaces.OpcUa),
+                NumericId = numericId
+            };
 
             // Act
             bool result = mockDataType.IsPartOfOpcUaTypesLibrary();
@@ -8696,9 +8709,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsPartOfOpcUaTypesLibrary_EmptyNamespace_ReturnsFalse()
         {
             // Arrange
-            var mockDataType = new DataTypeDesign();
-            mockDataType.SymbolicId = new XmlQualifiedName("TestType", string.Empty);
-            mockDataType.NumericId = DataTypes.Argument;
+            var mockDataType = new DataTypeDesign
+            {
+                SymbolicId = new XmlQualifiedName("TestType", string.Empty),
+                NumericId = DataTypes.Argument
+            };
 
             // Act
             bool result = mockDataType.IsPartOfOpcUaTypesLibrary();
@@ -8714,9 +8729,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsPartOfOpcUaTypesLibrary_NullNamespace_ReturnsFalse()
         {
             // Arrange
-            var mockDataType = new DataTypeDesign();
-            mockDataType.SymbolicId = new XmlQualifiedName("TestType", null);
-            mockDataType.NumericId = DataTypes.Argument;
+            var mockDataType = new DataTypeDesign
+            {
+                SymbolicId = new XmlQualifiedName("TestType", null),
+                NumericId = DataTypes.Argument
+            };
 
             // Act
             bool result = mockDataType.IsPartOfOpcUaTypesLibrary();
@@ -8732,9 +8749,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsPartOfOpcUaTypesLibrary_CaseVariationInNamespace_ReturnsFalse()
         {
             // Arrange
-            var mockDataType = new DataTypeDesign();
-            mockDataType.SymbolicId = new XmlQualifiedName("TestType", "HTTP://OPCFOUNDATION.ORG/UA/");
-            mockDataType.NumericId = DataTypes.Argument;
+            var mockDataType = new DataTypeDesign
+            {
+                SymbolicId = new XmlQualifiedName("TestType", "HTTP://OPCFOUNDATION.ORG/UA/"),
+                NumericId = DataTypes.Argument
+            };
 
             // Act
             bool result = mockDataType.IsPartOfOpcUaTypesLibrary();
@@ -8750,9 +8769,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsPartOfOpcUaTypesLibrary_NamespaceWithoutTrailingSlash_ReturnsFalse()
         {
             // Arrange
-            var mockDataType = new DataTypeDesign();
-            mockDataType.SymbolicId = new XmlQualifiedName("TestType", "http://opcfoundation.org/UA");
-            mockDataType.NumericId = DataTypes.Argument;
+            var mockDataType = new DataTypeDesign
+            {
+                SymbolicId = new XmlQualifiedName("TestType", "http://opcfoundation.org/UA"),
+                NumericId = DataTypes.Argument
+            };
 
             // Act
             bool result = mockDataType.IsPartOfOpcUaTypesLibrary();
@@ -8811,9 +8832,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsOverriddenWithSameClass_ModellingRuleNone_ReturnsFalse()
         {
             // Arrange
-            var mockInstance = new InstanceDesign();
-            mockInstance.OveriddenNode = new InstanceDesign();
-            mockInstance.ModellingRule = ModellingRule.None;
+            var mockInstance = new InstanceDesign
+            {
+                OveriddenNode = new InstanceDesign(),
+                ModellingRule = ModellingRule.None
+            };
             const string targetNamespace = "http://test.org/UA/";
             Namespace[] namespaces = [];
 
@@ -8833,9 +8856,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsOverriddenWithSameClass_ModellingRuleExposesItsArray_ReturnsFalse()
         {
             // Arrange
-            var mockInstance = new InstanceDesign();
-            mockInstance.OveriddenNode = new InstanceDesign();
-            mockInstance.ModellingRule = ModellingRule.ExposesItsArray;
+            var mockInstance = new InstanceDesign
+            {
+                OveriddenNode = new InstanceDesign(),
+                ModellingRule = ModellingRule.ExposesItsArray
+            };
             const string targetNamespace = "http://test.org/UA/";
             Namespace[] namespaces = [];
 
@@ -8855,9 +8880,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsOverriddenWithSameClass_ModellingRuleMandatoryPlaceholder_ReturnsFalse()
         {
             // Arrange
-            var mockInstance = new InstanceDesign();
-            mockInstance.OveriddenNode = new InstanceDesign();
-            mockInstance.ModellingRule = ModellingRule.MandatoryPlaceholder;
+            var mockInstance = new InstanceDesign
+            {
+                OveriddenNode = new InstanceDesign(),
+                ModellingRule = ModellingRule.MandatoryPlaceholder
+            };
             const string targetNamespace = "http://test.org/UA/";
             Namespace[] namespaces = [];
 
@@ -8877,9 +8904,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsOverriddenWithSameClass_ModellingRuleOptionalPlaceholder_ReturnsFalse()
         {
             // Arrange
-            var mockInstance = new InstanceDesign();
-            mockInstance.OveriddenNode = new InstanceDesign();
-            mockInstance.ModellingRule = ModellingRule.OptionalPlaceholder;
+            var mockInstance = new InstanceDesign
+            {
+                OveriddenNode = new InstanceDesign(),
+                ModellingRule = ModellingRule.OptionalPlaceholder
+            };
             const string targetNamespace = "http://test.org/UA/";
             Namespace[] namespaces = [];
 
@@ -10994,12 +11023,12 @@ namespace Opc.Ua.Schema.Model.Tests
         /// </summary>
         private sealed class MockGetDotNetTypeName
         {
-            private readonly string _returnValue;
+            private readonly string m_returnValue;
             public NullableAnnotation LastNullableAnnotation { get; private set; }
 
             public MockGetDotNetTypeName(string returnValue)
             {
-                _returnValue = returnValue;
+                m_returnValue = returnValue;
             }
 
             public string GetMethodArgumentDotNetTypeWrapper(
@@ -11013,7 +11042,7 @@ namespace Opc.Ua.Schema.Model.Tests
                 LastNullableAnnotation = isOptional ? NullableAnnotation.Nullable : NullableAnnotation.NonNullable;
 
                 // Mock the GetDotNetTypeName call
-                string typeName = _returnValue;
+                string typeName = m_returnValue;
 
                 // Replicate the method logic
                 if (typeName is "global::Opc.Ua.IEncodeable" or "global::Opc.Ua.IEncodeable?")
@@ -11064,9 +11093,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsBuiltInProperty_MethodDesignParentWithInputArguments_ReturnsTrue()
         {
             // Arrange
-            var mockInstance = new InstanceDesign();
-            mockInstance.Parent = new MethodDesign();
-            mockInstance.SymbolicName = new XmlQualifiedName("InputArguments", Namespaces.OpcUa);
+            var mockInstance = new InstanceDesign
+            {
+                Parent = new MethodDesign(),
+                SymbolicName = new XmlQualifiedName("InputArguments", Namespaces.OpcUa)
+            };
 
             // Act
             bool result = mockInstance.IsBuiltInProperty();
@@ -11083,9 +11114,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsBuiltInProperty_MethodDesignParentWithOutputArguments_ReturnsTrue()
         {
             // Arrange
-            var mockInstance = new InstanceDesign();
-            mockInstance.Parent = new MethodDesign();
-            mockInstance.SymbolicName = new XmlQualifiedName("OutputArguments", Namespaces.OpcUa);
+            var mockInstance = new InstanceDesign
+            {
+                Parent = new MethodDesign(),
+                SymbolicName = new XmlQualifiedName("OutputArguments", Namespaces.OpcUa)
+            };
 
             // Act
             bool result = mockInstance.IsBuiltInProperty();
@@ -11102,9 +11135,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsBuiltInProperty_MethodDesignParentWithInputArgumentsDifferentNamespace_ReturnsFalse()
         {
             // Arrange
-            var mockInstance = new InstanceDesign();
-            mockInstance.Parent = new MethodDesign();
-            mockInstance.SymbolicName = new XmlQualifiedName("InputArguments", "http://custom.namespace/");
+            var mockInstance = new InstanceDesign
+            {
+                Parent = new MethodDesign(),
+                SymbolicName = new XmlQualifiedName("InputArguments", "http://custom.namespace/")
+            };
 
             // Act
             bool result = mockInstance.IsBuiltInProperty();
@@ -11121,9 +11156,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsBuiltInProperty_MethodDesignParentWithOutputArgumentsDifferentNamespace_ReturnsFalse()
         {
             // Arrange
-            var mockInstance = new InstanceDesign();
-            mockInstance.Parent = new MethodDesign();
-            mockInstance.SymbolicName = new XmlQualifiedName("OutputArguments", "http://custom.namespace/");
+            var mockInstance = new InstanceDesign
+            {
+                Parent = new MethodDesign(),
+                SymbolicName = new XmlQualifiedName("OutputArguments", "http://custom.namespace/")
+            };
 
             // Act
             bool result = mockInstance.IsBuiltInProperty();
@@ -11140,9 +11177,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsBuiltInProperty_MethodDesignParentWithDifferentName_ReturnsFalse()
         {
             // Arrange
-            var mockInstance = new InstanceDesign();
-            mockInstance.Parent = new MethodDesign();
-            mockInstance.SymbolicName = new XmlQualifiedName("CustomProperty", Namespaces.OpcUa);
+            var mockInstance = new InstanceDesign
+            {
+                Parent = new MethodDesign(),
+                SymbolicName = new XmlQualifiedName("CustomProperty", Namespaces.OpcUa)
+            };
 
             // Act
             bool result = mockInstance.IsBuiltInProperty();
@@ -11159,9 +11198,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsBuiltInProperty_VariableDesignParentWithEnumStrings_ReturnsTrue()
         {
             // Arrange
-            var mockInstance = new InstanceDesign();
-            mockInstance.Parent = new VariableDesign();
-            mockInstance.SymbolicName = new XmlQualifiedName("EnumStrings", Namespaces.OpcUa);
+            var mockInstance = new InstanceDesign
+            {
+                Parent = new VariableDesign(),
+                SymbolicName = new XmlQualifiedName("EnumStrings", Namespaces.OpcUa)
+            };
 
             // Act
             bool result = mockInstance.IsBuiltInProperty();
@@ -11178,9 +11219,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsBuiltInProperty_VariableDesignParentWithEnumStringsDifferentNamespace_ReturnsFalse()
         {
             // Arrange
-            var mockInstance = new InstanceDesign();
-            mockInstance.Parent = new VariableDesign();
-            mockInstance.SymbolicName = new XmlQualifiedName("EnumStrings", "http://custom.namespace/");
+            var mockInstance = new InstanceDesign
+            {
+                Parent = new VariableDesign(),
+                SymbolicName = new XmlQualifiedName("EnumStrings", "http://custom.namespace/")
+            };
 
             // Act
             bool result = mockInstance.IsBuiltInProperty();
@@ -11197,9 +11240,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsBuiltInProperty_VariableDesignParentWithDifferentName_ReturnsFalse()
         {
             // Arrange
-            var mockInstance = new InstanceDesign();
-            mockInstance.Parent = new VariableDesign();
-            mockInstance.SymbolicName = new XmlQualifiedName("CustomProperty", Namespaces.OpcUa);
+            var mockInstance = new InstanceDesign
+            {
+                Parent = new VariableDesign(),
+                SymbolicName = new XmlQualifiedName("CustomProperty", Namespaces.OpcUa)
+            };
 
             // Act
             bool result = mockInstance.IsBuiltInProperty();
@@ -11216,9 +11261,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsBuiltInProperty_OtherParentType_ReturnsFalse()
         {
             // Arrange
-            var mockInstance = new InstanceDesign();
-            mockInstance.Parent = new NodeDesign();
-            mockInstance.SymbolicName = new XmlQualifiedName("SomeProperty", Namespaces.OpcUa);
+            var mockInstance = new InstanceDesign
+            {
+                Parent = new NodeDesign(),
+                SymbolicName = new XmlQualifiedName("SomeProperty", Namespaces.OpcUa)
+            };
 
             // Act
             bool result = mockInstance.IsBuiltInProperty();
@@ -11255,9 +11302,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsBuiltInProperty_NullSymbolicName_ReturnsFalse()
         {
             // Arrange
-            var mockInstance = new InstanceDesign();
-            mockInstance.Parent = new MethodDesign();
-            mockInstance.SymbolicName = null;
+            var mockInstance = new InstanceDesign
+            {
+                Parent = new MethodDesign(),
+                SymbolicName = null
+            };
 
             // Act
             bool result = mockInstance.IsBuiltInProperty();
@@ -11274,9 +11323,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsBuiltInProperty_EmptySymbolicName_ReturnsFalse()
         {
             // Arrange
-            var mockInstance = new InstanceDesign();
-            mockInstance.Parent = new MethodDesign();
-            mockInstance.SymbolicName = new XmlQualifiedName(string.Empty, Namespaces.OpcUa);
+            var mockInstance = new InstanceDesign
+            {
+                Parent = new MethodDesign(),
+                SymbolicName = new XmlQualifiedName(string.Empty, Namespaces.OpcUa)
+            };
 
             // Act
             bool result = mockInstance.IsBuiltInProperty();
@@ -11292,9 +11343,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsBuiltInProperty_MethodDesignParentWithInputArgumentsDifferentCase_ReturnsFalse()
         {
             // Arrange
-            var mockInstance = new InstanceDesign();
-            mockInstance.Parent = new MethodDesign();
-            mockInstance.SymbolicName = new XmlQualifiedName("inputarguments", Namespaces.OpcUa);
+            var mockInstance = new InstanceDesign
+            {
+                Parent = new MethodDesign(),
+                SymbolicName = new XmlQualifiedName("inputarguments", Namespaces.OpcUa)
+            };
 
             // Act
             bool result = mockInstance.IsBuiltInProperty();
@@ -11310,9 +11363,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsBuiltInProperty_MethodDesignParentWithOutputArgumentsDifferentCase_ReturnsFalse()
         {
             // Arrange
-            var mockInstance = new InstanceDesign();
-            mockInstance.Parent = new MethodDesign();
-            mockInstance.SymbolicName = new XmlQualifiedName("OUTPUTARGUMENTS", Namespaces.OpcUa);
+            var mockInstance = new InstanceDesign
+            {
+                Parent = new MethodDesign(),
+                SymbolicName = new XmlQualifiedName("OUTPUTARGUMENTS", Namespaces.OpcUa)
+            };
 
             // Act
             bool result = mockInstance.IsBuiltInProperty();
@@ -11328,9 +11383,11 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsBuiltInProperty_VariableDesignParentWithEnumStringsDifferentCase_ReturnsFalse()
         {
             // Arrange
-            var mockInstance = new InstanceDesign();
-            mockInstance.Parent = new VariableDesign();
-            mockInstance.SymbolicName = new XmlQualifiedName("enumstrings", Namespaces.OpcUa);
+            var mockInstance = new InstanceDesign
+            {
+                Parent = new VariableDesign(),
+                SymbolicName = new XmlQualifiedName("enumstrings", Namespaces.OpcUa)
+            };
 
             // Act
             bool result = mockInstance.IsBuiltInProperty();
@@ -11383,8 +11440,10 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsMethodTypeNode_VariousSymbolicNames_ReturnsExpectedResult(string symbolicName, bool expected)
         {
             // Arrange
-            var mockNode = new NodeDesign();
-            mockNode.SymbolicId = new XmlQualifiedName(symbolicName);
+            var mockNode = new NodeDesign
+            {
+                SymbolicId = new XmlQualifiedName(symbolicName)
+            };
 
             // Act
             bool result = mockNode.IsMethodTypeNode();
@@ -11427,8 +11486,10 @@ namespace Opc.Ua.Schema.Model.Tests
             bool expected)
         {
             // Arrange
-            var mockNode = new NodeDesign();
-            mockNode.SymbolicId = new XmlQualifiedName(symbolicName);
+            var mockNode = new NodeDesign
+            {
+                SymbolicId = new XmlQualifiedName(symbolicName)
+            };
 
             // Act
             bool result = mockNode.IsMethodTypeNode();
@@ -11447,8 +11508,10 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsMethodTypeNode_UnderscoreAtStart_DoesNotTruncate(string symbolicName, bool expected)
         {
             // Arrange
-            var mockNode = new NodeDesign();
-            mockNode.SymbolicId = new XmlQualifiedName(symbolicName);
+            var mockNode = new NodeDesign
+            {
+                SymbolicId = new XmlQualifiedName(symbolicName)
+            };
 
             // Act
             bool result = mockNode.IsMethodTypeNode();
@@ -11470,8 +11533,10 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsMethodTypeNode_CaseSensitivity_ReturnsExpectedResult(string symbolicName, bool expected)
         {
             // Arrange
-            var mockNode = new NodeDesign();
-            mockNode.SymbolicId = new XmlQualifiedName(symbolicName);
+            var mockNode = new NodeDesign
+            {
+                SymbolicId = new XmlQualifiedName(symbolicName)
+            };
 
             // Act
             bool result = mockNode.IsMethodTypeNode();

@@ -1136,7 +1136,9 @@ namespace Opc.Ua
         /// The type information for the matrix.
         /// </summary>
         [JsonPropertyName("TypeInfo")]
+#pragma warning disable RCS1085 // Use auto-implemented property
         public TypeInfo TypeInfo => m_typeInfo;
+#pragma warning restore RCS1085 // Use auto-implemented property
 
         /// <inheritdoc/>
         public override int GetHashCode()
@@ -1223,7 +1225,7 @@ namespace Opc.Ua
                         .GetHashCode(m_value as Variant[]),
                     BuiltInType.ByteString => ByteStringArrayEqualityComparer.Default
                         .GetHashCode(m_value as byte[][]),
-                    _ => 0,
+                    _ => 0
                 };
             }
             return m_value?.GetHashCode() ?? 0;
@@ -2254,7 +2256,7 @@ namespace Opc.Ua
             scoped ref readonly T data,
             out T value,
             BuiltInType builtInType,
-            T defaultValue = default!)
+            T defaultValue = default)
         {
             bool success = TypeInfo.BuiltInType == builtInType && TypeInfo.IsScalar;
             value = success ? data : defaultValue;
@@ -5021,7 +5023,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public object GetValue()
         {
-            return Value!;
+            return Value;
         }
 
         /// <summary>

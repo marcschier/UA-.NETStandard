@@ -467,10 +467,11 @@ namespace Opc.Ua.Gds.Server.Database.Linq
                     {
                         continue;
                     }
-                    else // filter for clients
-                        if (applicationType == 2 &&
-                            result.ApplicationType != (int)ApplicationType.Client &&
-                            result.ApplicationType != (int)ApplicationType.ClientAndServer)
+
+                    // filter for clients
+                    if (applicationType == 2 &&
+                        result.ApplicationType != (int)ApplicationType.Client &&
+                        result.ApplicationType != (int)ApplicationType.ClientAndServer)
                     {
                         continue;
                     }

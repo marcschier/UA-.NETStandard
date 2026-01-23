@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using NUnit.Framework;
 using Opc.Ua.Tests;
 using Assert = NUnit.Framework.Legacy.ClassicAssert;
@@ -79,7 +78,7 @@ namespace Opc.Ua.Server.Tests
             var translations = new Dictionary<string, string> {
                 { "en-US", "Hello" },
                 { "de-DE", "Hallo" } };
-            var defaultText = new LocalizedText("greeting", translations).AsMultiLanguage();
+            LocalizedText defaultText = new LocalizedText("greeting", translations).AsMultiLanguage();
 
             //Act
             LocalizedText resultText = resourceManager.Translate(

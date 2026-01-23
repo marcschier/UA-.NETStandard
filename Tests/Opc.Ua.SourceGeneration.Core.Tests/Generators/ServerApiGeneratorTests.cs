@@ -45,17 +45,17 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
     [Parallelizable]
     public class ServerApiGeneratorTests
     {
-        private Mock<IFileSystem> _mockFileSystem;
-        private Mock<IModelDesign> _mockModelDesign;
-        private Mock<ITelemetryContext> _mockTelemetry;
-        private GeneratorContext _context;
+        private Mock<IFileSystem> m_mockFileSystem;
+        private Mock<IModelDesign> m_mockModelDesign;
+        private Mock<ITelemetryContext> m_mockTelemetry;
+        private GeneratorContext m_context;
 
         [SetUp]
         public void SetUp()
         {
-            _mockFileSystem = new Mock<IFileSystem>();
-            _mockModelDesign = new Mock<IModelDesign>();
-            _mockTelemetry = new Mock<ITelemetryContext>();
+            m_mockFileSystem = new Mock<IFileSystem>();
+            m_mockModelDesign = new Mock<IModelDesign>();
+            m_mockTelemetry = new Mock<ITelemetryContext>();
 
             // Setup default namespace
             var targetNamespace = new Namespace
@@ -64,8 +64,8 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
                 Prefix = "Test",
                 Name = "TestNamespace"
             };
-            _mockModelDesign.Setup(m => m.TargetNamespace).Returns(targetNamespace);
-            _mockModelDesign.Setup(m => m.Namespaces).Returns([targetNamespace]);
+            m_mockModelDesign.Setup(m => m.TargetNamespace).Returns(targetNamespace);
+            m_mockModelDesign.Setup(m => m.Namespaces).Returns([targetNamespace]);
         }
 
         /// <summary>
@@ -88,17 +88,17 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         public void Constructor_ValidContext_CreatesInstance()
         {
             // Arrange
-            _context = new GeneratorContext
+            m_context = new GeneratorContext
             {
-                FileSystem = _mockFileSystem.Object,
+                FileSystem = m_mockFileSystem.Object,
                 OutputFolder = "TestOutput",
-                ModelDesign = _mockModelDesign.Object,
-                Telemetry = _mockTelemetry.Object,
+                ModelDesign = m_mockModelDesign.Object,
+                Telemetry = m_mockTelemetry.Object,
                 Options = new GeneratorOptions()
             };
 
             // Act
-            var generator = new ServerApiGenerator(_context);
+            var generator = new ServerApiGenerator(m_context);
 
             // Assert
             Assert.That(generator, Is.Not.Null);
@@ -113,23 +113,23 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             // Arrange
             using var memoryStream = new MemoryStream();
 
-            _mockModelDesign.Setup(m => m.GetListOfServices(It.IsAny<ServiceCategory[]>())).Returns([]);
+            m_mockModelDesign.Setup(m => m.GetListOfServices(It.IsAny<ServiceCategory[]>())).Returns([]);
 
             string capturedPath = null;
-            _mockFileSystem.Setup(fs => fs.OpenWrite(It.IsAny<string>()))
+            m_mockFileSystem.Setup(fs => fs.OpenWrite(It.IsAny<string>()))
                 .Callback<string>(path => capturedPath = path)
                 .Returns(memoryStream);
 
-            _context = new GeneratorContext
+            m_context = new GeneratorContext
             {
-                FileSystem = _mockFileSystem.Object,
+                FileSystem = m_mockFileSystem.Object,
                 OutputFolder = "C:\\output",
-                ModelDesign = _mockModelDesign.Object,
-                Telemetry = _mockTelemetry.Object,
+                ModelDesign = m_mockModelDesign.Object,
+                Telemetry = m_mockTelemetry.Object,
                 Options = new GeneratorOptions()
             };
 
-            var generator = new ServerApiGenerator(_context);
+            var generator = new ServerApiGenerator(m_context);
 
             // Act
             generator.Emit();
@@ -138,7 +138,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             Assert.That(capturedPath, Is.Not.Null);
             Assert.That(capturedPath, Does.Contain("Opc.Ua.ServerBase.g.cs"));
             Assert.That(capturedPath, Does.StartWith("C:\\output"));
-            _mockFileSystem.Verify(fs => fs.OpenWrite(It.IsAny<string>()), Times.Once);
+            m_mockFileSystem.Verify(fs => fs.OpenWrite(It.IsAny<string>()), Times.Once);
         }
 
         /// <summary>
@@ -170,24 +170,24 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
                 Response = responseType
             };
 
-            _mockModelDesign.Setup(m => m.GetListOfServices(It.IsAny<ServiceCategory[]>()))
+            m_mockModelDesign.Setup(m => m.GetListOfServices(It.IsAny<ServiceCategory[]>()))
                 .Returns([service]);
 
             string capturedPath = null;
-            _mockFileSystem.Setup(fs => fs.OpenWrite(It.IsAny<string>()))
+            m_mockFileSystem.Setup(fs => fs.OpenWrite(It.IsAny<string>()))
                 .Callback<string>(path => capturedPath = path)
                 .Returns(memoryStream);
 
-            _context = new GeneratorContext
+            m_context = new GeneratorContext
             {
-                FileSystem = _mockFileSystem.Object,
+                FileSystem = m_mockFileSystem.Object,
                 OutputFolder = "C:\\output",
-                ModelDesign = _mockModelDesign.Object,
-                Telemetry = _mockTelemetry.Object,
+                ModelDesign = m_mockModelDesign.Object,
+                Telemetry = m_mockTelemetry.Object,
                 Options = new GeneratorOptions()
             };
 
-            var generator = new ServerApiGenerator(_context);
+            var generator = new ServerApiGenerator(m_context);
 
             // Act
             generator.Emit();
@@ -196,7 +196,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             Assert.That(capturedPath, Is.Not.Null);
             Assert.That(capturedPath, Does.Contain("Opc.Ua.ServerBase.g.cs"));
             Assert.That(capturedPath, Does.StartWith("C:\\output"));
-            _mockFileSystem.Verify(fs => fs.OpenWrite(It.IsAny<string>()), Times.Once);
+            m_mockFileSystem.Verify(fs => fs.OpenWrite(It.IsAny<string>()), Times.Once);
         }
 
         /// <summary>
@@ -208,23 +208,23 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             // Arrange
             using var memoryStream = new MemoryStream();
 
-            _mockModelDesign.Setup(m => m.GetListOfServices(It.IsAny<ServiceCategory[]>())).Returns([]);
+            m_mockModelDesign.Setup(m => m.GetListOfServices(It.IsAny<ServiceCategory[]>())).Returns([]);
 
             string capturedPath = null;
-            _mockFileSystem.Setup(fs => fs.OpenWrite(It.IsAny<string>()))
+            m_mockFileSystem.Setup(fs => fs.OpenWrite(It.IsAny<string>()))
                 .Callback<string>(path => capturedPath = path)
                 .Returns(memoryStream);
 
-            _context = new GeneratorContext
+            m_context = new GeneratorContext
             {
-                FileSystem = _mockFileSystem.Object,
+                FileSystem = m_mockFileSystem.Object,
                 OutputFolder = string.Empty,
-                ModelDesign = _mockModelDesign.Object,
-                Telemetry = _mockTelemetry.Object,
+                ModelDesign = m_mockModelDesign.Object,
+                Telemetry = m_mockTelemetry.Object,
                 Options = new GeneratorOptions()
             };
 
-            var generator = new ServerApiGenerator(_context);
+            var generator = new ServerApiGenerator(m_context);
 
             // Act
             generator.Emit();
@@ -232,7 +232,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             // Assert
             Assert.That(capturedPath, Is.Not.Null);
             Assert.That(capturedPath, Does.Contain("Opc.Ua.ServerBase.g.cs"));
-            _mockFileSystem.Verify(fs => fs.OpenWrite(It.IsAny<string>()), Times.Once);
+            m_mockFileSystem.Verify(fs => fs.OpenWrite(It.IsAny<string>()), Times.Once);
         }
     }
 }

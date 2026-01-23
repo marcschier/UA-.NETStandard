@@ -2903,6 +2903,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             Assert.That(arguments, Has.Length.EqualTo(1));
             Assert.That(arguments[0], Is.EqualTo(itemValue));
         }
+
         /// <summary>
         /// Tests that AddFormatted with string type creates a Token operation.
         /// Input: item = "TestToken", type = typeof(string)

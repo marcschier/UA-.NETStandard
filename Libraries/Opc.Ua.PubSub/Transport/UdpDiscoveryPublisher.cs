@@ -205,7 +205,7 @@ namespace Opc.Ua.PubSub.Transport
         {
             await Task.Delay(kMinimumResponseInterval).ConfigureAwait(false);
             ushort[] metadataWriterIdsToSend;
-            var connection = m_udpConnection;
+            UdpPubSubConnection connection = m_udpConnection;
             lock (Lock)
             {
                 if (connection == null)
@@ -235,7 +235,7 @@ namespace Opc.Ua.PubSub.Transport
         private async Task SendResponseDataSetWriterConfigurationAsync()
         {
             await Task.Delay(kMinimumResponseInterval).ConfigureAwait(false);
-            var connection = m_udpConnection;
+            UdpPubSubConnection connection = m_udpConnection;
             ushort[] dataSetWriterIdsToSend;
             lock (Lock)
             {
@@ -276,7 +276,7 @@ namespace Opc.Ua.PubSub.Transport
         {
             await Task.Delay(kMinimumResponseInterval).ConfigureAwait(false);
 
-            var connection = m_udpConnection;
+            UdpPubSubConnection connection = m_udpConnection;
             if (connection == null)
             {
                 return;

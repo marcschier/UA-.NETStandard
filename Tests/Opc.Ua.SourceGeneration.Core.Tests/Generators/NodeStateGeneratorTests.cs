@@ -28,7 +28,6 @@
  * ======================================================================*/
 
 using System;
-using System.IO;
 using Moq;
 using NUnit.Framework;
 using Opc.Ua.Schema.Model;
@@ -45,17 +44,17 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
     [Parallelizable]
     public class NodeStateGeneratorTests
     {
-        private Mock<IFileSystem> _mockFileSystem;
-        private Mock<IModelDesign> _mockModelDesign;
-        private Mock<ITelemetryContext> _mockTelemetry;
-        private GeneratorContext _context;
+        private Mock<IFileSystem> m_mockFileSystem;
+        private Mock<IModelDesign> m_mockModelDesign;
+        private Mock<ITelemetryContext> m_mockTelemetry;
+        private GeneratorContext m_context;
 
         [SetUp]
         public void SetUp()
         {
-            _mockFileSystem = new Mock<IFileSystem>();
-            _mockModelDesign = new Mock<IModelDesign>();
-            _mockTelemetry = new Mock<ITelemetryContext>();
+            m_mockFileSystem = new Mock<IFileSystem>();
+            m_mockModelDesign = new Mock<IModelDesign>();
+            m_mockTelemetry = new Mock<ITelemetryContext>();
 
             // Setup default namespace
             var targetNamespace = new Namespace
@@ -64,8 +63,8 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
                 Prefix = "Test",
                 Name = "TestNamespace"
             };
-            _mockModelDesign.Setup(m => m.TargetNamespace).Returns(targetNamespace);
-            _mockModelDesign.Setup(m => m.Namespaces).Returns([targetNamespace]);
+            m_mockModelDesign.Setup(m => m.TargetNamespace).Returns(targetNamespace);
+            m_mockModelDesign.Setup(m => m.Namespaces).Returns([targetNamespace]);
         }
 
         /// <summary>
@@ -88,17 +87,17 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         public void Constructor_ValidContext_CreatesInstance()
         {
             // Arrange
-            _context = new GeneratorContext
+            m_context = new GeneratorContext
             {
-                FileSystem = _mockFileSystem.Object,
+                FileSystem = m_mockFileSystem.Object,
                 OutputFolder = "TestOutput",
-                ModelDesign = _mockModelDesign.Object,
-                Telemetry = _mockTelemetry.Object,
+                ModelDesign = m_mockModelDesign.Object,
+                Telemetry = m_mockTelemetry.Object,
                 Options = new GeneratorOptions()
             };
 
             // Act
-            var generator = new NodeStateGenerator(_context);
+            var generator = new NodeStateGenerator(m_context);
 
             // Assert
             Assert.That(generator, Is.Not.Null);
@@ -111,17 +110,17 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         public void Constructor_WithUseXmlInitializersTrue_CreatesInstance()
         {
             // Arrange
-            _context = new GeneratorContext
+            m_context = new GeneratorContext
             {
-                FileSystem = _mockFileSystem.Object,
+                FileSystem = m_mockFileSystem.Object,
                 OutputFolder = "TestOutput",
-                ModelDesign = _mockModelDesign.Object,
-                Telemetry = _mockTelemetry.Object,
+                ModelDesign = m_mockModelDesign.Object,
+                Telemetry = m_mockTelemetry.Object,
                 Options = new GeneratorOptions()
             };
 
             // Act
-            var generator = new NodeStateGenerator(_context, useXmlInitializers: true);
+            var generator = new NodeStateGenerator(m_context, useXmlInitializers: true);
 
             // Assert
             Assert.That(generator, Is.Not.Null);
@@ -134,24 +133,24 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         public void Emit_NoNodeStateClasses_ReturnsEarlyWithoutCreatingFiles()
         {
             // Arrange
-            _mockModelDesign.Setup(m => m.GetNodeDesigns()).Returns([]);
+            m_mockModelDesign.Setup(m => m.GetNodeDesigns()).Returns([]);
 
-            _context = new GeneratorContext
+            m_context = new GeneratorContext
             {
-                FileSystem = _mockFileSystem.Object,
+                FileSystem = m_mockFileSystem.Object,
                 OutputFolder = "TestOutput",
-                ModelDesign = _mockModelDesign.Object,
-                Telemetry = _mockTelemetry.Object,
+                ModelDesign = m_mockModelDesign.Object,
+                Telemetry = m_mockTelemetry.Object,
                 Options = new GeneratorOptions()
             };
 
-            var generator = new NodeStateGenerator(_context);
+            var generator = new NodeStateGenerator(m_context);
 
             // Act
             generator.Emit();
 
             // Assert - OpenWrite should not be called when there are no node state classes
-            _mockFileSystem.Verify(
+            m_mockFileSystem.Verify(
                 fs => fs.OpenWrite(It.IsAny<string>()),
                 Times.Never,
                 "OpenWrite should not be called when there are no node state classes");

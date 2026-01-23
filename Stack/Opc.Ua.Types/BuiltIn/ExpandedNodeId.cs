@@ -1396,8 +1396,10 @@ namespace Opc.Ua
         internal struct Inner
         {
             public object NamespaceUri;
+
             /// <summary> Padding </summary>
             public uint Reserved;
+
             public uint ServerIndex;
         }
 #pragma warning disable IDE0032 // Use auto property

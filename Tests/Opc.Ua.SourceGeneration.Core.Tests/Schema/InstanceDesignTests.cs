@@ -1018,7 +1018,7 @@ namespace Opc.Ua.Schema.Model.Tests
 
             var objectDesign = new ObjectDesign
             {
-                SymbolicId = new XmlQualifiedName("TestId2", "http://test.com"),
+                SymbolicId = new XmlQualifiedName("TestId2", "http://test.com")
             };
 
             // Act

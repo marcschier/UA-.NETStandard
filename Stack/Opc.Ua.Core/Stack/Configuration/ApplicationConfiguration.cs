@@ -36,7 +36,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.Extensions.Logging;
-using static Opc.Ua.RelativePathFormatter;
 
 namespace Opc.Ua
 {
@@ -67,7 +66,7 @@ namespace Opc.Ua
                 element = element.NextSibling;
             }
 
-            var serializer = CoreUtils.CreateDataContractSerializer<ConfigurationLocation>();
+            DataContractSerializer serializer = CoreUtils.CreateDataContractSerializer<ConfigurationLocation>();
             using var reader = XmlReader.Create(
                 new StringReader(element.OuterXml),
                 Utils.DefaultXmlReaderSettings());
@@ -573,7 +572,7 @@ namespace Opc.Ua
         {
             using Stream ostrm = File.Open(filePath, FileMode.Create, FileAccess.ReadWrite);
             using IDisposable scope = AmbientMessageContext.SetScopedContext(m_telemetry);
-            var serializer = CoreUtils.CreateDataContractSerializer(GetType());
+            DataContractSerializer serializer = CoreUtils.CreateDataContractSerializer(GetType());
             XmlWriterSettings settings = Utils.DefaultXmlWriterSettings();
             settings.CloseOutput = true;
             using var writer = XmlWriter.Create(ostrm, settings);
