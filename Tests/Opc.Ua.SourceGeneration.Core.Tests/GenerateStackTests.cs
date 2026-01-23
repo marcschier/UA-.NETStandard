@@ -58,7 +58,7 @@ namespace Opc.Ua.SourceGeneration.Tests
     [MemoryDiagnoser]
     [DisassemblyDiagnoser]
     [Parallelizable(ParallelScope.All)]
-    public class GeneratorStackTests
+    public class GenerateStackTests
     {
         [DatapointSource]
         public OptimizationLevel[] OptimizationLevels = CompilerUtils.SupportedOptimizationLevels;

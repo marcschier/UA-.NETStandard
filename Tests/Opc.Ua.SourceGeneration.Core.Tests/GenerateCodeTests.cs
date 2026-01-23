@@ -53,10 +53,21 @@ namespace Opc.Ua.SourceGeneration.Tests
     [SetCulture("en-us")]
     [SetUICulture("en-us")]
     [Parallelizable]
-    public class GeneratorDesignTests
+    public class GenerateCodeTests
     {
         [DatapointSource]
         public OptimizationLevel[] OptimizationLevels = CompilerUtils.SupportedOptimizationLevels;
+
+        [DatapointSource]
+        public string[] ModelDesignFiles =
+        [
+            "TestDataDesign.xml",
+            "DemoMode.json"
+#if TEST_ALL
+            , "TestDataDesign.json"
+            , "DemoMode.xml"
+#endif
+        ];
 
         /// <summary>
         /// Only support modern language versions
@@ -65,7 +76,7 @@ namespace Opc.Ua.SourceGeneration.Tests
         public LanguageVersion[] LanguageVersions =
         [
             LanguageVersion.CSharp11,
-#if TEST_ALL_LANG_VERSIONS
+#if TEST_ALL
             LanguageVersion.CSharp12,
             LanguageVersion.CSharp13,
          // LanguageVersion.CSharp14,
@@ -74,7 +85,8 @@ namespace Opc.Ua.SourceGeneration.Tests
 
         [Theory]
         [Pairwise]
-        public async Task GenerateAndCompileTestDataAsync(
+        public async Task GenerateAndCompileDesignFileAsync(
+            string modelDesignFile,
             OptimizationLevel optimizationLevel,
             LanguageVersion languageVersion,
             bool withAnalyzers,
@@ -83,11 +95,12 @@ namespace Opc.Ua.SourceGeneration.Tests
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.Create(logLevel: LogLevel.Error);
             Dictionary<string, string> generatedText = GenerateCodeFromModel(
+                modelDesignFile,
                 languageVersion,
                 embedNodeSet2Xml,
                 telemetry,
                 out Dictionary<string, string> generatedOther);
-            Dictionary<string, string> generatedTextStack = GeneratorStackTests.GenerateStack(
+            Dictionary<string, string> generatedTextStack = GenerateStackTests.GenerateStack(
                 StackGenerationType.Models,
                 telemetry,
                 out Dictionary<string, string> generatedStackOther);
@@ -169,10 +182,13 @@ namespace Opc.Ua.SourceGeneration.Tests
         }
 
         [Theory]
-        public async Task GenerateTestDataWithCsharp8Async(bool embedNodeSet2Xml)
+        public async Task GenerateFromDesignFileWithCsharp8Async(
+            string modelDesignFile,
+            bool embedNodeSet2Xml)
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.Create(logLevel: LogLevel.Error);
             Dictionary<string, string> generatedText = GenerateCodeFromModel(
+                modelDesignFile,
                 LanguageVersion.CSharp8,
                 embedNodeSet2Xml,
                 telemetry,
@@ -181,6 +197,7 @@ namespace Opc.Ua.SourceGeneration.Tests
         }
 
         private static Dictionary<string, string> GenerateCodeFromModel(
+            string modelDesignFile,
             LanguageVersion languageVersion,
             bool embedNodeSet2Xml,
             ITelemetryContext telemetry,
@@ -191,8 +208,14 @@ namespace Opc.Ua.SourceGeneration.Tests
             using var fileSystem = new VirtualFileSystem();
             Generators.GenerateCode(new DesignFileCollection
             {
-                DesignFiles = [Path.Combine(Directory.GetCurrentDirectory(), "Resources", "TestDataDesign.xml")],
-                IdentifierFilePath = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "TestDataDesign.csv"),
+                DesignFiles = [Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "Resources",
+                    modelDesignFile)],
+                IdentifierFilePath = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "Resources",
+                    Path.GetFileNameWithoutExtension(modelDesignFile) + ".csv"),
                 Options = new DesignFileOptions()
             }, fileSystem, string.Empty, telemetry, new GeneratorOptions
             {
