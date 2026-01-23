@@ -4,7 +4,6 @@
     <RootNamespace>Opc.Ua.SourceGeneration.Tests</RootNamespace>
     <IsTestProject>true</IsTestProject>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <NoErrorProneAnalyzers>true</NoErrorProneAnalyzers>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
@@ -30,8 +29,9 @@
     <ProjectReference Include="..\..\Tools\Opc.Ua.SourceGeneration\Opc.Ua.SourceGeneration.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\*">
+    <EmbeddedResource Include="..\Opc.Ua.SourceGeneration.Core.Tests\Resources\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Resources\%(Filename)%(Extension)</Link>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

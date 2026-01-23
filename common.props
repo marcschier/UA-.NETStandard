@@ -37,10 +37,6 @@
     <PackageReference Include="Roslynator.Analyzers" PrivateAssets="All" />
     <PackageReference Include="Roslynator.Formatting.Analyzers" PrivateAssets="All" />
   </ItemGroup>
-  <ItemGroup Condition="'$(NoErrorProneAnalyzers)' == '' AND '$(BuildingInsideVisualStudio)' != 'true'">
-    <PackageReference Include="ErrorProne.NET.CoreAnalyzers" PrivateAssets="All" />
-    <!--<PackageReference Include="ErrorProne.NET.Structs" PrivateAssets="All" />-->
-  </ItemGroup>
   <PropertyGroup>
     <NoWarn>$(NoWarn);NU1510</NoWarn>
     <PackageIcon>images/logo.jpg</PackageIcon>

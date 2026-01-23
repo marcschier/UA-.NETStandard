@@ -27,4 +27,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Stack\Opc.Ua.Types\Opc.Ua.Types.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Schema\Json\" />
+  </ItemGroup>
 </Project>

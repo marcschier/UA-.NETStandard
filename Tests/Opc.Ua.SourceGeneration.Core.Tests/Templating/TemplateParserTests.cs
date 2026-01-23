@@ -470,14 +470,37 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         /// Tests that the TemplateParser constructor handles single minimum integer value parameter.
         /// Expected: ArgumentOutOfRangeException due to negative capacity.
         /// </summary>
-        [TestCase(int.MinValue, 0, TestName = "Constructor_MinValueLiteralZeroFormatted_ThrowsArgumentOutOfRangeException")]
-        [TestCase(0, int.MinValue, TestName = "Constructor_ZeroLiteralMinValueFormatted_ThrowsArgumentOutOfRangeException")]
-        [TestCase(int.MaxValue, 0, TestName = "Constructor_MaxValueLiteralZeroFormatted_ThrowsArgumentOutOfRangeException")]
-        [TestCase(0, int.MaxValue, TestName = "Constructor_ZeroLiteralMaxValueFormatted_ThrowsArgumentOutOfRangeException")]
-        [TestCase(int.MaxValue, int.MaxValue, TestName = "Constructor_MaxValueLiteralMaxValueFormatted_ThrowsArgumentOutOfRangeException")]
-        [TestCase(ParsedTemplateString.MaxLiteralLength + 1, 0, TestName = "Constructor_MaxLiteralLengthZeroFormatted_ThrowsArgumentOutOfRangeException")]
-        [TestCase(0, ParsedTemplateString.MaxFormattedCount + 1, TestName = "Constructor_ZeroMaxFormattedLengthFormatted_ThrowsArgumentOutOfRangeException")]
-        public void Constructor_SingleMinValueParameter_ThrowsArgumentOutOfRangeException(int literalLength, int formattedCount)
+        [TestCase(
+            int.MinValue,
+            0,
+            TestName = "Constructor_MinValueLiteralZeroFormatted_ThrowsArgumentOutOfRangeException")]
+        [TestCase(
+            0,
+            int.MinValue,
+            TestName = "Constructor_ZeroLiteralMinValueFormatted_ThrowsArgumentOutOfRangeException")]
+        [TestCase(
+            int.MaxValue,
+            0,
+            TestName = "Constructor_MaxValueLiteralZeroFormatted_ThrowsArgumentOutOfRangeException")]
+        [TestCase(
+            0,
+            int.MaxValue,
+            TestName = "Constructor_ZeroLiteralMaxValueFormatted_ThrowsArgumentOutOfRangeException")]
+        [TestCase(
+            int.MaxValue,
+            int.MaxValue,
+            TestName = "Constructor_MaxValueLiteralMaxValueFormatted_ThrowsArgumentOutOfRangeException")]
+        [TestCase(
+            ParsedTemplateString.MaxLiteralLength + 1,
+            0,
+            TestName = "Constructor_MaxLiteralLengthZeroFormatted_ThrowsArgumentOutOfRangeException")]
+        [TestCase(
+            0,
+            ParsedTemplateString.MaxFormattedCount + 1,
+            TestName = "Constructor_ZeroMaxFormattedLengthFormatted_ThrowsArgumentOutOfRangeException")]
+        public void Constructor_SingleMinValueParameter_ThrowsArgumentOutOfRangeException(
+            int literalLength,
+            int formattedCount)
         {
             // Arrange & Act & Assert
             Assert.Throws<ArgumentOutOfRangeException>(() => new TemplateParser(literalLength, formattedCount));

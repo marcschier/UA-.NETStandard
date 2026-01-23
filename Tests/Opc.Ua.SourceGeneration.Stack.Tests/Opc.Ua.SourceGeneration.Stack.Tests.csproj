@@ -4,7 +4,6 @@
     <RootNamespace>Opc.Ua.SourceGeneration.Tests</RootNamespace>
     <IsTestProject>true</IsTestProject>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <NoErrorProneAnalyzers>true</NoErrorProneAnalyzers>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />

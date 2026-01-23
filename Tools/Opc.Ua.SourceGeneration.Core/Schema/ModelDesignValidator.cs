@@ -33,6 +33,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Xml;
 using Microsoft.Extensions.Logging;
 using Opc.Ua.Export;
@@ -484,8 +485,7 @@ namespace Opc.Ua.Schema.Model
 
             // load the design files.
             m_logger.LogInformation("Loading StandardTypes...");
-            ModelDesign targetModel = Load<ModelDesign>(
-                BuiltInDesignFiles.BuiltInTypesXml);
+            ModelDesign targetModel = LoadModelDesign(BuiltInDesignFiles.BuiltInTypesXml);
             targetModel.Items ??= [];
 
             for (int ii = 0; ii < designFilePaths.Count; ii++)
@@ -691,7 +691,8 @@ namespace Opc.Ua.Schema.Model
             string designFilePath,
             string identifierFilePath)
         {
-            ModelDesign model = Load<ModelDesign>(designFilePath);
+            ModelDesign model = LoadModelDesign(designFilePath);
+
             model.SourceFilePath = designFilePath;
             model.IsSourceNodeSet = false;
 
@@ -1039,7 +1040,7 @@ namespace Opc.Ua.Schema.Model
             var nodes = new List<NodeDesign>();
 
             // load the design files.
-            ModelDesign builtin = Load<ModelDesign>(
+            ModelDesign builtin = LoadModelDesign(
                 BuiltInDesignFiles.BuiltInTypesXml);
 
             nodes.AddRange(builtin.Items);
@@ -1057,7 +1058,7 @@ namespace Opc.Ua.Schema.Model
                 nodes.AddRange(datatypes.Items);
             }
 
-            ModelDesign standard = Load<ModelDesign>(
+            ModelDesign standard = LoadModelDesign(
                 BuiltInDesignFiles.StandardTypesXml);
             nodes.AddRange(standard.Items);
 
@@ -1664,7 +1665,7 @@ namespace Opc.Ua.Schema.Model
                 }
                 else
                 {
-                    ModelDesign design = Load<ModelDesign>(fileToLoad);
+                    ModelDesign design = LoadModelDesign(fileToLoad);
 
                     foreach (Namespace ns in design.Namespaces)
                     {
@@ -6251,6 +6252,24 @@ namespace Opc.Ua.Schema.Model
             }
 
             return hierarchy;
+        }
+
+        /// <summary>
+        /// Load model design xml or json
+        /// </summary>
+        /// <param name="fileToLoad"></param>
+        /// <returns></returns>
+        private ModelDesign LoadModelDesign(string fileToLoad)
+        {
+            string fileExtension = Path.GetExtension(fileToLoad);
+            if (string.Equals(fileExtension, "json", StringComparison.OrdinalIgnoreCase))
+            {
+                // Load from json file
+                using Stream stream = OpenRead(fileToLoad);
+                return JsonSerializer.Deserialize<ModelDesignJson>(
+                    stream)?.ToModelDesign();
+            }
+            return Load<ModelDesign>(fileToLoad);
         }
 
         /// <summary>
