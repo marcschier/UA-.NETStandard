@@ -1,21 +1,19 @@
 {
   "$schema": "https://raw.githubusercontent.com/OPCFoundation/UA-.NETStandard/refs/heads/master/Tools/Opc.Ua.SourceGeneration.Core/Schema/ModelDesign.json",
   "TargetNamespace": "http://test.org/UA/Data/",
-  "Namespaces": {
-    "Namespaces": [
-      {
-        "Uri": "http://opcfoundation.org/UA/",
-        "Name": "OpcUa",
-        "Prefix": "Opc.Ua",
-        "XmlNamespace": "http://opcfoundation.org/UA/2008/02/Types.xsd"
-      },
-      {
-        "Uri": "http://test.org/UA/Data/",
-        "Name": "TestData",
-        "Prefix": "TestData"
-      }
-    ]
-  },
+  "Namespaces": [
+    {
+      "Uri": "http://opcfoundation.org/UA/",
+      "Name": "OpcUa",
+      "Prefix": "Opc.Ua",
+      "XmlNamespace": "http://opcfoundation.org/UA/2008/02/Types.xsd"
+    },
+    {
+      "Uri": "http://test.org/UA/Data/",
+      "Name": "TestData",
+      "Prefix": "TestData"
+    }
+  ],
   "Methods": [
     {
       "SymbolicName": "GenerateValuesMethodType",

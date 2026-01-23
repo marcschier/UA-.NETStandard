@@ -38,6 +38,11 @@ namespace Opc.Ua.Schema.Model.Tests
     /// <summary>
     /// Tests for the VariableTypeDesignJson class.
     /// </summary>
+    [TestFixture]
+    [Category("ModelDesign")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [Parallelizable]
     public class ModelDesignSchemaTests
     {
         /// <summary>

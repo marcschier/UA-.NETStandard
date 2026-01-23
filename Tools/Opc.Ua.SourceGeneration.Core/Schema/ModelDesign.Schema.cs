@@ -45,7 +45,7 @@ namespace Opc.Ua.Schema.Model
         string? TargetVersion,
         System.DateTime? TargetPublicationDate,
         string? TargetXmlNamespace,
-        string? DefaultLocale)
+        string? DefaultLocale = "en")
     {
         /// <summary>
         /// Converts this record to a <see cref="ModelDesign"/>.
