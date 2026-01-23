@@ -208,7 +208,7 @@ namespace Opc.Ua
             try
             {
                 using IDisposable scope = AmbientMessageContext.SetScopedContext(telemetry);
-                var serializer = CoreUtils.CreateDataContractSerializer<ConfiguredEndpointCollection>();
+                DataContractSerializer serializer = CoreUtils.CreateDataContractSerializer<ConfiguredEndpointCollection>();
                 using var reader = XmlReader.Create(istrm, Utils.DefaultXmlReaderSettings());
                 var endpoints = serializer.ReadObject(reader) as ConfiguredEndpointCollection;
 
@@ -258,7 +258,7 @@ namespace Opc.Ua
         /// </summary>
         public void Save(Stream ostrm)
         {
-            var serializer =
+            DataContractSerializer serializer =
                 CoreUtils.CreateDataContractSerializer<ConfiguredEndpointCollection>();
             using var writer = XmlWriter.Create(ostrm, Utils.DefaultXmlWriterSettings());
             serializer.WriteObject(writer, this);

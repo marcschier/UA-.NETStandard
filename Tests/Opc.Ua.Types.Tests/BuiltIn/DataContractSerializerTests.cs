@@ -27,7 +27,6 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
 using System.IO;
 using System.Runtime.Serialization;
 using NUnit.Framework;

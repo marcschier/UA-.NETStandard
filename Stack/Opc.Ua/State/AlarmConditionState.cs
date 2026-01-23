@@ -298,10 +298,7 @@ namespace Opc.Ua
                 ShelvingState.CauseProcessingCompleted(context, state);
             }
 
-            if (ShelvingState.UnshelveTime != null)
-            {
-                ShelvingState.UnshelveTime.Timestamp = DateTime.UtcNow;
-            }
+            ShelvingState.UnshelveTime?.Timestamp = DateTime.UtcNow;
 
             UpdateEffectiveState(context);
             ClearChangeMasks(context, includeChildren: true);

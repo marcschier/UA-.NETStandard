@@ -1979,7 +1979,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public object GetValue()
         {
-            return Value!;
+            return Value;
         }
 
         /// <summary>

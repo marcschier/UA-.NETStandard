@@ -126,7 +126,7 @@ namespace Opc.Ua.Core.Tests.Types.ServiceMessageContextTests
         {
             // Arrange
             var context = new ServiceMessageContext(null);
-            var originalFactory = context.Factory;
+            IEncodeableFactory originalFactory = context.Factory;
 
             // Act
             context.Factory = null;

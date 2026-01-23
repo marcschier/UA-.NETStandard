@@ -111,7 +111,7 @@ namespace Opc.Ua.Core.Tests.Stack.State
                 }
                 else
                 {
-                    var defaultConstructor = systemType.GetConstructor([]);
+                    ConstructorInfo defaultConstructor = systemType.GetConstructor([]);
                     if (defaultConstructor == null || !defaultConstructor.IsPublic)
                     {
                         instance = null;

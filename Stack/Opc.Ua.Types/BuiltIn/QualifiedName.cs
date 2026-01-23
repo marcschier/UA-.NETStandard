@@ -29,7 +29,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using Opc.Ua.Types;
@@ -567,7 +566,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public object GetValue()
         {
-            return Value!;
+            return Value;
         }
 
         /// <summary>

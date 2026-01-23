@@ -27,10 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using NUnit.Framework;
 using Opc.Ua.Tests;
 using Assert = NUnit.Framework.Legacy.ClassicAssert;
@@ -50,28 +47,28 @@ namespace Opc.Ua.Server.Tests.Stack.Schema
         [Test]
         public void TestDataNodeSet2ValidationTest()
         {
-            using var inputStream = TestData.NodeSet2.XmlAsStream;
+            using Stream inputStream = TestData.NodeSet2.XmlAsStream;
             NodeSet2ValidationTest(inputStream);
         }
 
         [Test]
         public void BoilerNodeSet2ValidationTest()
         {
-            using var inputStream = Boiler.NodeSet2.XmlAsStream;
+            using Stream inputStream = Boiler.NodeSet2.XmlAsStream;
             NodeSet2ValidationTest(inputStream);
         }
 
         [Test]
         public void MemoryBufferNodeSet2ValidationTest()
         {
-            using var inputStream = MemoryBuffer.NodeSet2.XmlAsStream;
+            using Stream inputStream = MemoryBuffer.NodeSet2.XmlAsStream;
             NodeSet2ValidationTest(inputStream);
         }
 
         /// <summary>
         /// Test NodeSet2 import.
         /// </summary>
-        private void NodeSet2ValidationTest(Stream importStream)
+        private static void NodeSet2ValidationTest(Stream importStream)
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.Create();
 

@@ -336,7 +336,9 @@ namespace Opc.Ua
         /// The value of data value.
         /// </summary>
         [DataMember(Name = "Value", Order = 1, IsRequired = false)]
+#pragma warning disable RCS1085 // Use auto-implemented property
         public Variant WrappedValue
+#pragma warning restore RCS1085 // Use auto-implemented property
         {
             get => m_value;
             set => m_value = value;

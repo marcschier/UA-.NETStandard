@@ -279,9 +279,11 @@ namespace Opc.Ua.Bindings
                     }
                     else
 #endif
-                    if (!await awaitableTask.ConfigureAwait(false))
                     {
-                        badRequestInterrupted = true;
+                        if (!await awaitableTask.ConfigureAwait(false))
+                        {
+                            badRequestInterrupted = true;
+                        }
                     }
                 }
                 catch (TimeoutException)

@@ -29,10 +29,8 @@
 
 using Moq;
 using NUnit.Framework;
-using Opc.Ua.Schema.Model;
 using System;
 using System.IO;
-using System.Reflection;
 using System.Text;
 
 namespace Opc.Ua.SourceGeneration.Generator.Tests
@@ -617,4 +615,3 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         }
     }
 }
-

@@ -75,11 +75,11 @@ namespace Opc.Ua.SourceGeneration.Tests
         [DatapointSource]
         public LanguageVersion[] LanguageVersions =
         [
-            LanguageVersion.CSharp11,
-#if TEST_ALL
-            LanguageVersion.CSharp12,
-            LanguageVersion.CSharp13,
-         // LanguageVersion.CSharp14,
+            LanguageVersion.CSharp11
+#if TEST_ALL_LANG_VERSIONS
+            ,LanguageVersion.CSharp12
+            ,LanguageVersion.CSharp13
+         // ,LanguageVersion.CSharp14
 #endif
         ];
 

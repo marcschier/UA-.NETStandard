@@ -1766,15 +1766,7 @@ namespace Opc.Ua.Schema.Model
                 symbol = symbol[..index];
             }
 
-            if (!symbol.EndsWith("MethodType", StringComparison.Ordinal))
-            {
-                return false;
-            }
-            if (node is not MethodDesign)
-            {
-                return true;
-            }
-            return true;
+            return symbol.EndsWith("MethodType", StringComparison.Ordinal);
         }
 
         public static bool IsPartOfOpcUaTypesLibrary(this DataTypeDesign dataType)

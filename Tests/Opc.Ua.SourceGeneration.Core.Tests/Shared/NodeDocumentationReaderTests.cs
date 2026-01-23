@@ -1354,7 +1354,7 @@ namespace Opc.Ua.SourceGeneration.Shared.Tests
             Assert.That(reader2, Is.Not.SameAs(reader3));
         }
 
-        private MemoryStream StreamFromString(string str)
+        private static MemoryStream StreamFromString(string str)
         {
             return new MemoryStream(Encoding.UTF8.GetBytes(str ?? string.Empty));
         }

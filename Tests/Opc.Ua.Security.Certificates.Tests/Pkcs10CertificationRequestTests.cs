@@ -29,11 +29,9 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using NUnit.Framework;
-using Opc.Ua.Tests;
 using Assert = NUnit.Framework.Legacy.ClassicAssert;
 
 namespace Opc.Ua.Security.Certificates.Tests
@@ -48,7 +46,6 @@ namespace Opc.Ua.Security.Certificates.Tests
     [SetCulture("en-us")]
     public class Pkcs10CertificationRequestTests
     {
-        #region Test Methods
         /// <summary>
         /// Test parsing a valid RSA CSR from file.
         /// </summary>
@@ -344,6 +341,5 @@ namespace Opc.Ua.Security.Certificates.Tests
             Assert.That(subjectName, Does.Contain("CN=TestSubject"));
             Assert.That(subjectName, Does.Contain("O=TestOrg"));
         }
-        #endregion
     }
 }

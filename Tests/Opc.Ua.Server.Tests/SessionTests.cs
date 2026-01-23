@@ -10,7 +10,7 @@ namespace Opc.Ua.Server.Tests
     public class SessionTests
     {
         [Test]
-        public async Task UpdateDiagnosticCounters_RaisesEvent_WhenPerRequestCounterChanged()
+        public async Task UpdateDiagnosticCounters_RaisesEvent_WhenPerRequestCounterChangedAsync()
         {
             var fixture = new ServerFixture<StandardServer>(t => new StandardServer(t));
             await fixture.StartAsync().ConfigureAwait(false);
@@ -53,7 +53,7 @@ namespace Opc.Ua.Server.Tests
         [TestCase(RequestType.ActivateSession)]
         [TestCase(RequestType.CloseSession)]
         [TestCase(RequestType.Cancel)]
-        public async Task UpdateDiagnosticCounters_DoesNotRaiseEvent_ForIgnoredRequestTypes(RequestType requestType)
+        public async Task UpdateDiagnosticCounters_DoesNotRaiseEvent_ForIgnoredRequestTypesAsync(RequestType requestType)
         {
             var fixture = new ServerFixture<StandardServer>(t => new StandardServer(t));
             await fixture.StartAsync().ConfigureAwait(false);

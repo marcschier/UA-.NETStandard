@@ -27,13 +27,9 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
-using Opc.Ua.Test;
 using Opc.Ua.Tests;
 using Assert = NUnit.Framework.Legacy.ClassicAssert;
 
@@ -55,7 +51,7 @@ namespace Opc.Ua.Core.Tests.Types.BuiltIn
         [Test]
         public void DiagnosticInfoInnerDiagnostics()
         {
-            var telemetry = NUnitTelemetryContext.Create();
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
             var stringTable = new StringTable();
             var serviceResult = new ServiceResult(
                 Namespaces.OpcUa,

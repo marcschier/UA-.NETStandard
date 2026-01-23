@@ -359,11 +359,11 @@ namespace Opc.Ua.Client.Tests
                             var value = new DataValue();
                             if (r.NodeId == nodeIds[0])
                             {
-                                nodes[0].Read(null!, r.AttributeId, value);
+                                nodes[0].Read(null, r.AttributeId, value);
                             }
                             else
                             {
-                                nodes[1].Read(null!, r.AttributeId, value);
+                                nodes[1].Read(null, r.AttributeId, value);
                             }
                             return value;
                         }));
@@ -442,11 +442,11 @@ namespace Opc.Ua.Client.Tests
                             }
                             if (r.NodeId == nodeIds[0])
                             {
-                                nodes[0].Read(null!, r.AttributeId, value);
+                                nodes[0].Read(null, r.AttributeId, value);
                             }
                             else
                             {
-                                nodes[1].Read(null!, r.AttributeId, value);
+                                nodes[1].Read(null, r.AttributeId, value);
                             }
                             return value;
                         }));
@@ -497,7 +497,7 @@ namespace Opc.Ua.Client.Tests
                         .Select(r =>
                         {
                             var value = new DataValue();
-                            node.Read(null!, r.AttributeId, value);
+                            node.Read(null, r.AttributeId, value);
                             return value;
                         }));
                     return new ValueTask<IServiceResponse>(new ReadResponse
@@ -623,7 +623,7 @@ namespace Opc.Ua.Client.Tests
                             if (r.NodeId == nodeIds[0])
                             {
                                 var value = new DataValue();
-                                nodes[0].Read(null!, r.AttributeId, value);
+                                nodes[0].Read(null, r.AttributeId, value);
                                 return value;
                             }
                             return new DataValue(StatusCodes.BadUnexpectedError);
@@ -701,11 +701,11 @@ namespace Opc.Ua.Client.Tests
                             var value = new DataValue();
                             if (r.NodeId == nodeIds[0])
                             {
-                                nodes[0].Read(null!, r.AttributeId, value);
+                                nodes[0].Read(null, r.AttributeId, value);
                             }
                             else
                             {
-                                nodes[1].Read(null!, r.AttributeId, value);
+                                nodes[1].Read(null, r.AttributeId, value);
                             }
                             return value;
                         }));
@@ -806,7 +806,7 @@ namespace Opc.Ua.Client.Tests
                         .Select(r =>
                         {
                             var value = new DataValue();
-                            node.Read(null!, r.AttributeId, value);
+                            node.Read(null, r.AttributeId, value);
                             return value;
                         }));
                     return new ValueTask<IServiceResponse>(new ReadResponse
@@ -875,11 +875,11 @@ namespace Opc.Ua.Client.Tests
                             var value = new DataValue();
                             if (r.NodeId == nodeIds[0])
                             {
-                                nodes[0].Read(null!, r.AttributeId, value);
+                                nodes[0].Read(null, r.AttributeId, value);
                             }
                             else
                             {
-                                nodes[1].Read(null!, r.AttributeId, value);
+                                nodes[1].Read(null, r.AttributeId, value);
                             }
                             return value;
                         }));

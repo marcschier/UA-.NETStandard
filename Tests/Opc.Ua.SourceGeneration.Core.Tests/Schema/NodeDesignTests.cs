@@ -386,7 +386,6 @@ namespace Opc.Ua.Schema.Model.Tests
             Assert.That(result, Is.True);
         }
 
-
         /// <summary>
         /// Tests that Equals returns true when comparing with empty string BrowseName.
         /// </summary>
@@ -2715,7 +2714,7 @@ namespace Opc.Ua.Schema.Model.Tests
         /// <summary>
         /// Helper method to create a test NodeDesign with all properties set.
         /// </summary>
-        private NodeDesign CreateTestNodeDesign()
+        private static NodeDesign CreateTestNodeDesign()
         {
             return new NodeDesign
             {

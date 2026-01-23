@@ -1196,7 +1196,7 @@ namespace Opc.Ua.Client
             }
 
             // Call SetTriggering for each triggering item
-            foreach (var kvp in triggeringGroups)
+            foreach (KeyValuePair<uint, List<uint>> kvp in triggeringGroups)
             {
                 uint triggeringItemId = kvp.Key;
                 var linksToAdd = new UInt32Collection(kvp.Value);
@@ -2992,7 +2992,7 @@ namespace Opc.Ua.Client
             {
                 MonitoredItemNotification notification = notifications.MonitoredItems[ii];
 
-                if (!m_monitoredItems.TryGetValue(notification.ClientHandle, out var monitoredItem))
+                if (!m_monitoredItems.TryGetValue(notification.ClientHandle, out MonitoredItem? monitoredItem))
                 {
                     m_logger.LogWarning(
                         "Publish response contains invalid MonitoredItem. " +

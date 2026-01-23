@@ -166,7 +166,7 @@ namespace Opc.Ua.Types.Tests.State
         public void PropertyStateExtractsValueFromVariant()
         {
             var propertyState = new PropertyState<string>(null);
-            var testString = "VariantValue";
+            const string testString = "VariantValue";
 
             // Use WrappedValue property which calls ExtractValueFromVariant
             propertyState.WrappedValue = new Variant(testString);

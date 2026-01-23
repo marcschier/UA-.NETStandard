@@ -752,7 +752,7 @@ namespace Opc.Ua.Server
                     BuildNumber = m_serverDescription.BuildNumber,
                     BuildDate = m_serverDescription.BuildDate
                 };
-                var buildInfoVariableState =
+                BuildInfoVariableState buildInfoVariableState =
                     DiagnosticsNodeManager.FindPredefinedNode<BuildInfoVariableState>(
                         VariableIds.Server_ServerStatus_BuildInfo);
                 var buildInfoVariable = new BuildInfoVariableValue(

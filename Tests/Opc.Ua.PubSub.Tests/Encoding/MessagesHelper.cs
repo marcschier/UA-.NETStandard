@@ -2531,7 +2531,7 @@ namespace Opc.Ua.PubSub.Tests.Encoding
                         DataType = DataTypeIds.LocalizedText,
                         ValueRank = ValueRanks.TwoDimensions,
                         Description = LocalizedText.Null
-                    },
+                    } //,
                     //new FieldMetaData()
                     //{
                     //    Name = "StructureMatrix",

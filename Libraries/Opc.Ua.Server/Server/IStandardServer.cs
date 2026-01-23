@@ -73,7 +73,6 @@ namespace Opc.Ua.Server
         /// to instantiate the node manager in the server.
         /// </summary>
         /// <param name="nodeManagerFactory">The node manager factory used to create the NodeManager.</param>
-
         void AddNodeManager(INodeManagerFactory nodeManagerFactory);
 
         /// <summary>

@@ -314,7 +314,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             string result = stringWriter.ToString();
             Assert.That(result.Length, Is.EqualTo(largeCount + 3));
             Assert.That(result, Does.EndWith("end"));
-            Assert.That(result.Substring(0, largeCount), Is.EqualTo(new string(' ', largeCount)));
+            Assert.That(result[..largeCount], Is.EqualTo(new string(' ', largeCount)));
         }
 
         /// <summary>
@@ -1626,7 +1626,6 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             using var writer = new StringWriter();
             using (var templateWriter = new TemplateWriter(writer, leaveOpen: false))
             {
-
                 // Act
                 templateWriter.WriteLine(longText);
             }
@@ -3545,9 +3544,12 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             // Assert
             string result = stringWriter.ToString();
             Assert.That(result, Is.EqualTo(
-                "No indent" + Environment.NewLine +
-                "Two spaces" + Environment.NewLine +
-                "  Four spaces" + Environment.NewLine));
+                "No indent" +
+                Environment.NewLine +
+                "Two spaces" +
+                Environment.NewLine +
+                "  Four spaces" +
+                Environment.NewLine));
             // TODO: Should be
             // Assert.That(result, Is.EqualTo(
             //  "No indent" + Environment.NewLine +

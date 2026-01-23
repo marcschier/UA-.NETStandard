@@ -2063,9 +2063,9 @@ namespace Opc.Ua.Schema.Model
                 > 1 => ValueRank.OneOrMoreDimensions,
                 1 => ValueRank.Array,
                 0 => ValueRank.OneOrMoreDimensions,
-                (-1) => ValueRank.Scalar,
-                (-2) => ValueRank.ScalarOrArray,
-                (-3) => ValueRank.ScalarOrOneDimension,
+                -1 => ValueRank.Scalar,
+                -2 => ValueRank.ScalarOrArray,
+                -3 => ValueRank.ScalarOrOneDimension,
                 < -3 => ValueRank.ScalarOrArray
             };
         }
