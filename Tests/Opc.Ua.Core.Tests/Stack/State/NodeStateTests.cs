@@ -28,6 +28,7 @@
  * ======================================================================*/
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
@@ -70,6 +71,75 @@ namespace Opc.Ua.Core.Tests.Stack.State
         protected void OneTimeTearDown()
         {
             Utils.SilentDispose(Context);
+        }
+
+        [Test]
+        public void ValidateGeneratedNodeStates()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+            var context = new SystemContext(telemetry) { NamespaceUris = Context.NamespaceUris };
+
+            var comparer = new NodeStateEqualityComparer();
+            var generated = new NodeStateCollection().AddOpcUa(context).ToHashSet(comparer);
+            var initialized= new NodeStateCollection().LoadOpcUa(context).ToHashSet(comparer);
+
+            var byNodeIdInitialized = initialized.ToDictionary(n => n.NodeId, n => n);
+            Assert.That(byNodeIdInitialized.Count, Is.EqualTo(initialized.Count));
+            var byNodeIdGenerated = generated.ToDictionary(n => n.NodeId, n => n);
+            Assert.That(byNodeIdGenerated.Count, Is.EqualTo(generated.Count));
+
+            var diffInitToGenerated = initialized.Except(generated, comparer).ToList();
+            var diffGeneratedToInit = diffInitToGenerated.ConvertAll(n => byNodeIdGenerated[n.NodeId]);
+
+            Assert.IsEmpty(diffInitToGenerated, "Some NodeState types are not generated correctly.");
+        }
+
+        public sealed class NodeStateEqualityComparer : IEqualityComparer<NodeState>
+        {
+            public bool Equals(NodeState x, NodeState y)
+            {
+                if (x == null && y == null)
+                {
+                    return true;
+                }
+                if (x == null || y == null)
+                {
+                    return false;
+                }
+                bool equal =
+                    x.NodeClass == y.NodeClass &&
+                    x.SymbolicName == y.SymbolicName &&
+                    x.BrowseName == y.BrowseName &&
+                    x.NodeId == y.NodeId;
+                if (!equal)
+                {
+                    return false;
+                }
+                List<IReference> xref = [];
+                List<IReference> yref = [];
+                x.GetReferences(null, xref);
+                y.GetReferences(null, yref);
+                equal = xref.Count == yref.Count;
+                if (!equal)
+                {
+                    return false;
+                }
+                List<BaseInstanceState> xChildren = [];
+                List<BaseInstanceState> yChildren = [];
+                x.GetChildren(null, xChildren);
+                y.GetChildren(null, yChildren);
+                equal = xChildren.Count == yChildren.Count;
+                if (!equal)
+                {
+                    return false;
+                }
+                return equal;
+            }
+
+            public int GetHashCode(NodeState obj)
+            {
+                return obj.NodeId.GetHashCode();
+            }
         }
 
         /// <summary>

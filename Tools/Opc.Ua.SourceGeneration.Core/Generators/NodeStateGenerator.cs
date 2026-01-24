@@ -62,16 +62,18 @@ namespace Opc.Ua.SourceGeneration
             {
                 return null;
             }
+            var nsPrefix = m_context.ModelDesign.TargetNamespace.Prefix;
             string fileName = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
                 "{0}.NodeStates.g.cs",
-                m_context.ModelDesign.TargetNamespace.Prefix));
+                nsPrefix));
             using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
 
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, CodeTemplates.NodeStatesFile_cs);
+            template.AddReplacement(Tokens.NamespacePrefix, nsPrefix);
             template.AddReplacement(
                 Tokens.Namespace,
-                m_context.ModelDesign.TargetNamespace.Prefix);
+                nsPrefix.Replace(".", string.Empty, StringComparison.Ordinal));
             template.AddReplacement(
                 Tokens.NamespaceUri,
                 m_context.ModelDesign.Namespaces.GetConstantSymbolForNamespace(

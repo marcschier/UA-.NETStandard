@@ -77,39 +77,6 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// Helpers
-        /// </summary>
-        public static readonly TemplateString Helpers_File_cs = TemplateString.Parse(
-            $$"""
-            {{Tokens.Header}}
-
-            {{Tokens.ListOfImports}}
-
-            namespace {{Tokens.NamespacePrefix}}
-            {
-                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
-                public static partial class {{Tokens.Namespace}}Extensions
-                {
-                    /// <summary>
-                    /// Adds the predefined nodes for the {{Tokens.NamespacePrefix}} namespace
-                    /// to the node state collection.
-                    /// </summary>
-                    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
-                    public static NodeStateCollection Add{{Tokens.Namespace}}(
-                        this global::Opc.Ua.NodeStateCollection collection,
-                        global::Opc.Ua.ISystemContext context)
-                    {
-                        global::Opc.Ua.NodeStateCollection predefinedNodes = new global::Opc.Ua.NodeStateCollection();
-                        using global::System.IO.Stream stream = Predefined.NodesAsStream;
-                        predefinedNodes.LoadFrom{{Tokens.Encoding}}(context, stream, true);
-                        collection.AddRange(predefinedNodes);
-                        return collection;
-                    }
-                }
-            }
-            """);
-
-        /// <summary>
         /// Base data type and node state files
         /// </summary>
         public static readonly TemplateString DataTypesFile_cs = TemplateString.Parse(
@@ -2485,6 +2452,39 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
+        /// Predefined nodes (to be removed)
+        /// </summary>
+        public static readonly TemplateString Helpers_File_cs = TemplateString.Parse(
+            $$"""
+            {{Tokens.Header}}
+
+            {{Tokens.ListOfImports}}
+
+            namespace {{Tokens.NamespacePrefix}}
+            {
+                public static partial class {{Tokens.Namespace}}Extensions
+                {
+                    /// <summary>
+                    /// Adds the predefined nodes for the {{Tokens.NamespaceUri}} namespace
+                    /// to the node state collection.
+                    /// </summary>
+                    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
+                    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
+                    public static NodeStateCollection Load{{Tokens.Namespace}}(
+                        this global::Opc.Ua.NodeStateCollection collection,
+                        global::Opc.Ua.ISystemContext context)
+                    {
+                        global::Opc.Ua.NodeStateCollection predefinedNodes = new global::Opc.Ua.NodeStateCollection();
+                        using global::System.IO.Stream stream = Predefined.NodesAsStream;
+                        predefinedNodes.LoadFrom{{Tokens.Encoding}}(context, stream, true);
+                        collection.AddRange(predefinedNodes);
+                        return collection;
+                    }
+                }
+            }
+            """);
+
+        /// <summary>
         /// Main file template for predefined nodes code generation
         /// </summary>
         public static readonly TemplateString NodeStatesFile_cs = TemplateString.Parse(
@@ -2493,26 +2493,27 @@ namespace Opc.Ua.SourceGeneration
 
             {{Tokens.ListOfImports}}
 
-            namespace {{Tokens.Namespace}}
+            namespace {{Tokens.NamespacePrefix}}
             {
                 {{Tokens.ListOfTypes}}
 
                 /// <summary>
-                /// Provides methods to create the Address Space for the {{Tokens.Namespace}} namespace.
+                /// Extensions that add functionality from the {{Tokens.NamespaceUri}} namespace.
                 /// </summary>
-                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
-                [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
-                public static partial class AddressSpace
+                public static partial class {{Tokens.Namespace}}Extensions
                 {
                     /// <summary>
-                    /// Creates and returns all predefined node states for the namespace.
+                    /// Creates and returns all node states for the {{Tokens.NamespaceUri}} namespace.
                     /// </summary>
+                    /// <param name="nodes">The collection to add the node states to.</param>
                     /// <param name="context">The system context to use for initialization.</param>
-                    /// <returns>A collection containing all predefined node states.</returns>
-                    public static global::Opc.Ua.NodeStateCollection GetAddressSpace(
+                    /// <returns>Original collection with node states added.</returns>
+                    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
+                    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
+                    public static NodeStateCollection Add{{Tokens.Namespace}}(
+                        this global::Opc.Ua.NodeStateCollection nodes,
                         global::Opc.Ua.ISystemContext context)
                     {
-                        var nodes = new global::Opc.Ua.NodeStateCollection();
                         {{Tokens.ListOfNodeStateInitializers}}
                         return nodes;
                     }

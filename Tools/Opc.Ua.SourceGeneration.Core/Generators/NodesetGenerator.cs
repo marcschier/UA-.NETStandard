@@ -453,7 +453,8 @@ namespace Opc.Ua.SourceGeneration
                 LoadTemplate_NamespaceImports);
 
             template.AddReplacement(Tokens.NamespacePrefix, nsPrefix);
-            template.AddReplacement(Tokens.Namespace,
+            template.AddReplacement(
+                Tokens.Namespace,
                 nsPrefix.Replace(".", string.Empty, StringComparison.Ordinal));
             template.AddReplacement(Tokens.Encoding, EncodingString);
 
