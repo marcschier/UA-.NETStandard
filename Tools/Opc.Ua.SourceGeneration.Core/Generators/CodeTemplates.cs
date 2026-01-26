@@ -2553,7 +2553,7 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
-                state.SuperTypeId = {{Tokens.SuperTypeIdConstant}};
+                state.SuperTypeId = {{Tokens.SuperTypeId}};
                 state.IsAbstract = {{Tokens.IsAbstract}};
                 {{Tokens.ReleaseStatusValue}}
                 {{Tokens.CategoriesValue}}
@@ -2590,7 +2590,7 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
-                state.SuperTypeId = {{Tokens.SuperTypeIdConstant}};
+                state.SuperTypeId = {{Tokens.SuperTypeId}};
                 state.IsAbstract = {{Tokens.IsAbstract}};
                 state.DataType = {{Tokens.DataTypeIdConstant}};
                 state.ValueRank = {{Tokens.ValueRank}};
@@ -2631,7 +2631,7 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
-                state.SuperTypeId = {{Tokens.SuperTypeIdConstant}};
+                state.SuperTypeId = {{Tokens.SuperTypeId}};
                 state.IsAbstract = {{Tokens.IsAbstract}};
                 state.Symmetric = {{Tokens.SymmetricValue}};
                 {{Tokens.InverseNameValue}}
@@ -2667,7 +2667,7 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
-                state.SuperTypeId = {{Tokens.SuperTypeIdConstant}};
+                state.SuperTypeId = {{Tokens.SuperTypeId}};
                 state.IsAbstract = {{Tokens.IsAbstract}};
                 {{Tokens.ReleaseStatusValue}}
                 {{Tokens.CategoriesValue}}
@@ -2704,9 +2704,9 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
-                state.TypeDefinitionId = {{Tokens.TypeDefinitionIdConstant}};
-                state.ReferenceTypeId = {{Tokens.ReferenceTypeIdConstant}};
-                {{Tokens.ModellingRuleIdConstant}}
+                state.TypeDefinitionId = {{Tokens.TypeDefinitionId}};
+                state.ReferenceTypeId = {{Tokens.ReferenceTypeId}};
+                {{Tokens.ModellingRuleId}}
                 state.EventNotifier = {{Tokens.EventNotifier}};
                 {{Tokens.ReleaseStatusValue}}
                 {{Tokens.CategoriesValue}}
@@ -2777,11 +2777,11 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
-                state.ReferenceTypeId = {{Tokens.ReferenceTypeIdConstant}};
-                {{Tokens.ModellingRuleIdConstant}}
+                state.ReferenceTypeId = {{Tokens.ReferenceTypeId}};
+                {{Tokens.ModellingRuleId}}
                 state.Executable = {{Tokens.ExecutableValue}};
                 state.UserExecutable = {{Tokens.ExecutableValue}};
-                {{Tokens.MethodDeclarationIdConstant}}
+                {{Tokens.MethodDeclarationId}}
                 {{Tokens.ReleaseStatusValue}}
                 {{Tokens.CategoriesValue}}
                 {{Tokens.SpecificationValue}}
@@ -2813,13 +2813,14 @@ namespace Opc.Ua.SourceGeneration
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
-                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
+                state.DisplayName = new global::Opc.Ua.LocalizedText(
+                    {{Tokens.DisplayNameValue}});
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
-                state.TypeDefinitionId = {{Tokens.TypeDefinitionIdConstant}};
-                state.ReferenceTypeId = {{Tokens.ReferenceTypeIdConstant}};
-                {{Tokens.ModellingRuleIdConstant}}
+                state.TypeDefinitionId = {{Tokens.TypeDefinitionId}};
+                state.ReferenceTypeId = {{Tokens.ReferenceTypeId}};
+                {{Tokens.ModellingRuleId}}
                 state.DataType = {{Tokens.DataTypeIdConstant}};
                 state.ValueRank = {{Tokens.ValueRank}};
                 {{Tokens.ArrayDimensions}}
@@ -2864,9 +2865,9 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
-                state.TypeDefinitionId = {{Tokens.TypeDefinitionIdConstant}};
-                state.ReferenceTypeId = {{Tokens.ReferenceTypeIdConstant}};
-                {{Tokens.ModellingRuleIdConstant}}
+                state.TypeDefinitionId = {{Tokens.TypeDefinitionId}};
+                state.ReferenceTypeId = {{Tokens.ReferenceTypeId}};
+                {{Tokens.ModellingRuleId}}
                 state.EventNotifier = {{Tokens.EventNotifier}};
                 {{Tokens.ReleaseStatusValue}}
                 {{Tokens.CategoriesValue}}
@@ -2904,9 +2905,9 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
-                state.TypeDefinitionId = {{Tokens.TypeDefinitionIdConstant}};
-                state.ReferenceTypeId = {{Tokens.ReferenceTypeIdConstant}};
-                {{Tokens.ModellingRuleIdConstant}}
+                state.TypeDefinitionId = {{Tokens.TypeDefinitionId}};
+                state.ReferenceTypeId = {{Tokens.ReferenceTypeId}};
+                {{Tokens.ModellingRuleId}}
                 state.DataType = {{Tokens.DataTypeIdConstant}};
                 state.ValueRank = {{Tokens.ValueRank}};
                 {{Tokens.ArrayDimensions}}
@@ -2951,11 +2952,11 @@ namespace Opc.Ua.SourceGeneration
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
-                state.ReferenceTypeId = {{Tokens.ReferenceTypeIdConstant}};
-                {{Tokens.ModellingRuleIdConstant}}
+                state.ReferenceTypeId = {{Tokens.ReferenceTypeId}};
+                {{Tokens.ModellingRuleId}}
                 state.Executable = {{Tokens.ExecutableValue}};
                 state.UserExecutable = {{Tokens.ExecutableValue}};
-                {{Tokens.MethodDeclarationIdConstant}}
+                {{Tokens.MethodDeclarationId}}
                 {{Tokens.ReleaseStatusValue}}
                 {{Tokens.CategoriesValue}}
                 {{Tokens.SpecificationValue}}
@@ -2975,7 +2976,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public static readonly TemplateString NodeState_AddReference_cs = TemplateString.Parse(
             $$"""
-            state.AddReference({{Tokens.ReferenceTypeIdConstant}}, {{Tokens.IsInverse}}, {{Tokens.TargetNodeIdConstant}});
+            state.AddReference({{Tokens.ReferenceTypeId}}, {{Tokens.IsInverse}}, {{Tokens.TargetNodeId}});
 
             """);
 
@@ -3072,7 +3073,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public static readonly TemplateString NodeState_ModellingRule_cs = TemplateString.Parse(
             $$"""
-            state.ModellingRuleId = {{Tokens.ModellingRuleIdConstant}};
+            state.ModellingRuleId = {{Tokens.ModellingRuleId}};
 
             """);
 
@@ -3081,7 +3082,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public static readonly TemplateString NodeState_MethodDeclarationId_cs = TemplateString.Parse(
             $$"""
-            state.MethodDeclarationId = {{Tokens.MethodDeclarationIdConstant}};
+            state.MethodDeclarationId = {{Tokens.MethodDeclarationId}};
 
             """);
 
