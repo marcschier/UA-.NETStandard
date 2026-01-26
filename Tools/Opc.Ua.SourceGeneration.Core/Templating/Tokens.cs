@@ -184,6 +184,7 @@ namespace Opc.Ua.SourceGeneration
         public static string StateVariable => nameof(StateVariable);
         public static string StateClassName => nameof(StateClassName);
         public static string DisplayNameValue => nameof(DisplayNameValue);
+        public static string DataTypeDefinition => nameof(DataTypeDefinition);
         public static string DescriptionValue => nameof(DescriptionValue);
         public static string ValueCode => nameof(ValueCode);
         public static string DataTypeIdConstant => nameof(DataTypeIdConstant);

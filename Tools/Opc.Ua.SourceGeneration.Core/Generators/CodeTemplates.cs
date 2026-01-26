@@ -2669,6 +2669,7 @@ namespace Opc.Ua.SourceGeneration
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
                 state.SuperTypeId = {{Tokens.SuperTypeId}};
                 state.IsAbstract = {{Tokens.IsAbstract}};
+                state.DataTypeDefinition = {{Tokens.DataTypeDefinition}};
                 {{Tokens.ReleaseStatusValue}}
                 {{Tokens.CategoriesValue}}
                 {{Tokens.SpecificationValue}}
@@ -2697,6 +2698,7 @@ namespace Opc.Ua.SourceGeneration
                 var state = new global::Opc.Ua.BaseObjectState(null);
                 state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
+                state.NumericId = {{Tokens.NumericIdValue}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
@@ -2770,6 +2772,7 @@ namespace Opc.Ua.SourceGeneration
                 var state = new global::Opc.Ua.MethodState(null);
                 state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
+                state.NumericId = {{Tokens.NumericIdValue}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
@@ -2810,6 +2813,7 @@ namespace Opc.Ua.SourceGeneration
                 var state = new {{Tokens.StateClassName}}(null);
                 state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
+                state.NumericId = {{Tokens.NumericIdValue}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
@@ -2858,6 +2862,7 @@ namespace Opc.Ua.SourceGeneration
                 var state = new global::Opc.Ua.BaseObjectState(parent);
                 state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
+                state.NumericId = {{Tokens.NumericIdValue}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
@@ -2889,7 +2894,7 @@ namespace Opc.Ua.SourceGeneration
         public static readonly TemplateString NodeState_ChildVariable_cs = TemplateString.Parse(
             $$"""
             /// <summary>
-            /// Creates the {{Tokens.SymbolicName}} Variable child node state.
+            /// Creates the {{Tokens.SymbolicName}} child Variable node state.
             /// </summary>
             private static global::Opc.Ua.BaseVariableState Create_{{Tokens.SymbolicId}}(
                 global::Opc.Ua.ISystemContext context,
@@ -2898,6 +2903,7 @@ namespace Opc.Ua.SourceGeneration
                 var state = new {{Tokens.StateClassName}}(parent);
                 state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
+                state.NumericId = {{Tokens.NumericIdValue}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
@@ -2945,6 +2951,7 @@ namespace Opc.Ua.SourceGeneration
                 var state = new global::Opc.Ua.MethodState(parent);
                 state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
+                state.NumericId = {{Tokens.NumericIdValue}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));

@@ -61,9 +61,9 @@ namespace Opc.Ua.SourceGeneration.Tests
         [DatapointSource]
         public string[] ModelDesignFiles =
         [
-            "TestDataDesign.xml",
-            "DemoMode.json"
+            "TestDataDesign.xml"
 #if TEST_ALL
+            , "DemoModel.json"
             , "TestDataDesign.json"
             , "DemoMode.xml"
 #endif

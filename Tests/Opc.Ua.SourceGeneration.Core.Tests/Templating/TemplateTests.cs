@@ -743,7 +743,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
 
             Assert.That(result, Does.Contain("namespace My.Prefix"));
             Assert.That(result, Does.Contain("public static partial class MyNamespaceExtensions"));
-            Assert.That(result, Does.Contain("AddMyNamespace("));
+            Assert.That(result, Does.Contain("LoadMyNamespace("));
             Assert.That(result, Does.Contain("predefinedNodes.LoadFromBinary(context, stream, true);"));
         }
 

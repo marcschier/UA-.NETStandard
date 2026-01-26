@@ -84,9 +84,7 @@ namespace Opc.Ua.SourceGeneration
                     continue;
                 }
 
-                bool isInAddressSpace =
-                    !node.NotInAddressSpace;
-
+                bool isInAddressSpace = !node.NotInAddressSpace;
                 if (node is InstanceDesign instanceDesign &&
                     instanceDesign.TypeDefinition != null &&
                     instanceDesign.TypeDefinition.Name == "DataTypeEncodingType")
