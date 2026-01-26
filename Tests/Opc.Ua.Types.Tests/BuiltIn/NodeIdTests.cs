@@ -225,7 +225,7 @@ namespace Opc.Ua.Types.Tests.BuiltIn
 
             nodeIds.Insert(0, new NodeId(123, 1));
             distinctNodes++;
-            Assert.AreNotEqual(nodeIds[0].GetHashCode(), nodeIds[1].GetHashCode());
+            Assert.AreEqual(nodeIds[0].GetHashCode(), nodeIds[1].GetHashCode());
 
             nodeIds.Insert(0, new NodeId("Test", 0));
             distinctNodes++;

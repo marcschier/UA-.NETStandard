@@ -63,9 +63,12 @@ namespace Opc.Ua.SourceGeneration.Tests
         [
             "TestDataDesign.xml"
 #if TEST_ALL
+            , "DemoModel.xml"
+            , "TestModel.xml"
+            , "OpcUaOnboardingModel.xml"
+            , "OpcUaSchedulerModel.xml"
             , "DemoModel.json"
             , "TestDataDesign.json"
-            , "DemoMode.xml"
 #endif
         ];
 

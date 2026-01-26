@@ -84,6 +84,16 @@ namespace Opc.Ua.Schema.Model
         NamespaceTable NamespaceUris { get; }
 
         /// <summary>
+        /// Default role permissions to apply to nodes.
+        /// </summary>
+        IReadOnlyDictionary<string, RolePermissionSet> RolePermissions { get; }
+
+        /// <summary>
+        /// Default access restrictions to apply to nodes.
+        /// </summary>
+        IReadOnlyDictionary<string, AccessRestrictions?> AccessRestrictions { get; }
+
+        /// <summary>
         /// Returns a list of nodes with nodes excluded per exclusion criteria.
         /// </summary>
         IEnumerable<NodeDesign> GetNodeDesigns();

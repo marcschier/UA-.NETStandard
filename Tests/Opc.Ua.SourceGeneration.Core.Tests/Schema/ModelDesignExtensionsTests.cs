@@ -487,7 +487,7 @@ namespace Opc.Ua.Schema.Model.Tests
         /// Expected: Returns "default".
         /// </summary>
         [Test]
-        public void GetDefaultDotNetValue_ArrayValueRankWithUseVariantFalse_ReturnsDefault()
+        public void GetDefaultDotNetValue_ArrayValueRankWithUseVariantFalse_ReturnsEmptyArray()
         {
             // Arrange
             var mockDataType = new DataTypeDesign
@@ -508,15 +508,14 @@ namespace Opc.Ua.Schema.Model.Tests
                 mockContext.Object);
 
             // Assert
-            Assert.That(result, Is.EqualTo("default"));
+            Assert.That(result, Is.EqualTo("global::System.Array.Empty<int>()"));
         }
 
         /// <summary>
         /// Tests GetDefaultDotNetValue with Array ValueRank and useVariantForObject set to true.
-        /// Expected: Returns formatted new instance constructor.
         /// </summary>
         [Test]
-        public void GetDefaultDotNetValue_ArrayValueRankWithUseVariantTrue_ReturnsNewInstance()
+        public void GetDefaultDotNetValue_ArrayValueRankWithUseVariantTrue_ReturnsEmptyArray()
         {
             // Arrange
             var mockDataType = new DataTypeDesign
@@ -537,8 +536,7 @@ namespace Opc.Ua.Schema.Model.Tests
                 mockContext.Object);
 
             // Assert
-            Assert.That(result, Does.StartWith("new "));
-            Assert.That(result, Does.EndWith("()"));
+            Assert.That(result, Is.EqualTo("global::System.Array.Empty<int>()"));
         }
 
         /// <summary>
@@ -1840,7 +1838,7 @@ namespace Opc.Ua.Schema.Model.Tests
         /// Expected: Returns "0".
         /// </summary>
         [Test]
-        public void GetDefaultDotNetValue_EnumerationMatchingOpcUaEnumeration_ReturnsZero()
+        public void GetDefaultDotNetValue_EnumerationMatchingOpcUaEnumeration_ReturnsDefault()
         {
             // Arrange
             var mockDataType = new DataTypeDesign
@@ -1862,7 +1860,7 @@ namespace Opc.Ua.Schema.Model.Tests
                 mockContext.Object);
 
             // Assert
-            Assert.That(result, Is.EqualTo("0"));
+            Assert.That(result, Is.EqualTo("default"));
         }
 
         /// <summary>
@@ -1902,19 +1900,18 @@ namespace Opc.Ua.Schema.Model.Tests
 
         /// <summary>
         /// Tests GetDefaultDotNetValue with Enumeration type that IsOptionSet.
-        /// Expected: Returns "0" (first IsOptionSet check).
         /// </summary>
         [Test]
-        public void GetDefaultDotNetValue_EnumerationIsOptionSet_ReturnsZero()
+        public void GetDefaultDotNetValue_EnumerationIsOptionSet_ReturnsDefault()
         {
             // Arrange
             var mockDataType = new DataTypeDesign
             {
                 BasicDataType = BasicDataType.Enumeration,
-                SymbolicId = new XmlQualifiedName("TestEnum", "http://test.namespace"),
+                SymbolicName = new XmlQualifiedName("TestEnum", "http://test.namespace"),
                 BaseTypeNode = new TypeDesign
                 {
-                    SymbolicId = new XmlQualifiedName("SomeOtherBase", Namespaces.OpcUa)
+                    SymbolicId = new XmlQualifiedName("SomeOtherBase", Namespaces.OpcUa),
                 },
                 IsOptionSet = true
             };
@@ -1932,7 +1929,7 @@ namespace Opc.Ua.Schema.Model.Tests
                 mockContext.Object);
 
             // Assert
-            Assert.That(result, Is.EqualTo("0"));
+            Assert.That(result, Is.EqualTo("default"));
         }
 
         /// <summary>
@@ -2668,7 +2665,7 @@ namespace Opc.Ua.Schema.Model.Tests
             string result = mockMethod.GetClassName("http://test.org", namespaces);
 
             // Assert
-            Assert.That(result, Is.EqualTo("MethodState"));
+            Assert.That(result, Is.EqualTo("global::Opc.Ua.MethodState"));
         }
 
         /// <summary>
@@ -2692,7 +2689,7 @@ namespace Opc.Ua.Schema.Model.Tests
             string result = mockMethod.GetClassName("http://test.org", namespaces);
 
             // Assert
-            Assert.That(result, Is.EqualTo("MethodState"));
+            Assert.That(result, Is.EqualTo("global::Opc.Ua.MethodState"));
         }
 
         /// <summary>
@@ -2716,7 +2713,7 @@ namespace Opc.Ua.Schema.Model.Tests
             string result = mockMethod.GetClassName("http://test.org", namespaces);
 
             // Assert
-            Assert.That(result, Is.EqualTo("MethodState"));
+            Assert.That(result, Is.EqualTo("global::Opc.Ua.MethodState"));
         }
 
         /// <summary>
@@ -3148,7 +3145,7 @@ namespace Opc.Ua.Schema.Model.Tests
             string result = mockMethod.GetClassName(string.Empty, namespaces);
 
             // Assert
-            Assert.That(result, Is.EqualTo("MethodState"));
+            Assert.That(result, Is.EqualTo("global::Opc.Ua.MethodState"));
         }
 
         /// <summary>
@@ -3171,7 +3168,7 @@ namespace Opc.Ua.Schema.Model.Tests
             string result = mockMethod.GetClassName("http://test.org", null);
 
             // Assert
-            Assert.That(result, Is.EqualTo("MethodState"));
+            Assert.That(result, Is.EqualTo("global::Opc.Ua.MethodState"));
         }
 
         /// <summary>
@@ -3271,7 +3268,7 @@ namespace Opc.Ua.Schema.Model.Tests
             string result = mockMethod.GetClassName("http://test.org", namespaces);
 
             // Assert
-            Assert.That(result, Is.EqualTo("MethodState"));
+            Assert.That(result, Is.EqualTo("global::Opc.Ua.MethodState"));
         }
 
         /// <summary>
@@ -3318,7 +3315,7 @@ namespace Opc.Ua.Schema.Model.Tests
             string result = mockVariable.GetClassName("http://test.org", namespaces);
 
             // Assert
-            Assert.That(result, Is.EqualTo("BaseVariableTypeState<Other.CustomType>"));
+            Assert.That(result, Is.EqualTo("BaseVariableTypeState<global::Other.CustomType>"));
         }
 
         /// <summary>
@@ -4240,8 +4237,8 @@ namespace Opc.Ua.Schema.Model.Tests
             // Arrange
             var mockDataType = new DataTypeDesign();
             var mockBaseDataType = new DataTypeDesign();
-            var symbolicName = new XmlQualifiedName("BaseTypeName", "http://test.org");
-            var symbolicId = new XmlQualifiedName("BaseTypeId", "http://opcfoundation.org/UA/");
+            var symbolicName = new XmlQualifiedName("BaseTypeName", "http://opcfoundation.org/UA/");
+            var symbolicId = new XmlQualifiedName("BaseTypeId", "http://test.org");
 
             mockBaseDataType.BasicDataType = basicType;
             mockBaseDataType.SymbolicName = symbolicName;
@@ -4257,7 +4254,7 @@ namespace Opc.Ua.Schema.Model.Tests
             string result = mockDataType.GetBaseClassName(namespaces);
 
             // Assert
-            Assert.That(result, Is.EqualTo("OpcUa.BaseTypeName"));
+            Assert.That(result, Is.EqualTo("global::OpcUa.BaseTypeName"));
         }
 
         /// <summary>
@@ -4289,7 +4286,7 @@ namespace Opc.Ua.Schema.Model.Tests
             string result = mockDataType.GetBaseClassName(namespaces);
 
             // Assert
-            Assert.That(result, Is.EqualTo(".BaseTypeName"));
+            Assert.That(result, Is.EqualTo("BaseTypeName"));
         }
 
         /// <summary>
@@ -4317,7 +4314,7 @@ namespace Opc.Ua.Schema.Model.Tests
             string result = mockDataType.GetBaseClassName(namespaces);
 
             // Assert
-            Assert.That(result, Is.EqualTo(".BaseTypeName"));
+            Assert.That(result, Is.EqualTo("BaseTypeName"));
         }
 
         /// <summary>
@@ -4345,7 +4342,7 @@ namespace Opc.Ua.Schema.Model.Tests
             string result = mockDataType.GetBaseClassName(namespaces);
 
             // Assert
-            Assert.That(result, Is.EqualTo(".BaseTypeName"));
+            Assert.That(result, Is.EqualTo("BaseTypeName"));
         }
 
         /// <summary>
@@ -4359,7 +4356,7 @@ namespace Opc.Ua.Schema.Model.Tests
             // Arrange
             var mockDataType = new DataTypeDesign();
             var mockBaseDataType = new DataTypeDesign();
-            var symbolicName = new XmlQualifiedName(null, "http://test.org");
+            var symbolicName = new XmlQualifiedName("null", "http://test.org");
             var symbolicId = new XmlQualifiedName("BaseTypeId", "http://opcfoundation.org/UA/");
 
             mockBaseDataType.BasicDataType = BasicDataType.Int32;
@@ -4369,14 +4366,14 @@ namespace Opc.Ua.Schema.Model.Tests
 
             Namespace[] namespaces =
             [
-                new Namespace { Value = "http://opcfoundation.org/UA/", Prefix = "OpcUa" }
+                new Namespace { Value = "http://test.org", Prefix = "OpcUa" }
             ];
 
             // Act
             string result = mockDataType.GetBaseClassName(namespaces);
 
             // Assert
-            Assert.That(result, Is.EqualTo("OpcUa."));
+            Assert.That(result, Is.EqualTo("global::OpcUa.null"));
         }
 
         /// <summary>
@@ -4429,7 +4426,7 @@ namespace Opc.Ua.Schema.Model.Tests
             string result = mockDataType.GetBaseClassName(namespaces);
 
             // Assert
-            Assert.That(result, Is.EqualTo(".BaseTypeName"));
+            Assert.That(result, Is.EqualTo("BaseTypeName"));
         }
 
         /// <summary>
@@ -4443,8 +4440,8 @@ namespace Opc.Ua.Schema.Model.Tests
             // Arrange
             var mockDataType = new DataTypeDesign();
             var mockBaseDataType = new DataTypeDesign();
-            var symbolicName = new XmlQualifiedName("CustomType", "http://test.org");
-            var symbolicId = new XmlQualifiedName("CustomTypeId", "http://custom.org/Types/");
+            var symbolicName = new XmlQualifiedName("CustomType", "http://custom.org/Types/");
+            var symbolicId = new XmlQualifiedName("CustomTypeId", "http://test.org");
 
             mockBaseDataType.BasicDataType = BasicDataType.UserDefined;
             mockBaseDataType.SymbolicName = symbolicName;
@@ -4462,7 +4459,7 @@ namespace Opc.Ua.Schema.Model.Tests
             string result = mockDataType.GetBaseClassName(namespaces);
 
             // Assert
-            Assert.That(result, Is.EqualTo("Custom.CustomType"));
+            Assert.That(result, Is.EqualTo("global::Custom.CustomType"));
         }
 
         /// <summary>
@@ -4475,7 +4472,7 @@ namespace Opc.Ua.Schema.Model.Tests
             TypeDesign node = null;
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => node.FixClassName());
+            Assert.Throws<ArgumentNullException>(() => node.GetClassName([]));
         }
 
         /// <summary>
@@ -4487,19 +4484,19 @@ namespace Opc.Ua.Schema.Model.Tests
             // Arrange
             var dataType = new DataTypeDesign
             {
-                SymbolicId = new XmlQualifiedName("TestDataType", "http://test.namespace"),
+                SymbolicName = new XmlQualifiedName("TestDataType", "http://test.namespace"),
                 ClassName = "SomeClassName"
             };
 
             // Act
-            string result = dataType.FixClassName();
+            string result = dataType.GetClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("TestDataType"));
         }
 
         /// <summary>
-        /// Tests that FixClassName throws NullReferenceException when DataTypeDesign has null SymbolicId.
+        /// Tests that FixClassName throws when DataTypeDesign has null SymbolicId.
         /// </summary>
         [Test]
         public void FixClassName_DataTypeDesignWithNullSymbolicId_ThrowsArgumentException()
@@ -4512,7 +4509,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => dataType.FixClassName());
+            Assert.Throws<ArgumentException>(() => dataType.GetClassName([]));
         }
 
         /// <summary>
@@ -4525,14 +4522,14 @@ namespace Opc.Ua.Schema.Model.Tests
             var objectType = new ObjectTypeDesign
             {
                 ClassName = "ObjectSource",
-                SymbolicId = new XmlQualifiedName("TestObject", "http://test.namespace")
+                SymbolicName = new XmlQualifiedName("TestObject", "http://test.namespace")
             };
 
             // Act
-            string result = objectType.FixClassName();
+            string result = objectType.GetClassName([]);
 
             // Assert
-            Assert.That(result, Is.EqualTo("BaseObject"));
+            Assert.That(result, Is.EqualTo("global::Opc.Ua.BaseObject"));
         }
 
         /// <summary>
@@ -4549,7 +4546,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = objectType.FixClassName();
+            string result = objectType.GetClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("CustomObjectType"));
@@ -4569,7 +4566,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => objectType.FixClassName());
+            Assert.Throws<ArgumentException>(() => objectType.GetClassName([]));
         }
 
         /// <summary>
@@ -4586,10 +4583,10 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = variableType.FixClassName();
+            string result = variableType.GetClassName([]);
 
             // Assert
-            Assert.That(result, Is.EqualTo("BaseDataVariable"));
+            Assert.That(result, Is.EqualTo("global::Opc.Ua.BaseDataVariable"));
         }
 
         /// <summary>
@@ -4606,7 +4603,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = variableType.FixClassName();
+            string result = variableType.GetClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("CustomVariableType"));
@@ -4626,7 +4623,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => variableType.FixClassName());
+            Assert.Throws<ArgumentException>(() => variableType.GetClassName([]));
         }
 
         /// <summary>
@@ -4643,7 +4640,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = referenceType.FixClassName();
+            string result = referenceType.GetClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("CustomReferenceType"));
@@ -4653,20 +4650,20 @@ namespace Opc.Ua.Schema.Model.Tests
         /// Tests that FixClassName returns empty string when ObjectTypeDesign ClassName is empty.
         /// </summary>
         [Test]
-        public void FixClassName_ObjectTypeDesignWithEmptyClassName_ReturnsEmptyString()
+        public void FixClassName_ObjectTypeDesignWithEmptyClassName_SymbolicNameInstead()
         {
             // Arrange
             var objectType = new ObjectTypeDesign
             {
                 ClassName = string.Empty,
-                SymbolicId = new XmlQualifiedName("TestObject", "http://test.namespace")
+                SymbolicName = new XmlQualifiedName("TestObject", "http://test.namespace")
             };
 
             // Act
-            string result = objectType.FixClassName();
+            string result = objectType.GetClassName([]);
 
             // Assert
-            Assert.That(result, Is.EqualTo(string.Empty));
+            Assert.That(result, Is.EqualTo("TestObject"));
         }
 
         /// <summary>
@@ -4683,7 +4680,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = variableType.FixClassName();
+            string result = variableType.GetClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("   "));
@@ -4703,7 +4700,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = objectType.FixClassName();
+            string result = objectType.GetClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("objectsource"));
@@ -4723,30 +4720,28 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = variableType.FixClassName();
+            string result = variableType.GetClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("datavariable"));
         }
 
         /// <summary>
-        /// Tests that FixClassName returns empty string from SymbolicId.Name when DataTypeDesign SymbolicId.Name is empty.
+        /// Tests that FixClassName returns empty string from Symbolic Name
+        /// when DataTypeDesign Symbolic Name is empty.
         /// </summary>
         [Test]
-        public void FixClassName_DataTypeDesignWithEmptySymbolicIdName_ReturnsEmptyString()
+        public void FixClassName_DataTypeDesignWithEmptySymbolicIdName_Throws()
         {
             // Arrange
             var dataType = new DataTypeDesign
             {
-                SymbolicId = new XmlQualifiedName(string.Empty, "http://test.namespace"),
+                SymbolicName = new XmlQualifiedName(string.Empty, "http://test.namespace"),
                 ClassName = "SomeClassName"
             };
 
-            // Act
-            string result = dataType.FixClassName();
-
-            // Assert
-            Assert.That(result, Is.EqualTo(string.Empty));
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => dataType.GetClassName([]));
         }
 
         /// <summary>
@@ -5824,7 +5819,7 @@ namespace Opc.Ua.Schema.Model.Tests
                 NullableAnnotation.NonNullable);
 
             // Assert
-            Assert.That(result, Is.EqualTo("Variant"));
+            Assert.That(result, Is.EqualTo("global::Opc.Ua.Variant"));
         }
 
         /// <summary>
@@ -6324,7 +6319,7 @@ namespace Opc.Ua.Schema.Model.Tests
                 NullableAnnotation.NonNullable);
 
             // Assert
-            Assert.That(result, Is.EqualTo("Variant"));
+            Assert.That(result, Is.EqualTo("global::Opc.Ua.Variant"));
         }
 
         /// <summary>
@@ -8292,7 +8287,7 @@ namespace Opc.Ua.Schema.Model.Tests
             string result = dataType.GetDotNetTypeName(targetNamespace, namespaces, NullableAnnotation.NonNullable);
 
             // Assert
-            Assert.That(result, Is.EqualTo("Other.CustomType"));
+            Assert.That(result, Is.EqualTo("global::Other.CustomType"));
         }
 
         /// <summary>
@@ -8543,7 +8538,7 @@ namespace Opc.Ua.Schema.Model.Tests
             string result = dataType.GetDotNetTypeName(targetNamespace, namespaces, NullableAnnotation.NonNullable);
 
             // Assert
-            Assert.That(result, Is.EqualTo("Second.CustomType"));
+            Assert.That(result, Is.EqualTo("global::Second.CustomType"));
         }
 
         /// <summary>

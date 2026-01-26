@@ -443,12 +443,7 @@ namespace Opc.Ua.SourceGeneration
             // Add helpers
             using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
             using var templateWriter = new TemplateWriter(writer);
-            var template = new Template(templateWriter, CodeTemplates.Helpers_File_cs);
-
-            template.AddReplacement(
-                Tokens.ListOfImports,
-                m_context.ModelDesign.Namespaces,
-                LoadTemplate_NamespaceImports);
+            var template = new Template(templateWriter, CodeTemplates.PredefinedNodes_File_cs);
 
             template.AddReplacement(Tokens.NamespacePrefix, nsPrefix);
             template.AddReplacement(
@@ -458,28 +453,6 @@ namespace Opc.Ua.SourceGeneration
 
             template.Render();
             fileNames.Add(fileName);
-        }
-
-        private TemplateString LoadTemplate_NamespaceImports(ILoadContext context)
-        {
-            if (context.Target is not Namespace ns)
-            {
-                return null;
-            }
-
-            if (ns.Value == m_context.ModelDesign.TargetNamespace.Value)
-            {
-                return null;
-            }
-
-            if (ns.FilePath == null && ns.Value != Namespaces.OpcUa)
-            {
-                return null;
-            }
-
-            context.Out.WriteLine("using {0};",
-                m_context.ModelDesign.Namespaces.GetNamespacePrefix(ns.Value));
-            return null;
         }
 
         private static void IndexDocumentation(

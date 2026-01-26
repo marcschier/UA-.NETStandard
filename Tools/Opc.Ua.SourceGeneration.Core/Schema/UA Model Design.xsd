@@ -160,7 +160,7 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
-
+  
   <xs:simpleType name="ReleaseStatus">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Released" />
@@ -178,7 +178,7 @@
       <xs:enumeration value="Testing" />
     </xs:restriction>
   </xs:simpleType>
-
+  
   <xs:complexType name="NodeDesign">
     <xs:annotation>
       <xs:documentation>
@@ -244,7 +244,7 @@
         <xs:annotation>
           <xs:documentation>
             <html:p>
-              The RolePermissions specify the permissions that apply to the Node.
+              The RolePermissions specify the permissions that apply to the Node. 
               They override the DefaultRolePermissions for thr Namespace.
               RolePermissions specified on a parent always override the RolePermissions for the children unless a child has its own RolePermissions set.
             </html:p>
@@ -688,7 +688,7 @@
       <xs:enumeration value="None" />
     </xs:restriction>
   </xs:simpleType>
-
+  
   <xs:complexType name="RolePermission">
     <xs:annotation>
       <xs:documentation>
@@ -716,7 +716,7 @@
       <xs:element name="PermissionSet" type="RolePermissionSet" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
   </xs:complexType>
-
+          
   <xs:complexType name="Reference">
     <xs:annotation>
       <xs:documentation>

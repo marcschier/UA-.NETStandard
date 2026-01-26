@@ -560,6 +560,8 @@ namespace Opc.Ua.SourceGeneration
                 {
                     public const string OpcUa = "http://opcfoundation.org/UA/";
                 }
+                public class IdentityMappingRuleType { }
+                public class Range { }
                 public class FiniteStateMachineState : BaseObjectState
                 {
                     public FiniteStateMachineState(NodeState? parent) : base(parent) { }
@@ -572,9 +574,29 @@ namespace Opc.Ua.SourceGeneration
                 {
                     public AnalogUnitState(NodeState? parent) : base(parent) { }
                 }
+                public class AnalogItemState : BaseDataVariableState<double>
+                {
+                    public AnalogItemState(NodeState? parent) : base(parent) { }
+                }
+                public class AnalogItemState<T> : BaseDataVariableState<T>
+                {
+                    public AnalogItemState(NodeState? parent) : base(parent) { }
+                }
                 public class BaseInterfaceState : BaseObjectState
                 {
                     public BaseInterfaceState(NodeState? parent) : base(parent) { }
+                }
+                public class BaseEventState : BaseObjectState
+                {
+                    public BaseEventState(NodeState? parent) : base(parent) { }
+                }
+                public class ConditionState : BaseObjectState
+                {
+                    public ConditionState(NodeState? parent) : base(parent) { }
+                }
+                public class AcknowledgeableConditionState : BaseObjectState
+                {
+                    public AcknowledgeableConditionState(NodeState? parent) : base(parent) { }
                 }
                 public class FolderState : BaseObjectState
                 {

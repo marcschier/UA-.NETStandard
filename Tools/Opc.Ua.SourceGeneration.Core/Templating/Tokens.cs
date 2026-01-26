@@ -54,6 +54,8 @@ namespace Opc.Ua.SourceGeneration
         public static string CollectionClass => nameof(CollectionClass);
         public static string CollectionType => nameof(CollectionType);
         public static string DataType => nameof(DataType);
+        public static string StructureType => nameof(StructureType);
+        public static string FirstExplicitFieldIndex => nameof(FirstExplicitFieldIndex);
         public static string DataTypeNamespacePrefix => nameof(DataTypeNamespacePrefix);
         public static string DataTypeNamespaceUri => nameof(DataTypeNamespaceUri);
         public static string DefaultValue => nameof(DefaultValue);
@@ -112,11 +114,15 @@ namespace Opc.Ua.SourceGeneration
         public static string ListOfResultProperties => nameof(ListOfResultProperties);
         public static string ListOfSwitchFields => nameof(ListOfSwitchFields);
         public static string ListOfTypes => nameof(ListOfTypes);
+        public static string ListOfTypeActivators => nameof(ListOfTypeActivators);
+        public static string ListOfDataTypeDefinitions => nameof(ListOfDataTypeDefinitions);
         public static string ListOfUpdateChildrenChangeMasks => nameof(ListOfUpdateChildrenChangeMasks);
         public static string ListOfValues => nameof(ListOfValues);
+        public static string ListOfActivatorRegistrations => nameof(ListOfActivatorRegistrations);
         public static string MethodList => nameof(MethodList);
         public static string MinimumSamplingInterval => nameof(MinimumSamplingInterval);
         public static string Name => nameof(Name);
+        public static string IsOptional => nameof(IsOptional);
         public static string Namespace => nameof(Namespace);
         public static string NamespacePrefix => nameof(NamespacePrefix);
         public static string NamespaceUri => nameof(NamespaceUri);
@@ -183,7 +189,7 @@ namespace Opc.Ua.SourceGeneration
         public static string ParentVariable => nameof(ParentVariable);
         public static string StateVariable => nameof(StateVariable);
         public static string StateClassName => nameof(StateClassName);
-        public static string DisplayNameValue => nameof(DisplayNameValue);
+        public static string DisplayName => nameof(DisplayName);
         public static string DataTypeDefinition => nameof(DataTypeDefinition);
         public static string DescriptionValue => nameof(DescriptionValue);
         public static string ValueCode => nameof(ValueCode);

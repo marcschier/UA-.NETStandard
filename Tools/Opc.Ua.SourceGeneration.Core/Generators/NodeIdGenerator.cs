@@ -74,11 +74,6 @@ namespace Opc.Ua.SourceGeneration
                     m_context.ModelDesign.TargetNamespace.Value));
 
             template.AddReplacement(
-                Tokens.ListOfImports,
-                m_context.ModelDesign.Namespaces,
-                LoadTemplate_NamespaceImports);
-
-            template.AddReplacement(
                 Tokens.ListOfIdentifiers,
                 CodeTemplates.IdsPerNodeClass_cs,
                 identifiers,
@@ -94,30 +89,6 @@ namespace Opc.Ua.SourceGeneration
 
             template.Render();
             return [fileName.AsTextFileResource()];
-        }
-
-        private TemplateString LoadTemplate_NamespaceImports(ILoadContext context)
-        {
-            if (context.Target is not Namespace ns)
-            {
-                return null;
-            }
-
-            if (ns.Value == m_context.ModelDesign.TargetNamespace.Value)
-            {
-                return null;
-            }
-
-            if (ns.FilePath == null && ns.Value != Namespaces.OpcUa)
-            {
-                return null;
-            }
-
-            string externalPrefix = m_context.ModelDesign.Namespaces.GetNamespacePrefix(ns.Value);
-
-            context.Out.WriteLine("using {0};", externalPrefix);
-
-            return null;
         }
 
         private TemplateString LoadTemplate_IdsPerNodeClass(ILoadContext context)

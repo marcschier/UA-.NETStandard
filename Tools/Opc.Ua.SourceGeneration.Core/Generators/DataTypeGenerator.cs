@@ -33,6 +33,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml;
+using System.Xml.Linq;
 using Opc.Ua.Schema.Model;
 using Opc.Ua.Types;
 
@@ -59,62 +60,317 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
+            string nsPrefix = m_context.ModelDesign.TargetNamespace.Prefix;
             string fileName = Path.Combine(m_context.OutputFolder, CoreUtils.Format(
                 "{0}.DataTypes.g.cs",
-                m_context.ModelDesign.TargetNamespace.Prefix));
+                nsPrefix));
             using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
 
             using var templateWriter = new TemplateWriter(writer);
             var template = new Template(templateWriter, CodeTemplates.DataTypesFile_cs);
             template.AddReplacement(
+                Tokens.NamespacePrefix,
+                nsPrefix);
+            template.AddReplacement(
                 Tokens.Namespace,
-                m_context.ModelDesign.TargetNamespace.Prefix);
+                nsPrefix.Replace(".", string.Empty, StringComparison.Ordinal));
             template.AddReplacement(
                 Tokens.NamespaceUri,
                 m_context.ModelDesign.Namespaces.GetConstantSymbolForNamespace(
                     m_context.ModelDesign.TargetNamespace.Value));
-
-            template.AddReplacement(
-                Tokens.ListOfImports,
-                m_context.ModelDesign.Namespaces,
-                LoadTemplate_NamespaceImports);
             template.AddReplacement(
                 Tokens.ListOfTypes,
                 datatypes,
                 LoadTemplate_ListOfTypes,
                 WriteTemplate_ListOfTypes);
-
+            template.AddReplacement(
+                Tokens.ListOfDataTypeDefinitions,
+                datatypes,
+                LoadTemplate_ListOfDataTypeDefinitions,
+                WriteTemplate_ListOfDataTypeDefinitions);
+            template.AddReplacement(
+                Tokens.ListOfTypeActivators,
+                datatypes,
+                LoadTemplate_ListOfActivatorClasses,
+                WriteTemplate_ListOfDataTypeActivators);
+            template.AddReplacement(
+                Tokens.ListOfActivatorRegistrations,
+                datatypes,
+                LoadTemplate_ListOfActivatorRegistrations,
+                WriteTemplate_ListOfDataTypeActivators);
             template.Render();
+
             return [fileName.AsTextFileResource()];
         }
 
-        private TemplateString LoadTemplate_NamespaceImports(ILoadContext context)
+        private TemplateString LoadTemplate_ListOfActivatorClasses(ILoadContext context)
         {
-            if (context.Target is not Namespace ns)
+            if (context.Target is not DataTypeDesign datatype)
             {
                 return null;
             }
-
-            if (ns.Value == m_context.ModelDesign.TargetNamespace.Value)
+            if (datatype.BasicDataType == BasicDataType.UserDefined &&
+                datatype.IsStructure &&
+                !datatype.IsAbstract)
             {
-                return null;
+                return CodeTemplates.DataTypes_StructureActivatorClass;
             }
-
-            if (ns.FilePath == null && ns.Value != Namespaces.OpcUa)
-            {
-                return null;
-            }
-
-            string externalPrefix = m_context.ModelDesign.Namespaces.GetNamespacePrefix(ns.Value);
-
-            context.Out.WriteLine("using {0};", externalPrefix);
-
+            // if (datatype.BasicDataType == BasicDataType.Enumeration &&
+            //      datatype.IsEnumeration)
+            // {
+            //     // TODO
+            // }
             return null;
+        }
+
+        private TemplateString LoadTemplate_ListOfActivatorRegistrations(ILoadContext context)
+        {
+            if (context.Target is not DataTypeDesign datatype)
+            {
+                return null;
+            }
+            if (datatype.BasicDataType == BasicDataType.UserDefined &&
+                datatype.IsStructure &&
+                !datatype.IsAbstract)
+            {
+                return CodeTemplates.DataType_StructureActivatorRegistration;
+            }
+            // if (datatype.BasicDataType == BasicDataType.Enumeration &&
+            //      datatype.IsEnumeration)
+            // {
+            //     // TODO
+            // }
+            return null;
+        }
+
+        private bool WriteTemplate_ListOfDataTypeActivators(IWriteContext context)
+        {
+            if (context.Target is not DataTypeDesign dataType)
+            {
+                return false;
+            }
+            context.Template.AddReplacement(Tokens.ClassName, dataType.SymbolicName.Name);
+            context.Template.AddReplacement(Tokens.BrowseName, dataType.SymbolicName.Name);
+            AddEncodingIdReplacements(context, dataType);
+            return context.Template.Render();
+        }
+
+        private TemplateString LoadTemplate_ListOfDataTypeDefinitions(ILoadContext context)
+        {
+            if (context.Target is not DataTypeDesign datatype)
+            {
+                return null;
+            }
+            if (datatype.BasicDataType == BasicDataType.UserDefined && datatype.IsStructure)
+            {
+                return CodeTemplates.DataTypes_StructureDefinition;
+            }
+            if (datatype.BasicDataType == BasicDataType.Enumeration && datatype.IsEnumeration)
+            {
+                return CodeTemplates.DataTypes_EnumDefinition;
+            }
+            return null;
+        }
+
+        private bool WriteTemplate_ListOfDataTypeDefinitions(IWriteContext context)
+        {
+            if (context.Target is not DataTypeDesign dataType)
+            {
+                return false;
+            }
+
+            context.Template.AddReplacement(Tokens.BrowseName, dataType.SymbolicName.Name);
+            context.Template.AddReplacement(Tokens.ClassName, dataType.SymbolicName.Name);
+
+            if (dataType.BasicDataType != BasicDataType.UserDefined)
+            {
+                // Enumeration definition
+                context.Template.AddReplacement(
+                    Tokens.IsOptionSet,
+                    dataType.IsOptionSet);
+                context.Template.AddReplacement(
+                    Tokens.ListOfFields,
+                    CodeTemplates.DataTypes_EnumField,
+                    dataType.Fields ?? [],
+                    WriteTemplate_ListOfEnumDefinitionFields);
+            }
+            else
+            {
+                // Structure definition
+                StructureType structureType = StructureType.Structure;
+                if (dataType.IsUnion)
+                {
+                    structureType = StructureType.Union;
+                }
+                foreach (Parameter field in dataType.Fields)
+                {
+                    if (field.IsOptional)
+                    {
+                        structureType = StructureType.StructureWithOptionalFields;
+                        break;
+                    }
+                    if (field.AllowSubTypes)
+                    {
+                        if (dataType.IsUnion)
+                        {
+                            structureType = StructureType.UnionWithSubtypedValues;
+                            break;
+                        }
+                        structureType = StructureType.StructureWithSubtypedValues;
+                        break;
+                    }
+                }
+                List<Parameter> fields = [];
+                context.Template.AddReplacement(
+                    Tokens.BaseType,
+                    dataType.BaseTypeNode.GetNodeIdConstant(
+                        m_context.ModelDesign.Namespaces,
+                        kNamespaceTableContextVariable));
+                context.Template.AddReplacement(
+                    Tokens.FirstExplicitFieldIndex,
+                    CollectStructureDefinitionFields(dataType, ref structureType, fields));
+                context.Template.AddReplacement(
+                    Tokens.StructureType,
+                    structureType);
+                context.Template.AddReplacement(
+                    Tokens.ListOfFields,
+                    CodeTemplates.DataTypes_StructureField,
+                    fields.ToDictionary(f => f, _ => structureType),
+                    WriteTemplate_ListOfStructureDefinitionFields);
+
+                static int CollectStructureDefinitionFields(
+                    DataTypeDesign dataType,
+                    ref StructureType structureType,
+                    List<Parameter> fields)
+                {
+                    if (dataType == null || dataType.Fields == null)
+                    {
+                        return fields.Count;
+                    }
+
+                    if (dataType.BaseTypeNode is DataTypeDesign baseType)
+                    {
+                        CollectStructureDefinitionFields(
+                            baseType,
+                            ref structureType,
+                            fields);
+                    }
+
+                    int start = fields.Count;
+                    foreach (Parameter field in dataType.Fields)
+                    {
+                        if (field.IsOptional)
+                        {
+                            // inherit optional fields flag if derived structure
+                            // contains no optional fields
+                            structureType = StructureType.StructureWithOptionalFields;
+                        }
+                        fields.Add(field);
+                    }
+                    return start;
+                }
+            }
+            return context.Template.Render();
+        }
+
+        private bool WriteTemplate_ListOfEnumDefinitionFields(IWriteContext context)
+        {
+            if (context.Target is not Parameter field ||
+                field.Parent is not DataTypeDesign dataType)
+            {
+                return false;
+            }
+
+            if (dataType.IsOptionSet)
+            {
+                long bit = 1;
+                int value = 0;
+
+                while (field.Identifier > 0 && bit <= long.MaxValue)
+                {
+                    if ((bit & (long)field.Identifier) != 0)
+                    {
+                        break;
+                    }
+
+                    bit <<= 1;
+                    value++;
+                }
+                context.Template.AddReplacement(
+                    Tokens.ValueCode,
+                    value);
+            }
+            else
+            {
+                context.Template.AddReplacement(
+                    Tokens.ValueCode,
+                    (long)field.Identifier);
+            }
+
+            context.Template.AddReplacement(
+                Tokens.FieldName,
+                field.Name.AsStringLiteral());
+            context.Template.AddReplacement(
+                Tokens.DisplayName,
+                field.Name.GetLocalizedTextAsCode());
+            context.Template.AddReplacement(
+                Tokens.Description,
+                field.Description.GetLocalizedTextAsCode(true));
+            return context.Template.Render();
+        }
+
+        private bool WriteTemplate_ListOfStructureDefinitionFields(IWriteContext context)
+        {
+            if (context.Target is not KeyValuePair<Parameter, StructureType> kvp)
+            {
+                return false;
+            }
+
+            StructureType structureType = kvp.Value;
+            Parameter field = kvp.Key;
+
+            context.Template.AddReplacement(
+                Tokens.FieldName,
+                field.Name.AsStringLiteral());
+            context.Template.AddReplacement(
+                Tokens.DataType,
+                m_context.ModelDesign.GetNodeIdConstant(
+                    field.DataType,
+                    "DataType",
+                    kNamespaceTableContextVariable));
+            context.Template.AddReplacement(
+                Tokens.ValueRank,
+                field.ValueRank.GetValueRankString(field.ArrayDimensions));
+            context.Template.AddReplacement(
+                Tokens.ArrayDimensions,
+                field.ValueRank.GetArrayDimensionsAsCode(field.ArrayDimensions));
+            context.Template.AddReplacement(
+                Tokens.ArrayDimensions,
+                field.ValueRank.GetArrayDimensionsString(field.ArrayDimensions));
+            if (structureType == StructureType.StructureWithOptionalFields)
+            {
+                context.Template.AddReplacement(Tokens.IsOptional, field.IsOptional);
+            }
+            else if (structureType is
+                StructureType.StructureWithSubtypedValues or
+                StructureType.UnionWithSubtypedValues)
+            {
+                context.Template.AddReplacement(Tokens.IsOptional, field.AllowSubTypes);
+            }
+            else
+            {
+                context.Template.AddReplacement(Tokens.IsOptional, false);
+            }
+            context.Template.AddReplacement(
+                Tokens.Description,
+                field.Description.GetLocalizedTextAsCode(true));
+            return context.Template.Render();
         }
 
         private TemplateString LoadTemplate_ListOfTypes(ILoadContext context)
         {
-            if (context.Target is not DataTypeDesign datatype)
+            if (context.Target is not DataTypeDesign datatype ||
+                datatype.IsPartOfOpcUaTypesLibrary())
             {
                 return null;
             }
@@ -148,7 +404,8 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.Enumeration:
                     var baseType = datatype.BaseTypeNode as DataTypeDesign;
 
-                    if (baseType?.SymbolicId == new XmlQualifiedName("OptionSet", Namespaces.OpcUa))
+                    if (baseType?.SymbolicId ==
+                        new XmlQualifiedName("OptionSet", Namespaces.OpcUa))
                     {
                         return CodeTemplates.DataTypes_DerivedClass_cs;
                     }
@@ -173,12 +430,18 @@ namespace Opc.Ua.SourceGeneration
 
             Parameter[] fields = GetFields(dataType);
 
-            context.Template.AddReplacement(Tokens.NodeClass, dataType.GetNodeClassString());
+            context.Template.AddReplacement(
+                Tokens.NodeClass,
+                dataType.GetNodeClassString());
             context.Template.AddReplacement(
                 Tokens.Description,
                 dataType.Description != null ? dataType.Description.Value : string.Empty);
-            context.Template.AddReplacement(Tokens.Encoding, EncodingString);
-            context.Template.AddReplacement(Tokens.TypeName, dataType.SymbolicName.Name);
+            context.Template.AddReplacement(
+                Tokens.Encoding,
+                EncodingString);
+            context.Template.AddReplacement(
+                Tokens.TypeName,
+                dataType.SymbolicName.Name);
             context.Template.AddReplacement(
                 Tokens.NamespaceUri,
                 m_context.ModelDesign.Namespaces.GetConstantSymbolForNamespace(
@@ -196,6 +459,9 @@ namespace Opc.Ua.SourceGeneration
                 Tokens.BrowseName,
                 dataType.SymbolicName.Name);
             context.Template.AddReplacement(
+                Tokens.ClassName,
+                dataType.SymbolicName.Name);
+            context.Template.AddReplacement(
                 Tokens.BrowseNameNamespacePrefix,
                 m_context.ModelDesign.Namespaces.GetNamespacePrefix(
                     dataType.SymbolicName.Namespace));
@@ -204,9 +470,6 @@ namespace Opc.Ua.SourceGeneration
                 m_context.ModelDesign.Namespaces.GetConstantSymbolForNamespace(
                     dataType.SymbolicName.Namespace));
 
-            context.Template.AddReplacement(
-                  Tokens.ClassName,
-                  dataType.ClassName);
             context.Template.AddReplacement(
                 Tokens.BaseType,
                 dataType.GetBaseClassName(m_context.ModelDesign.Namespaces));
@@ -218,9 +481,6 @@ namespace Opc.Ua.SourceGeneration
                 Tokens.BaseTypeNamespaceUri,
                 m_context.ModelDesign.Namespaces.GetConstantSymbolForNamespace(
                     dataType.BaseTypeNode.SymbolicId.Namespace));
-            context.Template.AddReplacement(
-                Tokens.BaseClassName,
-                dataType.BaseTypeNode.FixClassName());
 
             List<Parameter> completeListOfFields = null;
 
@@ -231,8 +491,7 @@ namespace Opc.Ua.SourceGeneration
 
                 while (parentDataType != null &&
                     parentDataType.SymbolicId != new XmlQualifiedName("Structure", Namespaces.OpcUa) &&
-                    parentDataType.SymbolicId != new XmlQualifiedName("Union", Namespaces.OpcUa)
-                )
+                    parentDataType.SymbolicId != new XmlQualifiedName("Union", Namespaces.OpcUa))
                 {
                     inheritanceTree.Add(parentDataType);
                     parentDataType = parentDataType.BaseTypeNode as DataTypeDesign;
@@ -298,38 +557,7 @@ namespace Opc.Ua.SourceGeneration
                 fields = [.. clone];
             }
 
-            Dictionary<string, string> encodings = new()
-                {
-                    { Tokens.BinaryEncodingId,
-                        CoreUtils.Format("{0}_Encoding_DefaultBinary", dataType.SymbolicName.Name) },
-                    { Tokens.XmlEncodingId,
-                        CoreUtils.Format("{0}_Encoding_DefaultXml", dataType.SymbolicName.Name) },
-                    { Tokens.JsonEncodingId,
-                        CoreUtils.Format("{0}_Encoding_DefaultJson", dataType.SymbolicName.Name) }
-                };
-            foreach (KeyValuePair<string, string> kv in encodings)
-            {
-                // bool isEncodingPartOfModel = m_context.ModelDesign.TryFindNode(
-                //     new XmlQualifiedName(kv.Value, dataType.SymbolicName.Namespace),
-                //     kv.Key,
-                //     "HasEncoding",
-                //     out NodeDesign encodingNode);
-                bool isEncodingPartOfModel = m_context.ModelDesign.Nodes.Any(x =>
-                    x.SymbolicId.Name == kv.Value &&
-                    x.SymbolicId.Namespace == dataType.SymbolicName.Namespace);
-                if (!isEncodingPartOfModel)
-                {
-                    context.Template.AddReplacement(
-                        kv.Key,
-                        "global::Opc.Ua.NodeId.Null");
-                }
-                else
-                {
-                    context.Template.AddReplacement(
-                        kv.Key,
-                        CoreUtils.Format("ObjectIds.{0}", kv.Value));
-                }
-            }
+            AddEncodingIdReplacements(context, dataType);
 
             context.Template.AddReplacement(
                 Tokens.ListOfSwitchFields,
@@ -523,7 +751,8 @@ namespace Opc.Ua.SourceGeneration
 
             if (field.IsOptional)
             {
-                context.Out.WriteLine($"if ((EncodingMask & (uint){dataType.ClassName}Fields.{field.Name}) != 0) ");
+                context.Out.WriteLine(
+                    $"if ((EncodingMask & (uint){dataType.ClassName}Fields.{field.Name}) != 0) ");
             }
 
             string functionName = field.DataTypeNode.BasicDataType.ToString();
@@ -596,9 +825,10 @@ namespace Opc.Ua.SourceGeneration
                     {
                         if (field.ValueRank == ValueRank.Array)
                         {
+                            context.Out.WriteLine("encoder.WriteExtensionObjectArray(");
+                            context.Out.WriteLine("    {0},", fieldName);
                             context.Out.WriteLine(
-                                "encoder.WriteExtensionObjectArray({0}, global::Opc.Ua.ExtensionObjectCollection.ToExtensionObjects({1}));",
-                                fieldName,
+                                "    global::Opc.Ua.ExtensionObjectCollection.ToExtensionObjects({0}));",
                                 field.Name);
 
                             if (isUnion)
@@ -613,7 +843,7 @@ namespace Opc.Ua.SourceGeneration
                         if (field.ValueRank == ValueRank.Scalar)
                         {
                             context.Out.WriteLine(
-                                "encoder.WriteExtensionObject({0}, new ExtensionObject({1}));",
+                                "encoder.WriteExtensionObject({0}, new global::Opc.Ua.ExtensionObject({1}));",
                                 fieldName,
                                 field.Name);
 
@@ -626,8 +856,10 @@ namespace Opc.Ua.SourceGeneration
                             return null;
                         }
 
-                        context.Out.WriteLine("encoder.WriteVariant({0}, {1});", fieldName, field.Name);
-
+                        context.Out.WriteLine(
+                            "encoder.WriteVariant({0}, {1});",
+                            fieldName,
+                            field.Name);
                         if (isUnion)
                         {
                             context.Out.WriteLine("break;");
@@ -643,10 +875,10 @@ namespace Opc.Ua.SourceGeneration
                         m_context.ModelDesign.TargetNamespace.Value,
                         m_context.ModelDesign.Namespaces,
                         nullable: NullableAnnotation.NonNullable);
-
                     if (field.ValueRank == ValueRank.Array)
                     {
-                        context.Out.WriteLine("encoder.WriteEncodeableArray({0}, {1}.ToArray(), typeof({2}));",
+                        context.Out.WriteLine(
+                            "encoder.WriteEncodeableArray({0}, {1}.ToArray(), typeof({2}));",
                             fieldName,
                             field.Name,
                             elementName);
@@ -656,7 +888,6 @@ namespace Opc.Ua.SourceGeneration
                             context.Out.WriteLine("break;");
                             context.Out.WriteLine("}");
                         }
-
                         return null;
                     }
                     break;
@@ -698,7 +929,6 @@ namespace Opc.Ua.SourceGeneration
 
             var dataType = (DataTypeDesign)field.Parent;
             bool isUnion = dataType.IsUnion;
-
             if (isUnion)
             {
                 context.Out.WriteLine($"case {dataType.ClassName}Fields.{field.Name}:");
@@ -749,7 +979,8 @@ namespace Opc.Ua.SourceGeneration
                             break;
                         }
 
-                        functionName = ((DataTypeDesign)field.DataTypeNode.BaseTypeNode).BasicDataType.ToString();
+                        var fdt = (DataTypeDesign)field.DataTypeNode.BaseTypeNode;
+                        functionName = fdt.BasicDataType.ToString();
                         break;
                     }
 
@@ -773,7 +1004,9 @@ namespace Opc.Ua.SourceGeneration
                         if (field.ValueRank == ValueRank.Array)
                         {
                             context.Out.WriteLine(
-                                $"({elementName}[])ExtensionObject.ToArray(decoder.ReadExtensionObjectArray({fieldName}), typeof({elementName}));");
+                                $"({elementName}[])global::Opc.Ua.ExtensionObject.ToArray(");
+                            context.Out.WriteLine(
+                                $"    decoder.ReadExtensionObjectArray({fieldName}), typeof({elementName}));");
 
                             if (isUnion)
                             {
@@ -786,7 +1019,10 @@ namespace Opc.Ua.SourceGeneration
 
                         if (field.ValueRank == ValueRank.Scalar)
                         {
-                            context.Out.WriteLine($"({elementName})ExtensionObject.ToEncodeable(decoder.ReadExtensionObject({fieldName}));");
+                            context.Out.WriteLine(
+                                $"({elementName})global::Opc.Ua.ExtensionObject.ToEncodeable(");
+                            context.Out.WriteLine(
+                                $"    decoder.ReadExtensionObject({fieldName}));");
 
                             if (isUnion)
                             {
@@ -840,7 +1076,8 @@ namespace Opc.Ua.SourceGeneration
                     context.Out.Write("({0})", elementName);
                 }
 
-                context.Out.WriteLine($"decoder.Read{functionName}({fieldName}, typeof({elementName}));");
+                context.Out.WriteLine(
+                    $"decoder.Read{functionName}({fieldName}, typeof({elementName}));");
             }
             else
             {
@@ -872,16 +1109,21 @@ namespace Opc.Ua.SourceGeneration
 
             if (field.IsOptional)
             {
-                context.Out.WriteLine($"if ((EncodingMask & (uint){dataType.ClassName}Fields.{field.Name}) != 0) ");
+                context.Out.WriteLine(
+                    $"if ((EncodingMask & (uint){dataType.ClassName}Fields.{field.Name}) != 0) ");
             }
 
             if (dataType.IsDotNetEqualityComparable(field.ValueRank))
             {
-                context.Out.WriteLine("if ({0} != value.{0})", field.GetChildFieldName());
+                context.Out.WriteLine(
+                    "if ({0} != value.{0})",
+                    field.GetChildFieldName());
             }
             else
             {
-                context.Out.WriteLine("if (!global::Opc.Ua.CoreUtils.IsEqual({0}, value.{0}))", field.GetChildFieldName());
+                context.Out.WriteLine(
+                    "if (!global::Opc.Ua.CoreUtils.IsEqual({0}, value.{0}))",
+                    field.GetChildFieldName());
             }
             context.Out.WriteLine("{");
             context.Out.WriteLine("    return false;");
@@ -913,7 +1155,8 @@ namespace Opc.Ua.SourceGeneration
 
             if (field.IsOptional)
             {
-                context.Out.WriteLine($"if ((EncodingMask & (uint){dataType.ClassName}Fields.{field.Name}) != 0) ");
+                context.Out.WriteLine(
+                    $"if ((EncodingMask & (uint){dataType.ClassName}Fields.{field.Name}) != 0) ");
             }
 
             context.Out.WriteLine("clone.{0} = ({1})global::Opc.Ua.CoreUtils.Clone(this.{0});",
@@ -967,17 +1210,15 @@ namespace Opc.Ua.SourceGeneration
                     field.ValueRank == ValueRank.Array)
                 {
                     if (field.AllowSubTypes ||
-                        (field.ValueRank != ValueRank.Array && field.ValueRank != ValueRank.Scalar))
+                        (field.ValueRank != ValueRank.Array &&
+                            field.ValueRank != ValueRank.Scalar))
                     {
                         return CodeTemplates.DataTypes_Property_cs;
                     }
-
                     return CodeTemplates.DataTypes_ArrayProperty_cs;
                 }
-
                 return CodeTemplates.DataTypes_Property_cs;
             }
-
             return CodeTemplates.DataTypes_EnumerationValue_cs;
         }
 
@@ -989,31 +1230,50 @@ namespace Opc.Ua.SourceGeneration
             }
 
             const bool isRequired = false;
-            bool emitDefaultValue = !field.DataTypeNode.IsDotNetReferenceType(field.ValueRank);
+            bool emitDefaultValue =
+                !field.DataTypeNode.IsDotNetReferenceType(field.ValueRank);
 
             context.Template.AddReplacement(
                 Tokens.Description,
                 field.Description != null ? field.Description.Value : string.Empty);
-            context.Template.AddReplacement(Tokens.BrowseName, field.Name);
-            context.Template.AddReplacement(Tokens.EnumerationName, field.EnsureUniqueEnumName());
-            context.Template.AddReplacement(Tokens.TypeName, field.DataTypeNode.GetDotNetTypeName(
+            context.Template.AddReplacement(
+                Tokens.BrowseName,
+                field.Name);
+            context.Template.AddReplacement(
+                Tokens.EnumerationName,
+                field.EnsureUniqueEnumName());
+            context.Template.AddReplacement(
+                Tokens.TypeName,
+                field.DataTypeNode.GetDotNetTypeName(
                 field.ValueRank,
                 m_context.ModelDesign.TargetNamespace.Value,
                 m_context.ModelDesign.Namespaces,
                 nullable: NullableAnnotation.NullableExceptDataTypes));
-            context.Template.AddReplacement(Tokens.FieldName, field.GetChildFieldName());
-            context.Template.AddReplacement(Tokens.IsRequired, isRequired ? "true" : "false");
-            context.Template.AddReplacement(Tokens.EmitDefaultValue, emitDefaultValue ? "true" : "false");
-            context.Template.AddReplacement(Tokens.FieldIndex, CoreUtils.Format("{0}", context.Index + 1));
-            context.Template.AddReplacement(Tokens.DefaultValue, field.DataTypeNode.GetDefaultDotNetValue(
-                field.ValueRank,
-                null,
-                null,
-                true,
-                m_context.ModelDesign.TargetNamespace.Value,
-                m_context.ModelDesign.Namespaces,
-                m_messageContext));
-            context.Template.AddReplacement(Tokens.Identifier, field.Identifier.ToString(CultureInfo.InvariantCulture));
+            context.Template.AddReplacement(
+                Tokens.FieldName,
+                field.GetChildFieldName());
+            context.Template.AddReplacement(
+                Tokens.IsRequired,
+                isRequired ? "true" : "false");
+            context.Template.AddReplacement(
+                Tokens.EmitDefaultValue,
+                emitDefaultValue ? "true" : "false");
+            context.Template.AddReplacement(
+                Tokens.FieldIndex,
+                CoreUtils.Format("{0}", context.Index + 1));
+            context.Template.AddReplacement(
+                Tokens.DefaultValue,
+                field.DataTypeNode.GetDefaultDotNetValue(
+                    field.ValueRank,
+                    null,
+                    null,
+                    true,
+                    m_context.ModelDesign.TargetNamespace.Value,
+                    m_context.ModelDesign.Namespaces,
+                    m_messageContext));
+            context.Template.AddReplacement(
+                Tokens.Identifier,
+                field.Identifier.ToString(CultureInfo.InvariantCulture));
 
             if (field.IdentifierInName)
             {
@@ -1029,14 +1289,54 @@ namespace Opc.Ua.SourceGeneration
                 field.Parent is DataTypeDesign dt &&
                 dt.BaseTypeNode.SymbolicName.Name == BrowseNames.HistoryUpdateDetails)
             {
-                context.Template.AddReplacement(Tokens.PropertyAccessor, "public override");
+                context.Template.AddReplacement(
+                    Tokens.PropertyAccessor,
+                    "public override");
             }
             else
             {
-                context.Template.AddReplacement(Tokens.PropertyAccessor, "public");
+                context.Template.AddReplacement(
+                    Tokens.PropertyAccessor,
+                    "public");
             }
 
             return context.Template.Render();
+        }
+
+        private void AddEncodingIdReplacements(IWriteContext context, DataTypeDesign dataType)
+        {
+            Dictionary<string, string> encodings = new()
+            {
+                { Tokens.BinaryEncodingId,
+                    CoreUtils.Format("{0}_Encoding_DefaultBinary", dataType.SymbolicName.Name) },
+                { Tokens.XmlEncodingId,
+                    CoreUtils.Format("{0}_Encoding_DefaultXml", dataType.SymbolicName.Name) },
+                { Tokens.JsonEncodingId,
+                    CoreUtils.Format("{0}_Encoding_DefaultJson", dataType.SymbolicName.Name) }
+            };
+            foreach (KeyValuePair<string, string> kv in encodings)
+            {
+                // bool isEncodingPartOfModel = m_context.ModelDesign.TryFindNode(
+                //     new XmlQualifiedName(kv.Value, dataType.SymbolicName.Namespace),
+                //     kv.Key,
+                //     "HasEncoding",
+                //     out NodeDesign encodingNode);
+                bool isEncodingPartOfModel = m_context.ModelDesign.Nodes.Any(x =>
+                    x.SymbolicId.Name == kv.Value &&
+                    x.SymbolicId.Namespace == dataType.SymbolicName.Namespace);
+                if (!isEncodingPartOfModel)
+                {
+                    context.Template.AddReplacement(
+                        kv.Key,
+                        "global::Opc.Ua.NodeId.Null");
+                }
+                else
+                {
+                    context.Template.AddReplacement(
+                        kv.Key,
+                        CoreUtils.Format("ObjectIds.{0}", kv.Value));
+                }
+            }
         }
 
         private Parameter[] GetFields(DataTypeDesign dataType)
@@ -1064,8 +1364,7 @@ namespace Opc.Ua.SourceGeneration
             List<DataTypeDesign> datatypes = [];
             foreach (NodeDesign node in m_context.ModelDesign.GetNodeDesigns())
             {
-                if (node is DataTypeDesign dataTypeDesign &&
-                    !dataTypeDesign.IsPartOfOpcUaTypesLibrary())
+                if (node is DataTypeDesign dataTypeDesign)
                 {
                     datatypes.Add(dataTypeDesign);
                 }
@@ -1074,6 +1373,7 @@ namespace Opc.Ua.SourceGeneration
         }
 
         private string EncodingString => m_useXmlInitializers ? "Xml" : "Binary";
+        private const string kNamespaceTableContextVariable = "namespaceUris";
 
         private readonly IServiceMessageContext m_messageContext;
         private readonly IGeneratorContext m_context;

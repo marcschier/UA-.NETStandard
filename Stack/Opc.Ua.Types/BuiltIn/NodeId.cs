@@ -161,7 +161,7 @@ namespace Opc.Ua
         {
             m_inner.NamespaceIdx = namespaceIndex;
             m_inner.Type = (byte)IdType.String;
-            m_inner.Numeric = value == null ? 0u :
+            m_inner.Numeric = string.IsNullOrEmpty(value) ? 0u :
                 (uint)value.GetHashCode(StringComparison.Ordinal);
             m_identifier = value;
         }
@@ -203,7 +203,7 @@ namespace Opc.Ua
         {
             m_inner.NamespaceIdx = 0;
             m_inner.Type = (byte)IdType.Opaque;
-            if (value != null)
+            if (value?.Length > 0)
             {
                 byte[] copy = new byte[value.Length];
                 Array.Copy(value, copy, value.Length);
@@ -214,7 +214,7 @@ namespace Opc.Ua
             else
             {
                 m_inner.Numeric = 0;
-                m_identifier = null;
+                m_identifier = value;
             }
         }
 
@@ -230,7 +230,7 @@ namespace Opc.Ua
         {
             m_inner.NamespaceIdx = namespaceIndex;
             m_inner.Type = (byte)IdType.Opaque;
-            if (value != null)
+            if (value?.Length > 0)
             {
                 byte[] copy = new byte[value.Length];
                 Array.Copy(value, copy, value.Length);
@@ -241,7 +241,7 @@ namespace Opc.Ua
             else
             {
                 m_inner.Numeric = 0;
-                m_identifier = null;
+                m_identifier = value;
             }
         }
 
@@ -1346,7 +1346,7 @@ namespace Opc.Ua
                 IdType.Guid =>
                     GuidIdentifier.CompareTo(nodeId.GuidIdentifier),
                 IdType.Opaque =>
-                    OpaqueIdentifer.SequenceCompareTo(nodeId.OpaqueIdentifer ?? []),
+                    OpaqueIdentifer.SequenceCompareTo(nodeId.OpaqueIdentifer),
                 _ => -1
             };
         }
@@ -1521,7 +1521,9 @@ namespace Opc.Ua
                 case IdType.Guid:
                     return GuidIdentifier == other.GuidIdentifier;
                 case IdType.Opaque:
-                    return ByteStringEqualityComparer.Default.Equals(other.OpaqueIdentifer);
+                    return ByteStringEqualityComparer.Default.Equals(
+                        OpaqueIdentifer,
+                        other.OpaqueIdentifer);
             }
             return false;
         }
@@ -1563,11 +1565,13 @@ namespace Opc.Ua
             {
                 return false;
             }
-            if (other == null)
+            if (other == null || other.Length == 0)
             {
                 return IsNullNodeId;
             }
-            return OpaqueIdentifer.SequenceEqual(other);
+            return ByteStringEqualityComparer.Default.Equals(
+                OpaqueIdentifer,
+                other);
         }
 
         /// <inheritdoc/>
@@ -1577,11 +1581,14 @@ namespace Opc.Ua
             {
                 return false;
             }
-            if (other == null)
+            if (string.IsNullOrEmpty(other))
             {
                 return IsNullNodeId;
             }
-            return string.Equals(StringIdentifier, other, StringComparison.Ordinal);
+            return string.Equals(
+                StringIdentifier,
+                other,
+                StringComparison.Ordinal);
         }
 
         /// <inheritdoc/>
@@ -1711,22 +1718,26 @@ namespace Opc.Ua
         /// <summary>
         /// Identifier as bytes
         /// </summary>
-        internal byte[] OpaqueIdentifer => (byte[])m_identifier;
+        internal byte[] OpaqueIdentifer =>
+            (byte[])m_identifier ?? Array.Empty<byte>();
 
         /// <summary>
         /// Identifier as string
         /// </summary>
-        internal string StringIdentifier => (string)m_identifier;
+        internal string StringIdentifier =>
+            (string)m_identifier ?? string.Empty;
 
         /// <summary>
         /// Identifier as numberic
         /// </summary>
-        internal uint NumericIdentifier => m_identifier == null ? m_inner.Numeric : 0;
+        internal uint NumericIdentifier =>
+            m_identifier == null ? m_inner.Numeric : 0;
 
         /// <summary>
         /// Identifier as Guid
         /// </summary>
-        internal Guid GuidIdentifier => m_identifier == null ? Guid.Empty : (Guid)m_identifier;
+        internal Guid GuidIdentifier =>
+            m_identifier == null ? Guid.Empty : (Guid)m_identifier;
 
         /// <summary>
         /// The node identifier.
@@ -1828,7 +1839,7 @@ namespace Opc.Ua
             IdType.Numeric => NumericIdentifier == 0,
             IdType.String => string.IsNullOrEmpty(StringIdentifier),
             IdType.Guid => GuidIdentifier == Guid.Empty,
-            IdType.Opaque => OpaqueIdentifer == null || OpaqueIdentifer.Length == 0,
+            IdType.Opaque => OpaqueIdentifer.Length == 0,
             _ => false
         };
 

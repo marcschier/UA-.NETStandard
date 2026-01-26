@@ -27,6 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using System;
 using System.Text;
 using System.Xml;
 
@@ -158,6 +159,26 @@ namespace Opc.Ua.SourceGeneration
                     return "@" + symbol;
             }
             return symbol;
+        }
+
+        /// <summary>
+        /// Wrap the string as a string literal for generated code.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static string AsStringLiteral(this string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return "string.Empty";
+            }
+            value = value
+                .Replace("\\", "\\\\", StringComparison.Ordinal)
+                .Replace("\"", "\\\"", StringComparison.Ordinal)
+                .Replace("\n", "\\n", StringComparison.Ordinal)
+                .Replace("\r", "\\r", StringComparison.Ordinal)
+                .Replace("\t", "\\t", StringComparison.Ordinal);
+            return $"\"{value}\"";
         }
 
         /// <summary>
