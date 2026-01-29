@@ -469,7 +469,8 @@ namespace Opc.Ua.SourceGeneration
                     returnType = datatype.GetDotNetTypeName(
                         m_context.ModelDesign.TargetNamespace.Value,
                         m_context.ModelDesign.Namespaces,
-                        nullable: NullableAnnotation.Nullable);
+                        nullable: NullableAnnotation.Nullable,
+                        false); // Use raw types as return type.
                 }
             }
             return returnType;

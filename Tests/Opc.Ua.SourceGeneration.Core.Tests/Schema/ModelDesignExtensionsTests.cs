@@ -498,7 +498,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Array,
                 null,
                 null,
@@ -526,7 +526,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Array,
                 null,
                 null,
@@ -555,7 +555,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 null,
@@ -587,7 +587,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 valueRank,
                 null,
                 null,
@@ -617,7 +617,7 @@ namespace Opc.Ua.Schema.Model.Tests
             XmlElement mockDefaultValue = new XmlDocument().CreateElement("Root");
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 mockDefaultValue,
                 true,
@@ -647,7 +647,7 @@ namespace Opc.Ua.Schema.Model.Tests
             XmlElement mockDefaultValue = new XmlDocument().CreateElement("test");
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 mockDefaultValue,
                 false,
@@ -662,10 +662,9 @@ namespace Opc.Ua.Schema.Model.Tests
 
         /// <summary>
         /// Tests GetDefaultDotNetValue with Boolean type and true value without defaultValue (inverted bug).
-        /// Expected: Returns "false" due to documented bug.
         /// </summary>
-        [Test]
-        public void GetDefaultDotNetValue_BooleanTrueWithoutDefaultValue_ReturnsFalseDueToBug()
+        [Theory]
+        public void GetDefaultDotNetValue_BooleanTrueWithoutDefaultValue_ReturnsFalseWithQuirk(bool quirk)
         {
             // Arrange
             var mockDataType = new DataTypeDesign
@@ -676,25 +675,26 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 true,
                 false,
                 "TestNamespace",
                 namespaces,
-                mockContext.Object);
+                mockContext.Object,
+                dataTypeQuirk: quirk);
 
             // Assert
-            Assert.That(result, Is.EqualTo("false"));
+            Assert.That(result, Is.EqualTo(quirk ? "false" : "true"));
         }
 
         /// <summary>
         /// Tests GetDefaultDotNetValue with Boolean type and false value without defaultValue (inverted bug).
         /// Expected: Returns "true" due to documented bug.
         /// </summary>
-        [Test]
-        public void GetDefaultDotNetValue_BooleanFalseWithoutDefaultValue_ReturnsTrueDueToBug()
+        [Theory]
+        public void GetDefaultDotNetValue_BooleanFalseWithoutDefaultValue_ReturnsTrueWhenQuirk(bool quirk)
         {
             // Arrange
             var mockDataType = new DataTypeDesign
@@ -705,17 +705,18 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 false,
                 false,
                 "TestNamespace",
                 namespaces,
-                mockContext.Object);
+                mockContext.Object,
+                dataTypeQuirk: quirk);
 
             // Assert
-            Assert.That(result, Is.EqualTo("true"));
+            Assert.That(result, Is.EqualTo(quirk ? "true" : "false"));
         }
 
         /// <summary>
@@ -737,7 +738,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 value,
@@ -766,7 +767,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 "not a sbyte",
@@ -797,7 +798,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 value,
@@ -828,7 +829,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 value,
@@ -859,7 +860,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 value,
@@ -890,7 +891,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 value,
@@ -920,7 +921,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 value,
@@ -951,7 +952,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 value,
@@ -980,7 +981,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 (long)12345,
@@ -1010,7 +1011,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 value,
@@ -1039,7 +1040,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 (ulong)12345,
@@ -1070,7 +1071,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 value,
@@ -1099,7 +1100,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 "not a float",
@@ -1130,7 +1131,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 value,
@@ -1159,7 +1160,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 123.456,
@@ -1188,7 +1189,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 string.Empty,
@@ -1217,7 +1218,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 "Hello World",
@@ -1246,7 +1247,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 123,
@@ -1275,7 +1276,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 DateTime.MinValue,
@@ -1305,7 +1306,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var testDate = new DateTime(2024, 1, 15, 10, 30, 45);
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 testDate,
@@ -1335,7 +1336,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 "not a datetime",
@@ -1364,7 +1365,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 Guid.Empty,
@@ -1394,7 +1395,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var testGuid = Guid.NewGuid();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 testGuid,
@@ -1426,7 +1427,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var testUuid = new Uuid(testGuid);
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 testUuid,
@@ -1456,7 +1457,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 null,
@@ -1486,7 +1487,7 @@ namespace Opc.Ua.Schema.Model.Tests
             byte[] testBytes = [0x01, 0x02, 0x03, 0xFF];
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 testBytes,
@@ -1516,7 +1517,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 null,
@@ -1545,7 +1546,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 NodeId.Null,
@@ -1575,7 +1576,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var testNodeId = new NodeId(123);
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 testNodeId,
@@ -1609,7 +1610,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var testNodeId = new NodeId(123, 1);
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 testNodeId,
@@ -1639,7 +1640,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 ExpandedNodeId.Null,
@@ -1669,7 +1670,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var testExpandedNodeId = new ExpandedNodeId(123, "http://test.namespace");
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 testExpandedNodeId,
@@ -1698,7 +1699,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 QualifiedName.Null,
@@ -1728,7 +1729,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var testQName = new QualifiedName("TestName", 1);
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 testQName,
@@ -1758,7 +1759,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var testLocalizedText = new Ua.LocalizedText("en-US", "Test Text");
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 testLocalizedText,
@@ -1790,7 +1791,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var testStatusCode = new StatusCode(0);
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 testStatusCode,
@@ -1820,7 +1821,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var testStatusCode = new StatusCode(0x80000000);
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 testStatusCode,
@@ -1850,7 +1851,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 null,
@@ -1885,7 +1886,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 null,
@@ -1919,7 +1920,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 null,
@@ -1960,7 +1961,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 null,
@@ -1989,7 +1990,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 null,
@@ -2023,7 +2024,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 null,
@@ -2053,7 +2054,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 null,
@@ -2082,7 +2083,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var mockContext = new Mock<IServiceMessageContext>();
 
             // Act
-            string result = mockDataType.GetDefaultDotNetValue(
+            string result = mockDataType.GetValueAsCode(
                 ValueRank.Scalar,
                 null,
                 null,
@@ -2662,7 +2663,7 @@ namespace Opc.Ua.Schema.Model.Tests
             Namespace[] namespaces = [];
 
             // Act
-            string result = mockMethod.GetClassName("http://test.org", namespaces);
+            string result = mockMethod.GetNodeStateClassName("http://test.org", namespaces);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.MethodState"));
@@ -2686,7 +2687,7 @@ namespace Opc.Ua.Schema.Model.Tests
             Namespace[] namespaces = [];
 
             // Act
-            string result = mockMethod.GetClassName("http://test.org", namespaces);
+            string result = mockMethod.GetNodeStateClassName("http://test.org", namespaces);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.MethodState"));
@@ -2710,7 +2711,7 @@ namespace Opc.Ua.Schema.Model.Tests
             Namespace[] namespaces = [];
 
             // Act
-            string result = mockMethod.GetClassName("http://test.org", namespaces);
+            string result = mockMethod.GetNodeStateClassName("http://test.org", namespaces);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.MethodState"));
@@ -2734,7 +2735,7 @@ namespace Opc.Ua.Schema.Model.Tests
             Namespace[] namespaces = [];
 
             // Act
-            string result = mockMethod.GetClassName("http://test.org", namespaces);
+            string result = mockMethod.GetNodeStateClassName("http://test.org", namespaces);
 
             // Assert
             Assert.That(result, Is.EqualTo("CustomMethodState"));
@@ -2758,7 +2759,7 @@ namespace Opc.Ua.Schema.Model.Tests
             Namespace[] namespaces = [];
 
             // Act
-            string result = mockMethod.GetClassName("http://test.org", namespaces);
+            string result = mockMethod.GetNodeStateClassName("http://test.org", namespaces);
 
             // Assert
             Assert.That(result, Is.EqualTo("TestMethodState"));
@@ -2782,7 +2783,7 @@ namespace Opc.Ua.Schema.Model.Tests
             Namespace[] namespaces = [];
 
             // Act
-            string result = mockMethod.GetClassName("http://test.org", namespaces);
+            string result = mockMethod.GetNodeStateClassName("http://test.org", namespaces);
 
             // Assert
             Assert.That(result, Is.EqualTo("CustomMethodMethodState"));
@@ -2791,7 +2792,7 @@ namespace Opc.Ua.Schema.Model.Tests
         /// <summary>
         /// Tests GetClassName with an ObjectDesign (not MethodDesign, not VariableDesign).
         /// Input: ObjectDesign with TypeDefinitionNode having ClassName "BaseObjectType".
-        /// Expected: Returns "{FixClassName}State" based on TypeDefinitionNode.
+        /// Expected: Returns "{GetNodeStateClassName}State" based on TypeDefinitionNode.
         /// </summary>
         [Test]
         public void GetClassName_ObjectDesign_ReturnsTypeDefinitionState()
@@ -2810,7 +2811,7 @@ namespace Opc.Ua.Schema.Model.Tests
             Namespace[] namespaces = [];
 
             // Act
-            string result = mockObject.GetClassName("http://test.org", namespaces);
+            string result = mockObject.GetNodeStateClassName("http://test.org", namespaces);
 
             // Assert
             Assert.That(result, Is.EqualTo("BaseObjectTypeState"));
@@ -2819,7 +2820,7 @@ namespace Opc.Ua.Schema.Model.Tests
         /// <summary>
         /// Tests GetClassName with a VariableDesign where the VariableType does not require parameter in templates.
         /// Input: VariableDesign with VariableTypeDesign that doesn't require parameters.
-        /// Expected: Returns "{FixClassName(variableType)}State".
+        /// Expected: Returns "{GetNodeStateClassName(variableType)}State".
         /// </summary>
         [Test]
         public void GetClassName_VariableDesignTypeNoParameterRequired_ReturnsVariableTypeState()
@@ -2847,7 +2848,7 @@ namespace Opc.Ua.Schema.Model.Tests
             Namespace[] namespaces = [];
 
             // Act
-            string result = mockVariable.GetClassName("http://test.org", namespaces);
+            string result = mockVariable.GetNodeStateClassName("http://test.org", namespaces);
 
             // Assert
             Assert.That(result, Is.EqualTo("BaseVariableTypeState"));
@@ -2856,7 +2857,7 @@ namespace Opc.Ua.Schema.Model.Tests
         /// <summary>
         /// Tests GetClassName with a VariableDesign where the variable instance does not restrict the datatype.
         /// Input: VariableDesign that doesn't restrict the datatype (doesn't require parameter).
-        /// Expected: Returns "{FixClassName(variableType)}State".
+        /// Expected: Returns "{GetNodeStateClassName(variableType)}State".
         /// </summary>
         [Test]
         public void GetClassName_VariableDesignInstanceNoDataTypeRestriction_ReturnsVariableTypeState()
@@ -2884,7 +2885,7 @@ namespace Opc.Ua.Schema.Model.Tests
             Namespace[] namespaces = [];
 
             // Act
-            string result = mockVariable.GetClassName("http://test.org", namespaces);
+            string result = mockVariable.GetNodeStateClassName("http://test.org", namespaces);
 
             // Assert
             Assert.That(result, Is.EqualTo("BaseVariableTypeState"));
@@ -2893,7 +2894,7 @@ namespace Opc.Ua.Schema.Model.Tests
         /// <summary>
         /// Tests GetClassName with a VariableDesign with UserDefined BasicDataType and Scalar ValueRank.
         /// Input: VariableDesign with BasicDataType.UserDefined, ValueRank.Scalar.
-        /// Expected: Returns "{FixClassName(variableType)}State<{scalarName}>".
+        /// Expected: Returns "{GetNodeStateClassName(variableType)}State<{scalarName}>".
         /// </summary>
         [Test]
         public void GetClassName_VariableDesignUserDefinedScalar_ReturnsTemplatedState()
@@ -2925,7 +2926,7 @@ namespace Opc.Ua.Schema.Model.Tests
             Namespace[] namespaces = [];
 
             // Act
-            string result = mockVariable.GetClassName("http://test.org", namespaces);
+            string result = mockVariable.GetNodeStateClassName("http://test.org", namespaces);
 
             // Assert
             Assert.That(result, Is.EqualTo("BaseVariableTypeState<CustomType>"));
@@ -2934,7 +2935,7 @@ namespace Opc.Ua.Schema.Model.Tests
         /// <summary>
         /// Tests GetClassName with a VariableDesign with Structure BasicDataType and Scalar ValueRank.
         /// Input: VariableDesign with BasicDataType.Structure, ValueRank.Scalar.
-        /// Expected: Returns "{FixClassName(variableType)}State<global::Opc.Ua.ExtensionObject>".
+        /// Expected: Returns "{GetNodeStateClassName(variableType)}State<global::Opc.Ua.ExtensionObject>".
         /// </summary>
         [Test]
         public void GetClassName_VariableDesignStructureScalar_ReturnsTemplatedExtensionObjectState()
@@ -2964,7 +2965,7 @@ namespace Opc.Ua.Schema.Model.Tests
             Namespace[] namespaces = [];
 
             // Act
-            string result = mockVariable.GetClassName("http://test.org", namespaces);
+            string result = mockVariable.GetNodeStateClassName("http://test.org", namespaces);
 
             // Assert
             Assert.That(result, Is.EqualTo("BaseVariableTypeState<global::Opc.Ua.ExtensionObject>"));
@@ -2973,7 +2974,7 @@ namespace Opc.Ua.Schema.Model.Tests
         /// <summary>
         /// Tests GetClassName with a VariableDesign with Array ValueRank.
         /// Input: VariableDesign with ValueRank.Array, BasicDataType.Int32.
-        /// Expected: Returns "{FixClassName(variableType)}State<{scalarName}[]>".
+        /// Expected: Returns "{GetNodeStateClassName(variableType)}State<{scalarName}[]>".
         /// </summary>
         [Test]
         public void GetClassName_VariableDesignArrayValueRank_ReturnsArrayTemplatedState()
@@ -3003,7 +3004,7 @@ namespace Opc.Ua.Schema.Model.Tests
             Namespace[] namespaces = [];
 
             // Act
-            string result = mockVariable.GetClassName("http://test.org", namespaces);
+            string result = mockVariable.GetNodeStateClassName("http://test.org", namespaces);
 
             // Assert
             Assert.That(result, Is.EqualTo("BaseVariableTypeState<int[]>"));
@@ -3012,7 +3013,7 @@ namespace Opc.Ua.Schema.Model.Tests
         /// <summary>
         /// Tests GetClassName with a VariableDesign that is an indeterminate type.
         /// Input: VariableDesign with ValueRank.OneOrMoreDimensions (indeterminate).
-        /// Expected: Returns "{FixClassName(variableType)}State" without template parameter.
+        /// Expected: Returns "{GetNodeStateClassName(variableType)}State" without template parameter.
         /// </summary>
         [Test]
         public void GetClassName_VariableDesignIndeterminateType_ReturnsNonTemplatedState()
@@ -3041,7 +3042,7 @@ namespace Opc.Ua.Schema.Model.Tests
             Namespace[] namespaces = [];
 
             // Act
-            string result = mockVariable.GetClassName("http://test.org", namespaces);
+            string result = mockVariable.GetNodeStateClassName("http://test.org", namespaces);
 
             // Assert
             Assert.That(result, Is.EqualTo("BaseVariableTypeState"));
@@ -3050,7 +3051,7 @@ namespace Opc.Ua.Schema.Model.Tests
         /// <summary>
         /// Tests GetClassName with a VariableDesign with TwoStateDiscreteType.
         /// Input: VariableDesign with VariableTypeDesign.SymbolicName = TwoStateDiscreteType.
-        /// Expected: Returns "{FixClassName(variableType)}State" without template parameter.
+        /// Expected: Returns "{GetNodeStateClassName(variableType)}State" without template parameter.
         /// </summary>
         [Test]
         public void GetClassName_VariableDesignTwoStateDiscreteType_ReturnsNonTemplatedState()
@@ -3080,7 +3081,7 @@ namespace Opc.Ua.Schema.Model.Tests
             Namespace[] namespaces = [];
 
             // Act
-            string result = mockVariable.GetClassName("http://test.org", namespaces);
+            string result = mockVariable.GetNodeStateClassName("http://test.org", namespaces);
 
             // Assert
             Assert.That(result, Is.EqualTo("TwoStateDiscreteTypeState"));
@@ -3089,7 +3090,7 @@ namespace Opc.Ua.Schema.Model.Tests
         /// <summary>
         /// Tests GetClassName with a VariableDesign with Enumeration DataType (indeterminate type case).
         /// Input: VariableDesign with DataType = Enumeration in OpcUa namespace.
-        /// Expected: Returns "{FixClassName(variableType)}State" without template parameter.
+        /// Expected: Returns "{GetNodeStateClassName(variableType)}State" without template parameter.
         /// </summary>
         [Test]
         public void GetClassName_VariableDesignEnumerationDataType_ReturnsNonTemplatedState()
@@ -3118,7 +3119,7 @@ namespace Opc.Ua.Schema.Model.Tests
             Namespace[] namespaces = [];
 
             // Act
-            string result = mockVariable.GetClassName("http://test.org", namespaces);
+            string result = mockVariable.GetNodeStateClassName("http://test.org", namespaces);
 
             // Assert
             Assert.That(result, Is.EqualTo("BaseVariableTypeState"));
@@ -3142,7 +3143,7 @@ namespace Opc.Ua.Schema.Model.Tests
             Namespace[] namespaces = [];
 
             // Act
-            string result = mockMethod.GetClassName(string.Empty, namespaces);
+            string result = mockMethod.GetNodeStateClassName(string.Empty, namespaces);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.MethodState"));
@@ -3165,7 +3166,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = mockMethod.GetClassName("http://test.org", null);
+            string result = mockMethod.GetNodeStateClassName("http://test.org", null);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.MethodState"));
@@ -3202,7 +3203,7 @@ namespace Opc.Ua.Schema.Model.Tests
             Namespace[] namespaces = [];
 
             // Act
-            string result = mockVariable.GetClassName("http://test.org", namespaces);
+            string result = mockVariable.GetNodeStateClassName("http://test.org", namespaces);
 
             // Assert
             Assert.That(result, Is.EqualTo("BaseVariableTypeState"));
@@ -3211,7 +3212,7 @@ namespace Opc.Ua.Schema.Model.Tests
         /// <summary>
         /// Tests GetClassName with a VariableDesign with other basic data types.
         /// Input: VariableDesign with BasicDataType.String, ValueRank.Scalar.
-        /// Expected: Returns "{FixClassName(variableType)}State<string>".
+        /// Expected: Returns "{GetNodeStateClassName(variableType)}State<string>".
         /// </summary>
         [Test]
         public void GetClassName_VariableDesignStringDataType_ReturnsTemplatedStringState()
@@ -3241,7 +3242,7 @@ namespace Opc.Ua.Schema.Model.Tests
             Namespace[] namespaces = [];
 
             // Act
-            string result = mockVariable.GetClassName("http://test.org", namespaces);
+            string result = mockVariable.GetNodeStateClassName("http://test.org", namespaces);
 
             // Assert
             Assert.That(result, Is.EqualTo("BaseVariableTypeState<string>"));
@@ -3265,7 +3266,7 @@ namespace Opc.Ua.Schema.Model.Tests
             Namespace[] namespaces = [];
 
             // Act
-            string result = mockMethod.GetClassName("http://test.org", namespaces);
+            string result = mockMethod.GetNodeStateClassName("http://test.org", namespaces);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.MethodState"));
@@ -3312,7 +3313,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var namespaces = new Namespace[] { mockNamespace };
 
             // Act
-            string result = mockVariable.GetClassName("http://test.org", namespaces);
+            string result = mockVariable.GetNodeStateClassName("http://test.org", namespaces);
 
             // Assert
             Assert.That(result, Is.EqualTo("BaseVariableTypeState<global::Other.CustomType>"));
@@ -4463,23 +4464,23 @@ namespace Opc.Ua.Schema.Model.Tests
         }
 
         /// <summary>
-        /// Tests that FixClassName throws ArgumentNullException when node parameter is null.
+        /// Tests that GetNodeStateClassName throws ArgumentNullException when node parameter is null.
         /// </summary>
         [Test]
-        public void FixClassName_NullNode_ThrowsArgumentNullException()
+        public void GetNodeStateClassName_NullNode_ThrowsArgumentNullException()
         {
             // Arrange
             TypeDesign node = null;
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => node.GetClassName([]));
+            Assert.Throws<ArgumentNullException>(() => node.GetNodeStateClassName([]));
         }
 
         /// <summary>
-        /// Tests that FixClassName returns SymbolicId.Name when node is a DataTypeDesign.
+        /// Tests that GetNodeStateClassName returns SymbolicId.Name when node is a DataTypeDesign.
         /// </summary>
         [Test]
-        public void FixClassName_DataTypeDesign_ReturnsSymbolicIdName()
+        public void GetNodeStateClassName_DataTypeDesign_ReturnsSymbolicIdName()
         {
             // Arrange
             var dataType = new DataTypeDesign
@@ -4489,17 +4490,17 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = dataType.GetClassName([]);
+            string result = dataType.GetNodeStateClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("TestDataType"));
         }
 
         /// <summary>
-        /// Tests that FixClassName throws when DataTypeDesign has null SymbolicId.
+        /// Tests that GetNodeStateClassName throws when DataTypeDesign has null SymbolicId.
         /// </summary>
         [Test]
-        public void FixClassName_DataTypeDesignWithNullSymbolicId_ThrowsArgumentException()
+        public void GetNodeStateClassName_DataTypeDesignWithNullSymbolicId_ThrowsArgumentException()
         {
             // Arrange
             var dataType = new DataTypeDesign
@@ -4509,14 +4510,14 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => dataType.GetClassName([]));
+            Assert.Throws<ArgumentException>(() => dataType.GetNodeStateClassName([]));
         }
 
         /// <summary>
-        /// Tests that FixClassName returns "BaseObject" when ObjectTypeDesign has ClassName "ObjectSource".
+        /// Tests that GetNodeStateClassName returns "BaseObject" when ObjectTypeDesign has ClassName "ObjectSource".
         /// </summary>
         [Test]
-        public void FixClassName_ObjectTypeDesignWithObjectSourceClassName_ReturnsBaseObject()
+        public void GetNodeStateClassName_ObjectTypeDesignWithObjectSourceClassName_ReturnsBaseObject()
         {
             // Arrange
             var objectType = new ObjectTypeDesign
@@ -4526,17 +4527,17 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = objectType.GetClassName([]);
+            string result = objectType.GetNodeStateClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.BaseObject"));
         }
 
         /// <summary>
-        /// Tests that FixClassName returns actual ClassName when ObjectTypeDesign has different ClassName.
+        /// Tests that GetNodeStateClassName returns actual ClassName when ObjectTypeDesign has different ClassName.
         /// </summary>
         [Test]
-        public void FixClassName_ObjectTypeDesignWithDifferentClassName_ReturnsActualClassName()
+        public void GetNodeStateClassName_ObjectTypeDesignWithDifferentClassName_ReturnsActualClassName()
         {
             // Arrange
             var objectType = new ObjectTypeDesign
@@ -4546,17 +4547,17 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = objectType.GetClassName([]);
+            string result = objectType.GetNodeStateClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("CustomObjectType"));
         }
 
         /// <summary>
-        /// Tests that FixClassName throws when ObjectTypeDesign has null ClassName.
+        /// Tests that GetNodeStateClassName throws when ObjectTypeDesign has null ClassName.
         /// </summary>
         [Test]
-        public void FixClassName_ObjectTypeDesignWithNullClassName_ThrowsArgumentException()
+        public void GetNodeStateClassName_ObjectTypeDesignWithNullClassName_ThrowsArgumentException()
         {
             // Arrange
             var objectType = new ObjectTypeDesign
@@ -4566,14 +4567,14 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => objectType.GetClassName([]));
+            Assert.Throws<ArgumentException>(() => objectType.GetNodeStateClassName([]));
         }
 
         /// <summary>
-        /// Tests that FixClassName returns "BaseDataVariable" when VariableTypeDesign has ClassName "DataVariable".
+        /// Tests that GetNodeStateClassName returns "BaseDataVariable" when VariableTypeDesign has ClassName "DataVariable".
         /// </summary>
         [Test]
-        public void FixClassName_VariableTypeDesignWithDataVariableClassName_ReturnsBaseDataVariable()
+        public void GetNodeStateClassName_VariableTypeDesignWithDataVariableClassName_ReturnsBaseDataVariable()
         {
             // Arrange
             var variableType = new VariableTypeDesign
@@ -4583,17 +4584,17 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = variableType.GetClassName([]);
+            string result = variableType.GetNodeStateClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.BaseDataVariable"));
         }
 
         /// <summary>
-        /// Tests that FixClassName returns actual ClassName when VariableTypeDesign has different ClassName.
+        /// Tests that GetNodeStateClassName returns actual ClassName when VariableTypeDesign has different ClassName.
         /// </summary>
         [Test]
-        public void FixClassName_VariableTypeDesignWithDifferentClassName_ReturnsActualClassName()
+        public void GetNodeStateClassName_VariableTypeDesignWithDifferentClassName_ReturnsActualClassName()
         {
             // Arrange
             var variableType = new VariableTypeDesign
@@ -4603,17 +4604,17 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = variableType.GetClassName([]);
+            string result = variableType.GetNodeStateClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("CustomVariableType"));
         }
 
         /// <summary>
-        /// Tests that FixClassName throws when VariableTypeDesign has null ClassName.
+        /// Tests that GetNodeStateClassName throws when VariableTypeDesign has null ClassName.
         /// </summary>
         [Test]
-        public void FixClassName_VariableTypeDesignWithNullClassName_ThrowsArgumentExceptionl()
+        public void GetNodeStateClassName_VariableTypeDesignWithNullClassName_ThrowsArgumentExceptionl()
         {
             // Arrange
             var variableType = new VariableTypeDesign
@@ -4623,14 +4624,14 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => variableType.GetClassName([]));
+            Assert.Throws<ArgumentException>(() => variableType.GetNodeStateClassName([]));
         }
 
         /// <summary>
-        /// Tests that FixClassName returns ClassName when TypeDesign is not DataType, ObjectType or VariableType.
+        /// Tests that GetNodeStateClassName returns ClassName when TypeDesign is not DataType, ObjectType or VariableType.
         /// </summary>
         [Test]
-        public void FixClassName_ReferenceTypeDesign_ReturnsClassName()
+        public void GetNodeStateClassName_ReferenceTypeDesign_ReturnsClassName()
         {
             // Arrange
             var referenceType = new ReferenceTypeDesign
@@ -4640,17 +4641,17 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = referenceType.GetClassName([]);
+            string result = referenceType.GetNodeStateClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("CustomReferenceType"));
         }
 
         /// <summary>
-        /// Tests that FixClassName returns empty string when ObjectTypeDesign ClassName is empty.
+        /// Tests that GetNodeStateClassName returns empty string when ObjectTypeDesign ClassName is empty.
         /// </summary>
         [Test]
-        public void FixClassName_ObjectTypeDesignWithEmptyClassName_SymbolicNameInstead()
+        public void GetNodeStateClassName_ObjectTypeDesignWithEmptyClassName_SymbolicNameInstead()
         {
             // Arrange
             var objectType = new ObjectTypeDesign
@@ -4660,17 +4661,17 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = objectType.GetClassName([]);
+            string result = objectType.GetNodeStateClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("TestObject"));
         }
 
         /// <summary>
-        /// Tests that FixClassName returns whitespace string when VariableTypeDesign ClassName is whitespace.
+        /// Tests that GetNodeStateClassName returns whitespace string when VariableTypeDesign ClassName is whitespace.
         /// </summary>
         [Test]
-        public void FixClassName_VariableTypeDesignWithWhitespaceClassName_ReturnsWhitespace()
+        public void GetNodeStateClassName_VariableTypeDesignWithWhitespaceClassName_ReturnsWhitespace()
         {
             // Arrange
             var variableType = new VariableTypeDesign
@@ -4680,17 +4681,17 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = variableType.GetClassName([]);
+            string result = variableType.GetNodeStateClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("   "));
         }
 
         /// <summary>
-        /// Tests that FixClassName comparison is case-sensitive for ObjectSource.
+        /// Tests that GetNodeStateClassName comparison is case-sensitive for ObjectSource.
         /// </summary>
         [Test]
-        public void FixClassName_ObjectTypeDesignWithObjectSourceLowerCase_ReturnsActualClassName()
+        public void GetNodeStateClassName_ObjectTypeDesignWithObjectSourceLowerCase_ReturnsActualClassName()
         {
             // Arrange
             var objectType = new ObjectTypeDesign
@@ -4700,17 +4701,17 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = objectType.GetClassName([]);
+            string result = objectType.GetNodeStateClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("objectsource"));
         }
 
         /// <summary>
-        /// Tests that FixClassName comparison is case-sensitive for DataVariable.
+        /// Tests that GetNodeStateClassName comparison is case-sensitive for DataVariable.
         /// </summary>
         [Test]
-        public void FixClassName_VariableTypeDesignWithDataVariableLowerCase_ReturnsActualClassName()
+        public void GetNodeStateClassName_VariableTypeDesignWithDataVariableLowerCase_ReturnsActualClassName()
         {
             // Arrange
             var variableType = new VariableTypeDesign
@@ -4720,18 +4721,18 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = variableType.GetClassName([]);
+            string result = variableType.GetNodeStateClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("datavariable"));
         }
 
         /// <summary>
-        /// Tests that FixClassName returns empty string from Symbolic Name
+        /// Tests that GetNodeStateClassName returns empty string from Symbolic Name
         /// when DataTypeDesign Symbolic Name is empty.
         /// </summary>
         [Test]
-        public void FixClassName_DataTypeDesignWithEmptySymbolicIdName_Throws()
+        public void GetNodeStateClassName_DataTypeDesignWithEmptySymbolicIdName_Throws()
         {
             // Arrange
             var dataType = new DataTypeDesign
@@ -4741,7 +4742,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => dataType.GetClassName([]));
+            Assert.Throws<ArgumentException>(() => dataType.GetNodeStateClassName([]));
         }
 
         /// <summary>
@@ -5689,109 +5690,108 @@ namespace Opc.Ua.Schema.Model.Tests
         }
 
         /// <summary>
-        /// Tests that GetArrayDimensionsString returns "null" when valueRank is not OneOrMoreDimensions.
+        /// Tests that GetArrayDimensionsAsCode returns "null" when valueRank is not OneOrMoreDimensions.
         /// </summary>
-        /// <param name="valueRank">The ValueRank enum value to test.</param>
         [TestCase(ValueRank.Scalar)]
         [TestCase(ValueRank.Array)]
         [TestCase(ValueRank.ScalarOrArray)]
         [TestCase(ValueRank.ScalarOrOneDimension)]
         [TestCase(ValueRank.Any)]
-        public void GetArrayDimensionsString_ValueRankNotOneOrMoreDimensions_ReturnsNull(ValueRank valueRank)
+        public void GetArrayDimensionsAsCode_ValueRankNotOneOrMoreDimensions_ReturnsNull(ValueRank valueRank)
         {
             // Arrange
             const string arrayDimensions = "1,2,3";
 
             // Act
-            string result = valueRank.GetArrayDimensionsString(arrayDimensions);
+            string result = valueRank.GetArrayDimensionsAsCode(arrayDimensions);
 
             // Assert
-            Assert.That(result, Is.EqualTo("null"));
+            Assert.That(result, Is.EqualTo("new uint[] { 1, 2, 3 }"));
         }
 
         /// <summary>
-        /// Tests that GetArrayDimensionsString handles empty string when valueRank is OneOrMoreDimensions.
+        /// Tests that GetArrayDimensionsAsCode handles empty string when valueRank is OneOrMoreDimensions.
         /// </summary>
         [Test]
-        public void GetArrayDimensionsString_ValueRankOneOrMoreDimensionsWithEmptyString_ReturnsFormattedArrayWithEmptyContent()
+        public void GetArrayDimensionsAsCode_ValueRankOneOrMoreDimensionsWithEmptyString_ReturnsFormattedArrayWithEmptyContent()
         {
             // Arrange
             const ValueRank valueRank = ValueRank.OneOrMoreDimensions;
             string arrayDimensions = string.Empty;
 
             // Act
-            string result = valueRank.GetArrayDimensionsString(arrayDimensions);
+            string result = valueRank.GetArrayDimensionsAsCode(arrayDimensions);
 
             // Assert
-            Assert.That(result, Is.EqualTo("new uint[] {}"));
+            Assert.That(result, Is.Null);
         }
 
         /// <summary>
-        /// Tests that GetArrayDimensionsString handles null string when valueRank is OneOrMoreDimensions.
+        /// Tests that GetArrayDimensionsAsCode handles null string when valueRank is OneOrMoreDimensions.
         /// </summary>
         [Test]
-        public void GetArrayDimensionsString_ValueRankOneOrMoreDimensionsWithNull_ReturnsFormattedArrayWithNull()
+        public void GetArrayDimensionsAsCode_ValueRankOneOrMoreDimensionsWithNull_ReturnsFormattedArrayWithNull()
         {
             // Arrange
             const ValueRank valueRank = ValueRank.OneOrMoreDimensions;
             const string arrayDimensions = null;
 
             // Act
-            string result = valueRank.GetArrayDimensionsString(arrayDimensions);
+            string result = valueRank.GetArrayDimensionsAsCode(arrayDimensions);
 
             // Assert
-            Assert.That(result, Is.EqualTo("new uint[] {}"));
+            Assert.That(result, Is.Null);
         }
 
         /// <summary>
-        /// Tests that GetArrayDimensionsString handles very long string when valueRank is OneOrMoreDimensions.
+        /// Tests that GetArrayDimensionsAsCode handles very long string when valueRank is OneOrMoreDimensions.
         /// </summary>
         [Test]
-        public void GetArrayDimensionsString_ValueRankOneOrMoreDimensionsWithVeryLongString_ReturnsFormattedArray()
+        public void GetArrayDimensionsAsCode_ValueRankOneOrMoreDimensionsWithVeryLongString_ReturnsFormattedArray()
         {
             // Arrange
             const ValueRank valueRank = ValueRank.OneOrMoreDimensions;
             string arrayDimensions = new('1', 10000);
 
             // Act
-            string result = valueRank.GetArrayDimensionsString(arrayDimensions);
+            string result = valueRank.GetArrayDimensionsAsCode(arrayDimensions);
 
             // Assert
-            Assert.That(result, Is.EqualTo($"new uint[] {{{arrayDimensions}}}"));
+            Assert.That(result, Is.EqualTo("new uint[] { 0 }"));
         }
 
         /// <summary>
-        /// Tests that GetArrayDimensionsString handles invalid enum value cast from int.
+        /// Tests that GetArrayDimensionsAsCode handles invalid enum value cast from int.
         /// </summary>
         [Test]
-        public void GetArrayDimensionsString_InvalidValueRankValue_ReturnsNull()
+        public void GetArrayDimensionsAsCode_LargeValueRankValue_Array_dimension()
         {
             // Arrange
             const ValueRank valueRank = (ValueRank)999;
-            const string arrayDimensions = "1,2,3";
+            const string arrayDimensions = "1,    2,    3";
 
             // Act
-            string result = valueRank.GetArrayDimensionsString(arrayDimensions);
+            string result = valueRank.GetArrayDimensionsAsCode(arrayDimensions);
 
             // Assert
-            Assert.That(result, Is.EqualTo("null"));
+            Assert.That(result, Is.EqualTo("new uint[] { 1, 2, 3 }"));
         }
 
         /// <summary>
-        /// Tests that GetArrayDimensionsString returns "null" even when arrayDimensions is null for non-OneOrMoreDimensions values.
+        /// Tests that GetArrayDimensionsAsCode returns "null" even when arrayDimensions is null for non-OneOrMoreDimensions values.
         /// </summary>
         [Test]
-        public void GetArrayDimensionsString_ValueRankNotOneOrMoreDimensionsWithNullDimensions_ReturnsNull()
+        public void GetArrayDimensionsAsCode_ValueRankNotOneOrMoreDimensionsWithNullDimensions_ReturnsNull()
         {
             // Arrange
             const ValueRank valueRank = ValueRank.Scalar;
             const string arrayDimensions = null;
 
             // Act
-            string result = valueRank.GetArrayDimensionsString(arrayDimensions);
+            string result = valueRank.GetArrayDimensionsAsCode(arrayDimensions);
 
             // Assert
-            Assert.That(result, Is.EqualTo("null"));
+            Assert.That(result, Is.EqualTo(null));
         }
 
         /// <summary>

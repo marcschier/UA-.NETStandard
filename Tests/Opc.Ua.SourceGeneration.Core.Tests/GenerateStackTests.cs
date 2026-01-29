@@ -42,7 +42,7 @@ using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Opc.Ua.Tests;
 
-namespace Opc.Ua.SourceGeneration.Tests
+namespace Opc.Ua.SourceGeneration.Api.Tests
 {
     /// <summary>
     /// Test generating and compiling stack
@@ -53,7 +53,7 @@ namespace Opc.Ua.SourceGeneration.Tests
     [SetUICulture("en-us")]
     [MemoryDiagnoser]
     [DisassemblyDiagnoser]
-    [Parallelizable(ParallelScope.All)]
+    // [Parallelizable(ParallelScope.All)]
     public class GenerateStackTests
     {
         [DatapointSource]

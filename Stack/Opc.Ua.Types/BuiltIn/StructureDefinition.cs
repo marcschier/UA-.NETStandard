@@ -38,7 +38,7 @@ namespace Opc.Ua
     /// Structure definition
     /// </summary>
     [DataContract(Namespace = Namespaces.OpcUaXsd)]
-    public partial class StructureDefinition : DataTypeDefinition
+    public class StructureDefinition : DataTypeDefinition
     {
         /// <inheritdoc/>
         public StructureDefinition()
@@ -96,6 +96,11 @@ namespace Opc.Ua
                 }
             }
         }
+
+        /// <summary>
+        /// The first non-inherited field in the structure definition.
+        /// </summary>
+        public int FirstExplicitFieldIndex { get; set; }
 
         /// <inheritdoc/>
         public override ExpandedNodeId TypeId => DataTypeIds.StructureDefinition;

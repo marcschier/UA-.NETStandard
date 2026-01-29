@@ -610,6 +610,18 @@ namespace Opc.Ua.SourceGeneration
                 {
                     public TemporaryFileTransferState(NodeState? parent) : base(parent) { }
                 }
+                public class TwoStateVariableState : BaseVariableState
+                {
+                    public TwoStateVariableState(NodeState? parent) : base(parent) { }
+                }
+                public class ConditionVariableState<T> : BaseVariableState
+                {
+                    public ConditionVariableState(NodeState? parent) : base(parent) { }
+                }
+                public class FiniteStateVariableState : BaseVariableState
+                {
+                    public FiniteStateVariableState(NodeState? parent) : base(parent) { }
+                }
             }
             """;
     }

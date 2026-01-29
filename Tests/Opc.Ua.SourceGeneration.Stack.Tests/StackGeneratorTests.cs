@@ -43,6 +43,7 @@ namespace Opc.Ua.SourceGeneration
     [Category("SourceGeneration")]
     [SetCulture("en-us")]
     [SetUICulture("en-us")]
+    // [Parallelizable(ParallelScope.All)]
     public class StackGeneratorTests
     {
         [DatapointSource]

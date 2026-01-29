@@ -43,7 +43,7 @@ using Opc.Ua.Schema.Binary;
 using Opc.Ua.Schema.Xml;
 using Opc.Ua.Tests;
 
-namespace Opc.Ua.SourceGeneration.Tests
+namespace Opc.Ua.SourceGeneration.Api.Tests
 {
     /// <summary>
     /// Test generating and compiling model design
@@ -52,7 +52,7 @@ namespace Opc.Ua.SourceGeneration.Tests
     [Category("Api")]
     [SetCulture("en-us")]
     [SetUICulture("en-us")]
-    [Parallelizable]
+    // [Parallelizable(ParallelScope.All)]
     public class GenerateCodeTests
     {
         [DatapointSource]

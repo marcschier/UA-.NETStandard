@@ -2985,6 +2985,8 @@ namespace Opc.Ua.SourceGeneration
                 state.Executable = {{Tokens.ExecutableValue}};
                 state.UserExecutable = {{Tokens.ExecutableValue}};
                 {{Tokens.MethodDeclarationId}}
+                {{Tokens.ListOfInputArguments}}
+                {{Tokens.ListOfOutputArguments}}
                 {{Tokens.ReleaseStatusValue}}
                 {{Tokens.CategoriesValue}}
                 {{Tokens.SpecificationValue}}
@@ -3007,7 +3009,7 @@ namespace Opc.Ua.SourceGeneration
             /// <summary>
             /// Creates the {{Tokens.SymbolicName}} Variable node state.
             /// </summary>
-            private static global::Opc.Ua.BaseVariableState Create_{{Tokens.SymbolicId}}(
+            private static {{Tokens.StateClassName}} Create_{{Tokens.SymbolicId}}(
                 global::Opc.Ua.ISystemContext context)
             {
                 var state = new {{Tokens.StateClassName}}(null);
@@ -3096,7 +3098,7 @@ namespace Opc.Ua.SourceGeneration
             /// <summary>
             /// Creates the {{Tokens.SymbolicName}} child Variable node state.
             /// </summary>
-            private static global::Opc.Ua.BaseVariableState Create_{{Tokens.SymbolicId}}(
+            private static {{Tokens.StateClassName}} Create_{{Tokens.SymbolicId}}(
                 global::Opc.Ua.ISystemContext context,
                 global::Opc.Ua.NodeState parent)
             {
@@ -3193,6 +3195,16 @@ namespace Opc.Ua.SourceGeneration
         public static readonly TemplateString NodeState_AddChild_cs = TemplateString.Parse(
             $$"""
             state.AddChild(Create_{{Tokens.SymbolicId}}(context, state));
+
+            """);
+
+        /// <summary>
+        /// Template for adding a child node state as property and child
+        /// </summary>
+        public static readonly TemplateString NodeState_AddChildProperty_cs = TemplateString.Parse(
+            $$"""
+            state.{{Tokens.SymbolicName}} = Create_{{Tokens.SymbolicId}}(context, state);
+            state.AddChild(state.{{Tokens.SymbolicName}});
 
             """);
 
@@ -3307,7 +3319,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public static readonly TemplateString NodeState_ArrayValue_cs = TemplateString.Parse(
             $$"""
-            state.Value = new {{Tokens.DataType}}Collection
+            state.Value = new {{Tokens.DataType}}[]
             {
                 {{Tokens.ListOfValues}}
             };

@@ -29,6 +29,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
@@ -80,8 +81,14 @@ namespace Opc.Ua.Core.Tests.Stack.State
             var context = new SystemContext(telemetry) { NamespaceUris = Context.NamespaceUris };
 
             var comparer = new NodeStateEqualityComparer();
-            var generated = new NodeStateCollection().AddOpcUa(context).ToHashSet(comparer);
-            var initialized= new NodeStateCollection().LoadOpcUa(context).ToHashSet(comparer);
+            var generatedc = new NodeStateCollection().AddOpcUa(context);
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "generated_nodestates.xml");
+            generatedc.SaveAsXml(context, File.OpenWrite(path));
+            var initializedc = new NodeStateCollection().LoadOpcUa(context);
+            path = Path.Combine(Directory.GetCurrentDirectory(), "serialized_nodestates.xml");
+            initializedc.SaveAsXml(context, File.OpenWrite(path));
+            var generated = generatedc.ToHashSet(comparer);
+            var initialized = initializedc.ToHashSet(comparer);
 
             var byNodeIdInitialized = initialized.ToDictionary(n => n.NodeId, n => n);
             Assert.That(byNodeIdInitialized.Count, Is.EqualTo(initialized.Count));

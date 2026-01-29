@@ -221,12 +221,7 @@ namespace Opc.Ua
             XmlWriterSettings settings = CoreUtils.DefaultXmlWriterSettings();
             settings.CloseOutput = !keepStreamOpen;
 
-            var messageContext = new ServiceMessageContext(context.Telemetry)
-            {
-                NamespaceUris = context.NamespaceUris,
-                ServerUris = context.ServerUris,
-                Factory = context.EncodeableFactory
-            };
+            var messageContext = context.AsMessageContext();
 
             using var writer = XmlWriter.Create(ostrm, settings);
             var root = new XmlQualifiedName("ListOfNodeState", Namespaces.OpcUaXsd);
@@ -249,12 +244,7 @@ namespace Opc.Ua
         /// </summary>
         public void SaveAsBinary(ISystemContext context, Stream ostrm)
         {
-            var messageContext = new ServiceMessageContext(context.Telemetry)
-            {
-                NamespaceUris = context.NamespaceUris,
-                ServerUris = context.ServerUris,
-                Factory = context.EncodeableFactory
-            };
+            var messageContext = context.AsMessageContext();
 
             using var encoder = new BinaryEncoder(ostrm, messageContext, true);
             encoder.SaveStringTable(context.NamespaceUris);
@@ -272,16 +262,62 @@ namespace Opc.Ua
         }
 
         /// <summary>
+        /// Writes the collection to a stream using the Opc.Ua.Schema.UANodeSet schema.
+        /// </summary>
+        public void SaveAsNodeSet2(
+            ISystemContext context,
+            Stream ostrm,
+            Export.ModelTableEntry model,
+            DateTime lastModified,
+            bool outputRedundantNames)
+        {
+            var nodeSet = new Export.UANodeSet();
+
+            if (lastModified != DateTime.MinValue)
+            {
+                nodeSet.LastModified = lastModified;
+                nodeSet.LastModifiedSpecified = true;
+            }
+
+            nodeSet.NamespaceUris = (context.NamespaceUris?.ToArray()
+                .Where(x => x != Namespaces.OpcUa)
+                .ToArray());
+            nodeSet.ServerUris = (context.ServerUris?.ToArray());
+
+            if (nodeSet.NamespaceUris != null && nodeSet.NamespaceUris.Length == 0)
+            {
+                nodeSet.NamespaceUris = null;
+            }
+
+            if (nodeSet.ServerUris != null && nodeSet.ServerUris.Length == 0)
+            {
+                nodeSet.ServerUris = null;
+            }
+
+            if (model != null)
+            {
+                nodeSet.Models = [model];
+            }
+
+            for (int ii = 0; ii < s_aliasesToUse.Length; ii++)
+            {
+                nodeSet.AddAlias(context, s_aliasesToUse[ii].Alias, s_aliasesToUse[ii].NodeId);
+            }
+
+            for (int ii = 0; ii < Count; ii++)
+            {
+                nodeSet.Export(context, this[ii], outputRedundantNames);
+            }
+
+            nodeSet.Write(ostrm);
+        }
+
+        /// <summary>
         /// Reads the schema information from a XML document.
         /// </summary>
         public void LoadFromBinary(ISystemContext context, Stream istrm, bool updateTables)
         {
-            var messageContext = new ServiceMessageContext(context.Telemetry)
-            {
-                NamespaceUris = context.NamespaceUris,
-                ServerUris = context.ServerUris,
-                Factory = context.EncodeableFactory
-            };
+            var messageContext = context.AsMessageContext();
 
             using var decoder = new BinaryDecoder(istrm, messageContext);
             // check if a namespace table was provided.
@@ -346,12 +382,7 @@ namespace Opc.Ua
         /// </summary>
         public void LoadFromXml(ISystemContext context, Stream istrm, bool updateTables)
         {
-            var messageContext = new ServiceMessageContext(context.Telemetry)
-            {
-                NamespaceUris = context.NamespaceUris,
-                ServerUris = context.ServerUris,
-                Factory = context.EncodeableFactory
-            };
+            var messageContext = context.AsMessageContext();
 
             using var reader = XmlReader.Create(istrm, CoreUtils.DefaultXmlReaderSettings());
             using var decoder = new XmlDecoder(null, reader, messageContext);

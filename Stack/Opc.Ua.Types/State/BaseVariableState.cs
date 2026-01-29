@@ -411,12 +411,7 @@ namespace Opc.Ua
                     IServiceMessageContext messageContext;
                     if (context != null)
                     {
-                        messageContext = new ServiceMessageContext(context.Telemetry)
-                        {
-                            NamespaceUris = context.NamespaceUris,
-                            ServerUris = context.ServerUris,
-                            Factory = context.EncodeableFactory
-                        };
+                        messageContext = context.AsMessageContext();
                     }
                     else
                     {
@@ -1656,12 +1651,7 @@ namespace Opc.Ua
             // apply data encoding.
             if (!dataEncoding.IsNullQn)
             {
-                var messageContext = new ServiceMessageContext(context.Telemetry)
-                {
-                    NamespaceUris = context.NamespaceUris,
-                    ServerUris = context.ServerUris,
-                    Factory = context.EncodeableFactory
-                };
+                var messageContext = context.AsMessageContext();
 
                 result = EncodeableObject.ApplyDataEncoding(
                     messageContext,

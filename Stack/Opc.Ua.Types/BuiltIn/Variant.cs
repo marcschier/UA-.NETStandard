@@ -32,6 +32,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -1318,6 +1319,16 @@ namespace Opc.Ua
         }
 
         /// <summary>
+        /// Converts the variant to a structure of type T
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public T GetStructure<T>(T defaultValue = default) where T : IEncodeable
+        {
+            return TryGet(out ExtensionObject v) ?
+                (T)ExtensionObject.ToEncodeable(v) : defaultValue;
+        }
+
+        /// <summary>
         /// Converts the variant to a uint value or returns the default.
         /// </summary>
         public uint GetUInt32(uint defaultValue = default)
@@ -1500,6 +1511,16 @@ namespace Opc.Ua
         public T[] GetEnumerationArray<T>(T[] defaultValue = default) where T : Enum
         {
             return TryGet(out T[] v) ? v : defaultValue;
+        }
+
+        /// <summary>
+        /// Converts the variant to a structure of type T
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public T[] GetStructureArray<T>(T[] defaultValue = default) where T : IEncodeable
+        {
+            return TryGet(out ExtensionObject[] v) ?
+                (T[])ExtensionObject.ToArray(v, typeof(T)) : defaultValue;
         }
 
         /// <summary>
@@ -4694,6 +4715,25 @@ namespace Opc.Ua
                 Variant[] v => Equals(v),
                 _ => false
             };
+        }
+
+        /// <summary>
+        /// Convert to a variant from an xml stream. Used during initialization of values
+        /// from string values.
+        /// </summary>
+        /// <remarks>
+        /// This is an internal API and subject to change, but it is not marked experimental
+        /// because it is used by generated codee.
+        /// </remarks>
+        /// <param name="istrm">The variant value xml as utf8 character stream</param>
+        /// <param name="context">message context</param>
+        /// <returns></returns>
+        public static Variant FromXml(Stream istrm, ISystemContext context)
+        {
+            using var reader = XmlReader.Create(istrm, CoreUtils.DefaultXmlReaderSettings());
+            using var decoder = new XmlDecoder(reader, context.AsMessageContext());
+            object contents = decoder.ReadVariantContents(out _);
+            return new Variant(contents);
         }
 
         /// <summary>

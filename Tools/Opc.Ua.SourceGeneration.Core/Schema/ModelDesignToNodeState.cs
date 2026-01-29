@@ -28,7 +28,6 @@
  * ======================================================================*/
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -1958,7 +1957,12 @@ namespace Opc.Ua.Schema.Model
         {
             int index;
 
-            if (node == null || node.StringId != null)
+            if (node == null)
+            {
+                return default;
+            }
+
+            if (node.StringId != null)
             {
                 index = namespaceUris.GetIndex(node.SymbolicId.Namespace);
                 return new NodeId(node.StringId, (ushort)index);

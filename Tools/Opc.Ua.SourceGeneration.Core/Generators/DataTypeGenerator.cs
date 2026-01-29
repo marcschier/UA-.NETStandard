@@ -33,7 +33,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml;
-using System.Xml.Linq;
 using Opc.Ua.Schema.Model;
 using Opc.Ua.Types;
 
@@ -334,19 +333,13 @@ namespace Opc.Ua.SourceGeneration
                 field.Name.AsStringLiteral());
             context.Template.AddReplacement(
                 Tokens.DataType,
-                m_context.ModelDesign.GetNodeIdConstant(
-                    field.DataType,
-                    "DataType",
-                    kNamespaceTableContextVariable));
+                GetNodeIdConstantForDataType(field, m_context.ModelDesign.Namespaces));
             context.Template.AddReplacement(
                 Tokens.ValueRank,
                 field.ValueRank.GetValueRankString(field.ArrayDimensions));
             context.Template.AddReplacement(
                 Tokens.ArrayDimensions,
-                field.ValueRank.GetArrayDimensionsAsCode(field.ArrayDimensions));
-            context.Template.AddReplacement(
-                Tokens.ArrayDimensions,
-                field.ValueRank.GetArrayDimensionsString(field.ArrayDimensions));
+                field.ValueRank.GetArrayDimensionsAsCode(field.ArrayDimensions) ?? "default");
             if (structureType == StructureType.StructureWithOptionalFields)
             {
                 context.Template.AddReplacement(Tokens.IsOptional, field.IsOptional);
@@ -1183,14 +1176,15 @@ namespace Opc.Ua.SourceGeneration
                 return null;
             }
 
-            string value = field.DataTypeNode.GetDefaultDotNetValue(
+            string value = field.DataTypeNode.GetValueAsCode(
                 field.ValueRank,
                 field.DefaultValue,
                 null,
                 true,
                 m_context.ModelDesign.TargetNamespace.Value,
                 m_context.ModelDesign.Namespaces,
-                m_messageContext);
+                m_messageContext,
+                dataTypeQuirk: true);
 
             context.Out.WriteLine("{0} = {1};", field.GetChildFieldName(), value);
             return null;
@@ -1263,14 +1257,15 @@ namespace Opc.Ua.SourceGeneration
                 CoreUtils.Format("{0}", context.Index + 1));
             context.Template.AddReplacement(
                 Tokens.DefaultValue,
-                field.DataTypeNode.GetDefaultDotNetValue(
+                field.DataTypeNode.GetValueAsCode(
                     field.ValueRank,
                     null,
                     null,
                     true,
                     m_context.ModelDesign.TargetNamespace.Value,
                     m_context.ModelDesign.Namespaces,
-                    m_messageContext));
+                    m_messageContext,
+                    dataTypeQuirk: true));
             context.Template.AddReplacement(
                 Tokens.Identifier,
                 field.Identifier.ToString(CultureInfo.InvariantCulture));
@@ -1370,6 +1365,21 @@ namespace Opc.Ua.SourceGeneration
                 }
             }
             return datatypes;
+        }
+
+        private string GetNodeIdConstantForDataType(
+            Parameter field,
+            Namespace[] namespaceUris)
+        {
+            if (!m_context.ModelDesign.UseAllowSubtypes)
+            {
+                DataTypeDesign dataType = m_context.ModelDesign.FindNode<DataTypeDesign>(
+                    field.DataType,
+                    field.Name,
+                    "DataType");
+                return dataType.GetNodeIdConstant(namespaceUris, kNamespaceTableContextVariable);
+            }
+            return field.DataTypeNode.GetNodeIdConstant(namespaceUris, kNamespaceTableContextVariable);
         }
 
         private string EncodingString => m_useXmlInitializers ? "Xml" : "Binary";

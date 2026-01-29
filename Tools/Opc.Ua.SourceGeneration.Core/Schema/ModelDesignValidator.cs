@@ -1326,7 +1326,7 @@ namespace Opc.Ua.Schema.Model
                     if (child.Instance.BrowseName == "StaticNumericNodeIdRange")
                     {
                         var variable = child.Instance as VariableDesign;
-                        variable.DecodedValue = ranges.ToArray();
+                        variable.SetDefaultValue(ranges.ToArray(), m_context);
                     }
 
                     if (m_dictionary.TargetPublicationDateSpecified)
@@ -1334,7 +1334,7 @@ namespace Opc.Ua.Schema.Model
                         if (child.Instance.BrowseName == BrowseNames.NamespacePublicationDate)
                         {
                             var variable = child.Instance as VariableDesign;
-                            variable.DecodedValue = m_dictionary.TargetPublicationDate;
+                            variable.SetDefaultValue(m_dictionary.TargetPublicationDate, m_context);
                         }
                     }
 
@@ -1343,7 +1343,7 @@ namespace Opc.Ua.Schema.Model
                         if (child.Instance.BrowseName == BrowseNames.NamespaceVersion)
                         {
                             var variable = child.Instance as VariableDesign;
-                            variable.DecodedValue = m_dictionary.TargetVersion;
+                            variable.SetDefaultValue(m_dictionary.TargetVersion, m_context);
                         }
                     }
                 }
@@ -2196,7 +2196,7 @@ namespace Opc.Ua.Schema.Model
             property.MinimumSamplingIntervalSpecified = true;
             property.Historizing = false;
             property.HistorizingSpecified = true;
-            property.DecodedValue = value;
+            property.SetDefaultValue(value, m_context);
             property.PartNo = parent.PartNo;
             property.Category = parent.Category;
             property.ReleaseStatus = parent.ReleaseStatus;
@@ -3475,8 +3475,7 @@ namespace Opc.Ua.Schema.Model
             property.AccessLevel = AccessLevel.Read;
             property.ValueRank = ValueRank.Array;
             property.DataType = new XmlQualifiedName("Argument", Ua.Types.Namespaces.OpcUa);
-            property.DecodedValue = null;
-            property.DefaultValue = null;
+            property.SetDefaultValue(null, m_context);
             property.DisplayName = new LocalizedText
             {
                 Value = property.BrowseName,
@@ -3747,7 +3746,6 @@ namespace Opc.Ua.Schema.Model
                 if (variableType.DefaultValue != null)
                 {
                     var decoder = new XmlDecoder(variableType.DefaultValue, m_context);
-
                     variableType.DecodedValue = decoder.ReadVariantContents(out TypeInfo typeInfo);
 
                     if (!typeInfo.IsUnknown)
@@ -4030,7 +4028,6 @@ namespace Opc.Ua.Schema.Model
                 if (variable.DefaultValue != null)
                 {
                     var decoder = new XmlDecoder(variable.DefaultValue, m_context);
-
                     variable.DecodedValue = decoder.ReadVariantContents(out TypeInfo typeInfo);
 
                     if (!typeInfo.IsUnknown)
@@ -4433,6 +4430,10 @@ namespace Opc.Ua.Schema.Model
             {
                 mergedType.DecodedValue = variableType.DecodedValue;
             }
+            if (variableType.DefaultValue != null)
+            {
+                mergedType.DefaultValue = variableType.DefaultValue;
+            }
 
             if (variableType.DataType != null &&
                 variableType.DataType != s_baseDataTypeQn)
@@ -4737,6 +4738,11 @@ namespace Opc.Ua.Schema.Model
                 mergedVariable.DecodedValue = variableType.DecodedValue;
             }
 
+            if (variableType.DefaultValue != null)
+            {
+                mergedVariable.DefaultValue = variableType.DefaultValue;
+            }
+
             if (variableType.DataType != null &&
                 variableType.DataType != s_baseDataTypeQn)
             {
@@ -4803,6 +4809,11 @@ namespace Opc.Ua.Schema.Model
             if (variable.DecodedValue != null)
             {
                 mergedVariable.DecodedValue = variable.DecodedValue;
+            }
+
+            if (variable.DefaultValue != null)
+            {
+                mergedVariable.DefaultValue = variable.DefaultValue;
             }
 
             if (variable.DataType != null &&
