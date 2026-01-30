@@ -165,7 +165,7 @@ namespace Opc.Ua.SourceGeneration
 
             // There will be 120 errors due to missing Opc.Ua dll reference
             GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation, true);
-            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(8));
+            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(7));
 
             string testDataXmlSchema = ValidateXmlSchema(languageVersion, generatorResult);
             Assert.That(testDataXmlSchema,

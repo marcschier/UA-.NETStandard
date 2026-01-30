@@ -443,7 +443,7 @@ namespace Opc.Ua.SourceGeneration
             // Add helpers
             using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
             using var templateWriter = new TemplateWriter(writer);
-            var template = new Template(templateWriter, CodeTemplates.PredefinedNodes_File_cs);
+            var template = new Template(templateWriter, CodeTemplates.PredefinedNodes_File);
 
             template.AddReplacement(Tokens.NamespacePrefix, nsPrefix);
             template.AddReplacement(

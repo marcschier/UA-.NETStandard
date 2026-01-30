@@ -4015,7 +4015,7 @@ namespace Quickstarts.ReferenceServer
         /// Creates a new variable.
         /// </summary>
         private DataItemState CreateDataItemVariable(
-            NodeState parent,
+            FolderState parent,
             string path,
             string name,
             BuiltInType dataType,
@@ -4202,7 +4202,7 @@ namespace Quickstarts.ReferenceServer
         /// Creates a new variable.
         /// </summary>
         private TwoStateDiscreteState CreateTwoStateDiscreteItemVariable(
-            NodeState parent,
+            FolderState parent,
             string path,
             string name,
             string trueState,
@@ -4246,7 +4246,7 @@ namespace Quickstarts.ReferenceServer
         /// Creates a new variable.
         /// </summary>
         private MultiStateDiscreteState CreateMultiStateDiscreteItemVariable(
-            NodeState parent,
+            FolderState parent,
             string path,
             string name,
             params string[] values)
@@ -4771,7 +4771,7 @@ namespace Quickstarts.ReferenceServer
         /// <summary>
         /// Creates a new method.
         /// </summary>
-        private MethodState CreateMethod(NodeState parent, string path, string name)
+        private MethodState CreateMethod(FolderState parent, string path, string name)
         {
             var method = new MethodState(parent)
             {

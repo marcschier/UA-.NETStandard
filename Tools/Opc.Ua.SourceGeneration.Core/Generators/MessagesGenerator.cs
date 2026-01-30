@@ -62,13 +62,13 @@ namespace Opc.Ua.SourceGeneration
                 CoreUtils.Format("{0}.Messages.g.cs", Constants.CoreNamespacePrefix));
             using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
             using var templateWriter = new TemplateWriter(writer);
-            var template = new Template(templateWriter, CodeTemplates.Messages_File_cs);
+            var template = new Template(templateWriter, CodeTemplates.Messages_File);
 
             template.AddReplacement(Tokens.Prefix, Constants.CoreNamespacePrefix);
 
             template.AddReplacement(
                 Tokens.TypeList,
-                CodeTemplates.Messages_DataTypeAnnotation_cs,
+                CodeTemplates.Messages_DataTypeAnnotation,
                 serviceTypes,
                 WriteTemplate_ServiceMessage);
 

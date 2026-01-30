@@ -2252,12 +2252,22 @@ namespace Opc.Ua
             try
             {
                 value = (T[])Array.CreateInstance(typeof(T), array.Length);
-                for (int ii = 0; ii < array.Length; ii++)
+                if (typeof(T).IsEnum)
                 {
-                    value[ii] = (T)Convert.ChangeType(
-                        array.GetValue(ii),
-                        typeof(T),
-                        CultureInfo.InvariantCulture);
+                    for (int ii = 0; ii < array.Length; ii++)
+                    {
+                        value[ii] = (T)Enum.ToObject(typeof(T), array.GetValue(ii));
+                    }
+                }
+                else
+                {
+                    for (int ii = 0; ii < array.Length; ii++)
+                    {
+                        value[ii] = (T)Convert.ChangeType(
+                            array.GetValue(ii),
+                            typeof(T),
+                            CultureInfo.InvariantCulture);
+                    }
                 }
                 return true;
             }

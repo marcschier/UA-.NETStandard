@@ -56,7 +56,7 @@ namespace Opc.Ua.SourceGeneration
             using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
 
             using var templateWriter = new TemplateWriter(writer);
-            var template = new Template(templateWriter, CodeTemplates.Constants_File_cs);
+            var template = new Template(templateWriter, CodeTemplates.StatusCode_Attributes_File);
 
             template.AddReplacement(Tokens.Prefix, Constants.CoreNamespacePrefix);
             template.AddReplacement(Tokens.ClassName, "StatusCodes");
@@ -123,13 +123,13 @@ namespace Opc.Ua.SourceGeneration
             // collect datatypes with the specified type.
             template.AddReplacement(
                 Tokens.ListOfIdentifiers,
-                CodeTemplates.StatusCodeDeclaration_cs,
+                CodeTemplates.StatusCodes_Declaration,
                 constants,
                 WriteTemplate_StatusCodeDeclaration);
 
             template.AddReplacement(
                 Tokens.IdentifierReflection,
-                CodeTemplates.TypeInterning_cs,
+                CodeTemplates.StatusCode_TypeInterning,
                 [constants],
                 WriteTemplate_StatusCodeInterning);
 

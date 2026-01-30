@@ -1651,7 +1651,7 @@ namespace Opc.Ua
             // apply data encoding.
             if (!dataEncoding.IsNullQn)
             {
-                var messageContext = context.AsMessageContext();
+                IServiceMessageContext messageContext = context.AsMessageContext();
 
                 result = EncodeableObject.ApplyDataEncoding(
                     messageContext,

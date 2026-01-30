@@ -622,6 +622,94 @@ namespace Opc.Ua.SourceGeneration
                 {
                     public FiniteStateVariableState(NodeState? parent) : base(parent) { }
                 }
+                public class DataTypeEncodingState : BaseObjectState
+                {
+                    public DataTypeEncodingState(NodeState? parent) : base(parent) { }
+                }
+                public class OpenMethodState : MethodState
+                {
+                    public OpenMethodState(NodeState? parent) : base(parent) { }
+                }
+                public class CloseMethodState : MethodState
+                {
+                    public CloseMethodState(NodeState? parent) : base(parent) { }
+                }
+                public class ReadMethodState : MethodState
+                {
+                    public ReadMethodState(NodeState? parent) : base(parent) { }
+                }
+                public class WriteMethodState : MethodState
+                {
+                    public WriteMethodState(NodeState? parent) : base(parent) { }
+                }
+                public class GetPositionMethodState : MethodState
+                {
+                    public GetPositionMethodState(NodeState? parent) : base(parent) { }
+                }
+                public class SetPositionMethodState : MethodState
+                {
+                    public SetPositionMethodState(NodeState? parent) : base(parent) { }
+                }
+                public class GenerateFileForReadMethodState : MethodState
+                {
+                    public GenerateFileForReadMethodState(NodeState? parent) : base(parent) { }
+                }
+                public class GenerateFileForWriteMethodState : MethodState
+                {
+                    public GenerateFileForWriteMethodState(NodeState? parent) : base(parent) { }
+                }
+                public class CreateDirectoryMethodState : MethodState
+                {
+                    public CreateDirectoryMethodState(NodeState? parent) : base(parent) { }
+                }
+                public class CreateFileMethodState : MethodState
+                {
+                    public CreateFileMethodState(NodeState? parent) : base(parent) { }
+                }
+                public class DeleteFileMethodState : MethodState
+                {
+                    public DeleteFileMethodState(NodeState? parent) : base(parent) { }
+                }
+                public class MoveOrCopyMethodState : MethodState
+                {
+                    public MoveOrCopyMethodState(NodeState? parent) : base(parent) { }
+                }
+                public class CloseAndCommitMethodState : MethodState
+                {
+                    public CloseAndCommitMethodState(NodeState? parent) : base(parent) { }
+                }
+                public class FileState : BaseObjectState
+                {
+                    public FileState(NodeState? parent) : base(parent) { }
+                }
+                public class StateMachineStateState : BaseObjectState
+                {
+                    public StateMachineStateState(NodeState? parent) : base(parent) { }
+                }
+                public class StateMachineInitialStateState : StateMachineStateState
+                {
+                    public StateMachineInitialStateState(NodeState? parent) : base(parent) { }
+                }
+                public class StateMachineTransitionState : BaseObjectState
+                {
+                    public StateMachineTransitionState(NodeState? parent) : base(parent) { }
+                }
+                public class AddCommentMethodState : MethodState
+                {
+                    public AddCommentMethodState(NodeState? parent) : base(parent) { }
+                }
+                public class DataTypeDictionaryState : BaseDataVariableState
+                {
+                    public DataTypeDictionaryState(NodeState? parent) : base(parent) { }
+                }
+                public class DataTypeDescriptionState : BaseDataVariableState
+                {
+                    public DataTypeDescriptionState(NodeState? parent) : base(parent) { }
+                }
+                public class RoleState : BaseObjectState
+                {
+                    public RoleState(NodeState? parent) : base(parent) { }
+                }
             }
             """;
     }

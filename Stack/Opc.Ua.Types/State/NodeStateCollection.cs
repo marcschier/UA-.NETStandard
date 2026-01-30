@@ -221,7 +221,7 @@ namespace Opc.Ua
             XmlWriterSettings settings = CoreUtils.DefaultXmlWriterSettings();
             settings.CloseOutput = !keepStreamOpen;
 
-            var messageContext = context.AsMessageContext();
+            IServiceMessageContext messageContext = context.AsMessageContext();
 
             using var writer = XmlWriter.Create(ostrm, settings);
             var root = new XmlQualifiedName("ListOfNodeState", Namespaces.OpcUaXsd);
@@ -244,7 +244,7 @@ namespace Opc.Ua
         /// </summary>
         public void SaveAsBinary(ISystemContext context, Stream ostrm)
         {
-            var messageContext = context.AsMessageContext();
+            IServiceMessageContext messageContext = context.AsMessageContext();
 
             using var encoder = new BinaryEncoder(ostrm, messageContext, true);
             encoder.SaveStringTable(context.NamespaceUris);
@@ -317,7 +317,7 @@ namespace Opc.Ua
         /// </summary>
         public void LoadFromBinary(ISystemContext context, Stream istrm, bool updateTables)
         {
-            var messageContext = context.AsMessageContext();
+            IServiceMessageContext messageContext = context.AsMessageContext();
 
             using var decoder = new BinaryDecoder(istrm, messageContext);
             // check if a namespace table was provided.
@@ -382,7 +382,7 @@ namespace Opc.Ua
         /// </summary>
         public void LoadFromXml(ISystemContext context, Stream istrm, bool updateTables)
         {
-            var messageContext = context.AsMessageContext();
+            IServiceMessageContext messageContext = context.AsMessageContext();
 
             using var reader = XmlReader.Create(istrm, CoreUtils.DefaultXmlReaderSettings());
             using var decoder = new XmlDecoder(null, reader, messageContext);

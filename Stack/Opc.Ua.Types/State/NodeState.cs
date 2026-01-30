@@ -181,7 +181,10 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Initializes the instance with the default values.
+        /// Initializes the instance with attributes children and references from the source node state.
+        /// This is called when deserializing a raw nodestate and initializing a generated class with its
+        /// values, including properties etc. Generated classes override this to also perform initialization
+        /// of any optional children added to the node state BEFORE calling this method.
         /// </summary>
         /// <param name="context">The object that describes how access the system containing the data.</param>
         /// <param name="source">The source node.</param>
@@ -567,7 +570,7 @@ namespace Opc.Ua
         /// <param name="ostrm">The stream to write.</param>
         public void SaveAsXml(ISystemContext context, Stream ostrm)
         {
-            var messageContext = context.AsMessageContext();
+            IServiceMessageContext messageContext = context.AsMessageContext();
 
             XmlWriterSettings settings = CoreUtils.DefaultXmlWriterSettings();
             settings.CloseOutput = true;
@@ -594,7 +597,7 @@ namespace Opc.Ua
         /// <param name="ostrm">The stream to write.</param>
         public void SaveAsBinary(ISystemContext context, Stream ostrm)
         {
-            var messageContext = context.AsMessageContext();
+            IServiceMessageContext messageContext = context.AsMessageContext();
 
             using var encoder = new BinaryEncoder(ostrm, messageContext, true);
             encoder.SaveStringTable(context.NamespaceUris);
@@ -632,7 +635,7 @@ namespace Opc.Ua
         /// <param name="istrm">The stream to read.</param>
         public void LoadAsBinary(ISystemContext context, Stream istrm)
         {
-            var messageContext = context.AsMessageContext();
+            IServiceMessageContext messageContext = context.AsMessageContext();
 
             using var decoder = new BinaryDecoder(istrm, messageContext, true);
             // check if a namespace table was provided.
@@ -1265,7 +1268,7 @@ namespace Opc.Ua
         /// <exception cref="ServiceResultException"></exception>
         public void LoadFromXml(ISystemContext context, XmlReader reader)
         {
-            var messageContext = context.AsMessageContext();
+            IServiceMessageContext messageContext = context.AsMessageContext();
 
             reader.MoveToContent();
 
@@ -4212,7 +4215,7 @@ namespace Opc.Ua
         /// <summary>
         /// Adds a child to the node.
         /// </summary>
-        public void AddChild(BaseInstanceState child)
+        public virtual void AddChild(BaseInstanceState child)
         {
             if (!ReferenceEquals(child.Parent, this))
             {
@@ -4276,7 +4279,7 @@ namespace Opc.Ua
         /// <summary>
         /// Removes a child from the node.
         /// </summary>
-        public void RemoveChild(BaseInstanceState child)
+        public virtual void RemoveChild(BaseInstanceState child)
         {
             lock (m_childrenLock)
             {

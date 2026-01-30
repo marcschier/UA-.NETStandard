@@ -451,11 +451,7 @@ namespace Opc.Ua.Schema.Model
             }
 
             if (node is VariableTypeDesign variableType &&
-                variableType.ClassName is
-                "DataVariable" or
-                "BaseVariable" or
-                "DataTypeDictionary" or
-                "DataTypeDescription")
+                variableType.ClassName is "DataVariable" or "BaseVariable")
             {
                 return "global::Opc.Ua.BaseDataVariable";
             }
@@ -1499,36 +1495,6 @@ namespace Opc.Ua.Schema.Model
             }
 
             return instance;
-        }
-
-        /// <summary>
-        /// Checks if the instance is a built in property that should not be generatd.
-        /// </summary>
-        public static bool IsBuiltInProperty(this InstanceDesign instance)
-        {
-            if (instance == null)
-            {
-                return true;
-            }
-
-            if (instance.Parent is MethodDesign)
-            {
-                if (instance.SymbolicName ==
-                    new XmlQualifiedName("InputArguments", Namespaces.OpcUa))
-                {
-                    return true;
-                }
-
-                if (instance.SymbolicName ==
-                    new XmlQualifiedName("OutputArguments", Namespaces.OpcUa))
-                {
-                    return true;
-                }
-            }
-
-            return instance.Parent is VariableDesign &&
-                instance.SymbolicName ==
-                    new XmlQualifiedName("EnumStrings", Namespaces.OpcUa);
         }
 
         /// <summary>

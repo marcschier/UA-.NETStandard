@@ -899,7 +899,7 @@ namespace Opc.Ua.Schema.Model
                     design.PartNo = 4;
                 }
 
-                m_logger.LogInformation(
+                m_logger.LogDebug(
                     "Imported {Type}: {Name}",
                     design.GetType().Name,
                     design.SymbolicId.Name);
@@ -2827,7 +2827,7 @@ namespace Opc.Ua.Schema.Model
             }
 
             m_nodes.Add(node.SymbolicId, node);
-            m_logger.LogInformation(
+            m_logger.LogDebug(
                 "Imported {Type}: {Name}",
                 node.GetType().Name,
                 node.SymbolicId.Name);
@@ -3320,7 +3320,7 @@ namespace Opc.Ua.Schema.Model
 
                 // add to table.
                 m_nodes.Add(encoding.SymbolicId, encoding);
-                m_logger.LogInformation(
+                m_logger.LogDebug(
                     "Imported {Type}: {Name}",
                     encoding.GetType().Name,
                     encoding.SymbolicId.Name);
@@ -3501,7 +3501,7 @@ namespace Opc.Ua.Schema.Model
                 "VariableType");
 
             m_nodes.Add(property.SymbolicId, property);
-            m_logger.LogInformation(
+            m_logger.LogDebug(
                 "Imported {Type}: {Name}",
                 property.GetType().Name,
                 property.SymbolicId.Name);
@@ -3628,7 +3628,7 @@ namespace Opc.Ua.Schema.Model
                     source.SymbolicId.Name);
             }
 
-            m_logger.LogInformation(
+            m_logger.LogDebug(
                 "Import Reference: {Source} => {Reference} => {Target}",
                 reference.SourceNode.SymbolicName.Name,
                 reference.ReferenceType.Name,
@@ -4974,7 +4974,7 @@ namespace Opc.Ua.Schema.Model
 
                         if (!inPath)
                         {
-                            m_logger.LogInformation(
+                            m_logger.LogDebug(
                                 "OverridingInstance: {Instance} : {Overridden}",
                                 instance.SymbolicId.Name,
                                 overriddenInstance.SymbolicId.Name);
@@ -5591,7 +5591,7 @@ namespace Opc.Ua.Schema.Model
 
         private Hierarchy BuildInstanceHierarchy(NodeDesign root, int depth)
         {
-            m_logger.LogInformation(
+            m_logger.LogDebug(
                 "Building InstanceHierarchy for {Name}",
                 root.SymbolicId.Name);
             if (depth > MaxRecursionDepth)

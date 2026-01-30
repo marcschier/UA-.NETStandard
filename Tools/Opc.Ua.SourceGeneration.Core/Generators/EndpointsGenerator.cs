@@ -68,14 +68,14 @@ namespace Opc.Ua.SourceGeneration
                 CoreUtils.Format("{0}.Endpoints.g.cs", Constants.CoreNamespacePrefix));
             using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
             using var templateWriter = new TemplateWriter(writer);
-            var template = new Template(templateWriter, CodeTemplates.Endpoints_File_cs);
+            var template = new Template(templateWriter, CodeTemplates.Endpoints_File);
 
             template.AddReplacement(Tokens.Prefix, Constants.CoreNamespacePrefix);
             template.AddReplacement(Tokens.Namespace, Constants.CoreNamespace);
 
             template.AddReplacement(
                 Tokens.ServiceSets,
-                CodeTemplates.Endpoints_ServiceSet_cs,
+                CodeTemplates.Endpoints_ServiceSet,
                 serviceSets,
                 WriteTemplate_EndpointServiceSet);
 
@@ -104,7 +104,7 @@ namespace Opc.Ua.SourceGeneration
 
             context.Template.AddReplacement(
                 Tokens.MethodList,
-                CodeTemplates.Endpoints_Method_cs,
+                CodeTemplates.Endpoints_Method,
                 datatypes,
                 WriteTemplate_EndpointMethod);
 

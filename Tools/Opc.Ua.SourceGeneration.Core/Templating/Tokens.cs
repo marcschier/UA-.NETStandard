@@ -69,6 +69,8 @@ namespace Opc.Ua.SourceGeneration
         public static string FieldName => nameof(FieldName);
         public static string FindChildMethods => nameof(FindChildMethods);
         public static string FindChildMethodsForType => nameof(FindChildMethodsForType);
+        public static string AddChildMethods => nameof(AddChildMethods);
+        public static string AddChildMethodsForType => nameof(AddChildMethodsForType);
         public static string Historizing => nameof(Historizing);
         public static string Identifier => nameof(Identifier);
         public static string IdType => nameof(IdType);
@@ -95,6 +97,7 @@ namespace Opc.Ua.SourceGeneration
         public static string ListOfEncodingMaskFieldNames => nameof(ListOfEncodingMaskFieldNames);
         public static string ListOfFieldsForType => nameof(ListOfFieldsForType);
         public static string ListOfFindChildCase => nameof(ListOfFindChildCase);
+        public static string ListOfAddChildCase = nameof(ListOfAddChildCase);
         public static string ListOfFindChildren => nameof(ListOfFindChildren);
         public static string ListOfIdentifiers => nameof(ListOfIdentifiers);
         public static string ListOfIdentifersToNames => nameof(ListOfIdentifersToNames);

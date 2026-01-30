@@ -56,7 +56,7 @@ namespace Opc.Ua.SourceGeneration
             using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
 
             using var templateWriter = new TemplateWriter(writer);
-            var template = new Template(templateWriter, CodeTemplates.Constants_File_cs);
+            var template = new Template(templateWriter, CodeTemplates.StatusCode_Attributes_File);
 
             template.AddReplacement(Tokens.Prefix, Constants.CoreNamespacePrefix);
             template.AddReplacement(Tokens.ClassName, "Attributes");
@@ -86,13 +86,13 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddReplacement(
                 Tokens.ListOfIdentifiers,
-                CodeTemplates.Constants_Constant_cs,
+                CodeTemplates.StatusCode_Attributes_Constant,
                 constants,
                 WriteTemplate_AttributeConstant);
 
             template.AddReplacement(
                 Tokens.IdentifierReflection,
-                CodeTemplates.Constants_Reflection_cs,
+                CodeTemplates.Identifiers_Reflection,
                 [constants],
                 WriteTemplate_ReflectionHelpers);
 

@@ -72,7 +72,7 @@ namespace Opc.Ua.SourceGeneration
             using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
 
             using var templateWriter = new TemplateWriter(writer);
-            var template = new Template(templateWriter, CodeTemplates.ConstantsFile_cs);
+            var template = new Template(templateWriter, CodeTemplates.Constants_File);
             template.AddReplacement(
                 Tokens.Namespace,
                 m_context.ModelDesign.TargetNamespace.Prefix);
@@ -83,13 +83,13 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddReplacement(
                 Tokens.ListOfNamespaceUris,
-                CodeTemplates.NamespaceUriStrings_cs,
+                CodeTemplates.Constants_NamespaceUri,
                 GetNamespaceUris(),
                 WriteTemplate_NamespaceUriStrings);
 
             template.AddReplacement(
                 Tokens.ListOfBrowseNames,
-                CodeTemplates.BrowseNames_cs,
+                CodeTemplates.Constants_BrowseName,
                 browseNames.ToArray(),
                 LoadTemplate_BrowseNames,
                 WriteTemplate_BrowseNames);
