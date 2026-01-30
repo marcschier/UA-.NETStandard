@@ -4,32 +4,30 @@
   "TargetXmlNamespace": "urn:opc-foundation.org:2024-01:DemoModel",
   "TargetVersion": "1.05.03",
   "TargetPublicationDate": "2023-12-15T00:00:00Z",
-  "Namespaces": {
-    "Namespaces": [
-      {
-        "Uri": "urn:opcfoundation.org:2024-01:DemoModel",
-        "Name": "DemoModel",
-        "Prefix": "DemoModel",
-        "XmlNamespace": "urn:opcfoundation.org:2024-01:DemoModelTypes.xsd",
-        "XmlPrefix": "DemoModel"
-      },
-      {
-        "Uri": "http://opcfoundation.org/UA/",
-        "Name": "OpcUa",
-        "Prefix": "Opc.Ua",
-        "InternalPrefix": "Opc.Ua.Server",
-        "XmlNamespace": "http://opcfoundation.org/UA/2008/02/Types.xsd",
-        "XmlPrefix": "OpcUa"
-      },
-      {
-        "Uri": "http://opcfoundation.org/UA/DI/",
-        "Name": "DI",
-        "Prefix": "Opc.Ua.Di",
-        "InternalPrefix": "Opc.Ua.Di.Server",
-        "XmlPrefix": "OpcUaDi"
-      }
-    ]
-  },
+  "Namespaces": [
+    {
+      "Uri": "urn:opcfoundation.org:2024-01:DemoModel",
+      "Name": "DemoModel",
+      "Prefix": "DemoModel",
+      "XmlNamespace": "urn:opcfoundation.org:2024-01:DemoModelTypes.xsd",
+      "XmlPrefix": "DemoModel"
+    },
+    {
+      "Uri": "http://opcfoundation.org/UA/",
+      "Name": "OpcUa",
+      "Prefix": "Opc.Ua",
+      "InternalPrefix": "Opc.Ua.Server",
+      "XmlNamespace": "http://opcfoundation.org/UA/2008/02/Types.xsd",
+      "XmlPrefix": "OpcUa"
+    },
+    {
+      "Uri": "http://opcfoundation.org/UA/DI/",
+      "Name": "DI",
+      "Prefix": "Opc.Ua.Di",
+      "InternalPrefix": "Opc.Ua.Di.Server",
+      "XmlPrefix": "OpcUaDi"
+    }
+  ],
   "PermissionSets": [
     {
       "Name": "AuthenticatedUserOnly",
