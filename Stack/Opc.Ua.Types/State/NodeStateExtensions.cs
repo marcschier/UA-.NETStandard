@@ -27,27 +27,43 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
-using System.IO;
-using System.Linq;
+using System.Collections.Generic;
 
 namespace Opc.Ua
 {
-    public partial class NodeState
+    /// <summary>
+    /// Node state extension methods
+    /// </summary>
+    public static class NodeStateExtensions
     {
         /// <summary>
-        /// The specification that defines the node.
+        /// Get all children
         /// </summary>
-        public string Specification { get; set; }
+        /// <param name="state"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public static IEnumerable<BaseInstanceState> EnumerateChildren(
+            this NodeState state,
+            SystemContext context)
+        {
+            List<BaseInstanceState> list = [];
+            state.GetChildren(context, list);
+            return list;
+        }
 
         /// <summary>
-        /// The documentation for the node that is saved in the NodeSet.
+        /// Get all references
         /// </summary>
-        public string NodeSetDocumentation { get; set; }
-
-        /// <summary>
-        /// The documentation for the node that is saved in the NodeSet.
-        /// </summary>
-        public bool DesignToolOnly { get; set; }
+        /// <param name="state"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public static IEnumerable<IReference> EnumerateReferences(
+            this NodeState state,
+            SystemContext context)
+        {
+            List<IReference> list = [];
+            state.GetReferences(context, list);
+            return list;
+        }
     }
 }

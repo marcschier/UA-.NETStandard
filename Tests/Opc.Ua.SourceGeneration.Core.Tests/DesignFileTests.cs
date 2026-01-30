@@ -33,7 +33,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Opc.Ua.SourceGeneration.Tests
+namespace Opc.Ua.SourceGeneration.Api.Tests
 {
     /// <summary>
     /// Unit tests for <see cref = "DesignFileExtensions"/> class.

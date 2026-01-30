@@ -727,7 +727,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         public void WriteTemplate_WithHelpersFileTemplate_RendersCorrectly()
         {
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.Helpers_File_cs;
+            TemplateString templateString = CodeTemplates.PredefinedNodes_File_cs;
             using (var templateWriter = new TemplateWriter(writer))
             {
                 var template = new Template(templateWriter, templateString);
@@ -743,7 +743,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
 
             Assert.That(result, Does.Contain("namespace My.Prefix"));
             Assert.That(result, Does.Contain("public static partial class MyNamespaceExtensions"));
-            Assert.That(result, Does.Contain("AddMyNamespace("));
+            Assert.That(result, Does.Contain("LoadMyNamespace("));
             Assert.That(result, Does.Contain("predefinedNodes.LoadFromBinary(context, stream, true);"));
         }
 

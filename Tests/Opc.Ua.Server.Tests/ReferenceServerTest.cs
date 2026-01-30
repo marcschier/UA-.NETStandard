@@ -970,7 +970,7 @@ namespace Opc.Ua.Server.Tests
                 m_requestHeader,
                 nodesToCall, CancellationToken.None).ConfigureAwait(false);
 
-            Assert.AreEqual(expectedStatus, callResponse.Results[0].StatusCode.Code);
+            Assert.AreEqual(expectedStatus, callResponse.Results[0].StatusCode);
             ServerFixtureUtils.ValidateResponse(callResponse.ResponseHeader, callResponse.Results, nodesToCall);
             ServerFixtureUtils.ValidateDiagnosticInfos(
                 callResponse.DiagnosticInfos,

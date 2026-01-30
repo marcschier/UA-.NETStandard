@@ -49,11 +49,19 @@ namespace Opc.Ua.SourceGeneration.Tester
 
             Generators.GenerateCode(new DesignFileCollection
             {
-                DesignFiles = [Path.Combine(Directory.GetCurrentDirectory(), "TestDataDesign.xml")],
-                IdentifierFilePath = Path.Combine(Directory.GetCurrentDirectory(), "TestDataDesign.csv"),
+                DesignFiles = [Path.Combine(Directory.GetCurrentDirectory(), "Resources", "TestDataDesign.xml")],
+                IdentifierFilePath = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "TestDataDesign.csv"),
                 Options = new DesignFileOptions()
             }, fs, output, new Telemetry(), embedNodeSet2Xml: true);
-            Console.WriteLine("Test design build completed.");
+            Console.WriteLine("TestData design build completed.");
+
+            Generators.GenerateCode(new DesignFileCollection
+            {
+                DesignFiles = [Path.Combine(Directory.GetCurrentDirectory(), "Resources", "DemoModel.xml")],
+                IdentifierFilePath = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "DemoModel.csv"),
+                Options = new DesignFileOptions()
+            }, fs, output, new Telemetry(), embedNodeSet2Xml: true);
+            Console.WriteLine("DemoModel design build completed.");
         }
 
         private sealed class Telemetry : TelemetryContextBase

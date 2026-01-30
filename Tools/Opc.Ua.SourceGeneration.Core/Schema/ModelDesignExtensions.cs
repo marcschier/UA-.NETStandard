@@ -28,6 +28,7 @@
  * ======================================================================*/
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -102,18 +103,17 @@ namespace Opc.Ua.Schema.Model
         /// <summary>
         /// Returns the class name to use when creating an instance of the type.
         /// </summary>
-        public static string GetClassName(
+        public static string GetNodeStateClassName(
             this InstanceDesign instance,
             string targetNamespace,
             Namespace[] namespaces)
         {
             if (instance is MethodDesign method)
             {
-                string className = method.SymbolicName.Name;
-
+                string className;
                 if (method.TypeDefinition != null)
                 {
-                    className = method.TypeDefinition.Name;
+                    className = method.TypeDefinition.AsFullyQualifiedTypeSymbol(namespaces);
 
                     if (className.EndsWith("MethodType", StringComparison.Ordinal))
                     {
@@ -124,21 +124,29 @@ namespace Opc.Ua.Schema.Model
                         className = className[..^"Type".Length];
                     }
                 }
-                if (className.EndsWith("MethodType", StringComparison.Ordinal))
+                else
                 {
-                    className = className[..^"MethodType".Length];
+                    className = method.SymbolicName.AsFullyQualifiedTypeSymbol(namespaces);
+
+                    if (className.EndsWith("MethodType", StringComparison.Ordinal))
+                    {
+                        className = className[..^"MethodType".Length];
+                    }
                 }
+
                 if (method.HasArguments)
                 {
                     return CoreUtils.Format("{0}MethodState", className);
                 }
 
-                return "MethodState";
+                return "global::Opc.Ua.MethodState";
             }
 
             if (instance is not VariableDesign variable)
             {
-                return CoreUtils.Format("{0}State", FixClassName(instance.TypeDefinitionNode));
+                return CoreUtils.Format(
+                    "{0}State",
+                    GetNodeStateClassName(instance.TypeDefinitionNode, namespaces));
             }
 
             var variableType = instance.TypeDefinitionNode as VariableTypeDesign;
@@ -147,13 +155,17 @@ namespace Opc.Ua.Schema.Model
             // need for a template parameter.
             if (variableType.DataTypeNode.IsTemplateParameterRequired(variableType.ValueRank))
             {
-                return CoreUtils.Format("{0}State", FixClassName(variableType));
+                return CoreUtils.Format(
+                    "{0}State",
+                    GetNodeStateClassName(variableType, namespaces));
             }
 
             // check if the variable instance did not restrict the datatype.
             if (!variable.DataTypeNode.IsTemplateParameterRequired(variable.ValueRank))
             {
-                return CoreUtils.Format("{0}State", FixClassName(variableType));
+                return CoreUtils.Format(
+                    "{0}State",
+                    GetNodeStateClassName(variableType, namespaces));
             }
 
             // instance restricted the datatype but the type did not not.
@@ -161,25 +173,33 @@ namespace Opc.Ua.Schema.Model
                 variable.DataTypeNode,
                 targetNamespace,
                 namespaces,
-                nullable: NullableAnnotation.NonNullable);
+                nullable: NullableAnnotation.NonNullable,
+                true);
 
             if (variable.ValueRank == ValueRank.Array)
             {
-                return CoreUtils.Format("{0}State<{1}[]>", FixClassName(variableType), scalarName);
+                return CoreUtils.Format(
+                    "{0}State<{1}[]>",
+                    GetNodeStateClassName(variableType, namespaces),
+                    scalarName);
             }
 
             if (IsIndeterminateType(variable))
             {
-                return $"{FixClassName(variableType)}State";
+                return $"{GetNodeStateClassName(variableType, namespaces)}State";
             }
 
             // add hack for TwoStateDiscreteType which always has to be bool.
-            if (variableType.SymbolicName == new XmlQualifiedName("TwoStateDiscreteType", Namespaces.OpcUa))
+            if (variableType.SymbolicName ==
+                new XmlQualifiedName("TwoStateDiscreteType", Namespaces.OpcUa))
             {
-                return $"{FixClassName(variableType)}State";
+                return $"{GetNodeStateClassName(variableType, namespaces)}State";
             }
 
-            return CoreUtils.Format("{0}State<{1}>", FixClassName(variableType), scalarName);
+            return CoreUtils.Format(
+                "{0}State<{1}>",
+                GetNodeStateClassName(variableType, namespaces),
+                scalarName);
         }
 
         /// <summary>
@@ -196,7 +216,7 @@ namespace Opc.Ua.Schema.Model
             if (type is not DataTypeDesign dataType ||
                 dataType.BaseTypeNode is not DataTypeDesign dtd)
             {
-                return type.BaseTypeNode.SymbolicName.Name;
+                return type.BaseTypeNode.GetNodeStateClassName(namespaces);
             }
 
             if (dtd.BasicDataType == BasicDataType.Structure)
@@ -204,8 +224,30 @@ namespace Opc.Ua.Schema.Model
                 return "global::Opc.Ua.IEncodeable";
             }
 
-            string ns = namespaces.GetNamespacePrefix(dtd.SymbolicId.Namespace);
-            return ns + "." + dtd.SymbolicName.Name;
+            return dtd.SymbolicName.AsFullyQualifiedTypeSymbol(namespaces);
+        }
+
+        /// <summary>
+        /// Fully qualify a symbol
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static string AsFullyQualifiedTypeSymbol(
+            this XmlQualifiedName symbol,
+            Namespace[] namespaces,
+            string alternativeName = null)
+        {
+            string name = alternativeName ?? symbol?.Name;
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentException("Symbol name is empty");
+            }
+            string ns = namespaces.GetNamespacePrefix(symbol?.Namespace);
+            if (string.IsNullOrEmpty(ns))
+            {
+                return name;
+            }
+            return CoreUtils.Format("global::{0}.{1}", ns, name);
         }
 
         /// <summary>
@@ -289,8 +331,8 @@ namespace Opc.Ua.Schema.Model
                 return false;
             }
 
-            string x = instance.GetMergedInstance().GetClassName(targetNamespace, namespaces);
-            string y = instance.OveriddenNode.GetClassName(targetNamespace, namespaces);
+            string x = instance.GetMergedInstance().GetNodeStateClassName(targetNamespace, namespaces);
+            string y = instance.OveriddenNode.GetNodeStateClassName(targetNamespace, namespaces);
 
             if (y.StartsWith("BaseDataVariableState<", StringComparison.Ordinal) &&
                 x.StartsWith("BaseDataVariableState<", StringComparison.Ordinal))
@@ -390,7 +432,7 @@ namespace Opc.Ua.Schema.Model
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="ArgumentException"></exception>
-        public static string FixClassName(this TypeDesign node)
+        public static string GetNodeStateClassName(this TypeDesign node, Namespace[] namespaces)
         {
             if (node is null)
             {
@@ -399,29 +441,31 @@ namespace Opc.Ua.Schema.Model
 
             if (node is DataTypeDesign)
             {
-                if (node.SymbolicId?.Name is not null)
-                {
-                    return node.SymbolicId.Name;
-                }
-                throw new ArgumentException("Symbolic Id is null");
+                return node.SymbolicName.AsFullyQualifiedTypeSymbol(namespaces);
             }
 
             if (node is ObjectTypeDesign objectType &&
                 objectType.ClassName == "ObjectSource")
             {
-                return "BaseObject";
+                return "global::Opc.Ua.BaseObject";
             }
 
             if (node is VariableTypeDesign variableType &&
-                variableType.ClassName == "DataVariable")
+                variableType.ClassName is
+                "DataVariable" or
+                "BaseVariable" or
+                "DataTypeDictionary" or
+                "DataTypeDescription")
             {
-                return "BaseDataVariable";
+                return "global::Opc.Ua.BaseDataVariable";
             }
-            if (node.ClassName is null)
+
+            if (!string.IsNullOrEmpty(node.ClassName))
             {
-                throw new ArgumentException("Class name is null");
+                return node.SymbolicName.AsFullyQualifiedTypeSymbol(
+                    namespaces, node.ClassName);
             }
-            return node.ClassName;
+            return node.SymbolicName.AsFullyQualifiedTypeSymbol(namespaces);
         }
 
         /// <summary>
@@ -555,18 +599,6 @@ namespace Opc.Ua.Schema.Model
         }
 
         /// <summary>
-        /// Maps the array dimensions onto a constant declaration.
-        /// </summary>
-        public static string GetArrayDimensionsString(this ValueRank valueRank, string arrayDimensions)
-        {
-            if (valueRank != ValueRank.OneOrMoreDimensions)
-            {
-                return "null";
-            }
-            return CoreUtils.Format("new uint[] {{{0}}}", arrayDimensions);
-        }
-
-        /// <summary>
         /// Maps the MinimumSamplingInterval onto a constant.
         /// </summary>
         public static string GetMinimumSamplingIntervalString(this VariableTypeDesign variableType)
@@ -661,7 +693,7 @@ namespace Opc.Ua.Schema.Model
         /// <summary>
         /// Whether a template parameter is required.
         /// </summary>
-        public static string GetDefaultDotNetValue(
+        public static string GetValueAsCode(
             this DataTypeDesign dataType,
             ValueRank valueRank,
             XmlElement defaultValue,
@@ -669,28 +701,10 @@ namespace Opc.Ua.Schema.Model
             bool useVariantForObject,
             string targetNamespace,
             Namespace[] namespaces,
-            IServiceMessageContext context)
+            IServiceMessageContext context,
+            Func<string> onUnknownElement = null,
+            bool dataTypeQuirk = false)
         {
-            if (valueRank == ValueRank.Array)
-            {
-                if (!useVariantForObject)
-                {
-                    return "default";
-                }
-                return CoreUtils.Format("new {0}()", GetDotNetTypeName(
-                    dataType,
-                    valueRank,
-                    targetNamespace,
-                    namespaces,
-                    nullable: NullableAnnotation.NonNullable));
-            }
-
-            if (dataType.BasicDataType == BasicDataType.BaseDataType ||
-                valueRank != ValueRank.Scalar)
-            {
-                return "default";
-            }
-
             TypeInfo decodedValueType = default;
 
             if (decodedValue == null && defaultValue != null)
@@ -699,6 +713,47 @@ namespace Opc.Ua.Schema.Model
                 decodedValue = decoder.ReadVariantContents(out decodedValueType);
             }
 
+            if (valueRank == ValueRank.Array)
+            {
+                return dataType.GetArrayValueAsCode(
+                    defaultValue,
+                    decodedValue,
+                    targetNamespace,
+                    namespaces,
+                    onUnknownElement);
+            }
+
+            if (valueRank == ValueRank.Scalar &&
+                dataType.BasicDataType != BasicDataType.BaseDataType)
+            {
+                return dataType.GetScalarValueAsCode(
+                    defaultValue,
+                    decodedValue,
+                    decodedValueType,
+                    useVariantForObject,
+                    targetNamespace,
+                    namespaces,
+                    onUnknownElement,
+                    dataTypeQuirk);
+            }
+
+            return onUnknownElement?.Invoke() ?? "default";
+        }
+
+        /// <summary>
+        /// Get default for a scalar type
+        /// </summary>
+        internal static string GetScalarValueAsCode(
+            this DataTypeDesign dataType,
+            XmlElement defaultValue,
+            object decodedValue,
+            TypeInfo decodedValueType,
+            bool useVariantForObject,
+            string targetNamespace,
+            Namespace[] namespaces,
+            Func<string> onUnknownElement = null,
+            bool dataTypeQuirk = false)
+        {
             switch (dataType.BasicDataType)
             {
                 case BasicDataType.Boolean:
@@ -706,6 +761,7 @@ namespace Opc.Ua.Schema.Model
                     {
                         boolValue = false;
                     }
+
                     // If decoded value was passed, but no type info, set to concrete
                     // type so that we correctly handle the default value below.
                     // Otherwise fall to the back compat path that inverts the value.
@@ -713,16 +769,15 @@ namespace Opc.Ua.Schema.Model
                     {
                         decodedValueType = TypeInfo.Scalars.Boolean;
                     }
-
-                    if (defaultValue != null &&
-                        decodedValueType == TypeInfo.Scalars.Boolean)
+                    if (dataTypeQuirk &&
+                        (defaultValue == null || decodedValueType != TypeInfo.Scalars.Boolean))
                     {
-                        return boolValue ? "true" : "false";
+                        // this is technically a bug but the potential for side effects is
+                        // so large that it is better to leave as is.
+                        return boolValue ? "false" : "true";
                     }
 
-                    // this is technically a bug but the potential for side effects is
-                    // so large that it is better to leave as is.
-                    return boolValue ? "false" : "true";
+                    return boolValue ? "true" : "false";
                 case BasicDataType.SByte:
                     if (decodedValue is not sbyte sbyteValue)
                     {
@@ -791,11 +846,7 @@ namespace Opc.Ua.Schema.Model
                     {
                         return "default";
                     }
-                    if (stringValue.Length == 0)
-                    {
-                        return "string.Empty";
-                    }
-                    return CoreUtils.Format("\"{0}\"", stringValue);
+                    return stringValue.AsStringLiteral();
                 case BasicDataType.DateTime:
                     if (decodedValue is not DateTime dateTimeValue ||
                         dateTimeValue == DateTime.MinValue)
@@ -870,9 +921,9 @@ namespace Opc.Ua.Schema.Model
                         return "default";
                     }
                     return CoreUtils.Format(
-                        "new global::Opc.Ua.LocalizedText(\"{0}\", \"{1}\")",
-                        localizedText.Locale,
-                        localizedText.Text);
+                        "new global::Opc.Ua.LocalizedText({0}, {1})",
+                        localizedText.Locale.AsStringLiteral(),
+                        localizedText.Text.AsStringLiteral());
                 case BasicDataType.StatusCode:
                     if (decodedValue is not StatusCode statusCode ||
                         statusCode.Code == 0)
@@ -881,33 +932,39 @@ namespace Opc.Ua.Schema.Model
                     }
                     return CoreUtils.Format("(StatusCode){0}", statusCode);
                 case BasicDataType.Enumeration:
-                    if (dataType.SymbolicId ==
-                        new XmlQualifiedName("Enumeration", Namespaces.OpcUa))
-                    {
-                        return "0";
-                    }
-                    if (dataType.BaseTypeNode.SymbolicId ==
+                    if (dataType.BaseTypeNode?.SymbolicId ==
                         new XmlQualifiedName("OptionSet", Namespaces.OpcUa))
                     {
-                        return $"new {dataType.SymbolicName.Name}()";
+                        return CoreUtils.Format("new {0}()",
+                            dataType.SymbolicName.AsFullyQualifiedTypeSymbol(namespaces));
                     }
-                    if (dataType.IsOptionSet)
+                    if (!dataType.IsOptionSet && dataType.Fields?.Length > 0)
                     {
-                        return "0";
+                        if (decodedValue is int enumValue)
+                        {
+                            return CoreUtils.Format("({0}){1}",
+                                dataType.SymbolicName.AsFullyQualifiedTypeSymbol(namespaces),
+                                enumValue);
+                        }
+                        if (decodedValue is null)
+                        {
+                            // Enum type declared - use first field as default
+                            return CoreUtils.Format("{0}.{1}",
+                                dataType.SymbolicName.AsFullyQualifiedTypeSymbol(namespaces),
+                                dataType.Fields[0].Name);
+                        }
+                        // TODO: change to initialize enum with the value
+                        return onUnknownElement?.Invoke() ?? "default";
                     }
-                    if (dataType.IsOptionSet)
-                    {
-                        return CoreUtils.Format("{0}.None", dataType.SymbolicName.Name);
-                    }
-                    return CoreUtils.Format(
-                        "{0}.{1}",
-                        dataType.SymbolicName.Name,
-                        dataType.Fields[0].Name);
+                    // Default to enum with value 0 which should be "none" for option set
+                    return onUnknownElement?.Invoke() ?? "default";
                 case BasicDataType.DataValue:
                     return "new global::Opc.Ua.DataValue()";
                 case BasicDataType.UserDefined:
-                    if (useVariantForObject)
+                    if (useVariantForObject && defaultValue == null)
                     {
+                        // Ensure a variant can be initialized correcty with
+                        // type info
                         return CoreUtils.Format(
                             "new {0}()",
                             GetDotNetTypeName(
@@ -917,16 +974,151 @@ namespace Opc.Ua.Schema.Model
                                 namespaces,
                                 nullable: NullableAnnotation.NonNullable));
                     }
-                    return "default";
+                    return onUnknownElement?.Invoke() ?? "default";
+                default:
+                    return onUnknownElement?.Invoke() ?? "default";
+            }
+        }
+
+        /// <summary>
+        /// Get default for a array type
+        /// </summary>
+        internal static string GetArrayValueAsCode(
+            this DataTypeDesign dataType,
+            XmlElement defaultValue,
+            object decodedValue,
+            string targetNamespace,
+            Namespace[] namespaces,
+            Func<string> onUnknownElement = null)
+        {
+            if ((decodedValue is not null &&
+                (decodedValue is not IList l || l.Count != 0) &&
+                (decodedValue is not Array a || a.Length != 0)) ||
+                (decodedValue is null && defaultValue is not null))
+            {
+                // TODO: change to initialize simple arrays with values
+                return onUnknownElement?.Invoke() ?? "default";
+            }
+            // Emit Array.Empty<T>() for empty arrays
+            switch (dataType.BasicDataType)
+            {
+                case BasicDataType.Boolean:
+                    return "global::System.Array.Empty<bool>()";
+                case BasicDataType.SByte:
+                    return "global::System.Array.Empty<sbyte>()";
+                case BasicDataType.Byte:
+                    return "global::System.Array.Empty<byte>()";
+                case BasicDataType.Int16:
+                    return "global::System.Array.Empty<short>()";
+                case BasicDataType.UInt16:
+                    return "global::System.Array.Empty<ushort>()";
+                case BasicDataType.Int32:
+                    return "global::System.Array.Empty<int>()";
+                case BasicDataType.UInt32:
+                    return "global::System.Array.Empty<uint>()";
+                case BasicDataType.Int64:
+                    return "global::System.Array.Empty<long>()";
+                case BasicDataType.UInt64:
+                    return "global::System.Array.Empty<ulong>()";
+                case BasicDataType.Float:
+                    return "global::System.Array.Empty<float>()";
+                case BasicDataType.Double:
+                    return "global::System.Array.Empty<double>()";
+                case BasicDataType.String:
+                    return "global::System.Array.Empty<string>()";
+                case BasicDataType.Guid:
+                    return "global::System.Array.Empty<global::Opc.Ua.Uuid>()";
+                case BasicDataType.DateTime:
+                    return "global::System.Array.Empty<global::System.DateTime>()";
+                case BasicDataType.ByteString:
+                    return "global::System.Array.Empty<byte[]>()";
+                case BasicDataType.XmlElement:
+                    return "global::System.Array.Empty<global::System.Xml.XmlElement>()";
+                case BasicDataType.NodeId:
+                    return "global::System.Array.Empty<global::Opc.Ua.NodeId>()";
+                case BasicDataType.ExpandedNodeId:
+                    return "global::System.Array.Empty<global::Opc.Ua.ExpandedNodeId>()";
+                case BasicDataType.QualifiedName:
+                    return "global::System.Array.Empty<global::Opc.Ua.QualifiedName>()";
+                case BasicDataType.LocalizedText:
+                    return "global::System.Array.Empty<global::Opc.Ua.LocalizedText>()";
+                case BasicDataType.StatusCode:
+                    return "global::System.Array.Empty<global::Opc.Ua.StatusCode>()";
+                case BasicDataType.DataValue:
+                    return "global::System.Array.Empty<global::Opc.Ua.DataValue>()";
+                case BasicDataType.Structure:
+                    return "global::System.Array.Empty<global::Opc.Ua.ExtensionObject>()";
+                case BasicDataType.Enumeration:
+                case BasicDataType.UserDefined:
+                    return CoreUtils.Format(
+                        "global::System.Array.Empty<{0}>()",
+                        GetDotNetTypeName(
+                            dataType,
+                            ValueRank.Scalar,
+                            targetNamespace,
+                            namespaces,
+                            nullable: NullableAnnotation.NonNullable));
+                case BasicDataType.DiagnosticInfo:
+                    return "global::System.Array.Empty<global::Opc.Ua.DiagnosticInfo>()";
+                case BasicDataType.Number:
+                case BasicDataType.Integer:
+                case BasicDataType.UInteger:
+                case BasicDataType.BaseDataType:
+                    return "global::System.Array.Empty<global::Opc.Ua.Variant>()";
                 default:
                     return "default";
             }
         }
 
         /// <summary>
+        /// Get code string to load a variant from XML resource stream.
+        /// </summary>
+        /// <param name="dataType"></param>
+        /// <param name="valueRank"></param>
+        /// <param name="targetNamespace"></param>
+        /// <param name="namespaces"></param>
+        /// <param name="xmlStreamResource"></param>
+        /// <returns></returns>
+        public static string GetVariantFromXmlCode(
+            this DataTypeDesign dataType,
+            ValueRank valueRank,
+            string targetNamespace,
+            Namespace[] namespaces,
+            string xmlStreamResource)
+        {
+            switch (dataType.BasicDataType)
+            {
+                case BasicDataType.BaseDataType:
+                    return CoreUtils.Format(
+                        "global::Opc.Ua.Variant.FromXml({0}AsStream, context)",
+                        xmlStreamResource);
+                case BasicDataType.UserDefined:
+                case BasicDataType.Structure:
+                case BasicDataType.Enumeration:
+                    string dataTypeString = dataType.GetDotNetTypeName(
+                        targetNamespace,
+                        namespaces,
+                        NullableAnnotation.NonNullable,
+                        false);
+                    return CoreUtils.Format(
+                        "global::Opc.Ua.Variant.FromXml({0}AsStream, context).Get{1}{2}<{3}>()",
+                        xmlStreamResource,
+                        dataType.BasicDataType == BasicDataType.Enumeration ? "Enumeration" : "Structure",
+                        valueRank == ValueRank.Array ? "Array" : string.Empty,
+                        dataTypeString);
+                default:
+                    return CoreUtils.Format(
+                        "global::Opc.Ua.Variant.FromXml({0}AsStream, context).Get{1}{2}()",
+                        xmlStreamResource,
+                        dataType.BasicDataType.ToString(),
+                        valueRank == ValueRank.Array ? "Array" : string.Empty);
+            }
+        }
+
+        /// <summary>
         /// Returns the data type for a method argument.
         /// </summary>
-        public static string GetMethodArgumentDotNetType(
+        public static string GetMethodArgumentTypeAsCode(
             this DataTypeDesign datatype,
             ValueRank valueRank,
             string targetNamespace,
@@ -937,7 +1129,8 @@ namespace Opc.Ua.Schema.Model
                 datatype,
                 targetNamespace,
                 namespaces,
-                nullable: isOptional ? NullableAnnotation.Nullable : NullableAnnotation.NonNullable);
+                nullable: isOptional ? NullableAnnotation.Nullable : NullableAnnotation.NonNullable,
+                false); // Use raw arguments
 
             if (typeName is "global::Opc.Ua.IEncodeable" or "global::Opc.Ua.IEncodeable?")
             {
@@ -996,7 +1189,8 @@ namespace Opc.Ua.Schema.Model
             this DataTypeDesign datatype,
             string targetNamespace,
             Namespace[] namespaces,
-            NullableAnnotation nullable = NullableAnnotation.NonNullable)
+            NullableAnnotation nullable = NullableAnnotation.NonNullable,
+            bool useBuiltInWrapperTypes = false)
         {
             switch (datatype.BasicDataType)
             {
@@ -1023,13 +1217,17 @@ namespace Opc.Ua.Schema.Model
                 case BasicDataType.Double:
                     return "double";
                 case BasicDataType.String:
-                    return nullable == NullableAnnotation.NonNullable ? "string" : "string?";
+                    return nullable == NullableAnnotation.NonNullable ?
+                        "string" :
+                        "string?";
                 case BasicDataType.DateTime:
                     return "global::System.DateTime";
                 case BasicDataType.Guid:
                     return "global::Opc.Ua.Uuid";
                 case BasicDataType.ByteString:
-                    return nullable == NullableAnnotation.NonNullable ? "byte[]" : "byte[]?";
+                    return nullable == NullableAnnotation.NonNullable ?
+                        "byte[]" :
+                        "byte[]?";
                 case BasicDataType.XmlElement:
                     return "global::System.Xml.XmlElement";
                 case BasicDataType.NodeId:
@@ -1039,7 +1237,9 @@ namespace Opc.Ua.Schema.Model
                 case BasicDataType.StatusCode:
                     return "global::Opc.Ua.StatusCode";
                 case BasicDataType.DiagnosticInfo:
-                    return nullable == NullableAnnotation.NonNullable ? "global::Opc.Ua.DiagnosticInfo" : "global::Opc.Ua.DiagnosticInfo?";
+                    return nullable == NullableAnnotation.NonNullable ?
+                        "global::Opc.Ua.DiagnosticInfo" :
+                        "global::Opc.Ua.DiagnosticInfo?";
                 case BasicDataType.QualifiedName:
                     return "global::Opc.Ua.QualifiedName";
                 case BasicDataType.LocalizedText:
@@ -1047,6 +1247,12 @@ namespace Opc.Ua.Schema.Model
                 case BasicDataType.DataValue:
                     return "global::Opc.Ua.DataValue";
                 case BasicDataType.Structure:
+                    if (!useBuiltInWrapperTypes)
+                    {
+                        // return nullable == NullableAnnotation.NonNullable ?
+                        //     "global::Opc.Ua.IEncodeable" :
+                        //     "global::Opc.Ua.IEncodeable?";
+                    }
                     return "global::Opc.Ua.ExtensionObject";
                 case BasicDataType.Enumeration:
                     if (datatype.SymbolicId ==
@@ -1061,26 +1267,12 @@ namespace Opc.Ua.Schema.Model
                             (DataTypeDesign)datatype.BaseTypeNode,
                             targetNamespace,
                             namespaces,
-                            nullable); // Should it always be non nullable?
+                            nullable,  // Should it always be non nullable?
+                            useBuiltInWrapperTypes);
                     }
-                    return datatype.SymbolicName.Name;
+                    return datatype.SymbolicName.AsFullyQualifiedTypeSymbol(namespaces);
                 case BasicDataType.UserDefined:
-                    string typeName;
-                    if (datatype.SymbolicId.Namespace != targetNamespace)
-                    {
-                        Namespace ns = namespaces
-                            .FirstOrDefault(x => x.Value == datatype.SymbolicId.Namespace);
-                        if (string.IsNullOrWhiteSpace(ns?.Prefix))
-                        {
-                            throw new ArgumentException(
-                                $"Namespace {datatype.SymbolicId.Namespace} cannot be resolved");
-                        }
-                        typeName = $"{ns.Prefix}.{datatype.SymbolicName.Name}";
-                    }
-                    else
-                    {
-                        typeName = datatype.SymbolicName.Name;
-                    }
+                    string typeName = datatype.SymbolicName.AsFullyQualifiedTypeSymbol(namespaces);
                     if (datatype.IsEnumeration)
                     {
                         return typeName;
@@ -1089,139 +1281,150 @@ namespace Opc.Ua.Schema.Model
                     // is passed therefore we want to maintain non nullability no matter
                     return nullable != NullableAnnotation.Nullable ? typeName : typeName + "?";
             }
-            return nullable == NullableAnnotation.NonNullable ? "object" : "object?";
+            if (!useBuiltInWrapperTypes)
+            {
+                return nullable == NullableAnnotation.NonNullable ? "object" : "object?";
+            }
+            return "global::Opc.Ua.Variant";
         }
 
         /// <summary>
-        /// Returns system type for a basic data type.
+        /// Returns the type name for the data type with the provided value rank.
         /// </summary>
         public static string GetDotNetTypeName(
-            this DataTypeDesign datatype,
+            this DataTypeDesign dataType,
             ValueRank valueRank,
             string targetNamespace,
             Namespace[] namespaces,
-            NullableAnnotation nullable = NullableAnnotation.NonNullable)
+            NullableAnnotation nullable = NullableAnnotation.NonNullable,
+            bool useArrayTypeInsteadOfCollection = false)
         {
             if (valueRank == ValueRank.Scalar)
             {
-                string typeName = GetDotNetTypeName(
-                    datatype,
+                return GetDotNetTypeName(
+                    dataType,
                     targetNamespace,
                     namespaces,
-                    nullable);
-
-                if (typeName is
-                    "object" or
-                    "object?")
-                {
-                    return "global::Opc.Ua.Variant";
-                }
-
-                if (typeName is
-                    "global::Opc.Ua.IEncodeable" or
-                    "global::Opc.Ua.IEncodeable?")
-                {
-                    return "global::Opc.Ua.ExtensionObject";
-                }
-
-                return typeName;
+                    nullable,
+                    true);
             }
 
             if (valueRank == ValueRank.Array)
             {
-                string typeName = GetCollectionTypeName();
+                // Leave collections always non nullable even though they can
+                // serialized as null value. But properties are always init
+                // as collection never null
+                // return !nullable ? typeName : typeName + "?";
+                if (!useArrayTypeInsteadOfCollection)
+                {
+                    string collectionType = GetCollectionType();
+                    if (collectionType != null)
+                    {
+                        return collectionType;
+                    }
+                }
+                string typeName = GetDotNetTypeName(
+                    dataType,
+                    targetNamespace,
+                    namespaces,
+                    nullable,
+                    true);
                 if (typeName != null)
                 {
-                    // Leave collections always non nullable even though they can
-                    // serialized as null value. But properties are always init
-                    // as collection never null
-                    // return !nullable ? typeName : typeName + "?";
-                    return typeName;
-                }
-
-                string GetCollectionTypeName()
-                {
-                    switch (datatype.BasicDataType)
-                    {
-                        case BasicDataType.Boolean:
-                            return "global::Opc.Ua.BooleanCollection";
-                        case BasicDataType.SByte:
-                            return "global::Opc.Ua.SByteCollection";
-                        case BasicDataType.Byte:
-                            return "global::Opc.Ua.ByteCollection";
-                        case BasicDataType.Int16:
-                            return "global::Opc.Ua.Int16Collection";
-                        case BasicDataType.UInt16:
-                            return "global::Opc.Ua.UInt16Collection";
-                        case BasicDataType.Int32:
-                            return "global::Opc.Ua.Int32Collection";
-                        case BasicDataType.UInt32:
-                            return "global::Opc.Ua.UInt32Collection";
-                        case BasicDataType.Int64:
-                            return "global::Opc.Ua.Int64Collection";
-                        case BasicDataType.UInt64:
-                            return "global::Opc.Ua.UInt64Collection";
-                        case BasicDataType.Float:
-                            return "global::Opc.Ua.FloatCollection";
-                        case BasicDataType.Double:
-                            return "global::Opc.Ua.DoubleCollection";
-                        case BasicDataType.String:
-                            return "global::Opc.Ua.StringCollection";
-                        case BasicDataType.DateTime:
-                            return "global::Opc.Ua.DateTimeCollection";
-                        case BasicDataType.Guid:
-                            return "global::Opc.Ua.UuidCollection";
-                        case BasicDataType.ByteString:
-                            return "global::Opc.Ua.ByteStringCollection";
-                        case BasicDataType.XmlElement:
-                            return "global::Opc.Ua.XmlElementCollection";
-                        case BasicDataType.NodeId:
-                            return "global::Opc.Ua.NodeIdCollection";
-                        case BasicDataType.ExpandedNodeId:
-                            return "global::Opc.Ua.ExpandedNodeIdCollection";
-                        case BasicDataType.StatusCode:
-                            return "global::Opc.Ua.StatusCodeCollection";
-                        case BasicDataType.DiagnosticInfo:
-                            return "global::Opc.Ua.DiagnosticInfoCollection";
-                        case BasicDataType.QualifiedName:
-                            return "global::Opc.Ua.QualifiedNameCollection";
-                        case BasicDataType.LocalizedText:
-                            return "global::Opc.Ua.LocalizedTextCollection";
-                        case BasicDataType.DataValue:
-                            return "global::Opc.Ua.DataValueCollection";
-                        case BasicDataType.Number:
-                        case BasicDataType.Integer:
-                        case BasicDataType.UInteger:
-                        case BasicDataType.BaseDataType:
-                            return "global::Opc.Ua.VariantCollection";
-                        case BasicDataType.Structure:
-                            return "global::Opc.Ua.ExtensionObjectCollection";
-                        case BasicDataType.Enumeration:
-                            if (datatype.SymbolicId ==
-                                new XmlQualifiedName("Enumeration", Namespaces.OpcUa))
-                            {
-                                return "global::Opc.Ua.Int32Collection";
-                            }
-
-                            if (datatype.IsOptionSet ||
-                                datatype.BaseType !=
-                                    new XmlQualifiedName("Enumeration", Namespaces.OpcUa))
-                            {
-                                return GetDotNetTypeName(
-                                    (DataTypeDesign)datatype.BaseTypeNode,
-                                    valueRank,
-                                    targetNamespace,
-                                    namespaces,
-                                    nullable: NullableAnnotation.NonNullable);
-                            }
-                            return datatype.SymbolicName.Name + "Collection";
-                        case BasicDataType.UserDefined:
-                            return datatype.SymbolicName.Name + "Collection";
-                    }
-                    return null; // Default to variant
+                    return CoreUtils.Format("{0}[]", typeName);
                 }
             }
-            return "Variant";
+
+            return "global::Opc.Ua.Variant";
+
+            string GetCollectionType()
+            {
+                switch (dataType.BasicDataType)
+                {
+                    case BasicDataType.Boolean:
+                        return "global::Opc.Ua.BooleanCollection";
+                    case BasicDataType.SByte:
+                        return "global::Opc.Ua.SByteCollection";
+                    case BasicDataType.Byte:
+                        return "global::Opc.Ua.ByteCollection";
+                    case BasicDataType.Int16:
+                        return "global::Opc.Ua.Int16Collection";
+                    case BasicDataType.UInt16:
+                        return "global::Opc.Ua.UInt16Collection";
+                    case BasicDataType.Int32:
+                        return "global::Opc.Ua.Int32Collection";
+                    case BasicDataType.UInt32:
+                        return "global::Opc.Ua.UInt32Collection";
+                    case BasicDataType.Int64:
+                        return "global::Opc.Ua.Int64Collection";
+                    case BasicDataType.UInt64:
+                        return "global::Opc.Ua.UInt64Collection";
+                    case BasicDataType.Float:
+                        return "global::Opc.Ua.FloatCollection";
+                    case BasicDataType.Double:
+                        return "global::Opc.Ua.DoubleCollection";
+                    case BasicDataType.String:
+                        return "global::Opc.Ua.StringCollection";
+                    case BasicDataType.DateTime:
+                        return "global::Opc.Ua.DateTimeCollection";
+                    case BasicDataType.Guid:
+                        return "global::Opc.Ua.UuidCollection";
+                    case BasicDataType.ByteString:
+                        return "global::Opc.Ua.ByteStringCollection";
+                    case BasicDataType.XmlElement:
+                        return "global::Opc.Ua.XmlElementCollection";
+                    case BasicDataType.NodeId:
+                        return "global::Opc.Ua.NodeIdCollection";
+                    case BasicDataType.ExpandedNodeId:
+                        return "global::Opc.Ua.ExpandedNodeIdCollection";
+                    case BasicDataType.StatusCode:
+                        return "global::Opc.Ua.StatusCodeCollection";
+                    case BasicDataType.DiagnosticInfo:
+                        return "global::Opc.Ua.DiagnosticInfoCollection";
+                    case BasicDataType.QualifiedName:
+                        return "global::Opc.Ua.QualifiedNameCollection";
+                    case BasicDataType.LocalizedText:
+                        return "global::Opc.Ua.LocalizedTextCollection";
+                    case BasicDataType.DataValue:
+                        return "global::Opc.Ua.DataValueCollection";
+                    case BasicDataType.Number:
+                    case BasicDataType.Integer:
+                    case BasicDataType.UInteger:
+                    case BasicDataType.BaseDataType:
+                        return "global::Opc.Ua.VariantCollection";
+                    case BasicDataType.Structure:
+                        return "global::Opc.Ua.ExtensionObjectCollection";
+                    case BasicDataType.Enumeration:
+                        if (dataType.SymbolicId ==
+                            new XmlQualifiedName("Enumeration", Namespaces.OpcUa))
+                        {
+                            return "global::Opc.Ua.Int32Collection";
+                        }
+
+                        if (dataType.IsOptionSet ||
+                            dataType.BaseType !=
+                                new XmlQualifiedName("Enumeration", Namespaces.OpcUa))
+                        {
+                            return GetDotNetTypeName(
+                                (DataTypeDesign)dataType.BaseTypeNode,
+                                valueRank,
+                                targetNamespace,
+                                namespaces,
+                                nullable: NullableAnnotation.NonNullable);
+                        }
+                        goto case BasicDataType.UserDefined;
+                    case BasicDataType.UserDefined:
+                        if (!dataType.NoArraysAllowed)
+                        {
+                            return CoreUtils.Format("{0}Collection",
+                                dataType.SymbolicName.AsFullyQualifiedTypeSymbol(namespaces));
+                        }
+                        // No collection type generate, return null to fallback to array
+                        break;
+
+                }
+                return null; // Default to variant
+            }
         }
 
         /// <summary>
@@ -1846,6 +2049,26 @@ namespace Opc.Ua.Schema.Model
             };
         }
 
+        public static string GetLocalizedTextAsCode(this string localizedText)
+        {
+            return GetLocalizedTextAsCode(new LocalizedText
+            {
+                Value = localizedText
+            }, noAutoGen: false);
+        }
+
+        public static string GetLocalizedTextAsCode(this LocalizedText localizedText, bool noAutoGen = false)
+        {
+            if (localizedText?.Value != null && (!noAutoGen || !localizedText.IsAutogenerated))
+            {
+                return CoreUtils.Format(
+                    "new global::Opc.Ua.LocalizedText({0}, string.Empty, {1})",
+                    localizedText.Key.AsStringLiteral(),
+                    localizedText.Value.Trim().AsStringLiteral());
+            }
+            return "global::Opc.Ua.LocalizedText.Null";
+        }
+
         /// <summary>
         /// Maps the array dimensions onto code that creates the array.
         /// </summary>
@@ -1860,24 +2083,28 @@ namespace Opc.Ua.Schema.Model
             {
                 if (valueRank == ValueRank.Array)
                 {
-                    return "new global::Opc.Ua.ReadOnlyList<uint>(new uint[] { 0 })";
+                    return "new uint[] { 0 }";
                 }
 
                 return null;
             }
 
-            string[] tokens = arrayDimensions.Split([','], StringSplitOptions.RemoveEmptyEntries);
+            var tokens = arrayDimensions
+                .Split([','], StringSplitOptions.RemoveEmptyEntries)
+                .Select(t => t.Trim())
+                .Where(t => t.Length > 0)
+                .ToList();
 
-            if (tokens == null || tokens.Length < 1)
+            if (tokens.Count == 0)
             {
                 return null;
             }
 
             return CoreUtils.Format(
-                "new global::Opc.Ua.ReadOnlyList<uint>(new uint[] {{ {0} }})",
+                "new uint[] {{ {0} }}",
                 string.Join(", ", tokens.Select(t =>
                 {
-                    if (uint.TryParse(t.Trim(), out uint val))
+                    if (uint.TryParse(t, out uint val))
                     {
                         return val.ToString(CultureInfo.InvariantCulture);
                     }
@@ -1885,17 +2112,45 @@ namespace Opc.Ua.Schema.Model
                 })));
         }
 
-        public static string GetAccessRestrictionsAsCode(this AccessRestrictions restrictions)
+        public static string GetAccessRestrictionsAsCode(
+            this AccessRestrictions restrictions,
+            bool restrictionsSpecified)
         {
+            if (!restrictionsSpecified)
+            {
+                return null;
+            }
             return restrictions switch
             {
-                AccessRestrictions.SigningRequired => "global::Opc.Ua.AccessRestrictionType.SigningRequired",
-                AccessRestrictions.EncryptionRequired => "global::Opc.Ua.AccessRestrictionType.EncryptionRequired",
-                AccessRestrictions.SessionRequired => "global::Opc.Ua.AccessRestrictionType.SessionRequired",
+                AccessRestrictions.SigningRequired =>
+                    "global::Opc.Ua.AccessRestrictionType.SigningRequired",
+                AccessRestrictions.EncryptionRequired =>
+                    "global::Opc.Ua.AccessRestrictionType.EncryptionRequired",
+                AccessRestrictions.SessionRequired =>
+                    "global::Opc.Ua.AccessRestrictionType.SessionRequired",
                 AccessRestrictions.SessionWithSigningRequired =>
-                    "global::Opc.Ua.AccessRestrictionType.SigningRequired | global::Opc.Ua.AccessRestrictionType.SessionRequired",
+                    "global::Opc.Ua.AccessRestrictionType.SigningRequired | " +
+                    "global::Opc.Ua.AccessRestrictionType.SessionRequired",
                 AccessRestrictions.SessionWithEncryptionRequired =>
-                    "global::Opc.Ua.AccessRestrictionType.EncryptionRequired | global::Opc.Ua.AccessRestrictionType.SessionRequired",
+                    "global::Opc.Ua.AccessRestrictionType.EncryptionRequired | " +
+                    "global::Opc.Ua.AccessRestrictionType.SessionRequired",
+                AccessRestrictions.SigningAndApplyToBrowseRequired =>
+                    "global::Opc.Ua.AccessRestrictionType.SigningRequired | " +
+                    "global::Opc.Ua.AccessRestrictionType.ApplyRestrictionsToBrowse",
+                AccessRestrictions.EncryptionAndApplyToBrowseRequired =>
+                    "global::Opc.Ua.AccessRestrictionType.EncryptionRequired | " +
+                    "global::Opc.Ua.AccessRestrictionType.ApplyRestrictionsToBrowse",
+                AccessRestrictions.SessionAndApplyToBrowseRequired =>
+                    "global::Opc.Ua.AccessRestrictionType.SessionRequired | " +
+                    "global::Opc.Ua.AccessRestrictionType.ApplyRestrictionsToBrowse",
+                AccessRestrictions.SessionWithSigningAndApplyToBrowseRequired =>
+                    "global::Opc.Ua.AccessRestrictionType.SigningRequired | " +
+                    "global::Opc.Ua.AccessRestrictionType.SessionRequired | " +
+                    "global::Opc.Ua.AccessRestrictionType.ApplyRestrictionsToBrowse",
+                AccessRestrictions.SessionWithEncryptionAndApplyToBrowseRequired =>
+                    "global::Opc.Ua.AccessRestrictionType.EncryptionRequired | " +
+                    "global::Opc.Ua.AccessRestrictionType.SessionRequired | " +
+                    "global::Opc.Ua.AccessRestrictionType.ApplyRestrictionsToBrowse",
                 _ => null
             };
         }
@@ -1907,28 +2162,79 @@ namespace Opc.Ua.Schema.Model
                 return "global::Opc.Ua.PermissionType.None";
             }
 
-            var parts = new List<string>();
+            var parts = new HashSet<string>();
             foreach (Permissions p in permissions)
+            {
+                switch (p)
+                {
+                    case Permissions.All:
+                        AddPermissionStrings(Permissions.WriteAttribute, parts);
+                        AddPermissionStrings(Permissions.WriteRolePermissions, parts);
+                        AddPermissionStrings(Permissions.WriteHistorizing, parts);
+                        AddPermissionStrings(Permissions.Write, parts);
+                        AddPermissionStrings(Permissions.InsertHistory, parts);
+                        AddPermissionStrings(Permissions.ModifyHistory, parts);
+                        AddPermissionStrings(Permissions.DeleteHistory, parts);
+                        AddPermissionStrings(Permissions.Call, parts);
+                        AddPermissionStrings(Permissions.AddReference, parts);
+                        AddPermissionStrings(Permissions.RemoveReference, parts);
+                        AddPermissionStrings(Permissions.DeleteNode, parts);
+                        AddPermissionStrings(Permissions.AddNode, parts);
+                        goto case Permissions.AllRead;
+                    case Permissions.AllRead:
+                        AddPermissionStrings(Permissions.Browse, parts);
+                        AddPermissionStrings(Permissions.Read, parts);
+                        AddPermissionStrings(Permissions.ReadHistory, parts);
+                        AddPermissionStrings(Permissions.ReceiveEvents, parts);
+                        AddPermissionStrings(Permissions.ReadRolePermissions, parts);
+                        break;
+                    default:
+                        AddPermissionStrings(p, parts);
+                        break;
+                }
+            }
+            return parts.Count > 0 ?
+                string.Join(" | ", parts) :
+                "global::Opc.Ua.PermissionType.None";
+
+            static void AddPermissionStrings(Permissions p, HashSet<string> parts)
             {
                 string part = p switch
                 {
-                    Permissions.Browse => "global::Opc.Ua.PermissionType.Browse",
-                    Permissions.Read => "global::Opc.Ua.PermissionType.Read",
-                    Permissions.Write => "global::Opc.Ua.PermissionType.Write",
-                    Permissions.Call => "global::Opc.Ua.PermissionType.Call",
-                    Permissions.ReadHistory => "global::Opc.Ua.PermissionType.ReadHistory",
-                    Permissions.InsertHistory => "global::Opc.Ua.PermissionType.InsertHistory",
-                    Permissions.ModifyHistory => "global::Opc.Ua.PermissionType.ModifyHistory",
-                    Permissions.DeleteHistory => "global::Opc.Ua.PermissionType.DeleteHistory",
-                    Permissions.ReceiveEvents => "global::Opc.Ua.PermissionType.ReceiveEvents",
-                    Permissions.AddNode => "global::Opc.Ua.PermissionType.AddNode",
-                    Permissions.DeleteNode => "global::Opc.Ua.PermissionType.DeleteNode",
-                    Permissions.AddReference => "global::Opc.Ua.PermissionType.AddReference",
-                    Permissions.RemoveReference => "global::Opc.Ua.PermissionType.RemoveReference",
-                    Permissions.ReadRolePermissions => "global::Opc.Ua.PermissionType.ReadRolePermissions",
-                    Permissions.WriteRolePermissions => "global::Opc.Ua.PermissionType.WriteRolePermissions",
-                    Permissions.WriteAttribute => "global::Opc.Ua.PermissionType.WriteAttribute",
-                    Permissions.WriteHistorizing => "global::Opc.Ua.PermissionType.WriteHistorizing",
+                    Permissions.Browse =>
+                        "global::Opc.Ua.PermissionType.Browse",
+                    Permissions.Read =>
+                        "global::Opc.Ua.PermissionType.Read",
+                    Permissions.Write =>
+                        "global::Opc.Ua.PermissionType.Write",
+                    Permissions.Call =>
+                        "global::Opc.Ua.PermissionType.Call",
+                    Permissions.ReadHistory =>
+                        "global::Opc.Ua.PermissionType.ReadHistory",
+                    Permissions.InsertHistory =>
+                        "global::Opc.Ua.PermissionType.InsertHistory",
+                    Permissions.ModifyHistory =>
+                        "global::Opc.Ua.PermissionType.ModifyHistory",
+                    Permissions.DeleteHistory =>
+                        "global::Opc.Ua.PermissionType.DeleteHistory",
+                    Permissions.ReceiveEvents =>
+                        "global::Opc.Ua.PermissionType.ReceiveEvents",
+                    Permissions.AddNode =>
+                        "global::Opc.Ua.PermissionType.AddNode",
+                    Permissions.DeleteNode =>
+                        "global::Opc.Ua.PermissionType.DeleteNode",
+                    Permissions.AddReference =>
+                        "global::Opc.Ua.PermissionType.AddReference",
+                    Permissions.RemoveReference =>
+                        "global::Opc.Ua.PermissionType.RemoveReference",
+                    Permissions.ReadRolePermissions =>
+                        "global::Opc.Ua.PermissionType.ReadRolePermissions",
+                    Permissions.WriteRolePermissions =>
+                        "global::Opc.Ua.PermissionType.WriteRolePermissions",
+                    Permissions.WriteAttribute =>
+                        "global::Opc.Ua.PermissionType.WriteAttribute",
+                    Permissions.WriteHistorizing =>
+                        "global::Opc.Ua.PermissionType.WriteHistorizing",
                     _ => null
                 };
                 if (part != null)
@@ -1936,8 +2242,136 @@ namespace Opc.Ua.Schema.Model
                     parts.Add(part);
                 }
             }
+        }
 
-            return parts.Count > 0 ? string.Join(" | ", parts) : "global::Opc.Ua.PermissionType.None";
+        public static string GetNodeIdConstant(
+            this NodeDesign node,
+            Namespace[] namespaces,
+            string namespaceTableVariable)
+        {
+            string identifier;
+            if (node == null)
+            {
+                return "global::Opc.Ua.NodeId.Null";
+            }
+            if (node.NumericIdSpecified)
+            {
+                identifier = CoreUtils.Format("{0}u", node.NumericId);
+            }
+            else if (!string.IsNullOrEmpty(node.StringId))
+            {
+                identifier = node.StringId.AsStringLiteral();
+            }
+            else
+            {
+                identifier = null;
+                for (NodeDesign parent = node.Parent; parent != null; parent = parent.Parent)
+                {
+                    if (parent.Hierarchy == null)
+                    {
+                        continue;
+                    }
+                    string browsePath = node.SymbolicId.Name;
+                    string parentPath = parent.SymbolicId.Name;
+                    if (browsePath.StartsWith(parentPath, StringComparison.InvariantCulture) &&
+                        browsePath[parentPath.Length] == NodeDesign.PathChar)
+                    {
+                        browsePath = browsePath.Substring(parentPath.Length + 1);
+                    }
+
+                    if (parent.Hierarchy.Nodes.TryGetValue(browsePath, out HierarchyNode instance) &&
+                        instance.Instance.NumericId != 0)
+                    {
+                        identifier = CoreUtils.Format("{0}u", instance.Instance.NumericId);
+                        break;
+                    }
+                }
+                if (identifier == null)
+                {
+                    if (string.IsNullOrEmpty(node.SymbolicId.Name))
+                    {
+                        return "global::Opc.Ua.NodeId.Null";
+                    }
+                    identifier = node.SymbolicId.Name.AsStringLiteral();
+                }
+            }
+            return CoreUtils.Format(
+                "global::Opc.Ua.NodeId.Create({0}, {1}, {2})",
+                identifier,
+                namespaces.GetConstantSymbolForNamespace(
+                    node.SymbolicId.Namespace),
+                namespaceTableVariable);
+        }
+
+        public static string GetNodeIdConstant(
+            this IModelDesign design,
+            XmlQualifiedName symbolidId,
+            string type,
+            string namespaceTableVariable)
+        {
+            if (symbolidId == null)
+            {
+                return "global::Opc.Ua.NodeId.Null";
+            }
+
+            NodeDesign node = design.FindNode(
+                symbolidId,
+                symbolidId.Name,
+                type);
+            if (node == null)
+            {
+                return "global::Opc.Ua.NodeId.Null";
+            }
+
+            return node.GetNodeIdConstant(design.Namespaces, namespaceTableVariable);
+        }
+
+        public static void SetDefaultValue(
+            this VariableTypeDesign node,
+            object value,
+            IServiceMessageContext context)
+        {
+            if (value != null)
+            {
+                node.DefaultValue = AsXmlElement(value, context);
+                node.DecodedValue = value;
+            }
+            else
+            {
+                node.DefaultValue = null;
+                node.DecodedValue = null;
+            }
+        }
+
+        public static void SetDefaultValue(
+            this VariableDesign node,
+            object value,
+            IServiceMessageContext context)
+        {
+            if (value != null)
+            {
+                node.DefaultValue = AsXmlElement(value, context);
+                node.DecodedValue = value;
+            }
+            else
+            {
+                node.DefaultValue = null;
+                node.DecodedValue = null;
+            }
+        }
+
+        private static XmlElement AsXmlElement(object value, IServiceMessageContext context)
+        {
+            if (value != null)
+            {
+                using var encoder = new XmlEncoder(context);
+                var variant = new Variant(value);
+                encoder.WriteVariantContents(variant.AsBoxedObject(), variant.TypeInfo);
+                var xmlDoc = new XmlDocument();
+                xmlDoc.LoadInnerXml(encoder.CloseAndReturnText());
+                return xmlDoc.DocumentElement;
+            }
+            return null;
         }
 
         private static bool IsBasicDataType(

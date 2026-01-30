@@ -77,39 +77,6 @@ namespace Opc.Ua.SourceGeneration
             """;
 
         /// <summary>
-        /// Helpers
-        /// </summary>
-        public static readonly TemplateString Helpers_File_cs = TemplateString.Parse(
-            $$"""
-            {{Tokens.Header}}
-
-            {{Tokens.ListOfImports}}
-
-            namespace {{Tokens.NamespacePrefix}}
-            {
-                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
-                public static partial class {{Tokens.Namespace}}Extensions
-                {
-                    /// <summary>
-                    /// Adds the predefined nodes for the {{Tokens.NamespacePrefix}} namespace
-                    /// to the node state collection.
-                    /// </summary>
-                    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
-                    public static NodeStateCollection Add{{Tokens.Namespace}}(
-                        this global::Opc.Ua.NodeStateCollection collection,
-                        global::Opc.Ua.ISystemContext context)
-                    {
-                        global::Opc.Ua.NodeStateCollection predefinedNodes = new global::Opc.Ua.NodeStateCollection();
-                        using global::System.IO.Stream stream = Predefined.NodesAsStream;
-                        predefinedNodes.LoadFrom{{Tokens.Encoding}}(context, stream, true);
-                        collection.AddRange(predefinedNodes);
-                        return collection;
-                    }
-                }
-            }
-            """);
-
-        /// <summary>
         /// Base data type and node state files
         /// </summary>
         public static readonly TemplateString DataTypesFile_cs = TemplateString.Parse(
@@ -118,10 +85,153 @@ namespace Opc.Ua.SourceGeneration
 
             {{Tokens.ListOfImports}}
 
-            namespace {{Tokens.Namespace}}
+            namespace {{Tokens.NamespacePrefix}}
             {
                 {{Tokens.ListOfTypes}}
+
+                {{Tokens.ListOfTypeActivators}}
+
+                /// <summary>
+                /// Data type definitions for all classes in the {{Tokens.NamespaceUri}} namespace.
+                /// </summary>
+                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
+                [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
+                public static partial class DataTypeDefinitions
+                {
+                    {{Tokens.ListOfDataTypeDefinitions}}
+                }
+
+                /// <summary>
+                /// Extensions that add functionality from the {{Tokens.NamespaceUri}} namespace.
+                /// </summary>
+                public static partial class {{Tokens.Namespace}}Extensions
+                {
+                    /// <summary>
+                    /// Adds all encodeables of the {{Tokens.NamespaceUri}} namespace to the
+                    /// IEncodeableFactoryBuilder.
+                    /// </summary>
+                    /// <param name="builder">The factory builder.</param>
+                    /// <returns>The factory builder passed as parameter.</returns>
+                    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
+                    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
+                    public static global::Opc.Ua.IEncodeableFactoryBuilder Add{{Tokens.Namespace}}(
+                        this global::Opc.Ua.IEncodeableFactoryBuilder builder)
+                    {
+                        {{Tokens.ListOfActivatorRegistrations}}
+
+                        return builder;
+                    }
+                }
             }
+            """);
+
+        public static readonly TemplateString DataTypes_StructureDefinition = TemplateString.Parse(
+            $$"""
+            /// <summary>
+            /// The structure definition for the {{Tokens.BrowseName}} DataType.
+            /// </summary>
+            public static global::Opc.Ua.StructureDefinition Create{{Tokens.ClassName}}(
+                global::Opc.Ua.NamespaceTable namespaceUris)
+            {
+                return new global::Opc.Ua.StructureDefinition
+                {
+                    BaseDataType = {{Tokens.BaseType}},
+                    StructureType = global::Opc.Ua.StructureType.{{Tokens.StructureType}},
+                    FirstExplicitFieldIndex = {{Tokens.FirstExplicitFieldIndex}},
+                    Fields = new global::Opc.Ua.StructureField[]
+                    {
+                        {{Tokens.ListOfFields}}
+                    }
+                };
+            }
+            """);
+
+        /// <summary>
+        /// Structure definition field
+        /// </summary>
+        public static readonly TemplateString DataTypes_StructureField = TemplateString.Parse(
+            $$"""
+            new global::Opc.Ua.StructureField
+            {
+                Name = {{Tokens.FieldName}},
+                DataType = {{Tokens.DataType}},
+                ValueRank = {{Tokens.ValueRank}},
+                ArrayDimensions = {{Tokens.ArrayDimensions}},
+                IsOptional = {{Tokens.IsOptional}},
+                Description = {{Tokens.Description}}
+            },
+            """);
+
+        /// <summary>
+        /// Enum definition
+        /// </summary>
+        public static readonly TemplateString DataTypes_EnumDefinition = TemplateString.Parse(
+            $$"""
+            /// <summary>
+            /// The enum definition for the {{Tokens.BrowseName}} DataType.
+            /// </summary>
+            public static global::Opc.Ua.EnumDefinition Create{{Tokens.ClassName}}(
+                global::Opc.Ua.NamespaceTable namespaceUris)
+            {
+                return new global::Opc.Ua.EnumDefinition
+                {
+                    IsOptionSet = {{Tokens.IsOptionSet}},
+                    Fields = new global::Opc.Ua.EnumField[]
+                    {
+                        {{Tokens.ListOfFields}}
+                    }
+                };
+            }
+            """);
+
+        /// <summary>
+        /// Enum field
+        /// </summary>
+        public static readonly TemplateString DataTypes_EnumField = TemplateString.Parse(
+            $$"""
+            new global::Opc.Ua.EnumField
+            {
+                Name = {{Tokens.FieldName}},
+                DisplayName = {{Tokens.DisplayName}},
+                Value = {{Tokens.ValueCode}},
+                Description = {{Tokens.Description}}
+            },
+            """);
+
+        /// <summary>
+        /// Encodeable activator
+        /// </summary>
+        public static readonly TemplateString DataTypes_StructureActivatorClass = TemplateString.Parse(
+            $$"""
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
+            [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
+            public sealed class {{Tokens.ClassName}}Activator : global::Opc.Ua.EncodeableType<{{Tokens.ClassName}}>
+            {
+                /// <summary>
+                /// The singleton instance of the activator.
+                /// </summary>
+                public static readonly {{Tokens.ClassName}}Activator Instance
+                    = new {{Tokens.ClassName}}Activator();
+
+                /// <inheritdoc/>
+                public override global::Opc.Ua.IEncodeable CreateInstance()
+                {
+                    return new {{Tokens.ClassName}}();
+                }
+            }
+            """);
+
+        /// <summary>
+        /// Encodeable activator builder registration
+        /// </summary>
+        public static readonly TemplateString DataType_StructureActivatorRegistration = TemplateString.Parse(
+            $$"""
+            // Add encodeable activator for {{Tokens.BrowseName}}
+            builder = builder
+                .AddEncodeableType(DataTypeIds.{{Tokens.BrowseName}}, {{Tokens.ClassName}}Activator.Instance)
+                .AddEncodeableType({{Tokens.BinaryEncodingId}}, {{Tokens.ClassName}}Activator.Instance)
+                .AddEncodeableType({{Tokens.XmlEncodingId}}, {{Tokens.ClassName}}Activator.Instance)
+                .AddEncodeableType({{Tokens.JsonEncodingId}}, {{Tokens.ClassName}}Activator.Instance);
             """);
 
         /// <summary>
@@ -144,12 +254,12 @@ namespace Opc.Ua.SourceGeneration
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
             [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
             [global::System.Runtime.Serialization.DataContract(Namespace = {{Tokens.XmlNamespaceUri}})]
-            public partial class {{Tokens.BrowseName}} : global::Opc.Ua.IEncodeable, global::Opc.Ua.IJsonEncodeable
+            public partial class {{Tokens.ClassName}} : global::Opc.Ua.IEncodeable, global::Opc.Ua.IJsonEncodeable
             {
                 /// <summary>
                 /// The default constructor.
                 /// </summary>
-                public {{Tokens.BrowseName}}()
+                public {{Tokens.ClassName}}()
                 {
                     Initialize();
                 }
@@ -260,13 +370,13 @@ namespace Opc.Ua.SourceGeneration
                 /// <inheritdoc/>
                 public virtual object Clone()
                 {
-                    return ({{Tokens.BrowseName}})this.MemberwiseClone();
+                    return ({{Tokens.ClassName}})this.MemberwiseClone();
                 }
 
                 /// <inheritdoc/>
                 public new object MemberwiseClone()
                 {
-                    {{Tokens.BrowseName}} clone = ({{Tokens.BrowseName}})base.MemberwiseClone();
+                    {{Tokens.ClassName}} clone = ({{Tokens.ClassName}})base.MemberwiseClone();
 
                     clone.SwitchField = this.SwitchField;
 
@@ -315,12 +425,12 @@ namespace Opc.Ua.SourceGeneration
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
             [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
             [global::System.Runtime.Serialization.DataContract(Namespace = {{Tokens.XmlNamespaceUri}})]
-            public partial class {{Tokens.BrowseName}} : {{Tokens.BaseType}}
+            public partial class {{Tokens.ClassName}} : {{Tokens.BaseType}}
             {
                 /// <summary>
                 /// The default constructor.
                 /// </summary>
-                public {{Tokens.BrowseName}}()
+                public {{Tokens.ClassName}}()
                 {
                     Initialize();
                 }
@@ -405,13 +515,13 @@ namespace Opc.Ua.SourceGeneration
                 /// <inheritdoc/>
                 public override object Clone()
                 {
-                    return ({{Tokens.BrowseName}})this.MemberwiseClone();
+                    return ({{Tokens.ClassName}})this.MemberwiseClone();
                 }
 
                 /// <inheritdoc/>
                 public new object MemberwiseClone()
                 {
-                    {{Tokens.BrowseName}} clone = ({{Tokens.BrowseName}})base.MemberwiseClone();
+                    {{Tokens.ClassName}} clone = ({{Tokens.ClassName}})base.MemberwiseClone();
                     {{Tokens.ListOfClonedFields}}
                     return clone;
                 }
@@ -449,12 +559,12 @@ namespace Opc.Ua.SourceGeneration
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
             [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
             [global::System.Runtime.Serialization.DataContract(Namespace = {{Tokens.XmlNamespaceUri}})]
-            public partial class {{Tokens.BrowseName}} : IEncodeable, IJsonEncodeable
+            public partial class {{Tokens.ClassName}} : global::Opc.Ua.IEncodeable, global::Opc.Ua.IJsonEncodeable
             {
                 /// <summary>
                 /// The default constructor.
                 /// </summary>
-                public {{Tokens.BrowseName}}()
+                public {{Tokens.ClassName}}()
                 {
                     Initialize();
                 }
@@ -538,13 +648,13 @@ namespace Opc.Ua.SourceGeneration
                 /// <inheritdoc/>
                 public virtual object Clone()
                 {
-                    return ({{Tokens.BrowseName}})this.MemberwiseClone();
+                    return ({{Tokens.ClassName}})this.MemberwiseClone();
                 }
 
                 /// <inheritdoc/>
                 public new object MemberwiseClone()
                 {
-                    {{Tokens.BrowseName}} clone = ({{Tokens.BrowseName}})base.MemberwiseClone();
+                    {{Tokens.ClassName}} clone = ({{Tokens.ClassName}})base.MemberwiseClone();
                     clone.EncodingMask = this.EncodingMask;
                     {{Tokens.ListOfClonedFields}}
                     return clone;
@@ -573,12 +683,12 @@ namespace Opc.Ua.SourceGeneration
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
             [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
             [global::System.Runtime.Serialization.DataContract(Namespace = {{Tokens.XmlNamespaceUri}})]
-            public {{Tokens.IsAbstract}}partial class {{Tokens.BrowseName}} : global::Opc.Ua.IEncodeable, global::Opc.Ua.IJsonEncodeable
+            public {{Tokens.IsAbstract}}partial class {{Tokens.ClassName}} : global::Opc.Ua.IEncodeable, global::Opc.Ua.IJsonEncodeable
             {
                 /// <summary>
                 /// The default constructor.
                 /// </summary>
-                public {{Tokens.BrowseName}}()
+                public {{Tokens.ClassName}}()
                 {
                     Initialize();
                 }
@@ -651,13 +761,13 @@ namespace Opc.Ua.SourceGeneration
                 /// <inheritdoc/>
                 public virtual object Clone()
                 {
-                    return ({{Tokens.BrowseName}})this.MemberwiseClone();
+                    return ({{Tokens.ClassName}})this.MemberwiseClone();
                 }
 
                 /// <inheritdoc/>
                 public new object MemberwiseClone()
                 {
-                    {{Tokens.BrowseName}} clone = ({{Tokens.BrowseName}})base.MemberwiseClone();
+                    {{Tokens.ClassName}} clone = ({{Tokens.ClassName}})base.MemberwiseClone();
                     {{Tokens.ListOfClonedFields}}
                     return clone;
                 }
@@ -680,12 +790,12 @@ namespace Opc.Ua.SourceGeneration
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
             [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
             [global::System.Runtime.Serialization.DataContract(Namespace = {{Tokens.XmlNamespaceUri}})]
-            public partial class {{Tokens.BrowseName}} : {{Tokens.BaseType}}
+            public partial class {{Tokens.ClassName}} : {{Tokens.BaseType}}
             {
                 /// <summary>
                 /// The default constructor.
                 /// </summary>
-                public {{Tokens.BrowseName}}()
+                public {{Tokens.ClassName}}()
                 {
                     Initialize();
                 }
@@ -760,13 +870,13 @@ namespace Opc.Ua.SourceGeneration
                 /// <inheritdoc/>
                 public override object Clone()
                 {
-                    return ({{Tokens.BrowseName}})this.MemberwiseClone();
+                    return ({{Tokens.ClassName}})this.MemberwiseClone();
                 }
 
                 /// <inheritdoc/>
                 public new object MemberwiseClone()
                 {
-                    {{Tokens.BrowseName}} clone = ({{Tokens.BrowseName}})base.MemberwiseClone();
+                    {{Tokens.ClassName}} clone = ({{Tokens.ClassName}})base.MemberwiseClone();
                     {{Tokens.ListOfClonedFields}}
                     return clone;
                 }
@@ -788,13 +898,103 @@ namespace Opc.Ua.SourceGeneration
             /// </summary>
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
             [global::System.Runtime.Serialization.DataContract(Namespace = {{Tokens.XmlNamespaceUri}})] {{Tokens.Flags}}
-            public enum {{Tokens.BrowseName}}{{Tokens.BasicType}}
+            public enum {{Tokens.ClassName}}{{Tokens.BasicType}}
             {
                 {{Tokens.ListOfProperties}}
             }
 
             {{Tokens.CollectionClass}}
 
+            """);
+
+        /// <summary>
+        /// Collection class for data types
+        /// </summary>
+        public static readonly TemplateString DataTypes_CollectionClass_cs = TemplateString.Parse(
+            $$"""
+            /// <summary>
+            /// A collection of {{Tokens.ClassName}} objects.
+            /// </summary>
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
+            [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
+            [global::System.Runtime.Serialization.CollectionDataContract(
+                Name = "ListOf{{Tokens.BrowseName}}",
+                Namespace = {{Tokens.XmlNamespaceUri}},
+                ItemName = "{{Tokens.BrowseName}}")]
+            public partial class {{Tokens.ClassName}}Collection :
+                global::System.Collections.Generic.List<{{Tokens.ClassName}}>,
+                global::System.ICloneable
+            {
+                /// <inheritdoc/>
+                public {{Tokens.ClassName}}Collection()
+                {
+                }
+
+                /// <inheritdoc/>
+                public {{Tokens.ClassName}}Collection(int capacity)
+                    : base(capacity)
+                {
+                }
+
+                /// <inheritdoc/>
+                public {{Tokens.ClassName}}Collection(
+                    global::System.Collections.Generic.IEnumerable<{{Tokens.ClassName}}> collection)
+                    : base(collection)
+                {
+                }
+
+                /// <inheritdoc/>
+                public static implicit operator {{Tokens.ClassName}}Collection({{Tokens.ClassName}}[]? values)
+                {
+                    return To{{Tokens.ClassName}}Collection(values);
+                }
+
+                /// <inheritdoc/>
+                public static {{Tokens.ClassName}}Collection To{{Tokens.ClassName}}Collection({{Tokens.ClassName}}[]? values)
+                {
+                    if (values != null)
+                    {
+                        return new {{Tokens.ClassName}}Collection(values);
+                    }
+                    return new {{Tokens.ClassName}}Collection();
+                }
+
+                /// <inheritdoc/>
+                public static explicit operator {{Tokens.ClassName}}[]?({{Tokens.ClassName}}Collection? values)
+                {
+                    return From{{Tokens.ClassName}}Collection(values);
+                }
+
+                /// <inheritdoc/>
+                public static {{Tokens.ClassName}}[]? From{{Tokens.ClassName}}Collection({{Tokens.ClassName}}Collection? values)
+                {
+                    if (values != null)
+                    {
+                        return values.ToArray();
+                    }
+                    return null;
+                }
+
+                /// <inheritdoc/>
+                public object Clone()
+                {
+                    return ({{Tokens.ClassName}}Collection)this.MemberwiseClone();
+                }
+
+                /// <inheritdoc/>
+                public new object MemberwiseClone()
+                {
+                    {{Tokens.ClassName}}Collection clone =
+                        new {{Tokens.ClassName}}Collection(this.Count);
+
+                    for (int ii = 0; ii < this.Count; ii++)
+                    {
+                        clone.Add(({{Tokens.ClassName}})global::Opc.Ua.CoreUtils.Clone(this[ii]));
+                    }
+
+                    return clone;
+                }
+            }
             """);
 
         /// <summary>
@@ -830,7 +1030,10 @@ namespace Opc.Ua.SourceGeneration
                 protected override void Initialize(global::Opc.Ua.ISystemContext context)
                 {
                     base.Initialize(context);
-                    Initialize(context, {{Tokens.ClassName}}Initializers.{{Tokens.Encoding}}, EncodingType.{{Tokens.Encoding}});
+                    Initialize(
+                        context,
+                        {{Tokens.ClassName}}Initializers.{{Tokens.Encoding}},
+                        global::Opc.Ua.EncodingType.{{Tokens.Encoding}});
                     InitializeOptionalChildren(context);
                 }
 
@@ -959,7 +1162,7 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 /// <inheritdoc/>
-                public new static NodeState Construct(global::Opc.Ua.NodeState parent)
+                public new static global::Opc.Ua.NodeState Construct(global::Opc.Ua.NodeState parent)
                 {
                     return new {{Tokens.ClassName}}(parent);
                 }
@@ -1078,96 +1281,6 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// Collection class for data types
-        /// </summary>
-        public static readonly TemplateString DataTypes_CollectionClass_cs = TemplateString.Parse(
-            $$"""
-            /// <summary>
-            /// A collection of {{Tokens.BrowseName}} objects.
-            /// </summary>
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
-            [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
-            [global::System.Runtime.Serialization.CollectionDataContract(
-                Name = "ListOf{{Tokens.BrowseName}}",
-                Namespace = {{Tokens.XmlNamespaceUri}},
-                ItemName = "{{Tokens.BrowseName}}")]
-            public partial class {{Tokens.BrowseName}}Collection :
-                global::System.Collections.Generic.List<{{Tokens.BrowseName}}>,
-                global::System.ICloneable
-            {
-                /// <inheritdoc/>
-                public {{Tokens.BrowseName}}Collection()
-                {
-                }
-
-                /// <inheritdoc/>
-                public {{Tokens.BrowseName}}Collection(int capacity)
-                    : base(capacity)
-                {
-                }
-
-                /// <inheritdoc/>
-                public {{Tokens.BrowseName}}Collection(
-                    global::System.Collections.Generic.IEnumerable<{{Tokens.BrowseName}}> collection)
-                    : base(collection)
-                {
-                }
-
-                /// <inheritdoc/>
-                public static implicit operator {{Tokens.BrowseName}}Collection({{Tokens.BrowseName}}[]? values)
-                {
-                    return To{{Tokens.BrowseName}}Collection(values);
-                }
-
-                /// <inheritdoc/>
-                public static {{Tokens.BrowseName}}Collection To{{Tokens.BrowseName}}Collection({{Tokens.BrowseName}}[]? values)
-                {
-                    if (values != null)
-                    {
-                        return new {{Tokens.BrowseName}}Collection(values);
-                    }
-                    return new {{Tokens.BrowseName}}Collection();
-                }
-
-                /// <inheritdoc/>
-                public static explicit operator {{Tokens.BrowseName}}[]?({{Tokens.BrowseName}}Collection? values)
-                {
-                    return From{{Tokens.BrowseName}}Collection(values);
-                }
-
-                /// <inheritdoc/>
-                public static {{Tokens.BrowseName}}[]? From{{Tokens.BrowseName}}Collection({{Tokens.BrowseName}}Collection? values)
-                {
-                    if (values != null)
-                    {
-                        return values.ToArray();
-                    }
-                    return null;
-                }
-
-                /// <inheritdoc/>
-                public object Clone()
-                {
-                    return ({{Tokens.BrowseName}}Collection)this.MemberwiseClone();
-                }
-
-                /// <inheritdoc/>
-                public new object MemberwiseClone()
-                {
-                    {{Tokens.BrowseName}}Collection clone =
-                        new {{Tokens.BrowseName}}Collection(this.Count);
-
-                    for (int ii = 0; ii < this.Count; ii++)
-                    {
-                        clone.Add(({{Tokens.BrowseName}})global::Opc.Ua.CoreUtils.Clone(this[ii]));
-                    }
-
-                    return clone;
-                }
-            }
-            """);
-
-        /// <summary>
         /// Typed variable type node state
         /// </summary>
         public static readonly TemplateString TypedVariableType_cs = TemplateString.Parse(
@@ -1209,7 +1322,7 @@ namespace Opc.Ua.SourceGeneration
                 public new T Value
                 {
                     get => CheckTypeBeforeCast<T>(((global::Opc.Ua.BaseVariableState)this).Value, true);
-                    set => ((BaseVariableState)this).Value = value;
+                    set => ((global::Opc.Ua.BaseVariableState)this).Value = value;
                 }
             }
 
@@ -1275,8 +1388,8 @@ namespace Opc.Ua.SourceGeneration
                         variable.OnWriteValue = OnWriteValue;
 
                         global::Opc.Ua.BaseVariableState? instance = null;
-                        global::System.Collections.Generic.List<BaseInstanceState> updateList =
-                            new global::System.Collections.Generic.List<BaseInstanceState>();
+                        global::System.Collections.Generic.List<global::Opc.Ua.BaseInstanceState> updateList =
+                            new global::System.Collections.Generic.List<global::Opc.Ua.BaseInstanceState>();
                         updateList.Add(variable);
 
                         {{Tokens.ListOfChildInitializers}}
@@ -1309,7 +1422,7 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 /// <inheritdoc/>
-                private ServiceResult OnWriteValue(
+                private global::Opc.Ua.ServiceResult OnWriteValue(
                     global::Opc.Ua.ISystemContext context,
                     global::Opc.Ua.NodeState node,
                     global::Opc.Ua.NumericRange indexRange,
@@ -1455,7 +1568,7 @@ namespace Opc.Ua.SourceGeneration
             }
 
             /// <inheritdoc/>
-            protected override BaseInstanceState FindChild(
+            protected override global::Opc.Ua.BaseInstanceState FindChild(
                 global::Opc.Ua.ISystemContext context,
                 global::Opc.Ua.QualifiedName browseName,
                 bool createOrReplace,
@@ -1594,7 +1707,9 @@ namespace Opc.Ua.SourceGeneration
             {{Tokens.PropertyAccessor}} {{Tokens.TypeName}} {{Tokens.BrowseName}}
             {
                 get => {{Tokens.FieldName}};
-                set => {{Tokens.FieldName}} = value == null ? {{Tokens.DefaultValue}} : value;
+                set => {{Tokens.FieldName}} = value == null ?
+                    ({{Tokens.TypeName}}){{Tokens.DefaultValue}} :
+                    value;
             }
 
             """);
@@ -2148,8 +2263,6 @@ namespace Opc.Ua.SourceGeneration
             $$"""
             {{Tokens.Header}}
 
-            {{Tokens.ListOfImports}}
-
             namespace {{Tokens.Namespace}}
             {
                 {{Tokens.ListOfIdentifiers}}
@@ -2485,41 +2598,129 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// Main file template for predefined nodes code generation
+        /// Predefined nodes (to be removed)
         /// </summary>
-        public static readonly TemplateString NodeStatesFile_cs = TemplateString.Parse(
+        public static readonly TemplateString PredefinedNodes_File_cs = TemplateString.Parse(
             $$"""
             {{Tokens.Header}}
 
             {{Tokens.ListOfImports}}
 
-            namespace {{Tokens.Namespace}}
+            namespace {{Tokens.NamespacePrefix}}
+            {
+                public static partial class {{Tokens.Namespace}}Extensions
+                {
+                    /// <summary>
+                    /// Adds the predefined nodes for the {{Tokens.NamespaceUri}} namespace
+                    /// to the node state collection.
+                    /// </summary>
+                    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
+                    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
+                    public static global::Opc.Ua.NodeStateCollection Load{{Tokens.Namespace}}(
+                        this global::Opc.Ua.NodeStateCollection collection,
+                        global::Opc.Ua.ISystemContext context)
+                    {
+                        global::Opc.Ua.NodeStateCollection predefinedNodes = new global::Opc.Ua.NodeStateCollection();
+                        using global::System.IO.Stream stream = Predefined.NodesAsStream;
+                        predefinedNodes.LoadFrom{{Tokens.Encoding}}(context, stream, true);
+                        collection.AddRange(predefinedNodes);
+                        return collection;
+                    }
+                }
+            }
+            """);
+
+        /// <summary>
+        /// Main file template for predefined nodes code generation
+        /// </summary>
+        public static readonly TemplateString NodeStates_File_cs = TemplateString.Parse(
+            $$"""
+            {{Tokens.Header}}
+
+            {{Tokens.ListOfImports}}
+
+            namespace {{Tokens.NamespacePrefix}}
             {
                 {{Tokens.ListOfTypes}}
 
+                {{Tokens.ListOfTypeActivators}}
+
                 /// <summary>
-                /// Provides methods to create the Address Space for the {{Tokens.Namespace}} namespace.
+                /// Extensions that add functionality from the {{Tokens.NamespaceUri}} namespace.
                 /// </summary>
-                [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
-                [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
-                public static partial class AddressSpace
+                public static partial class {{Tokens.Namespace}}Extensions
                 {
                     /// <summary>
-                    /// Creates and returns all predefined node states for the namespace.
+                    /// Creates and returns all node states for the {{Tokens.NamespaceUri}} namespace.
                     /// </summary>
+                    /// <param name="nodes">The collection to add the node states to.</param>
                     /// <param name="context">The system context to use for initialization.</param>
-                    /// <returns>A collection containing all predefined node states.</returns>
-                    public static global::Opc.Ua.NodeStateCollection GetAddressSpace(
+                    /// <returns>Original collection with node states added.</returns>
+                    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
+                    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
+                    public static global::Opc.Ua.NodeStateCollection Add{{Tokens.Namespace}}(
+                        this global::Opc.Ua.NodeStateCollection nodes,
                         global::Opc.Ua.ISystemContext context)
                     {
-                        var nodes = new global::Opc.Ua.NodeStateCollection();
                         {{Tokens.ListOfNodeStateInitializers}}
                         return nodes;
+                    }
+
+                    /// <summary>
+                    /// Adds all nodestate activators of the {{Tokens.NamespaceUri}}
+                    /// namespace to a INodeStateFactoryBuilder.
+                    /// </summary>
+                    /// <param name="builder">The node state factory builder.</param>
+                    /// <returns>The builder passed as parameter for chaining.</returns>
+                    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
+                    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
+                    public static global::Opc.Ua.INodeStateFactoryBuilder Add{{Tokens.Namespace}}(
+                        this global::Opc.Ua.INodeStateFactoryBuilder builder)
+                    {
+                        {{Tokens.ListOfActivatorRegistrations}}
+                        return builder;
                     }
 
                     {{Tokens.ListOfNodeStateFactories}}
                 }
             }
+            """);
+
+        /// <summary>
+        /// Encodeable activator
+        /// </summary>
+        public static readonly TemplateString NodeState_ActivatorClass = TemplateString.Parse(
+            $$"""
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{Tokens.Tool}}", "{{Tokens.Version}}")]
+            [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute()]
+            public sealed class {{Tokens.ClassName}}Activator : global::Opc.Ua.NodeStateActivator
+            {
+                /// <summary>
+                /// The singleton instance of the activator.
+                /// </summary>
+                public static readonly {{Tokens.ClassName}}Activator Instance
+                    = new {{Tokens.ClassName}}Activator();
+
+                /// <inheritdoc/>
+                protected override global::Opc.Ua.NodeState CreateInstance(
+                    global::Opc.Ua.ISystemContext context, global::Opc.Ua.NodeState parent)
+                {
+                    global::Opc.Ua.NodeState state = new {{Tokens.ClassName}}(parent);
+                    // state.Initialize(context);
+                    return state;
+                }
+            }
+            """);
+
+        /// <summary>
+        /// Nodestate activator registration
+        /// </summary>
+        public static readonly TemplateString NodeState_ActivatorRegistration = TemplateString.Parse(
+            $$"""
+            // Register node state factory for {{Tokens.BrowseName}} {{Tokens.NodeClass}}
+            builder = builder.RegisterType(
+                {{Tokens.NodeClass}}Ids.{{Tokens.SymbolicName}},
+                {{Tokens.ClassName}}Activator.Instance);
             """);
 
         /// <summary>
@@ -2548,11 +2749,11 @@ namespace Opc.Ua.SourceGeneration
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
-                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
+                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayName}});
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
-                state.SuperTypeId = {{Tokens.SuperTypeIdConstant}};
+                state.SuperTypeId = {{Tokens.SuperTypeId}};
                 state.IsAbstract = {{Tokens.IsAbstract}};
                 {{Tokens.ReleaseStatusValue}}
                 {{Tokens.CategoriesValue}}
@@ -2585,11 +2786,11 @@ namespace Opc.Ua.SourceGeneration
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
-                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
+                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayName}});
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
-                state.SuperTypeId = {{Tokens.SuperTypeIdConstant}};
+                state.SuperTypeId = {{Tokens.SuperTypeId}};
                 state.IsAbstract = {{Tokens.IsAbstract}};
                 state.DataType = {{Tokens.DataTypeIdConstant}};
                 state.ValueRank = {{Tokens.ValueRank}};
@@ -2626,11 +2827,11 @@ namespace Opc.Ua.SourceGeneration
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
-                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
+                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayName}});
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
-                state.SuperTypeId = {{Tokens.SuperTypeIdConstant}};
+                state.SuperTypeId = {{Tokens.SuperTypeId}};
                 state.IsAbstract = {{Tokens.IsAbstract}};
                 state.Symmetric = {{Tokens.SymmetricValue}};
                 {{Tokens.InverseNameValue}}
@@ -2662,12 +2863,13 @@ namespace Opc.Ua.SourceGeneration
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
-                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
+                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayName}});
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
-                state.SuperTypeId = {{Tokens.SuperTypeIdConstant}};
+                state.SuperTypeId = {{Tokens.SuperTypeId}};
                 state.IsAbstract = {{Tokens.IsAbstract}};
+                state.DataTypeDefinition = {{Tokens.DataTypeDefinition}};
                 {{Tokens.ReleaseStatusValue}}
                 {{Tokens.CategoriesValue}}
                 {{Tokens.SpecificationValue}}
@@ -2696,16 +2898,17 @@ namespace Opc.Ua.SourceGeneration
                 var state = new global::Opc.Ua.BaseObjectState(null);
                 state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
+                state.NumericId = {{Tokens.NumericIdValue}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
-                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
+                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayName}});
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
-                state.TypeDefinitionId = {{Tokens.TypeDefinitionIdConstant}};
-                state.ReferenceTypeId = {{Tokens.ReferenceTypeIdConstant}};
-                {{Tokens.ModellingRuleIdConstant}}
+                state.TypeDefinitionId = {{Tokens.TypeDefinitionId}};
+                state.ReferenceTypeId = {{Tokens.ReferenceTypeId}};
+                {{Tokens.ModellingRuleId}}
                 state.EventNotifier = {{Tokens.EventNotifier}};
                 {{Tokens.ReleaseStatusValue}}
                 {{Tokens.CategoriesValue}}
@@ -2738,7 +2941,7 @@ namespace Opc.Ua.SourceGeneration
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
-                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
+                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayName}});
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
@@ -2769,18 +2972,21 @@ namespace Opc.Ua.SourceGeneration
                 var state = new global::Opc.Ua.MethodState(null);
                 state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
+                state.NumericId = {{Tokens.NumericIdValue}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
-                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
+                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayName}});
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
-                state.ReferenceTypeId = {{Tokens.ReferenceTypeIdConstant}};
-                {{Tokens.ModellingRuleIdConstant}}
+                state.ReferenceTypeId = {{Tokens.ReferenceTypeId}};
+                {{Tokens.ModellingRuleId}}
                 state.Executable = {{Tokens.ExecutableValue}};
                 state.UserExecutable = {{Tokens.ExecutableValue}};
-                {{Tokens.MethodDeclarationIdConstant}}
+                {{Tokens.MethodDeclarationId}}
+                {{Tokens.ListOfInputArguments}}
+                {{Tokens.ListOfOutputArguments}}
                 {{Tokens.ReleaseStatusValue}}
                 {{Tokens.CategoriesValue}}
                 {{Tokens.SpecificationValue}}
@@ -2803,22 +3009,24 @@ namespace Opc.Ua.SourceGeneration
             /// <summary>
             /// Creates the {{Tokens.SymbolicName}} Variable node state.
             /// </summary>
-            private static global::Opc.Ua.BaseVariableState Create_{{Tokens.SymbolicId}}(
+            private static {{Tokens.StateClassName}} Create_{{Tokens.SymbolicId}}(
                 global::Opc.Ua.ISystemContext context)
             {
                 var state = new {{Tokens.StateClassName}}(null);
                 state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
+                state.NumericId = {{Tokens.NumericIdValue}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
-                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
+                state.DisplayName = new global::Opc.Ua.LocalizedText(
+                    {{Tokens.DisplayName}});
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
-                state.TypeDefinitionId = {{Tokens.TypeDefinitionIdConstant}};
-                state.ReferenceTypeId = {{Tokens.ReferenceTypeIdConstant}};
-                {{Tokens.ModellingRuleIdConstant}}
+                state.TypeDefinitionId = {{Tokens.TypeDefinitionId}};
+                state.ReferenceTypeId = {{Tokens.ReferenceTypeId}};
+                {{Tokens.ModellingRuleId}}
                 state.DataType = {{Tokens.DataTypeIdConstant}};
                 state.ValueRank = {{Tokens.ValueRank}};
                 {{Tokens.ArrayDimensions}}
@@ -2856,16 +3064,17 @@ namespace Opc.Ua.SourceGeneration
                 var state = new global::Opc.Ua.BaseObjectState(parent);
                 state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
+                state.NumericId = {{Tokens.NumericIdValue}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
-                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
+                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayName}});
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
-                state.TypeDefinitionId = {{Tokens.TypeDefinitionIdConstant}};
-                state.ReferenceTypeId = {{Tokens.ReferenceTypeIdConstant}};
-                {{Tokens.ModellingRuleIdConstant}}
+                state.TypeDefinitionId = {{Tokens.TypeDefinitionId}};
+                state.ReferenceTypeId = {{Tokens.ReferenceTypeId}};
+                {{Tokens.ModellingRuleId}}
                 state.EventNotifier = {{Tokens.EventNotifier}};
                 {{Tokens.ReleaseStatusValue}}
                 {{Tokens.CategoriesValue}}
@@ -2887,25 +3096,26 @@ namespace Opc.Ua.SourceGeneration
         public static readonly TemplateString NodeState_ChildVariable_cs = TemplateString.Parse(
             $$"""
             /// <summary>
-            /// Creates the {{Tokens.SymbolicName}} Variable child node state.
+            /// Creates the {{Tokens.SymbolicName}} child Variable node state.
             /// </summary>
-            private static global::Opc.Ua.BaseVariableState Create_{{Tokens.SymbolicId}}(
+            private static {{Tokens.StateClassName}} Create_{{Tokens.SymbolicId}}(
                 global::Opc.Ua.ISystemContext context,
                 global::Opc.Ua.NodeState parent)
             {
                 var state = new {{Tokens.StateClassName}}(parent);
                 state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
+                state.NumericId = {{Tokens.NumericIdValue}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
-                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
+                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayName}});
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
-                state.TypeDefinitionId = {{Tokens.TypeDefinitionIdConstant}};
-                state.ReferenceTypeId = {{Tokens.ReferenceTypeIdConstant}};
-                {{Tokens.ModellingRuleIdConstant}}
+                state.TypeDefinitionId = {{Tokens.TypeDefinitionId}};
+                state.ReferenceTypeId = {{Tokens.ReferenceTypeId}};
+                {{Tokens.ModellingRuleId}}
                 state.DataType = {{Tokens.DataTypeIdConstant}};
                 state.ValueRank = {{Tokens.ValueRank}};
                 {{Tokens.ArrayDimensions}}
@@ -2943,18 +3153,19 @@ namespace Opc.Ua.SourceGeneration
                 var state = new global::Opc.Ua.MethodState(parent);
                 state.SymbolicName = "{{Tokens.SymbolicName}}";
                 state.NodeId = {{Tokens.NodeIdConstant}};
+                state.NumericId = {{Tokens.NumericIdValue}};
                 state.BrowseName = new global::Opc.Ua.QualifiedName(
                     {{Tokens.BrowseNameValue}},
                     context.NamespaceUris.GetIndexOrAppend({{Tokens.BrowseNameNamespaceUri}}));
-                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayNameValue}});
+                state.DisplayName = new global::Opc.Ua.LocalizedText({{Tokens.DisplayName}});
                 {{Tokens.DescriptionValue}}
                 state.WriteMask = {{Tokens.WriteMaskValue}};
                 state.UserWriteMask = {{Tokens.UserWriteMaskValue}};
-                state.ReferenceTypeId = {{Tokens.ReferenceTypeIdConstant}};
-                {{Tokens.ModellingRuleIdConstant}}
+                state.ReferenceTypeId = {{Tokens.ReferenceTypeId}};
+                {{Tokens.ModellingRuleId}}
                 state.Executable = {{Tokens.ExecutableValue}};
                 state.UserExecutable = {{Tokens.ExecutableValue}};
-                {{Tokens.MethodDeclarationIdConstant}}
+                {{Tokens.MethodDeclarationId}}
                 {{Tokens.ReleaseStatusValue}}
                 {{Tokens.CategoriesValue}}
                 {{Tokens.SpecificationValue}}
@@ -2974,7 +3185,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public static readonly TemplateString NodeState_AddReference_cs = TemplateString.Parse(
             $$"""
-            state.AddReference({{Tokens.ReferenceTypeIdConstant}}, {{Tokens.IsInverse}}, {{Tokens.TargetNodeIdConstant}});
+            state.AddReference({{Tokens.ReferenceTypeId}}, {{Tokens.IsInverse}}, {{Tokens.TargetNodeId}});
 
             """);
 
@@ -2984,6 +3195,16 @@ namespace Opc.Ua.SourceGeneration
         public static readonly TemplateString NodeState_AddChild_cs = TemplateString.Parse(
             $$"""
             state.AddChild(Create_{{Tokens.SymbolicId}}(context, state));
+
+            """);
+
+        /// <summary>
+        /// Template for adding a child node state as property and child
+        /// </summary>
+        public static readonly TemplateString NodeState_AddChildProperty_cs = TemplateString.Parse(
+            $$"""
+            state.{{Tokens.SymbolicName}} = Create_{{Tokens.SymbolicId}}(context, state);
+            state.AddChild(state.{{Tokens.SymbolicName}});
 
             """);
 
@@ -3071,7 +3292,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public static readonly TemplateString NodeState_ModellingRule_cs = TemplateString.Parse(
             $$"""
-            state.ModellingRuleId = {{Tokens.ModellingRuleIdConstant}};
+            state.ModellingRuleId = {{Tokens.ModellingRuleId}};
 
             """);
 
@@ -3080,7 +3301,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         public static readonly TemplateString NodeState_MethodDeclarationId_cs = TemplateString.Parse(
             $$"""
-            state.MethodDeclarationId = {{Tokens.MethodDeclarationIdConstant}};
+            state.MethodDeclarationId = {{Tokens.MethodDeclarationId}};
 
             """);
 
@@ -3096,10 +3317,27 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Template for value assignment
         /// </summary>
-        public static readonly TemplateString NodeState_Value_cs = TemplateString.Parse(
+        public static readonly TemplateString NodeState_ArrayValue_cs = TemplateString.Parse(
             $$"""
-            state.Value = {{Tokens.ValueCode}};
+            state.Value = new {{Tokens.DataType}}[]
+            {
+                {{Tokens.ListOfValues}}
+            };
+            """);
 
+        /// <summary>
+        /// Template for value assignment
+        /// </summary>
+        public static readonly TemplateString NodeState_ArgumentValue_cs = TemplateString.Parse(
+            $$"""
+            new global::Opc.Ua.Argument
+            {
+                Name = {{Tokens.Name}},
+                DataType = {{Tokens.DataType}},
+                ValueRank = {{Tokens.ValueRank}},
+                ArrayDimensions = {{Tokens.ArrayDimensions}},
+                Description = {{Tokens.Description}}
+            },
             """);
     }
 }

@@ -120,7 +120,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             // Act & Assert
             ArgumentException ex = Assert.Throws<ArgumentException>(() =>
                 template.AddReplacement(replacement, templateString, targets, onLoad: null, onWrite: null));
-            Assert.That(ex.ParamName, Is.EqualTo("OnLoad"));
+            Assert.That(ex.ParamName, Is.EqualTo("onLoad"));
         }
 
         /// <summary>
@@ -670,7 +670,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             // Act & Assert
             ArgumentException ex = Assert.Throws<ArgumentException>(() =>
                 template.AddReplacement(replacement, templateString, targets, OnWrite));
-            Assert.That(ex.ParamName, Is.EqualTo("OnLoad"));
+            Assert.That(ex.ParamName, Is.EqualTo("onLoad"));
             Assert.That(ex.Message, Does.Contain("A template loader must be passed if template string is null"));
         }
 

@@ -386,6 +386,9 @@ namespace Opc.Ua.SourceGeneration
             {
                 switch (resource)
                 {
+                    case TextResource text:
+                        leaveOpen = false;
+                        return new MemoryStream(Encoding.UTF8.GetBytes(text.Text));
                     case TextFileResource textFile:
                         leaveOpen = false;
                         return m_context.FileSystem.OpenRead(textFile.FileName);

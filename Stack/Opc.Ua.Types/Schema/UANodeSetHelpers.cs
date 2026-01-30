@@ -549,12 +549,7 @@ namespace Opc.Ua.Export
         /// </summary>
         private XmlEncoder CreateEncoder(ISystemContext context)
         {
-            IServiceMessageContext messageContext = new ServiceMessageContext(context.Telemetry)
-            {
-                NamespaceUris = context.NamespaceUris,
-                ServerUris = context.ServerUris,
-                Factory = context.EncodeableFactory
-            };
+            IServiceMessageContext messageContext = context.AsMessageContext();
 
             var encoder = new XmlEncoder(messageContext);
 
@@ -588,12 +583,7 @@ namespace Opc.Ua.Export
         /// </summary>
         private XmlDecoder CreateDecoder(ISystemContext context, XmlElement source)
         {
-            IServiceMessageContext messageContext = new ServiceMessageContext(context.Telemetry)
-            {
-                NamespaceUris = context.NamespaceUris,
-                ServerUris = context.ServerUris,
-                Factory = context.EncodeableFactory
-            };
+            IServiceMessageContext messageContext = context.AsMessageContext();
 
             var decoder = new XmlDecoder(source, messageContext);
 

@@ -67,6 +67,501 @@ namespace Opc.Ua.Schema.Model
             {
                 CreateNodeState(node, m_modelDesign.NamespaceUris);
             }
+            UpdateRolePermissions();
+        }
+
+        private void UpdateRolePermissions()
+        {
+            var list = new List<NodeState>();
+
+            foreach (NodeDesign ii in m_modelDesign.Nodes)
+            {
+                CollectInstances(m_context, list, ii.State);
+            }
+
+            foreach (NodeState ii in list)
+            {
+                if (ii is BaseInstanceState instance)
+                {
+                    if (ii.RolePermissions == null)
+                    {
+                        RolePermissionSet rolePermissions = FindDefaultPermissions(
+                            instance,
+                            m_modelDesign.RolePermissions);
+
+                        if (rolePermissions != null)
+                        {
+                            instance.RolePermissions = ImportRolePermissions(
+                                rolePermissions,
+                                m_context.NamespaceUris);
+                        }
+                    }
+
+                    if (ii.AccessRestrictions == null)
+                    {
+                        AccessRestrictions? accessRestrictions = FindDefaultPermissions(
+                            instance,
+                            m_modelDesign.AccessRestrictions);
+
+                        if (accessRestrictions != null)
+                        {
+                            instance.AccessRestrictions = ImportAccessRestrictions(
+                                accessRestrictions.Value,
+                                true);
+                        }
+                    }
+                }
+            }
+
+            foreach (NodeState ii in list)
+            {
+                if (ii is BaseInstanceState instance)
+                {
+                    BaseInstanceState parent = instance;
+
+                    while (parent != null && parent.RolePermissions == null)
+                    {
+                        parent = parent.Parent as BaseInstanceState;
+                    }
+
+                    var nd = parent?.Handle as NodeDesign;
+
+                    if (parent?.RolePermissions != null &&
+                        (nd?.RolePermissions == null || !nd.RolePermissions.DoNotInheirit))
+                    {
+                        instance.RolePermissions = parent.RolePermissions;
+                        instance.AccessRestrictions = parent.AccessRestrictions;
+                    }
+                }
+            }
+
+            foreach (NodeState ii in list)
+            {
+                if (ii.RolePermissions != null)
+                {
+                    FilterByNodeClass(ii);
+
+                    if (ii.RolePermissions.Any(x => x.RoleId != Objects.WellKnownRole_Anonymous))
+                    {
+                        ii.AccessRestrictions |= AccessRestrictionType.SigningRequired;
+                    }
+                }
+            }
+        }
+
+        private static PermissionType ImportRolePermission(Permissions[] input)
+        {
+            PermissionType output = PermissionType.None;
+
+            if (input != null && input.Length > 0)
+            {
+                foreach (Permissions jj in input)
+                {
+                    switch (jj)
+                    {
+                        case Permissions.Browse:
+                            output |= PermissionType.Browse;
+                            break;
+                        case Permissions.ReadRolePermissions:
+                            output |= PermissionType.ReadRolePermissions;
+                            break;
+                        case Permissions.WriteAttribute:
+                            output |= PermissionType.WriteAttribute;
+                            break;
+                        case Permissions.WriteRolePermissions:
+                            output |= PermissionType.WriteRolePermissions;
+                            break;
+                        case Permissions.WriteHistorizing:
+                            output |= PermissionType.WriteHistorizing;
+                            break;
+                        case Permissions.Read:
+                            output |= PermissionType.Read;
+                            break;
+                        case Permissions.Write:
+                            output |= PermissionType.Write;
+                            break;
+                        case Permissions.ReadHistory:
+                            output |= PermissionType.ReadHistory;
+                            break;
+                        case Permissions.InsertHistory:
+                            output |= PermissionType.InsertHistory;
+                            break;
+                        case Permissions.ModifyHistory:
+                            output |= PermissionType.ModifyHistory;
+                            break;
+                        case Permissions.DeleteHistory:
+                            output |= PermissionType.DeleteHistory;
+                            break;
+                        case Permissions.ReceiveEvents:
+                            output |= PermissionType.ReceiveEvents;
+                            break;
+                        case Permissions.Call:
+                            output |= PermissionType.Call;
+                            break;
+                        case Permissions.AddReference:
+                            output |= PermissionType.AddReference;
+                            break;
+                        case Permissions.RemoveReference:
+                            output |= PermissionType.RemoveReference;
+                            break;
+                        case Permissions.DeleteNode:
+                            output |= PermissionType.DeleteNode;
+                            break;
+                        case Permissions.AddNode:
+                            output |= PermissionType.AddNode;
+                            break;
+                        case Permissions.AllRead:
+                            output |=
+                                PermissionType.Browse |
+                                PermissionType.Read |
+                                PermissionType.ReadHistory |
+                                PermissionType.ReceiveEvents |
+                                PermissionType.ReadRolePermissions;
+                            break;
+                        case Permissions.All:
+                            output |=
+                                PermissionType.Browse |
+                                PermissionType.ReadRolePermissions |
+                                PermissionType.WriteAttribute |
+                                PermissionType.WriteRolePermissions |
+                                PermissionType.WriteHistorizing |
+                                PermissionType.Read |
+                                PermissionType.Write |
+                                PermissionType.ReadHistory |
+                                PermissionType.InsertHistory |
+                                PermissionType.ModifyHistory |
+                                PermissionType.DeleteHistory |
+                                PermissionType.ReceiveEvents |
+                                PermissionType.Call |
+                                PermissionType.AddReference |
+                                PermissionType.RemoveReference |
+                                PermissionType.DeleteNode |
+                                PermissionType.AddNode;
+                            break;
+                    }
+                }
+            }
+
+            return output;
+        }
+
+        private RolePermissionTypeCollection ImportRolePermissions(
+            RolePermissionSet input,
+            NamespaceTable namespaceUris)
+        {
+            if (input == null)
+            {
+                return null;
+            }
+
+            if (input.RolePermission != null)
+            {
+                RolePermissionTypeCollection output = [];
+
+                foreach (RolePermission ii in input.RolePermission)
+                {
+                    var role = new RolePermissionType();
+
+                    ObjectDesign roleNode = m_modelDesign.FindNode<ObjectDesign>(
+                        ii.Role,
+                        ii.Role.Name,
+                        "RoleType");
+                    role.RoleId = ConstructNodeId(roleNode, namespaceUris);
+                    role.Permissions = (uint)ImportRolePermission(ii.Permission);
+
+                    output.Add(role);
+                }
+
+                return output;
+            }
+
+            return null;
+        }
+
+        private static AccessRestrictionType? ImportAccessRestrictions(
+            AccessRestrictions restrictions,
+            bool enabled)
+        {
+            AccessRestrictionType output = AccessRestrictionType.None;
+
+            if (!enabled)
+            {
+                return null;
+            }
+
+            switch (restrictions)
+            {
+                case AccessRestrictions.SigningRequired:
+                    output |= AccessRestrictionType.SigningRequired;
+                    break;
+                case AccessRestrictions.EncryptionRequired:
+                    output |= AccessRestrictionType.EncryptionRequired;
+                    break;
+                case AccessRestrictions.SessionRequired:
+                    output |= AccessRestrictionType.SessionRequired;
+                    break;
+                case AccessRestrictions.SessionWithSigningRequired:
+                    output |=
+                        AccessRestrictionType.SigningRequired |
+                        AccessRestrictionType.SessionRequired;
+                    break;
+                case AccessRestrictions.SessionWithEncryptionRequired:
+                    output |=
+                        AccessRestrictionType.EncryptionRequired |
+                        AccessRestrictionType.SessionRequired;
+                    break;
+                case AccessRestrictions.SessionAndApplyToBrowseRequired:
+                    output |=
+                        AccessRestrictionType.SessionRequired |
+                        AccessRestrictionType.ApplyRestrictionsToBrowse;
+                    break;
+                case AccessRestrictions.SessionWithSigningAndApplyToBrowseRequired:
+                    output |=
+                        AccessRestrictionType.SigningRequired |
+                        AccessRestrictionType.SessionRequired |
+                        AccessRestrictionType.ApplyRestrictionsToBrowse;
+                    break;
+                case AccessRestrictions.SessionWithEncryptionAndApplyToBrowseRequired:
+                    output |=
+                        AccessRestrictionType.EncryptionRequired |
+                        AccessRestrictionType.SessionRequired |
+                        AccessRestrictionType.ApplyRestrictionsToBrowse;
+                    break;
+                case AccessRestrictions.SigningAndApplyToBrowseRequired:
+                    output |=
+                        AccessRestrictionType.SigningRequired |
+                        AccessRestrictionType.ApplyRestrictionsToBrowse;
+                    break;
+                case AccessRestrictions.EncryptionAndApplyToBrowseRequired:
+                    output |=
+                        AccessRestrictionType.EncryptionRequired |
+                        AccessRestrictionType.ApplyRestrictionsToBrowse;
+                    break;
+            }
+
+            return output > AccessRestrictionType.None ? output : null;
+        }
+
+        private static void CollectInstances(
+            SystemContext context,
+            List<NodeState> list,
+            NodeState node)
+        {
+            if (node.NodeId.IsNullNodeId)
+            {
+                return;
+            }
+
+            if (node is BaseInstanceState)
+            {
+                list.Add(node);
+            }
+
+            List<BaseInstanceState> children = [];
+            node.GetChildren(context, children);
+
+            foreach (BaseInstanceState child in children)
+            {
+                CollectInstances(context, list, child);
+            }
+        }
+
+        private static readonly Dictionary<NodeClass, uint> s_nodeClassPermissionMasks = new()
+        {
+            [NodeClass.Object] = (uint)~(
+                PermissionType.Write |
+                PermissionType.Read |
+                PermissionType.WriteHistorizing |
+                PermissionType.AddNode),
+            [NodeClass.Variable] = (uint)~(
+                PermissionType.Call |
+                PermissionType.ReceiveEvents |
+                PermissionType.AddNode),
+            [NodeClass.Method] = (uint)~(
+                PermissionType.ReceiveEvents |
+                PermissionType.ReadHistory |
+                PermissionType.DeleteHistory |
+                PermissionType.ModifyHistory |
+                PermissionType.InsertHistory |
+                PermissionType.Write |
+                PermissionType.Read |
+                PermissionType.WriteHistorizing |
+                PermissionType.AddNode),
+            [NodeClass.View] = (uint)~(
+                PermissionType.Write |
+                PermissionType.Read |
+                PermissionType.WriteHistorizing |
+                PermissionType.AddNode),
+            [NodeClass.ObjectType] = (uint)~(
+                PermissionType.ReceiveEvents |
+                PermissionType.ReadHistory |
+                PermissionType.DeleteHistory |
+                PermissionType.ModifyHistory |
+                PermissionType.InsertHistory |
+                PermissionType.Write |
+                PermissionType.Read |
+                PermissionType.WriteHistorizing |
+                PermissionType.AddNode),
+            [NodeClass.VariableType] = (uint)~(
+                PermissionType.Call |
+                PermissionType.ReceiveEvents |
+                PermissionType.ReadHistory |
+                PermissionType.DeleteHistory |
+                PermissionType.ModifyHistory |
+                PermissionType.InsertHistory |
+                PermissionType.Write |
+                PermissionType.Read |
+                PermissionType.WriteHistorizing |
+                PermissionType.AddNode),
+            [NodeClass.DataType] = (uint)~(
+                PermissionType.Call |
+                PermissionType.ReceiveEvents |
+                PermissionType.ReadHistory |
+                PermissionType.DeleteHistory |
+                PermissionType.ModifyHistory |
+                PermissionType.InsertHistory |
+                PermissionType.Write |
+                PermissionType.Read |
+                PermissionType.WriteHistorizing |
+                PermissionType.AddNode),
+            [NodeClass.ReferenceType] = (uint)~(
+                PermissionType.Call |
+                PermissionType.ReceiveEvents |
+                PermissionType.ReadHistory |
+                PermissionType.DeleteHistory |
+                PermissionType.ModifyHistory |
+                PermissionType.InsertHistory |
+                PermissionType.Write |
+                PermissionType.Read |
+                PermissionType.WriteHistorizing |
+                PermissionType.AddNode)
+        };
+
+        private static void FilterByNodeClass(NodeState node)
+        {
+            var clone = new RolePermissionTypeCollection();
+
+            foreach (RolePermissionType ii in node.RolePermissions)
+            {
+                clone.Add(new RolePermissionType
+                {
+                    RoleId = ii.RoleId,
+                    Permissions = ii.Permissions & s_nodeClassPermissionMasks[node.NodeClass]
+                });
+            }
+
+            node.RolePermissions = clone;
+        }
+
+        private static T FindDefaultPermissions<T>(
+            BaseTypeState type,
+            List<BaseInstanceState> path,
+            IReadOnlyDictionary<string, T> defaultPermissions)
+        {
+            Stack<BaseTypeState> types = new();
+
+            while (type != null)
+            {
+                if (type.Handle is not TypeDesign design)
+                {
+                    break;
+                }
+
+                types.Push(type);
+                type = design.BaseTypeNode?.State as BaseTypeState;
+            }
+
+            var permissions = default(T);
+
+            while (types.Count > 0)
+            {
+                type = types.Pop();
+
+                if (type.Handle is not TypeDesign design)
+                {
+                    break;
+                }
+
+                string name = design.SymbolicId.Name;
+
+                if (path.Count > 0)
+                {
+                    name += "_";
+                    name += string.Join("_", path.Select(x => x.SymbolicName));
+                }
+
+                if (defaultPermissions.TryGetValue(name, out T output))
+                {
+                    permissions = output;
+                }
+            }
+
+            return permissions;
+        }
+
+        private static T FindDefaultPermissions<T>(
+            BaseInstanceState instance,
+            IReadOnlyDictionary<string, T> defaultPermissions)
+        {
+            var path = new List<BaseInstanceState>
+            {
+                instance
+            };
+
+            NodeState parent = instance.Parent;
+            var type = parent as BaseTypeState;
+
+            while (parent != null)
+            {
+                if (parent is not BaseInstanceState parentInstance)
+                {
+                    break;
+                }
+
+                path.Add(parentInstance);
+                parent = parentInstance.Parent;
+                type = parent as BaseTypeState;
+            }
+
+            // no roles applied to instance declarations.
+#if FALSE
+            if (type != null)
+            {
+                return default;
+            }
+#endif
+
+            path.Reverse();
+
+            var permissions = default(T);
+
+            if (type != null)
+            {
+                permissions = FindDefaultPermissions(type, path, defaultPermissions);
+            }
+            else
+            {
+                string name = string.Join("_", path.Select(x => x.SymbolicName));
+
+                if (defaultPermissions.TryGetValue(name, out T output))
+                {
+                    permissions = output;
+                }
+            }
+
+            while (EqualityComparer<T>.Default.Equals(permissions, default) && path.Count > 0)
+            {
+                BaseInstanceState parentInstance = path[0];
+
+                if (parentInstance.Handle is InstanceDesign design)
+                {
+                    type = design.TypeDefinitionNode?.State as BaseTypeState;
+                    path.RemoveAt(0);
+                    permissions = FindDefaultPermissions(type, path, defaultPermissions);
+                }
+            }
+
+            return permissions;
         }
 
         private void CreateNodeState(
@@ -1462,7 +1957,12 @@ namespace Opc.Ua.Schema.Model
         {
             int index;
 
-            if (node == null || node.StringId != null)
+            if (node == null)
+            {
+                return default;
+            }
+
+            if (node.StringId != null)
             {
                 index = namespaceUris.GetIndex(node.SymbolicId.Namespace);
                 return new NodeId(node.StringId, (ushort)index);
