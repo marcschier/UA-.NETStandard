@@ -2129,7 +2129,8 @@ namespace Opc.Ua.SourceGeneration
             }
 
             Dictionary<XmlQualifiedName, InstanceDesign> lookup = node.Root.Children?.Items?
-                .ToDictionary(r => r.SymbolicId, r => r) ?? [];
+                .ToDictionary(r => r.SymbolicId, r => r) ??
+                [];
             Hierarchy hierarchy = node.Hierarchy;
             NodeDesign root = node.Root;
             foreach (HierarchyNode current in hierarchy.NodeList)
