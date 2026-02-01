@@ -160,7 +160,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         }
 
         [Test]
-        public void GenerateAddressSpaceCodeTest()
+        public void GenerateNodeStateGeneratorCodeTest()
         {
             // Arrange
             ITelemetryContext telemetry = NUnitTelemetryContext.Create(logLevel: LogLevel.Error);
@@ -171,11 +171,11 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
 
             // Assert - NodeState file should be created
             var generatedFiles = fileSystem.CreatedFiles
-                .Where(c => c.EndsWith(".NodeStates.g.cs", StringComparison.Ordinal))
+                .Where(c => c.EndsWith(".NodeStates.ex.g.cs", StringComparison.Ordinal))
                 .ToList();
 
             Assert.That(generatedFiles, Is.Not.Empty,
-                "NodeStates.g.cs file should be generated");
+                "NodeStates.ex.g.cs file should be generated");
 
             foreach (string file in generatedFiles)
             {
@@ -193,7 +193,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         }
 
         [Test]
-        public void GeneratedAddressSpaceCodeCompilesTest()
+        public void GeneratedNodeStateGeneratorCodeCompilesTest()
         {
             // Arrange
             ITelemetryContext telemetry = NUnitTelemetryContext.Create(logLevel: LogLevel.Error);
@@ -221,7 +221,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         }
 
         [Test]
-        public void AddressSpaceCodeGeneratesCorrectMethodSignatures()
+        public void NodeStateGeneratorCodeGeneratesCorrectMethodSignatures()
         {
             // Arrange
             ITelemetryContext telemetry = NUnitTelemetryContext.Create(logLevel: LogLevel.Error);
@@ -230,9 +230,9 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
             // Act
             Generators.GenerateStack(StackGenerationType.All, fileSystem, string.Empty, telemetry);
 
-            // Find AddressSpace files
+            // Find NodeStateGenerator files
             var predefinedNodesFiles = fileSystem.CreatedFiles
-                .Where(c => c.EndsWith(".NodeStates.g.cs", StringComparison.Ordinal))
+                .Where(c => c.EndsWith(".NodeStates.ex.g.cs", StringComparison.Ordinal))
                 .ToList();
 
             Assert.That(predefinedNodesFiles, Is.Not.Empty);

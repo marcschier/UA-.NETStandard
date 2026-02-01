@@ -473,11 +473,7 @@ namespace Opc.Ua
             }
         }
 
-        /// <summary>
-        /// Populates a list with the children that belong to the node.
-        /// </summary>
-        /// <param name="context">The context for the system being accessed.</param>
-        /// <param name="children">The list of children to populate.</param>
+        /// <inheritdoc/>
         public override void GetChildren(ISystemContext context, IList<BaseInstanceState> children)
         {
             PropertyState<Argument[]> inputArguments = m_inputArguments;
@@ -497,9 +493,42 @@ namespace Opc.Ua
             base.GetChildren(context, children);
         }
 
-        /// <summary>
-        /// Finds the child with the specified browse name.
-        /// </summary>
+        /// <inheritdoc/>
+        public override void AddChild(BaseInstanceState child)
+        {
+            if (child == null || child.BrowseName.IsNullQn)
+            {
+                return;
+            }
+
+            switch (child.BrowseName.Name)
+            {
+                case BrowseNames.OutputArguments:
+                {
+                    if (child is PropertyState<Argument[]> instance)
+                    {
+                        OutputArguments = instance;
+                        return;
+                    }
+                    break;
+                }
+
+                case BrowseNames.InputArguments:
+                {
+                    if (child is PropertyState<Argument[]> instance)
+                    {
+                        InputArguments = instance;
+                        return;
+                    }
+                    break;
+                }
+            }
+
+            // Add to the base class if not found or as unknown.
+            base.AddChild(child);
+        }
+
+        /// <inheritdoc/>
         protected override BaseInstanceState FindChild(
             ISystemContext context,
             QualifiedName browseName,

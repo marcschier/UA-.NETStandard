@@ -463,9 +463,6 @@ namespace Opc.Ua.Schema.Model
             }
 
             UpdateNamespaceObject(m_dictionary);
-
-            // update the references.
-            new ModelDesignToNodeState(this, m_context).AttachNodeStatesToNodeDesigns();
         }
 
         /// <summary>
@@ -633,9 +630,6 @@ namespace Opc.Ua.Schema.Model
 
             AssignIdentifiers(m_dictionary, identifierFilePath);
             UpdateNamespaceObject(m_dictionary);
-
-            // update the references.
-            new ModelDesignToNodeState(this, m_context).AttachNodeStatesToNodeDesigns();
         }
 
         /// <summary>
@@ -4548,7 +4542,6 @@ namespace Opc.Ua.Schema.Model
             mergedInstance.References = null;
             mergedInstance.IdentifierRequired = true;
             mergedInstance.InstanceDeclarationNode = null;
-            mergedInstance.InstanceState = null;
             mergedInstance.OveriddenNode = null;
             mergedInstance.Parent = null;
             mergedInstance.Category = source.Category;
@@ -5626,7 +5619,7 @@ namespace Opc.Ua.Schema.Model
             if (instance == null)
             {
                 rootId = new XmlQualifiedName(
-                    root.SymbolicId.Name + "Instance",
+                    "InstanceOf" + root.SymbolicId.Name,
                     root.SymbolicId.Namespace);
             }
 

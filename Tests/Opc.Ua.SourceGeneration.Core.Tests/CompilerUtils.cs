@@ -710,6 +710,11 @@ namespace Opc.Ua.SourceGeneration
                 {
                     public RoleState(NodeState? parent) : base(parent) { }
                 }
+                public class EUInformation {}
+                public class DeleteFileSystemObjectMethodState : MethodState
+                {
+                    public DeleteFileSystemObjectMethodState(NodeState? parent) : base(parent) { }
+                }
             }
             """;
     }

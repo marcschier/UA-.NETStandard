@@ -27,10 +27,6 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System;
-using System.IO;
-using System.Linq;
-
 namespace Opc.Ua
 {
     public partial class NodeState

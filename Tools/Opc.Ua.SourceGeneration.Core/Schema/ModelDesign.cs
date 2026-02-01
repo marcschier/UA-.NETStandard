@@ -809,34 +809,12 @@ namespace Opc.Ua.Schema.Model
         public bool HasReferences { get; set; }
 
         /// <summary>
-        /// State
-        /// </summary>
-        [XmlIgnore]
-#pragma warning disable CA2235 // Mark all non-serializable fields
-        public NodeState State { get; set; }
-#pragma warning restore CA2235 // Mark all non-serializable fields
-
-        /// <summary>
-        /// Instance state
-        /// </summary>
-        [XmlIgnore]
-#pragma warning disable CA2235 // Mark all non-serializable fields
-        public NodeState InstanceState { get; set; }
-#pragma warning restore CA2235 // Mark all non-serializable fields
-
-        /// <summary>
         /// Hierarchy
         /// </summary>
         [XmlIgnore]
 #pragma warning disable CA2235 // Mark all non-serializable fields
         public Hierarchy Hierarchy { get; set; }
 #pragma warning restore CA2235 // Mark all non-serializable fields
-
-        /// <summary>
-        /// Handle
-        /// </summary>
-        [XmlIgnore]
-        public string Handle { get; set; }
 
         /// <summary>
         /// Returns the string representation of the object.

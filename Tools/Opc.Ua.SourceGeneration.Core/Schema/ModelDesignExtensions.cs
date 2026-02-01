@@ -101,6 +101,18 @@ namespace Opc.Ua.Schema.Model
         }
 
         /// <summary>
+        /// Get type node state class name
+        /// </summary>
+        public static string GetNodeStateClassName(
+            this TypeDesign type,
+            string targetNamespace,
+            Namespace[] namespaces)
+        {
+            string className = type.SymbolicName.AsFullyQualifiedTypeSymbol(namespaces);
+            return CoreUtils.Format("{0}State", className);
+        }
+
+        /// <summary>
         /// Returns the class name to use when creating an instance of the type.
         /// </summary>
         public static string GetNodeStateClassName(
@@ -146,7 +158,7 @@ namespace Opc.Ua.Schema.Model
             {
                 return CoreUtils.Format(
                     "{0}State",
-                    GetNodeStateClassName(instance.TypeDefinitionNode, namespaces));
+                    GetClassName(instance.TypeDefinitionNode, namespaces));
             }
 
             var variableType = instance.TypeDefinitionNode as VariableTypeDesign;
@@ -157,7 +169,7 @@ namespace Opc.Ua.Schema.Model
             {
                 return CoreUtils.Format(
                     "{0}State",
-                    GetNodeStateClassName(variableType, namespaces));
+                    GetClassName(variableType, namespaces));
             }
 
             // check if the variable instance did not restrict the datatype.
@@ -165,7 +177,7 @@ namespace Opc.Ua.Schema.Model
             {
                 return CoreUtils.Format(
                     "{0}State",
-                    GetNodeStateClassName(variableType, namespaces));
+                    GetClassName(variableType, namespaces));
             }
 
             // instance restricted the datatype but the type did not not.
@@ -180,25 +192,25 @@ namespace Opc.Ua.Schema.Model
             {
                 return CoreUtils.Format(
                     "{0}State<{1}[]>",
-                    GetNodeStateClassName(variableType, namespaces),
+                    GetClassName(variableType, namespaces),
                     scalarName);
             }
 
             if (IsIndeterminateType(variable))
             {
-                return $"{GetNodeStateClassName(variableType, namespaces)}State";
+                return $"{GetClassName(variableType, namespaces)}State";
             }
 
             // add hack for TwoStateDiscreteType which always has to be bool.
             if (variableType.SymbolicName ==
                 new XmlQualifiedName("TwoStateDiscreteType", Namespaces.OpcUa))
             {
-                return $"{GetNodeStateClassName(variableType, namespaces)}State";
+                return $"{GetClassName(variableType, namespaces)}State";
             }
 
             return CoreUtils.Format(
                 "{0}State<{1}>",
-                GetNodeStateClassName(variableType, namespaces),
+                GetClassName(variableType, namespaces),
                 scalarName);
         }
 
@@ -216,7 +228,7 @@ namespace Opc.Ua.Schema.Model
             if (type is not DataTypeDesign dataType ||
                 dataType.BaseTypeNode is not DataTypeDesign dtd)
             {
-                return type.BaseTypeNode.GetNodeStateClassName(namespaces);
+                return type.BaseTypeNode.GetClassName(namespaces);
             }
 
             if (dtd.BasicDataType == BasicDataType.Structure)
@@ -432,7 +444,7 @@ namespace Opc.Ua.Schema.Model
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="ArgumentException"></exception>
-        public static string GetNodeStateClassName(this TypeDesign node, Namespace[] namespaces)
+        public static string GetClassName(this TypeDesign node, Namespace[] namespaces)
         {
             if (node is null)
             {
@@ -1919,7 +1931,7 @@ namespace Opc.Ua.Schema.Model
             return null;
         }
 
-        public static bool IsMethodTypeNode(this NodeDesign node)
+        public static bool IsMethodTypeDesign(this NodeDesign node)
         {
             if (node?.SymbolicId is null)
             {

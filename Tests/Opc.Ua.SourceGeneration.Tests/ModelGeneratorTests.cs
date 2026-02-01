@@ -91,12 +91,12 @@ namespace Opc.Ua.SourceGeneration
             GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation);
             if (!embedNodeSet2Xml)
             {
-                Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(8));
+                Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(6));
             }
             else
             {
                 // one extra for the embedded nodeset2.xml
-                Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(9));
+                Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(7));
             }
         }
 
@@ -129,7 +129,7 @@ namespace Opc.Ua.SourceGeneration
                 .WithUpdatedAnalyzerConfigOptions(options)
                 ;
             GeneratorRunResult generatorResult = GenerateAndCompile(driver, compilation);
-            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(16));
+            Assert.That(generatorResult.GeneratedSources.Length, Is.EqualTo(14));
         }
 
         [Theory]

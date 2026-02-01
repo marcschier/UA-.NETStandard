@@ -201,7 +201,7 @@ namespace Opc.Ua.SourceGeneration
                 {
                     structureType = StructureType.Union;
                 }
-                foreach (Parameter field in dataType.Fields)
+                foreach (Parameter field in dataType.Fields ?? [])
                 {
                     if (field.IsOptional)
                     {

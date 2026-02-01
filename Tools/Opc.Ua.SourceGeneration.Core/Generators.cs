@@ -83,7 +83,7 @@ namespace Opc.Ua.SourceGeneration
                     ModelDesign = modelDesign,
                     Telemetry = telemetry,
                     Options = options
-                }, validateSchemas: false, embedNodeSet2Xml: embedNodeSet2Xml);
+                }, validateSchemas: false);
             }
         }
 
@@ -143,7 +143,7 @@ namespace Opc.Ua.SourceGeneration
                     ModelDesign = modelDesign,
                     Telemetry = telemetry,
                     Options = options
-                }, validateSchemas: false, embedNodeSet2Xml: embedNodeSet2Xml);
+                }, validateSchemas: false);
                 // TODO {
                 // TODO     AvailableNodeSets = nodesets.Files
                 // TODO };
@@ -219,7 +219,7 @@ namespace Opc.Ua.SourceGeneration
                 var statusCodesGenerator = new StatusCodesGenerator(generatorContext);
                 statusCodesGenerator.Emit();
 
-                Generate(generatorContext, !options.OptimizeForCompileSpeed, false);
+                Generate(generatorContext, !options.OptimizeForCompileSpeed);
             }
         }
 
@@ -228,8 +228,7 @@ namespace Opc.Ua.SourceGeneration
         /// </summary>
         private static void Generate(
             GeneratorContext context,
-            bool validateSchemas = false,
-            bool embedNodeSet2Xml = false)
+            bool validateSchemas = false)
         {
             // Generate schemas
             var xmlSchemaGenerator = new XmlSchemaGenerator(context)
@@ -258,9 +257,6 @@ namespace Opc.Ua.SourceGeneration
             nodeStateCodeGenerator.Emit();
             var dataTypesGenerator = new DataTypeGenerator(context);
             dataTypesGenerator.Emit();
-            var nodesetGenerator = new NodesetGenerator(context,
-                embedNodeset: embedNodeSet2Xml);
-            nodesetGenerator.Emit();
         }
     }
 }

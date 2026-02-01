@@ -4473,7 +4473,7 @@ namespace Opc.Ua.Schema.Model.Tests
             TypeDesign node = null;
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => node.GetNodeStateClassName([]));
+            Assert.Throws<ArgumentNullException>(() => node.GetClassName([]));
         }
 
         /// <summary>
@@ -4490,7 +4490,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = dataType.GetNodeStateClassName([]);
+            string result = dataType.GetClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("TestDataType"));
@@ -4510,7 +4510,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => dataType.GetNodeStateClassName([]));
+            Assert.Throws<ArgumentException>(() => dataType.GetClassName([]));
         }
 
         /// <summary>
@@ -4527,7 +4527,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = objectType.GetNodeStateClassName([]);
+            string result = objectType.GetClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.BaseObject"));
@@ -4547,7 +4547,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = objectType.GetNodeStateClassName([]);
+            string result = objectType.GetClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("CustomObjectType"));
@@ -4567,7 +4567,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => objectType.GetNodeStateClassName([]));
+            Assert.Throws<ArgumentException>(() => objectType.GetClassName([]));
         }
 
         /// <summary>
@@ -4584,7 +4584,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = variableType.GetNodeStateClassName([]);
+            string result = variableType.GetClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.BaseDataVariable"));
@@ -4604,7 +4604,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = variableType.GetNodeStateClassName([]);
+            string result = variableType.GetClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("CustomVariableType"));
@@ -4624,7 +4624,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => variableType.GetNodeStateClassName([]));
+            Assert.Throws<ArgumentException>(() => variableType.GetClassName([]));
         }
 
         /// <summary>
@@ -4641,7 +4641,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = referenceType.GetNodeStateClassName([]);
+            string result = referenceType.GetClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("CustomReferenceType"));
@@ -4661,7 +4661,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = objectType.GetNodeStateClassName([]);
+            string result = objectType.GetClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("TestObject"));
@@ -4681,7 +4681,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = variableType.GetNodeStateClassName([]);
+            string result = variableType.GetClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("   "));
@@ -4701,7 +4701,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = objectType.GetNodeStateClassName([]);
+            string result = objectType.GetClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("objectsource"));
@@ -4721,7 +4721,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = variableType.GetNodeStateClassName([]);
+            string result = variableType.GetClassName([]);
 
             // Assert
             Assert.That(result, Is.EqualTo("datavariable"));
@@ -4742,7 +4742,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => dataType.GetNodeStateClassName([]));
+            Assert.Throws<ArgumentException>(() => dataType.GetClassName([]));
         }
 
         /// <summary>
@@ -11074,7 +11074,7 @@ namespace Opc.Ua.Schema.Model.Tests
             NodeDesign node = null;
 
             // Act
-            bool result = node.IsMethodTypeNode();
+            bool result = node.IsMethodTypeDesign();
 
             // Assert
             Assert.That(result, Is.False);
@@ -11114,7 +11114,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            bool result = mockNode.IsMethodTypeNode();
+            bool result = mockNode.IsMethodTypeDesign();
 
             // Assert
             Assert.That(result, Is.EqualTo(expected));
@@ -11134,7 +11134,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            bool result = mockNode.IsMethodTypeNode();
+            bool result = mockNode.IsMethodTypeDesign();
 
             // Assert
             Assert.That(result, Is.False);
@@ -11160,7 +11160,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            bool result = mockNode.IsMethodTypeNode();
+            bool result = mockNode.IsMethodTypeDesign();
 
             // Assert
             Assert.That(result, Is.EqualTo(expected));
@@ -11182,7 +11182,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            bool result = mockNode.IsMethodTypeNode();
+            bool result = mockNode.IsMethodTypeDesign();
 
             // Assert
             Assert.That(result, Is.EqualTo(expected));
@@ -11207,7 +11207,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            bool result = mockNode.IsMethodTypeNode();
+            bool result = mockNode.IsMethodTypeDesign();
 
             // Assert
             Assert.That(result, Is.EqualTo(expected));
@@ -11231,7 +11231,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            bool result = mockNode.IsMethodTypeNode();
+            bool result = mockNode.IsMethodTypeDesign();
 
             // Assert
             Assert.That(result, Is.EqualTo(expected));

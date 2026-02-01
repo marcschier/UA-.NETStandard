@@ -16,6 +16,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Compile Remove="Generators\NodesetGenerator.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <InternalsVisibleTo Include="Opc.Ua.SourceGeneration.Core.Tests" />
   </ItemGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">

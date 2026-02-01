@@ -47,21 +47,23 @@ namespace Opc.Ua.SourceGeneration.Tester
             Generators.GenerateStack(StackGenerationType.All, fs, output, new Telemetry());
             Console.WriteLine("Stack generation completed.");
 
-            Generators.GenerateCode(new DesignFileCollection
+            string[] models =
+            [
+                "TestDataDesign",
+                "DemoModel"
+            ];
+            foreach (string model in models)
             {
-                DesignFiles = [Path.Combine(Directory.GetCurrentDirectory(), "Resources", "TestDataDesign.xml")],
-                IdentifierFilePath = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "TestDataDesign.csv"),
-                Options = new DesignFileOptions()
-            }, fs, output, new Telemetry(), embedNodeSet2Xml: true);
-            Console.WriteLine("TestData design build completed.");
-
-            Generators.GenerateCode(new DesignFileCollection
-            {
-                DesignFiles = [Path.Combine(Directory.GetCurrentDirectory(), "Resources", "DemoModel.xml")],
-                IdentifierFilePath = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "DemoModel.csv"),
-                Options = new DesignFileOptions()
-            }, fs, output, new Telemetry(), embedNodeSet2Xml: true);
-            Console.WriteLine("DemoModel design build completed.");
+                Generators.GenerateCode(new DesignFileCollection
+                {
+                    DesignFiles = [
+                        Path.Combine(Directory.GetCurrentDirectory(), "Resources", model + ".xml")],
+                    IdentifierFilePath =
+                    Path.Combine(Directory.GetCurrentDirectory(), "Resources", model + ".csv"),
+                    Options = new DesignFileOptions()
+                }, fs, output, new Telemetry(), embedNodeSet2Xml: true);
+                Console.WriteLine($"{model} design build completed.");
+            }
         }
 
         private sealed class Telemetry : TelemetryContextBase

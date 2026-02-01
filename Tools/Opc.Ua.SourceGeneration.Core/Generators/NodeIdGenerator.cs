@@ -376,7 +376,7 @@ namespace Opc.Ua.SourceGeneration
                     continue;
                 }
 
-                if (node.IsMethodTypeNode())
+                if (node.IsMethodTypeDesign())
                 {
                     continue;
                 }
