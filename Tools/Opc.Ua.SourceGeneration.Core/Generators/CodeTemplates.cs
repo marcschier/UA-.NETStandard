@@ -1870,7 +1870,11 @@ namespace Opc.Ua.SourceGeneration
             {
                 if (child is {{Tokens.ClassName}} instance)
                 {
-                    {{Tokens.ChildName}} = instance;
+                    // allow setting before initialization
+                    if ({{Tokens.ChildName}} == null)
+                    {
+                        {{Tokens.ChildName}} = instance;
+                    }
                     return;
                 }
                 break;

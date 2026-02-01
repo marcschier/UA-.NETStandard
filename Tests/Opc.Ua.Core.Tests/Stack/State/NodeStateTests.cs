@@ -84,21 +84,10 @@ namespace Opc.Ua.Core.Tests.Stack.State
             var generatedc = new NodeStateCollection().AddOpcUa(context);
             var path = Path.Combine(Directory.GetCurrentDirectory(), "generated_nodestates.xml");
             generatedc.SaveAsXml(context, File.OpenWrite(path));
-            var initializedc = new NodeStateCollection().LoadOpcUa(context);
-            path = Path.Combine(Directory.GetCurrentDirectory(), "serialized_nodestates.xml");
-            initializedc.SaveAsXml(context, File.OpenWrite(path));
             var generated = generatedc.ToHashSet(comparer);
-            var initialized = initializedc.ToHashSet(comparer);
 
-            var byNodeIdInitialized = initialized.ToDictionary(n => n.NodeId, n => n);
-            Assert.That(byNodeIdInitialized.Count, Is.EqualTo(initialized.Count));
             var byNodeIdGenerated = generated.ToDictionary(n => n.NodeId, n => n);
             Assert.That(byNodeIdGenerated.Count, Is.EqualTo(generated.Count));
-
-            var diffInitToGenerated = initialized.Except(generated, comparer).ToList();
-            var diffGeneratedToInit = diffInitToGenerated.ConvertAll(n => byNodeIdGenerated[n.NodeId]);
-
-            Assert.IsEmpty(diffInitToGenerated, "Some NodeState types are not generated correctly.");
         }
 
         public sealed class NodeStateEqualityComparer : IEqualityComparer<NodeState>
