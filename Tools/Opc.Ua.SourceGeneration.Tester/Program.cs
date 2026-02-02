@@ -52,17 +52,21 @@ namespace Opc.Ua.SourceGeneration.Tester
                 "TestDataDesign",
                 "DemoModel"
             ];
-            foreach (string model in models)
+            foreach (string file in Directory.EnumerateFiles(
+                Path.Combine(Directory.GetCurrentDirectory(), "Resources"), "*.xml"))
             {
+                string csvFile = Path.ChangeExtension(file, "csv");
+                if (!File.Exists(csvFile))
+                {
+                    continue;
+                }
                 Generators.GenerateCode(new DesignFileCollection
                 {
-                    DesignFiles = [
-                        Path.Combine(Directory.GetCurrentDirectory(), "Resources", model + ".xml")],
-                    IdentifierFilePath =
-                    Path.Combine(Directory.GetCurrentDirectory(), "Resources", model + ".csv"),
+                    DesignFiles = [ file ],
+                    IdentifierFilePath = csvFile,
                     Options = new DesignFileOptions()
-                }, fs, output, new Telemetry(), embedNodeSet2Xml: true);
-                Console.WriteLine($"{model} design build completed.");
+                }, fs, output, new Telemetry());
+                Console.WriteLine($"{Path.GetFileNameWithoutExtension(file)} design build completed.");
             }
         }
 

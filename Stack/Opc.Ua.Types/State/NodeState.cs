@@ -204,9 +204,6 @@ namespace Opc.Ua
             m_references = null;
             m_changeMasks = NodeStateChangeMasks.None;
 
-            // set the initialization flags.
-            Initialized = true;
-
             var children = new List<BaseInstanceState>();
             source.GetChildren(context, children);
 
@@ -1479,9 +1476,6 @@ namespace Opc.Ua
             }
 
             decoder.PopNamespace();
-
-            // set the initialization flags.
-            Initialized = true;
         }
 
         /// <summary>
@@ -2736,6 +2730,14 @@ namespace Opc.Ua
                 DisplayName = displayName;
             }
 
+            CreateInternal(context, assignNodeIds);
+        }
+
+        /// <summary>
+        /// Internal create sequence without node assignments
+        /// </summary>
+        private void CreateInternal(ISystemContext context, bool assignNodeIds)
+        {
             // get all children.
             var children = new List<BaseInstanceState>();
             GetChildren(context, children);
@@ -2753,8 +2755,7 @@ namespace Opc.Ua
                 UpdateReferenceTargets(context, children, mappingTable);
             }
 
-            // Call OnAfterCreate on all children.
-            CallOnAfterCreate(context, children);
+            CallOnAfterCreate(context, null);
 
             ClearChangeMasks(context, true);
         }
@@ -2821,12 +2822,8 @@ namespace Opc.Ua
         public virtual void Create(ISystemContext context, NodeState source)
         {
             Initialize(context, source);
-
             CallOnBeforeCreate(context);
-
-            CallOnAfterCreate(context, null);
-
-            ClearChangeMasks(context, true);
+            CreateInternal(context, false);
         }
 
         /// <summary>
@@ -2848,6 +2845,16 @@ namespace Opc.Ua
 
             ChangeMasks = NodeStateChangeMasks.Deleted;
             ClearChangeMasks(context, false);
+        }
+
+        /// <summary>
+        /// Called when the predefined node was fully created. Called
+        /// by generated code after all children have been created.
+        /// </summary>
+        public void CreateAsPredefinedNode(ISystemContext context)
+        {
+            CallOnBeforeCreate(context);
+            CreateInternal(context, false);
         }
 
         /// <summary>
@@ -4215,7 +4222,7 @@ namespace Opc.Ua
         /// <summary>
         /// Adds a child to the node.
         /// </summary>
-        public virtual void AddChild(BaseInstanceState child)
+        public void AddChild(BaseInstanceState child)
         {
             if (!ReferenceEquals(child.Parent, this))
             {
@@ -4723,8 +4730,13 @@ namespace Opc.Ua
         /// </summary>
         /// <param name="context">The context for the system being accessed.</param>
         /// <param name="browseName">The browse name of the children to add.</param>
-        /// <param name="createOrReplace">if set to <c>true</c> and the child could exist then the child is created.</param>
-        /// <param name="replacement">The replacement to use if createOrReplace is true.</param>
+        /// <param name="createOrReplace">if set to <c>true</c> and the child does
+        /// not exist then the child is created or replaced with the provided
+        /// replacement.</param>
+        /// <param name="replacement">The replacement to use if createOrReplace is
+        /// true. If not of same type, the node state is used to initialize a new
+        /// instance of the required type (for narrowing conversation to the type
+        /// definition</param>
         /// <returns>The child.</returns>
         protected virtual BaseInstanceState FindChild(
             ISystemContext context,
@@ -4737,6 +4749,10 @@ namespace Opc.Ua
                 return null;
             }
 
+            // search for existing child to replace or add to the list of children
+            // that are not assigned to a sub type's properties. Unlike the sub
+            // type implementations we do not create a new instance here if
+            // replacement is null. TODO: should this be reconsidered?
             lock (m_childrenLock)
             {
                 if (m_children != null)

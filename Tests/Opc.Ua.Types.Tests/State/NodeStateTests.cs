@@ -82,7 +82,6 @@ namespace Opc.Ua.Types.Tests.State
 
             var testObject = CreateDefaultNodeStateType(systemType) as NodeState;
             Assert.NotNull(testObject);
-            Assert.False(testObject.Initialized);
             var context = new SystemContext(telemetry) { NamespaceUris = Context.NamespaceUris };
             Assert.AreEqual(0, context.NamespaceUris.GetIndexOrAppend(OpcUa));
             testObject.Create(context, new NodeId(1000), "Name", "DisplayName", true);

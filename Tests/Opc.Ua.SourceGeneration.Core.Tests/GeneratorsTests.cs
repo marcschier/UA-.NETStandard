@@ -283,65 +283,11 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         }
 
         /// <summary>
-        /// Tests that GenerateCode handles embedNodeSet2Xml set to false.
-        /// Condition: embedNodeSet2Xml is false
-        /// Expected: Method executes with embedNodeSet2Xml false
-        /// </summary>
-        [Test]
-        public void GenerateCode_EmbedNodeSet2XmlFalse_DoesNotThrow()
-        {
-            // Arrange
-            var mockFileSystem = new Mock<IFileSystem>();
-            var mockTelemetry = new Mock<ITelemetryContext>();
-            var nodesets = new NodesetFileCollection(
-                [],
-                mockFileSystem.Object,
-                mockTelemetry.Object);
-
-            // Act & Assert
-            Assert.DoesNotThrow(() => nodesets.GenerateCode(
-                mockFileSystem.Object,
-                "output",
-                mockTelemetry.Object,
-                embedNodeSet2Xml: false));
-        }
-
-        /// <summary>
-        /// Tests that GenerateCode handles embedNodeSet2Xml set to true.
-        /// Condition: embedNodeSet2Xml is true
-        /// Expected: Method executes with embedNodeSet2Xml true
-        /// </summary>
-        [Test]
-        public void GenerateCode_EmbedNodeSet2XmlTrue_DoesNotThrow()
-        {
-            // Arrange
-            var mockFileSystem = new Mock<IFileSystem>();
-            var mockTelemetry = new Mock<ITelemetryContext>();
-            var nodesets = new NodesetFileCollection(
-                [],
-                mockFileSystem.Object,
-                mockTelemetry.Object);
-
-            // Act & Assert
-            Assert.DoesNotThrow(() => nodesets.GenerateCode(
-                mockFileSystem.Object,
-                "output",
-                mockTelemetry.Object,
-                embedNodeSet2Xml: true));
-        }
-
-        /// <summary>
         /// Tests that GenerateCode handles all boolean parameter combinations.
-        /// Condition: Various combinations of useAllowSubtypes and embedNodeSet2Xml
-        /// Expected: Method executes for all combinations
         /// </summary>
-        [TestCase(false, false)]
-        [TestCase(false, true)]
-        [TestCase(true, false)]
-        [TestCase(true, true)]
+        [Theory]
         public void GenerateCode_BooleanParameterCombinations_DoesNotThrow(
-            bool useAllowSubtypes,
-            bool embedNodeSet2Xml)
+            bool useAllowSubtypes)
         {
             // Arrange
             var mockFileSystem = new Mock<IFileSystem>();
@@ -356,8 +302,7 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
                 mockFileSystem.Object,
                 "output",
                 mockTelemetry.Object,
-                useAllowSubtypes: useAllowSubtypes,
-                embedNodeSet2Xml: embedNodeSet2Xml));
+                useAllowSubtypes: useAllowSubtypes));
         }
     }
 }

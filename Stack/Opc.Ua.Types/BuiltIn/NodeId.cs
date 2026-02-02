@@ -1718,7 +1718,7 @@ namespace Opc.Ua
         /// Identifier as bytes
         /// </summary>
         internal byte[] OpaqueIdentifer =>
-            (byte[])m_identifier ?? Array.Empty<byte>();
+            (byte[])m_identifier ?? [];
 
         /// <summary>
         /// Identifier as string

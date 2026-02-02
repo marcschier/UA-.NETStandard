@@ -93,14 +93,12 @@ namespace Opc.Ua.SourceGeneration.Api.Tests
             OptimizationLevel optimizationLevel,
             LanguageVersion languageVersion,
             bool withAnalyzers,
-            bool withNodeLoader,
-            bool embedNodeSet2Xml)
+            bool withNodeLoader)
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.Create(logLevel: LogLevel.Error);
             Dictionary<string, string> generatedText = GenerateCodeFromModel(
                 modelDesignFile,
                 languageVersion,
-                embedNodeSet2Xml,
                 telemetry,
                 out Dictionary<string, string> generatedOther);
             Dictionary<string, string> generatedTextStack = GenerateStackTests.GenerateStack(
@@ -151,7 +149,7 @@ namespace Opc.Ua.SourceGeneration.Api.Tests
             }
 
             // Parse and compile the generated code
-            var sw = new Stopwatch();
+            var sw = Stopwatch.StartNew();
             using var peStream = new MemoryStream();
             using var xmlStream = new MemoryStream();
             bool success = optimizationLevel
@@ -185,15 +183,12 @@ namespace Opc.Ua.SourceGeneration.Api.Tests
         }
 
         [Theory]
-        public async Task GenerateFromDesignFileWithCsharp8Async(
-            string modelDesignFile,
-            bool embedNodeSet2Xml)
+        public async Task GenerateFromDesignFileWithCsharp8Async(string modelDesignFile)
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.Create(logLevel: LogLevel.Error);
             Dictionary<string, string> generatedText = GenerateCodeFromModel(
                 modelDesignFile,
                 LanguageVersion.CSharp8,
-                embedNodeSet2Xml,
                 telemetry,
                 out _);
             Assert.That(generatedText, Is.Not.Empty);
@@ -202,7 +197,6 @@ namespace Opc.Ua.SourceGeneration.Api.Tests
         private static Dictionary<string, string> GenerateCodeFromModel(
             string modelDesignFile,
             LanguageVersion languageVersion,
-            bool embedNodeSet2Xml,
             ITelemetryContext telemetry,
             out Dictionary<string, string> nonSourceCode)
         {
@@ -223,7 +217,7 @@ namespace Opc.Ua.SourceGeneration.Api.Tests
             }, fileSystem, string.Empty, telemetry, new GeneratorOptions
             {
                 UseUtf8StringLiterals = languageVersion >= LanguageVersion.CSharp11
-            }, embedNodeSet2Xml: embedNodeSet2Xml);
+            });
 
             var generatedText = fileSystem.CreatedFiles
                 .Where(c => Path.GetExtension(c) == ".cs")

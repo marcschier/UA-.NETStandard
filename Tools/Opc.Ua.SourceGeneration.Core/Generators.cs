@@ -46,7 +46,6 @@ namespace Opc.Ua.SourceGeneration
         /// <param name="telemetry">Telemetry context for logging</param>
         /// <param name="options">Generator options</param>
         /// <param name="useAllowSubtypes">allow subtypes</param>
-        /// <param name="embedNodeSet2Xml">embed nodeset2.xml files</param>
         /// <param name="identifierFiles">Any additional csv files</param>
         public static void GenerateCode(
             this DesignFileCollection designFiles,
@@ -55,7 +54,6 @@ namespace Opc.Ua.SourceGeneration
             ITelemetryContext telemetry,
             GeneratorOptions options = null,
             bool useAllowSubtypes = false,
-            bool embedNodeSet2Xml = false,
             List<string> identifierFiles = null)
         {
             if (designFiles.DesignFiles.Count == 0)
@@ -96,15 +94,13 @@ namespace Opc.Ua.SourceGeneration
         /// <param name="telemetry">Telemetry context for logging</param>
         /// <param name="options">Generator options</param>
         /// <param name="useAllowSubtypes">allow subtypes</param>
-        /// <param name="embedNodeSet2Xml">embed nodeset2.xml files</param>
         public static void GenerateCode(
             this NodesetFileCollection nodesets,
             IFileSystem fileSystem,
             string outputDir,
             ITelemetryContext telemetry,
             GeneratorOptions options = null,
-            bool useAllowSubtypes = false,
-            bool embedNodeSet2Xml = false)
+            bool useAllowSubtypes = false)
         {
             if (nodesets.Files.Count == 0)
             {

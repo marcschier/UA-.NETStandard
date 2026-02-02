@@ -479,7 +479,7 @@ namespace Opc.Ua.Schema.Model
         /// <summary>
         /// Returns the NodeClass of a Node
         /// </summary>
-        public static string GetNodeClassString(this NodeDesign node)
+        public static string GetNodeClassAsString(this NodeDesign node)
         {
             if (node is VariableDesign)
             {
@@ -525,18 +525,10 @@ namespace Opc.Ua.Schema.Model
         }
 
         /// <summary>
-        /// Returns a boolean value as text.
-        /// </summary>
-        public static string AsBooleanString(this bool value)
-        {
-            return value ? "true" : "false";
-        }
-
-        /// <summary>
         /// Maps the event notifier flag onto a string.
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
-        public static string GetEventNotifierString(this ObjectTypeDesign objectType)
+        public static string GetEventNotifierAsCode(this ObjectTypeDesign objectType)
         {
             if (objectType is null)
             {
@@ -550,26 +542,9 @@ namespace Opc.Ua.Schema.Model
         }
 
         /// <summary>
-        /// Maps the access level enumeration onto a string.
-        /// </summary>
-        public static string GetAccessLevelString(this AccessLevel accessLevel)
-        {
-            return accessLevel switch
-            {
-                AccessLevel.Read => "global::Opc.Ua.AccessLevels.CurrentRead",
-                AccessLevel.Write => "global::Opc.Ua.AccessLevels.CurrentWrite",
-                AccessLevel.ReadWrite => "global::Opc.Ua.AccessLevels.CurrentReadOrWrite",
-                AccessLevel.HistoryRead => "global::Opc.Ua.AccessLevels.HistoryRead",
-                AccessLevel.HistoryWrite => "global::Opc.Ua.AccessLevels.HistoryWrite",
-                AccessLevel.HistoryReadWrite => "global::Opc.Ua.AccessLevels.HistoryReadOrWrite",
-                _ => "AccessLevels.None"
-            };
-        }
-
-        /// <summary>
         /// Maps the value rank enumeration onto a string.
         /// </summary>
-        public static string GetValueRankString(this ValueRank valueRank, string arrayDimensions)
+        public static string GetValueRankAsCode(this ValueRank valueRank, string arrayDimensions)
         {
             switch (valueRank)
             {
@@ -609,7 +584,7 @@ namespace Opc.Ua.Schema.Model
         /// <summary>
         /// Maps the MinimumSamplingInterval onto a constant.
         /// </summary>
-        public static string GetMinimumSamplingIntervalString(this VariableTypeDesign variableType)
+        public static string GetMinimumSamplingIntervalAsCode(this VariableTypeDesign variableType)
         {
             return variableType.MinimumSamplingInterval switch
             {
@@ -762,6 +737,7 @@ namespace Opc.Ua.Schema.Model
             Func<string> onUnknownElement = null,
             bool dataTypeQuirk = false)
         {
+            // Note that we return a typed value since we initialize a object/variant
             switch (dataType.BasicDataType)
             {
                 case BasicDataType.Boolean:
@@ -789,70 +765,70 @@ namespace Opc.Ua.Schema.Model
                 case BasicDataType.SByte:
                     if (decodedValue is not sbyte sbyteValue)
                     {
-                        return "default";
+                        sbyteValue = 0;
                     }
                     return CoreUtils.Format("(sbyte){0}", sbyteValue);
                 case BasicDataType.Byte:
                     if (decodedValue is not byte byteValue)
                     {
-                        return "default";
+                        byteValue = 0;
                     }
                     return CoreUtils.Format("(byte){0}", byteValue);
                 case BasicDataType.Int16:
                     if (decodedValue is not short shortValue)
                     {
-                        return "default";
+                        shortValue = 0;
                     }
                     return CoreUtils.Format("(short){0}", shortValue);
                 case BasicDataType.UInt16:
                     if (decodedValue is not ushort ushortValue)
                     {
-                        return "default";
+                        ushortValue = 0;
                     }
                     return CoreUtils.Format("(ushort){0}", ushortValue);
                 case BasicDataType.Int32:
                     if (decodedValue is not int intValue)
                     {
-                        return "default";
+                        intValue = 0;
                     }
                     return CoreUtils.Format("(int){0}", intValue);
                 case BasicDataType.UInt32:
                     if (decodedValue is not uint uintValue)
                     {
-                        return "default";
+                        uintValue = 0;
                     }
                     return CoreUtils.Format("(uint){0}", uintValue);
                 case BasicDataType.Integer:
                 case BasicDataType.Int64:
                     if (decodedValue is not long longValue)
                     {
-                        return "default";
+                        longValue = 0;
                     }
                     return CoreUtils.Format("(long){0}", longValue);
                 case BasicDataType.UInteger:
                 case BasicDataType.UInt64:
                     if (decodedValue is not ulong ulongValue)
                     {
-                        return "default";
+                        ulongValue = 0;
                     }
                     return CoreUtils.Format("(ulong){0}", ulongValue);
                 case BasicDataType.Float:
                     if (decodedValue is not float floatValue)
                     {
-                        return "default";
+                        floatValue = 0;
                     }
                     return CoreUtils.Format("(float){0}", floatValue);
                 case BasicDataType.Number:
                 case BasicDataType.Double:
                     if (decodedValue is not double doubleValue)
                     {
-                        return "default";
+                        doubleValue = 0;
                     }
                     return CoreUtils.Format("(double){0}", doubleValue);
                 case BasicDataType.String:
                     if (decodedValue is not string stringValue)
                     {
-                        return "default";
+                        stringValue = default;
                     }
                     return stringValue.AsStringLiteral();
                 case BasicDataType.DateTime:
@@ -872,7 +848,7 @@ namespace Opc.Ua.Schema.Model
                     if (decodedValue is not Guid guidValue ||
                         guidValue == Guid.Empty)
                     {
-                        return "default";
+                        return "global::Opc.Ua.Uuid.Empty";
                     }
                     return CoreUtils.Format(
                         "global::Opc.Ua.Uuid.Parse(\"{0}\")",
@@ -880,7 +856,7 @@ namespace Opc.Ua.Schema.Model
                 case BasicDataType.ByteString:
                     if (decodedValue is not byte[] byteStringValue)
                     {
-                        return "default";
+                        return "default(byte[])";
                     }
                     return CoreUtils.Format(
                         "CoreUtils.FromHexString(\"{0}\")",
@@ -889,7 +865,7 @@ namespace Opc.Ua.Schema.Model
                     if (decodedValue is not NodeId nodeId ||
                         nodeId.IsNullNodeId)
                     {
-                        return "default";
+                        return "global::Opc.Ua.NodeId.Null";
                     }
                     if (nodeId.NamespaceIndex == 0 ||
                         nodeId.NamespaceIndex >= namespaces.Length)
@@ -908,7 +884,7 @@ namespace Opc.Ua.Schema.Model
                     if (decodedValue is not ExpandedNodeId expandedNodeId ||
                         expandedNodeId.IsNull)
                     {
-                        return "default";
+                        return "global::Opc.Ua.ExpandedNodeId.Null";
                     }
                     return CoreUtils.Format(
                         "global::Opc.Ua.ExpandedNodeId.Parse(\"{0}\")",
@@ -917,7 +893,7 @@ namespace Opc.Ua.Schema.Model
                     if (decodedValue is not QualifiedName qualifiedName ||
                         qualifiedName.IsNullQn)
                     {
-                        return "default";
+                        return "global::Opc.Ua.QualifiedName.Null";
                     }
                     return CoreUtils.Format(
                         "global::Opc.Ua.QualifiedName.Parse(\"{0}\")",
@@ -926,7 +902,7 @@ namespace Opc.Ua.Schema.Model
                     if (decodedValue is not Ua.LocalizedText localizedText ||
                         localizedText.IsNullOrEmpty)
                     {
-                        return "default";
+                        return "global::Opc.Ua.LocalizedText.Null";
                     }
                     return CoreUtils.Format(
                         "new global::Opc.Ua.LocalizedText({0}, {1})",
@@ -936,9 +912,11 @@ namespace Opc.Ua.Schema.Model
                     if (decodedValue is not StatusCode statusCode ||
                         statusCode.Code == 0)
                     {
-                        return "default";
+                        return "default(global::Opc.Ua.StatusCode)";
                     }
-                    return CoreUtils.Format("(StatusCode){0}", statusCode);
+                    return CoreUtils.Format(
+                        "(global::Opc.Ua.StatusCode.StatusCode){0}",
+                        statusCode);
                 case BasicDataType.Enumeration:
                     if (dataType.BaseTypeNode?.SymbolicId ==
                         new XmlQualifiedName("OptionSet", Namespaces.OpcUa))
@@ -962,7 +940,8 @@ namespace Opc.Ua.Schema.Model
                                 dataType.Fields[0].Name);
                         }
                         // TODO: change to initialize enum with the value
-                        return onUnknownElement?.Invoke() ?? "default";
+                        return onUnknownElement?.Invoke() ?? CoreUtils.Format("default({0})",
+                            dataType.SymbolicName.AsFullyQualifiedTypeSymbol(namespaces));
                     }
                     // Default to enum with value 0 which should be "none" for option set
                     return onUnknownElement?.Invoke() ?? "default";
@@ -1081,25 +1060,23 @@ namespace Opc.Ua.Schema.Model
         /// <summary>
         /// Get code string to load a variant from XML resource stream.
         /// </summary>
-        /// <param name="dataType"></param>
-        /// <param name="valueRank"></param>
-        /// <param name="targetNamespace"></param>
-        /// <param name="namespaces"></param>
-        /// <param name="xmlStreamResource"></param>
         /// <returns></returns>
         public static string GetVariantFromXmlCode(
             this DataTypeDesign dataType,
             ValueRank valueRank,
             string targetNamespace,
             Namespace[] namespaces,
-            string xmlStreamResource)
+            string xmlStreamResource,
+            string contextVariable = null)
         {
+            contextVariable ??= "context";
             switch (dataType.BasicDataType)
             {
                 case BasicDataType.BaseDataType:
                     return CoreUtils.Format(
-                        "global::Opc.Ua.Variant.FromXml({0}AsStream, context)",
-                        xmlStreamResource);
+                        "global::Opc.Ua.Variant.FromXml({0}AsStream, {1})",
+                        xmlStreamResource,
+                        contextVariable);
                 case BasicDataType.UserDefined:
                 case BasicDataType.Structure:
                 case BasicDataType.Enumeration:
@@ -1109,15 +1086,17 @@ namespace Opc.Ua.Schema.Model
                         NullableAnnotation.NonNullable,
                         false);
                     return CoreUtils.Format(
-                        "global::Opc.Ua.Variant.FromXml({0}AsStream, context).Get{1}{2}<{3}>()",
+                        "global::Opc.Ua.Variant.FromXml({0}AsStream, {1}).Get{2}{3}<{4}>()",
                         xmlStreamResource,
+                        contextVariable,
                         dataType.BasicDataType == BasicDataType.Enumeration ? "Enumeration" : "Structure",
                         valueRank == ValueRank.Array ? "Array" : string.Empty,
                         dataTypeString);
                 default:
                     return CoreUtils.Format(
-                        "global::Opc.Ua.Variant.FromXml({0}AsStream, context).Get{1}{2}()",
+                        "global::Opc.Ua.Variant.FromXml({0}AsStream, {1}).Get{2}{3}()",
                         xmlStreamResource,
+                        contextVariable,
                         dataType.BasicDataType.ToString(),
                         valueRank == ValueRank.Array ? "Array" : string.Empty);
             }
@@ -1938,6 +1917,11 @@ namespace Opc.Ua.Schema.Model
                 return false;
             }
 
+            if (node is not MethodDesign)
+            {
+                return false;
+            }
+
             string symbol = node.SymbolicId.Name;
 
             int index = symbol.IndexOf('_', StringComparison.Ordinal);
@@ -2222,7 +2206,7 @@ namespace Opc.Ua.Schema.Model
             }
         }
 
-        public static string GetNodeIdConstant(
+        public static string GetNodeIdAsCode(
             this NodeDesign node,
             Namespace[] namespaces,
             string namespaceTableVariable)
@@ -2242,29 +2226,12 @@ namespace Opc.Ua.Schema.Model
             }
             else
             {
-                identifier = null;
-                for (NodeDesign parent = node.Parent; parent != null; parent = parent.Parent)
+                uint? numericId = FindNumericIdentifier(node);
+                if (numericId.HasValue)
                 {
-                    if (parent.Hierarchy == null)
-                    {
-                        continue;
-                    }
-                    string browsePath = node.SymbolicId.Name;
-                    string parentPath = parent.SymbolicId.Name;
-                    if (browsePath.StartsWith(parentPath, StringComparison.InvariantCulture) &&
-                        browsePath[parentPath.Length] == NodeDesign.PathChar)
-                    {
-                        browsePath = browsePath.Substring(parentPath.Length + 1);
-                    }
-
-                    if (parent.Hierarchy.Nodes.TryGetValue(browsePath, out HierarchyNode instance) &&
-                        instance.Instance.NumericId != 0)
-                    {
-                        identifier = CoreUtils.Format("{0}u", instance.Instance.NumericId);
-                        break;
-                    }
+                    identifier = CoreUtils.Format("{0}u", numericId.Value);
                 }
-                if (identifier == null)
+                else
                 {
                     if (string.IsNullOrEmpty(node.SymbolicId.Name))
                     {
@@ -2279,6 +2246,74 @@ namespace Opc.Ua.Schema.Model
                 namespaces.GetConstantSymbolForNamespace(
                     node.SymbolicId.Namespace),
                 namespaceTableVariable);
+        }
+
+        public static string GetExpandedNodeIdAsCode(
+            this NodeDesign node,
+            Namespace[] namespaces)
+        {
+            string identifier;
+            if (node == null)
+            {
+                return "global::Opc.Ua.ExpandedNodeId.Null";
+            }
+            if (node.NumericIdSpecified)
+            {
+                identifier = CoreUtils.Format("{0}u", node.NumericId);
+            }
+            else if (!string.IsNullOrEmpty(node.StringId))
+            {
+                identifier = node.StringId.AsStringLiteral();
+            }
+            else
+            {
+                uint? numericId = FindNumericIdentifier(node);
+                if (numericId.HasValue)
+                {
+                    identifier = CoreUtils.Format("{0}u", numericId.Value);
+                }
+                else
+                {
+                    if (string.IsNullOrEmpty(node.SymbolicId.Name))
+                    {
+                        return "global::Opc.Ua.ExpandedNodeId.Null";
+                    }
+                    identifier = node.SymbolicId.Name.AsStringLiteral();
+                }
+            }
+            return CoreUtils.Format(
+                "new global::Opc.Ua.ExpandedNodeId({0}, {1})",
+                identifier,
+                namespaces.GetConstantSymbolForNamespace(
+                    node.SymbolicId.Namespace));
+        }
+
+        public static uint? FindNumericIdentifier(this NodeDesign node)
+        {
+            uint? numericId = node.NumericIdSpecified ? node.NumericId : null;
+            for (NodeDesign parent = node.Parent;
+                !numericId.HasValue && parent != null;
+                parent = parent.Parent)
+            {
+                if (parent.Hierarchy == null)
+                {
+                    continue;
+                }
+                string browsePath = node.SymbolicId.Name;
+                string parentPath = parent.SymbolicId.Name;
+                if (browsePath.StartsWith(parentPath, StringComparison.InvariantCulture) &&
+                    browsePath[parentPath.Length] == NodeDesign.PathChar)
+                {
+                    browsePath = browsePath[(parentPath.Length + 1)..];
+                }
+
+                if (parent.Hierarchy.Nodes.TryGetValue(browsePath, out HierarchyNode instance) &&
+                    instance.Instance.NumericId != 0)
+                {
+                    numericId = instance.Instance.NumericId;
+                }
+            }
+            return numericId;
         }
 
         public static string GetNodeIdConstant(
@@ -2301,7 +2336,7 @@ namespace Opc.Ua.Schema.Model
                 return "global::Opc.Ua.NodeId.Null";
             }
 
-            return node.GetNodeIdConstant(design.Namespaces, namespaceTableVariable);
+            return node.GetNodeIdAsCode(design.Namespaces, namespaceTableVariable);
         }
 
         public static void SetDefaultValue(

@@ -53,11 +53,6 @@ namespace Opc.Ua.SourceGeneration
         public IReadOnlyList<string> Exclude { get; set; }
 
         /// <summary>
-        /// Embed NodeSet2 XML as resource
-        /// </summary>
-        public bool EmbedNodeSet2Xml { get; internal set; }
-
-        /// <summary>
         /// Get options from options provider
         /// </summary>
         /// <param name="provider"></param>
@@ -81,8 +76,7 @@ namespace Opc.Ua.SourceGeneration
                         nameof(DesignFileOptions.ReleaseCandidate))
                 },
                 Exclude = provider.GlobalOptions.GetStrings(nameof(Exclude)),
-                UseAllowSubtypes = provider.GlobalOptions.GetBool(nameof(UseAllowSubtypes)),
-                EmbedNodeSet2Xml = provider.GlobalOptions.GetBool(nameof(EmbedNodeSet2Xml))
+                UseAllowSubtypes = provider.GlobalOptions.GetBool(nameof(UseAllowSubtypes))
             };
         }
     }

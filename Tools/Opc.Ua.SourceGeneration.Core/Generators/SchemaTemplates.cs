@@ -564,30 +564,6 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// Service type schema template
-        /// </summary>
-        public static readonly TemplateString XmlSchema_ServiceType_xml = TemplateString.Parse(
-            $$"""
-            <xs:complexType name="{{Tokens.TypeName}}Request">
-              <xs:annotation>
-                <xs:documentation>{{Tokens.Description}}</xs:documentation>
-              </xs:annotation>
-              <xs:sequence>
-                {{Tokens.ListOfRequestParameters}}
-              </xs:sequence>
-            </xs:complexType>
-            <xs:element name="{{Tokens.TypeName}}Request" type="tns:{{Tokens.TypeName}}Request" />
-
-            <xs:complexType name="{{Tokens.TypeName}}Response">
-              <xs:sequence>
-                {{Tokens.ListOfResponseParameters}}
-              </xs:sequence>
-            </xs:complexType>
-            <xs:element name="{{Tokens.TypeName}}Response" type="tns:{{Tokens.TypeName}}Response" />
-
-            """);
-
-        /// <summary>
         /// Simple type schema template
         /// </summary>
         public static readonly TemplateString XmlSchema_SimpleType_xml = TemplateString.Parse(

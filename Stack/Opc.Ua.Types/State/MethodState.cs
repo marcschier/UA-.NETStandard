@@ -494,41 +494,6 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public override void AddChild(BaseInstanceState child)
-        {
-            if (child == null || child.BrowseName.IsNullQn)
-            {
-                return;
-            }
-
-            switch (child.BrowseName.Name)
-            {
-                case BrowseNames.OutputArguments:
-                {
-                    if (child is PropertyState<Argument[]> instance)
-                    {
-                        OutputArguments = instance;
-                        return;
-                    }
-                    break;
-                }
-
-                case BrowseNames.InputArguments:
-                {
-                    if (child is PropertyState<Argument[]> instance)
-                    {
-                        InputArguments = instance;
-                        return;
-                    }
-                    break;
-                }
-            }
-
-            // Add to the base class if not found or as unknown.
-            base.AddChild(child);
-        }
-
-        /// <inheritdoc/>
         protected override BaseInstanceState FindChild(
             ISystemContext context,
             QualifiedName browseName,
@@ -540,6 +505,7 @@ namespace Opc.Ua
                 return null;
             }
 
+            BaseInstanceState instance = null;
             switch (browseName.Name)
             {
                 case BrowseNames.InputArguments:
@@ -554,7 +520,8 @@ namespace Opc.Ua
                             InputArguments = (PropertyState<Argument[]>)replacement;
                         }
                     }
-                    return InputArguments ?? base.FindChild(context, browseName, createOrReplace, replacement);
+                    instance = InputArguments;
+                    break;
                 case BrowseNames.OutputArguments:
                     if (createOrReplace && OutputArguments == null)
                     {
@@ -567,10 +534,10 @@ namespace Opc.Ua
                             OutputArguments = (PropertyState<Argument[]>)replacement;
                         }
                     }
-                    return OutputArguments ?? base.FindChild(context, browseName, createOrReplace, replacement);
-                default:
-                    return base.FindChild(context, browseName, createOrReplace, replacement);
+                    instance = OutputArguments;
+                    break;
             }
+            return instance ?? base.FindChild(context, browseName, createOrReplace, replacement);
         }
 
         /// <summary>

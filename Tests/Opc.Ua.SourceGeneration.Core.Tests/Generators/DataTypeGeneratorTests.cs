@@ -105,29 +105,6 @@ namespace Opc.Ua.SourceGeneration.Generator.Tests
         }
 
         /// <summary>
-        /// Tests that constructor creates instance with useXmlInitializers flag set to true.
-        /// </summary>
-        [Test]
-        public void Constructor_WithUseXmlInitializersTrue_CreatesInstance()
-        {
-            // Arrange
-            m_context = new GeneratorContext
-            {
-                FileSystem = m_mockFileSystem.Object,
-                OutputFolder = "TestOutput",
-                ModelDesign = m_mockModelDesign.Object,
-                Telemetry = m_mockTelemetry.Object,
-                Options = new GeneratorOptions()
-            };
-
-            // Act
-            var generator = new DataTypeGenerator(m_context, useXmlInitializers: true);
-
-            // Assert
-            Assert.That(generator, Is.Not.Null);
-        }
-
-        /// <summary>
         /// Tests that Emit returns early without creating files when no data types exist.
         /// </summary>
         [Test]

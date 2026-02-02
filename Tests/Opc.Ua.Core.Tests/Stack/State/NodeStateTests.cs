@@ -83,7 +83,7 @@ namespace Opc.Ua.Core.Tests.Stack.State
             var comparer = new NodeStateEqualityComparer();
             var generatedc = new NodeStateCollection().AddOpcUa(context);
             var path = Path.Combine(Directory.GetCurrentDirectory(), "generated_nodestates.xml");
-            generatedc.SaveAsXml(context, File.OpenWrite(path));
+            generatedc.SaveAsXml(context, File.Create(path));
             var generated = generatedc.ToHashSet(comparer);
 
             var byNodeIdGenerated = generated.ToDictionary(n => n.NodeId, n => n);
@@ -148,7 +148,6 @@ namespace Opc.Ua.Core.Tests.Stack.State
 
             var testObject = CreateDefaultNodeStateType(systemType) as NodeState;
             Assert.NotNull(testObject);
-            Assert.False(testObject.Initialized);
             var context = new SystemContext(telemetry) { NamespaceUris = Context.NamespaceUris };
             Assert.AreEqual(0, context.NamespaceUris.GetIndexOrAppend(OpcUa));
             testObject.Create(context, new NodeId(1000), "Name", "DisplayName", true);

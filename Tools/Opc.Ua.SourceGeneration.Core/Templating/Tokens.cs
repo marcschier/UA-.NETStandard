@@ -31,8 +31,6 @@ namespace Opc.Ua.SourceGeneration
 {
     internal static class Tokens
     {
-        public static string AccessLevel => nameof(AccessLevel);
-        public static string ArrayDeclaration => nameof(ArrayDeclaration);
         public static string ArrayDimensions => nameof(ArrayDimensions);
         public static string BaseClassName => nameof(BaseClassName);
         public static string BaseType => nameof(BaseType);
@@ -42,7 +40,8 @@ namespace Opc.Ua.SourceGeneration
         public static string BrowseName => nameof(BrowseName);
         public static string BrowseNameNamespacePrefix => nameof(BrowseNameNamespacePrefix);
         public static string BrowseNameNamespaceUri => nameof(BrowseNameNamespaceUri);
-        public static string BrowseNameValue => nameof(BrowseNameValue);
+        public static string BrowseNameSymbol => nameof(BrowseNameSymbol);
+        public static string SymbolicNameSymbol => nameof(SymbolicNameSymbol);
         public static string BuiltInTypes => nameof(BuiltInTypes);
         public static string ChildDataType => nameof(ChildDataType);
         public static string ChildName => nameof(ChildName);
@@ -67,10 +66,7 @@ namespace Opc.Ua.SourceGeneration
         public static string EventNotifier => nameof(EventNotifier);
         public static string FieldIndex => nameof(FieldIndex);
         public static string FieldName => nameof(FieldName);
-        public static string FindChildMethods => nameof(FindChildMethods);
-        public static string FindChildMethodsForType => nameof(FindChildMethodsForType);
-        public static string AddChildMethods => nameof(AddChildMethods);
-        public static string AddChildMethodsForType => nameof(AddChildMethodsForType);
+        public static string ListOfChildOperations => nameof(ListOfChildOperations);
         public static string Historizing => nameof(Historizing);
         public static string Identifier => nameof(Identifier);
         public static string IdType => nameof(IdType);
@@ -90,14 +86,11 @@ namespace Opc.Ua.SourceGeneration
         public static string ListOfDecodedFields => nameof(ListOfDecodedFields);
         public static string ListOfEncodedFields => nameof(ListOfEncodedFields);
         public static string ListOfEncodingMaskFields => nameof(ListOfEncodingMaskFields);
-        public static string ListOfEncodings => nameof(ListOfEncodings);
         public static string ListOfFieldInitializers => nameof(ListOfFieldInitializers);
         public static string ListOfFields => nameof(ListOfFields);
         public static string ListOfSwitchFieldNames => nameof(ListOfSwitchFieldNames);
         public static string ListOfEncodingMaskFieldNames => nameof(ListOfEncodingMaskFieldNames);
-        public static string ListOfFieldsForType => nameof(ListOfFieldsForType);
         public static string ListOfFindChildCase => nameof(ListOfFindChildCase);
-        public static string ListOfAddChildCase = nameof(ListOfAddChildCase);
         public static string ListOfFindChildren => nameof(ListOfFindChildren);
         public static string ListOfIdentifiers => nameof(ListOfIdentifiers);
         public static string ListOfIdentifersToNames => nameof(ListOfIdentifersToNames);
@@ -110,10 +103,8 @@ namespace Opc.Ua.SourceGeneration
         public static string ListOfOutputArgumentsFromResult => nameof(ListOfOutputArgumentsFromResult);
         public static string ListOfOutputDeclarations => nameof(ListOfOutputDeclarations);
         public static string ListOfProperties => nameof(ListOfProperties);
-        public static string ListOfPropertiesForType => nameof(ListOfPropertiesForType);
+        public static string ListOfNonMandatoryChildren => nameof(ListOfNonMandatoryChildren);
         public static string ListOfRemoveChild => nameof(ListOfRemoveChild);
-        public static string ListOfRequestParameters => nameof(ListOfRequestParameters);
-        public static string ListOfResponseParameters => nameof(ListOfResponseParameters);
         public static string ListOfResultProperties => nameof(ListOfResultProperties);
         public static string ListOfSwitchFields => nameof(ListOfSwitchFields);
         public static string ListOfTypes => nameof(ListOfTypes);
@@ -123,7 +114,6 @@ namespace Opc.Ua.SourceGeneration
         public static string ListOfValues => nameof(ListOfValues);
         public static string ListOfActivatorRegistrations => nameof(ListOfActivatorRegistrations);
         public static string MethodList => nameof(MethodList);
-        public static string MinimumSamplingInterval => nameof(MinimumSamplingInterval);
         public static string Name => nameof(Name);
         public static string IsOptional => nameof(IsOptional);
         public static string Namespace => nameof(Namespace);
@@ -157,14 +147,13 @@ namespace Opc.Ua.SourceGeneration
         public static string TypeList => nameof(TypeList);
         public static string BasicType => nameof(BasicType);
         public static string Flags => nameof(Flags);
-        public static string Encoding => nameof(Encoding);
         public static string AddKnownType => nameof(AddKnownType);
         public static string ModelUri => nameof(ModelUri);
         public static string TargetPublicationDate => nameof(TargetPublicationDate);
         public static string TargetVersion => nameof(TargetVersion);
         public static string BaseT => nameof(BaseT);
         public static string XsRestrictionBaseType => nameof(XsRestrictionBaseType);
-        public static string PropertyAccessor => nameof(PropertyAccessor);
+        public static string AccessorSymbol => nameof(AccessorSymbol);
         public static string JsonEncodingId => nameof(JsonEncodingId);
         public static string ServerMethodAsync => nameof(ServerMethodAsync);
         public static string ClientMethodAsync => nameof(ClientMethodAsync);
@@ -178,19 +167,17 @@ namespace Opc.Ua.SourceGeneration
         public static string ListOfResourceDeclarations => nameof(ListOfResourceDeclarations);
         public static string AccessModifier => nameof(AccessModifier);
         public static string IdentifierReflection => nameof(IdentifierReflection);
-        public static string EqualityComparer => nameof(EqualityComparer);
         public static string ListOfNodeStateInitializers => nameof(ListOfNodeStateInitializers);
-        public static string ListOfNodeStateFactories => nameof(ListOfNodeStateFactories);
+        public static string ListOfNodeStateTypeFactories => nameof(ListOfNodeStateTypeFactories);
+        public static string ListOfNodeStateInstanceFactories => nameof(ListOfNodeStateInstanceFactories);
         public static string ListOfChildNodeStates => nameof(ListOfChildNodeStates);
-        public static string ListOfChildTypes => nameof(ListOfChildTypes);
+        public static string ListOfOptionalChildNodeStates => nameof(ListOfOptionalChildNodeStates);
         public static string ListOfReferences => nameof(ListOfReferences);
         public static string NodeIdConstant => nameof(NodeIdConstant);
         public static string SuperTypeId => nameof(SuperTypeId);
         public static string TypeDefinitionId => nameof(TypeDefinitionId);
         public static string ReferenceTypeId => nameof(ReferenceTypeId);
         public static string ModellingRuleId => nameof(ModellingRuleId);
-        public static string ParentVariable => nameof(ParentVariable);
-        public static string StateVariable => nameof(StateVariable);
         public static string StateClassName => nameof(StateClassName);
         public static string DisplayName => nameof(DisplayName);
         public static string DataTypeDefinition => nameof(DataTypeDefinition);
@@ -199,8 +186,6 @@ namespace Opc.Ua.SourceGeneration
         public static string DataTypeIdConstant => nameof(DataTypeIdConstant);
         public static string InverseNameValue => nameof(InverseNameValue);
         public static string SymmetricValue => nameof(SymmetricValue);
-        public static string TargetNodeId => nameof(TargetNodeId);
-        public static string IsInverse => nameof(IsInverse);
         public static string ReleaseStatusValue => nameof(ReleaseStatusValue);
         public static string CategoriesValue => nameof(CategoriesValue);
         public static string SpecificationValue => nameof(SpecificationValue);

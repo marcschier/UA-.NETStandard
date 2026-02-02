@@ -232,7 +232,7 @@ namespace Opc.Ua.SourceGeneration
                 idType = "string";
             }
 
-            context.Template.AddReplacement(Tokens.NodeClass, node.GetNodeClassString());
+            context.Template.AddReplacement(Tokens.NodeClass, node.GetNodeClassAsString());
             context.Template.AddReplacement(Tokens.SymbolicName, node.SymbolicId.Name);
             context.Template.AddReplacement(Tokens.Identifier, id);
             context.Template.AddReplacement(
@@ -376,17 +376,7 @@ namespace Opc.Ua.SourceGeneration
                     continue;
                 }
 
-                if (node.IsMethodTypeDesign())
-                {
-                    continue;
-                }
-
-                string nodeClass = node.GetNodeClassString();
-
-                if (nodeClass == "EventType")
-                {
-                    nodeClass = "ObjectType";
-                }
+                string nodeClass = node.GetNodeClassAsString();
 
                 if (!identifiers.TryGetValue(nodeClass, out List<NodeDesign> nodesWithinClass))
                 {
@@ -467,7 +457,7 @@ namespace Opc.Ua.SourceGeneration
                         continue;
                     }
 
-                    nodeClass = current.Value.Instance.GetNodeClassString();
+                    nodeClass = current.Value.Instance.GetNodeClassAsString();
 
                     if (!identifiers.TryGetValue(nodeClass, out nodesWithinClass))
                     {

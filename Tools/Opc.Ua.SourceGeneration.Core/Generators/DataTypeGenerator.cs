@@ -32,9 +32,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Resources;
 using System.Xml;
+using System.Xml.Linq;
+using Microsoft.Extensions.Logging;
 using Opc.Ua.Schema.Model;
+using Opc.Ua.Schema.Types;
 using Opc.Ua.Types;
+using static Opc.Ua.RelativePathFormatter;
 
 namespace Opc.Ua.SourceGeneration
 {
@@ -43,11 +48,11 @@ namespace Opc.Ua.SourceGeneration
     /// </summary>
     internal sealed class DataTypeGenerator : IGenerator
     {
-        public DataTypeGenerator(IGeneratorContext context, bool useXmlInitializers = false)
+        public DataTypeGenerator(IGeneratorContext context)
         {
             m_context = context ?? throw new ArgumentNullException(nameof(context));
             m_messageContext = new ServiceMessageContext(context.Telemetry);
-            m_useXmlInitializers = useXmlInitializers;
+            m_logger = context.Telemetry.CreateLogger<DataTypeGenerator>();
         }
 
         /// <inheritdoc/>
@@ -56,7 +61,7 @@ namespace Opc.Ua.SourceGeneration
             List<DataTypeDesign> datatypes = GetDataTypes();
             if (datatypes.Count == 0)
             {
-                return null;
+                return [];
             }
 
             string nsPrefix = m_context.ModelDesign.TargetNamespace.Prefix;
@@ -98,6 +103,12 @@ namespace Opc.Ua.SourceGeneration
                 LoadTemplate_ListOfActivatorRegistrations,
                 WriteTemplate_ListOfDataTypeActivators);
             template.Render();
+
+            Resource initializers = EmbedInitializers();
+            if (initializers != null)
+            {
+                return [fileName.AsTextFileResource(), initializers];
+            }
 
             return [fileName.AsTextFileResource()];
         }
@@ -222,7 +233,7 @@ namespace Opc.Ua.SourceGeneration
                 List<Parameter> fields = [];
                 context.Template.AddReplacement(
                     Tokens.BaseType,
-                    dataType.BaseTypeNode.GetNodeIdConstant(
+                    dataType.BaseTypeNode.GetNodeIdAsCode(
                         m_context.ModelDesign.Namespaces,
                         kNamespaceTableContextVariable));
                 context.Template.AddReplacement(
@@ -336,7 +347,7 @@ namespace Opc.Ua.SourceGeneration
                 GetNodeIdConstantForDataType(field, m_context.ModelDesign.Namespaces));
             context.Template.AddReplacement(
                 Tokens.ValueRank,
-                field.ValueRank.GetValueRankString(field.ArrayDimensions));
+                field.ValueRank.GetValueRankAsCode(field.ArrayDimensions));
             context.Template.AddReplacement(
                 Tokens.ArrayDimensions,
                 field.ValueRank.GetArrayDimensionsAsCode(field.ArrayDimensions) ?? "default");
@@ -425,13 +436,10 @@ namespace Opc.Ua.SourceGeneration
 
             context.Template.AddReplacement(
                 Tokens.NodeClass,
-                dataType.GetNodeClassString());
+                dataType.GetNodeClassAsString());
             context.Template.AddReplacement(
                 Tokens.Description,
                 dataType.Description != null ? dataType.Description.Value : string.Empty);
-            context.Template.AddReplacement(
-                Tokens.Encoding,
-                EncodingString);
             context.Template.AddReplacement(
                 Tokens.TypeName,
                 dataType.SymbolicName.Name);
@@ -1184,6 +1192,11 @@ namespace Opc.Ua.SourceGeneration
                 m_context.ModelDesign.TargetNamespace.Value,
                 m_context.ModelDesign.Namespaces,
                 m_messageContext,
+                () => AddXmlInitializerForComplexValue(
+                    field,
+                    field.ValueRank,
+                    field.DataTypeNode,
+                    field.DefaultValue),
                 dataTypeQuirk: true);
 
             context.Out.WriteLine("{0} = {1};", field.GetChildFieldName(), value);
@@ -1265,6 +1278,11 @@ namespace Opc.Ua.SourceGeneration
                     m_context.ModelDesign.TargetNamespace.Value,
                     m_context.ModelDesign.Namespaces,
                     m_messageContext,
+                    () => AddXmlInitializerForComplexValue(
+                        field,
+                        field.ValueRank,
+                        field.DataTypeNode,
+                        field.DefaultValue),
                     dataTypeQuirk: true));
             context.Template.AddReplacement(
                 Tokens.Identifier,
@@ -1285,13 +1303,13 @@ namespace Opc.Ua.SourceGeneration
                 dt.BaseTypeNode.SymbolicName.Name == BrowseNames.HistoryUpdateDetails)
             {
                 context.Template.AddReplacement(
-                    Tokens.PropertyAccessor,
+                    Tokens.AccessorSymbol,
                     "public override");
             }
             else
             {
                 context.Template.AddReplacement(
-                    Tokens.PropertyAccessor,
+                    Tokens.AccessorSymbol,
                     "public");
             }
 
@@ -1377,16 +1395,67 @@ namespace Opc.Ua.SourceGeneration
                     field.DataType,
                     field.Name,
                     "DataType");
-                return dataType.GetNodeIdConstant(namespaceUris, kNamespaceTableContextVariable);
+                return dataType.GetNodeIdAsCode(namespaceUris, kNamespaceTableContextVariable);
             }
-            return field.DataTypeNode.GetNodeIdConstant(namespaceUris, kNamespaceTableContextVariable);
+            return field.DataTypeNode.GetNodeIdAsCode(namespaceUris, kNamespaceTableContextVariable);
         }
 
-        private string EncodingString => m_useXmlInitializers ? "Xml" : "Binary";
+        private string AddXmlInitializerForComplexValue(
+            Parameter field,
+            ValueRank valueRank,
+            DataTypeDesign dataType,
+            XmlElement element)
+        {
+            string xml = element?.OuterXml;
+            if (string.IsNullOrEmpty(xml))
+            {
+                return null;
+            }
+            string resourceName = CoreUtils.Format(
+                "Values.{0}_{1}",
+                dataType.SymbolicId.Name,
+                field.Name);
+            string uniqueName = resourceName;
+            for (int i = 0; i < 1000; i++)
+            {
+                if (m_initializers.TryAdd(uniqueName, new TextResource(uniqueName, xml)))
+                {
+                    // Get code to create the variant from the XML resource reference
+                    // TODO: Need to remove ambient message context usage here
+                    return dataType.GetVariantFromXmlCode(
+                        valueRank,
+                        m_context.ModelDesign.TargetNamespace.Value,
+                        m_context.ModelDesign.Namespaces,
+                        uniqueName,
+                        "global::Opc.Ua.AmbientMessageContext.CurrentContext");
+                }
+                uniqueName = resourceName + i;
+            }
+            throw new InvalidOperationException("Unexpected duplicate resource names");
+        }
+
+        /// <summary>
+        /// Embed all initializers as source code
+        /// </summary>
+        private Resource EmbedInitializers()
+        {
+            if (m_initializers.Count == 0)
+            {
+                return null;
+            }
+            var initializers = new ResourceGenerator(m_context);
+            return initializers.Embed(
+                m_context.ModelDesign.TargetNamespace.Prefix,
+                "DataTypes.i",
+                internalAccess: true,
+                [.. m_initializers.Values]);
+        }
+
         private const string kNamespaceTableContextVariable = "namespaceUris";
 
+        private readonly Dictionary<string, Resource> m_initializers = [];
         private readonly IServiceMessageContext m_messageContext;
         private readonly IGeneratorContext m_context;
-        private readonly bool m_useXmlInitializers;
+        private readonly ILogger m_logger;
     }
 }

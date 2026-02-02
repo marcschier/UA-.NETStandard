@@ -479,14 +479,13 @@ namespace Opc.Ua
                 // Can convert
                 return typedValue;
             }
-            else if (value == null)
+
+            if (value == null)
             {
-                if (!typeof(T).GetTypeInfo().IsValueType)
-                {
-                    // Return null because reference is null
-                    return default;
-                }
+                // Use default either null or default value of value type
+                return default;
             }
+
             // Otherwise check if we need to throw and throw or return default
             if (throwOnError)
             {
@@ -2281,6 +2280,7 @@ namespace Opc.Ua
                 return null;
             }
 
+            BaseInstanceState instance = null;
             switch (browseName.Name)
             {
                 case BrowseNames.EnumStrings:
@@ -2295,10 +2295,10 @@ namespace Opc.Ua
                             EnumStrings = (PropertyState<LocalizedText[]>)replacement;
                         }
                     }
-                    return EnumStrings ?? base.FindChild(context, browseName, createOrReplace, replacement);
-                default:
-                    return base.FindChild(context, browseName, createOrReplace, replacement);
+                    instance = EnumStrings;
+                    break;
             }
+            return instance ?? base.FindChild(context, browseName, createOrReplace, replacement);
         }
 
         private PropertyState<LocalizedText[]> m_enumStrings;

@@ -4728,20 +4728,38 @@ namespace Opc.Ua
         }
 
         /// <summary>
-        /// Convert to a variant from an xml stream. Used during initialization of values
-        /// from string values.
+        /// Convert to a variant from an xml stream. Used during initialization
+        /// of values from string values.
         /// </summary>
         /// <remarks>
-        /// This is an internal API and subject to change, but it is not marked experimental
-        /// because it is used by generated codee.
+        /// This is an internal API and subject to change, but it is not marked
+        /// experimental because it is used by generated code.
         /// </remarks>
-        /// <param name="istrm">The variant value xml as utf8 character stream</param>
+        /// <param name="istrm">The variant value xml as utf8 character stream
+        /// </param>
         /// <param name="context">message context</param>
         /// <returns></returns>
         public static Variant FromXml(Stream istrm, ISystemContext context)
         {
+            return FromXml(istrm, context.AsMessageContext());
+        }
+
+        /// <summary>
+        /// Convert to a variant from an xml stream. Used during initialization
+        /// of values from string values.
+        /// </summary>
+        /// <remarks>
+        /// This is an internal API and subject to change, but it is not marked
+        /// experimental because it is used by generated code.
+        /// </remarks>
+        /// <param name="istrm">The variant value xml as utf8 character stream
+        /// </param>
+        /// <param name="context">message context</param>
+        /// <returns></returns>
+        public static Variant FromXml(Stream istrm, IServiceMessageContext context)
+        {
             using var reader = XmlReader.Create(istrm, CoreUtils.DefaultXmlReaderSettings());
-            using var decoder = new XmlDecoder(reader, context.AsMessageContext());
+            using var decoder = new XmlDecoder(reader, context);
             object contents = decoder.ReadVariantContents(out _);
             return new Variant(contents);
         }

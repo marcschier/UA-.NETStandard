@@ -724,30 +724,6 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         }
 
         [Test]
-        public void WriteTemplate_WithHelpersFileTemplate_RendersCorrectly()
-        {
-            using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.PredefinedNodes_File;
-            using (var templateWriter = new TemplateWriter(writer))
-            {
-                var template = new Template(templateWriter, templateString);
-
-                template.AddReplacement(Tokens.ListOfImports, "using System;");
-                template.AddReplacement(Tokens.NamespacePrefix, "My.Prefix");
-                template.AddReplacement(Tokens.Namespace, "MyNamespace");
-                template.AddReplacement(Tokens.Encoding, "Binary");
-
-                template.Render();
-            }
-            string result = writer.ToString();
-
-            Assert.That(result, Does.Contain("namespace My.Prefix"));
-            Assert.That(result, Does.Contain("public static partial class MyNamespaceExtensions"));
-            Assert.That(result, Does.Contain("LoadMyNamespace("));
-            Assert.That(result, Does.Contain("predefinedNodes.LoadFromBinary(context, stream, true);"));
-        }
-
-        [Test]
         public void AddReplacement_Generic_RendersCorrectly()
         {
             using var writer = new StringWriter();

@@ -331,7 +331,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var node = new VariableDesign();
 
             // Act
-            string result = node.GetNodeClassString();
+            string result = node.GetNodeClassAsString();
 
             // Assert
             Assert.That(result, Is.EqualTo("Variable"));
@@ -347,7 +347,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var node = new VariableTypeDesign();
 
             // Act
-            string result = node.GetNodeClassString();
+            string result = node.GetNodeClassAsString();
 
             // Assert
             Assert.That(result, Is.EqualTo("VariableType"));
@@ -363,7 +363,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var node = new ObjectDesign();
 
             // Act
-            string result = node.GetNodeClassString();
+            string result = node.GetNodeClassAsString();
 
             // Assert
             Assert.That(result, Is.EqualTo("Object"));
@@ -379,7 +379,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var node = new ObjectTypeDesign();
 
             // Act
-            string result = node.GetNodeClassString();
+            string result = node.GetNodeClassAsString();
 
             // Assert
             Assert.That(result, Is.EqualTo("ObjectType"));
@@ -395,7 +395,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var node = new ReferenceTypeDesign();
 
             // Act
-            string result = node.GetNodeClassString();
+            string result = node.GetNodeClassAsString();
 
             // Assert
             Assert.That(result, Is.EqualTo("ReferenceType"));
@@ -411,7 +411,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var node = new DataTypeDesign();
 
             // Act
-            string result = node.GetNodeClassString();
+            string result = node.GetNodeClassAsString();
 
             // Assert
             Assert.That(result, Is.EqualTo("DataType"));
@@ -427,7 +427,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var node = new MethodDesign();
 
             // Act
-            string result = node.GetNodeClassString();
+            string result = node.GetNodeClassAsString();
 
             // Assert
             Assert.That(result, Is.EqualTo("Method"));
@@ -443,7 +443,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var node = new ViewDesign();
 
             // Act
-            string result = node.GetNodeClassString();
+            string result = node.GetNodeClassAsString();
 
             // Assert
             Assert.That(result, Is.EqualTo("View"));
@@ -459,7 +459,7 @@ namespace Opc.Ua.Schema.Model.Tests
             var node = new NodeDesign();
 
             // Act
-            string result = node.GetNodeClassString();
+            string result = node.GetNodeClassAsString();
 
             // Assert
             Assert.That(result, Is.EqualTo("Node"));
@@ -476,7 +476,7 @@ namespace Opc.Ua.Schema.Model.Tests
             NodeDesign node = null;
 
             // Act
-            string result = node.GetNodeClassString();
+            string result = node.GetNodeClassAsString();
 
             // Assert
             Assert.That(result, Is.EqualTo("Node"));
@@ -777,7 +777,7 @@ namespace Opc.Ua.Schema.Model.Tests
                 mockContext.Object);
 
             // Assert
-            Assert.That(result, Is.EqualTo("default"));
+            Assert.That(result, Is.EqualTo("(sbyte)0"));
         }
 
         /// <summary>
@@ -1110,7 +1110,7 @@ namespace Opc.Ua.Schema.Model.Tests
                 mockContext.Object);
 
             // Assert
-            Assert.That(result, Is.EqualTo("default"));
+            Assert.That(result, Is.EqualTo("(float)0"));
         }
 
         /// <summary>
@@ -1257,7 +1257,7 @@ namespace Opc.Ua.Schema.Model.Tests
                 mockContext.Object);
 
             // Assert
-            Assert.That(result, Is.EqualTo("default"));
+            Assert.That(result, Is.EqualTo("string.Empty"));
         }
 
         /// <summary>
@@ -1375,7 +1375,7 @@ namespace Opc.Ua.Schema.Model.Tests
                 mockContext.Object);
 
             // Assert
-            Assert.That(result, Is.EqualTo("default"));
+            Assert.That(result, Is.EqualTo("global::Opc.Ua.Uuid.Empty"));
         }
 
         /// <summary>
@@ -1467,7 +1467,7 @@ namespace Opc.Ua.Schema.Model.Tests
                 mockContext.Object);
 
             // Assert
-            Assert.That(result, Is.EqualTo("default"));
+            Assert.That(result, Is.EqualTo("default(byte[])"));
         }
 
         /// <summary>
@@ -1527,7 +1527,7 @@ namespace Opc.Ua.Schema.Model.Tests
                 mockContext.Object);
 
             // Assert
-            Assert.That(result, Is.EqualTo("default"));
+            Assert.That(result, Is.EqualTo("global::Opc.Ua.NodeId.Null"));
         }
 
         /// <summary>
@@ -1556,7 +1556,7 @@ namespace Opc.Ua.Schema.Model.Tests
                 mockContext.Object);
 
             // Assert
-            Assert.That(result, Is.EqualTo("default"));
+            Assert.That(result, Is.EqualTo("global::Opc.Ua.NodeId.Null"));
         }
 
         /// <summary>
@@ -1650,7 +1650,7 @@ namespace Opc.Ua.Schema.Model.Tests
                 mockContext.Object);
 
             // Assert
-            Assert.That(result, Is.EqualTo("default"));
+            Assert.That(result, Is.EqualTo("global::Opc.Ua.ExpandedNodeId.Null"));
         }
 
         /// <summary>
@@ -1709,7 +1709,7 @@ namespace Opc.Ua.Schema.Model.Tests
                 mockContext.Object);
 
             // Assert
-            Assert.That(result, Is.EqualTo("default"));
+            Assert.That(result, Is.EqualTo("global::Opc.Ua.QualifiedName.Null"));
         }
 
         /// <summary>
@@ -1801,7 +1801,7 @@ namespace Opc.Ua.Schema.Model.Tests
                 mockContext.Object);
 
             // Assert
-            Assert.That(result, Is.EqualTo("default"));
+            Assert.That(result, Is.EqualTo("default(global::Opc.Ua.StatusCode)"));
         }
 
         /// <summary>
@@ -1831,7 +1831,7 @@ namespace Opc.Ua.Schema.Model.Tests
                 mockContext.Object);
 
             // Assert
-            Assert.That(result, Does.StartWith("(StatusCode)"));
+            Assert.That(result, Does.StartWith("(global::Opc.Ua.StatusCode.StatusCode)"));
         }
 
         /// <summary>
@@ -1912,7 +1912,7 @@ namespace Opc.Ua.Schema.Model.Tests
                 SymbolicName = new XmlQualifiedName("TestEnum", "http://test.namespace"),
                 BaseTypeNode = new TypeDesign
                 {
-                    SymbolicId = new XmlQualifiedName("SomeOtherBase", Namespaces.OpcUa),
+                    SymbolicId = new XmlQualifiedName("SomeOtherBase", Namespaces.OpcUa)
                 },
                 IsOptionSet = true
             };
@@ -3331,7 +3331,7 @@ namespace Opc.Ua.Schema.Model.Tests
             const string arrayDimensions = null;
 
             // Act
-            string result = valueRank.GetValueRankString(arrayDimensions);
+            string result = valueRank.GetValueRankAsCode(arrayDimensions);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.ValueRanks.OneDimension"));
@@ -3349,7 +3349,7 @@ namespace Opc.Ua.Schema.Model.Tests
             const string arrayDimensions = null;
 
             // Act
-            string result = valueRank.GetValueRankString(arrayDimensions);
+            string result = valueRank.GetValueRankAsCode(arrayDimensions);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.ValueRanks.Scalar"));
@@ -3367,7 +3367,7 @@ namespace Opc.Ua.Schema.Model.Tests
             const string arrayDimensions = null;
 
             // Act
-            string result = valueRank.GetValueRankString(arrayDimensions);
+            string result = valueRank.GetValueRankAsCode(arrayDimensions);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.ValueRanks.Any"));
@@ -3385,7 +3385,7 @@ namespace Opc.Ua.Schema.Model.Tests
             const string arrayDimensions = null;
 
             // Act
-            string result = valueRank.GetValueRankString(arrayDimensions);
+            string result = valueRank.GetValueRankAsCode(arrayDimensions);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.ValueRanks.Any"));
@@ -3403,7 +3403,7 @@ namespace Opc.Ua.Schema.Model.Tests
             const string arrayDimensions = null;
 
             // Act
-            string result = valueRank.GetValueRankString(arrayDimensions);
+            string result = valueRank.GetValueRankAsCode(arrayDimensions);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.ValueRanks.ScalarOrOneDimension"));
@@ -3421,7 +3421,7 @@ namespace Opc.Ua.Schema.Model.Tests
             const string arrayDimensions = null;
 
             // Act
-            string result = valueRank.GetValueRankString(arrayDimensions);
+            string result = valueRank.GetValueRankAsCode(arrayDimensions);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.ValueRanks.OneOrMoreDimensions"));
@@ -3439,7 +3439,7 @@ namespace Opc.Ua.Schema.Model.Tests
             string arrayDimensions = string.Empty;
 
             // Act
-            string result = valueRank.GetValueRankString(arrayDimensions);
+            string result = valueRank.GetValueRankAsCode(arrayDimensions);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.ValueRanks.OneOrMoreDimensions"));
@@ -3457,7 +3457,7 @@ namespace Opc.Ua.Schema.Model.Tests
             const string arrayDimensions = "   ";
 
             // Act
-            string result = valueRank.GetValueRankString(arrayDimensions);
+            string result = valueRank.GetValueRankAsCode(arrayDimensions);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.ValueRanks.OneOrMoreDimensions"));
@@ -3475,7 +3475,7 @@ namespace Opc.Ua.Schema.Model.Tests
             const string arrayDimensions = "5";
 
             // Act
-            string result = valueRank.GetValueRankString(arrayDimensions);
+            string result = valueRank.GetValueRankAsCode(arrayDimensions);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.ValueRanks.TwoDimensions"));
@@ -3493,7 +3493,7 @@ namespace Opc.Ua.Schema.Model.Tests
             const string arrayDimensions = "5,10";
 
             // Act
-            string result = valueRank.GetValueRankString(arrayDimensions);
+            string result = valueRank.GetValueRankAsCode(arrayDimensions);
 
             // Assert
             Assert.That(result, Is.EqualTo("3"));
@@ -3511,7 +3511,7 @@ namespace Opc.Ua.Schema.Model.Tests
             const string arrayDimensions = "5,10,15";
 
             // Act
-            string result = valueRank.GetValueRankString(arrayDimensions);
+            string result = valueRank.GetValueRankAsCode(arrayDimensions);
 
             // Assert
             Assert.That(result, Is.EqualTo("4"));
@@ -3529,7 +3529,7 @@ namespace Opc.Ua.Schema.Model.Tests
             const string arrayDimensions = "1,2,3,4,5";
 
             // Act
-            string result = valueRank.GetValueRankString(arrayDimensions);
+            string result = valueRank.GetValueRankAsCode(arrayDimensions);
 
             // Assert
             Assert.That(result, Is.EqualTo("6"));
@@ -3547,7 +3547,7 @@ namespace Opc.Ua.Schema.Model.Tests
             const string arrayDimensions = "5, 10, 15";
 
             // Act
-            string result = valueRank.GetValueRankString(arrayDimensions);
+            string result = valueRank.GetValueRankAsCode(arrayDimensions);
 
             // Assert
             Assert.That(result, Is.EqualTo("4"));
@@ -3565,7 +3565,7 @@ namespace Opc.Ua.Schema.Model.Tests
             const string arrayDimensions = "5,,10";
 
             // Act
-            string result = valueRank.GetValueRankString(arrayDimensions);
+            string result = valueRank.GetValueRankAsCode(arrayDimensions);
 
             // Assert
             Assert.That(result, Is.EqualTo("3"));
@@ -3583,7 +3583,7 @@ namespace Opc.Ua.Schema.Model.Tests
             const string arrayDimensions = ",,,";
 
             // Act
-            string result = valueRank.GetValueRankString(arrayDimensions);
+            string result = valueRank.GetValueRankAsCode(arrayDimensions);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.ValueRanks.OneDimension"));
@@ -3601,7 +3601,7 @@ namespace Opc.Ua.Schema.Model.Tests
             const string arrayDimensions = null;
 
             // Act
-            string result = valueRank.GetValueRankString(arrayDimensions);
+            string result = valueRank.GetValueRankAsCode(arrayDimensions);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.ValueRanks.Any"));
@@ -3619,7 +3619,7 @@ namespace Opc.Ua.Schema.Model.Tests
             const string arrayDimensions = "5,10";
 
             // Act
-            string result = valueRank.GetValueRankString(arrayDimensions);
+            string result = valueRank.GetValueRankAsCode(arrayDimensions);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.ValueRanks.OneDimension"));
@@ -3637,7 +3637,7 @@ namespace Opc.Ua.Schema.Model.Tests
             const string arrayDimensions = "5,10";
 
             // Act
-            string result = valueRank.GetValueRankString(arrayDimensions);
+            string result = valueRank.GetValueRankAsCode(arrayDimensions);
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.ValueRanks.Scalar"));
@@ -7444,7 +7444,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = variableType.GetMinimumSamplingIntervalString();
+            string result = variableType.GetMinimumSamplingIntervalAsCode();
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.MinimumSamplingIntervals.Indeterminate"));
@@ -7463,7 +7463,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = variableType.GetMinimumSamplingIntervalString();
+            string result = variableType.GetMinimumSamplingIntervalAsCode();
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.MinimumSamplingIntervals.Continuous"));
@@ -7484,7 +7484,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = variableType.GetMinimumSamplingIntervalString();
+            string result = variableType.GetMinimumSamplingIntervalAsCode();
 
             // Assert
             Assert.That(result, Is.EqualTo("1"));
@@ -7505,7 +7505,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = variableType.GetMinimumSamplingIntervalString();
+            string result = variableType.GetMinimumSamplingIntervalAsCode();
 
             // Assert
             Assert.That(result, Is.EqualTo(int.MaxValue.ToString(System.Globalization.CultureInfo.InvariantCulture)));
@@ -7526,7 +7526,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = variableType.GetMinimumSamplingIntervalString();
+            string result = variableType.GetMinimumSamplingIntervalAsCode();
 
             // Assert
             Assert.That(result, Is.EqualTo("-2"));
@@ -7547,7 +7547,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = variableType.GetMinimumSamplingIntervalString();
+            string result = variableType.GetMinimumSamplingIntervalAsCode();
 
             // Assert
             Assert.That(result, Is.EqualTo(int.MinValue.ToString(System.Globalization.CultureInfo.InvariantCulture)));
@@ -7571,7 +7571,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = variableType.GetMinimumSamplingIntervalString();
+            string result = variableType.GetMinimumSamplingIntervalAsCode();
 
             // Assert
             Assert.That(result, Is.EqualTo(expected));
@@ -7594,7 +7594,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = variableType.GetMinimumSamplingIntervalString();
+            string result = variableType.GetMinimumSamplingIntervalAsCode();
 
             // Assert
             Assert.That(result, Is.EqualTo(expected));
@@ -9178,23 +9178,6 @@ namespace Opc.Ua.Schema.Model.Tests
             {
                 bool result = mockInstance.IsOverriddenWithSameClass(targetNamespace, namespaces);
             });
-        }
-
-        /// <summary>
-        /// Tests that AsBooleanString returns the correct string representation for boolean values.
-        /// Verifies that true returns "true" and false returns "false".
-        /// </summary>
-        /// <param name="value">The boolean value to convert.</param>
-        /// <param name="expected">The expected string result.</param>
-        [TestCase(true, "true")]
-        [TestCase(false, "false")]
-        public void AsBooleanString_GivenBooleanValue_ReturnsExpectedString(bool value, string expected)
-        {
-            // Act
-            string result = value.AsBooleanString();
-
-            // Assert
-            Assert.That(result, Is.EqualTo(expected));
         }
 
         /// <summary>
@@ -10791,44 +10774,10 @@ namespace Opc.Ua.Schema.Model.Tests
         public void GetAccessLevelString_ValidAccessLevel_ReturnsCorrectString(AccessLevel accessLevel, string expectedResult)
         {
             // Act
-            string result = accessLevel.GetAccessLevelString();
+            string result = accessLevel.GetAccessLevelAsCode();
 
             // Assert
             Assert.That(result, Is.EqualTo(expectedResult));
-        }
-
-        /// <summary>
-        /// Tests that GetAccessLevelString returns "AccessLevels.None" for the None enum value
-        /// which falls into the default case of the switch expression.
-        /// </summary>
-        [Test]
-        public void GetAccessLevelString_NoneAccessLevel_ReturnsDefaultString()
-        {
-            // Arrange
-            const AccessLevel accessLevel = AccessLevel.None;
-
-            // Act
-            string result = accessLevel.GetAccessLevelString();
-
-            // Assert
-            Assert.That(result, Is.EqualTo("AccessLevels.None"));
-        }
-
-        /// <summary>
-        /// Tests that GetAccessLevelString returns "AccessLevels.None" for an invalid enum value
-        /// that is not defined in the AccessLevel enum, falling into the default case.
-        /// </summary>
-        [Test]
-        public void GetAccessLevelString_InvalidAccessLevel_ReturnsDefaultString()
-        {
-            // Arrange
-            const AccessLevel accessLevel = (AccessLevel)999;
-
-            // Act
-            string result = accessLevel.GetAccessLevelString();
-
-            // Assert
-            Assert.That(result, Is.EqualTo("AccessLevels.None"));
         }
 
         /// <summary>
@@ -11108,7 +11057,7 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsMethodTypeNode_VariousSymbolicNames_ReturnsExpectedResult(string symbolicName, bool expected)
         {
             // Arrange
-            var mockNode = new NodeDesign
+            var mockNode = new MethodDesign
             {
                 SymbolicId = new XmlQualifiedName(symbolicName)
             };
@@ -11154,7 +11103,7 @@ namespace Opc.Ua.Schema.Model.Tests
             bool expected)
         {
             // Arrange
-            var mockNode = new NodeDesign
+            var mockNode = new MethodDesign
             {
                 SymbolicId = new XmlQualifiedName(symbolicName)
             };
@@ -11176,7 +11125,7 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsMethodTypeNode_UnderscoreAtStart_DoesNotTruncate(string symbolicName, bool expected)
         {
             // Arrange
-            var mockNode = new NodeDesign
+            var mockNode = new MethodDesign
             {
                 SymbolicId = new XmlQualifiedName(symbolicName)
             };
@@ -11201,7 +11150,7 @@ namespace Opc.Ua.Schema.Model.Tests
         public void IsMethodTypeNode_CaseSensitivity_ReturnsExpectedResult(string symbolicName, bool expected)
         {
             // Arrange
-            var mockNode = new NodeDesign
+            var mockNode = new MethodDesign
             {
                 SymbolicId = new XmlQualifiedName(symbolicName)
             };
@@ -11635,7 +11584,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = objectType.GetEventNotifierString();
+            string result = objectType.GetEventNotifierAsCode();
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.EventNotifiers.SubscribeToEvents"));
@@ -11656,7 +11605,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = objectType.GetEventNotifierString();
+            string result = objectType.GetEventNotifierAsCode();
 
             // Assert
             Assert.That(result, Is.EqualTo("global::Opc.Ua.EventNotifiers.None"));
@@ -11678,7 +11627,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = objectType.GetEventNotifierString();
+            string result = objectType.GetEventNotifierAsCode();
 
             // Assert
             Assert.That(result, Is.EqualTo(expectedResult));
@@ -11696,7 +11645,7 @@ namespace Opc.Ua.Schema.Model.Tests
             ObjectTypeDesign objectType = null;
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => objectType.GetEventNotifierString());
+            Assert.Throws<ArgumentNullException>(() => objectType.GetEventNotifierAsCode());
         }
 
         /// <summary>

@@ -76,7 +76,7 @@ namespace Opc.Ua.SourceGeneration
         /// Embed resources as code into the compilation
         /// </summary>
         /// <exception cref="ArgumentException"></exception>
-        public string Embed(
+        public Resource Embed(
             string namespacePrefix,
             string name,
             bool internalAccess,
@@ -120,7 +120,7 @@ namespace Opc.Ua.SourceGeneration
                 WriteTemplate_ResourceGroup);
 
             template.Render();
-            return outputFile;
+            return outputFile.AsTextFileResource();
         }
 
         private bool WriteTemplate_ResourceGroup(IWriteContext context)

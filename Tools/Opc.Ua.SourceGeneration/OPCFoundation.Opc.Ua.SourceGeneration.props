@@ -3,7 +3,6 @@
     <CompilerVisibleProperty Include="ModelSourceGeneratorVersion" />
     <CompilerVisibleProperty Include="ModelSourceGeneratorExclude" />
     <CompilerVisibleProperty Include="ModelSourceGeneratorUseAllowSubtypes" />
-    <CompilerVisibleProperty Include="ModelSourceGeneratorEmbedNodeSet2Xml" />
     <CompilerVisibleProperty Include="ModelSourceGeneratorStartId" />
     <CompilerVisibleProperty Include="ModelSourceGeneratorModelVersion" />
     <CompilerVisibleProperty Include="ModelSourceGeneratorModelPublicationDate" />

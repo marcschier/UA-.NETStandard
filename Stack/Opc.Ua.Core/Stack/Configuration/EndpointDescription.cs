@@ -135,7 +135,7 @@ namespace Opc.Ua
                 string tokenSecurityPolicyUri)
             {
                 // construct issuer type.
-                string issuedTokenTypeText = issuedTokenType;
+                string issuedTokenTypeText = issuedTokenType ?? string.Empty;
 
                 UserTokenPolicy sameEncryptionAlgorithm = null;
                 UserTokenPolicy unspecifiedSecPolicy = null;
