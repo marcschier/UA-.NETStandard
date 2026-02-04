@@ -1257,7 +1257,7 @@ namespace Opc.Ua.Schema.Model.Tests
                 mockContext.Object);
 
             // Assert
-            Assert.That(result, Is.EqualTo("string.Empty"));
+            Assert.That(result, Is.EqualTo("null"));
         }
 
         /// <summary>

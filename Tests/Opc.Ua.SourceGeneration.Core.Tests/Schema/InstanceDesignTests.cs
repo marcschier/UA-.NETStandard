@@ -121,7 +121,6 @@ namespace Opc.Ua.Schema.Model.Tests
             var declaration = new XmlQualifiedName("Declaration", "http://example.com");
             var typeDefinition = new XmlQualifiedName("TypeDef", "http://example.com");
             var typeDefinitionNode = new ObjectTypeDesign();
-            var instanceDeclarationNode = new ObjectDesign();
             var overriddenNode = new ObjectDesign();
 
             var original = new InstanceDesign
@@ -130,7 +129,6 @@ namespace Opc.Ua.Schema.Model.Tests
                 Declaration = declaration,
                 TypeDefinition = typeDefinition,
                 TypeDefinitionNode = typeDefinitionNode,
-                InstanceDeclarationNode = instanceDeclarationNode,
                 OveriddenNode = overriddenNode
             };
 
@@ -142,7 +140,6 @@ namespace Opc.Ua.Schema.Model.Tests
             Assert.That(copy.Declaration, Is.SameAs(original.Declaration));
             Assert.That(copy.TypeDefinition, Is.SameAs(original.TypeDefinition));
             Assert.That(copy.TypeDefinitionNode, Is.SameAs(original.TypeDefinitionNode));
-            Assert.That(copy.InstanceDeclarationNode, Is.SameAs(original.InstanceDeclarationNode));
             Assert.That(copy.OveriddenNode, Is.SameAs(original.OveriddenNode));
         }
 
@@ -160,7 +157,6 @@ namespace Opc.Ua.Schema.Model.Tests
                 Declaration = null,
                 TypeDefinition = null,
                 TypeDefinitionNode = null,
-                InstanceDeclarationNode = null,
                 OveriddenNode = null
             };
 
@@ -172,7 +168,6 @@ namespace Opc.Ua.Schema.Model.Tests
             Assert.That(copy.Declaration, Is.Null);
             Assert.That(copy.TypeDefinition, Is.Null);
             Assert.That(copy.TypeDefinitionNode, Is.Null);
-            Assert.That(copy.InstanceDeclarationNode, Is.Null);
             Assert.That(copy.OveriddenNode, Is.Null);
         }
 
@@ -385,8 +380,6 @@ namespace Opc.Ua.Schema.Model.Tests
 
         /// <summary>
         /// Tests that GetHashCode handles null object reference properties correctly.
-        /// Validates null handling for TypeDefinitionNode, InstanceDeclarationNode, and OveriddenNode.
-        /// Expected: GetHashCode does not throw and produces a valid hash code.
         /// </summary>
         [Test]
         public void GetHashCode_NullObjectReferences_HandlesCorrectly()
@@ -395,7 +388,6 @@ namespace Opc.Ua.Schema.Model.Tests
             var instance = new InstanceDesign
             {
                 TypeDefinitionNode = null,
-                InstanceDeclarationNode = null,
                 OveriddenNode = null
             };
 
@@ -647,30 +639,7 @@ namespace Opc.Ua.Schema.Model.Tests
         }
 
         /// <summary>
-        /// Tests GetHashCode with circular references in InstanceDeclarationNode.
-        /// Validates that circular references are handled without causing stack overflow or infinite loops.
-        /// Expected: GetHashCode completes successfully without exceptions.
-        /// </summary>
-        [Test]
-        public void GetHashCode_CircularReferenceInInstanceDeclarationNode_HandlesCorrectly()
-        {
-            // Arrange
-            var instance1 = new InstanceDesign();
-            var instance2 = new InstanceDesign
-            {
-                InstanceDeclarationNode = instance1
-            };
-            instance1.InstanceDeclarationNode = instance2;
-
-            // Act & Assert
-            Assert.DoesNotThrow(() => instance1.GetHashCode());
-            Assert.DoesNotThrow(() => instance2.GetHashCode());
-        }
-
-        /// <summary>
         /// Tests GetHashCode with circular references in OveriddenNode.
-        /// Validates that circular references are handled without causing stack overflow or infinite loops.
-        /// Expected: GetHashCode completes successfully without exceptions.
         /// </summary>
         [Test]
         public void GetHashCode_CircularReferenceInOveriddenNode_HandlesCorrectly()
@@ -836,7 +805,6 @@ namespace Opc.Ua.Schema.Model.Tests
         {
             // Arrange
             var typeDefNode = new ObjectTypeDesign();
-            var instanceDeclNode = new InstanceDesign();
             var overriddenNode = new InstanceDesign();
 
             var instance = new InstanceDesign
@@ -851,7 +819,6 @@ namespace Opc.Ua.Schema.Model.Tests
                 PreserveDefaultAttributes = true,
                 DesignToolOnly = true,
                 TypeDefinitionNode = typeDefNode,
-                InstanceDeclarationNode = instanceDeclNode,
                 OveriddenNode = overriddenNode,
                 IdentifierRequired = true
             };
@@ -1543,33 +1510,6 @@ namespace Opc.Ua.Schema.Model.Tests
 
             // Assert
             Assert.That(result, Is.True);
-        }
-
-        /// <summary>
-        /// Tests that Equals returns false when InstanceDeclarationNode differs.
-        /// </summary>
-        [Test]
-        public void Equals_DifferentInstanceDeclarationNode_ReturnsFalse()
-        {
-            // Arrange
-            var decl1 = new InstanceDesign { SymbolicId = new XmlQualifiedName("Decl1", "http://test.org") };
-            var decl2 = new InstanceDesign { SymbolicId = new XmlQualifiedName("Decl2", "http://test.org") };
-
-            var instance1 = new InstanceDesign
-            {
-                InstanceDeclarationNode = decl1
-            };
-
-            var instance2 = new InstanceDesign
-            {
-                InstanceDeclarationNode = decl2
-            };
-
-            // Act
-            bool result = instance1.Equals(instance2);
-
-            // Assert
-            Assert.That(result, Is.False);
         }
 
         /// <summary>

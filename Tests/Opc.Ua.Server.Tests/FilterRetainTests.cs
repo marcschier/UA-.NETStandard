@@ -410,15 +410,16 @@ namespace Opc.Ua.Server.Tests
             ITelemetryContext telemetry)
         {
             var alarm = new ExclusiveLevelAlarmState(null);
+            SystemContext context = GetSystemContext(telemetry);
             alarm.Create(
-                GetSystemContext(telemetry),
+                context,
                 new NodeId(12345, 1),
                 new QualifiedName("AnyAlarm", 1),
                 new LocalizedText(string.Empty, "AnyAlarm"),
                 true);
 
             alarm.EventType.Value = ObjectTypeIds.ExclusiveLevelAlarmType;
-
+            alarm.AddOutOfServiceState(context);
             if (addFilterRetain)
             {
                 alarm.SupportsFilteredRetain = new PropertyState<bool>(alarm)

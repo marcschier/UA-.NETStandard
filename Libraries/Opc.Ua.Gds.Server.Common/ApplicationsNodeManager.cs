@@ -298,7 +298,8 @@ namespace Opc.Ua.Gds.Server
                     // list of supported cert type mappings (V1.04)
                     {
                         Ua.ObjectTypeIds.HttpsCertificateType,
-                        nameof(Ua.ObjectTypeIds.HttpsCertificateType) },
+                        nameof(Ua.ObjectTypeIds.HttpsCertificateType)
+                    },
                     {
                         Ua.ObjectTypeIds.UserCertificateType,
                         nameof(Ua.ObjectTypeIds.UserCertificateType)
@@ -406,11 +407,12 @@ namespace Opc.Ua.Gds.Server
             switch (numericId)
             {
                 case ObjectTypes.CertificateDirectoryType:
+#if FALSE // TODO: All predefined nodes are active nodes - need a backcompat story ?
                     if (passiveNode is CertificateDirectoryState)
                     {
                         break;
                     }
-
+#endif
                     var activeNode = new CertificateDirectoryState(passiveNode.Parent)
                     {
                         RevokeCertificate = new RevokeCertificateMethodState(passiveNode),

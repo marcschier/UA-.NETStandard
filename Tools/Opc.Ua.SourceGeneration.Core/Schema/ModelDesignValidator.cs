@@ -4541,7 +4541,6 @@ namespace Opc.Ua.Schema.Model
 
             mergedInstance.References = null;
             mergedInstance.IdentifierRequired = true;
-            mergedInstance.InstanceDeclarationNode = null;
             mergedInstance.OveriddenNode = null;
             mergedInstance.Parent = null;
             mergedInstance.Category = source.Category;
@@ -4886,7 +4885,8 @@ namespace Opc.Ua.Schema.Model
                 mergedMethod.DefaultRolePermissions = method.DefaultRolePermissions;
             }
 
-            if (method.DefaultAccessRestrictionsSpecified && !method.DefaultAccessRestrictionsSpecified)
+            if (method.DefaultAccessRestrictionsSpecified &&
+                !mergedMethod.DefaultAccessRestrictionsSpecified)
             {
                 mergedMethod.DefaultAccessRestrictions = method.DefaultAccessRestrictions;
                 mergedMethod.DefaultAccessRestrictionsSpecified = true;
@@ -5356,7 +5356,8 @@ namespace Opc.Ua.Schema.Model
 
                     if (!string.IsNullOrEmpty(basePath))
                     {
-                        if (instance.ModellingRule is ModellingRule.None or
+                        if (instance.ModellingRule is
+                            ModellingRule.None or
                             ModellingRule.ExposesItsArray or
                             ModellingRule.OptionalPlaceholder)
                         {
@@ -5708,7 +5709,6 @@ namespace Opc.Ua.Schema.Model
                     }
 
                     mergedNode.OverriddenNodes ??= [];
-
                     mergedNode.OverriddenNodes.Add(node.Instance);
 
                     if (explicitlyDefined)

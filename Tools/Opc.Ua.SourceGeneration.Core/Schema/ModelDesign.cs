@@ -1282,12 +1282,6 @@ namespace Opc.Ua.Schema.Model
         public TypeDesign TypeDefinitionNode { get; set; }
 
         /// <summary>
-        /// Instance declaration node
-        /// </summary>
-        [XmlIgnore]
-        public InstanceDesign InstanceDeclarationNode { get; set; }
-
-        /// <summary>
         /// Overidden node
         /// </summary>
         [XmlIgnore]
@@ -1336,9 +1330,6 @@ namespace Opc.Ua.Schema.Model
                     TypeDefinitionNode?.SymbolicId,
                     other.TypeDefinitionNode?.SymbolicId) &&
                 XmlQualifiedNameEqualityComparer.Default.Equals(
-                    InstanceDeclarationNode?.SymbolicId,
-                    other.InstanceDeclarationNode?.SymbolicId) &&
-                XmlQualifiedNameEqualityComparer.Default.Equals(
                     OveriddenNode?.SymbolicId,
                     other.OveriddenNode?.SymbolicId) &&
                 IdentifierRequired == other.IdentifierRequired;
@@ -1359,7 +1350,6 @@ namespace Opc.Ua.Schema.Model
             hash.Add(PreserveDefaultAttributes);
             hash.Add(DesignToolOnly);
             hash.Add(TypeDefinitionNode?.SymbolicId, XmlQualifiedNameEqualityComparer.Default);
-            hash.Add(InstanceDeclarationNode?.SymbolicId, XmlQualifiedNameEqualityComparer.Default);
             hash.Add(OveriddenNode?.SymbolicId, XmlQualifiedNameEqualityComparer.Default);
             hash.Add(IdentifierRequired);
             return hash.ToHashCode();

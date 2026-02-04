@@ -558,11 +558,6 @@ namespace Opc.Ua.Server
             ISystemContext context,
             NodeState predefinedNode)
         {
-            if (predefinedNode is not BaseObjectState)
-            {
-                return predefinedNode;
-            }
-
             return predefinedNode;
         }
 

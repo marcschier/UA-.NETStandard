@@ -828,7 +828,7 @@ namespace Opc.Ua.Schema.Model
                 case BasicDataType.String:
                     if (decodedValue is not string stringValue)
                     {
-                        stringValue = default;
+                        return "null";
                     }
                     return stringValue.AsStringLiteral();
                 case BasicDataType.DateTime:
@@ -940,8 +940,9 @@ namespace Opc.Ua.Schema.Model
                                 dataType.Fields[0].Name);
                         }
                         // TODO: change to initialize enum with the value
-                        return onUnknownElement?.Invoke() ?? CoreUtils.Format("default({0})",
-                            dataType.SymbolicName.AsFullyQualifiedTypeSymbol(namespaces));
+                        return onUnknownElement?.Invoke() ??
+                            CoreUtils.Format("default({0})",
+                                dataType.SymbolicName.AsFullyQualifiedTypeSymbol(namespaces));
                     }
                     // Default to enum with value 0 which should be "none" for option set
                     return onUnknownElement?.Invoke() ?? "default";
@@ -1475,7 +1476,8 @@ namespace Opc.Ua.Schema.Model
                         relativePath = relativePath[(index + 1)..];
                     }
 
-                    if (parent.Hierarchy.Nodes.TryGetValue(relativePath, out HierarchyNode hierarchyNode) &&
+                    if (parent.Hierarchy.Nodes.TryGetValue(relativePath,
+                        out HierarchyNode hierarchyNode) &&
                         hierarchyNode.Instance is InstanceDesign instanceDesign)
                     {
                         return instanceDesign;

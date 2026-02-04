@@ -23,5 +23,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Resources\%(Filename)%(Extension)</Link>
     </EmbeddedResource>
+    <EmbeddedResource Include="..\..\Libraries\Opc.Ua.Gds.Common\Design\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Resources\%(Filename)%(Extension)</Link>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

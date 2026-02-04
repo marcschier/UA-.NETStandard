@@ -164,17 +164,12 @@ namespace Opc.Ua.SourceGeneration
                 return;
             }
 
-            if (node.IsMethodTypeDesign())
-            {
-                return;
-            }
-
             if (node.SymbolicName.Namespace == m_context.ModelDesign.TargetNamespace.Value)
             {
                 browseNames[node.SymbolicName.Name] = node.BrowseName;
             }
 
-            if (!node.HasChildren)
+            if (node.Children?.Items == null)
             {
                 return;
             }
@@ -186,9 +181,7 @@ namespace Opc.Ua.SourceGeneration
                     continue;
                 }
 
-                if (child.SymbolicName == new XmlQualifiedName(
-                    BrowseNames.DefaultInstanceBrowseName,
-                    Namespaces.OpcUa))
+                if (child.SymbolicName == new XmlQualifiedName(BrowseNames.DefaultInstanceBrowseName, Namespaces.OpcUa))
                 {
                     var variable = (VariableDesign)child;
 
@@ -219,7 +212,7 @@ namespace Opc.Ua.SourceGeneration
                     browseNames[child.SymbolicName.Name] = child.BrowseName;
                 }
 
-                if (child is InstanceDesign instance && instance.InstanceDeclarationNode == null)
+                if (child is InstanceDesign instance)
                 {
                     CollectBrowseNames(child, browseNames);
                 }
