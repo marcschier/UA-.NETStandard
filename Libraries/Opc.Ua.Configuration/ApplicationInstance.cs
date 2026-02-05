@@ -97,7 +97,7 @@ namespace Opc.Ua.Configuration
         public Type ConfigurationType { get; set; }
 
         /// <inheritdoc/>
-        public IServerBase Server { get; private set; }
+        public ServerBase Server { get; private set; }
 
         /// <inheritdoc/>
         public ApplicationConfiguration ApplicationConfiguration { get; set; }
@@ -114,7 +114,7 @@ namespace Opc.Ua.Configuration
         public bool DisableCertificateAutoCreation { get; set; }
 
         /// <inheritdoc/>
-        public async Task StartAsync(IServerBase server)
+        public async Task StartAsync(ServerBase server)
         {
             Server = server;
 
@@ -444,12 +444,13 @@ namespace Opc.Ua.Configuration
             {
                 if (!DisableCertificateAutoCreation)
                 {
-                    certificate = await CreateApplicationInstanceCertificateAsync(
-                            configuration,
-                            id,
-                            lifeTimeInMonths,
-                            ct)
-                        .ConfigureAwait(false);
+                certificate = await CreateApplicationInstanceCertificateAsync(
+                        configuration,
+                        id,
+                        minimumKeySize,
+                        lifeTimeInMonths,
+                        ct)
+                    .ConfigureAwait(false);
                 }
                 else
                 {
@@ -808,6 +809,7 @@ namespace Opc.Ua.Configuration
         /// </summary>
         /// <param name="configuration">The configuration.</param>
         /// <param name="id">The certificate identifier.</param>
+        /// <param name="minimumKeySize">Minimum RSA key size to use when creating the certificate.</param>
         /// <param name="lifeTimeInMonths">The lifetime in months.</param>
         /// <param name="ct">Cancellation token to cancel operation with</param>
         /// <returns>The new certificate</returns>
@@ -815,6 +817,7 @@ namespace Opc.Ua.Configuration
         private async Task<X509Certificate2> CreateApplicationInstanceCertificateAsync(
             ApplicationConfiguration configuration,
             CertificateIdentifier id,
+            ushort minimumKeySize,
             ushort lifeTimeInMonths,
             CancellationToken ct)
         {
@@ -851,10 +854,16 @@ namespace Opc.Ua.Configuration
                 id.CertificateType == ObjectTypeIds.RsaMinApplicationCertificateType ||
                 id.CertificateType == ObjectTypeIds.RsaSha256ApplicationCertificateType)
             {
-                id.Certificate = builder.SetRSAKeySize(CertificateFactory.DefaultKeySize)
-                    .CreateForRSA();
+                ushort keySize = minimumKeySize == 0
+                    ? CertificateFactory.DefaultKeySize
+                    : minimumKeySize;
 
-                m_logger.LogInformation("Certificate {Certificate} created for RSA.", id.Certificate.AsLogSafeString());
+                id.Certificate = builder.SetRSAKeySize(keySize).CreateForRSA();
+
+                m_logger.LogInformation(
+                    "Certificate {Certificate} created for RSA with key size {KeySize} bits.",
+                    id.Certificate.AsLogSafeString(),
+                    keySize);
             }
             else
             {

@@ -99,7 +99,7 @@ namespace Opc.Ua.Security.Certificates.Tests
 
             // Verify subject
             Assert.NotNull(csr.Subject);
-            Assert.That(csr.Subject.Name, Does.Contain("CN=Test RSA CSR"));
+            NUnit.Framework.Assert.That(csr.Subject.Name, Does.Contain("CN=Test RSA CSR"));
 
             // Verify signature
             bool isValid = csr.Verify();
@@ -138,7 +138,7 @@ namespace Opc.Ua.Security.Certificates.Tests
 
             // Verify subject
             Assert.NotNull(csr.Subject);
-            Assert.That(csr.Subject.Name, Does.Contain("CN=Test ECDSA P256 CSR"));
+            NUnit.Framework.Assert.That(csr.Subject.Name, Does.Contain("CN=Test ECDSA P256 CSR"));
 
             // Verify SubjectPublicKeyInfo
             Assert.NotNull(csr.SubjectPublicKeyInfo);
@@ -150,7 +150,7 @@ namespace Opc.Ua.Security.Certificates.Tests
             Assert.True(isValid, "ECDSA CSR signature should be valid");
 #else
             // ECDSA verification not supported on older frameworks
-            Assert.Throws<NotSupportedException>(() => csr.Verify());
+            NUnit.Framework.Assert.Throws<NotSupportedException>(() => csr.Verify());
 #endif
         }
 
@@ -160,7 +160,7 @@ namespace Opc.Ua.Security.Certificates.Tests
         [Test]
         public void ParseNullCsrThrowsArgumentNullException()
         {
-            Assert.Throws<ArgumentNullException>(() => new Pkcs10CertificationRequest(null));
+            NUnit.Framework.Assert.Throws<ArgumentNullException>(() => new Pkcs10CertificationRequest(null));
         }
 
         /// <summary>
@@ -170,7 +170,7 @@ namespace Opc.Ua.Security.Certificates.Tests
         public void ParseInvalidCsrThrowsCryptographicException()
         {
             byte[] invalidData = [0x01, 0x02, 0x03, 0x04];
-            Assert.Throws<CryptographicException>(() => new Pkcs10CertificationRequest(invalidData));
+            NUnit.Framework.Assert.Throws<CryptographicException>(() => new Pkcs10CertificationRequest(invalidData));
         }
 
         /// <summary>
@@ -232,12 +232,12 @@ namespace Opc.Ua.Security.Certificates.Tests
             X509SubjectAltNameExtension sanExtension = Pkcs10Utils.GetSubjectAltNameExtension(csr.Attributes);
 
             Assert.NotNull(sanExtension);
-            Assert.That(sanExtension.Uris, Has.Count.EqualTo(1));
-            Assert.That(sanExtension.Uris[0], Is.EqualTo(applicationUri));
+            NUnit.Framework.Assert.That(sanExtension.Uris, Has.Count.EqualTo(1));
+            NUnit.Framework.Assert.That(sanExtension.Uris[0], Is.EqualTo(applicationUri));
 
             // Verify domain names (may include URIs and domain names)
             int totalNames = sanExtension.DomainNames.Count + sanExtension.IPAddresses.Count;
-            Assert.That(totalNames, Is.EqualTo(domainNames.Length));
+            NUnit.Framework.Assert.That(totalNames, Is.EqualTo(domainNames.Length));
         }
 
         /// <summary>
@@ -290,6 +290,8 @@ namespace Opc.Ua.Security.Certificates.Tests
             Assert.Greater(requestInfo.Length, 0);
         }
 
+        private static readonly string[] s_domainNames = ["localhost"];
+
         /// <summary>
         /// Test parsing multiple CSRs in sequence.
         /// </summary>
@@ -307,7 +309,7 @@ namespace Opc.Ua.Security.Certificates.Tests
                 using X509Certificate2 certificate = CertificateBuilder.Create(subject)
                     .SetNotBefore(DateTime.UtcNow.AddDays(-1))
                     .SetLifeTime(TimeSpan.FromDays(30))
-                    .AddExtension(new X509SubjectAltNameExtension(applicationUri, ["localhost"]))
+                    .AddExtension(new X509SubjectAltNameExtension(applicationUri, s_domainNames))
                     .CreateForRSA();
 
                 byte[] csrData = CertificateFactory.CreateSigningRequest(certificate);
@@ -318,7 +320,7 @@ namespace Opc.Ua.Security.Certificates.Tests
                 csrList.Add(csr);
             }
 
-            Assert.That(csrList, Has.Count.EqualTo(count));
+            NUnit.Framework.Assert.That(csrList, Has.Count.EqualTo(count));
         }
 
         /// <summary>
@@ -338,8 +340,8 @@ namespace Opc.Ua.Security.Certificates.Tests
             var csr = new Pkcs10CertificationRequest(csrData);
 
             string subjectName = csr.Subject.Name;
-            Assert.That(subjectName, Does.Contain("CN=TestSubject"));
-            Assert.That(subjectName, Does.Contain("O=TestOrg"));
+            NUnit.Framework.Assert.That(subjectName, Does.Contain("CN=TestSubject"));
+            NUnit.Framework.Assert.That(subjectName, Does.Contain("O=TestOrg"));
         }
     }
 }
