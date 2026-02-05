@@ -1184,9 +1184,11 @@ namespace Opc.Ua.SourceGeneration
             {
                 return null;
             }
-            if (node.Root.IsMethodTypeDesign() || node.IsInstanceOfType != null)
+            if (node.Root.IsMethodTypeDesign() ||
+                node.IsInstanceOfType != null ||
+                !IsInAddressSpace(node) ||
+                node.Root.Purpose == DataTypePurpose.Testing)
             {
-                // No need to register instances at the root
                 return null;
             }
             if (node.Parent != null)
@@ -2149,19 +2151,11 @@ namespace Opc.Ua.SourceGeneration
         private bool ExcludeNodeStateClassGeneration(NodeToGenerate node)
         {
             // Filter unncessary nodes
-            if (node.Root.NotInAddressSpace)
+            if (!IsInAddressSpace(node))
             {
                 m_logger.LogDebug(
                     "Excluded node {Node} as it is marked NotInAddressSpace.",
                     node.Root.SymbolicId.Name);
-                return true;
-            }
-            if (node.Root is InstanceDesign instanceDesign &&
-                instanceDesign.TypeDefinition != null &&
-                instanceDesign.TypeDefinition.Name == "DataTypeEncodingType" &&
-                instanceDesign.Parent != null &&
-                instanceDesign.Parent.NotInAddressSpace)
-            {
                 return true;
             }
 
@@ -2191,6 +2185,20 @@ namespace Opc.Ua.SourceGeneration
                 }
             }
             return false;
+        }
+
+        private bool IsInAddressSpace(NodeToGenerate node)
+        {
+            bool isInAddressSpace = !node.Root.NotInAddressSpace;
+            if (node.Root is InstanceDesign instanceDesign &&
+                instanceDesign.TypeDefinition != null &&
+                instanceDesign.TypeDefinition.Name == "DataTypeEncodingType")
+            {
+                isInAddressSpace =
+                    instanceDesign.Parent == null ||
+                    !instanceDesign.Parent.NotInAddressSpace;
+            }
+            return isInAddressSpace;
         }
 
         /// <summary>
