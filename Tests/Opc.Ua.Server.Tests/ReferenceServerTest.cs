@@ -1276,7 +1276,7 @@ namespace Opc.Ua.Server.Tests
             }
             else
             {
-                Assert.Fail("HistoryData body should be of type HistoryData");
+                NUnit.Framework.Assert.Fail("HistoryData body should be of type HistoryData");
             }
         }
 

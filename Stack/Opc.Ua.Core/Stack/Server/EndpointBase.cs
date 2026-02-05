@@ -704,7 +704,6 @@ namespace Opc.Ua
                 SecureChannelContext = context;
                 Request = request;
                 m_vts = ServiceResponsePooledValueTaskSource.Create();
-                m_service = m_endpoint.FindService(Request.TypeId);
                 m_cancellationToken = cancellationToken;
             }
 
@@ -768,7 +767,8 @@ namespace Opc.Ua
 
                     using (activity)
                     {
-                        IServiceResponse response = await m_service.InvokeAsync(Request, SecureChannelContext, linkedCts.Token).ConfigureAwait(false);
+                        ServiceDefinition service = m_endpoint.FindService(Request.TypeId);
+                        IServiceResponse response = await service.InvokeAsync(Request, SecureChannelContext, linkedCts.Token).ConfigureAwait(false);
                         m_vts.SetResult(response);
                     }
                 }
@@ -830,7 +830,6 @@ namespace Opc.Ua
             }
 
             private readonly EndpointBase m_endpoint;
-            private readonly ServiceDefinition m_service;
             private readonly ServiceResponsePooledValueTaskSource m_vts;
             private readonly CancellationToken m_cancellationToken;
         }
