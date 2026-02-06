@@ -211,7 +211,9 @@ namespace Opc.Ua.SourceGeneration
         }
 
         private static readonly string s_softwareVersion = CoreUtils.GetAssemblySoftwareVersion();
+#if FULL_VERSION
         private static readonly string s_buildVersion = CoreUtils.GetAssemblyBuildNumber();
+#endif
         private readonly TemplateString m_templateString;
         private readonly Template m_outerTemplate;
         private readonly TemplateWriter m_writer;

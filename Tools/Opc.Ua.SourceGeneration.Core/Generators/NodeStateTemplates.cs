@@ -171,7 +171,7 @@ namespace Opc.Ua.SourceGeneration
 
                 /// <inheritdoc/>
                 protected override global::Opc.Ua.NodeId GetDefaultTypeDefinitionId(
-                global::Opc.Ua.NamespaceTable namespaceUris)
+                    global::Opc.Ua.NamespaceTable namespaceUris)
                 {
                     return global::Opc.Ua.NodeId.Create(
                         {{Tokens.NamespacePrefix}}.ObjectTypes.{{Tokens.TypeName}},
@@ -190,14 +190,17 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 /// <inheritdoc/>
-                protected override void Initialize(global::Opc.Ua.ISystemContext context, global::Opc.Ua.NodeState source)
+                protected override void Initialize(
+                    global::Opc.Ua.ISystemContext context,
+                    global::Opc.Ua.NodeState source)
                 {
                     InitializeOptionalChildren(context);
                     base.Initialize(context, source);
                 }
 
                 /// <inheritdoc/>
-                protected override void InitializeOptionalChildren(global::Opc.Ua.ISystemContext context)
+                protected override void InitializeOptionalChildren(
+                    global::Opc.Ua.ISystemContext context)
                 {
                     base.InitializeOptionalChildren(context);
                     {{Tokens.InitializeOptionalChildren}}
@@ -295,7 +298,8 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 /// <inheritdoc/>
-                protected override void InitializeOptionalChildren(global::Opc.Ua.ISystemContext context)
+                protected override void InitializeOptionalChildren(
+                    global::Opc.Ua.ISystemContext context)
                 {
                     base.InitializeOptionalChildren(context);
                     {{Tokens.InitializeOptionalChildren}}
@@ -450,7 +454,8 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 /// <inheritdoc/>
-                protected override global::Opc.Ua.NodeId GetDefaultTypeDefinitionId(global::Opc.Ua.NamespaceTable namespaceUris)
+                protected override global::Opc.Ua.NodeId GetDefaultTypeDefinitionId(
+                    global::Opc.Ua.NamespaceTable namespaceUris)
                 {
                     return global::Opc.Ua.NodeId.Create(
                         {{Tokens.NamespacePrefix}}.VariableTypes.{{Tokens.TypeName}},
@@ -459,7 +464,8 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 /// <inheritdoc/>
-                protected override global::Opc.Ua.NodeId GetDefaultDataTypeId(global::Opc.Ua.NamespaceTable namespaceUris)
+                protected override global::Opc.Ua.NodeId GetDefaultDataTypeId(
+                    global::Opc.Ua.NamespaceTable namespaceUris)
                 {
                     return global::Opc.Ua.NodeId.Create(
                         {{Tokens.DataTypeNamespacePrefix}}.DataTypes.{{Tokens.DataType}},
@@ -484,14 +490,17 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 /// <inheritdoc/>
-                protected override void Initialize(global::Opc.Ua.ISystemContext context, global::Opc.Ua.NodeState source)
+                protected override void Initialize(
+                    global::Opc.Ua.ISystemContext context,
+                    global::Opc.Ua.NodeState source)
                 {
                     InitializeOptionalChildren(context);
                     base.Initialize(context, source);
                 }
 
                 /// <inheritdoc/>
-                protected override void InitializeOptionalChildren(global::Opc.Ua.ISystemContext context)
+                protected override void InitializeOptionalChildren(
+                    global::Opc.Ua.ISystemContext context)
                 {
                     base.InitializeOptionalChildren(context);
                     {{Tokens.InitializeOptionalChildren}}
@@ -627,7 +636,9 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 /// <inheritdoc/>
-                protected override void Initialize(global::Opc.Ua.ISystemContext context, global::Opc.Ua.NodeState source)
+                protected override void Initialize(
+                    global::Opc.Ua.ISystemContext context,
+                    global::Opc.Ua.NodeState source)
                 {
                     InitializeOptionalChildren(context);
                     base.Initialize(context, source);
