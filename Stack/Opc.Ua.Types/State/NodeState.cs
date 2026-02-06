@@ -45,7 +45,7 @@ namespace Opc.Ua
     {
         /// <summary>
         /// Creates an empty object.
-        /// </summary>
+        /// </summary>G
         /// <param name="nodeClass">The node class.</param>
         protected NodeState(NodeClass nodeClass)
         {
@@ -70,9 +70,149 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public virtual object Clone()
+        public abstract object Clone();
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
         {
-            throw new NotImplementedException();
+            if (obj is not NodeState other)
+            {
+                return false;
+            }
+
+            // Compare references and children
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
+            if (other is not null &&
+                EqualityComparer<object>.Default.Equals(Handle, other.Handle) &&
+                ChangeMasks == other.ChangeMasks &&
+                SymbolicName == other.SymbolicName &&
+                NodeId == other.NodeId &&
+                NodeClass == other.NodeClass &&
+                BrowseName == other.BrowseName &&
+                DisplayName == other.DisplayName &&
+                Description == other.Description &&
+                WriteMask == other.WriteMask &&
+                UserWriteMask == other.UserWriteMask &&
+                EqualityComparer<RolePermissionTypeCollection>.Default.Equals(
+                    RolePermissions, other.RolePermissions) &&
+                EqualityComparer<RolePermissionTypeCollection>.Default.Equals(
+                    UserRolePermissions, other.UserRolePermissions) &&
+                AccessRestrictions == other.AccessRestrictions &&
+                AreEventsMonitored == other.AreEventsMonitored &&
+                Initialized == other.Initialized &&
+                ValidationRequired == other.ValidationRequired &&
+
+                // TODO: Remove below as not needed during runtime
+                EqualityComparer<XmlElement[]>.Default.Equals(
+                    Extensions, other.Extensions) &&
+                EqualityComparer<IList<string>>.Default.Equals(
+                    Categories, other.Categories) &&
+                ReleaseStatus == other.ReleaseStatus &&
+                Specification == other.Specification &&
+                NodeSetDocumentation == other.NodeSetDocumentation &&
+                DesignToolOnly == other.DesignToolOnly)
+            {
+                lock (m_referencesLock)
+                {
+                    if (!ArrayEqualityComparer<IReference>.Default.Equals(
+                        m_references?.Keys.ToArray(), other.m_references?.Keys.ToArray()))
+                    {
+                        return false;
+                    }
+                }
+
+                lock (m_childrenLock)
+                {
+                    if (!ArrayEqualityComparer<BaseInstanceState>.Default.Equals(
+                        m_children?.ToArray(), other.m_children?.ToArray()))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(ChangeMasks);
+            hash.Add(SymbolicName);
+            hash.Add(NodeId);
+            hash.Add(NodeClass);
+            hash.Add(BrowseName);
+            hash.Add(DisplayName);
+            hash.Add(Description);
+            hash.Add(WriteMask);
+            hash.Add(UserWriteMask);
+            hash.Add(RolePermissions);
+            hash.Add(UserRolePermissions);
+            hash.Add(AccessRestrictions);
+            hash.Add(Extensions);
+            hash.Add(Categories);
+            hash.Add(ReleaseStatus);
+            hash.Add(Specification);
+            hash.Add(NodeSetDocumentation);
+            hash.Add(DesignToolOnly);
+            return hash.ToHashCode();
+        }
+
+        /// <summary>
+        /// Copy all state to the target node state. This performs
+        /// the actual deep copy of the node state.
+        /// </summary>
+        /// <param name="target"></param>
+        protected virtual void CopyTo(NodeState target)
+        {
+            target.Handle = Handle;
+            target.SymbolicName = SymbolicName;
+            target.NodeClass = NodeClass;
+            target.m_nodeId = m_nodeId;
+            target.m_browseName = m_browseName;
+            target.m_displayName = m_displayName;
+            target.m_description = m_description;
+            target.m_writeMask = m_writeMask;
+            target.m_changeMasks = m_changeMasks;
+
+            target.RolePermissions = RolePermissions;
+            target.UserRolePermissions = UserRolePermissions;
+
+            lock (m_referencesLock)
+            {
+                if (m_references != null)
+                {
+                    target.AddReferences(m_references.Keys.ToList());
+                }
+            }
+
+            List<BaseInstanceState> children;
+            lock (m_childrenLock)
+            {
+                children = m_children != null ? [.. m_children] : null;
+            }
+            if (children != null)
+            {
+                target.m_children = new List<BaseInstanceState>(children.Count);
+                for (int ii = 0; ii < children.Count; ii++)
+                {
+                    var child = (BaseInstanceState)children[ii].Clone();
+                    target.m_children.Add(child);
+                }
+            }
+
+            // TODO: Remove below as not needed during runtime
+            target.Categories = Categories;
+            target.Specification = Specification;
+            target.DesignToolOnly = DesignToolOnly;
+            target.ReleaseStatus = ReleaseStatus;
+            target.NodeSetDocumentation = NodeSetDocumentation;
+            target.Extensions = Extensions;
         }
 
         /// <summary>
@@ -479,6 +619,21 @@ namespace Opc.Ua
         /// The release status for the node.
         /// </summary>
         public Export.ReleaseStatus ReleaseStatus { get; set; }
+
+        /// <summary>
+        /// The specification that defines the node.
+        /// </summary>
+        public string Specification { get; set; }
+
+        /// <summary>
+        /// The documentation for the node that is saved in the NodeSet.
+        /// </summary>
+        public string NodeSetDocumentation { get; set; }
+
+        /// <summary>
+        /// The documentation for the node that is saved in the NodeSet.
+        /// </summary>
+        public bool DesignToolOnly { get; set; }
 
         /// <summary>
         /// Exports a copy of the node to a node table.

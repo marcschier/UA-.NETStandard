@@ -30,6 +30,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
@@ -501,19 +502,74 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public override object Clone()
         {
-            return MemberwiseClone();
+            var clone = (BaseInstanceState)Activator.CreateInstance(GetType(), Parent);
+            CopyTo(clone);
+            return clone;
         }
 
-        /// <summary>
-        /// Makes a copy of the node and all children.
-        /// </summary>
-        /// <returns>
-        /// A new object that is a copy of this instance.
-        /// </returns>
-        public new object MemberwiseClone()
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
         {
-            var clone = (BaseInstanceState)Activator.CreateInstance(GetType(), Parent);
-            return CloneChildren(clone);
+            if (obj is not BaseVariableState state)
+            {
+                return false;
+            }
+            return
+                base.Equals(obj) &&
+                state.Timestamp == Timestamp &&
+                state.StatusCode == StatusCode &&
+                EqualityComparer<object>.Default.Equals(state.Value, Value) &&
+                state.DataType == DataType &&
+                state.ValueRank == ValueRank &&
+                ArrayEqualityComparer<uint>.Default.Equals(
+                    state.ArrayDimensions?.ToArray(), ArrayDimensions?.ToArray()) &&
+                state.AccessLevel == AccessLevel &&
+                state.UserAccessLevel == UserAccessLevel &&
+                state.MinimumSamplingInterval == MinimumSamplingInterval &&
+                state.Historizing == Historizing &&
+                state.IsValueType == IsValueType
+                ;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(base.GetHashCode());
+            hash.Add(Timestamp);
+            hash.Add(StatusCode);
+            hash.Add(Value);
+            hash.Add(DataType);
+            hash.Add(ValueRank);
+            hash.Add(ArrayEqualityComparer<uint>.Default.GetHashCode(
+                ArrayDimensions?.ToArray()));
+            hash.Add(AccessLevel);
+            hash.Add(UserAccessLevel);
+            hash.Add(MinimumSamplingInterval);
+            hash.Add(Historizing);
+            hash.Add(IsValueType);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(NodeState target)
+        {
+            if (target is BaseVariableState state)
+            {
+                state.Value = Value;
+                state.Timestamp = Timestamp;
+                state.StatusCode = StatusCode;
+                state.m_valueTouched = m_valueTouched;
+                state.DataType = DataType;
+                state.ValueRank = ValueRank;
+                state.ArrayDimensions = ArrayDimensions;
+                state.AccessLevel = AccessLevel;
+                state.UserAccessLevel = UserAccessLevel;
+                state.MinimumSamplingInterval = MinimumSamplingInterval;
+                state.Historizing = Historizing;
+                state.IsValueType = IsValueType;
+            }
+            base.CopyTo(target);
         }
 
         /// <summary>
@@ -2232,6 +2288,46 @@ namespace Opc.Ua
         protected override NodeId GetDefaultTypeDefinitionId(NamespaceTable namespaceUris)
         {
             return VariableTypeIds.BaseDataVariableType;
+        }
+
+        /// <inheritdoc/>
+        public override object Clone()
+        {
+            var clone = (BaseDataVariableState)Activator.CreateInstance(GetType(), Parent);
+            CopyTo(clone);
+            return clone;
+        }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            if (obj is not BaseDataVariableState state)
+            {
+                return false;
+            }
+            return
+                base.Equals(obj) &&
+                EqualityComparer<PropertyState<LocalizedText[]>>.Default.Equals(
+                    state.EnumStrings, EnumStrings);
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(base.GetHashCode());
+            hash.Add(EnumStrings);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(NodeState target)
+        {
+            if (target is BaseDataVariableState state)
+            {
+                state.EnumStrings = EnumStrings;
+            }
+            base.CopyTo(target);
         }
 
         /// <summary>

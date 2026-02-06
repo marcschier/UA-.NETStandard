@@ -88,19 +88,55 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public override object Clone()
         {
-            return MemberwiseClone();
+            var clone = (MethodState)Activator.CreateInstance(GetType(), Parent);
+            CopyTo(clone);
+            return clone;
         }
 
-        /// <summary>
-        /// Makes a copy of the node and all children.
-        /// </summary>
-        /// <returns>
-        /// A new object that is a copy of this instance.
-        /// </returns>
-        public new object MemberwiseClone()
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
         {
-            var clone = (MethodState)Activator.CreateInstance(GetType(), Parent);
-            return CloneChildren(clone);
+            if (obj is not MethodState state)
+            {
+                return false;
+            }
+            return
+                base.Equals(obj) &&
+                EqualityComparer<PropertyState<Argument[]>>.Default.Equals(
+                    state.OutputArguments, OutputArguments) &&
+                EqualityComparer<PropertyState<Argument[]>>.Default.Equals(
+                    state.InputArguments, InputArguments) &&
+                state.MethodDeclarationId == MethodDeclarationId &&
+                state.Executable == Executable &&
+                state.UserExecutable == UserExecutable
+                ;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(base.GetHashCode());
+            hash.Add(OutputArguments);
+            hash.Add(OutputArguments);
+            hash.Add(MethodDeclarationId);
+            hash.Add(Executable);
+            hash.Add(UserExecutable);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(NodeState target)
+        {
+            if (target is MethodState state)
+            {
+                state.OutputArguments = OutputArguments;
+                state.InputArguments = InputArguments;
+                state.MethodDeclarationId = MethodDeclarationId;
+                state.Executable = Executable;
+                state.UserExecutable = UserExecutable;
+            }
+            base.CopyTo(target);
         }
 
         /// <summary>

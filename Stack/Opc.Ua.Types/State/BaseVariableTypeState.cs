@@ -29,6 +29,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using Opc.Ua.Types;
 
 namespace Opc.Ua
@@ -84,19 +86,52 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public override object Clone()
         {
-            return MemberwiseClone();
+            var clone = (BaseVariableTypeState)Activator.CreateInstance(GetType());
+            CopyTo(clone);
+            return clone;
         }
 
-        /// <summary>
-        /// Makes a copy of the node and all children.
-        /// </summary>
-        /// <returns>
-        /// A new object that is a copy of this instance.
-        /// </returns>
-        public new object MemberwiseClone()
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
         {
-            var clone = (BaseTypeState)Activator.CreateInstance(GetType());
-            return CloneChildren(clone);
+            if (obj is not BaseVariableTypeState state)
+            {
+                return false;
+            }
+            return
+                base.Equals(obj) &&
+                EqualityComparer<object>.Default.Equals(state.Value, Value) &&
+                state.DataType == DataType &&
+                state.ValueRank == ValueRank &&
+                ArrayEqualityComparer<uint>.Default.Equals(
+                    state.ArrayDimensions?.ToArray(), ArrayDimensions?.ToArray())
+                ;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(base.GetHashCode());
+            hash.Add(Value);
+            hash.Add(DataType);
+            hash.Add(ValueRank);
+            hash.Add(ArrayEqualityComparer<uint>.Default.GetHashCode(
+                ArrayDimensions?.ToArray()));
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(NodeState target)
+        {
+            if (target is BaseVariableTypeState state)
+            {
+                state.Value = Value;
+                state.DataType = DataType;
+                state.ValueRank = ValueRank;
+                state.ArrayDimensions = ArrayDimensions;
+            }
+            base.CopyTo(target);
         }
 
         /// <summary>

@@ -85,19 +85,43 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public override object Clone()
         {
-            return MemberwiseClone();
+            var clone = (ReferenceTypeState)Activator.CreateInstance(GetType());
+            CopyTo(clone);
+            return clone;
         }
 
-        /// <summary>
-        /// Makes a copy of the node and all children.
-        /// </summary>
-        /// <returns>
-        /// A new object that is a copy of this instance.
-        /// </returns>
-        public new object MemberwiseClone()
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
         {
-            var clone = (ReferenceTypeState)Activator.CreateInstance(GetType());
-            return CloneChildren(clone);
+            if (obj is not ReferenceTypeState state)
+            {
+                return false;
+            }
+            return
+                base.Equals(obj) &&
+                state.InverseName == InverseName &&
+                state.Symmetric == Symmetric;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(base.GetHashCode());
+            hash.Add(InverseName);
+            hash.Add(InverseName);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(NodeState target)
+        {
+            if (target is ReferenceTypeState state)
+            {
+                state.InverseName = InverseName;
+                state.Symmetric = Symmetric;
+            }
+            base.CopyTo(target);
         }
 
         /// <summary>

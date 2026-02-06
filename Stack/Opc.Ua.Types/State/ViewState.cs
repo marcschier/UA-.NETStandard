@@ -28,6 +28,7 @@
  * ======================================================================*/
 
 using System;
+using System.Collections.Generic;
 using Opc.Ua.Types;
 
 namespace Opc.Ua
@@ -88,19 +89,43 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public override object Clone()
         {
-            return MemberwiseClone();
+            var clone = (ViewState)Activator.CreateInstance(GetType());
+            CopyTo(clone);
+            return clone;
         }
 
-        /// <summary>
-        /// Makes a copy of the node and all children.
-        /// </summary>
-        /// <returns>
-        /// A new object that is a copy of this instance.
-        /// </returns>
-        public new object MemberwiseClone()
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
         {
-            var clone = (ViewState)Activator.CreateInstance(GetType());
-            return CloneChildren(clone);
+            if (obj is not ViewState state)
+            {
+                return false;
+            }
+            return
+                base.Equals(obj) &&
+                state.ContainsNoLoops == ContainsNoLoops &&
+                state.EventNotifier == EventNotifier;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(base.GetHashCode());
+            hash.Add(ContainsNoLoops);
+            hash.Add(EventNotifier);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(NodeState target)
+        {
+            if (target is ViewState state)
+            {
+                state.EventNotifier = EventNotifier;
+                state.ContainsNoLoops = ContainsNoLoops;
+            }
+            base.CopyTo(target);
         }
 
         /// <summary>

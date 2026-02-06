@@ -27,8 +27,10 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using System;
 using System.Collections.Generic;
 using System.Text;
+using Opc.Ua.Export;
 using Opc.Ua.Types;
 
 namespace Opc.Ua
@@ -75,19 +77,49 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public override object Clone()
         {
-            return MemberwiseClone();
+            var clone = new BaseInstanceState(NodeClass, Parent);
+            CopyTo(clone);
+            return clone;
         }
 
-        /// <summary>
-        /// Makes a copy of the node and all children.
-        /// </summary>
-        /// <returns>
-        /// A new object that is a copy of this instance.
-        /// </returns>
-        public new object MemberwiseClone()
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
         {
-            var clone = new BaseInstanceState(NodeClass, Parent);
-            return CloneChildren(clone);
+            if (obj is not BaseInstanceState state)
+            {
+                return false;
+            }
+            return
+                base.Equals(obj) &&
+                state.ReferenceTypeId == ReferenceTypeId &&
+                state.TypeDefinitionId == TypeDefinitionId &&
+                state.ModellingRuleId == ModellingRuleId &&
+                state.NumericId == NumericId;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(base.GetHashCode());
+            hash.Add(ReferenceTypeId);
+            hash.Add(TypeDefinitionId);
+            hash.Add(ModellingRuleId);
+            hash.Add(NumericId);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(NodeState target)
+        {
+            if (target is BaseInstanceState state)
+            {
+                state.ReferenceTypeId = ReferenceTypeId;
+                state.TypeDefinitionId = TypeDefinitionId;
+                state.ModellingRuleId = ModellingRuleId;
+                state.NumericId = NumericId;
+            }
+            base.CopyTo(target);
         }
 
         /// <summary>
