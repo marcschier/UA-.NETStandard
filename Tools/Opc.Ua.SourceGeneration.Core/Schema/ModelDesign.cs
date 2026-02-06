@@ -626,7 +626,7 @@ namespace Opc.Ua.Schema.Model
     /// <summary>
     /// Hierarchy node information
     /// </summary>
-    public class HierarchyNode : IFormattable
+    public record class HierarchyNode
     {
         /// <summary>
         /// Relative path
@@ -673,33 +673,18 @@ namespace Opc.Ua.Schema.Model
         /// </summary>
         public override string ToString()
         {
-            return ToString(null, null);
-        }
-
-        /// <summary>
-        /// Returns the string representation of the object.
-        /// </summary>
-        /// <exception cref="FormatException"></exception>
-        public string ToString(string format, IFormatProvider formatProvider)
-        {
-            if (format == null)
+            if (Instance != null && Instance.SymbolicId != null)
             {
-                if (Instance != null && Instance.SymbolicId != null)
-                {
-                    return string.Format(formatProvider, "{0}={1}", RelativePath, Instance.SymbolicId.Name);
-                }
-
-                return RelativePath;
+                return CoreUtils.Format("{0}={1}", RelativePath, Instance.SymbolicId.Name);
             }
-
-            throw new FormatException(CoreUtils.Format("Invalid format string: '{0}'.", format));
+            return RelativePath;
         }
     }
 
     /// <summary>
     /// Reference between hierarchy nodes
     /// </summary>
-    public class HierarchyReference : IFormattable
+    public record class HierarchyReference
     {
         /// <summary>
         /// Source path
@@ -736,33 +721,19 @@ namespace Opc.Ua.Schema.Model
         /// </summary>
         public override string ToString()
         {
-            return ToString(null, null);
-        }
-
-        /// <summary>
-        /// Returns the string representation of the object.
-        /// </summary>
-        /// <exception cref="FormatException"></exception>
-        public string ToString(string format, IFormatProvider formatProvider)
-        {
-            if (format == null)
+            if (TargetId != null)
             {
-                if (TargetId != null)
-                {
-                    return string.Format(formatProvider, "{0} => {1}", SourcePath, TargetId.Name);
-                }
-
-                return string.Format(formatProvider, "{0} => {1}", SourcePath, TargetPath);
+                return CoreUtils.Format("{0} => {1}", SourcePath, TargetId.Name);
             }
 
-            throw new FormatException(CoreUtils.Format("Invalid format string: '{0}'.", format));
+            return CoreUtils.Format("{0} => {1}", SourcePath, TargetPath);
         }
     }
 
     /// <summary>
     /// Hierarchy information for a type or instance.
     /// </summary>
-    public class Hierarchy
+    public record class Hierarchy
     {
         /// <summary>
         /// Type

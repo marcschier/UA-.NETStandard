@@ -61,14 +61,14 @@ namespace Opc.Ua.SourceGeneration
                 CoreUtils.Format("{0}.ServerBase.g.cs", Constants.CoreNamespacePrefix));
             using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
             using var templateWriter = new TemplateWriter(writer);
-            var template = new Template(templateWriter, CodeTemplates.ServerApi_File);
+            var template = new Template(templateWriter, ServerApiTemplates.File);
 
             template.AddReplacement(Tokens.Prefix, Constants.CoreNamespacePrefix);
             template.AddReplacement(Tokens.Namespace, Constants.CoreNamespace);
 
             template.AddReplacement(
                 Tokens.ServiceSets,
-                CodeTemplates.ServerApi_ServiceSet,
+                ServerApiTemplates.ServiceSet,
                 serviceSets,
                 WriteTemplate_ServerApiServiceSet);
 
@@ -96,13 +96,13 @@ namespace Opc.Ua.SourceGeneration
 
             context.Template.AddReplacement(
                 Tokens.ServerApi,
-                CodeTemplates.ServerApi_InterfaceMethod,
+                ServerApiTemplates.InterfaceMethod,
                 serviceTypes,
                 WriteTemplate_InterfaceMethod);
 
             context.Template.AddReplacement(
                 Tokens.ServerStubs,
-                CodeTemplates.ServerApi_Method,
+                ServerApiTemplates.Method,
                 serviceTypes,
                 WriteTemplate_ServerApiMethod);
 

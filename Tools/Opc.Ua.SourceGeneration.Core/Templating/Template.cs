@@ -57,7 +57,7 @@ namespace Opc.Ua.SourceGeneration
             m_templateString = templateString;
             m_outerTemplate = parent;
             m_writer = writer;
-            m_replacements.Add(Tokens.Header, CodeTemplates.Header);
+            m_replacements.Add(Tokens.CodeHeader, CodeTemplates.CodeHeader);
             m_replacements.Add(Tokens.Tool,
                 Assembly.GetExecutingAssembly().GetName().Name);
             m_replacements.Add(Tokens.Version, CoreUtils.Format(

@@ -92,7 +92,7 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddReplacement(
                 Tokens.IdentifierReflection,
-                CodeTemplates.Identifiers_Reflection,
+                NodeIdTemplates.Reflection,
                 [constants],
                 WriteTemplate_ReflectionHelpers);
 

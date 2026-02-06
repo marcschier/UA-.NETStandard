@@ -71,7 +71,7 @@ namespace Opc.Ua.SourceGeneration
             using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
 
             using var templateWriter = new TemplateWriter(writer);
-            var template = new Template(templateWriter, CodeTemplates.DataTypes_File);
+            var template = new Template(templateWriter, DataTypeTemplates.File);
             template.AddReplacement(
                 Tokens.NamespacePrefix,
                 nsPrefix);
@@ -123,7 +123,7 @@ namespace Opc.Ua.SourceGeneration
                 datatype.IsStructure &&
                 !datatype.IsAbstract)
             {
-                return CodeTemplates.DataTypes_StructureActivatorClass;
+                return DataTypeTemplates.StructureActivatorClass;
             }
             // if (datatype.BasicDataType == BasicDataType.Enumeration &&
             //      datatype.IsEnumeration)
@@ -143,7 +143,7 @@ namespace Opc.Ua.SourceGeneration
                 datatype.IsStructure &&
                 !datatype.IsAbstract)
             {
-                return CodeTemplates.DataType_StructureActivatorRegistration;
+                return DataTypeTemplates.StructureActivatorRegistration;
             }
             // if (datatype.BasicDataType == BasicDataType.Enumeration &&
             //      datatype.IsEnumeration)
@@ -173,11 +173,11 @@ namespace Opc.Ua.SourceGeneration
             }
             if (datatype.BasicDataType == BasicDataType.UserDefined && datatype.IsStructure)
             {
-                return CodeTemplates.DataTypes_StructureDefinition;
+                return DataTypeTemplates.StructureDefinition;
             }
             if (datatype.BasicDataType == BasicDataType.Enumeration && datatype.IsEnumeration)
             {
-                return CodeTemplates.DataTypes_EnumDefinition;
+                return DataTypeTemplates.EnumDefinition;
             }
             return null;
         }
@@ -200,7 +200,7 @@ namespace Opc.Ua.SourceGeneration
                     dataType.IsOptionSet);
                 context.Template.AddReplacement(
                     Tokens.ListOfFields,
-                    CodeTemplates.DataTypes_EnumField,
+                    DataTypeTemplates.EnumField,
                     dataType.Fields ?? [],
                     WriteTemplate_ListOfEnumDefinitionFields);
             }
@@ -244,7 +244,7 @@ namespace Opc.Ua.SourceGeneration
                     structureType);
                 context.Template.AddReplacement(
                     Tokens.ListOfFields,
-                    CodeTemplates.DataTypes_StructureField,
+                    DataTypeTemplates.StructureField,
                     fields.ToDictionary(f => f, _ => structureType),
                     WriteTemplate_ListOfStructureDefinitionFields);
 
@@ -386,39 +386,39 @@ namespace Opc.Ua.SourceGeneration
                 case BasicDataType.UserDefined:
                     if (datatype.IsUnion)
                     {
-                        return CodeTemplates.DataTypes_UnionClass;
+                        return DataTypeTemplates.UnionClass;
                     }
 
                     if (datatype.HasFields && datatype.Fields.Any(x => x.IsOptional))
                     {
                         if (datatype.IsDerivedDataType())
                         {
-                            return CodeTemplates.DataTypes_DerivedClassWithOptionalFields;
+                            return DataTypeTemplates.DerivedClassWithOptionalFields;
                         }
 
-                        return CodeTemplates.DataTypes_ClassWithOptionalFields;
+                        return DataTypeTemplates.ClassWithOptionalFields;
                     }
 
                     if (!datatype.IsDerivedDataType())
                     {
-                        return CodeTemplates.DataTypes_Class;
+                        return DataTypeTemplates.Class;
                     }
 
-                    return CodeTemplates.DataTypes_DerivedClass;
+                    return DataTypeTemplates.DerivedClass;
                 case BasicDataType.Enumeration:
                     var baseType = datatype.BaseTypeNode as DataTypeDesign;
 
                     if (baseType?.SymbolicId ==
                         new XmlQualifiedName("OptionSet", Namespaces.OpcUa))
                     {
-                        return CodeTemplates.DataTypes_DerivedClass;
+                        return DataTypeTemplates.DerivedClass;
                     }
 
-                    return CodeTemplates.DataTypes_Enumeration;
+                    return DataTypeTemplates.Enumeration;
                 default:
                     if (datatype.IsOptionSet)
                     {
-                        return CodeTemplates.DataTypes_Enumeration;
+                        return DataTypeTemplates.Enumeration;
                     }
 
                     return null;
@@ -602,7 +602,7 @@ namespace Opc.Ua.SourceGeneration
 
             context.Template.AddReplacement(
                 Tokens.CollectionClass,
-                CodeTemplates.DataTypes_CollectionClass,
+                DataTypeTemplates.CollectionClass,
                 [dataType],
                 LoadTemplate_CollectionClass,
                 WriteTemplate_CollectionClass);
@@ -1220,13 +1220,13 @@ namespace Opc.Ua.SourceGeneration
                         (field.ValueRank != ValueRank.Array &&
                             field.ValueRank != ValueRank.Scalar))
                     {
-                        return CodeTemplates.DataTypes_ScalarProperty;
+                        return DataTypeTemplates.ScalarProperty;
                     }
-                    return CodeTemplates.DataTypes_ArrayProperty;
+                    return DataTypeTemplates.ArrayProperty;
                 }
-                return CodeTemplates.DataTypes_ScalarProperty;
+                return DataTypeTemplates.ScalarProperty;
             }
-            return CodeTemplates.DataTypes_EnumerationValue;
+            return DataTypeTemplates.EnumerationValue;
         }
 
         private bool WriteTemplate_ListOfProperties(IWriteContext context)

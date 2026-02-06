@@ -2284,21 +2284,34 @@ namespace Opc.Ua
             switch (browseName.Name)
             {
                 case BrowseNames.EnumStrings:
-                    if (createOrReplace && EnumStrings == null)
-                    {
-                        if (replacement == null)
-                        {
-                            EnumStrings = new PropertyState<LocalizedText[]>(this);
-                        }
-                        else
-                        {
-                            EnumStrings = (PropertyState<LocalizedText[]>)replacement;
-                        }
-                    }
-                    instance = EnumStrings;
+                    instance = !createOrReplace ?
+                        EnumStrings : CreateOrReplaceEnumStrings(context, replacement);
                     break;
             }
             return instance ?? base.FindChild(context, browseName, createOrReplace, replacement);
+        }
+
+        /// <summary>
+        /// Create or replace enum strings
+        /// </summary>
+        public PropertyState<LocalizedText[]> CreateOrReplaceEnumStrings(
+            ISystemContext context,
+            BaseInstanceState replacement)
+        {
+            if (EnumStrings == null)
+            {
+                PropertyState<LocalizedText[]> child = replacement as PropertyState<LocalizedText[]>;
+                if (child == null)
+                {
+                    child = new PropertyState<LocalizedText[]>(this);
+                    if (replacement != null)
+                    {
+                        child.Create(context, replacement);
+                    }
+                }
+                EnumStrings = child;
+            }
+            return EnumStrings;
         }
 
         private PropertyState<LocalizedText[]> m_enumStrings;

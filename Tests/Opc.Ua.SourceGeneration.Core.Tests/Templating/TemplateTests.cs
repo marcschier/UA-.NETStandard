@@ -209,7 +209,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         {
             // Arrange
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.Constants_BrowseName;
+            TemplateString templateString = ConstantsTemplates.BrowseName;
             Template template;
             using var templateWriter = new TemplateWriter(writer);
             template = new Template(templateWriter, templateString);
@@ -227,7 +227,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         {
             // Arrange
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.Constants_BrowseName;
+            TemplateString templateString = ConstantsTemplates.BrowseName;
             Template template;
             using var templateWriter = new TemplateWriter(writer);
             template = new Template(templateWriter, templateString);
@@ -244,7 +244,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         {
             // Arrange
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.Constants_BrowseName;
+            TemplateString templateString = ConstantsTemplates.BrowseName;
             Template template;
             using var templateWriter = new TemplateWriter(writer);
             template = new Template(templateWriter, templateString);
@@ -261,7 +261,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         {
             // Arrange
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.Constants_BrowseName;
+            TemplateString templateString = ConstantsTemplates.BrowseName;
             Template template;
             using var templateWriter = new TemplateWriter(writer);
             template = new Template(templateWriter, templateString);
@@ -278,7 +278,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         {
             // Arrange
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.Constants_BrowseName;
+            TemplateString templateString = ConstantsTemplates.BrowseName;
             Template template;
             using var templateWriter = new TemplateWriter(writer);
             template = new Template(templateWriter, templateString);
@@ -295,7 +295,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         {
             // Arrange
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.Constants_BrowseName;
+            TemplateString templateString = ConstantsTemplates.BrowseName;
             Template template;
             using var templateWriter = new TemplateWriter(writer);
             template = new Template(templateWriter, templateString);
@@ -312,7 +312,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         {
             // Arrange
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.Constants_BrowseName;
+            TemplateString templateString = ConstantsTemplates.BrowseName;
             Template template;
             string veryLongToken = new('A', 10000);
             using var templateWriter = new TemplateWriter(writer);
@@ -330,7 +330,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         {
             // Arrange
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.Constants_BrowseName;
+            TemplateString templateString = ConstantsTemplates.BrowseName;
             Template template;
             string veryLongReplacement = new('B', 10000);
             using var templateWriter = new TemplateWriter(writer);
@@ -359,7 +359,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         {
             // Arrange
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.Constants_BrowseName;
+            TemplateString templateString = ConstantsTemplates.BrowseName;
             Template template;
             using var templateWriter = new TemplateWriter(writer);
             template = new Template(templateWriter, templateString);
@@ -387,7 +387,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         {
             // Arrange
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.Constants_BrowseName;
+            TemplateString templateString = ConstantsTemplates.BrowseName;
             Template template;
             using var templateWriter = new TemplateWriter(writer);
             template = new Template(templateWriter, templateString);
@@ -404,7 +404,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         {
             // Arrange
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.Constants_BrowseName;
+            TemplateString templateString = ConstantsTemplates.BrowseName;
             Template template;
             using var templateWriter = new TemplateWriter(writer);
             template = new Template(templateWriter, templateString);
@@ -424,7 +424,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         {
             // Arrange
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.Constants_BrowseName;
+            TemplateString templateString = ConstantsTemplates.BrowseName;
             Template template;
             using var templateWriter = new TemplateWriter(writer);
             template = new Template(templateWriter, templateString);
@@ -446,7 +446,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         {
             // Arrange
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.Constants_BrowseName;
+            TemplateString templateString = ConstantsTemplates.BrowseName;
             Template template;
             using var templateWriter = new TemplateWriter(writer);
             template = new Template(templateWriter, templateString);
@@ -463,7 +463,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         {
             // Arrange
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.Constants_BrowseName;
+            TemplateString templateString = ConstantsTemplates.BrowseName;
             Template template;
             using var templateWriter = new TemplateWriter(writer);
             template = new Template(templateWriter, templateString);
@@ -480,7 +480,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         {
             // Arrange
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.Constants_BrowseName;
+            TemplateString templateString = ConstantsTemplates.BrowseName;
             using (var templateWriter = new TemplateWriter(writer))
             {
                 var template = new Template(templateWriter, templateString);
@@ -652,7 +652,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         public void WriteTemplate_WithNamespaceUriTemplate_RendersCorrectly()
         {
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.Constants_NamespaceUri;
+            TemplateString templateString = ConstantsTemplates.NamespaceUri;
             using (var templateWriter = new TemplateWriter(writer))
             {
                 var template = new Template(templateWriter, templateString);
@@ -680,7 +680,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         public void WriteTemplate_WithBrowseNameTemplate_RendersCorrectly()
         {
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.Constants_BrowseName;
+            TemplateString templateString = ConstantsTemplates.BrowseName;
             using (var templateWriter = new TemplateWriter(writer))
             {
                 var template = new Template(templateWriter, templateString);
@@ -703,7 +703,7 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
         public void WriteTemplate_WithIdDeclarationTemplate_RendersCorrectly()
         {
             using var writer = new StringWriter();
-            TemplateString templateString = CodeTemplates.Identifiers_IdDeclaration;
+            TemplateString templateString = NodeIdTemplates.IdDeclaration;
             using (var templateWriter = new TemplateWriter(writer))
             {
                 var template = new Template(templateWriter, templateString);
@@ -993,12 +993,12 @@ namespace Opc.Ua.SourceGeneration.Templating.Tests
             using var writer = new StringWriter();
             using (var templateWriter = new TemplateWriter(writer))
             {
-                var template = new Template(templateWriter, CodeTemplates.Messages_File);
+                var template = new Template(templateWriter, MessagesTemplates.File);
                 template.AddReplacement(Tokens.Prefix, "MyNamespace");
-                template.AddReplacement(Tokens.Header, string.Empty);
+                template.AddReplacement(Tokens.CodeHeader, string.Empty);
                 template.AddReplacement(
                     Tokens.TypeList,
-                    CodeTemplates.Messages_DataTypeAnnotation,
+                    MessagesTemplates.DataTypeAnnotation,
                     ["Type1", "Type2", "Type3"],
                     context =>
                     {

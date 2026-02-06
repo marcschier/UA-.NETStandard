@@ -110,12 +110,12 @@ namespace Opc.Ua.SourceGeneration
             using TextWriter writer = m_context.FileSystem.CreateTextWriter(outputFile);
 
             using var templateWriter = new TemplateWriter(writer);
-            var template = new Template(templateWriter, CodeTemplates.Resources_File);
+            var template = new Template(templateWriter, ResourceTemplates.File);
 
             template.AddReplacement(Tokens.Namespace, namespacePrefix);
             template.AddReplacement(
                 Tokens.ListOfResourceGroups,
-                CodeTemplates.Resources_Class,
+                ResourceTemplates.Class,
                 groups,
                 WriteTemplate_ResourceGroup);
 
@@ -152,14 +152,14 @@ namespace Opc.Ua.SourceGeneration
             }
             if (context.Target is StringResource str && str.AsUtf16)
             {
-                return CodeTemplates.Resources_Declaration_ConstString;
+                return ResourceTemplates.Declaration_ConstString;
             }
             if (m_useByteArrayForBase64 &&
                 resource.GetLength(m_context.FileSystem) > m_base64Threshold)
             {
-                return CodeTemplates.Resources_Declaration_ByteArray;
+                return ResourceTemplates.Declaration_ByteArray;
             }
-            return CodeTemplates.Resources_Declaration_ReadOnlySpan;
+            return ResourceTemplates.Declaration_ReadOnlySpan;
         }
 
         private bool WriteTemplate_ResourceDeclaration(IWriteContext context)
