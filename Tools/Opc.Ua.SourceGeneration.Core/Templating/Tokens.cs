@@ -105,6 +105,9 @@ namespace Opc.Ua.SourceGeneration
         public static string ListOfProperties => nameof(ListOfProperties);
         public static string ListOfNonMandatoryChildren => nameof(ListOfNonMandatoryChildren);
         public static string ListOfRemoveChild => nameof(ListOfRemoveChild);
+        public static string ListOfChildCopies => nameof(ListOfChildCopies);
+        public static string ListOfChildHashes => nameof(ListOfChildHashes);
+        public static string ListOfEqualityComparers => nameof(ListOfEqualityComparers);
         public static string ListOfCreateOrReplaceChild => nameof(ListOfCreateOrReplaceChild);
         public static string ListOfResultProperties => nameof(ListOfResultProperties);
         public static string ListOfSwitchFields => nameof(ListOfSwitchFields);

@@ -228,29 +228,29 @@ namespace Opc.Ua.Core.Tests.Stack.State
     public class BaseEventStateTests
     {
         /// <summary>
-        /// Verify that MemberwiseClone works correctly for BaseEventState.
+        /// Verify that Clone works correctly for BaseEventState.
         /// </summary>
         [Test]
-        public void MemberwiseCloneBaseEventStateSucceeds()
+        public void CloneBaseEventStateSucceeds()
         {
             var parent = new BaseObjectState(null);
             var eventState = new BaseEventState(parent);
 
-            var clone = (BaseEventState)eventState.MemberwiseClone();
+            var clone = (BaseEventState)eventState.Clone();
 
             Assert.That(clone, Is.Not.Null);
             Assert.That(clone.Parent, Is.SameAs(parent));
         }
 
         /// <summary>
-        /// Verify that MemberwiseClone works correctly for BaseEventState with null parent.
+        /// Verify that Clone works correctly for BaseEventState with null parent.
         /// </summary>
         [Test]
-        public void MemberwiseCloneBaseEventStateWithNullParentSucceeds()
+        public void CloneBaseEventStateWithNullParentSucceeds()
         {
             var eventState = new BaseEventState(null);
 
-            var clone = (BaseEventState)eventState.MemberwiseClone();
+            var clone = (BaseEventState)eventState.Clone();
 
             Assert.That(clone, Is.Not.Null);
             Assert.That(clone.Parent, Is.Null);

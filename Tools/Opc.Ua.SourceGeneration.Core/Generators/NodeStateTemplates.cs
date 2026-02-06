@@ -129,7 +129,44 @@ namespace Opc.Ua.SourceGeneration
 
                 {{Tokens.ListOfNonMandatoryChildren}}
 
+                /// <inheritdoc/>
+                public override object Clone()
+                {
+                    {{Tokens.ClassName}}State clone = new {{Tokens.ClassName}}State(null);
+                    CopyTo(clone);
+                    return clone;
+                }
+
+                /// <inheritdoc/>
+                public override bool Equals(object obj)
+                {
+                    if (obj is not {{Tokens.ClassName}}State state || !base.Equals(obj))
+                    {
+                        return false;
+                    }
+                    {{Tokens.ListOfEqualityComparers}}
+                    return true;
+                }
+
+                /// <inheritdoc/>
+                public override int GetHashCode()
+                {
+                    int hashCode = base.GetHashCode();
+                    {{Tokens.ListOfChildHashes}}
+                    return hashCode;
+                }
+
                 {{Tokens.ListOfChildOperations}}
+
+                /// <inheritdoc/>
+                protected override void CopyTo(global::Opc.Ua.NodeState target)
+                {
+                    if (target is not {{Tokens.ClassName}}State state)
+                    {
+                        return;
+                    }
+                    {{Tokens.ListOfChildCopies}}
+                }
 
                 /// <inheritdoc/>
                 protected override global::Opc.Ua.NodeId GetDefaultTypeDefinitionId(global::Opc.Ua.NamespaceTable namespaceUris)
@@ -205,7 +242,44 @@ namespace Opc.Ua.SourceGeneration
 
                 {{Tokens.ListOfNonMandatoryChildren}}
 
+                /// <inheritdoc/>
+                public override object Clone()
+                {
+                    {{Tokens.ClassName}} clone = new {{Tokens.ClassName}}(null);
+                    CopyTo(clone);
+                    return clone;
+                }
+
+                /// <inheritdoc/>
+                public override bool Equals(object obj)
+                {
+                    if (obj is not {{Tokens.ClassName}} state || !base.Equals(obj))
+                    {
+                        return false;
+                    }
+                    {{Tokens.ListOfEqualityComparers}}
+                    return true;
+                }
+
+                /// <inheritdoc/>
+                public override int GetHashCode()
+                {
+                    int hashCode = base.GetHashCode();
+                    {{Tokens.ListOfChildHashes}}
+                    return hashCode;
+                }
+
                 {{Tokens.ListOfChildOperations}}
+
+                /// <inheritdoc/>
+                protected override void CopyTo(global::Opc.Ua.NodeState target)
+                {
+                    if (target is not {{Tokens.ClassName}} state)
+                    {
+                        return;
+                    }
+                    {{Tokens.ListOfChildCopies}}
+                }
 
                 /// <inheritdoc/>
                 protected override void Initialize(global::Opc.Ua.ISystemContext context)
@@ -332,7 +406,44 @@ namespace Opc.Ua.SourceGeneration
 
                 {{Tokens.ListOfNonMandatoryChildren}}
 
+                /// <inheritdoc/>
+                public override object Clone()
+                {
+                    {{Tokens.ClassName}}State clone = new {{Tokens.ClassName}}State(null);
+                    CopyTo(clone);
+                    return clone;
+                }
+
+                /// <inheritdoc/>
+                public override bool Equals(object obj)
+                {
+                    if (obj is not {{Tokens.ClassName}}State state || !base.Equals(obj))
+                    {
+                        return false;
+                    }
+                    {{Tokens.ListOfEqualityComparers}}
+                    return true;
+                }
+
+                /// <inheritdoc/>
+                public override int GetHashCode()
+                {
+                    int hashCode = base.GetHashCode();
+                    {{Tokens.ListOfChildHashes}}
+                    return hashCode;
+                }
+
                 {{Tokens.ListOfChildOperations}}
+
+                /// <inheritdoc/>
+                protected override void CopyTo(global::Opc.Ua.NodeState target)
+                {
+                    if (target is not {{Tokens.ClassName}}State state)
+                    {
+                        return;
+                    }
+                    {{Tokens.ListOfChildCopies}}
+                }
 
                 /// <inheritdoc/>
                 protected override global::Opc.Ua.NodeId GetDefaultTypeDefinitionId(global::Opc.Ua.NamespaceTable namespaceUris)
@@ -487,6 +598,21 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 /// <inheritdoc/>
+                public new T Value
+                {
+                    get => CheckTypeBeforeCast<T>(((global::Opc.Ua.BaseVariableState)this).Value, true);
+                    set => ((global::Opc.Ua.BaseVariableState)this).Value = value;
+                }
+
+                /// <inheritdoc/>
+                public override object Clone()
+                {
+                    {{Tokens.ClassName}}State<T> clone = new {{Tokens.ClassName}}State<T>(null);
+                    CopyTo(clone);
+                    return clone;
+                }
+
+                /// <inheritdoc/>
                 protected override void Initialize(global::Opc.Ua.ISystemContext context)
                 {
                     base.Initialize(context);
@@ -501,13 +627,6 @@ namespace Opc.Ua.SourceGeneration
                 {
                     InitializeOptionalChildren(context);
                     base.Initialize(context, source);
-                }
-
-                /// <inheritdoc/>
-                public new T Value
-                {
-                    get => CheckTypeBeforeCast<T>(((global::Opc.Ua.BaseVariableState)this).Value, true);
-                    set => ((global::Opc.Ua.BaseVariableState)this).Value = value;
                 }
             }
 
@@ -897,7 +1016,7 @@ namespace Opc.Ua.SourceGeneration
             """);
 
         /// <summary>
-        /// Remove child method template
+        /// Remove child template
         /// </summary>
         public static readonly TemplateString RemoveChild = TemplateString.Parse(
             $$"""
@@ -907,6 +1026,39 @@ namespace Opc.Ua.SourceGeneration
                 return;
             }
 
+            """);
+
+        /// <summary>
+        /// Clone child template
+        /// </summary>
+        public static readonly TemplateString CloneChild = TemplateString.Parse(
+            $$"""
+            state.{{Tokens.FieldName}} =
+                ({{Tokens.ClassName}}){{Tokens.FieldName}}?.Clone();
+            """);
+
+        /// <summary>
+        /// Compare child template
+        /// </summary>
+        public static readonly TemplateString CompareChild = TemplateString.Parse(
+            $$"""
+            if (!global::System.Collections.Generic.EqualityComparer<{{Tokens.ClassName}}>
+                .Default
+                .Equals(state.{{Tokens.FieldName}}, {{Tokens.FieldName}}))
+            {
+                return false;
+            }
+            """);
+
+        /// <summary>
+        /// Hash child template
+        /// </summary>
+        public static readonly TemplateString HashChild = TemplateString.Parse(
+            $$"""
+            hash = (hash * 16777619) ^
+                global::System.Collections.Generic.EqualityComparer<{{Tokens.ClassName}}>
+                .Default
+                .GetHashCode(state.{{Tokens.FieldName}}));
             """);
 
         /// <summary>

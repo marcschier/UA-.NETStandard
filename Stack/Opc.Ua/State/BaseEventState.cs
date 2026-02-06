@@ -85,24 +85,6 @@ namespace Opc.Ua
 
             m_message = new PropertyState<LocalizedText>(this) { Value = message };
         }
-
-        /// <inheritdoc/>
-        public override object Clone()
-        {
-            return MemberwiseClone();
-        }
-
-        /// <summary>
-        /// Makes a copy of the node and all children.
-        /// </summary>
-        /// <returns>
-        /// A new object that is a copy of this instance.
-        /// </returns>
-        public new object MemberwiseClone()
-        {
-            var clone = (BaseEventState)Activator.CreateInstance(GetType(), Parent);
-            return CloneChildren(clone);
-        }
     }
 
     /// <summary>

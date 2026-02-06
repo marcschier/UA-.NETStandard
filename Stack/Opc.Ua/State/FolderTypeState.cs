@@ -64,5 +64,13 @@ namespace Opc.Ua
             UserWriteMask = AttributeWriteMask.None;
             IsAbstract = false;
         }
+
+        /// <inheritdoc/>
+        public override object Clone()
+        {
+            var state = new FolderTypeState();
+            CopyTo(state);
+            return state;
+        }
     }
 }

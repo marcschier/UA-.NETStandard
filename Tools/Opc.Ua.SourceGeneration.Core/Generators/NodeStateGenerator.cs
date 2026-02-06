@@ -317,6 +317,22 @@ namespace Opc.Ua.SourceGeneration
                 LoadTemplate_FindChildMethods,
                 WriteTemplate_FindChildMethods);
 
+            context.Template.AddReplacement(
+                Tokens.ListOfChildCopies,
+                NodeStateTemplates.CloneChild,
+                node.Children.Values,
+                WriteTemplate_ListOfChildren);
+            context.Template.AddReplacement(
+                Tokens.ListOfChildHashes,
+                NodeStateTemplates.HashChild,
+                node.Children.Values,
+                WriteTemplate_ListOfChildren);
+            context.Template.AddReplacement(
+                Tokens.ListOfEqualityComparers,
+                NodeStateTemplates.CompareChild,
+                node.Children.Values,
+                WriteTemplate_ListOfChildren);
+
             return context.Template.Render();
         }
 
@@ -1148,19 +1164,10 @@ namespace Opc.Ua.SourceGeneration
                 return false;
             }
 
-            if (instance.Parent is TypeDesign type)
-            {
-                context.Template.AddReplacement(Tokens.TypeName, type.SymbolicName.Name);
-            }
-
             context.Template.AddReplacement(Tokens.AccessorSymbol, "public new");
             if (!instance.IsOverridden())
             {
                 context.Template.AddReplacement(Tokens.AccessorSymbol, "public");
-            }
-            else
-            {
-                // instance = instance.GetMergedInstance();
             }
 
             context.Template.AddReplacement(Tokens.ClassName, instance.GetNodeStateClassName(
