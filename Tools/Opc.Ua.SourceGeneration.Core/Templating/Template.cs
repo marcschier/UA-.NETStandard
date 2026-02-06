@@ -60,10 +60,13 @@ namespace Opc.Ua.SourceGeneration
             m_replacements.Add(Tokens.CodeHeader, CodeTemplates.CodeHeader);
             m_replacements.Add(Tokens.Tool,
                 Assembly.GetExecutingAssembly().GetName().Name);
-            m_replacements.Add(Tokens.Version, CoreUtils.Format(
-                "{0}.{1}",
-                s_softwareVersion,
-                s_buildVersion));
+            m_replacements.Add(
+                Tokens.Version,
+#if FULL_VERSION
+                CoreUtils.Format("{0}.{1}", s_softwareVersion, s_buildVersion));
+#else
+                s_softwareVersion);
+#endif
         }
 
         /// <summary>

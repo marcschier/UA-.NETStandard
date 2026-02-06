@@ -68,14 +68,14 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj)
+        public override bool DeepEquals(NodeState node)
         {
-            if (obj is not DataTypeState state)
+            if (node is not DataTypeState state)
             {
                 return false;
             }
             return
-                base.Equals(obj) &&
+                base.DeepEquals(state) &&
                 EqualityComparer<ExtensionObject>.Default.Equals(
                     state.DataTypeDefinition,
                     DataTypeDefinition) &&
@@ -83,10 +83,10 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public override int GetHashCode()
+        public override int DeepGetHashCode()
         {
             var hash = new HashCode();
-            hash.Add(base.GetHashCode());
+            hash.Add(base.DeepGetHashCode());
             hash.Add(DataTypeDefinition);
             hash.Add(Purpose);
             return hash.ToHashCode();

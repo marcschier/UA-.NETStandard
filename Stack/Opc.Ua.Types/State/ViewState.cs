@@ -95,23 +95,23 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj)
+        public override bool DeepEquals(NodeState node)
         {
-            if (obj is not ViewState state)
+            if (node is not ViewState state)
             {
                 return false;
             }
             return
-                base.Equals(obj) &&
+                base.DeepEquals(state) &&
                 state.ContainsNoLoops == ContainsNoLoops &&
                 state.EventNotifier == EventNotifier;
         }
 
         /// <inheritdoc/>
-        public override int GetHashCode()
+        public override int DeepGetHashCode()
         {
             var hash = new HashCode();
-            hash.Add(base.GetHashCode());
+            hash.Add(base.DeepGetHashCode());
             hash.Add(ContainsNoLoops);
             hash.Add(EventNotifier);
             return hash.ToHashCode();

@@ -83,14 +83,14 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj)
+        public override bool DeepEquals(NodeState node)
         {
-            if (obj is not BaseInstanceState state)
+            if (node is not BaseInstanceState state)
             {
                 return false;
             }
             return
-                base.Equals(obj) &&
+                base.DeepEquals(state) &&
                 state.ReferenceTypeId == ReferenceTypeId &&
                 state.TypeDefinitionId == TypeDefinitionId &&
                 state.ModellingRuleId == ModellingRuleId &&
@@ -98,10 +98,10 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public override int GetHashCode()
+        public override int DeepGetHashCode()
         {
             var hash = new HashCode();
-            hash.Add(base.GetHashCode());
+            hash.Add(base.DeepGetHashCode());
             hash.Add(ReferenceTypeId);
             hash.Add(TypeDefinitionId);
             hash.Add(ModellingRuleId);
@@ -114,6 +114,7 @@ namespace Opc.Ua
         {
             if (target is BaseInstanceState state)
             {
+                state.Parent = Parent; // Expected behavior.
                 state.ReferenceTypeId = ReferenceTypeId;
                 state.TypeDefinitionId = TypeDefinitionId;
                 state.ModellingRuleId = ModellingRuleId;

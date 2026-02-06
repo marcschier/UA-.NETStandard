@@ -138,9 +138,9 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 /// <inheritdoc/>
-                public override bool Equals(object obj)
+                public override bool DeepEquals(global::Opc.Ua.NodeState node)
                 {
-                    if (obj is not {{Tokens.ClassName}}State state || !base.Equals(obj))
+                    if (!(node is {{Tokens.ClassName}}State state) || !base.DeepEquals(state))
                     {
                         return false;
                     }
@@ -149,9 +149,9 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 /// <inheritdoc/>
-                public override int GetHashCode()
+                public override int DeepGetHashCode()
                 {
-                    int hashCode = base.GetHashCode();
+                    int hashCode = base.DeepGetHashCode();
                     {{Tokens.ListOfChildHashes}}
                     return hashCode;
                 }
@@ -161,15 +161,17 @@ namespace Opc.Ua.SourceGeneration
                 /// <inheritdoc/>
                 protected override void CopyTo(global::Opc.Ua.NodeState target)
                 {
-                    if (target is not {{Tokens.ClassName}}State state)
+                    if (!(target is {{Tokens.ClassName}}State state))
                     {
                         return;
                     }
                     {{Tokens.ListOfChildCopies}}
+                    base.CopyTo(target);
                 }
 
                 /// <inheritdoc/>
-                protected override global::Opc.Ua.NodeId GetDefaultTypeDefinitionId(global::Opc.Ua.NamespaceTable namespaceUris)
+                protected override global::Opc.Ua.NodeId GetDefaultTypeDefinitionId(
+                global::Opc.Ua.NamespaceTable namespaceUris)
                 {
                     return global::Opc.Ua.NodeId.Create(
                         {{Tokens.NamespacePrefix}}.ObjectTypes.{{Tokens.TypeName}},
@@ -251,9 +253,9 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 /// <inheritdoc/>
-                public override bool Equals(object obj)
+                public override bool DeepEquals(global::Opc.Ua.NodeState node)
                 {
-                    if (obj is not {{Tokens.ClassName}} state || !base.Equals(obj))
+                    if (!(node is {{Tokens.ClassName}} state) || !base.DeepEquals(state))
                     {
                         return false;
                     }
@@ -262,9 +264,9 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 /// <inheritdoc/>
-                public override int GetHashCode()
+                public override int DeepGetHashCode()
                 {
-                    int hashCode = base.GetHashCode();
+                    int hashCode = base.DeepGetHashCode();
                     {{Tokens.ListOfChildHashes}}
                     return hashCode;
                 }
@@ -274,11 +276,12 @@ namespace Opc.Ua.SourceGeneration
                 /// <inheritdoc/>
                 protected override void CopyTo(global::Opc.Ua.NodeState target)
                 {
-                    if (target is not {{Tokens.ClassName}} state)
+                    if (!(target is {{Tokens.ClassName}} state))
                     {
                         return;
                     }
                     {{Tokens.ListOfChildCopies}}
+                    base.CopyTo(target);
                 }
 
                 /// <inheritdoc/>
@@ -415,9 +418,9 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 /// <inheritdoc/>
-                public override bool Equals(object obj)
+                public override bool DeepEquals(global::Opc.Ua.NodeState node)
                 {
-                    if (obj is not {{Tokens.ClassName}}State state || !base.Equals(obj))
+                    if (!(node is {{Tokens.ClassName}}State state) || !base.DeepEquals(state))
                     {
                         return false;
                     }
@@ -426,9 +429,9 @@ namespace Opc.Ua.SourceGeneration
                 }
 
                 /// <inheritdoc/>
-                public override int GetHashCode()
+                public override int DeepGetHashCode()
                 {
-                    int hashCode = base.GetHashCode();
+                    int hashCode = base.DeepGetHashCode();
                     {{Tokens.ListOfChildHashes}}
                     return hashCode;
                 }
@@ -438,11 +441,12 @@ namespace Opc.Ua.SourceGeneration
                 /// <inheritdoc/>
                 protected override void CopyTo(global::Opc.Ua.NodeState target)
                 {
-                    if (target is not {{Tokens.ClassName}}State state)
+                    if (!(target is {{Tokens.ClassName}}State state))
                     {
                         return;
                     }
                     {{Tokens.ListOfChildCopies}}
+                    base.CopyTo(target);
                 }
 
                 /// <inheritdoc/>

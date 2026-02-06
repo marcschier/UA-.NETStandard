@@ -508,14 +508,14 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj)
+        public override bool DeepEquals(NodeState node)
         {
-            if (obj is not BaseVariableState state)
+            if (node is not BaseVariableState state)
             {
                 return false;
             }
             return
-                base.Equals(obj) &&
+                base.DeepEquals(state) &&
                 state.Timestamp == Timestamp &&
                 state.StatusCode == StatusCode &&
                 EqualityComparer<object>.Default.Equals(state.Value, Value) &&
@@ -532,10 +532,10 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public override int GetHashCode()
+        public override int DeepGetHashCode()
         {
             var hash = new HashCode();
-            hash.Add(base.GetHashCode());
+            hash.Add(base.DeepGetHashCode());
             hash.Add(Timestamp);
             hash.Add(StatusCode);
             hash.Add(Value);
@@ -2299,23 +2299,23 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj)
+        public override bool DeepEquals(NodeState node)
         {
-            if (obj is not BaseDataVariableState state)
+            if (node is not BaseDataVariableState state)
             {
                 return false;
             }
             return
-                base.Equals(obj) &&
+                base.DeepEquals(state) &&
                 EqualityComparer<PropertyState<LocalizedText[]>>.Default.Equals(
                     state.EnumStrings, EnumStrings);
         }
 
         /// <inheritdoc/>
-        public override int GetHashCode()
+        public override int DeepGetHashCode()
         {
             var hash = new HashCode();
-            hash.Add(base.GetHashCode());
+            hash.Add(base.DeepGetHashCode());
             hash.Add(EnumStrings);
             return hash.ToHashCode();
         }

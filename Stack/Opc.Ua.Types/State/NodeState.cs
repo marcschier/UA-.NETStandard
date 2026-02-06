@@ -73,53 +73,48 @@ namespace Opc.Ua
         public abstract object Clone();
 
         /// <inheritdoc/>
-        public override bool Equals(object obj)
+        public virtual bool DeepEquals(NodeState node)
         {
-            if (obj is not NodeState other)
-            {
-                return false;
-            }
-
             // Compare references and children
-            if (ReferenceEquals(this, other))
+            if (ReferenceEquals(this, node))
             {
                 return true;
             }
 
-            if (other is not null &&
-                EqualityComparer<object>.Default.Equals(Handle, other.Handle) &&
-                ChangeMasks == other.ChangeMasks &&
-                SymbolicName == other.SymbolicName &&
-                NodeId == other.NodeId &&
-                NodeClass == other.NodeClass &&
-                BrowseName == other.BrowseName &&
-                DisplayName == other.DisplayName &&
-                Description == other.Description &&
-                WriteMask == other.WriteMask &&
-                UserWriteMask == other.UserWriteMask &&
+            if (node is not null &&
+                EqualityComparer<object>.Default.Equals(Handle, node.Handle) &&
+                ChangeMasks == node.ChangeMasks &&
+                SymbolicName == node.SymbolicName &&
+                NodeId == node.NodeId &&
+                NodeClass == node.NodeClass &&
+                BrowseName == node.BrowseName &&
+                DisplayName == node.DisplayName &&
+                Description == node.Description &&
+                WriteMask == node.WriteMask &&
+                UserWriteMask == node.UserWriteMask &&
                 EqualityComparer<RolePermissionTypeCollection>.Default.Equals(
-                    RolePermissions, other.RolePermissions) &&
+                    RolePermissions, node.RolePermissions) &&
                 EqualityComparer<RolePermissionTypeCollection>.Default.Equals(
-                    UserRolePermissions, other.UserRolePermissions) &&
-                AccessRestrictions == other.AccessRestrictions &&
-                AreEventsMonitored == other.AreEventsMonitored &&
-                Initialized == other.Initialized &&
-                ValidationRequired == other.ValidationRequired &&
+                    UserRolePermissions, node.UserRolePermissions) &&
+                AccessRestrictions == node.AccessRestrictions &&
+                AreEventsMonitored == node.AreEventsMonitored &&
+                Initialized == node.Initialized &&
+                ValidationRequired == node.ValidationRequired &&
 
                 // TODO: Remove below as not needed during runtime
                 EqualityComparer<XmlElement[]>.Default.Equals(
-                    Extensions, other.Extensions) &&
+                    Extensions, node.Extensions) &&
                 EqualityComparer<IList<string>>.Default.Equals(
-                    Categories, other.Categories) &&
-                ReleaseStatus == other.ReleaseStatus &&
-                Specification == other.Specification &&
-                NodeSetDocumentation == other.NodeSetDocumentation &&
-                DesignToolOnly == other.DesignToolOnly)
+                    Categories, node.Categories) &&
+                ReleaseStatus == node.ReleaseStatus &&
+                Specification == node.Specification &&
+                NodeSetDocumentation == node.NodeSetDocumentation &&
+                DesignToolOnly == node.DesignToolOnly)
             {
                 lock (m_referencesLock)
                 {
                     if (!ArrayEqualityComparer<IReference>.Default.Equals(
-                        m_references?.Keys.ToArray(), other.m_references?.Keys.ToArray()))
+                        m_references?.Keys.ToArray(), node.m_references?.Keys.ToArray()))
                     {
                         return false;
                     }
@@ -128,7 +123,7 @@ namespace Opc.Ua
                 lock (m_childrenLock)
                 {
                     if (!ArrayEqualityComparer<BaseInstanceState>.Default.Equals(
-                        m_children?.ToArray(), other.m_children?.ToArray()))
+                        m_children?.ToArray(), node.m_children?.ToArray()))
                     {
                         return false;
                     }
@@ -139,7 +134,7 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public override int GetHashCode()
+        public virtual int DeepGetHashCode()
         {
             var hash = new HashCode();
             hash.Add(ChangeMasks);

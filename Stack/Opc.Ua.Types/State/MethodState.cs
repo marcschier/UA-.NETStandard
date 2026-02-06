@@ -94,14 +94,14 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj)
+        public override bool DeepEquals(NodeState node)
         {
-            if (obj is not MethodState state)
+            if (node is not MethodState state)
             {
                 return false;
             }
             return
-                base.Equals(obj) &&
+                base.DeepEquals(state) &&
                 EqualityComparer<PropertyState<Argument[]>>.Default.Equals(
                     state.OutputArguments, OutputArguments) &&
                 EqualityComparer<PropertyState<Argument[]>>.Default.Equals(
@@ -113,10 +113,10 @@ namespace Opc.Ua
         }
 
         /// <inheritdoc/>
-        public override int GetHashCode()
+        public override int DeepGetHashCode()
         {
             var hash = new HashCode();
-            hash.Add(base.GetHashCode());
+            hash.Add(base.DeepGetHashCode());
             hash.Add(OutputArguments);
             hash.Add(OutputArguments);
             hash.Add(MethodDeclarationId);
