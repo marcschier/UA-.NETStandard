@@ -1474,7 +1474,8 @@ namespace Opc.Ua.SourceGeneration
             if (node.Parent != null &&
                 IsInAddressSpace(node.Parent) &&
                 node.Parent.Design is InstanceDesign parentInstance &&
-                HasChildDefined(parentInstance.TypeDefinitionNode, instance.SymbolicName.Name))
+                (HasChildDefined(parentInstance.TypeDefinitionNode, instance.SymbolicName.Name) ||
+                    IsBuiltInProperty(node)))
             {
                 switch (instance.ModellingRule)
                 {
@@ -1497,12 +1498,12 @@ namespace Opc.Ua.SourceGeneration
                 }
             }
 
-            context.Out.WriteLine(
-                "state.ReplaceChild(context, Create{0}(context, state));",
-                node.Design.SymbolicId.Name);
             // context.Out.WriteLine(
-            //     "state.AddChild(Create{0}(context, state));",
-            //     node.Design.SymbolicId.Name);
+            //     "state.ReplaceChild(context, Create{0}(context, state));",
+            //     instance.SymbolicId.Name);
+            context.Out.WriteLine(
+                "state.AddChild(Create{0}(context, state));",
+                instance.SymbolicId.Name);
             return null;
         }
 

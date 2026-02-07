@@ -203,16 +203,14 @@ namespace Boiler
             switch (typeIdNumeric)
             {
                 case ObjectTypes.BoilerType:
-                    if (passiveNode is BoilerState)
+                    if (passiveNode is not BoilerState activeNode)
                     {
-                        break;
+                        activeNode = new BoilerState(passiveNode.Parent);
+                        activeNode.Create(context, passiveNode);
+
+                        // replace the node in the parent.
+                        passiveNode.Parent?.ReplaceChild(context, activeNode);
                     }
-
-                    var activeNode = new BoilerState(passiveNode.Parent);
-                    activeNode.Create(context, passiveNode);
-
-                    // replace the node in the parent.
-                    passiveNode.Parent?.ReplaceChild(context, activeNode);
 
                     // Autostart boiler simulation state machine
                     MethodState start = activeNode.Simulation.Start;
