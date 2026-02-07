@@ -531,7 +531,7 @@ namespace Opc.Ua.Gds.Server.Database.Linq
                         {
                             ApplicationUri = result.ApplicationUri,
                             ProductUri = result.ProductUri,
-                            ApplicationName = names.FirstOrDefault() ?? result.ApplicationName,
+                            ApplicationName = names.Count != 0 ? names[0] : new LocalizedText(result.ApplicationName),
                             ApplicationType = (ApplicationType)result.ApplicationType,
                             GatewayServerUri = null,
                             DiscoveryProfileUri = null,
