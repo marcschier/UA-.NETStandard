@@ -105,6 +105,10 @@ namespace Opc.Ua.SourceGeneration
         public static string ListOfProperties => nameof(ListOfProperties);
         public static string ListOfNonMandatoryChildren => nameof(ListOfNonMandatoryChildren);
         public static string ListOfRemoveChild => nameof(ListOfRemoveChild);
+        public static string ListOfChildCopies => nameof(ListOfChildCopies);
+        public static string ListOfChildHashes => nameof(ListOfChildHashes);
+        public static string ListOfEqualityComparers => nameof(ListOfEqualityComparers);
+        public static string ListOfCreateOrReplaceChild => nameof(ListOfCreateOrReplaceChild);
         public static string ListOfResultProperties => nameof(ListOfResultProperties);
         public static string ListOfSwitchFields => nameof(ListOfSwitchFields);
         public static string ListOfTypes => nameof(ListOfTypes);
@@ -160,7 +164,8 @@ namespace Opc.Ua.SourceGeneration
         public static string ClientMethodSync => nameof(ClientMethodSync);
         public static string ClientMethodBegin => nameof(ClientMethodBegin);
         public static string ClientMethodEnd => nameof(ClientMethodEnd);
-        public static string Header => nameof(Header);
+        public static string CodeHeader => nameof(CodeHeader);
+        public static string XmlHeader => nameof(XmlHeader);
         public static string ResourceName => nameof(ResourceName);
         public static string Resource => nameof(Resource);
         public static string ListOfResourceGroups => nameof(ListOfResourceGroups);

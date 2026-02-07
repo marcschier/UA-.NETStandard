@@ -82,7 +82,7 @@ namespace Opc.Ua.SourceGeneration
         {
             using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
             var templateWriter = new TemplateWriter(writer);
-            var template = new Template(templateWriter, SchemaTemplates.XmlSchema_File_xml);
+            var template = new Template(templateWriter, XmlSchemaTemplates.File);
 
             if (!string.IsNullOrEmpty(m_context.ModelDesign.TargetNamespace.XmlNamespace))
             {
@@ -115,7 +115,7 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddReplacement(
                 Tokens.BuiltInTypes,
-                SchemaTemplates.XmlSchema_BuiltInTypes_xsd,
+                XmlSchemaTemplates.BuiltInTypes,
                 [m_context.ModelDesign],
                 LoadTemplate_DataType,
                 WriteTemplate_DataType);
@@ -214,28 +214,28 @@ namespace Opc.Ua.SourceGeneration
 
                 if (baseType?.SymbolicId == new XmlQualifiedName("OptionSet", Namespaces.OpcUa))
                 {
-                    return SchemaTemplates.XmlSchema_DerivedType_xml;
+                    return XmlSchemaTemplates.DerivedType;
                 }
 
-                return SchemaTemplates.XmlSchema_EnumeratedType_xml;
+                return XmlSchemaTemplates.EnumeratedType;
             }
             else if (basicType == BasicDataType.UserDefined)
             {
                 if (dataType.BaseTypeNode.SymbolicName.Name == "Union")
                 {
-                    return SchemaTemplates.XmlSchema_Union_xml;
+                    return XmlSchemaTemplates.Union;
                 }
                 else if (dataType.BaseTypeNode.SymbolicName.Name == "Structure")
                 {
-                    return SchemaTemplates.XmlSchema_ComplexType_xml;
+                    return XmlSchemaTemplates.ComplexType;
                 }
                 else
                 {
-                    return SchemaTemplates.XmlSchema_DerivedType_xml;
+                    return XmlSchemaTemplates.DerivedType;
                 }
             }
 
-            return SchemaTemplates.XmlSchema_SimpleType_xml;
+            return XmlSchemaTemplates.SimpleType;
         }
 
         private bool WriteTemplate_DataType(IWriteContext context)
@@ -282,14 +282,14 @@ namespace Opc.Ua.SourceGeneration
 
             context.Template.AddReplacement(
                 Tokens.Documentation,
-                SchemaTemplates.XmlSchema_Documentation_xml,
+                XmlSchemaTemplates.Documentation,
                 [dataType],
                 LoadTemplate_XmlDocumentation,
                 WriteTemplate_XmlDocumentation);
 
             context.Template.AddReplacement(
                 Tokens.CollectionType,
-                SchemaTemplates.XmlSchema_CollectionType_xml,
+                XmlSchemaTemplates.CollectionType,
                 [dataType],
                 LoadTemplate_XmlCollectionType,
                 WriteTemplate_XmlCollectionType);

@@ -275,7 +275,7 @@ namespace Opc.Ua.SourceGeneration
         /// <summary>
         /// Add core stubs
         /// </summary>
-        public static IEnumerable<KeyValuePair<string, string>> WithOpcUaCore(
+        public static IEnumerable<KeyValuePair<string, string>> WithOpcUaGeneratedStack(
             this IEnumerable<KeyValuePair<string, string>> codeFiles)
         {
             return codeFiles.Append(new KeyValuePair<string, string>(
@@ -562,25 +562,39 @@ namespace Opc.Ua.SourceGeneration
                 }
                 public class IdentityMappingRuleType { }
                 public class Range { }
-                public class FiniteStateMachineState : BaseObjectState
-                {
-                    public FiniteStateMachineState(NodeState? parent) : base(parent) { }
-                }
                 public class FileDirectoryState : BaseObjectState
                 {
                     public FileDirectoryState(NodeState? parent) : base(parent) { }
+                    public void CreateOrReplaceCreateDirectory(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceCreateFile(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceDeleteFileSystemObject(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceMoveOrCopy(
+                        ISystemContext context, BaseInstanceState replacement) { }
                 }
                 public class AnalogUnitState : BaseDataVariableState<double>
                 {
                     public AnalogUnitState(NodeState? parent) : base(parent) { }
+                    public void CreateOrReplaceEngineeringUnits(
+                        ISystemContext context, BaseInstanceState replacement) { }
                 }
                 public class AnalogItemState : BaseDataVariableState<double>
                 {
                     public AnalogItemState(NodeState? parent) : base(parent) { }
+                    public void CreateOrReplaceEURange(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceEngineeringUnits(
+                        ISystemContext context, BaseInstanceState replacement) { }
                 }
                 public class AnalogItemState<T> : BaseDataVariableState<T>
                 {
                     public AnalogItemState(NodeState? parent) : base(parent) { }
+                    public void CreateOrReplaceEURange(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceEngineeringUnits(
+                        ISystemContext context, BaseInstanceState replacement) { }
                 }
                 public class BaseInterfaceState : BaseObjectState
                 {
@@ -589,12 +603,58 @@ namespace Opc.Ua.SourceGeneration
                 public class BaseEventState : BaseObjectState
                 {
                     public BaseEventState(NodeState? parent) : base(parent) { }
+                    public void CreateOrReplaceEventId(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceEventType(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceSourceNode(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceSourceName(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceTime(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceReceiveTime(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceMessage(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceSeverity(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceConditionClassId(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceConditionClassName(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceConditionName(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceBranchId(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceRetain(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceEnabledState(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceQuality(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceLastSeverity(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceComment(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceClientUserId(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceDisable(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceEnable(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceAddComment(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceAckedState(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceAcknowledge(
+                        ISystemContext context, BaseInstanceState replacement) { }
                 }
-                public class ConditionState : BaseObjectState
+                public class ConditionState : BaseEventState
                 {
                     public ConditionState(NodeState? parent) : base(parent) { }
                 }
-                public class AcknowledgeableConditionState : BaseObjectState
+                public class AcknowledgeableConditionState : BaseEventState
                 {
                     public AcknowledgeableConditionState(NodeState? parent) : base(parent) { }
                 }
@@ -602,25 +662,57 @@ namespace Opc.Ua.SourceGeneration
                 {
                     public FolderState(NodeState? parent) : base(parent) { }
                 }
-                public class InstrumentDiagnosticAlarmState : BaseObjectState
+                public class InstrumentDiagnosticAlarmState : BaseEventState
                 {
                     public InstrumentDiagnosticAlarmState(NodeState? parent) : base(parent) { }
+                    public void CreateOrReplaceIterations(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceNewValueCount(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceSuppressedOrShelved(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceActiveState(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceInputNode(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceNormalState(
+                        ISystemContext context, BaseInstanceState replacement) { }
                 }
                 public class TemporaryFileTransferState : BaseObjectState
                 {
                     public TemporaryFileTransferState(NodeState? parent) : base(parent) { }
+                    public void CreateOrReplaceClientProcessingTimeout(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceGenerateFileForWrite(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceGenerateFileForRead(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceCloseAndCommit(
+                        ISystemContext context, BaseInstanceState replacement) { }
                 }
                 public class TwoStateVariableState : BaseVariableState
                 {
                     public TwoStateVariableState(NodeState? parent) : base(parent) { }
+                    public void CreateOrReplaceId(
+                        ISystemContext context, BaseInstanceState replacement) { }
                 }
                 public class ConditionVariableState<T> : BaseVariableState
                 {
                     public ConditionVariableState(NodeState? parent) : base(parent) { }
+                    public void CreateOrReplaceSourceTimestamp(
+                        ISystemContext context, BaseInstanceState replacement) { }
                 }
                 public class FiniteStateVariableState : BaseVariableState
                 {
                     public FiniteStateVariableState(NodeState? parent) : base(parent) { }
+                    public void CreateOrReplaceId(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                }
+                public class FiniteStateMachineState : BaseObjectState
+                {
+                    public FiniteStateMachineState(NodeState? parent) : base(parent) { }
+                    public void CreateOrReplaceCurrentState(
+                        ISystemContext context, BaseInstanceState replacement) { }
                 }
                 public class DataTypeEncodingState : BaseObjectState
                 {
@@ -681,6 +773,27 @@ namespace Opc.Ua.SourceGeneration
                 public class FileState : BaseObjectState
                 {
                     public FileState(NodeState? parent) : base(parent) { }
+
+                    public void CreateOrReplaceSize(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceWritable(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceUserWritable(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceOpenCount(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceOpen(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceClose(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceRead(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceWrite(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceGetPosition(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceSetPosition(
+                        ISystemContext context, BaseInstanceState replacement) { }
                 }
                 public class StateMachineStateState : BaseObjectState
                 {
@@ -690,7 +803,7 @@ namespace Opc.Ua.SourceGeneration
                 {
                     public StateMachineInitialStateState(NodeState? parent) : base(parent) { }
                 }
-                public class StateMachineTransitionState : BaseObjectState
+                public class StateMachineTransitionState : StateMachineStateState
                 {
                     public StateMachineTransitionState(NodeState? parent) : base(parent) { }
                 }
@@ -701,6 +814,10 @@ namespace Opc.Ua.SourceGeneration
                 public class DataTypeDictionaryState : BaseDataVariableState
                 {
                     public DataTypeDictionaryState(NodeState? parent) : base(parent) { }
+                    public void CreateOrReplaceNamespaceUri(
+                        ISystemContext context, BaseInstanceState replacement) { }
+                    public void CreateOrReplaceDeprecated(
+                        ISystemContext context, BaseInstanceState replacement) { }
                 }
                 public class DataTypeDescriptionState : BaseDataVariableState
                 {
@@ -709,6 +826,8 @@ namespace Opc.Ua.SourceGeneration
                 public class RoleState : BaseObjectState
                 {
                     public RoleState(NodeState? parent) : base(parent) { }
+                    public void CreateOrReplaceIdentities(
+                        ISystemContext context, BaseInstanceState replacement) { }
                 }
                 public class EUInformation {}
                 public class DeleteFileSystemObjectMethodState : MethodState

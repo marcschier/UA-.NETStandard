@@ -27,6 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using System;
 using System.Collections.Generic;
 using Opc.Ua.Types;
 
@@ -63,19 +64,43 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public override object Clone()
         {
-            return MemberwiseClone();
+            var clone = new BaseTypeState(NodeClass);
+            CopyTo(clone);
+            return clone;
         }
 
-        /// <summary>
-        /// Makes a copy of the node and all children.
-        /// </summary>
-        /// <returns>
-        /// A new object that is a copy of this instance.
-        /// </returns>
-        public new object MemberwiseClone()
+        /// <inheritdoc/>
+        public override bool DeepEquals(NodeState node)
         {
-            var clone = new BaseTypeState(NodeClass);
-            return CloneChildren(clone);
+            if (node is not BaseTypeState state)
+            {
+                return false;
+            }
+            return
+                base.DeepEquals(state) &&
+                state.SuperTypeId == SuperTypeId &&
+                state.IsAbstract == IsAbstract;
+        }
+
+        /// <inheritdoc/>
+        public override int DeepGetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(base.DeepGetHashCode());
+            hash.Add(SuperTypeId);
+            hash.Add(IsAbstract);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(NodeState target)
+        {
+            if (target is BaseTypeState state)
+            {
+                state.SuperTypeId = SuperTypeId;
+                state.IsAbstract = IsAbstract;
+            }
+            base.CopyTo(target);
         }
 
         /// <summary>

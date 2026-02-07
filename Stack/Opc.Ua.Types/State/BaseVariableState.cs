@@ -30,6 +30,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
@@ -501,19 +502,74 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public override object Clone()
         {
-            return MemberwiseClone();
+            var clone = (BaseInstanceState)Activator.CreateInstance(GetType(), Parent);
+            CopyTo(clone);
+            return clone;
         }
 
-        /// <summary>
-        /// Makes a copy of the node and all children.
-        /// </summary>
-        /// <returns>
-        /// A new object that is a copy of this instance.
-        /// </returns>
-        public new object MemberwiseClone()
+        /// <inheritdoc/>
+        public override bool DeepEquals(NodeState node)
         {
-            var clone = (BaseInstanceState)Activator.CreateInstance(GetType(), Parent);
-            return CloneChildren(clone);
+            if (node is not BaseVariableState state)
+            {
+                return false;
+            }
+            return
+                base.DeepEquals(state) &&
+                state.Timestamp == Timestamp &&
+                state.StatusCode == StatusCode &&
+                EqualityComparer<object>.Default.Equals(state.Value, Value) &&
+                state.DataType == DataType &&
+                state.ValueRank == ValueRank &&
+                ArrayEqualityComparer<uint>.Default.Equals(
+                    state.ArrayDimensions?.ToArray(), ArrayDimensions?.ToArray()) &&
+                state.AccessLevel == AccessLevel &&
+                state.UserAccessLevel == UserAccessLevel &&
+                state.MinimumSamplingInterval == MinimumSamplingInterval &&
+                state.Historizing == Historizing &&
+                state.IsValueType == IsValueType
+                ;
+        }
+
+        /// <inheritdoc/>
+        public override int DeepGetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(base.DeepGetHashCode());
+            hash.Add(Timestamp);
+            hash.Add(StatusCode);
+            hash.Add(Value);
+            hash.Add(DataType);
+            hash.Add(ValueRank);
+            hash.Add(ArrayEqualityComparer<uint>.Default.GetHashCode(
+                ArrayDimensions?.ToArray()));
+            hash.Add(AccessLevel);
+            hash.Add(UserAccessLevel);
+            hash.Add(MinimumSamplingInterval);
+            hash.Add(Historizing);
+            hash.Add(IsValueType);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(NodeState target)
+        {
+            if (target is BaseVariableState state)
+            {
+                state.Value = Value;
+                state.Timestamp = Timestamp;
+                state.StatusCode = StatusCode;
+                state.m_valueTouched = m_valueTouched;
+                state.DataType = DataType;
+                state.ValueRank = ValueRank;
+                state.ArrayDimensions = ArrayDimensions;
+                state.AccessLevel = AccessLevel;
+                state.UserAccessLevel = UserAccessLevel;
+                state.MinimumSamplingInterval = MinimumSamplingInterval;
+                state.Historizing = Historizing;
+                state.IsValueType = IsValueType;
+            }
+            base.CopyTo(target);
         }
 
         /// <summary>
@@ -2234,6 +2290,46 @@ namespace Opc.Ua
             return VariableTypeIds.BaseDataVariableType;
         }
 
+        /// <inheritdoc/>
+        public override object Clone()
+        {
+            var clone = (BaseDataVariableState)Activator.CreateInstance(GetType(), Parent);
+            CopyTo(clone);
+            return clone;
+        }
+
+        /// <inheritdoc/>
+        public override bool DeepEquals(NodeState node)
+        {
+            if (node is not BaseDataVariableState state)
+            {
+                return false;
+            }
+            return
+                base.DeepEquals(state) &&
+                EqualityComparer<PropertyState<LocalizedText[]>>.Default.Equals(
+                    state.EnumStrings, EnumStrings);
+        }
+
+        /// <inheritdoc/>
+        public override int DeepGetHashCode()
+        {
+            var hash = new HashCode();
+            hash.Add(base.DeepGetHashCode());
+            hash.Add(EnumStrings);
+            return hash.ToHashCode();
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(NodeState target)
+        {
+            if (target is BaseDataVariableState state)
+            {
+                state.EnumStrings = EnumStrings;
+            }
+            base.CopyTo(target);
+        }
+
         /// <summary>
         /// The strings that describe the values for an enumeration.
         /// </summary>
@@ -2284,21 +2380,34 @@ namespace Opc.Ua
             switch (browseName.Name)
             {
                 case BrowseNames.EnumStrings:
-                    if (createOrReplace && EnumStrings == null)
-                    {
-                        if (replacement == null)
-                        {
-                            EnumStrings = new PropertyState<LocalizedText[]>(this);
-                        }
-                        else
-                        {
-                            EnumStrings = (PropertyState<LocalizedText[]>)replacement;
-                        }
-                    }
-                    instance = EnumStrings;
+                    instance = !createOrReplace ?
+                        EnumStrings : CreateOrReplaceEnumStrings(context, replacement);
                     break;
             }
             return instance ?? base.FindChild(context, browseName, createOrReplace, replacement);
+        }
+
+        /// <summary>
+        /// Create or replace enum strings
+        /// </summary>
+        public PropertyState<LocalizedText[]> CreateOrReplaceEnumStrings(
+            ISystemContext context,
+            BaseInstanceState replacement)
+        {
+            if (EnumStrings == null)
+            {
+                PropertyState<LocalizedText[]> child = replacement as PropertyState<LocalizedText[]>;
+                if (child == null)
+                {
+                    child = new PropertyState<LocalizedText[]>(this);
+                    if (replacement != null)
+                    {
+                        child.Create(context, replacement);
+                    }
+                }
+                EnumStrings = child;
+            }
+            return EnumStrings;
         }
 
         private PropertyState<LocalizedText[]> m_enumStrings;

@@ -79,7 +79,7 @@ namespace Opc.Ua.SourceGeneration
         {
             using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
             using var templateWriter = new TemplateWriter(writer);
-            var template = new Template(templateWriter, SchemaTemplates.BinarySchema_File_xml);
+            var template = new Template(templateWriter, BinarySchemaTemplates.File);
 
             string targetNamespace = m_context.ModelDesign.TargetNamespace.Value;
 
@@ -97,14 +97,14 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddReplacement(
                 Tokens.BuiltInTypes,
-                SchemaTemplates.BinarySchema_BuiltInTypes_bsd,
+                BinarySchemaTemplates.BuiltInTypes,
                 [m_context.ModelDesign],
                 LoadTemplate_DataType,
                 WriteTemplate_DataType);
 
             template.AddReplacement(
                 Tokens.ListOfTypes,
-                SchemaTemplates.BinarySchema_OpaqueType_xml,
+                BinarySchemaTemplates.OpaqueType,
                 GetListOfTypes(),
                 LoadTemplate_DataType,
                 WriteTemplate_DataType);
@@ -199,15 +199,15 @@ namespace Opc.Ua.SourceGeneration
 
             if (basicType == BasicDataType.UserDefined)
             {
-                return SchemaTemplates.BinarySchema_ComplexType_xml;
+                return BinarySchemaTemplates.ComplexType;
             }
 
             if (basicType == BasicDataType.Enumeration)
             {
-                return SchemaTemplates.BinarySchema_EnumeratedType_xml;
+                return BinarySchemaTemplates.EnumeratedType;
             }
 
-            return SchemaTemplates.BinarySchema_OpaqueType_xml;
+            return BinarySchemaTemplates.OpaqueType;
         }
 
         private bool WriteTemplate_DataType(IWriteContext context)

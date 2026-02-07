@@ -64,7 +64,7 @@ namespace Opc.Ua.SourceGeneration
 
             using TextWriter writer = m_context.FileSystem.CreateTextWriter(fileName);
             using var templateWriter = new TemplateWriter(writer);
-            var template = new Template(templateWriter, CodeTemplates.Identifiers_File);
+            var template = new Template(templateWriter, NodeIdTemplates.File);
             template.AddReplacement(
                 Tokens.Namespace,
                 m_context.ModelDesign.TargetNamespace.Prefix);
@@ -75,14 +75,14 @@ namespace Opc.Ua.SourceGeneration
 
             template.AddReplacement(
                 Tokens.ListOfIdentifiers,
-                CodeTemplates.Identifiers_IdsPerNodeClass,
+                NodeIdTemplates.IdsPerNodeClass,
                 identifiers,
                 LoadTemplate_IdsPerNodeClass,
                 WriteTemplate_IdsPerNodeClass);
 
             template.AddReplacement(
                 Tokens.ListOfNodeIds,
-                CodeTemplates.Identifiers_NodeIdPerNodeClass,
+                NodeIdTemplates.NodeIdPerNodeClass,
                 identifiers,
                 LoadTemplate_IdsPerNodeClass,
                 WriteTemplate_NodeIdPerNodeClass);
@@ -124,7 +124,7 @@ namespace Opc.Ua.SourceGeneration
 
             context.Template.AddReplacement(
                 Tokens.ListOfIdentifiers,
-                CodeTemplates.Identifiers_IdDeclaration,
+                NodeIdTemplates.IdDeclaration,
                 nodes.Value,
                 WriteTemplate_IdDeclaration);
 
@@ -158,7 +158,7 @@ namespace Opc.Ua.SourceGeneration
             {
                 context.Template.AddReplacement(
                     Tokens.IdentifierReflection,
-                    CodeTemplates.Identifiers_Reflection,
+                    NodeIdTemplates.Reflection,
                     [new KeyValuePair<string, List<NodeDesign>>(nodes.Key, [.. numericIds.Values])],
                     WriteTemplate_IdClassReflection);
             }
@@ -166,7 +166,7 @@ namespace Opc.Ua.SourceGeneration
             {
                 context.Template.AddReplacement(
                     Tokens.IdentifierReflection,
-                    CodeTemplates.Identifiers_Reflection,
+                    NodeIdTemplates.Reflection,
                     [new KeyValuePair<string, List<NodeDesign>>(nodes.Key, [.. stringIds.Values])],
                     WriteTemplate_IdClassReflection);
             }
@@ -193,14 +193,14 @@ namespace Opc.Ua.SourceGeneration
             context.Template.AddReplacement(
                 Tokens.ListOfIdentifiers,
                 m_context.ModelDesign.TargetNamespace.Value != Namespaces.OpcUa ?
-                    CodeTemplates.Identifiers_NodeIdDeclarationAbsolute :
-                    CodeTemplates.Identifiers_NodeIdDeclaration,
+                    NodeIdTemplates.NodeIdDeclarationAbsolute :
+                    NodeIdTemplates.NodeIdDeclaration,
                 nodes.Value,
                 WriteTemplate_IdDeclaration);
 
             context.Template.AddReplacement(
                 Tokens.IdentifierReflection,
-                CodeTemplates.Identifiers_Reflection,
+                NodeIdTemplates.Reflection,
                 [nodes],
                 WriteTemplate_NodeIdReflection);
 

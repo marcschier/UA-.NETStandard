@@ -407,20 +407,21 @@ namespace Opc.Ua.Gds.Server
             switch (numericId)
             {
                 case ObjectTypes.CertificateDirectoryType:
-#if FALSE // TODO: All predefined nodes are active nodes - need a backcompat story ?
-                    if (passiveNode is CertificateDirectoryState)
+                    // TODO: Document new behavior as breaking change
+                    if (passiveNode is not CertificateDirectoryState activeNode)
                     {
-                        break;
-                    }
-#endif
-                    var activeNode = new CertificateDirectoryState(passiveNode.Parent)
-                    {
-                        RevokeCertificate = new RevokeCertificateMethodState(passiveNode),
-                        CheckRevocationStatus = new CheckRevocationStatusMethodState(passiveNode),
-                        GetCertificates = new GetCertificatesMethodState(passiveNode)
-                    };
+                        activeNode = new CertificateDirectoryState(passiveNode.Parent)
+                        {
+                            RevokeCertificate = new RevokeCertificateMethodState(passiveNode),
+                            CheckRevocationStatus = new CheckRevocationStatusMethodState(passiveNode),
+                            GetCertificates = new GetCertificatesMethodState(passiveNode)
+                        };
 
-                    activeNode.Create(context, passiveNode);
+                        activeNode.Create(context, passiveNode);
+                        // replace the node in the parent.
+                        passiveNode.Parent?.ReplaceChild(context, activeNode);
+                    }
+
                     activeNode.QueryServers.OnCall
                         = new QueryServersMethodStateMethodCallHandler(OnQueryServers);
                     activeNode.QueryApplications.OnCall
@@ -534,9 +535,6 @@ namespace Opc.Ua.Gds.Server
                         = false;
                     activeNode.CertificateGroups.DefaultUserTokenGroup.TrustList.UserWritable.Value
                         = false;
-
-                    // replace the node in the parent.
-                    passiveNode.Parent?.ReplaceChild(context, activeNode);
 
                     return activeNode;
             }

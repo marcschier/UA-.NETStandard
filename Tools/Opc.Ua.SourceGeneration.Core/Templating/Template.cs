@@ -57,13 +57,16 @@ namespace Opc.Ua.SourceGeneration
             m_templateString = templateString;
             m_outerTemplate = parent;
             m_writer = writer;
-            m_replacements.Add(Tokens.Header, CodeTemplates.Header);
+            m_replacements.Add(Tokens.CodeHeader, CodeTemplates.CodeHeader);
             m_replacements.Add(Tokens.Tool,
                 Assembly.GetExecutingAssembly().GetName().Name);
-            m_replacements.Add(Tokens.Version, CoreUtils.Format(
-                "{0}.{1}",
-                s_softwareVersion,
-                s_buildVersion));
+            m_replacements.Add(
+                Tokens.Version,
+#if FULL_VERSION
+                CoreUtils.Format("{0}.{1}", s_softwareVersion, s_buildVersion));
+#else
+                s_softwareVersion);
+#endif
         }
 
         /// <summary>
@@ -208,7 +211,9 @@ namespace Opc.Ua.SourceGeneration
         }
 
         private static readonly string s_softwareVersion = CoreUtils.GetAssemblySoftwareVersion();
+#if FULL_VERSION
         private static readonly string s_buildVersion = CoreUtils.GetAssemblyBuildNumber();
+#endif
         private readonly TemplateString m_templateString;
         private readonly Template m_outerTemplate;
         private readonly TemplateWriter m_writer;

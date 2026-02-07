@@ -578,26 +578,6 @@ namespace Opc.Ua.Schema.Model.Tests
         }
 
         /// <summary>
-        /// Tests that ToString(null, null) returns the RelativePath when Instance is null.
-        /// </summary>
-        [Test]
-        public void ToString_FormatNullInstanceNull_ReturnsRelativePath()
-        {
-            // Arrange
-            var hierarchyNode = new HierarchyNode
-            {
-                RelativePath = "MyPath",
-                Instance = null
-            };
-
-            // Act
-            string result = hierarchyNode.ToString(null, null);
-
-            // Assert
-            Assert.That(result, Is.EqualTo("MyPath"));
-        }
-
-        /// <summary>
         /// Tests that ToString(null, formatProvider) returns the RelativePath when Instance.SymbolicId is null.
         /// </summary>
         [Test]
@@ -614,7 +594,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = hierarchyNode.ToString(null, CultureInfo.InvariantCulture);
+            string result = hierarchyNode.ToString();
 
             // Assert
             Assert.That(result, Is.EqualTo("MyPath"));
@@ -637,89 +617,10 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = hierarchyNode.ToString(null, CultureInfo.InvariantCulture);
+            string result = hierarchyNode.ToString();
 
             // Assert
             Assert.That(result, Is.EqualTo("Path1=Symbol1"));
-        }
-
-        /// <summary>
-        /// Tests that ToString(null, null) returns formatted string when Instance and SymbolicId are not null.
-        /// </summary>
-        [Test]
-        public void ToString_FormatNullInstanceAndSymbolicIdNotNull_ReturnsFormattedString()
-        {
-            // Arrange
-            var hierarchyNode = new HierarchyNode
-            {
-                RelativePath = "RootPath",
-                Instance = new ObjectDesign
-                {
-                    SymbolicId = new XmlQualifiedName("SymbolicName", "http://opcfoundation.org")
-                }
-            };
-
-            // Act
-            string result = hierarchyNode.ToString(null, null);
-
-            // Assert
-            Assert.That(result, Is.EqualTo("RootPath=SymbolicName"));
-        }
-
-        /// <summary>
-        /// Tests that ToString throws FormatException when format is an empty string.
-        /// </summary>
-        [Test]
-        public void ToString_FormatIsEmptyString_ThrowsFormatException()
-        {
-            // Arrange
-            var hierarchyNode = new HierarchyNode
-            {
-                RelativePath = "TestPath",
-                Instance = null
-            };
-
-            // Act & Assert
-            FormatException ex = Assert.Throws<FormatException>(() => hierarchyNode.ToString(string.Empty, null));
-            Assert.That(ex.Message, Does.Contain("Invalid format string"));
-            Assert.That(ex.Message, Does.Contain("''"));
-        }
-
-        /// <summary>
-        /// Tests that ToString throws FormatException when format is a non-null string.
-        /// </summary>
-        [Test]
-        public void ToString_FormatIsNonNullString_ThrowsFormatException()
-        {
-            // Arrange
-            var hierarchyNode = new HierarchyNode
-            {
-                RelativePath = "TestPath",
-                Instance = null
-            };
-
-            // Act & Assert
-            FormatException ex = Assert.Throws<FormatException>(() => hierarchyNode.ToString("G", null));
-            Assert.That(ex.Message, Does.Contain("Invalid format string"));
-            Assert.That(ex.Message, Does.Contain("'G'"));
-        }
-
-        /// <summary>
-        /// Tests that ToString throws FormatException when format is whitespace.
-        /// </summary>
-        [Test]
-        public void ToString_FormatIsWhitespace_ThrowsFormatException()
-        {
-            // Arrange
-            var hierarchyNode = new HierarchyNode
-            {
-                RelativePath = "TestPath",
-                Instance = null
-            };
-
-            // Act & Assert
-            FormatException ex = Assert.Throws<FormatException>(() => hierarchyNode.ToString("   ", null));
-            Assert.That(ex.Message, Does.Contain("Invalid format string"));
         }
 
         /// <summary>
@@ -814,7 +715,6 @@ namespace Opc.Ua.Schema.Model.Tests
         public void ToString_WithDifferentCultures_ReturnsFormattedString(string cultureName)
         {
             // Arrange
-            var culture = CultureInfo.GetCultureInfo(cultureName);
             var hierarchyNode = new HierarchyNode
             {
                 RelativePath = "TestPath",
@@ -825,7 +725,7 @@ namespace Opc.Ua.Schema.Model.Tests
             };
 
             // Act
-            string result = hierarchyNode.ToString(null, culture);
+            string result = hierarchyNode.ToString();
 
             // Assert
             Assert.That(result, Is.EqualTo("TestPath=TestName"));
@@ -898,30 +798,6 @@ namespace Opc.Ua.Schema.Model.Tests
 
             // Assert
             Assert.That(result, Is.EqualTo("Path="));
-        }
-
-        /// <summary>
-        /// Tests that ToString with various format strings all throw FormatException.
-        /// </summary>
-        [TestCase("X")]
-        [TestCase("F")]
-        [TestCase("D")]
-        [TestCase("C")]
-        [TestCase("CustomFormat")]
-        [TestCase("123")]
-        public void ToString_VariousFormatStrings_ThrowsFormatException(string format)
-        {
-            // Arrange
-            var hierarchyNode = new HierarchyNode
-            {
-                RelativePath = "TestPath",
-                Instance = null
-            };
-
-            // Act & Assert
-            FormatException ex = Assert.Throws<FormatException>(() => hierarchyNode.ToString(format, null));
-            Assert.That(ex.Message, Does.Contain("Invalid format string"));
-            Assert.That(ex.Message, Does.Contain($"'{format}'"));
         }
 
         /// <summary>

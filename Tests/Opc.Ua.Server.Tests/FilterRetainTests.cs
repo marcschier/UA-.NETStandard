@@ -420,6 +420,10 @@ namespace Opc.Ua.Server.Tests
 
             alarm.EventType.Value = ObjectTypeIds.ExclusiveLevelAlarmType;
             alarm.AddOutOfServiceState(context);
+            alarm.AddSuppressedState(context);
+            alarm.AddSilenceState(context);
+            alarm.AddShelvingState(context);
+            alarm.AddSeverityLowLow(context);
             if (addFilterRetain)
             {
                 alarm.SupportsFilteredRetain = new PropertyState<bool>(alarm)

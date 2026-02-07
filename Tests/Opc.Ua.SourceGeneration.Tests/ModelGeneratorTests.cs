@@ -30,6 +30,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -66,7 +68,7 @@ namespace Opc.Ua.SourceGeneration
             var host = new ModelSourceGeneratorHoist(generator);
 
             CSharpCompilation compilation = optimizationLevel.CreateCompilation()
-                .AddCode(new Dictionary<string, string>().WithOpcUaCore(), languageVersion);
+                .AddCode(new Dictionary<string, string>().WithOpcUaGeneratedStack(), languageVersion);
 
             var options = new AnalyzerOptionsProvider(
                 new Dictionary<string, string>
@@ -97,7 +99,7 @@ namespace Opc.Ua.SourceGeneration
             var host = new ModelSourceGeneratorHoist(generator);
 
             CSharpCompilation compilation = optimizationLevel.CreateCompilation()
-                .AddCode(new Dictionary<string, string>().WithOpcUaCore(), languageVersion);
+                .AddCode(new Dictionary<string, string>().WithOpcUaGeneratedStack(), languageVersion);
 
             var options = new AnalyzerOptionsProvider(
                 new Dictionary<string, string>
@@ -128,7 +130,7 @@ namespace Opc.Ua.SourceGeneration
             var host = new ModelSourceGeneratorHoist(generator);
 
             CSharpCompilation compilation = OptimizationLevel.Release.CreateCompilation()
-                .AddCode(new Dictionary<string, string>().WithOpcUaCore(), languageVersion);
+                .AddCode(new Dictionary<string, string>().WithOpcUaGeneratedStack(), languageVersion);
 
             var options = new AnalyzerOptionsProvider(
                 new Dictionary<string, string>

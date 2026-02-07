@@ -27,23 +27,44 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-namespace Opc.Ua
+namespace Opc.Ua.SourceGeneration
 {
-    public partial class NodeState
+    /// <summary>
+    /// Template strings
+    /// </summary>
+    internal static class MessagesTemplates
     {
         /// <summary>
-        /// The specification that defines the node.
+        /// Messages file template
         /// </summary>
-        public string Specification { get; set; }
+        public static readonly TemplateString File = TemplateString.Parse(
+            $$"""
+            {{Tokens.CodeHeader}}
+
+            namespace {{Tokens.Prefix}}
+            {
+                {{Tokens.TypeList}}
+            }
+            """);
 
         /// <summary>
-        /// The documentation for the node that is saved in the NodeSet.
+        /// Service message template
         /// </summary>
-        public string NodeSetDocumentation { get; set; }
+        public static readonly TemplateString DataTypeAnnotation = TemplateString.Parse(
+            $$"""
+            /// <summary>
+            /// The request message for the {{Tokens.Name}} service.
+            /// </summary>
+            public partial class {{Tokens.Name}}Request : global::Opc.Ua.IServiceRequest
+            {
+            }
 
-        /// <summary>
-        /// The documentation for the node that is saved in the NodeSet.
-        /// </summary>
-        public bool DesignToolOnly { get; set; }
+            /// <summary>
+            /// The response message for the {{Tokens.Name}} service.
+            /// </summary>
+            public partial class {{Tokens.Name}}Response : global::Opc.Ua.IServiceResponse
+            {
+            }
+            """);
     }
 }
