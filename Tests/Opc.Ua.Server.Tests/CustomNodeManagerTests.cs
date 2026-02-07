@@ -192,7 +192,6 @@ namespace Opc.Ua.Server.Tests
             var cancellationTokenSource = new CancellationTokenSource();
             Exception error = null;
             int tasksCompletedCount = 0;
-#pragma warning disable EPC17 // Avoid async-void delegates
             ParallelLoopResult result = Parallel.For(
                 0,
                 iterations,
@@ -213,7 +212,6 @@ namespace Opc.Ua.Server.Tests
                         tasksCompletedCount++;
                     }
                 });
-#pragma warning restore EPC17 // Avoid async-void delegates
 
             int spinWaitCount = 0;
             const int maxSpinWaitCount = 100;
