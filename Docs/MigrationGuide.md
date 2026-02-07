@@ -16,7 +16,10 @@ All pre-generated code files (`Generated/` folders) have been removed and are no
     - Source generators automatically create these files during compilation
     - No impact on runtime behavior - all generated types remain the same
 
-No migration steps are needed. The generated types and APIs remain identical.
+Normally no migration steps are needed. The generated types and APIs remain identical.
+
+However, `*.nodeset2.xml` files previously included as embedded zip have been removed.
+Also, all `*.Types.xsd` and `*.Types.bsd` files are now included as string resource instead of embedded resources. If you need access to these, use the new `Schemas.XmlAsStream` and `Schemas.BinaryAsStream` APIs in the node manager namespace which produce a utf8 stream.
 
 ### Several built in types are now immutable
 
@@ -77,11 +80,12 @@ Example guidance (mirrors BoilerNodeManager): the node passed to `AddBehaviorToP
             activeNode.Temperature.OnSimpleWriteValue = OnTemperatureWrite;
             activeNode.FlowRate.OnSimpleWriteValue = OnFlowRateWrite;
         }
-    
+
         // Add callbacks to the node here if necessary
         // If not needed you do not need to implement this call at all.
     }
     ```
+See [NodeStates](./../Stack/Opc.Ua.Types/State/readme.md) document for more information.
 
 ### Project Structure
 
@@ -188,42 +192,6 @@ Impact:
 - Ensure compatible .NET SDK version
 - Update any custom build scripts that depend on pre-generated files
 
-## Migration Checklist
-
-### For Applications Using NuGet Packages
-
-✅ **No changes required** - NuGet package structure remains compatible
-
-### For Applications Building from Source
-
-1. **Update .NET SDK** to version 8.0 or later
-2. **Clean and rebuild** to ensure source generation runs
-3. **Update identity token usage** to use handler pattern:
-
-    ```csharp
-    // Replace direct token operations
-    using var handler = identityToken.AsTokenHandler();
-    // Use handler for crypto operations
-    ```
-
-4. **Remove dependencies** on `Generated/` files in custom build scripts
-5. **Update project references** if referencing multiple stack projects directly
-
-### For Library Developers
-
-1. **Update identity token APIs** to use `IUserIdentityTokenHandler`
-2. **Test with source generation** in CI/CD pipelines  
-3. **Update documentation** referencing generated files
-4. **Consider `IFileSystem`** for testable file operations
-
-## Benefits of Migration
-
-- **Reduced repository size** - No more large generated files
-- **Better maintainability** - Source generation ensures consistency
-- **Improved security** - Handler pattern provides better lifetime management for sensitive data
-- **Enhanced developer experience** - Source generators provide immediate feedback
-- **Future-proof architecture** - Easier to extend and modify generated code
-
 ## Troubleshooting
 
 ### Source Generation Issues
@@ -233,7 +201,7 @@ Impact:
 **Solutions**:
 
 1. Clean and rebuild solution
-2. Check .NET SDK version (8.0+ recommended)
+2. Check .NET SDK version (10.0+ recommended)
 3. Verify source generator references in project files
 4. Check for analyzer/source generator conflicts
 
@@ -254,9 +222,8 @@ Impact:
 
 **Solutions**:
 
-1. Use incremental compilation
-2. Consider parallel builds
-3. Source generation runs once per model change
+1. Use incremental compilation and avoid changes to code in Opc.Ua and Opc.Ua.Core project
+2. Only build for your target framework
 
 ## Support
 
