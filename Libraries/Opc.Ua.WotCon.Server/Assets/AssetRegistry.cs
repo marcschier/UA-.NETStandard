@@ -294,13 +294,16 @@ namespace Opc.Ua.WotCon.Server.Assets
             catch (NotSupportedException ex)
             {
                 await DeleteAssetAsync(assetId, ct).ConfigureAwait(false);
-                return (ServiceResult.Create(ex, StatusCodes.BadNotSupported, ex.Message), NodeId.Null);
+                m_logger.LogError(ex,
+                    "CreateAssetForEndpoint failed for asset {AssetName}: provider rejected the endpoint",
+                    assetName);
+                return (ToClientStatus(ex, StatusCodes.BadNotSupported, "CreateAssetForEndpoint"), NodeId.Null);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 await DeleteAssetAsync(assetId, ct).ConfigureAwait(false);
-                m_logger.LogError(ex, "CreateAssetForEndpoint failed for {AssetName}", assetName);
-                return (ServiceResult.Create(ex, StatusCodes.BadConfigurationError, ex.Message), NodeId.Null);
+                m_logger.LogError(ex, "CreateAssetForEndpoint failed for asset {AssetName}", assetName);
+                return (ToClientStatus(ex, MapToStatusCode(ex), "CreateAssetForEndpoint"), NodeId.Null);
             }
         }
 
@@ -326,7 +329,14 @@ namespace Opc.Ua.WotCon.Server.Assets
             }
             catch (NotSupportedException ex)
             {
-                return (ServiceResult.Create(ex, StatusCodes.BadNotSupported, ex.Message),
+                m_logger.LogWarning(ex, "DiscoverAssets not supported by configured provider");
+                return (ToClientStatus(ex, StatusCodes.BadNotSupported, "DiscoverAssets"),
+                    Array.Empty<string>());
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                m_logger.LogError(ex, "DiscoverAssets failed");
+                return (ToClientStatus(ex, MapToStatusCode(ex), "DiscoverAssets"),
                     Array.Empty<string>());
             }
         }
@@ -355,7 +365,16 @@ namespace Opc.Ua.WotCon.Server.Assets
             }
             catch (NotSupportedException ex)
             {
-                return (ServiceResult.Create(ex, StatusCodes.BadNotSupported, ex.Message), false, string.Empty);
+                m_logger.LogWarning(ex, "ConnectionTest not supported by configured provider");
+                return (ToClientStatus(ex, StatusCodes.BadNotSupported, "ConnectionTest"),
+                    false, string.Empty);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                m_logger.LogError(ex,
+                    "ConnectionTest failed for endpoint provided by client");
+                return (ToClientStatus(ex, MapToStatusCode(ex), "ConnectionTest"),
+                    false, string.Empty);
             }
         }
 
@@ -415,7 +434,7 @@ namespace Opc.Ua.WotCon.Server.Assets
                 m_logger.LogError(ex,
                     "Binding factory {Factory} failed to connect asset {AssetName}",
                     factory.GetType().Name, entry.Name);
-                return ServiceResult.Create(ex, StatusCodes.BadConfigurationError, ex.Message);
+                return ToClientStatus(ex, MapToStatusCode(ex), "Asset rebuild");
             }
 
             await m_writeLock.WaitAsync(ct).ConfigureAwait(false);
@@ -645,12 +664,12 @@ namespace Opc.Ua.WotCon.Server.Assets
                 (ServiceResult status, Variant value) = await provider.ReadAsync(tag, ct).ConfigureAwait(false);
                 return new AttributeSimpleReadResult(status, value);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 m_logger.LogWarning(ex,
                     "Read failed for asset {AssetName} property {Property}", entry.Name, tag.Name);
                 return new AttributeSimpleReadResult(
-                    ServiceResult.Create(ex, StatusCodes.BadCommunicationError, ex.Message),
+                    ToClientStatus(ex, StatusCodes.BadCommunicationError, "Asset property read"),
                     Variant.Null);
             }
         }
@@ -671,12 +690,12 @@ namespace Opc.Ua.WotCon.Server.Assets
                 ServiceResult result = await provider.WriteAsync(tag, value, ct).ConfigureAwait(false);
                 return new AttributeWriteResult(result);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 m_logger.LogWarning(ex,
                     "Write failed for asset {AssetName} property {Property}", entry.Name, tag.Name);
                 return new AttributeWriteResult(
-                    ServiceResult.Create(ex, StatusCodes.BadCommunicationError, ex.Message));
+                    ToClientStatus(ex, StatusCodes.BadCommunicationError, "Asset property write"));
             }
         }
 
@@ -711,11 +730,11 @@ namespace Opc.Ua.WotCon.Server.Assets
                 }
                 return status;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 m_logger.LogWarning(ex,
                     "Action {Action} on asset {AssetName} threw", tag.Name, entry.Name);
-                return ServiceResult.Create(ex, StatusCodes.BadCommunicationError, ex.Message);
+                return ToClientStatus(ex, StatusCodes.BadCommunicationError, "Asset action invocation");
             }
         }
 
@@ -852,6 +871,50 @@ namespace Opc.Ua.WotCon.Server.Assets
                 entry.FileManager?.Dispose();
             }
             m_writeLock.Dispose();
+        }
+
+        /// <summary>
+        /// Maps an exception thrown by a discovery / provider call to
+        /// a client-facing <see cref="ServiceResult"/> that contains
+        /// only the supplied generic operation name. Deliberately
+        /// drops <c>ex.Message</c>, <c>ex.StackTrace</c>, and
+        /// <c>ex.GetType().Name</c> so internal endpoint URIs,
+        /// file-system paths, provider implementation details, and
+        /// stack-trace fragments cannot leak to remote callers. The
+        /// caller is responsible for logging the raw exception via
+        /// <see cref="m_logger"/> at the corresponding site.
+        /// </summary>
+        /// <param name="ex">The thrown exception (unused; accepted so
+        /// callers retain a single-line conversion).</param>
+        /// <param name="status">The mapped <see cref="StatusCode"/>.</param>
+        /// <param name="operation">A generic operation name surfaced
+        /// to the client.</param>
+        private static ServiceResult ToClientStatus(
+            Exception ex, StatusCode status, string operation)
+        {
+            _ = ex;
+            return ServiceResult.Create(status, "{0} failed.", operation);
+        }
+
+        /// <summary>
+        /// Returns the conventional WoT status code for the supplied
+        /// exception. Mapping:
+        ///   <see cref="NotSupportedException"/>       => Bad_NotSupported
+        ///   <see cref="ArgumentException"/>            => Bad_InvalidArgument
+        ///   <see cref="IOException"/>                  => Bad_ResourceUnavailable
+        ///   anything else                              => Bad_InternalError
+        /// <see cref="OperationCanceledException"/> is **never** mapped:
+        /// callers must put it in a <c>when</c>-filter so it propagates.
+        /// </summary>
+        private static StatusCode MapToStatusCode(Exception ex)
+        {
+            return ex switch
+            {
+                NotSupportedException => StatusCodes.BadNotSupported,
+                ArgumentException     => StatusCodes.BadInvalidArgument,
+                IOException           => StatusCodes.BadResourceUnavailable,
+                _                     => StatusCodes.BadInternalError
+            };
         }
 
         private readonly WotConnectivityNodeManager m_manager;
