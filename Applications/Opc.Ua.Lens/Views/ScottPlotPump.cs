@@ -449,7 +449,7 @@ internal sealed class HistogramPump : IScottPlotPump
 
                     m_sampleCount[ev.ItemId] = kMaxSamples / 2;
                 }
-                bins[idx] += 1;
+                bins[idx]++;
                 m_sampleCount[ev.ItemId]++;
                 m_dirty = true;
             }
@@ -649,7 +649,7 @@ internal sealed class HeatmapPump : IScottPlotPump
             return;
         }
 
-        m_grid[row, m_head] += 1;
+        m_grid[row, m_head]++;
     }
 
     private void AdvanceColumn(DateTime nowUtc)

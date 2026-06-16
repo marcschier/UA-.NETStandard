@@ -207,12 +207,9 @@ internal sealed class CertificateStoreService
         int deleted = 0;
         foreach (X509Certificate2 cert in all)
         {
-            if (cert.NotAfter.ToUniversalTime() < now)
+            if (cert.NotAfter.ToUniversalTime() < now && await DeleteAsync(kind, cert.Thumbprint, ct).ConfigureAwait(false))
             {
-                if (await DeleteAsync(kind, cert.Thumbprint, ct).ConfigureAwait(false))
-                {
-                    deleted++;
-                }
+                deleted++;
             }
         }
         m_log.LogInformation("DeleteExpired({Kind}): deleted {Count} of {Total} certificates.", kind, deleted, all.Count);

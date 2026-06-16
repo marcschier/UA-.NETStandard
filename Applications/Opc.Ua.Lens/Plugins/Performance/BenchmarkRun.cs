@@ -210,21 +210,18 @@ internal sealed record BenchmarkRun
                     sb.Append(c);
                 }
             }
+            else if (c == ',')
+            {
+                fields.Add(sb.ToString());
+                sb.Clear();
+            }
+            else if (c == '"' && sb.Length == 0)
+            {
+                inQuotes = true;
+            }
             else
             {
-                if (c == ',')
-                {
-                    fields.Add(sb.ToString());
-                    sb.Clear();
-                }
-                else if (c == '"' && sb.Length == 0)
-                {
-                    inQuotes = true;
-                }
-                else
-                {
-                    sb.Append(c);
-                }
+                sb.Append(c);
             }
         }
         fields.Add(sb.ToString());

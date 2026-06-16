@@ -776,7 +776,7 @@ internal sealed partial class MainWindow : Window, IDisposable
         grid.RowDefinitions[3].Height = a ? star : zero;
         grid.RowDefinitions[2].Height = a ? splitterPx : zero;
         grid.RowDefinitions[5].Height = r ? star : zero;
-        grid.RowDefinitions[4].Height = (a && r) ? splitterPx : zero;
+        grid.RowDefinitions[4].Height = a && r ? splitterPx : zero;
     }
 
     // ----- View-menu helpers -----
@@ -1038,7 +1038,7 @@ internal sealed partial class MainWindow : Window, IDisposable
             var names = new Dictionary<int, string>();
             foreach (var i in tab.Items)
             {
-                names[i.Id] = i.DisplayName ?? "";
+                names[i.Id] = i.DisplayName ?? string.Empty;
             }
             if (path.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
             {
@@ -2278,7 +2278,7 @@ internal sealed partial class MainWindow : Window, IDisposable
                 Opc.Ua.NodeId localId = Opc.Ua.ExpandedNodeId.ToNodeId(n.NodeId, session.NamespaceUris);
                 string name = !n.DisplayName.IsNull && !string.IsNullOrEmpty(n.DisplayName.Text)
                     ? n.DisplayName.Text!
-                    : (n.BrowseName.Name ?? localId.ToString() ?? "");
+                    : (n.BrowseName.Name ?? localId.ToString() ?? string.Empty);
                 switch (n.NodeClass)
                 {
                     case Opc.Ua.NodeClass.Variable:

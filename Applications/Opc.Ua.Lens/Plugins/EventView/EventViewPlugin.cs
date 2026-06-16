@@ -985,10 +985,10 @@ internal sealed partial class EventViewPlugin : ObservableObject, IPlugin
         }
         Status = string.Format(CultureInfo.InvariantCulture,
             "● {0} source{1} · {2} event{3}{4}{5}{6}",
-            EventSources.Count, EventSources.Count == 1 ? "" : "s",
-            received, received == 1 ? "" : "s",
-            dropped > 0 ? $" · {dropped} dropped" : "",
-            IsPaused ? " · paused" : "",
+            EventSources.Count, EventSources.Count == 1 ? string.Empty : "s",
+            received, received == 1 ? string.Empty : "s",
+            dropped > 0 ? $" · {dropped} dropped" : string.Empty,
+            IsPaused ? " · paused" : string.Empty,
             suffix);
 
         RefreshSubscriptionStatus();

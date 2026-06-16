@@ -101,10 +101,10 @@ internal sealed class NotificationRecorder
             foreach (NotificationEvent ev in snap)
             {
                 ct.ThrowIfCancellationRequested();
-                string name = displayNames is not null && displayNames.TryGetValue(ev.ItemId, out string? n) ? n : "";
+                string name = displayNames is not null && displayNames.TryGetValue(ev.ItemId, out string? n) ? n : string.Empty;
                 string value = ev.Value.HasValue
                     ? ev.Value.Value.ToString("R", CultureInfo.InvariantCulture)
-                    : "";
+                    : string.Empty;
                 await sw.WriteAsync(ev.ReceivedAtUtc.ToString("o", CultureInfo.InvariantCulture)).ConfigureAwait(false);
                 await sw.WriteAsync(",").ConfigureAwait(false);
                 await sw.WriteAsync(ev.Kind.ToString()).ConfigureAwait(false);

@@ -191,7 +191,7 @@ internal sealed partial class ViewNodeStateDialog : Window
             nc = (NodeClass)ncv;
         }
 
-        string displayName = "";
+        string displayName = string.Empty;
         int dnIdx = IndexOf(Attributes.DisplayName);
         if (dnIdx >= 0
             && results.Length > dnIdx
@@ -199,7 +199,7 @@ internal sealed partial class ViewNodeStateDialog : Window
             && results[dnIdx].WrappedValue.TryGetValue(out LocalizedText dn)
             && !dn.IsNull)
         {
-            displayName = dn.Text ?? "";
+            displayName = dn.Text ?? string.Empty;
         }
 
         string rootHeader = displayName.Length > 0

@@ -752,7 +752,7 @@ internal sealed partial class GdsDiscoveryPlugin : ObservableObject, IPlugin
                 }
                 Status = string.Format(CultureInfo.InvariantCulture,
                     "● {0} endpoint{1} for {2}",
-                    rows.Count, rows.Count == 1 ? "" : "s", node.EndpointUrl);
+                    rows.Count, rows.Count == 1 ? string.Empty : "s", node.EndpointUrl);
             }).GetTask().ConfigureAwait(true);
         }
         catch (Exception ex)

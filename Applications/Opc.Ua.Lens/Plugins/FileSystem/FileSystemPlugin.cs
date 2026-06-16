@@ -492,7 +492,7 @@ internal sealed partial class FileSystemPlugin : ObservableObject, IPlugin
         await target.RefreshAsync(CancellationToken.None).ConfigureAwait(true);
         RebuildSelectedChildren();
         Status = string.Format(CultureInfo.InvariantCulture,
-            "● Imported {0} of {1} file{2}", ok, localFiles.Count, localFiles.Count == 1 ? "" : "s");
+            "● Imported {0} of {1} file{2}", ok, localFiles.Count, localFiles.Count == 1 ? string.Empty : "s");
     }
 
     /// <summary>
@@ -854,7 +854,7 @@ internal sealed partial class FileSystemPlugin : ObservableObject, IPlugin
         }
         string sel = SelectedNode is { } s ? s.FullPath : "/";
         Status = string.Format(CultureInfo.InvariantCulture,
-            "● {0} root{1} · {2}", Roots.Count, Roots.Count == 1 ? "" : "s", sel);
+            "● {0} root{1} · {2}", Roots.Count, Roots.Count == 1 ? string.Empty : "s", sel);
     }
 
     private static Window? GetOwnerWindow()

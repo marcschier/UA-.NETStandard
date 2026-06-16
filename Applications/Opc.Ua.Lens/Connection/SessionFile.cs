@@ -46,7 +46,7 @@ namespace UaLens.Connection;
 internal sealed class SessionFile
 {
     public string Version { get; set; } = "1";
-    public string EndpointUrl { get; set; } = "";
+    public string EndpointUrl { get; set; } = string.Empty;
     public string Engine { get; set; } = "ChannelV2";
     public List<TabSnapshot> Tabs { get; set; } = new();
 
@@ -72,8 +72,8 @@ internal sealed class SessionFile
 
     public sealed class ItemSnapshot
     {
-        public string DisplayName { get; set; } = "";
-        public string NodeId { get; set; } = "";
+        public string DisplayName { get; set; } = string.Empty;
+        public string NodeId { get; set; } = string.Empty;
         public uint AttributeId { get; set; } = Attributes.Value;
         public TimeSpanMs SamplingInterval { get; set; } = new TimeSpanMs(1000);
         public uint QueueSize { get; set; } = 1;

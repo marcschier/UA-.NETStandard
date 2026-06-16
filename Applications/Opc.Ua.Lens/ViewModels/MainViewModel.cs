@@ -601,7 +601,7 @@ internal sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
                 tab.Items.Add(new SessionFile.ItemSnapshot
                 {
                     DisplayName = i.DisplayName,
-                    NodeId = i.NodeId.ToString() ?? "",
+                    NodeId = i.NodeId.ToString() ?? string.Empty,
                     AttributeId = i.AttributeId,
                     SamplingInterval = SessionFile.TimeSpanMs.From(i.SamplingInterval),
                     QueueSize = i.QueueSize,

@@ -321,5 +321,8 @@ internal sealed class ConnectionService : IAsyncDisposable
 }
 
 /// <summary>Trust decision returned by the interactive certificate dialog.</summary>
-internal enum TrustChoice { Reject, AcceptOnce, TrustPermanently }
+internal enum TrustChoice {
+Reject,
+AcceptOnce,
+TrustPermanently }
 

@@ -700,7 +700,6 @@ internal sealed partial class HistorianPlugin : ObservableObject, IPlugin
                     break;
                 }
                 case HistorianReadMode.AtTime:
-                {
                     var times = new List<DateTime>(AtTimes.Count);
                     foreach (AtTimeRow row in AtTimes)
                     {
@@ -724,7 +723,6 @@ internal sealed partial class HistorianPlugin : ObservableObject, IPlugin
                     Status = string.Format(CultureInfo.InvariantCulture,
                         "● {0} rows · at-time ({1} requested)", rows.Count, times.Count);
                     break;
-                }
                 default:
                     rows = new List<HistoryRow>();
                     break;

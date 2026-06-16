@@ -408,7 +408,7 @@ internal sealed class AnimationCanvas : Control
                 }
                 break;
                 case NotificationKind.KeepAlive:
-                    m_ka[m_head] += 1;
+                    m_ka[m_head]++;
                     m_lastKaSeq = ne.SequenceNumber;
                     break;
             }
