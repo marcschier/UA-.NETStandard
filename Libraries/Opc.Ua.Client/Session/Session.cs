@@ -1309,50 +1309,59 @@ namespace Opc.Ua.Client
             CreateSessionResponse? response = null;
 
             // if security none, first try to connect without certificate
-            if (m_endpoint.Description.SecurityPolicyUri == SecurityPolicies.None)
+            try
             {
-                // first try to connect with client certificate NULL
-                try
+                if (m_endpoint.Description.SecurityPolicyUri == SecurityPolicies.None)
+                {
+                    // first try to connect with client certificate NULL
+                    try
+                    {
+                        response = await base.CreateSessionAsync(
+                            null,
+                            clientDescription,
+                            m_endpoint.Description.Server.ApplicationUri,
+                            m_endpoint.EndpointUrl!.ToString(),
+                            sessionName,
+                            clientNonce,
+                            default,
+                            sessionTimeout,
+                            maxMessageSize,
+                            ct).ConfigureAwait(false);
+
+                        successCreateSession = true;
+                    }
+                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    {
+                        m_logger.LogWarning(ex, "Create session failed with client certificate NULL.");
+                        successCreateSession = false;
+                    }
+                }
+
+                if (!successCreateSession)
                 {
                     response = await base.CreateSessionAsync(
-                        null,
+                        requestHeader,
                         clientDescription,
                         m_endpoint.Description.Server.ApplicationUri,
                         m_endpoint.EndpointUrl!.ToString(),
                         sessionName,
                         clientNonce,
-                        default,
+                        clientCertificateChainData.IsEmpty ?
+                            clientCertificateData :
+                            clientCertificateChainData,
                         sessionTimeout,
                         maxMessageSize,
                         ct).ConfigureAwait(false);
-
-                    successCreateSession = true;
-                }
-                catch (Exception ex) when (ex is not OperationCanceledException)
-                {
-                    m_logger.LogWarning(ex, "Create session failed with client certificate NULL.");
-                    successCreateSession = false;
                 }
             }
-
-            if (!successCreateSession)
+            catch
             {
-                response = await base.CreateSessionAsync(
-                    requestHeader,
-                    clientDescription,
-                    m_endpoint.Description.Server.ApplicationUri,
-                    m_endpoint.EndpointUrl!.ToString(),
-                    sessionName,
-                    clientNonce,
-                    clientCertificateChainData.IsEmpty ?
-                        clientCertificateData :
-                        clientCertificateChainData,
-                    sessionTimeout,
-                    maxMessageSize,
-                    ct).ConfigureAwait(false);
+                serverCertificate?.Dispose();
+                throw;
             }
             if (response is null || response.SessionId.IsNull)
             {
+                serverCertificate?.Dispose();
                 throw ServiceResultException.Unexpected(
                     "Create response returned null session id");
             }
@@ -2312,6 +2321,18 @@ namespace Opc.Ua.Client
                 }
                 return Math.Min(clientLimit, serverLimit);
             }
+            // Cap an operation limit to the effective max array length. Each operation
+            // limit bounds the length of the operations array of its corresponding
+            // request, which the server also constrains via MaxArrayLength (Part 4
+            // section 5.6.2 and Part 12 section 6.5.2). A limit of 0 (unlimited) is bound
+            // to the array length and any larger limit is reduced to it. maxArrayLength
+            // is expected to be non-zero (callers guard the unlimited case).
+            static uint CapToArrayLength(uint operationLimit, uint maxArrayLength)
+            {
+                return operationLimit == 0 || operationLimit > maxArrayLength
+                    ? maxArrayLength
+                    : operationLimit;
+            }
 
             // First we read the node read max to optimize the second read.
             ArrayOf<NodeId> nodeIds =
@@ -2405,6 +2426,52 @@ namespace Opc.Ua.Client
                     ServerCapabilities.MaxByteStringLength > maxByteStringLength))
             {
                 ServerCapabilities.MaxByteStringLength = maxByteStringLength;
+            }
+
+            // array length quota. The smaller value is the effective array length the
+            // client can exchange with the server (mirrors the MaxByteStringLength
+            // handling above). A value of 0 on either side means no limit.
+            int maxArrayLengthQuota = m_configuration.TransportQuotas?.MaxArrayLength ?? 0;
+            uint maxArrayLength = maxArrayLengthQuota > 0 ? (uint)maxArrayLengthQuota : 0u;
+            if (maxArrayLength != 0 &&
+                (ServerCapabilities.MaxArrayLength == 0 ||
+                    ServerCapabilities.MaxArrayLength > maxArrayLength))
+            {
+                ServerCapabilities.MaxArrayLength = maxArrayLength;
+            }
+
+            // Cap each operation limit to the effective max array length. The number of
+            // operations in a request cannot exceed MaxArrayLength, so any operation
+            // limit that is unlimited (0) or larger than the array length is reduced to
+            // it. This keeps the batching in SessionClientBatched within what the server
+            // will accept.
+            uint effectiveArrayLength = ServerCapabilities.MaxArrayLength;
+            if (effectiveArrayLength != 0)
+            {
+                OperationLimits.MaxNodesPerRead = CapToArrayLength(
+                    OperationLimits.MaxNodesPerRead, effectiveArrayLength);
+                OperationLimits.MaxNodesPerHistoryReadData = CapToArrayLength(
+                    OperationLimits.MaxNodesPerHistoryReadData, effectiveArrayLength);
+                OperationLimits.MaxNodesPerHistoryReadEvents = CapToArrayLength(
+                    OperationLimits.MaxNodesPerHistoryReadEvents, effectiveArrayLength);
+                OperationLimits.MaxNodesPerWrite = CapToArrayLength(
+                    OperationLimits.MaxNodesPerWrite, effectiveArrayLength);
+                OperationLimits.MaxNodesPerHistoryUpdateData = CapToArrayLength(
+                    OperationLimits.MaxNodesPerHistoryUpdateData, effectiveArrayLength);
+                OperationLimits.MaxNodesPerHistoryUpdateEvents = CapToArrayLength(
+                    OperationLimits.MaxNodesPerHistoryUpdateEvents, effectiveArrayLength);
+                OperationLimits.MaxNodesPerMethodCall = CapToArrayLength(
+                    OperationLimits.MaxNodesPerMethodCall, effectiveArrayLength);
+                OperationLimits.MaxNodesPerBrowse = CapToArrayLength(
+                    OperationLimits.MaxNodesPerBrowse, effectiveArrayLength);
+                OperationLimits.MaxNodesPerRegisterNodes = CapToArrayLength(
+                    OperationLimits.MaxNodesPerRegisterNodes, effectiveArrayLength);
+                OperationLimits.MaxNodesPerNodeManagement = CapToArrayLength(
+                    OperationLimits.MaxNodesPerNodeManagement, effectiveArrayLength);
+                OperationLimits.MaxMonitoredItemsPerCall = CapToArrayLength(
+                    OperationLimits.MaxMonitoredItemsPerCall, effectiveArrayLength);
+                OperationLimits.MaxNodesPerTranslateBrowsePathsToNodeIds = CapToArrayLength(
+                    OperationLimits.MaxNodesPerTranslateBrowsePathsToNodeIds, effectiveArrayLength);
             }
         }
 
@@ -4978,35 +5045,36 @@ namespace Opc.Ua.Client
         private RequestHeader? CreateRequestHeaderForActivateSession(
             string userTokenSecurityPolicyUri)
         {
-            var requestHeader = new RequestHeader();
-            var parameters = new AdditionalParametersType();
-
-            if (!string.IsNullOrEmpty(userTokenSecurityPolicyUri))
-            {
-                SecurityPolicyInfo? userTokenSecurityPolicy = SecurityPolicies.GetInfo(userTokenSecurityPolicyUri);
-
-                if (userTokenSecurityPolicy!.EphemeralKeyAlgorithm != CertificateKeyAlgorithm.None)
-                {
-                    parameters.Parameters =
-                    [
-                        new KeyValuePair
-                        {
-                            Key = QualifiedName.From(AdditionalParameterNames.ECDHPolicyUri),
-                            Value = userTokenSecurityPolicyUri
-                        }
-                    ];
-
-                    m_logger.LogWarning("Requesting new EphmeralKey using {SecurityPolicyUri}.", userTokenSecurityPolicyUri);
-                }
-            }
-
-            if (parameters.Parameters.Count == 0)
+            if (string.IsNullOrEmpty(userTokenSecurityPolicyUri))
             {
                 return null;
             }
 
-            requestHeader.AdditionalHeader = new ExtensionObject(parameters);
-            return requestHeader;
+            SecurityPolicyInfo? userTokenSecurityPolicy = SecurityPolicies.GetInfo(userTokenSecurityPolicyUri);
+
+            if (userTokenSecurityPolicy!.EphemeralKeyAlgorithm == CertificateKeyAlgorithm.None)
+            {
+                return null;
+            }
+
+            m_logger.LogInformation("Requesting new EphmeralKey using {SecurityPolicyUri}.", userTokenSecurityPolicyUri);
+
+            var parameters = new AdditionalParametersType
+            {
+                Parameters =
+                [
+                    new KeyValuePair
+                    {
+                        Key = QualifiedName.From(AdditionalParameterNames.ECDHPolicyUri),
+                        Value = userTokenSecurityPolicyUri
+                    }
+                ]
+            };
+
+            return new RequestHeader
+            {
+                AdditionalHeader = new ExtensionObject(parameters)
+            };
         }
 
         /// <summary>

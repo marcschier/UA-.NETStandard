@@ -267,6 +267,14 @@ namespace Opc.Ua.PubSub.Tests
         }
 
         [Test]
+        // [Retry(2)]: the IntervalRunner is driven by a FakeTimeProvider, but each
+        // subsequent Delay is only registered with the provider after the previous
+        // timer's continuation resumes on the real thread pool. On a thread-pool-
+        // starved CI agent fake.Advance() can race that registration and be consumed
+        // before the next timer exists, so the awaited action never fires and the
+        // poll times out. The scheduling under test is otherwise deterministic;
+        // retry absorbs the rare registration race (observed on macOS PR runs).
+        [Retry(2)]
         public async Task FakeTimeProviderDrivesDeterministicSchedulingAsync()
         {
             var fake = new FakeTimeProvider();
@@ -351,7 +359,11 @@ namespace Opc.Ua.PubSub.Tests
             Func<bool> condition,
             TimeSpan? timeout = null)
         {
-            TimeSpan deadline = timeout ?? TimeSpan.FromSeconds(5);
+            // Default deadline is generous to absorb thread-pool starvation
+            // on busy CI Windows runners; the underlying scheduling itself is
+            // driven by the FakeTimeProvider so actual wall-clock duration in
+            // a healthy run is sub-second.
+            TimeSpan deadline = timeout ?? TimeSpan.FromSeconds(30);
             DateTime end = DateTime.UtcNow + deadline;
             while (!condition())
             {
@@ -359,7 +371,7 @@ namespace Opc.Ua.PubSub.Tests
                 {
                     Assert.Fail($"Condition not satisfied within {deadline.TotalMilliseconds}ms.");
                 }
-                await Task.Delay(5).ConfigureAwait(false);
+                await Task.Delay(10).ConfigureAwait(false);
             }
         }
     }
