@@ -911,17 +911,18 @@ internal sealed partial class SubscriptionBenchPlugin : ObservableObject, IPlugi
             int toAdd = targetSubs - currentSubs;
             for (int i = 0; i < toAdd; i++)
             {
-                ISubscription sub;
-                try
+                if (!session.TryGetSubscriptionManager(
+                    out Opc.Ua.Client.Subscriptions.ISubscriptionManager? benchMgr))
                 {
-                    sub = session.SubscriptionManager.Add(m_handler, m_sharedSubOptions);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    m_log.LogWarning(ex, "Subscription Bench requires the V2 (channel) subscription engine.");
+                    m_log.LogWarning("Subscription Bench requires the V2 (channel) subscription engine.");
                     Status = "● Subscription Bench requires the V2 engine — switch via Connection ↻ Engine.";
                     Dispatcher.UIThread.Post(() => SubsSliderValue = currentSubs + i);
                     return Task.CompletedTask;
+                }
+                ISubscription sub;
+                try
+                {
+                    sub = benchMgr.Add(m_handler, m_sharedSubOptions);
                 }
                 catch (Exception ex)
                 {
@@ -1204,11 +1205,11 @@ internal sealed partial class SubscriptionBenchPlugin : ObservableObject, IPlugi
                 $"Session min/max   : {session.MinPublishRequestCount} / {session.MaxPublishRequestCount}\n");
 
             // V2 SubscriptionManager exposes worker-pool / republish
-            // counters. The classic engine throws here and we fall back
-            // to a TODO note. See ManagedSession.SubscriptionManager.
-            try
+            // counters. The classic engine has no manager, so we fall back
+            // to a TODO note. See ISession.TryGetSubscriptionManager.
+            if (session.TryGetSubscriptionManager(
+                out Opc.Ua.Client.Subscriptions.ISubscriptionManager? mgr))
             {
-                Opc.Ua.Client.Subscriptions.ISubscriptionManager mgr = session.SubscriptionManager;
                 sb.Append(CultureInfo.InvariantCulture,
                     $"Mgr subscriptions : {mgr.Count}\n");
                 sb.Append(CultureInfo.InvariantCulture,
@@ -1220,11 +1221,11 @@ internal sealed partial class SubscriptionBenchPlugin : ObservableObject, IPlugi
                 sb.Append(CultureInfo.InvariantCulture,
                     $"Missing / republ. : {mgr.MissingMessageCount} / {mgr.RepublishMessageCount}\n");
             }
-            catch (InvalidOperationException)
+            else
             {
                 // TODO: surface ClassicSubscriptionEngine metrics once
                 // the engine exposes a public accessor parallel to
-                // ManagedSession.SubscriptionManager.
+                // ISession.TryGetSubscriptionManager.
                 sb.Append("(engine: classic — extra metrics unavailable)\n");
             }
         }

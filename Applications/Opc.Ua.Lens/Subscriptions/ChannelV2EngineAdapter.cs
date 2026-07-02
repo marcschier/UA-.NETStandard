@@ -72,56 +72,22 @@ internal sealed class ChannelV2EngineAdapter : ISubscriptionAdapter
     public uint CurrentLifetimeCount => m_subscription?.CurrentLifetimeCount ?? 0;
 
     public int PublishWorkerCount
-    {
-        get
-        {
-            try
-            {
-                return m_session.SubscriptionManager.PublishWorkerCount;
-            }
-            catch (InvalidOperationException)
-            {
-                return 0;
-            }
-        }
-    }
+        => m_session.TryGetSubscriptionManager(out ISubscriptionManager? mgr)
+            ? mgr.PublishWorkerCount : 0;
 
     public int GoodPublishRequestCount => m_session.GoodPublishRequestCount;
 
     public int BadPublishRequestCount
-    {
-        get
-        {
-            try
-            {
-                return m_session.SubscriptionManager.BadPublishRequestCount;
-            }
-            catch (InvalidOperationException)
-            {
-                return 0;
-            }
-        }
-    }
+        => m_session.TryGetSubscriptionManager(out ISubscriptionManager? mgr)
+            ? mgr.BadPublishRequestCount : 0;
 
     public long MissingMessageCount
-    {
-        get
-        {
-            try
-            { return m_session.SubscriptionManager.MissingMessageCount; }
-            catch (InvalidOperationException) { return 0; }
-        }
-    }
+        => m_session.TryGetSubscriptionManager(out ISubscriptionManager? mgr)
+            ? mgr.MissingMessageCount : 0;
 
     public long RepublishMessageCount
-    {
-        get
-        {
-            try
-            { return m_session.SubscriptionManager.RepublishMessageCount; }
-            catch (InvalidOperationException) { return 0; }
-        }
-    }
+        => m_session.TryGetSubscriptionManager(out ISubscriptionManager? mgr)
+            ? mgr.RepublishMessageCount : 0;
 
     public long DroppedNotificationCount => System.Threading.Volatile.Read(ref m_droppedCount);
 
@@ -129,25 +95,13 @@ internal sealed class ChannelV2EngineAdapter : ISubscriptionAdapter
 
     /// <summary>Currently-configured floor for the V2 worker pool.</summary>
     public int MinPublishWorkerCount
-    {
-        get
-        {
-            try
-            { return m_session.SubscriptionManager.MinPublishWorkerCount; }
-            catch (InvalidOperationException) { return 0; }
-        }
-    }
+        => m_session.TryGetSubscriptionManager(out ISubscriptionManager? mgr)
+            ? mgr.MinPublishWorkerCount : 0;
 
     /// <summary>Currently-configured ceiling for the V2 worker pool.</summary>
     public int MaxPublishWorkerCount
-    {
-        get
-        {
-            try
-            { return m_session.SubscriptionManager.MaxPublishWorkerCount; }
-            catch (InvalidOperationException) { return 0; }
-        }
-    }
+        => m_session.TryGetSubscriptionManager(out ISubscriptionManager? mgr)
+            ? mgr.MaxPublishWorkerCount : 0;
 
     public int MinPublishRequestCount => m_session.MinPublishRequestCount;
     public int MaxPublishRequestCount => m_session.MaxPublishRequestCount;
@@ -200,7 +154,12 @@ internal sealed class ChannelV2EngineAdapter : ISubscriptionAdapter
             if (m_subscription is null)
             {
                 var handler = new Handler(this);
-                m_subscription = m_session.SubscriptionManager.Add(handler, opts);
+                if (!m_session.TryGetSubscriptionManager(out ISubscriptionManager? manager))
+                {
+                    throw new InvalidOperationException(
+                        "The V2 subscription engine is not available on this session.");
+                }
+                m_subscription = manager.Add(handler, opts);
                 m_log.LogInformation("V2 subscription created.");
             }
             else
