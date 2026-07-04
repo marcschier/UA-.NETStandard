@@ -96,7 +96,7 @@ Libraries\Opc.Ua.WotCon.Server\bin\Debug\net48\Opc.Ua.WotCon.Server.dll
 Libraries\Opc.Ua.WotCon.Server\bin\Debug\net8.0\Opc.Ua.WotCon.Server.dll
 Libraries\Opc.Ua.WotCon.Server\bin\Debug\net9.0\Opc.Ua.WotCon.Server.dll
 Libraries\Opc.Ua.WotCon.Server\bin\Debug\net10.0\Opc.Ua.WotCon.Server.dll
-Applications\Opc.Ua.Mcp\bin\Debug\net10.0\Opc.Ua.Mcp.dll
+Applications\McpServer\bin\Debug\net10.0\Opc.Ua.Mcp.dll
 Libraries\Opc.Ua.Di\bin\Debug\netstandard2.1\Opc.Ua.Di.dll
 Libraries\Opc.Ua.Di\bin\Debug\net472\Opc.Ua.Di.dll
 Libraries\Opc.Ua.Di\bin\Debug\net48\Opc.Ua.Di.dll
