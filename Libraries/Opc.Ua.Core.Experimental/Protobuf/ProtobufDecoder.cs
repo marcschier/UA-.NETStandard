@@ -29,13 +29,16 @@ namespace Opc.Ua.Core.Experimental
         public T DecodeMessage<T>() where T : IEncodeable { NodeId type = ReadNodeId("type_id"); return ReadEncodeable<T>("body", type); }
         public bool HasField(string fieldName) => Current.Message.Has(Current.FieldForName(fieldName));
         // KNOWN LIMITATION (reference decoder): optional-field presence is reconstructed by probing
-        // each optional field name against the wire (HasField). Because the encoder numbers protobuf
-        // fields positionally and omits absent optionals, this reconstruction is only reliable when at
-        // most one optional precedes a given field, or no preceding optional is absent. Structures with
-        // two or more optional fields where an earlier one is absent can mis-map presence. The in-scope
-        // gRPC service messages (ProtobufGrpcMessages) do not use such structures. A fully general fix
-        // requires an explicit on-wire encoding mask (see WriteEncodingMask), which is out of scope for
-        // this first reference and would need coordinated encoder/decoder/generated-code changes.
+        // each optional field name against the wire (HasField). Because this hand-rolled reference
+        // numbers protobuf fields positionally and omits absent optionals, the reconstruction is only
+        // reliable when at most one optional precedes a given field, or no preceding optional is absent.
+        // Structures with two or more optional fields where an earlier one is absent can mis-map presence.
+        // The in-scope gRPC service messages (ProtobufGrpcMessages) do not use such structures. The spec
+        // (OPC-UA-Part6-Protobuf-DataEncoding §5.6.4 and encoding step 3) already prescribes the robust
+        // approach: assign FIXED field numbers from DataTypeDefinition field order (reserving numbers for
+        // absent optionals) plus proto3 explicit presence. A schema-driven codec that reads/writes fixed
+        // numbers from the generated .proto does not have this limitation; adopting fixed numbering here
+        // is deferred beyond this first positional reference.
         public uint ReadEncodingMask(IList<string> masks) { if (masks != null) { uint mask=0; for (int i=0;i<masks.Count && i<32;i++) if (HasField(masks[i])) mask |= 1u << i; return mask; } return Current.EncodingMask; }
         public uint ReadSwitchField(IList<string> switches, out string? fieldName) { fieldName=null; if (switches != null) { for (int i=0;i<switches.Count;i++) if (HasField(switches[i])) { fieldName=switches[i]; return (uint)(i+1); } } return Current.UnionSwitch; }
 
