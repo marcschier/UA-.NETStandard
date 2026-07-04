@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>$(AssemblyPrefix).Core.Experimental</AssemblyName>
+    <!-- Experimental Arrow/Avro/Protobuf reference encoders require modern .NET
+         (Apache.Arrow + net5+ BCL APIs such as BitConverter.SingleToUInt32Bits,
+         Convert.ToHexString and Stream.ReadExactly); target net8.0+ only and
+         no-op on the legacy CI CustomTestTarget matrix entries (net472/net48/
+         netstandard2.x) via RestrictForLegacyTfm. -->
+    <RestrictForLegacyTfm>true</RestrictForLegacyTfm>
+    <TargetFrameworks Condition="'$(CustomTestTarget)' == ''">net8.0;net9.0;net10.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(TargetFrameworks)' == '' AND ('$(CustomTestTarget)' == 'net8.0' OR '$(CustomTestTarget)' == 'net9.0' OR '$(CustomTestTarget)' == 'net10.0')">$(CustomTestTarget)</TargetFrameworks>
+    <TargetFrameworks Condition="'$(TargetFrameworks)' == ''">net10.0</TargetFrameworks>
+    <PackageId>$(PackagePrefix).Opc.Ua.Core.Experimental</PackageId>
+    <RootNamespace>Opc.Ua.Core.Experimental</RootNamespace>
+    <Description>OPC UA Core Experimental Class Library</Description>
+    <IsPackable>true</IsPackable>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Opc.Ua.Core.Experimental.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Stack\Opc.Ua.Types\Opc.Ua.Types.csproj" />
+    <ProjectReference Include="..\..\Stack\Opc.Ua.Core\Opc.Ua.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Apache.Arrow" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>$(AssemblyPrefix).PubSub.Experimental</AssemblyName>
+    <!-- Experimental Arrow/Avro PubSub adapters require modern .NET (Apache.Arrow
+         + net5+ BCL APIs); target net8.0+ only and no-op on the legacy CI
+         CustomTestTarget matrix entries (net472/net48/netstandard2.x) via
+         RestrictForLegacyTfm. -->
+    <RestrictForLegacyTfm>true</RestrictForLegacyTfm>
+    <TargetFrameworks Condition="'$(CustomTestTarget)' == ''">net8.0;net9.0;net10.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(TargetFrameworks)' == '' AND ('$(CustomTestTarget)' == 'net8.0' OR '$(CustomTestTarget)' == 'net9.0' OR '$(CustomTestTarget)' == 'net10.0')">$(CustomTestTarget)</TargetFrameworks>
+    <TargetFrameworks Condition="'$(TargetFrameworks)' == ''">net10.0</TargetFrameworks>
+    <PackageId>$(PackagePrefix).Opc.Ua.PubSub.Experimental</PackageId>
+    <RootNamespace>Opc.Ua.PubSub.Experimental</RootNamespace>
+    <Description>OPC UA PubSub Experimental Class Library</Description>
+    <IsPackable>true</IsPackable>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Opc.Ua.PubSub.Experimental.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Apache.Arrow" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Opc.Ua.PubSub\Opc.Ua.PubSub.csproj" />
+    <ProjectReference Include="..\Opc.Ua.Core.Experimental\Opc.Ua.Core.Experimental.csproj" />
+  </ItemGroup>
+</Project>

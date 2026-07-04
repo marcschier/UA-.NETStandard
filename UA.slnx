@@ -58,6 +58,7 @@
     <Project Path="Libraries/Opc.Ua.Client.ComplexTypes/Opc.Ua.Client.ComplexTypes.csproj" />
     <Project Path="Libraries/Opc.Ua.Client/Opc.Ua.Client.csproj" />
     <Project Path="Libraries/Opc.Ua.Configuration/Opc.Ua.Configuration.csproj" />
+    <Project Path="Libraries/Opc.Ua.Core.Experimental/Opc.Ua.Core.Experimental.csproj" />
     <Project Path="Libraries/Opc.Ua.Di.Client/Opc.Ua.Di.Client.csproj" />
     <Project Path="Libraries/Opc.Ua.Di.Server/Opc.Ua.Di.Server.csproj" />
     <Project Path="Libraries/Opc.Ua.Di/Opc.Ua.Di.csproj" />
@@ -66,6 +67,7 @@
     <Project Path="Libraries/Opc.Ua.Gds.Server.Common/Opc.Ua.Gds.Server.Common.csproj" />
     <Project Path="Libraries/Opc.Ua.Lds.Server/Opc.Ua.Lds.Server.csproj" />
     <Project Path="Libraries/Opc.Ua.PubSub/Opc.Ua.PubSub.csproj" />
+    <Project Path="Libraries/Opc.Ua.PubSub.Experimental/Opc.Ua.PubSub.Experimental.csproj" />
     <Project Path="Libraries/Opc.Ua.PubSub.Adapter/Opc.Ua.PubSub.Adapter.csproj" />
     <Project Path="Libraries/Opc.Ua.PubSub.Diagnostics/Opc.Ua.PubSub.Diagnostics.csproj" />
     <Project Path="Libraries/Opc.Ua.PubSub.Mqtt/Opc.Ua.PubSub.Mqtt.csproj" />
@@ -205,6 +207,7 @@
     <Project Path="Tests/Opc.Ua.Configuration.Tests/Opc.Ua.Configuration.Tests.csproj" />
     <Project Path="Tests/Opc.Ua.Core.Tests/Opc.Ua.Core.Tests.csproj" />
     <Project Path="Tests/Opc.Ua.Core.Encoders.Tests/Opc.Ua.Core.Encoders.Tests.csproj" />
+    <Project Path="Tests/Opc.Ua.Core.Experimental.Tests/Opc.Ua.Core.Experimental.Tests.csproj" />
     <Project Path="Tests/Opc.Ua.Core.Security.Tests/Opc.Ua.Core.Security.Tests.csproj" />
     <Project Path="Tests/Opc.Ua.Di.Tests/Opc.Ua.Di.Tests.csproj" />
     <Project Path="Tests/Opc.Ua.Core.Diagnostics.Tests/Opc.Ua.Core.Diagnostics.Tests.csproj" />
@@ -213,6 +216,7 @@
     <Project Path="Tests/Opc.Ua.History.Tests/Opc.Ua.History.Tests.csproj" />
     <Project Path="Tests/Opc.Ua.InformationModel.Tests/Opc.Ua.InformationModel.Tests.csproj" />
     <Project Path="Tests/Opc.Ua.Lds.Tests/Opc.Ua.Lds.Tests.csproj" />
+    <Project Path="Tests/Opc.Ua.PubSub.Experimental.Tests/Opc.Ua.PubSub.Experimental.Tests.csproj" />
     <Project Path="Tests/Opc.Ua.Sessions.Tests/Opc.Ua.Sessions.Tests.csproj" />
     <Project Path="Tests/Opc.Ua.Stress.Tests/Opc.Ua.Stress.Tests.csproj" />
     <Project Path="Tests/Opc.Ua.Subscriptions.Tests/Opc.Ua.Subscriptions.Tests.csproj" />
