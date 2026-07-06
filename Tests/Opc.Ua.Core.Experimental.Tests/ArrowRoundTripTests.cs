@@ -1,5 +1,33 @@
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
 using System;
-#pragma warning disable RCS0056, RCS1078, CA1861
 using System.IO;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
@@ -9,23 +37,42 @@ using Opc.Ua.Core.Experimental;
 
 namespace Opc.Ua.Core.Experimental.Tests
 {
+    /// <summary>
+    /// Verifies that the Arrow experimental encoder preserves OPC UA built-ins, composite values, presence
+    /// markers, and typed schema columns through round-trip serialization.
+    /// </summary>
     [TestFixture]
     public sealed class ArrowRoundTripTests
     {
+        private static readonly int[] MatrixValues = [1, 2, 3, 4];
+        private static readonly string[] SchemaStringValues = ["a", "b"];
+
         private static IServiceMessageContext Context => ServiceMessageContext.CreateEmpty(null!);
 
         [Test]
         public void ArrowBuiltInsRoundTripWithFloatBits()
         {
             Assert.That(RoundTrip(e => e.WriteBoolean(null, true), d => d.ReadBoolean(null)), Is.True);
-            Assert.That(RoundTrip(e => e.WriteSByte(null, sbyte.MinValue), d => d.ReadSByte(null)), Is.EqualTo(sbyte.MinValue));
-            Assert.That(RoundTrip(e => e.WriteUInt64(null, ulong.MaxValue), d => d.ReadUInt64(null)), Is.EqualTo(ulong.MaxValue));
-            Assert.That(BitConverter.SingleToInt32Bits(RoundTrip(e => e.WriteFloat(null, -0.0f), d => d.ReadFloat(null))), Is.EqualTo(BitConverter.SingleToInt32Bits(-0.0f)));
+            Assert.That(
+                RoundTrip(e => e.WriteSByte(null, sbyte.MinValue), d => d.ReadSByte(null)),
+                Is.EqualTo(sbyte.MinValue));
+            Assert.That(
+                RoundTrip(e => e.WriteUInt64(null, ulong.MaxValue), d => d.ReadUInt64(null)),
+                Is.EqualTo(ulong.MaxValue));
+            Assert.That(
+                BitConverter.SingleToInt32Bits(RoundTrip(e => e.WriteFloat(null, -0.0f), d => d.ReadFloat(null))),
+                Is.EqualTo(BitConverter.SingleToInt32Bits(-0.0f)));
             Assert.That(float.IsNaN(RoundTrip(e => e.WriteFloat(null, float.NaN), d => d.ReadFloat(null))), Is.True);
-            Assert.That(RoundTrip(e => e.WriteDouble(null, double.PositiveInfinity), d => d.ReadDouble(null)), Is.EqualTo(double.PositiveInfinity));
-            Assert.That(RoundTrip(e => e.WriteDateTime(null, DateTimeUtc.MaxValue), d => d.ReadDateTime(null)), Is.EqualTo(DateTimeUtc.MaxValue));
+            Assert.That(
+                RoundTrip(e => e.WriteDouble(null, double.PositiveInfinity), d => d.ReadDouble(null)),
+                Is.EqualTo(double.PositiveInfinity));
+            Assert.That(
+                RoundTrip(e => e.WriteDateTime(null, DateTimeUtc.MaxValue), d => d.ReadDateTime(null)),
+                Is.EqualTo(DateTimeUtc.MaxValue));
             Assert.That(RoundTrip(e => e.WriteString(null, null), d => d.ReadString(null)), Is.Null);
-            Assert.That(RoundTrip(e => e.WriteByteString(null, ByteString.From(1, 2, 3)), d => d.ReadByteString(null)), Is.EqualTo(ByteString.From(1, 2, 3)));
+            Assert.That(
+                RoundTrip(e => e.WriteByteString(null, ByteString.From(1, 2, 3)), d => d.ReadByteString(null)),
+                Is.EqualTo(ByteString.From(1, 2, 3)));
         }
 
         [Test]
@@ -40,20 +87,38 @@ namespace Opc.Ua.Core.Experimental.Tests
         [Test]
         public void ArrowArraysVariantMatrixDataValueExtensionObjectAndDiagnosticsRoundTrip()
         {
-            var strings = new ArrayOf<string>(new string?[] { "a", null, string.Empty }!);
-            Assert.That(RoundTrip(e => e.WriteStringArray(null, strings), d => d.ReadStringArray(null)), Is.EqualTo(strings));
+            var strings = new ArrayOf<string>(new string[] { "a", null!, string.Empty });
+            Assert.That(
+                RoundTrip(e => e.WriteStringArray(null, strings), d => d.ReadStringArray(null)),
+                Is.EqualTo(strings));
 
-            Variant matrix = new Variant(new ArrayOf<int>(new[] { 1, 2, 3, 4 }).ToMatrix(2, 2));
+            Variant matrix = new Variant(new ArrayOf<int>(MatrixValues).ToMatrix(2, 2));
             Assert.That(RoundTrip(e => e.WriteVariant(null, matrix), d => d.ReadVariant(null)), Is.EqualTo(matrix));
 
-            var value = new DataValue(new Variant("payload"), new StatusCode(0x80340000), new DateTimeUtc(123456789L), new DateTimeUtc(987654321L), 10, 20);
+            var value = new DataValue(
+                new Variant("payload"),
+                new StatusCode(0x80340000),
+                new DateTimeUtc(123456789L),
+                new DateTimeUtc(987654321L),
+                10,
+                20);
             Assert.That(RoundTrip(e => e.WriteDataValue(null, value), d => d.ReadDataValue(null)), Is.EqualTo(value));
 
             var extension = new ExtensionObject(new ExpandedNodeId(new NodeId(1u, 2)), ByteString.From(9, 8, 7));
-            Assert.That(RoundTrip(e => e.WriteExtensionObject(null, extension), d => d.ReadExtensionObject(null)), Is.EqualTo(extension));
+            Assert.That(
+                RoundTrip(e => e.WriteExtensionObject(null, extension), d => d.ReadExtensionObject(null)),
+                Is.EqualTo(extension));
 
-            var diagnostic = new DiagnosticInfo { SymbolicId = 1, AdditionalInfo = "info", InnerStatusCode = new StatusCode(0x80010000), InnerDiagnosticInfo = new DiagnosticInfo { SymbolicId = 2 } };
-            Assert.That(RoundTrip(e => e.WriteDiagnosticInfo(null, diagnostic), d => d.ReadDiagnosticInfo(null)), Is.EqualTo(diagnostic));
+            var diagnostic = new DiagnosticInfo
+            {
+                SymbolicId = 1,
+                AdditionalInfo = "info",
+                InnerStatusCode = new StatusCode(0x80010000),
+                InnerDiagnosticInfo = new DiagnosticInfo { SymbolicId = 2 }
+            };
+            Assert.That(
+                RoundTrip(e => e.WriteDiagnosticInfo(null, diagnostic), d => d.ReadDiagnosticInfo(null)),
+                Is.EqualTo(diagnostic));
         }
 
         [Test]
@@ -82,15 +147,21 @@ namespace Opc.Ua.Core.Experimental.Tests
             AssertArrowType(e => e.WriteInt32(null, 42), typeof(Int32Type));
             AssertArrowType(e => e.WriteGuid(null, new Uuid(Guid.NewGuid())), typeof(FixedSizeBinaryType));
             AssertArrowType(e => e.WriteNodeId(null, new NodeId(123u, 2)), typeof(StructType));
-            AssertArrowType(e => e.WriteStringArray(null, new ArrayOf<string>(new[] { "a", "b" })), typeof(ListType));
+            AssertArrowType(e => e.WriteStringArray(null, new ArrayOf<string>(SchemaStringValues)), typeof(ListType));
             AssertArrowType(e => e.WriteVariant(null, new Variant(123)), typeof(UnionType));
         }
 
+        /// <summary>
+        /// Encodes and decodes a <see cref="NodeId"/> with Arrow and asserts that the identifier kind is preserved.
+        /// </summary>
         private static void RoundTripEqual(NodeId value)
         {
             Assert.That(RoundTrip(e => e.WriteNodeId(null, value), d => d.ReadNodeId(null)), Is.EqualTo(value));
         }
 
+        /// <summary>
+        /// Serializes a value with the supplied Arrow writer delegate and reads it back with the matching decoder.
+        /// </summary>
         private static T RoundTrip<T>(Action<ArrowEncoder> write, Func<ArrowDecoder, T> read)
         {
             byte[] bytes = Encode(write);
@@ -98,6 +169,9 @@ namespace Opc.Ua.Core.Experimental.Tests
             return read(decoder);
         }
 
+        /// <summary>
+        /// Writes an Arrow payload to an in-memory stream and returns the completed record-batch bytes.
+        /// </summary>
         private static byte[] Encode(Action<ArrowEncoder> write)
         {
             using var stream = new MemoryStream();
@@ -109,6 +183,9 @@ namespace Opc.Ua.Core.Experimental.Tests
             return stream.ToArray();
         }
 
+        /// <summary>
+        /// Confirms that a single encoded Arrow field uses the expected typed Arrow column instead of a binary blob.
+        /// </summary>
         private static void AssertArrowType(Action<ArrowEncoder> write, Type expectedType)
         {
             using var reader = new ArrowStreamReader(Encode(write));

@@ -1,4 +1,32 @@
-#pragma warning disable RCS0056, RCS0023, RCS1007, CA1305, CS0618, CS0649, CS8604, CS8619
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
@@ -8,46 +36,208 @@ using System.Text;
 
 namespace Opc.Ua.Core.Experimental
 {
-    internal readonly record struct ProtoField(int Number, int WireType, ulong Varint, ReadOnlyMemory<byte> Bytes, uint Fixed32, ulong Fixed64);
+    /// <summary>
+    /// Represents a decoded Protobuf field together with the wire-format value storage.
+    /// </summary>
+    /// <param name="Number">The input required by this experimental codec helper.</param>
+    /// <param name="WireType">The input required by this experimental codec helper.</param>
+    /// <param name="Varint">The input required by this experimental codec helper.</param>
+    /// <param name="Bytes">The input required by this experimental codec helper.</param>
+    /// <param name="Fixed32">The input required by this experimental codec helper.</param>
+    /// <param name="Fixed64">The input required by this experimental codec helper.</param>
+    internal readonly record struct ProtoField(
+        int Number,
+        int WireType,
+        ulong Varint,
+        ReadOnlyMemory<byte> Bytes,
+        uint Fixed32,
+        ulong Fixed64
+    );
 
+    /// <summary>
+    /// Stores the decoded fields of one Protobuf message for positional lookup.
+    /// </summary>
     internal sealed class ProtoMessage
     {
+        /// <summary>
+        /// Stores the decoded values of one Protobuf field.
+        /// </summary>
+        /// <returns>The result produced by this codec helper.</returns>
         public List<ProtoField> Fields { get; } = new();
-        public ProtoField? First(int number) { foreach (ProtoField field in Fields) { if (field.Number == number) { return field; } } return null; }
+
+        /// <summary>
+        /// Returns the first decoded Protobuf field with the requested field number.
+        /// </summary>
+        /// <param name="number">The Protobuf field number to locate.</param>
+        /// <returns>The first matching field, or null when the field is absent.</returns>
+        public ProtoField? First(int number)
+        {
+            foreach (ProtoField field in Fields)
+            {
+                if (field.Number == number)
+                {
+                    return field;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Enumerates all decoded Protobuf fields with the requested field number.
+        /// </summary>
+        /// <param name="number">The Protobuf field number to locate.</param>
+        /// <returns>The matching decoded fields.</returns>
         public IEnumerable<ProtoField> All(int number) => Fields.Where(f => f.Number == number);
+
+        /// <summary>
+        /// Returns whether the decoded Protobuf message contains the requested field number.
+        /// </summary>
+        /// <param name="number">The Protobuf field number to locate.</param>
+        /// <returns>True when the message contains the field number.</returns>
         public bool Has(int number) => Fields.Any(f => f.Number == number);
     }
 
+    /// <summary>
+    /// Provides low-level Protobuf wire-format read and write helpers.
+    /// </summary>
     internal static class Proto
     {
-        public static void WriteTag(BinaryWriter w, int field, int wire) => WriteVarint(w, ((ulong)field << 3) | (uint)wire);
-        public static void WriteVarint(BinaryWriter w, ulong v) { while (v >= 0x80) { w.Write((byte)(v | 0x80)); v >>= 7; } w.Write((byte)v); }
+        /// <summary>
+        /// Writes a Protobuf field tag for the supplied field number and wire type.
+        /// </summary>
+        /// <param name="w">The binary writer that receives wire-format bytes.</param>
+        /// <param name="field">The Protobuf field number to write.</param>
+        /// <param name="wire">The Protobuf wire type to write.</param>
+        public static void WriteTag(BinaryWriter w, int field, int wire) =>
+            WriteVarint(w, ((ulong)field << 3) | (uint)wire);
+
+        /// <summary>
+        /// Writes an unsigned Protobuf varint value.
+        /// </summary>
+        /// <param name="w">The binary writer that receives wire-format bytes.</param>
+        /// <param name="v">The input required by this experimental codec helper.</param>
+        public static void WriteVarint(BinaryWriter w, ulong v)
+        {
+            while (v >= 0x80)
+            {
+                w.Write((byte)(v | 0x80));
+                v >>= 7;
+            }
+            w.Write((byte)v);
+        }
+
+        /// <summary>
+        /// Writes a signed integer using the Protobuf varint representation used by this reference codec.
+        /// </summary>
+        /// <param name="w">The binary writer that receives wire-format bytes.</param>
+        /// <param name="v">The input required by this experimental codec helper.</param>
         public static void WriteSignedVarint(BinaryWriter w, long v) => WriteVarint(w, unchecked((ulong)v));
+
+        /// <summary>
+        /// Writes a 32-bit fixed-width Protobuf value.
+        /// </summary>
+        /// <param name="w">The binary writer that receives wire-format bytes.</param>
+        /// <param name="v">The input required by this experimental codec helper.</param>
         public static void WriteFixed32(BinaryWriter w, uint v) => w.Write(v);
+
+        /// <summary>
+        /// Writes a 64-bit fixed-width Protobuf value.
+        /// </summary>
+        /// <param name="w">The binary writer that receives wire-format bytes.</param>
+        /// <param name="v">The input required by this experimental codec helper.</param>
         public static void WriteFixed64(BinaryWriter w, ulong v) => w.Write(v);
-        public static void WriteBytes(BinaryWriter w, ReadOnlySpan<byte> b) { WriteVarint(w, (ulong)b.Length); w.Write(b); }
+
+        /// <summary>
+        /// Writes a length-delimited Protobuf byte sequence.
+        /// </summary>
+        /// <param name="w">The binary writer that receives wire-format bytes.</param>
+        /// <param name="b">The input required by this experimental codec helper.</param>
+        public static void WriteBytes(BinaryWriter w, ReadOnlySpan<byte> b)
+        {
+            WriteVarint(w, (ulong)b.Length);
+            w.Write(b);
+        }
+
+        /// <summary>
+        /// Writes a UTF-8 Protobuf string as a length-delimited field value.
+        /// </summary>
+        /// <param name="w">The binary writer that receives wire-format bytes.</param>
+        /// <param name="s">The first value index in the Arrow segment.</param>
         public static void WriteString(BinaryWriter w, string s) => WriteBytes(w, Encoding.UTF8.GetBytes(s));
+
+        /// <summary>
+        /// Parses a Protobuf message buffer into positional field records.
+        /// </summary>
+        /// <param name="buffer">The encoded payload buffer to decode.</param>
+        /// <returns>The parsed Protobuf message.</returns>
         public static ProtoMessage Parse(ReadOnlyMemory<byte> buffer)
         {
-            var msg = new ProtoMessage(); int p=0; var span=buffer.Span;
+            var msg = new ProtoMessage();
+            int p = 0;
+            var span = buffer.Span;
             while (p < span.Length)
             {
-                ulong tag = ReadVarint(span, ref p); int field=(int)(tag>>3); int wire=(int)(tag&7);
+                ulong tag = ReadVarint(span, ref p);
+                int field = (int)(tag >> 3);
+                int wire = (int)(tag & 7);
                 switch (wire)
                 {
-                    case 0: msg.Fields.Add(new ProtoField(field,wire,ReadVarint(span,ref p),default,0,0)); break;
-                    case 1: ulong f64=BinaryPrimitives.ReadUInt64LittleEndian(span[p..]); p+=8; msg.Fields.Add(new ProtoField(field,wire,0,default,0,f64)); break;
-                    case 2: int len=checked((int)ReadVarint(span,ref p)); msg.Fields.Add(new ProtoField(field,wire,0,buffer.Slice(p,len),0,0)); p+=len; break;
-                    case 5: uint f32=BinaryPrimitives.ReadUInt32LittleEndian(span[p..]); p+=4; msg.Fields.Add(new ProtoField(field,wire,0,default,f32,0)); break;
-                    default: throw new ServiceResultException(StatusCodes.BadDecodingError, $"Unsupported Protobuf wire type {wire}.");
+                    case 0:
+                        msg.Fields.Add(new ProtoField(field, wire, ReadVarint(span, ref p), default, 0, 0));
+                        break;
+                    case 1:
+                        ulong f64 = BinaryPrimitives.ReadUInt64LittleEndian(span[p..]);
+                        p += 8;
+                        msg.Fields.Add(new ProtoField(field, wire, 0, default, 0, f64));
+                        break;
+                    case 2:
+                        int len = checked((int)ReadVarint(span, ref p));
+                        msg.Fields.Add(new ProtoField(field, wire, 0, buffer.Slice(p, len), 0, 0));
+                        p += len;
+                        break;
+                    case 5:
+                        uint f32 = BinaryPrimitives.ReadUInt32LittleEndian(span[p..]);
+                        p += 4;
+                        msg.Fields.Add(new ProtoField(field, wire, 0, default, f32, 0));
+                        break;
+                    default:
+                        throw new ServiceResultException(
+                            StatusCodes.BadDecodingError,
+                            $"Unsupported Protobuf wire type {wire}."
+                        );
                 }
             }
             return msg;
         }
-        public static ulong ReadVarint(ReadOnlySpan<byte> span, ref int p) { ulong v=0; int shift=0; while (p<span.Length) { byte b=span[p++]; v |= (ulong)(b & 0x7f) << shift; if ((b & 0x80)==0) return v; shift += 7; } throw new EndOfStreamException(); }
+
+        /// <summary>
+        /// Reads an unsigned Protobuf varint value from a span.
+        /// </summary>
+        /// <param name="span">The source span containing encoded bytes.</param>
+        /// <param name="p">The current read offset, updated as bytes are consumed.</param>
+        /// <returns>The decoded unsigned varint value.</returns>
+        public static ulong ReadVarint(ReadOnlySpan<byte> span, ref int p)
+        {
+            ulong v = 0;
+            int shift = 0;
+            while (p < span.Length)
+            {
+                byte b = span[p++];
+                v |= (ulong)(b & 0x7f) << shift;
+                if ((b & 0x80) == 0)
+                {
+                    return v;
+                }
+                shift += 7;
+            }
+            throw new EndOfStreamException();
+        }
+
+        /// <summary>
+        /// Decodes UTF-8 bytes from a Protobuf length-delimited string value.
+        /// </summary>
+        /// <param name="bytes">The byte sequence to encode or decode.</param>
+        /// <returns>The decoded UTF-8 string.</returns>
         public static string String(ReadOnlyMemory<byte> bytes) => Encoding.UTF8.GetString(bytes.Span);
     }
 }
-
-
-

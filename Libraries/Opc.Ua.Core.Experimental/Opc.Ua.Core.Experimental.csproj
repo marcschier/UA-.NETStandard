@@ -15,6 +15,9 @@
     <Description>OPC UA Core Experimental Class Library</Description>
     <IsPackable>true</IsPackable>
     <Nullable>enable</Nullable>
+    <!-- Enforce XML documentation on all public and internal API surface:
+         with TreatWarningsAsErrors, missing docs (CS1591) fail the build. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Opc.Ua.Core.Experimental.Tests" />

@@ -1,13 +1,51 @@
-#pragma warning disable RCS0056, NUnit2005, CS0618, CS8620
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
 using System;
 using System.IO;
 using NUnit.Framework;
 
 namespace Opc.Ua.Core.Experimental.Tests
 {
+    /// <summary>
+    /// Validates Protobuf experimental encoding for OPC UA built-ins, node identifiers, composite values,
+    /// variants, and optional-field presence semantics.
+    /// </summary>
     [TestFixture]
     public sealed class ProtobufRoundTripTests
     {
+        private static readonly byte[] BuiltInByteStringBytes = [0, 1, 255];
+        private static readonly byte[] NodeIdByteStringBytes = [9, 8, 7];
+        private static readonly ulong[] UInt64ArrayValues = [0, 1, ulong.MaxValue];
+        private static readonly byte[] ExtensionObjectBytes = [1, 2, 3];
+        private static readonly string[] OptionalCountFieldNames = ["count"];
+
         private static readonly IServiceMessageContext Context = ServiceMessageContext.CreateEmpty(null!);
 
         [Test]
@@ -31,7 +69,7 @@ namespace Opc.Ua.Core.Experimental.Tests
                 e.WriteDateTime("dt0", DateTimeUtc.MinValue);
                 e.WriteDateTime("dt1", DateTimeUtc.MaxValue);
                 e.WriteGuid("g", new Uuid(Guid.Parse("00112233-4455-6677-8899-aabbccddeeff")));
-                e.WriteByteString("bs", ByteString.From(new byte[] { 0, 1, 255 }));
+                e.WriteByteString("bs", ByteString.From(BuiltInByteStringBytes));
             });
 
             var d = new ProtobufDecoder(bytes, Context);
@@ -44,14 +82,18 @@ namespace Opc.Ua.Core.Experimental.Tests
             Assert.That(d.ReadUInt32("u32"), Is.EqualTo(uint.MaxValue));
             Assert.That(d.ReadInt64("i64"), Is.EqualTo(long.MinValue));
             Assert.That(d.ReadUInt64("u64"), Is.EqualTo(ulong.MaxValue));
-            Assert.That(BitConverter.SingleToUInt32Bits(d.ReadFloat("f")), Is.EqualTo(BitConverter.SingleToUInt32Bits(-0.0f)));
-            Assert.That(BitConverter.DoubleToUInt64Bits(d.ReadDouble("d")), Is.EqualTo(BitConverter.DoubleToUInt64Bits(double.NaN)));
+            Assert.That(
+                BitConverter.SingleToUInt32Bits(d.ReadFloat("f")),
+                Is.EqualTo(BitConverter.SingleToUInt32Bits(-0.0f)));
+            Assert.That(
+                BitConverter.DoubleToUInt64Bits(d.ReadDouble("d")),
+                Is.EqualTo(BitConverter.DoubleToUInt64Bits(double.NaN)));
             Assert.That(d.ReadString("sn"), Is.Null);
             Assert.That(d.ReadString("se"), Is.EqualTo(string.Empty));
             Assert.That(d.ReadDateTime("dt0"), Is.EqualTo(DateTimeUtc.MinValue));
             Assert.That(d.ReadDateTime("dt1"), Is.EqualTo(DateTimeUtc.MaxValue));
             Assert.That((Guid)d.ReadGuid("g"), Is.EqualTo(Guid.Parse("00112233-4455-6677-8899-aabbccddeeff")));
-            Assert.That(d.ReadByteString("bs").Span.ToArray(), Is.EqualTo(new byte[] { 0, 1, 255 }));
+            Assert.That(d.ReadByteString("bs").Span.ToArray(), Is.EqualTo(BuiltInByteStringBytes));
         }
 
         [Test]
@@ -62,7 +104,7 @@ namespace Opc.Ua.Core.Experimental.Tests
                 new NodeId(123u, 2),
                 new NodeId("name", 3),
                 new NodeId(Guid.Parse("00112233-4455-6677-8899-aabbccddeeff"), 4),
-                new NodeId(ByteString.From(new byte[] { 9, 8, 7 }), 5)
+                new NodeId(ByteString.From(NodeIdByteStringBytes), 5)
             ];
             byte[] bytes = Encode(e =>
             {
@@ -81,10 +123,17 @@ namespace Opc.Ua.Core.Experimental.Tests
         [Test]
         public void NullableArraysAndCompositeValuesRoundTrip()
         {
-            var numbers = new ArrayOf<ulong>(new ulong[] { 0, 1, ulong.MaxValue });
+            var numbers = new ArrayOf<ulong>(UInt64ArrayValues);
             var value = new DataValue(new Variant(42), StatusCodes.BadUnexpectedError);
-            var info = new DiagnosticInfo { SymbolicId = 1, AdditionalInfo = "detail", InnerStatusCode = StatusCodes.BadInternalError };
-            var xo = new ExtensionObject(new ExpandedNodeId(new NodeId(5001u, 2)), ByteString.From(new byte[] { 1, 2, 3 }));
+            var info = new DiagnosticInfo
+            {
+                SymbolicId = 1,
+                AdditionalInfo = "detail",
+                InnerStatusCode = StatusCodes.BadInternalError
+            };
+            var xo = new ExtensionObject(
+                new ExpandedNodeId(new NodeId(5001u, 2)),
+                ByteString.From(ExtensionObjectBytes));
 
             byte[] bytes = Encode(e =>
             {
@@ -124,6 +173,9 @@ namespace Opc.Ua.Core.Experimental.Tests
             Assert.That(decoded.GetUInt64(), Is.EqualTo(ulong.MaxValue));
         }
 
+        /// <summary>
+        /// Encodes and decodes an encodeable value with Protobuf to verify custom structure state is preserved.
+        /// </summary>
         private static T RoundTrip<T>(T value) where T : IEncodeable, new()
         {
             byte[] bytes = Encode(value.Encode);
@@ -132,6 +184,9 @@ namespace Opc.Ua.Core.Experimental.Tests
             return decoded;
         }
 
+        /// <summary>
+        /// Writes a Protobuf payload to an in-memory stream and returns the completed bytes.
+        /// </summary>
         private static byte[] Encode(Action<ProtobufEncoder> encode)
         {
             using var stream = new MemoryStream();
@@ -141,6 +196,9 @@ namespace Opc.Ua.Core.Experimental.Tests
             return stream.ToArray();
         }
 
+        /// <summary>
+        /// Minimal encodeable used to verify that Protobuf distinguishes absent optional scalars from present zeros.
+        /// </summary>
         private sealed class OptionalScalars : IEncodeable
         {
             public int Id { get; set; }
@@ -155,24 +213,46 @@ namespace Opc.Ua.Core.Experimental.Tests
             public ExpandedNodeId XmlEncodingId => new NodeId(9003u, 1);
             public object Clone() => MemberwiseClone();
             public bool IsEqual(IEncodeable? encodeable) => encodeable is OptionalScalars other && Equals(other);
+
             public void Encode(IEncoder encoder)
             {
                 encoder.WriteInt32("id", Id);
-                if (HasFlag) { encoder.WriteBoolean("flag", Flag); }
-                if (HasCount) { encoder.WriteInt32("count", Count); }
-                if (HasRatio) { encoder.WriteDouble("ratio", Ratio); }
+                if (HasFlag)
+                {
+                    encoder.WriteBoolean("flag", Flag);
+                }
+
+                if (HasCount)
+                {
+                    encoder.WriteInt32("count", Count);
+                }
+
+                if (HasRatio)
+                {
+                    encoder.WriteDouble("ratio", Ratio);
+                }
             }
+
             public void Decode(IDecoder decoder)
             {
                 Id = decoder.ReadInt32("id");
-                uint mask = decoder.ReadEncodingMask(["count"]);
+                uint mask = decoder.ReadEncodingMask(OptionalCountFieldNames);
                 HasCount = (mask & 1u) != 0;
-                if (HasFlag) { Flag = decoder.ReadBoolean("flag"); }
-                if (HasCount) { Count = decoder.ReadInt32("count"); }
-                if (HasRatio) { Ratio = decoder.ReadDouble("ratio"); }
+                if (HasFlag)
+                {
+                    Flag = decoder.ReadBoolean("flag");
+                }
+
+                if (HasCount)
+                {
+                    Count = decoder.ReadInt32("count");
+                }
+
+                if (HasRatio)
+                {
+                    Ratio = decoder.ReadDouble("ratio");
+                }
             }
         }
     }
 }
-
-

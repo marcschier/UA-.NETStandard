@@ -1,10 +1,39 @@
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
 using System;
 using System.Security.Cryptography;
 
 namespace Opc.Ua.Core.Experimental
 {
     /// <summary>
-    /// Computes compact schema identifiers used by experimental encodings.
+    /// Computes stable schema identifiers used by the experimental Avro, Arrow, and Protobuf encodings.
     /// </summary>
     public static class SchemaId
     {
@@ -13,8 +42,10 @@ namespace Opc.Ua.Core.Experimental
         private static readonly ulong[] s_rabinAvroTable = CreateRabinAvroTable();
 
         /// <summary>
-        /// Computes the CRC-64-AVRO Rabin fingerprint for canonical schema bytes.
+        /// Computes the CRC-64-AVRO Rabin fingerprint for canonical Avro schema bytes.
         /// </summary>
+        /// <param name="canonical">The canonical schema bytes to fingerprint.</param>
+        /// <returns>The CRC-64-AVRO fingerprint.</returns>
         public static ulong RabinCrc64Avro(ReadOnlySpan<byte> canonical)
         {
             ulong result = RabinAvroEmpty;
@@ -28,8 +59,10 @@ namespace Opc.Ua.Core.Experimental
         }
 
         /// <summary>
-        /// Builds the Avro single-object encoding prefix for a Rabin fingerprint.
+        /// Builds the Avro single-object encoding prefix for the supplied schema fingerprint.
         /// </summary>
+        /// <param name="fp">The Avro Rabin fingerprint to place in the prefix.</param>
+        /// <returns>The ten-byte Avro single-object prefix.</returns>
         public static byte[] AvroSingleObjectPrefix(ulong fp)
         {
             byte[] prefix = new byte[10];
@@ -45,13 +78,20 @@ namespace Opc.Ua.Core.Experimental
         }
 
         /// <summary>
-        /// Computes the first bytes of the SHA-256 digest for canonical schema bytes.
+        /// Computes the leading bytes of the SHA-256 digest used as Arrow and Protobuf schema identifiers.
         /// </summary>
+        /// <param name="canonical">The canonical schema bytes to fingerprint.</param>
+        /// <param name="nbytes">The number of leading SHA-256 digest bytes to return.</param>
+        /// <returns>The requested leading bytes of the SHA-256 digest.</returns>
         public static byte[] Sha256Id(ReadOnlySpan<byte> canonical, int nbytes = 8)
         {
             if (nbytes < 0 || nbytes > 32)
             {
-                throw new ArgumentOutOfRangeException(nameof(nbytes), nbytes, "The identifier length must be between 0 and 32 bytes.");
+                throw new ArgumentOutOfRangeException(
+                    nameof(nbytes),
+                    nbytes,
+                    "The identifier length must be between 0 and 32 bytes."
+                );
             }
 
 #if NET5_0_OR_GREATER

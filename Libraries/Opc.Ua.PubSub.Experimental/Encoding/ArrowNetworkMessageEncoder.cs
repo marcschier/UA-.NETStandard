@@ -1,4 +1,32 @@
-#pragma warning disable RCS0056, RCS1007, RCS1126, RCS1229, CA1508, CA1859, CA2000
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -11,6 +39,7 @@ using Apache.Arrow.Arrays;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Memory;
 using Apache.Arrow.Types;
+using Opc.Ua.Core.Experimental;
 using Opc.Ua.PubSub.Encoding;
 
 namespace Opc.Ua.PubSub.Experimental;
@@ -29,10 +58,28 @@ public sealed class ArrowNetworkMessageEncoder : INetworkMessageEncoder
     private const string Version = "1";
     private static readonly MemoryAllocator s_allocator = MemoryAllocator.Default.Value;
 
+    /// <inheritdoc/>
     public string TransportProfileUri => ArrowNetworkMessage.PubSubMqttArrowTransport;
 
+    /// <inheritdoc/>
     public int EstimatedHeaderOverhead => 256;
 
+    /// <summary>
+    /// Gets the SchemaId cache and per-destination announcement tracker used by the encoder.
+    /// </summary>
+    public SchemaCache SchemaCache { get; } = new();
+
+    /// <summary>
+    /// Gets or sets the destination identity used for announce-once tracking.
+    /// </summary>
+    public string DestinationId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets the announcement produced by the most recent encode call, if one was needed.
+    /// </summary>
+    public ArrowSchemaAnnouncement? LastSchemaAnnouncement { get; private set; }
+
+    /// <inheritdoc/>
     public async ValueTask<ReadOnlyMemory<byte>> EncodeAsync(
         PubSubNetworkMessage networkMessage,
         PubSubNetworkMessageContext context,
@@ -49,8 +96,16 @@ public sealed class ArrowNetworkMessageEncoder : INetworkMessageEncoder
         cancellationToken.ThrowIfCancellationRequested();
         if (networkMessage is not ArrowNetworkMessage message)
         {
-            throw new ArgumentException("Network message type is not supported by the Arrow encoder.", nameof(networkMessage));
+            throw new ArgumentException(
+                "Network message type is not supported by the Arrow encoder.",
+                nameof(networkMessage));
         }
+
+        ArrowSchemaAnnouncement announcement = SchemaExchangeMessages.CreateArrowAnnouncement(message);
+        LastSchemaAnnouncement = SchemaCache.MarkAnnounced(DestinationId, announcement.SchemaId)
+            ? announcement
+            : null;
+        SchemaCache.Add(announcement);
 
         DataSetMetaDataType? metaData = ResolveBatchMetaData(message, context);
         FieldPlan[] fields = BuildFieldPlan(message, metaData);
@@ -151,7 +206,9 @@ public sealed class ArrowNetworkMessageEncoder : INetworkMessageEncoder
             for (int i = 0; i < plans.Length; i++)
             {
                 FieldMetaData field = metaData.Fields[i];
-                string name = string.IsNullOrEmpty(field.Name) ? FormattableString.Invariant($"Field{i}") : field.Name;
+                string name = string.IsNullOrEmpty(field.Name)
+                    ? FormattableString.Invariant($"Field{i}")
+                    : field.Name;
                 TypeInfo typeInfo = TypeInfo.Create((BuiltInType)field.BuiltInType, field.ValueRank);
                 plans[i] = new FieldPlan(name, i, typeInfo, ToArrowType(name, typeInfo));
             }
@@ -169,7 +226,8 @@ public sealed class ArrowNetworkMessageEncoder : INetworkMessageEncoder
             DataSetField field = first.Fields[i];
             if (field.Value.IsNull)
             {
-                throw new ArgumentException($"Arrow field '{field.Name}' requires DataSetMetaData when the first value is null.");
+                throw new ArgumentException(
+                    $"Arrow field '{field.Name}' requires DataSetMetaData when the first value is null.");
             }
             inferred[i] = new FieldPlan(
                 ExperimentalMessageEncoding.ResolveFieldName(field, null, i),
@@ -198,7 +256,8 @@ public sealed class ArrowNetworkMessageEncoder : INetworkMessageEncoder
             }
             if (dataSetMessage.MessageType is not PubSubDataSetMessageType.KeyFrame)
             {
-                throw new NotSupportedException("The first Arrow PubSub adapter supports key frames and keep-alive schema batches only.");
+                throw new NotSupportedException(
+                    "The first Arrow PubSub adapter supports key frames and keep-alive schema batches only.");
             }
         }
     }
@@ -317,31 +376,276 @@ public sealed class ArrowNetworkMessageEncoder : INetworkMessageEncoder
             BuiltInType.StatusCode => UInt32Type.Default,
             _ => throw Unsupported(fieldName, typeInfo)
         };
-        return typeInfo.ValueRank >= 0 ? new ListType(new Field("item", scalar, nullable: true, metadata: null)) : scalar;
+        return typeInfo.ValueRank >= 0
+            ? new ListType(new Field("item", scalar, nullable: true, metadata: null))
+            : scalar;
     }
 
     private static NotSupportedException Unsupported(string fieldName, TypeInfo typeInfo)
     {
-        return new NotSupportedException($"Arrow RawData field '{fieldName}' with type {typeInfo} is not supported by this adapter.");
+        return new NotSupportedException(
+            $"Arrow RawData field '{fieldName}' with type {typeInfo} is not supported by this adapter.");
     }
 
-    private static IArrowArray BuildBoolean(ArrowNetworkMessage m, FieldPlan p, int n) { var b = new BooleanArray.Builder(); ForRows(m, p, n, v => { if (v.IsNull) b.AppendNull(); else b.Append(v.GetBoolean()); }); return b.Build(s_allocator); }
-    private static IArrowArray BuildInt8(ArrowNetworkMessage m, FieldPlan p, int n) { var b = new Int8Array.Builder(); ForRows(m, p, n, v => { if (v.IsNull) b.AppendNull(); else b.Append(v.GetSByte()); }); return b.Build(s_allocator); }
-    private static IArrowArray BuildUInt8(ArrowNetworkMessage m, FieldPlan p, int n) { var b = new UInt8Array.Builder(); ForRows(m, p, n, v => { if (v.IsNull) b.AppendNull(); else b.Append(v.GetByte()); }); return b.Build(s_allocator); }
-    private static IArrowArray BuildInt16(ArrowNetworkMessage m, FieldPlan p, int n) { var b = new Int16Array.Builder(); ForRows(m, p, n, v => { if (v.IsNull) b.AppendNull(); else b.Append(v.GetInt16()); }); return b.Build(s_allocator); }
-    private static IArrowArray BuildUInt16(ArrowNetworkMessage m, FieldPlan p, int n) { var b = new UInt16Array.Builder(); ForRows(m, p, n, v => { if (v.IsNull) b.AppendNull(); else b.Append(v.GetUInt16()); }); return b.Build(s_allocator); }
-    private static IArrowArray BuildInt32(ArrowNetworkMessage m, FieldPlan p, int n) { var b = new Int32Array.Builder(); ForRows(m, p, n, v => { if (v.IsNull) b.AppendNull(); else b.Append(v.GetInt32()); }); return b.Build(s_allocator); }
-    private static IArrowArray BuildUInt32(ArrowNetworkMessage m, FieldPlan p, int n) { var b = new UInt32Array.Builder(); ForRows(m, p, n, v => { if (v.IsNull) b.AppendNull(); else b.Append(v.GetUInt32()); }); return b.Build(s_allocator); }
-    private static IArrowArray BuildInt64(ArrowNetworkMessage m, FieldPlan p, int n) { var b = new Int64Array.Builder(); ForRows(m, p, n, v => { if (v.IsNull) b.AppendNull(); else b.Append(v.GetInt64()); }); return b.Build(s_allocator); }
-    private static IArrowArray BuildUInt64(ArrowNetworkMessage m, FieldPlan p, int n) { var b = new UInt64Array.Builder(); ForRows(m, p, n, v => { if (v.IsNull) b.AppendNull(); else b.Append(v.GetUInt64()); }); return b.Build(s_allocator); }
-    private static IArrowArray BuildFloat(ArrowNetworkMessage m, FieldPlan p, int n) { var b = new FloatArray.Builder(); ForRows(m, p, n, v => { if (v.IsNull) b.AppendNull(); else b.Append(v.GetFloat()); }); return b.Build(s_allocator); }
-    private static IArrowArray BuildDouble(ArrowNetworkMessage m, FieldPlan p, int n) { var b = new DoubleArray.Builder(); ForRows(m, p, n, v => { if (v.IsNull) b.AppendNull(); else b.Append(v.GetDouble()); }); return b.Build(s_allocator); }
-    private static IArrowArray BuildString(ArrowNetworkMessage m, FieldPlan p, int n) { var b = new StringArray.Builder(); ForRows(m, p, n, v => { if (v.IsNull) b.AppendNull(); else b.Append(v.GetString()); }); return b.Build(s_allocator); }
-    private static IArrowArray BuildDateTime(ArrowNetworkMessage m, FieldPlan p, int n) { var b = new Int64Array.Builder(); ForRows(m, p, n, v => { if (v.IsNull) b.AppendNull(); else b.Append(v.GetDateTime().Value); }); return b.Build(s_allocator); }
-    private static IArrowArray BuildBytes(ArrowNetworkMessage m, FieldPlan p, int n) { var b = new BinaryArray.Builder(); ForRows(m, p, n, v => { if (v.IsNull || v.GetByteString().IsNull) b.AppendNull(); else b.Append(v.GetByteString().Span); }); return b.Build(s_allocator); }
-    private static IArrowArray BuildStatus(ArrowNetworkMessage m, FieldPlan p, int n) { var b = new UInt32Array.Builder(); ForRows(m, p, n, v => { if (v.IsNull) b.AppendNull(); else b.Append(v.GetStatusCode().Code); }); return b.Build(s_allocator); }
+    private static BooleanArray BuildBoolean(ArrowNetworkMessage message, FieldPlan plan, int rowCount)
+    {
+        var builder = new BooleanArray.Builder();
+        ForRows(message, plan, rowCount, v =>
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetBoolean());
+            }
+        });
+        return builder.Build(s_allocator);
+    }
 
-    private static IArrowArray BuildGuid(ArrowNetworkMessage message, FieldPlan plan, int rowCount)
+    private static Int8Array BuildInt8(ArrowNetworkMessage message, FieldPlan plan, int rowCount)
+    {
+        var builder = new Int8Array.Builder();
+        ForRows(message, plan, rowCount, v =>
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetSByte());
+            }
+        });
+        return builder.Build(s_allocator);
+    }
+
+    private static UInt8Array BuildUInt8(ArrowNetworkMessage message, FieldPlan plan, int rowCount)
+    {
+        var builder = new UInt8Array.Builder();
+        ForRows(message, plan, rowCount, v =>
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetByte());
+            }
+        });
+        return builder.Build(s_allocator);
+    }
+
+    private static Int16Array BuildInt16(ArrowNetworkMessage message, FieldPlan plan, int rowCount)
+    {
+        var builder = new Int16Array.Builder();
+        ForRows(message, plan, rowCount, v =>
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetInt16());
+            }
+        });
+        return builder.Build(s_allocator);
+    }
+
+    private static UInt16Array BuildUInt16(ArrowNetworkMessage message, FieldPlan plan, int rowCount)
+    {
+        var builder = new UInt16Array.Builder();
+        ForRows(message, plan, rowCount, v =>
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetUInt16());
+            }
+        });
+        return builder.Build(s_allocator);
+    }
+
+    private static Int32Array BuildInt32(ArrowNetworkMessage message, FieldPlan plan, int rowCount)
+    {
+        var builder = new Int32Array.Builder();
+        ForRows(message, plan, rowCount, v =>
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetInt32());
+            }
+        });
+        return builder.Build(s_allocator);
+    }
+
+    private static UInt32Array BuildUInt32(ArrowNetworkMessage message, FieldPlan plan, int rowCount)
+    {
+        var builder = new UInt32Array.Builder();
+        ForRows(message, plan, rowCount, v =>
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetUInt32());
+            }
+        });
+        return builder.Build(s_allocator);
+    }
+
+    private static Int64Array BuildInt64(ArrowNetworkMessage message, FieldPlan plan, int rowCount)
+    {
+        var builder = new Int64Array.Builder();
+        ForRows(message, plan, rowCount, v =>
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetInt64());
+            }
+        });
+        return builder.Build(s_allocator);
+    }
+
+    private static UInt64Array BuildUInt64(ArrowNetworkMessage message, FieldPlan plan, int rowCount)
+    {
+        var builder = new UInt64Array.Builder();
+        ForRows(message, plan, rowCount, v =>
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetUInt64());
+            }
+        });
+        return builder.Build(s_allocator);
+    }
+
+    private static FloatArray BuildFloat(ArrowNetworkMessage message, FieldPlan plan, int rowCount)
+    {
+        var builder = new FloatArray.Builder();
+        ForRows(message, plan, rowCount, v =>
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetFloat());
+            }
+        });
+        return builder.Build(s_allocator);
+    }
+
+    private static DoubleArray BuildDouble(ArrowNetworkMessage message, FieldPlan plan, int rowCount)
+    {
+        var builder = new DoubleArray.Builder();
+        ForRows(message, plan, rowCount, v =>
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetDouble());
+            }
+        });
+        return builder.Build(s_allocator);
+    }
+
+    private static StringArray BuildString(ArrowNetworkMessage message, FieldPlan plan, int rowCount)
+    {
+        var builder = new StringArray.Builder();
+        ForRows(message, plan, rowCount, v =>
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetString());
+            }
+        });
+        return builder.Build(s_allocator);
+    }
+
+    private static Int64Array BuildDateTime(ArrowNetworkMessage message, FieldPlan plan, int rowCount)
+    {
+        var builder = new Int64Array.Builder();
+        ForRows(message, plan, rowCount, v =>
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetDateTime().Value);
+            }
+        });
+        return builder.Build(s_allocator);
+    }
+
+    private static BinaryArray BuildBytes(ArrowNetworkMessage message, FieldPlan plan, int rowCount)
+    {
+        var builder = new BinaryArray.Builder();
+        ForRows(message, plan, rowCount, v =>
+        {
+            if (v.IsNull || v.GetByteString().IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetByteString().Span);
+            }
+        });
+        return builder.Build(s_allocator);
+    }
+
+    private static UInt32Array BuildStatus(ArrowNetworkMessage message, FieldPlan plan, int rowCount)
+    {
+        var builder = new UInt32Array.Builder();
+        ForRows(message, plan, rowCount, v =>
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetStatusCode().Code);
+            }
+        });
+        return builder.Build(s_allocator);
+    }
+
+    private static FixedSizeBinaryArray BuildGuid(
+        ArrowNetworkMessage message,
+        FieldPlan plan,
+        int rowCount)
     {
         var bytes = new List<byte>(rowCount * 16);
         var validity = new ArrowBuffer.BitmapBuilder(rowCount);
@@ -351,16 +655,16 @@ public sealed class ArrowNetworkMessageEncoder : INetworkMessageEncoder
             validity.Append(valid);
             bytes.AddRange(valid ? value.GetGuid().ToByteArray() : new byte[16]);
         });
-        return new FixedSizeBinaryArray(new ArrayData(new FixedSizeBinaryType(16), rowCount, rowCount - validity.SetBitCount, 0, [validity.Build(s_allocator), BuildBuffer(bytes.ToArray())], []));
+        return BuildFixedSizeBinaryArray(rowCount, validity, bytes.ToArray());
     }
 
-    private static IArrowArray BuildListArray(ArrowNetworkMessage message, FieldPlan plan, int rowCount)
+    private static ListArray BuildListArray(ArrowNetworkMessage message, FieldPlan plan, int rowCount)
     {
         return plan.TypeInfo.BuiltInType switch
         {
             BuiltInType.Boolean => BuildList(message, plan, rowCount, BooleanType.Default, AppendBoolArray),
-            BuiltInType.SByte => BuildList(message, plan, rowCount, Int8Type.Default, AppendSByteArray),
-            BuiltInType.Byte => BuildList(message, plan, rowCount, UInt8Type.Default, AppendByteArray),
+            BuiltInType.SByte => BuildList(message, plan, rowCount, Int8Type.Default, AppendInt8Array),
+            BuiltInType.Byte => BuildList(message, plan, rowCount, UInt8Type.Default, AppendUInt8Array),
             BuiltInType.Int16 => BuildList(message, plan, rowCount, Int16Type.Default, AppendInt16Array),
             BuiltInType.UInt16 => BuildList(message, plan, rowCount, UInt16Type.Default, AppendUInt16Array),
             BuiltInType.Int32 => BuildList(message, plan, rowCount, Int32Type.Default, AppendInt32Array),
@@ -378,7 +682,12 @@ public sealed class ArrowNetworkMessageEncoder : INetworkMessageEncoder
         };
     }
 
-    private static IArrowArray BuildList(ArrowNetworkMessage message, FieldPlan plan, int rowCount, IArrowType itemType, Func<List<Variant>, IArrowArray> buildChild)
+    private static ListArray BuildList(
+        ArrowNetworkMessage message,
+        FieldPlan plan,
+        int rowCount,
+        IArrowType itemType,
+        Func<List<Variant>, IArrowArray> buildChild)
     {
         var offsets = new int[rowCount + 1];
         var validity = new ArrowBuffer.BitmapBuilder(rowCount);
@@ -399,10 +708,21 @@ public sealed class ArrowNetworkMessageEncoder : INetworkMessageEncoder
         }
         IArrowArray child = buildChild(items);
         var listType = new ListType(new Field("item", itemType, nullable: true, metadata: null));
-        return new ListArray(listType, rowCount, BuildBuffer(offsets), child, validity.Build(s_allocator), rowCount - validity.SetBitCount, 0);
+        return new ListArray(
+            listType,
+            rowCount,
+            BuildBuffer(offsets),
+            child,
+            validity.Build(s_allocator),
+            rowCount - validity.SetBitCount,
+            0);
     }
 
-    private static void ForRows(ArrowNetworkMessage message, FieldPlan plan, int rowCount, Action<Variant> action)
+    private static void ForRows(
+        ArrowNetworkMessage message,
+        FieldPlan plan,
+        int rowCount,
+        Action<Variant> action)
     {
         for (int row = 0; row < rowCount; row++)
         {
@@ -417,46 +737,383 @@ public sealed class ArrowNetworkMessageEncoder : INetworkMessageEncoder
         return builder.Build(s_allocator);
     }
 
+    private static FixedSizeBinaryArray BuildFixedSizeBinaryArray(
+        int length,
+        ArrowBuffer.BitmapBuilder validity,
+        byte[] bytes)
+    {
+#pragma warning disable CA2000 // Justification: ArrayData ownership is transferred to the returned FixedSizeBinaryArray.
+        return new FixedSizeBinaryArray(new ArrayData(
+            new FixedSizeBinaryType(16),
+            length,
+            length - validity.SetBitCount,
+            0,
+            [validity.Build(s_allocator), BuildBuffer(bytes)],
+            []));
+#pragma warning restore CA2000
+    }
+
     private static void AppendArrayElements(Variant value, BuiltInType type, List<Variant> items)
     {
         switch (type)
         {
-            case BuiltInType.Boolean: foreach (bool v in value.GetBooleanArray().Span) items.Add(new Variant(v)); break;
-            case BuiltInType.SByte: foreach (sbyte v in value.GetSByteArray().Span) items.Add(new Variant(v)); break;
-            case BuiltInType.Byte: foreach (byte v in value.GetByteArray().Span) items.Add(new Variant(v)); break;
-            case BuiltInType.Int16: foreach (short v in value.GetInt16Array().Span) items.Add(new Variant(v)); break;
-            case BuiltInType.UInt16: foreach (ushort v in value.GetUInt16Array().Span) items.Add(new Variant(v)); break;
-            case BuiltInType.Int32: foreach (int v in value.GetInt32Array().Span) items.Add(new Variant(v)); break;
-            case BuiltInType.UInt32: foreach (uint v in value.GetUInt32Array().Span) items.Add(new Variant(v)); break;
-            case BuiltInType.Int64: foreach (long v in value.GetInt64Array().Span) items.Add(new Variant(v)); break;
-            case BuiltInType.UInt64: foreach (ulong v in value.GetUInt64Array().Span) items.Add(new Variant(v)); break;
-            case BuiltInType.Float: foreach (float v in value.GetFloatArray().Span) items.Add(new Variant(v)); break;
-            case BuiltInType.Double: foreach (double v in value.GetDoubleArray().Span) items.Add(new Variant(v)); break;
-            case BuiltInType.String: foreach (string? v in value.GetStringArray().Span) items.Add(v is null ? Variant.Null : new Variant(v)); break;
-            case BuiltInType.DateTime: foreach (DateTimeUtc v in value.GetDateTimeArray().Span) items.Add(v.IsNull ? Variant.Null : new Variant(v)); break;
-            case BuiltInType.Guid: foreach (Uuid v in value.GetGuidArray().Span) items.Add(new Variant(v)); break;
-            case BuiltInType.ByteString: foreach (ByteString v in value.GetByteStringArray().Span) items.Add(v.IsNull ? Variant.Null : new Variant(v)); break;
-            case BuiltInType.StatusCode: foreach (StatusCode v in value.GetStatusCodeArray().Span) items.Add(new Variant(v)); break;
-            default: throw new NotSupportedException($"Arrow list field element type {type} is not supported.");
+            case BuiltInType.Boolean:
+                foreach (bool v in value.GetBooleanArray().Span)
+                {
+                    items.Add(new Variant(v));
+                }
+                break;
+            case BuiltInType.SByte:
+                foreach (sbyte v in value.GetSByteArray().Span)
+                {
+                    items.Add(new Variant(v));
+                }
+                break;
+            case BuiltInType.Byte:
+                foreach (byte v in value.GetByteArray().Span)
+                {
+                    items.Add(new Variant(v));
+                }
+                break;
+            case BuiltInType.Int16:
+                foreach (short v in value.GetInt16Array().Span)
+                {
+                    items.Add(new Variant(v));
+                }
+                break;
+            case BuiltInType.UInt16:
+                foreach (ushort v in value.GetUInt16Array().Span)
+                {
+                    items.Add(new Variant(v));
+                }
+                break;
+            case BuiltInType.Int32:
+                foreach (int v in value.GetInt32Array().Span)
+                {
+                    items.Add(new Variant(v));
+                }
+                break;
+            case BuiltInType.UInt32:
+                foreach (uint v in value.GetUInt32Array().Span)
+                {
+                    items.Add(new Variant(v));
+                }
+                break;
+            case BuiltInType.Int64:
+                foreach (long v in value.GetInt64Array().Span)
+                {
+                    items.Add(new Variant(v));
+                }
+                break;
+            case BuiltInType.UInt64:
+                foreach (ulong v in value.GetUInt64Array().Span)
+                {
+                    items.Add(new Variant(v));
+                }
+                break;
+            case BuiltInType.Float:
+                foreach (float v in value.GetFloatArray().Span)
+                {
+                    items.Add(new Variant(v));
+                }
+                break;
+            case BuiltInType.Double:
+                foreach (double v in value.GetDoubleArray().Span)
+                {
+                    items.Add(new Variant(v));
+                }
+                break;
+            case BuiltInType.String:
+                foreach (string? v in value.GetStringArray().Span)
+                {
+                    items.Add(v is null ? Variant.Null : new Variant(v));
+                }
+                break;
+            case BuiltInType.DateTime:
+                foreach (DateTimeUtc v in value.GetDateTimeArray().Span)
+                {
+                    items.Add(v.IsNull ? Variant.Null : new Variant(v));
+                }
+                break;
+            case BuiltInType.Guid:
+                foreach (Uuid v in value.GetGuidArray().Span)
+                {
+                    items.Add(new Variant(v));
+                }
+                break;
+            case BuiltInType.ByteString:
+                foreach (ByteString v in value.GetByteStringArray().Span)
+                {
+                    items.Add(v.IsNull ? Variant.Null : new Variant(v));
+                }
+                break;
+            case BuiltInType.StatusCode:
+                foreach (StatusCode v in value.GetStatusCodeArray().Span)
+                {
+                    items.Add(new Variant(v));
+                }
+                break;
+            default:
+                throw new NotSupportedException($"Arrow list field element type {type} is not supported.");
         }
     }
 
-    private static IArrowArray AppendBoolArray(List<Variant> values) { var b = new BooleanArray.Builder(); foreach (Variant v in values) { if (v.IsNull) b.AppendNull(); else b.Append(v.GetBoolean()); } return b.Build(s_allocator); }
-    private static IArrowArray AppendSByteArray(List<Variant> values) { var b = new Int8Array.Builder(); foreach (Variant v in values) { if (v.IsNull) b.AppendNull(); else b.Append(v.GetSByte()); } return b.Build(s_allocator); }
-    private static IArrowArray AppendByteArray(List<Variant> values) { var b = new UInt8Array.Builder(); foreach (Variant v in values) { if (v.IsNull) b.AppendNull(); else b.Append(v.GetByte()); } return b.Build(s_allocator); }
-    private static IArrowArray AppendInt16Array(List<Variant> values) { var b = new Int16Array.Builder(); foreach (Variant v in values) { if (v.IsNull) b.AppendNull(); else b.Append(v.GetInt16()); } return b.Build(s_allocator); }
-    private static IArrowArray AppendUInt16Array(List<Variant> values) { var b = new UInt16Array.Builder(); foreach (Variant v in values) { if (v.IsNull) b.AppendNull(); else b.Append(v.GetUInt16()); } return b.Build(s_allocator); }
-    private static IArrowArray AppendInt32Array(List<Variant> values) { var b = new Int32Array.Builder(); foreach (Variant v in values) { if (v.IsNull) b.AppendNull(); else b.Append(v.GetInt32()); } return b.Build(s_allocator); }
-    private static IArrowArray AppendUInt32Array(List<Variant> values) { var b = new UInt32Array.Builder(); foreach (Variant v in values) { if (v.IsNull) b.AppendNull(); else b.Append(v.GetUInt32()); } return b.Build(s_allocator); }
-    private static IArrowArray AppendInt64Array(List<Variant> values) { var b = new Int64Array.Builder(); foreach (Variant v in values) { if (v.IsNull) b.AppendNull(); else b.Append(v.GetInt64()); } return b.Build(s_allocator); }
-    private static IArrowArray AppendUInt64Array(List<Variant> values) { var b = new UInt64Array.Builder(); foreach (Variant v in values) { if (v.IsNull) b.AppendNull(); else b.Append(v.GetUInt64()); } return b.Build(s_allocator); }
-    private static IArrowArray AppendFloatArray(List<Variant> values) { var b = new FloatArray.Builder(); foreach (Variant v in values) { if (v.IsNull) b.AppendNull(); else b.Append(v.GetFloat()); } return b.Build(s_allocator); }
-    private static IArrowArray AppendDoubleArray(List<Variant> values) { var b = new DoubleArray.Builder(); foreach (Variant v in values) { if (v.IsNull) b.AppendNull(); else b.Append(v.GetDouble()); } return b.Build(s_allocator); }
-    private static IArrowArray AppendStringArray(List<Variant> values) { var b = new StringArray.Builder(); foreach (Variant v in values) { if (v.IsNull) b.AppendNull(); else b.Append(v.GetString()); } return b.Build(s_allocator); }
-    private static IArrowArray AppendDateTimeArray(List<Variant> values) { var b = new Int64Array.Builder(); foreach (Variant v in values) { if (v.IsNull) b.AppendNull(); else b.Append(v.GetDateTime().Value); } return b.Build(s_allocator); }
-    private static IArrowArray AppendByteStringArray(List<Variant> values) { var b = new BinaryArray.Builder(); foreach (Variant v in values) { if (v.IsNull || v.GetByteString().IsNull) b.AppendNull(); else b.Append(v.GetByteString().Span); } return b.Build(s_allocator); }
-    private static IArrowArray AppendStatusArray(List<Variant> values) { var b = new UInt32Array.Builder(); foreach (Variant v in values) { if (v.IsNull) b.AppendNull(); else b.Append(v.GetStatusCode().Code); } return b.Build(s_allocator); }
-    private static IArrowArray AppendGuidArray(List<Variant> values)
+    private static BooleanArray AppendBoolArray(List<Variant> values)
+    {
+        var builder = new BooleanArray.Builder();
+        foreach (Variant v in values)
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetBoolean());
+            }
+        }
+        return builder.Build(s_allocator);
+    }
+
+    private static Int8Array AppendInt8Array(List<Variant> values)
+    {
+        var builder = new Int8Array.Builder();
+        foreach (Variant v in values)
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetSByte());
+            }
+        }
+        return builder.Build(s_allocator);
+    }
+
+    private static UInt8Array AppendUInt8Array(List<Variant> values)
+    {
+        var builder = new UInt8Array.Builder();
+        foreach (Variant v in values)
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetByte());
+            }
+        }
+        return builder.Build(s_allocator);
+    }
+
+    private static Int16Array AppendInt16Array(List<Variant> values)
+    {
+        var builder = new Int16Array.Builder();
+        foreach (Variant v in values)
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetInt16());
+            }
+        }
+        return builder.Build(s_allocator);
+    }
+
+    private static UInt16Array AppendUInt16Array(List<Variant> values)
+    {
+        var builder = new UInt16Array.Builder();
+        foreach (Variant v in values)
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetUInt16());
+            }
+        }
+        return builder.Build(s_allocator);
+    }
+
+    private static Int32Array AppendInt32Array(List<Variant> values)
+    {
+        var builder = new Int32Array.Builder();
+        foreach (Variant v in values)
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetInt32());
+            }
+        }
+        return builder.Build(s_allocator);
+    }
+
+    private static UInt32Array AppendUInt32Array(List<Variant> values)
+    {
+        var builder = new UInt32Array.Builder();
+        foreach (Variant v in values)
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetUInt32());
+            }
+        }
+        return builder.Build(s_allocator);
+    }
+
+    private static Int64Array AppendInt64Array(List<Variant> values)
+    {
+        var builder = new Int64Array.Builder();
+        foreach (Variant v in values)
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetInt64());
+            }
+        }
+        return builder.Build(s_allocator);
+    }
+
+    private static UInt64Array AppendUInt64Array(List<Variant> values)
+    {
+        var builder = new UInt64Array.Builder();
+        foreach (Variant v in values)
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetUInt64());
+            }
+        }
+        return builder.Build(s_allocator);
+    }
+
+    private static FloatArray AppendFloatArray(List<Variant> values)
+    {
+        var builder = new FloatArray.Builder();
+        foreach (Variant v in values)
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetFloat());
+            }
+        }
+        return builder.Build(s_allocator);
+    }
+
+    private static DoubleArray AppendDoubleArray(List<Variant> values)
+    {
+        var builder = new DoubleArray.Builder();
+        foreach (Variant v in values)
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetDouble());
+            }
+        }
+        return builder.Build(s_allocator);
+    }
+
+    private static StringArray AppendStringArray(List<Variant> values)
+    {
+        var builder = new StringArray.Builder();
+        foreach (Variant v in values)
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetString());
+            }
+        }
+        return builder.Build(s_allocator);
+    }
+
+    private static Int64Array AppendDateTimeArray(List<Variant> values)
+    {
+        var builder = new Int64Array.Builder();
+        foreach (Variant v in values)
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetDateTime().Value);
+            }
+        }
+        return builder.Build(s_allocator);
+    }
+
+    private static BinaryArray AppendByteStringArray(List<Variant> values)
+    {
+        var builder = new BinaryArray.Builder();
+        foreach (Variant v in values)
+        {
+            if (v.IsNull || v.GetByteString().IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetByteString().Span);
+            }
+        }
+        return builder.Build(s_allocator);
+    }
+
+    private static UInt32Array AppendStatusArray(List<Variant> values)
+    {
+        var builder = new UInt32Array.Builder();
+        foreach (Variant v in values)
+        {
+            if (v.IsNull)
+            {
+                builder.AppendNull();
+            }
+            else
+            {
+                builder.Append(v.GetStatusCode().Code);
+            }
+        }
+        return builder.Build(s_allocator);
+    }
+
+    private static FixedSizeBinaryArray AppendGuidArray(List<Variant> values)
     {
         var bytes = new List<byte>(values.Count * 16);
         var validity = new ArrowBuffer.BitmapBuilder(values.Count);
@@ -466,7 +1123,7 @@ public sealed class ArrowNetworkMessageEncoder : INetworkMessageEncoder
             validity.Append(valid);
             bytes.AddRange(valid ? v.GetGuid().ToByteArray() : new byte[16]);
         }
-        return new FixedSizeBinaryArray(new ArrayData(new FixedSizeBinaryType(16), values.Count, values.Count - validity.SetBitCount, 0, [validity.Build(s_allocator), BuildBuffer(bytes.ToArray())], []));
+        return BuildFixedSizeBinaryArray(values.Count, validity, bytes.ToArray());
     }
 
     private readonly record struct FieldPlan(string Name, int Index, TypeInfo TypeInfo, IArrowType ArrowType);

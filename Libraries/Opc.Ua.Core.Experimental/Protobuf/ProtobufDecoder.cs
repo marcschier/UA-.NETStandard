@@ -1,4 +1,32 @@
-#pragma warning disable RCS0056, RCS0023, RCS1007, CA1305, CA1725, CS0618, CS0649, CS8604, CS8619
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,28 +34,82 @@ using System.Linq;
 
 namespace Opc.Ua.Core.Experimental
 {
+    /// <summary>
+    /// Decodes OPC UA values from the experimental Part 6 Protobuf wire representation.
+    /// </summary>
     public sealed class ProtobufDecoder : IDecoder
     {
-        public ProtobufDecoder(byte[] buffer, IServiceMessageContext context) : this(new ReadOnlyMemory<byte>(buffer), context) { }
+        /// <summary>
+        /// Initializes a new ProtobufDecoder instance for the experimental OPC UA encoding support.
+        /// </summary>
+        /// <param name="buffer">The encoded payload buffer to decode.</param>
+        /// <param name="context">The service message context that supplies namespace, server URI, and encodeable type resolution tables.</param>
+        public ProtobufDecoder(byte[] buffer, IServiceMessageContext context)
+            : this(new ReadOnlyMemory<byte>(buffer), context) { }
+
+        /// <summary>
+        /// Initializes a new ProtobufDecoder instance for the experimental OPC UA encoding support.
+        /// </summary>
+        /// <param name="buffer">The encoded payload buffer to decode.</param>
+        /// <param name="context">The service message context that supplies namespace, server URI, and encodeable type resolution tables.</param>
         public ProtobufDecoder(ReadOnlyMemory<byte> buffer, IServiceMessageContext context)
         {
             Context = context ?? throw new ArgumentNullException(nameof(context));
             m_stack.Push(new Frame(Proto.Parse(buffer)));
         }
+
+        /// <summary>
+        /// Initializes a new ProtobufDecoder instance for the experimental OPC UA encoding support.
+        /// </summary>
+        /// <param name="stream">The stream that receives or supplies the encoded payload.</param>
+        /// <param name="context">The service message context that supplies namespace, server URI, and encodeable type resolution tables.</param>
         public ProtobufDecoder(Stream stream, IServiceMessageContext context)
         {
             Context = context ?? throw new ArgumentNullException(nameof(context));
-            using var ms = new MemoryStream(); stream.CopyTo(ms); m_stack.Push(new Frame(Proto.Parse(ms.ToArray())));
+            using var ms = new MemoryStream();
+            stream.CopyTo(ms);
+            m_stack.Push(new Frame(Proto.Parse(ms.ToArray())));
         }
+
+        /// <inheritdoc/>
         public EncodingType EncodingType => EncodingType.Json;
+
+        /// <inheritdoc/>
         public IServiceMessageContext Context { get; }
+
+        /// <inheritdoc/>
         public void Dispose() => Close();
-        public void Close() { m_stack.Clear(); }
-        public void SetMappingTables(NamespaceTable namespaceUris, StringTable serverUris) { m_namespaceMappings = namespaceUris?.CreateMapping(Context.NamespaceUris, true); m_serverMappings = serverUris?.CreateMapping(Context.ServerUris, true); }
+
+        /// <inheritdoc/>
+        public void Close()
+        {
+            m_stack.Clear();
+        }
+
+        /// <inheritdoc/>
+        public void SetMappingTables(NamespaceTable namespaceUris, StringTable serverUris)
+        {
+            m_namespaceMappings = namespaceUris?.CreateMapping(Context.NamespaceUris, true);
+            m_serverMappings = serverUris?.CreateMapping(Context.ServerUris, true);
+        }
+
+        /// <inheritdoc/>
         public void PushNamespace(string namespaceUri) { }
+
+        /// <inheritdoc/>
         public void PopNamespace() { }
-        public T DecodeMessage<T>() where T : IEncodeable { NodeId type = ReadNodeId("type_id"); return ReadEncodeable<T>("body", type); }
+
+        /// <inheritdoc/>
+        public T DecodeMessage<T>()
+            where T : IEncodeable
+        {
+            NodeId type = ReadNodeId("type_id");
+            return ReadEncodeable<T>("body", type);
+        }
+
+        /// <inheritdoc/>
         public bool HasField(string fieldName) => Current.Message.Has(Current.FieldForName(fieldName));
+
         // KNOWN LIMITATION (reference decoder): optional-field presence is reconstructed by probing
         // each optional field name against the wire (HasField). Because this hand-rolled reference
         // numbers protobuf fields positionally and omits absent optionals, the reconstruction is only
@@ -39,95 +121,677 @@ namespace Opc.Ua.Core.Experimental
         // absent optionals) plus proto3 explicit presence. A schema-driven codec that reads/writes fixed
         // numbers from the generated .proto does not have this limitation; adopting fixed numbering here
         // is deferred beyond this first positional reference.
-        public uint ReadEncodingMask(IList<string> masks) { if (masks != null) { uint mask=0; for (int i=0;i<masks.Count && i<32;i++) if (HasField(masks[i])) mask |= 1u << i; return mask; } return Current.EncodingMask; }
-        public uint ReadSwitchField(IList<string> switches, out string? fieldName) { fieldName=null; if (switches != null) { for (int i=0;i<switches.Count;i++) if (HasField(switches[i])) { fieldName=switches[i]; return (uint)(i+1); } } return Current.UnionSwitch; }
 
-        public bool ReadBoolean(string? f) => Get(f).Varint != 0;
-        public sbyte ReadSByte(string? f) => unchecked((sbyte)Get(f).Varint);
-        public byte ReadByte(string? f) => checked((byte)Get(f).Varint);
-        public short ReadInt16(string? f) => unchecked((short)Get(f).Varint);
-        public ushort ReadUInt16(string? f) => checked((ushort)Get(f).Varint);
-        public int ReadInt32(string? f) => unchecked((int)Get(f).Varint);
-        public uint ReadUInt32(string? f) => checked((uint)Get(f).Varint);
-        public long ReadInt64(string? f) => unchecked((long)Get(f).Varint);
-        public ulong ReadUInt64(string? f) => Get(f).Varint;
-        public float ReadFloat(string? f) => BitConverter.UInt32BitsToSingle(Get(f).Fixed32);
-        public double ReadDouble(string? f) => BitConverter.UInt64BitsToDouble(Get(f).Fixed64);
-        public string? ReadString(string? f) { var fld = GetNullable(f); if (fld == null) return null; var m=Proto.Parse(fld.Value.Bytes); var v=m.First(1); return v.HasValue ? Proto.String(v.Value.Bytes) : null; }
-        public DateTimeUtc ReadDateTime(string? f) => new(unchecked((long)Get(f).Fixed64));
-        public Uuid ReadGuid(string? f) => new(Get(f).Bytes.ToArray());
-        public ByteString ReadByteString(string? f) { var fld=GetNullable(f); if (fld==null) return default; var m=Proto.Parse(fld.Value.Bytes); var v=m.First(1); return v.HasValue ? ByteString.From(v.Value.Bytes.Span) : default; }
-        public XmlElement ReadXmlElement(string? f) { string? xml=ReadString(f); if (xml == null) return default!; return (XmlElement)xml; }
-        public StatusCode ReadStatusCode(string? f) => new(Get(f).Fixed32);
-        public EnumValue ReadEnumerated(string? f) => new(ReadInt32(f));
-        public T ReadEnumerated<T>(string? f) where T : struct, Enum => (T)Enum.ToObject(typeof(T), ReadInt32(f));
-
-        public NodeId ReadNodeId(string? f) => DecodeNodeId(Proto.Parse(Get(f).Bytes));
-        public ExpandedNodeId ReadExpandedNodeId(string? f) { var m=Proto.Parse(Get(f).Bytes); NodeId n=m.First(1) is var nf && nf.HasValue ? DecodeNodeId(Proto.Parse(nf.Value.Bytes)) : NodeId.Null; string? uri=m.First(2) is var uf && uf.HasValue ? Proto.String(uf.Value.Bytes) : null; uint si=m.First(3) is var sf && sf.HasValue ? (uint)sf.Value.Varint : 0; return new ExpandedNodeId(n, uri, si); }
-        public QualifiedName ReadQualifiedName(string? f) { var m=Proto.Parse(Get(f).Bytes); ushort ns=m.First(1) is var nf && nf.HasValue ? (ushort)nf.Value.Varint : (ushort)0; string? name=m.First(2) is var sf && sf.HasValue ? Proto.String(sf.Value.Bytes) : null; return new QualifiedName(name, ns); }
-        public LocalizedText ReadLocalizedText(string? f) { var m=Proto.Parse(Get(f).Bytes); string? loc=m.First(1) is var lf && lf.HasValue ? Proto.String(lf.Value.Bytes) : null; string? text=m.First(2) is var tf && tf.HasValue ? Proto.String(tf.Value.Bytes) : null; return new LocalizedText(loc, text); }
-        public DiagnosticInfo? ReadDiagnosticInfo(string? f) { var fld=GetNullable(f); return fld.HasValue ? DecodeDiagnosticInfo(Proto.Parse(fld.Value.Bytes)) : null; }
-        public DataValue ReadDataValue(string? f) => DecodeDataValue(Proto.Parse(Get(f).Bytes));
-        public ExtensionObject ReadExtensionObject(string? f) => DecodeExtensionObject(Proto.Parse(Get(f).Bytes));
-        public Variant ReadVariant(string? f) => DecodeVariant(Proto.Parse(Get(f).Bytes));
-        public Variant ReadVariantValue(string? f, TypeInfo typeInfo) => ReadVariant(f);
-
-        public T ReadEncodeable<T>(string? f, ExpandedNodeId encodeableTypeId) where T : IEncodeable
+        /// <inheritdoc/>
+        public uint ReadEncodingMask(IList<string> masks)
         {
-            ProtoField fld=Get(f); if (!Context.Factory.TryGetEncodeableType(encodeableTypeId, out IEncodeableType? act)) throw new ServiceResultException(StatusCodes.BadDecodingError, $"Cannot decode type '{encodeableTypeId}'."); var v=(T)act.CreateInstance(); DecodeInto(v, fld.Bytes); return v;
+            if (masks != null)
+            {
+                uint mask = 0;
+                for (int i = 0; i < masks.Count && i < 32; i++)
+                {
+                    if (HasField(masks[i]))
+                    {
+                        mask |= 1u << i;
+                    }
+                }
+
+                return mask;
+            }
+            return 0;
         }
-        public T ReadEncodeable<T>(string? f) where T : IEncodeable, new() { var v=new T(); DecodeInto(v, Get(f).Bytes); return v; }
-        public T ReadEncodeableAsExtensionObject<T>(string? f) where T : IEncodeable { var eo=ReadExtensionObject(f); if (eo.Body is T t) return t; if (!eo.TypeId.IsNull) return ReadEncodeable<T>(f, eo.TypeId); return default!; }
-        private void DecodeInto(IEncodeable v, ReadOnlyMemory<byte> bytes) { m_stack.Push(new Frame(Proto.Parse(bytes))); try { v.Decode(this); } finally { m_stack.Pop(); } }
 
-        public ArrayOf<bool> ReadBooleanArray(string? f) => ReadArray(f, x => x.Varint != 0);
-        public ArrayOf<sbyte> ReadSByteArray(string? f) => ReadArray(f, x => unchecked((sbyte)x.Varint));
-        public ArrayOf<byte> ReadByteArray(string? f) => ReadArray(f, x => (byte)x.Varint);
-        public ArrayOf<short> ReadInt16Array(string? f) => ReadArray(f, x => unchecked((short)x.Varint));
-        public ArrayOf<ushort> ReadUInt16Array(string? f) => ReadArray(f, x => (ushort)x.Varint);
-        public ArrayOf<int> ReadInt32Array(string? f) => ReadArray(f, x => unchecked((int)x.Varint));
-        public ArrayOf<uint> ReadUInt32Array(string? f) => ReadArray(f, x => (uint)x.Varint);
-        public ArrayOf<long> ReadInt64Array(string? f) => ReadArray(f, x => (long)x.Varint);
-        public ArrayOf<ulong> ReadUInt64Array(string? f) => ReadArray(f, x => x.Varint);
-        public ArrayOf<float> ReadFloatArray(string? f) => ReadArray(f, x => BitConverter.UInt32BitsToSingle(x.Fixed32));
-        public ArrayOf<double> ReadDoubleArray(string? f) => ReadArray(f, x => BitConverter.UInt64BitsToDouble(x.Fixed64));
-        public ArrayOf<string?> ReadStringArray(string? f) => ReadArray(f, x => { var m=Proto.Parse(x.Bytes); var v=m.First(1); return v.HasValue ? Proto.String(v.Value.Bytes) : null; });
-        public ArrayOf<DateTimeUtc> ReadDateTimeArray(string? f) => ReadArray(f, x => new DateTimeUtc((long)x.Fixed64));
-        public ArrayOf<Uuid> ReadGuidArray(string? f) => ReadArray(f, x => new Uuid(x.Bytes.ToArray()));
-        public ArrayOf<ByteString> ReadByteStringArray(string? f) => ReadArray(f, x => { var m=Proto.Parse(x.Bytes); var v=m.First(1); return v.HasValue ? ByteString.From(v.Value.Bytes.Span) : default; });
-        public ArrayOf<XmlElement> ReadXmlElementArray(string? f) => ReadArray(f, x => { var m=Proto.Parse(x.Bytes); var v=m.First(1); if (!v.HasValue) return default!; return (XmlElement)Proto.String(v.Value.Bytes); });
-        public ArrayOf<NodeId> ReadNodeIdArray(string? f) => ReadArray(f, x => DecodeNodeId(Proto.Parse(x.Bytes)));
-        public ArrayOf<ExpandedNodeId> ReadExpandedNodeIdArray(string? f) => ReadArray(f, x => { m_stack.Push(new Frame(new ProtoMessage { Fields = { x } })); try { return ReadExpandedNodeId(null); } finally { m_stack.Pop(); } });
-        public ArrayOf<StatusCode> ReadStatusCodeArray(string? f) => ReadArray(f, x => new StatusCode(x.Fixed32));
-        public ArrayOf<DiagnosticInfo?> ReadDiagnosticInfoArray(string? f) => new ArrayOf<DiagnosticInfo?>(ReadArray(f, x => (DiagnosticInfo?)DecodeDiagnosticInfo(Proto.Parse(x.Bytes))).Memory);
-        public ArrayOf<QualifiedName> ReadQualifiedNameArray(string? f) => ReadArray(f, x => { var m=Proto.Parse(x.Bytes); return new QualifiedName(m.First(2) is var n && n.HasValue ? Proto.String(n.Value.Bytes) : null, m.First(1) is var ns && ns.HasValue ? (ushort)ns.Value.Varint : (ushort)0); });
-        public ArrayOf<LocalizedText> ReadLocalizedTextArray(string? f) => ReadArray(f, x => { var m=Proto.Parse(x.Bytes); return new LocalizedText(m.First(1) is var l && l.HasValue ? Proto.String(l.Value.Bytes) : null, m.First(2) is var t && t.HasValue ? Proto.String(t.Value.Bytes) : null); });
-        public ArrayOf<Variant> ReadVariantArray(string? f) => ReadArray(f, x => DecodeVariant(Proto.Parse(x.Bytes)));
-        public ArrayOf<DataValue> ReadDataValueArray(string? f) => ReadArray(f, x => DecodeDataValue(Proto.Parse(x.Bytes)));
-        public ArrayOf<ExtensionObject> ReadExtensionObjectArray(string? f) => ReadArray(f, x => DecodeExtensionObject(Proto.Parse(x.Bytes)));
-        public ArrayOf<T> ReadEnumeratedArray<T>(string? f) where T : struct, Enum => ReadArray(f, x => (T)Enum.ToObject(typeof(T), (int)(long)x.Varint));
-        public ArrayOf<EnumValue> ReadEnumeratedArray(string? f) => ReadArray(f, x => new EnumValue((int)(long)x.Varint));
-        public ArrayOf<T> ReadEncodeableArray<T>(string? f) where T : IEncodeable, new() => ReadArray(f, x => { var v=new T(); DecodeInto(v,x.Bytes); return v; });
-        public ArrayOf<T> ReadEncodeableArray<T>(string? f, ExpandedNodeId id) where T : IEncodeable => ReadArray(f, x => { if (!Context.Factory.TryGetEncodeableType(id, out IEncodeableType? act)) throw new ServiceResultException(StatusCodes.BadDecodingError); var v=(T)act.CreateInstance(); DecodeInto(v,x.Bytes); return v; });
-        public ArrayOf<T> ReadEncodeableArrayAsExtensionObjects<T>(string? f) where T : IEncodeable => throw new NotSupportedException("Decoding abstract encodeable arrays requires generated subtype descriptors in the Protobuf reference decoder.");
-        public MatrixOf<T> ReadEncodeableMatrix<T>(string? f, ExpandedNodeId id) where T : IEncodeable => throw new NotSupportedException("Decode encodeable matrix with an explicit generated T is not implemented in the minimal Protobuf reference decoder.");
-        public MatrixOf<T> ReadEncodeableMatrix<T>(string? f) where T : IEncodeable, new() => throw new NotSupportedException("Decode encodeable matrix is not implemented in the minimal Protobuf reference decoder.");
+        /// <inheritdoc/>
+        public uint ReadSwitchField(IList<string> switches, out string? fieldName)
+        {
+            fieldName = null;
+            if (switches != null)
+            {
+                for (int i = 0; i < switches.Count; i++)
+                {
+                    if (HasField(switches[i]))
+                    {
+                        fieldName = switches[i];
+                        return (uint)(i + 1);
+                    }
+                }
+            }
+            return 0;
+        }
 
-        private ArrayOf<T> ReadArray<T>(string? f, Func<ProtoField,T> conv) { var fld=GetNullable(f); if (!fld.HasValue) return default; var m=Proto.Parse(fld.Value.Bytes); return new ArrayOf<T>(m.All(1).Select(conv).ToArray()); }
-        private ProtoField Get(string? f) => GetNullable(f) ?? default;
-        private ProtoField? GetNullable(string? f) { int n=Current.Next(f); var fld=Current.Message.First(n); return fld.HasValue && fld.Value.Number != 0 ? fld : null; }
+        /// <inheritdoc/>
+        public bool ReadBoolean(string? fieldName) => Get(fieldName).Varint != 0;
+
+        /// <inheritdoc/>
+        public sbyte ReadSByte(string? fieldName) => unchecked((sbyte)Get(fieldName).Varint);
+
+        /// <inheritdoc/>
+        public byte ReadByte(string? fieldName) => checked((byte)Get(fieldName).Varint);
+
+        /// <inheritdoc/>
+        public short ReadInt16(string? fieldName) => unchecked((short)Get(fieldName).Varint);
+
+        /// <inheritdoc/>
+        public ushort ReadUInt16(string? fieldName) => checked((ushort)Get(fieldName).Varint);
+
+        /// <inheritdoc/>
+        public int ReadInt32(string? fieldName) => unchecked((int)Get(fieldName).Varint);
+
+        /// <inheritdoc/>
+        public uint ReadUInt32(string? fieldName) => checked((uint)Get(fieldName).Varint);
+
+        /// <inheritdoc/>
+        public long ReadInt64(string? fieldName) => unchecked((long)Get(fieldName).Varint);
+
+        /// <inheritdoc/>
+        public ulong ReadUInt64(string? fieldName) => Get(fieldName).Varint;
+
+        /// <inheritdoc/>
+        public float ReadFloat(string? fieldName) => BitConverter.UInt32BitsToSingle(Get(fieldName).Fixed32);
+
+        /// <inheritdoc/>
+        public double ReadDouble(string? fieldName) => BitConverter.UInt64BitsToDouble(Get(fieldName).Fixed64);
+
+        /// <inheritdoc/>
+        public string? ReadString(string? fieldName)
+        {
+            var fld = GetNullable(fieldName);
+            if (fld == null)
+            {
+                return null;
+            }
+            var m = Proto.Parse(fld.Value.Bytes);
+            var values = m.First(1);
+            return values.HasValue ? Proto.String(values.Value.Bytes) : null;
+        }
+
+        /// <inheritdoc/>
+        public DateTimeUtc ReadDateTime(string? fieldName) => new(unchecked((long)Get(fieldName).Fixed64));
+
+        /// <inheritdoc/>
+        public Uuid ReadGuid(string? fieldName) => new(Get(fieldName).Bytes.ToArray());
+
+        /// <inheritdoc/>
+        public ByteString ReadByteString(string? fieldName)
+        {
+            var fld = GetNullable(fieldName);
+            if (fld == null)
+            {
+                return default;
+            }
+            var m = Proto.Parse(fld.Value.Bytes);
+            var values = m.First(1);
+            return values.HasValue ? ByteString.From(values.Value.Bytes.Span) : default;
+        }
+
+        /// <inheritdoc/>
+        public XmlElement ReadXmlElement(string? fieldName)
+        {
+            string? xml = ReadString(fieldName);
+            return xml == null ? default! : (XmlElement)xml;
+        }
+
+        /// <inheritdoc/>
+        public StatusCode ReadStatusCode(string? fieldName) => new(Get(fieldName).Fixed32);
+
+        /// <inheritdoc/>
+        public EnumValue ReadEnumerated(string? fieldName) => new(ReadInt32(fieldName));
+
+        /// <inheritdoc/>
+        public T ReadEnumerated<T>(string? fieldName)
+            where T : struct, Enum => (T)Enum.ToObject(typeof(T), ReadInt32(fieldName));
+
+        /// <inheritdoc/>
+        public NodeId ReadNodeId(string? fieldName) => DecodeNodeId(Proto.Parse(Get(fieldName).Bytes));
+
+        /// <inheritdoc/>
+        public ExpandedNodeId ReadExpandedNodeId(string? fieldName)
+        {
+            var m = Proto.Parse(Get(fieldName).Bytes);
+            NodeId n = m.First(1) is var nf && nf.HasValue ? DecodeNodeId(Proto.Parse(nf.Value.Bytes)) : NodeId.Null;
+            string? uri = m.First(2) is var uf && uf.HasValue ? Proto.String(uf.Value.Bytes) : null;
+            uint si = m.First(3) is var sf && sf.HasValue ? (uint)sf.Value.Varint : 0;
+            return new ExpandedNodeId(n, uri, si);
+        }
+
+        /// <inheritdoc/>
+        public QualifiedName ReadQualifiedName(string? fieldName)
+        {
+            var m = Proto.Parse(Get(fieldName).Bytes);
+            ushort ns = m.First(1) is var nf && nf.HasValue ? (ushort)nf.Value.Varint : (ushort)0;
+            string? name = m.First(2) is var sf && sf.HasValue ? Proto.String(sf.Value.Bytes) : null;
+            return new QualifiedName(name, ns);
+        }
+
+        /// <inheritdoc/>
+        public LocalizedText ReadLocalizedText(string? fieldName)
+        {
+            var m = Proto.Parse(Get(fieldName).Bytes);
+            string? loc = m.First(1) is var lf && lf.HasValue ? Proto.String(lf.Value.Bytes) : null;
+            string? text = m.First(2) is var tf && tf.HasValue ? Proto.String(tf.Value.Bytes) : null;
+            return new LocalizedText(loc, text);
+        }
+
+        /// <inheritdoc/>
+        public DiagnosticInfo? ReadDiagnosticInfo(string? fieldName)
+        {
+            var fld = GetNullable(fieldName);
+            return fld.HasValue ? DecodeDiagnosticInfo(Proto.Parse(fld.Value.Bytes)) : null;
+        }
+
+        /// <inheritdoc/>
+        public DataValue ReadDataValue(string? fieldName) => DecodeDataValue(Proto.Parse(Get(fieldName).Bytes));
+
+        /// <inheritdoc/>
+        public ExtensionObject ReadExtensionObject(string? fieldName) =>
+            DecodeExtensionObject(Proto.Parse(Get(fieldName).Bytes));
+
+        /// <inheritdoc/>
+        public Variant ReadVariant(string? fieldName) => DecodeVariant(Proto.Parse(Get(fieldName).Bytes));
+
+        /// <inheritdoc/>
+        public Variant ReadVariantValue(string? fieldName, TypeInfo typeInfo) => ReadVariant(fieldName);
+
+        /// <inheritdoc/>
+        public T ReadEncodeable<T>(string? fieldName, ExpandedNodeId encodeableTypeId)
+            where T : IEncodeable
+        {
+            ProtoField fld = Get(fieldName);
+            if (!Context.Factory.TryGetEncodeableType(encodeableTypeId, out IEncodeableType? act))
+            {
+                throw new ServiceResultException(
+                    StatusCodes.BadDecodingError,
+                    $"Cannot decode type '{encodeableTypeId}'."
+                );
+            }
+
+            var values = (T)act.CreateInstance();
+            DecodeInto(values, fld.Bytes);
+            return values;
+        }
+
+        /// <inheritdoc/>
+        public T ReadEncodeable<T>(string? fieldName)
+            where T : IEncodeable, new()
+        {
+            var values = new T();
+            DecodeInto(values, Get(fieldName).Bytes);
+            return values;
+        }
+
+        /// <inheritdoc/>
+        public T ReadEncodeableAsExtensionObject<T>(string? fieldName)
+            where T : IEncodeable
+        {
+            var eo = ReadExtensionObject(fieldName);
+            if (eo.TryGetValue(out T? t, Context))
+            {
+                return t;
+            }
+
+            if (!eo.TypeId.IsNull)
+            {
+                return ReadEncodeable<T>(fieldName, eo.TypeId);
+            }
+
+            return default!;
+        }
+
+        private void DecodeInto(IEncodeable values, ReadOnlyMemory<byte> bytes)
+        {
+            m_stack.Push(new Frame(Proto.Parse(bytes)));
+            try
+            {
+                values.Decode(this);
+            }
+            finally
+            {
+                m_stack.Pop();
+            }
+        }
+
+        /// <inheritdoc/>
+        public ArrayOf<bool> ReadBooleanArray(string? fieldName) => ReadArray(fieldName, x => x.Varint != 0);
+
+        /// <inheritdoc/>
+        public ArrayOf<sbyte> ReadSByteArray(string? fieldName) =>
+            ReadArray(fieldName, x => unchecked((sbyte)x.Varint));
+
+        /// <inheritdoc/>
+        public ArrayOf<byte> ReadByteArray(string? fieldName) => ReadArray(fieldName, x => (byte)x.Varint);
+
+        /// <inheritdoc/>
+        public ArrayOf<short> ReadInt16Array(string? fieldName) =>
+            ReadArray(fieldName, x => unchecked((short)x.Varint));
+
+        /// <inheritdoc/>
+        public ArrayOf<ushort> ReadUInt16Array(string? fieldName) => ReadArray(fieldName, x => (ushort)x.Varint);
+
+        /// <inheritdoc/>
+        public ArrayOf<int> ReadInt32Array(string? fieldName) => ReadArray(fieldName, x => unchecked((int)x.Varint));
+
+        /// <inheritdoc/>
+        public ArrayOf<uint> ReadUInt32Array(string? fieldName) => ReadArray(fieldName, x => (uint)x.Varint);
+
+        /// <inheritdoc/>
+        public ArrayOf<long> ReadInt64Array(string? fieldName) => ReadArray(fieldName, x => (long)x.Varint);
+
+        /// <inheritdoc/>
+        public ArrayOf<ulong> ReadUInt64Array(string? fieldName) => ReadArray(fieldName, x => x.Varint);
+
+        /// <inheritdoc/>
+        public ArrayOf<float> ReadFloatArray(string? fieldName) =>
+            ReadArray(fieldName, x => BitConverter.UInt32BitsToSingle(x.Fixed32));
+
+        /// <inheritdoc/>
+        public ArrayOf<double> ReadDoubleArray(string? fieldName) =>
+            ReadArray(fieldName, x => BitConverter.UInt64BitsToDouble(x.Fixed64));
+
+        /// <inheritdoc/>
+        public ArrayOf<string?> ReadStringArray(string? fieldName) =>
+            ReadArray(
+                fieldName,
+                x =>
+                {
+                    var m = Proto.Parse(x.Bytes);
+                    var values = m.First(1);
+                    return values.HasValue ? Proto.String(values.Value.Bytes) : null;
+                }
+            );
+
+        /// <inheritdoc/>
+        public ArrayOf<DateTimeUtc> ReadDateTimeArray(string? fieldName) =>
+            ReadArray(fieldName, x => new DateTimeUtc((long)x.Fixed64));
+
+        /// <inheritdoc/>
+        public ArrayOf<Uuid> ReadGuidArray(string? fieldName) => ReadArray(fieldName, x => new Uuid(x.Bytes.ToArray()));
+
+        /// <inheritdoc/>
+        public ArrayOf<ByteString> ReadByteStringArray(string? fieldName) =>
+            ReadArray(
+                fieldName,
+                x =>
+                {
+                    var m = Proto.Parse(x.Bytes);
+                    var values = m.First(1);
+                    return values.HasValue ? ByteString.From(values.Value.Bytes.Span) : default;
+                }
+            );
+
+        /// <inheritdoc/>
+        public ArrayOf<XmlElement> ReadXmlElementArray(string? fieldName) =>
+            ReadArray(
+                fieldName,
+                x =>
+                {
+                    var m = Proto.Parse(x.Bytes);
+                    var values = m.First(1);
+                    return values.HasValue ? (XmlElement)Proto.String(values.Value.Bytes) : default!;
+                }
+            );
+
+        /// <inheritdoc/>
+        public ArrayOf<NodeId> ReadNodeIdArray(string? fieldName) =>
+            ReadArray(fieldName, x => DecodeNodeId(Proto.Parse(x.Bytes)));
+
+        /// <inheritdoc/>
+        public ArrayOf<ExpandedNodeId> ReadExpandedNodeIdArray(string? fieldName) =>
+            ReadArray(
+                fieldName,
+                x =>
+                {
+                    m_stack.Push(new Frame(new ProtoMessage { Fields = { x } }));
+                    try
+                    {
+                        return ReadExpandedNodeId(null);
+                    }
+                    finally
+                    {
+                        m_stack.Pop();
+                    }
+                }
+            );
+
+        /// <inheritdoc/>
+        public ArrayOf<StatusCode> ReadStatusCodeArray(string? fieldName) =>
+            ReadArray(fieldName, x => new StatusCode(x.Fixed32));
+
+        /// <inheritdoc/>
+        public ArrayOf<DiagnosticInfo?> ReadDiagnosticInfoArray(string? fieldName) =>
+            new ArrayOf<DiagnosticInfo?>(
+                ReadArray(fieldName, x => (DiagnosticInfo?)DecodeDiagnosticInfo(Proto.Parse(x.Bytes))).Memory
+            );
+
+        /// <inheritdoc/>
+        public ArrayOf<QualifiedName> ReadQualifiedNameArray(string? fieldName) =>
+            ReadArray(
+                fieldName,
+                x =>
+                {
+                    var m = Proto.Parse(x.Bytes);
+                    return new QualifiedName(
+                        m.First(2) is var n && n.HasValue ? Proto.String(n.Value.Bytes) : null,
+                        m.First(1) is var ns && ns.HasValue ? (ushort)ns.Value.Varint : (ushort)0
+                    );
+                }
+            );
+
+        /// <inheritdoc/>
+        public ArrayOf<LocalizedText> ReadLocalizedTextArray(string? fieldName) =>
+            ReadArray(
+                fieldName,
+                x =>
+                {
+                    var m = Proto.Parse(x.Bytes);
+                    return new LocalizedText(
+                        m.First(1) is var l && l.HasValue ? Proto.String(l.Value.Bytes) : null,
+                        m.First(2) is var t && t.HasValue ? Proto.String(t.Value.Bytes) : null
+                    );
+                }
+            );
+
+        /// <inheritdoc/>
+        public ArrayOf<Variant> ReadVariantArray(string? fieldName) =>
+            ReadArray(fieldName, x => DecodeVariant(Proto.Parse(x.Bytes)));
+
+        /// <inheritdoc/>
+        public ArrayOf<DataValue> ReadDataValueArray(string? fieldName) =>
+            ReadArray(fieldName, x => DecodeDataValue(Proto.Parse(x.Bytes)));
+
+        /// <inheritdoc/>
+        public ArrayOf<ExtensionObject> ReadExtensionObjectArray(string? fieldName) =>
+            ReadArray(fieldName, x => DecodeExtensionObject(Proto.Parse(x.Bytes)));
+
+        /// <inheritdoc/>
+        public ArrayOf<T> ReadEnumeratedArray<T>(string? fieldName)
+            where T : struct, Enum => ReadArray(fieldName, x => (T)Enum.ToObject(typeof(T), (int)(long)x.Varint));
+
+        /// <inheritdoc/>
+        public ArrayOf<EnumValue> ReadEnumeratedArray(string? fieldName) =>
+            ReadArray(fieldName, x => new EnumValue((int)(long)x.Varint));
+
+        /// <summary>
+        /// Reads EncodeableArray from the experimental encoded representation.
+        /// </summary>
+        /// <typeparam name="T">The OPC UA encodeable or value type processed by this member.</typeparam>
+        /// <param name="fieldName">The OPC UA field name associated with the encoded member.</param>
+        /// <returns>The result produced by this codec helper.</returns>
+        public ArrayOf<T> ReadEncodeableArray<T>(string? fieldName)
+            where T : IEncodeable, new() =>
+            ReadArray(
+                fieldName,
+                x =>
+                {
+                    var values = new T();
+                    DecodeInto(values, x.Bytes);
+                    return values;
+                }
+            );
+
+        /// <summary>
+        /// Reads EncodeableArray from the experimental encoded representation.
+        /// </summary>
+        /// <typeparam name="T">The OPC UA encodeable or value type processed by this member.</typeparam>
+        /// <param name="fieldName">The OPC UA field name associated with the encoded member.</param>
+        /// <param name="encodeableTypeId">The expanded type identifier used to resolve the encodeable body.</param>
+        /// <returns>The result produced by this codec helper.</returns>
+        public ArrayOf<T> ReadEncodeableArray<T>(string? fieldName, ExpandedNodeId encodeableTypeId)
+            where T : IEncodeable =>
+            ReadArray(
+                fieldName,
+                x =>
+                {
+                    if (!Context.Factory.TryGetEncodeableType(encodeableTypeId, out IEncodeableType? act))
+                    {
+                        throw new ServiceResultException(StatusCodes.BadDecodingError);
+                    }
+                    var values = (T)act.CreateInstance();
+                    DecodeInto(values, x.Bytes);
+                    return values;
+                }
+            );
+
+        /// <summary>
+        /// Reads EncodeableArrayAsExtensionObjects from the experimental encoded representation.
+        /// </summary>
+        /// <typeparam name="T">The OPC UA encodeable or value type processed by this member.</typeparam>
+        /// <param name="fieldName">The OPC UA field name associated with the encoded member.</param>
+        /// <returns>The result produced by this codec helper.</returns>
+        public ArrayOf<T> ReadEncodeableArrayAsExtensionObjects<T>(string? fieldName)
+            where T : IEncodeable =>
+            throw new NotSupportedException(
+                "Decoding abstract encodeable arrays requires generated subtype descriptors in the Protobuf reference decoder."
+            );
+
+        /// <summary>
+        /// Reads EncodeableMatrix from the experimental encoded representation.
+        /// </summary>
+        /// <typeparam name="T">The OPC UA encodeable or value type processed by this member.</typeparam>
+        /// <param name="fieldName">The OPC UA field name associated with the encoded member.</param>
+        /// <param name="encodeableTypeId">The expanded type identifier used to resolve the encodeable body.</param>
+        /// <returns>The result produced by this codec helper.</returns>
+        public MatrixOf<T> ReadEncodeableMatrix<T>(string? fieldName, ExpandedNodeId encodeableTypeId)
+            where T : IEncodeable =>
+            throw new NotSupportedException(
+                "Decode encodeable matrix with an explicit generated T is not implemented in the minimal Protobuf reference decoder."
+            );
+
+        /// <summary>
+        /// Reads EncodeableMatrix from the experimental encoded representation.
+        /// </summary>
+        /// <typeparam name="T">The OPC UA encodeable or value type processed by this member.</typeparam>
+        /// <param name="fieldName">The OPC UA field name associated with the encoded member.</param>
+        /// <returns>The result produced by this codec helper.</returns>
+        public MatrixOf<T> ReadEncodeableMatrix<T>(string? fieldName)
+            where T : IEncodeable, new() =>
+            throw new NotSupportedException(
+                "Decode encodeable matrix is not implemented in the minimal Protobuf reference decoder."
+            );
+
+        private ArrayOf<T> ReadArray<T>(string? fieldName, Func<ProtoField, T> conv)
+        {
+            var fld = GetNullable(fieldName);
+            if (!fld.HasValue)
+            {
+                return default;
+            }
+            var m = Proto.Parse(fld.Value.Bytes);
+            return new ArrayOf<T>(m.All(1).Select(conv).ToArray());
+        }
+
+        private ProtoField Get(string? fieldName) => GetNullable(fieldName) ?? default;
+
+        private ProtoField? GetNullable(string? fieldName)
+        {
+            int n = Current.Next(fieldName);
+            var fld = Current.Message.First(n);
+            return fld.HasValue && fld.Value.Number != 0 ? fld : null;
+        }
+
         private Frame Current => m_stack.Peek();
-        private static NodeId DecodeNodeId(ProtoMessage m) { ushort ns=m.First(1) is var nf && nf.HasValue ? (ushort)nf.Value.Varint : (ushort)0; if (m.First(3) is var s && s.HasValue) return new NodeId(Proto.String(s.Value.Bytes), ns); if (m.First(4) is var g && g.HasValue) return new NodeId(new Uuid(g.Value.Bytes.ToArray()), ns); if (m.First(5) is var o && o.HasValue) return new NodeId(ByteString.From(o.Value.Bytes.Span), ns); uint id=m.First(2) is var num && num.HasValue ? (uint)num.Value.Varint : 0; return new NodeId(id, ns); }
-        private DiagnosticInfo DecodeDiagnosticInfo(ProtoMessage m) => new DiagnosticInfo { SymbolicId = m.First(1) is var f1 && f1.HasValue ? (int)(long)f1.Value.Varint : -1, NamespaceUri = m.First(2) is var f2 && f2.HasValue ? (int)(long)f2.Value.Varint : -1, Locale = m.First(3) is var f3 && f3.HasValue ? (int)(long)f3.Value.Varint : -1, LocalizedText = m.First(4) is var f4 && f4.HasValue ? (int)(long)f4.Value.Varint : -1, AdditionalInfo = m.First(5) is var f5 && f5.HasValue ? Proto.String(f5.Value.Bytes) : null, InnerStatusCode = m.First(6) is var f6 && f6.HasValue ? new StatusCode(f6.Value.Fixed32) : default, InnerDiagnosticInfo = m.First(7) is var f7 && f7.HasValue ? DecodeDiagnosticInfo(Proto.Parse(f7.Value.Bytes)) : null };
-        private DataValue DecodeDataValue(ProtoMessage m) { Variant v=m.First(1) is var vf && vf.HasValue ? DecodeVariant(Proto.Parse(vf.Value.Bytes)) : Variant.Null; StatusCode sc=m.First(2) is var sf && sf.HasValue ? new StatusCode(sf.Value.Fixed32) : StatusCodes.Good; DateTimeUtc st=m.First(3) is var stf && stf.HasValue ? new DateTimeUtc((long)stf.Value.Fixed64) : default; DateTimeUtc sv=m.First(5) is var svf && svf.HasValue ? new DateTimeUtc((long)svf.Value.Fixed64) : default; ushort sp=m.First(4) is var spf && spf.HasValue ? (ushort)spf.Value.Varint : (ushort)0; ushort vp=m.First(6) is var vpf && vpf.HasValue ? (ushort)vpf.Value.Varint : (ushort)0; return new DataValue(v, sc, st, sv, sp, vp); }
-        private ExtensionObject DecodeExtensionObject(ProtoMessage m) { ExpandedNodeId type=m.First(1) is var tf && tf.HasValue ? DecodeNodeId(Proto.Parse(tf.Value.Bytes)) : ExpandedNodeId.Null; if (m.First(3) is var of && of.HasValue) return new ExtensionObject(type, ByteString.From(of.Value.Bytes.Span)); if (m.First(2) is var bf && bf.HasValue) return new ExtensionObject(type, ByteString.From(bf.Value.Bytes.Span)); return new ExtensionObject(type); }
-        private Variant DecodeVariant(ProtoMessage m) { if (!m.Has(1)) return Variant.Null; var t=(BuiltInType)m.First(1)!.Value.Varint; var payload=(m.First(2) ?? m.First(3) ?? m.First(4)); if (!payload.HasValue) return Variant.Null; var inner=Proto.Parse(payload.Value.Bytes); object? value = DecodeObjectFromField1(t, inner.First(1) ?? default); return value == null ? Variant.Null : new Variant(value); }
-        private object? DecodeObjectFromField1(BuiltInType t, ProtoField f) => t switch { BuiltInType.Boolean => f.Varint!=0, BuiltInType.SByte => (sbyte)(long)f.Varint, BuiltInType.Byte => (byte)f.Varint, BuiltInType.Int16 => (short)(long)f.Varint, BuiltInType.UInt16 => (ushort)f.Varint, BuiltInType.Int32 or BuiltInType.Enumeration => (int)(long)f.Varint, BuiltInType.UInt32 => (uint)f.Varint, BuiltInType.Int64 => (long)f.Varint, BuiltInType.UInt64 => f.Varint, BuiltInType.Float => BitConverter.UInt32BitsToSingle(f.Fixed32), BuiltInType.Double => BitConverter.UInt64BitsToDouble(f.Fixed64), BuiltInType.String => Proto.Parse(f.Bytes).First(1) is var sf && sf.HasValue ? Proto.String(sf.Value.Bytes) : null, BuiltInType.DateTime => new DateTimeUtc((long)f.Fixed64), BuiltInType.Guid => new Uuid(f.Bytes.ToArray()), BuiltInType.ByteString => ByteString.From(Proto.Parse(f.Bytes).First(1)!.Value.Bytes.Span), BuiltInType.NodeId => DecodeNodeId(Proto.Parse(f.Bytes)), BuiltInType.StatusCode => new StatusCode(f.Fixed32), _ => null };
-        private sealed class Frame { public Frame(ProtoMessage m){Message=m;} public ProtoMessage Message; public int NextField=1; public uint EncodingMask; public uint UnionSwitch; private readonly Dictionary<string,int> _names=new(); public int Next(string? name)=>FieldForName(name); public int FieldForName(string? name){ if (name==null) return NextField++; if (!_names.TryGetValue(name,out int n)){ n=NextField++; _names[name]=n;} return n; } }
-        private readonly Stack<Frame> m_stack = new(); private ushort[]? m_namespaceMappings; private ushort[]? m_serverMappings;
+
+        private static NodeId DecodeNodeId(ProtoMessage m)
+        {
+            ushort ns = m.First(1) is var nf && nf.HasValue ? (ushort)nf.Value.Varint : (ushort)0;
+            if (m.First(3) is var s && s.HasValue)
+            {
+                return new NodeId(Proto.String(s.Value.Bytes), ns);
+            }
+
+            if (m.First(4) is var g && g.HasValue)
+            {
+                return new NodeId(new Uuid(g.Value.Bytes.ToArray()), ns);
+            }
+
+            if (m.First(5) is var o && o.HasValue)
+            {
+                return new NodeId(ByteString.From(o.Value.Bytes.Span), ns);
+            }
+
+            uint encodeableTypeId = m.First(2) is var num && num.HasValue ? (uint)num.Value.Varint : 0;
+            return new NodeId(encodeableTypeId, ns);
+        }
+
+        private DiagnosticInfo DecodeDiagnosticInfo(ProtoMessage m) =>
+            new DiagnosticInfo
+            {
+                SymbolicId = m.First(1) is var f1 && f1.HasValue ? (int)(long)f1.Value.Varint : -1,
+                NamespaceUri = m.First(2) is var f2 && f2.HasValue ? (int)(long)f2.Value.Varint : -1,
+                Locale = m.First(3) is var f3 && f3.HasValue ? (int)(long)f3.Value.Varint : -1,
+                LocalizedText = m.First(4) is var f4 && f4.HasValue ? (int)(long)f4.Value.Varint : -1,
+                AdditionalInfo = m.First(5) is var f5 && f5.HasValue ? Proto.String(f5.Value.Bytes) : null,
+                InnerStatusCode = m.First(6) is var f6 && f6.HasValue ? new StatusCode(f6.Value.Fixed32) : default,
+                InnerDiagnosticInfo =
+                    m.First(7) is var f7 && f7.HasValue ? DecodeDiagnosticInfo(Proto.Parse(f7.Value.Bytes)) : null,
+            };
+
+        private DataValue DecodeDataValue(ProtoMessage m)
+        {
+            Variant values =
+                m.First(1) is var vf && vf.HasValue ? DecodeVariant(Proto.Parse(vf.Value.Bytes)) : Variant.Null;
+            StatusCode sc = m.First(2) is var sf && sf.HasValue ? new StatusCode(sf.Value.Fixed32) : StatusCodes.Good;
+            DateTimeUtc st = m.First(3) is var stf && stf.HasValue ? new DateTimeUtc((long)stf.Value.Fixed64) : default;
+            DateTimeUtc sv = m.First(5) is var svf && svf.HasValue ? new DateTimeUtc((long)svf.Value.Fixed64) : default;
+            ushort sp = m.First(4) is var spf && spf.HasValue ? (ushort)spf.Value.Varint : (ushort)0;
+            ushort vp = m.First(6) is var vpf && vpf.HasValue ? (ushort)vpf.Value.Varint : (ushort)0;
+            return new DataValue(values, sc, st, sv, sp, vp);
+        }
+
+        private ExtensionObject DecodeExtensionObject(ProtoMessage m)
+        {
+            ExpandedNodeId type =
+                m.First(1) is var tf && tf.HasValue ? DecodeNodeId(Proto.Parse(tf.Value.Bytes)) : ExpandedNodeId.Null;
+            if (m.First(3) is var of && of.HasValue)
+            {
+                return new ExtensionObject(type, ByteString.From(of.Value.Bytes.Span));
+            }
+
+            if (m.First(2) is var bf && bf.HasValue)
+            {
+                return new ExtensionObject(type, ByteString.From(bf.Value.Bytes.Span));
+            }
+
+            return new ExtensionObject(type);
+        }
+
+        private Variant DecodeVariant(ProtoMessage m)
+        {
+            if (!m.Has(1))
+            {
+                return Variant.Null;
+            }
+
+            var t = (BuiltInType)m.First(1)!.Value.Varint;
+            var payload = m.First(2) ?? m.First(3) ?? m.First(4);
+            if (!payload.HasValue)
+            {
+                return Variant.Null;
+            }
+
+            var inner = Proto.Parse(payload.Value.Bytes);
+            object? value = DecodeObjectFromField1(t, inner.First(1) ?? default);
+            return value switch
+            {
+                null => Variant.Null,
+                bool typed => Variant.From(typed),
+                sbyte typed => Variant.From(typed),
+                byte typed => Variant.From(typed),
+                short typed => Variant.From(typed),
+                ushort typed => Variant.From(typed),
+                int typed => Variant.From(typed),
+                uint typed => Variant.From(typed),
+                long typed => Variant.From(typed),
+                ulong typed => Variant.From(typed),
+                float typed => Variant.From(typed),
+                double typed => Variant.From(typed),
+                string typed => Variant.From(typed),
+                DateTimeUtc typed => Variant.From(typed),
+                Uuid typed => Variant.From(typed),
+                ByteString typed => Variant.From(typed),
+                NodeId typed => Variant.From(typed),
+                StatusCode typed => Variant.From(typed),
+                _ => throw new NotSupportedException(
+                    $"Variant payload type {t} is not supported by the Protobuf reference decoder."
+                ),
+            };
+        }
+
+        private object? DecodeObjectFromField1(BuiltInType t, ProtoField fieldName) =>
+            t switch
+            {
+                BuiltInType.Boolean => fieldName.Varint != 0,
+                BuiltInType.SByte => (sbyte)(long)fieldName.Varint,
+                BuiltInType.Byte => (byte)fieldName.Varint,
+                BuiltInType.Int16 => (short)(long)fieldName.Varint,
+                BuiltInType.UInt16 => (ushort)fieldName.Varint,
+                BuiltInType.Int32 or BuiltInType.Enumeration => (int)(long)fieldName.Varint,
+                BuiltInType.UInt32 => (uint)fieldName.Varint,
+                BuiltInType.Int64 => (long)fieldName.Varint,
+                BuiltInType.UInt64 => fieldName.Varint,
+                BuiltInType.Float => BitConverter.UInt32BitsToSingle(fieldName.Fixed32),
+                BuiltInType.Double => BitConverter.UInt64BitsToDouble(fieldName.Fixed64),
+                BuiltInType.String => Proto.Parse(fieldName.Bytes).First(1) is var sf && sf.HasValue
+                    ? Proto.String(sf.Value.Bytes)
+                    : null,
+                BuiltInType.DateTime => new DateTimeUtc((long)fieldName.Fixed64),
+                BuiltInType.Guid => new Uuid(fieldName.Bytes.ToArray()),
+                BuiltInType.ByteString => ByteString.From(Proto.Parse(fieldName.Bytes).First(1)!.Value.Bytes.Span),
+                BuiltInType.NodeId => DecodeNodeId(Proto.Parse(fieldName.Bytes)),
+                BuiltInType.StatusCode => new StatusCode(fieldName.Fixed32),
+                _ => null,
+            };
+
+        private sealed class Frame
+        {
+            /// <summary>
+            /// Initializes a new Frame instance for the experimental OPC UA encoding support.
+            /// </summary>
+            /// <param name="m">The parsed Protobuf message to decode.</param>
+            public Frame(ProtoMessage m)
+            {
+                Message = m;
+            }
+
+            /// <summary>
+            /// Gets the Protobuf message being decoded in this frame.
+            /// </summary>
+            public ProtoMessage Message;
+
+            /// <summary>
+            /// Stores the next positional Protobuf field number assigned by this frame.
+            /// </summary>
+            public int NextField = 1;
+            private readonly Dictionary<string, int> _names = new();
+
+            /// <summary>
+            /// Returns the Protobuf field number for the supplied OPC UA field name.
+            /// </summary>
+            /// <param name="name">The field or column name to assign.</param>
+            /// <returns>The result produced by this codec helper.</returns>
+            public int Next(string? name) => FieldForName(name);
+
+            /// <summary>
+            /// Maps an OPC UA field name to the positional Protobuf field number used in this frame.
+            /// </summary>
+            /// <param name="name">The field or column name to assign.</param>
+            /// <returns>The result produced by this codec helper.</returns>
+            public int FieldForName(string? name)
+            {
+                if (name == null)
+                {
+                    return NextField++;
+                }
+                if (!_names.TryGetValue(name, out int n))
+                {
+                    n = NextField++;
+                    _names[name] = n;
+                }
+                return n;
+            }
+        }
+
+        private readonly Stack<Frame> m_stack = new();
+        private ushort[]? m_namespaceMappings;
+        private ushort[]? m_serverMappings;
     }
 }
-
-
-
-

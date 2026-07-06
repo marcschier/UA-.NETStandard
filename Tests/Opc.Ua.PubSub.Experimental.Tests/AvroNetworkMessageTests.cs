@@ -1,4 +1,32 @@
-#pragma warning disable CA1861
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
 using System;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -8,9 +36,15 @@ using Opc.Ua.PubSub.MetaData;
 
 namespace Opc.Ua.PubSub.Experimental.Tests;
 
+/// <summary>
+/// Verifies Avro PubSub network-message encoding and decoding for multiple dataset messages and field encodings.
+/// </summary>
 [TestFixture]
 public sealed class AvroNetworkMessageTests
 {
+    private static readonly ushort[] DataSetWriterIds = [101, 102];
+    private static readonly double[] SampleValues = [1.0, 2.5, 4.25];
+
     [Test]
     public async Task EncoderDecoderRoundTripsMultipleDataSetMessages()
     {
@@ -23,7 +57,7 @@ public sealed class AvroNetworkMessageTests
             writerGroupId: 7,
             dataSetClassId,
             metaData,
-            dataSetWriterIds: [101, 102],
+            dataSetWriterIds: DataSetWriterIds,
             diagnostics);
 
         DateTimeUtc firstTimestamp = new(new DateTime(2026, 7, 4, 9, 0, 0, DateTimeKind.Utc));
@@ -49,17 +83,36 @@ public sealed class AvroNetworkMessageTests
                     MetaDataVersion = metaData.ConfigurationVersion,
                     Fields =
                     [
-                        new DataSetField { Name = "Enabled", Value = new Variant(true), Encoding = PubSubFieldEncoding.RawData },
-                        new DataSetField { Name = "Temperature", Value = new Variant(23.5), Encoding = PubSubFieldEncoding.Variant },
-                        new DataSetField { Name = "Label", Value = new Variant("pump-1"), Encoding = PubSubFieldEncoding.RawData },
+                        new DataSetField
+                        {
+                            Name = "Enabled",
+                            Value = new Variant(true),
+                            Encoding = PubSubFieldEncoding.RawData
+                        },
+                        new DataSetField
+                        {
+                            Name = "Temperature",
+                            Value = new Variant(23.5),
+                            Encoding = PubSubFieldEncoding.Variant
+                        },
+                        new DataSetField
+                        {
+                            Name = "Label",
+                            Value = new Variant("pump-1"),
+                            Encoding = PubSubFieldEncoding.RawData
+                        },
                         new DataSetField
                         {
                             Name = "Samples",
-                            Value = new Variant(new ArrayOf<double>(
-                                new[] { 1.0, 2.5, 4.25 }.AsMemory())),
+                            Value = new Variant(new ArrayOf<double>(SampleValues.AsMemory())),
                             Encoding = PubSubFieldEncoding.RawData
                         },
-                        new DataSetField { Name = "OptionalText", Value = Variant.Null, Encoding = PubSubFieldEncoding.Variant }
+                        new DataSetField
+                        {
+                            Name = "OptionalText",
+                            Value = Variant.Null,
+                            Encoding = PubSubFieldEncoding.Variant
+                        }
                     ]
                 },
                 new AvroDataSetMessage
@@ -70,7 +123,8 @@ public sealed class AvroNetworkMessageTests
                     Status = (StatusCode)StatusCodes.Uncertain,
                     MessageType = PubSubDataSetMessageType.KeyFrame,
                     MetaDataVersion = metaData.ConfigurationVersion,
-                    FieldContentMask = DataSetFieldContentMask.StatusCode | DataSetFieldContentMask.SourceTimestamp,
+                    FieldContentMask =
+                        DataSetFieldContentMask.StatusCode | DataSetFieldContentMask.SourceTimestamp,
                     Fields =
                     [
                         new DataSetField
@@ -114,14 +168,16 @@ public sealed class AvroNetworkMessageTests
         Assert.That(first.Fields[2].Value.TryGetValue(out string label), Is.True);
         Assert.That(label, Is.EqualTo("pump-1"));
         Assert.That(first.Fields[3].Value.TryGetValue(out ArrayOf<double> samples), Is.True);
-        Assert.That(samples.ToArray(), Is.EqualTo(new[] { 1.0, 2.5, 4.25 }));
+        Assert.That(samples.ToArray(), Is.EqualTo(SampleValues));
         Assert.That(first.Fields[4].Value.IsNull, Is.True);
         Assert.That(first.Fields[0].Encoding, Is.EqualTo(PubSubFieldEncoding.RawData));
         Assert.That(first.Fields[1].Encoding, Is.EqualTo(PubSubFieldEncoding.Variant));
 
         AvroDataSetMessage second = (AvroDataSetMessage)decodedMessage.DataSetMessages[1];
         AssertHeader(second, (AvroDataSetMessage)message.DataSetMessages[1]);
-        Assert.That(second.FieldContentMask, Is.EqualTo(DataSetFieldContentMask.StatusCode | DataSetFieldContentMask.SourceTimestamp));
+        Assert.That(
+            second.FieldContentMask,
+            Is.EqualTo(DataSetFieldContentMask.StatusCode | DataSetFieldContentMask.SourceTimestamp));
         Assert.That(second.Fields.Count, Is.EqualTo(1));
         Assert.That(second.Fields[0].Encoding, Is.EqualTo(PubSubFieldEncoding.DataValue));
         Assert.That(second.Fields[0].Value.TryGetValue(out double dataValueTemperature), Is.True);
@@ -130,6 +186,9 @@ public sealed class AvroNetworkMessageTests
         Assert.That(second.Fields[0].SourceTimestamp, Is.EqualTo(sourceTimestamp));
     }
 
+    /// <summary>
+    /// Asserts that a decoded Avro dataset header matches the message header that was originally encoded.
+    /// </summary>
     private static void AssertHeader(AvroDataSetMessage actual, AvroDataSetMessage expected)
     {
         Assert.That(actual.DataSetWriterId, Is.EqualTo(expected.DataSetWriterId));
@@ -141,6 +200,9 @@ public sealed class AvroNetworkMessageTests
         Assert.That(actual.MetaDataVersion.MinorVersion, Is.EqualTo(expected.MetaDataVersion.MinorVersion));
     }
 
+    /// <summary>
+    /// Builds a PubSub decoding context registered with metadata for all dataset writers used in the test.
+    /// </summary>
     private static PubSubNetworkMessageContext CreateContext(
         PublisherId publisherId,
         ushort writerGroupId,
@@ -168,6 +230,9 @@ public sealed class AvroNetworkMessageTests
             TimeProvider.System);
     }
 
+    /// <summary>
+    /// Defines the Avro dataset fields and configuration version expected by the test network message.
+    /// </summary>
     private static DataSetMetaDataType CreateMetaData()
     {
         return new DataSetMetaDataType
@@ -180,11 +245,36 @@ public sealed class AvroNetworkMessageTests
             },
             Fields =
             [
-                new FieldMetaData { Name = "Enabled", BuiltInType = (byte)BuiltInType.Boolean, ValueRank = ValueRanks.Scalar },
-                new FieldMetaData { Name = "Temperature", BuiltInType = (byte)BuiltInType.Double, ValueRank = ValueRanks.Scalar },
-                new FieldMetaData { Name = "Label", BuiltInType = (byte)BuiltInType.String, ValueRank = ValueRanks.Scalar },
-                new FieldMetaData { Name = "Samples", BuiltInType = (byte)BuiltInType.Double, ValueRank = ValueRanks.OneDimension },
-                new FieldMetaData { Name = "OptionalText", BuiltInType = (byte)BuiltInType.String, ValueRank = ValueRanks.Scalar }
+                new FieldMetaData
+                {
+                    Name = "Enabled",
+                    BuiltInType = (byte)BuiltInType.Boolean,
+                    ValueRank = ValueRanks.Scalar
+                },
+                new FieldMetaData
+                {
+                    Name = "Temperature",
+                    BuiltInType = (byte)BuiltInType.Double,
+                    ValueRank = ValueRanks.Scalar
+                },
+                new FieldMetaData
+                {
+                    Name = "Label",
+                    BuiltInType = (byte)BuiltInType.String,
+                    ValueRank = ValueRanks.Scalar
+                },
+                new FieldMetaData
+                {
+                    Name = "Samples",
+                    BuiltInType = (byte)BuiltInType.Double,
+                    ValueRank = ValueRanks.OneDimension
+                },
+                new FieldMetaData
+                {
+                    Name = "OptionalText",
+                    BuiltInType = (byte)BuiltInType.String,
+                    ValueRank = ValueRanks.Scalar
+                }
             ]
         };
     }
