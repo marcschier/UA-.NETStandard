@@ -29,18 +29,19 @@
 
 using Opc.Ua;
 
-namespace Opc.Ua.PubSub.Encoding;
-
-/// <summary>
-/// Resolves a missing SchemaId through a deployment-specific schema source.
-/// </summary>
-public interface ISchemaResolver
+namespace Opc.Ua.PubSub.Encoding
 {
     /// <summary>
-    /// Attempts to resolve a schema for a raw SchemaId.
+    /// Resolves a missing SchemaId through a deployment-specific schema source.
     /// </summary>
-    /// <param name="schemaId">The raw schema identifier.</param>
-    /// <param name="result">The resolved schema bytes and format name.</param>
-    /// <returns><c>true</c> if the schema was resolved; otherwise <c>false</c>.</returns>
-    bool TryResolve(ByteString schemaId, out (ByteString schema, string format) result);
+    public interface ISchemaResolver
+    {
+        /// <summary>
+        /// Attempts to resolve a schema for a raw SchemaId.
+        /// </summary>
+        /// <param name="schemaId">The raw schema identifier.</param>
+        /// <param name="result">The resolved schema bytes and format name.</param>
+        /// <returns><c>true</c> if the schema was resolved; otherwise <c>false</c>.</returns>
+        bool TryResolve(ByteString schemaId, out (ByteString schema, string format) result);
+    }
 }

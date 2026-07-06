@@ -29,33 +29,34 @@
 
 using Opc.Ua;
 
-namespace Opc.Ua.PubSub.Encoding;
-
-/// <summary>
-/// Apache Arrow IPC-stream PubSub NetworkMessage. The stream schema
-/// describes one DataSet; each RecordBatch row is one DataSetMessage
-/// sample and each DataSet field is a typed Arrow column.
-/// </summary>
-public sealed record ArrowNetworkMessage : PubSubNetworkMessage
+namespace Opc.Ua.PubSub.Encoding
 {
     /// <summary>
-    /// Identifies the MQTT transport profile URI used for Arrow PubSub frames.
+    /// Apache Arrow IPC-stream PubSub NetworkMessage. The stream schema
+    /// describes one DataSet; each RecordBatch row is one DataSetMessage
+    /// sample and each DataSet field is a typed Arrow column.
     /// </summary>
-    public const string PubSubMqttArrowTransport = "http://opcfoundation.org/UA-Profile/Transport/pubsub-mqtt-arrow";
-
-    /// <summary>
-    /// Gets the DataSetClassId advertised with the Arrow stream schema metadata.
-    /// </summary>
-    public Uuid DataSetClassId { get; init; }
-
-    /// <summary>
-    /// Gets the schema identifier used by schema exchange and cache lookups.
-    /// </summary>
-    public string SchemaId { get; init; } = string.Empty;
-
-    /// <inheritdoc/>
-    public override string TransportProfileUri
+    public sealed record ArrowNetworkMessage : PubSubNetworkMessage
     {
-        get { return PubSubMqttArrowTransport; }
+        /// <summary>
+        /// Identifies the MQTT transport profile URI used for Arrow PubSub frames.
+        /// </summary>
+        public const string PubSubMqttArrowTransport = "http://opcfoundation.org/UA-Profile/Transport/pubsub-mqtt-arrow";
+
+        /// <summary>
+        /// Gets the DataSetClassId advertised with the Arrow stream schema metadata.
+        /// </summary>
+        public Uuid DataSetClassId { get; init; }
+
+        /// <summary>
+        /// Gets the schema identifier used by schema exchange and cache lookups.
+        /// </summary>
+        public string SchemaId { get; init; } = string.Empty;
+
+        /// <inheritdoc/>
+        public override string TransportProfileUri
+        {
+            get { return PubSubMqttArrowTransport; }
+        }
     }
 }

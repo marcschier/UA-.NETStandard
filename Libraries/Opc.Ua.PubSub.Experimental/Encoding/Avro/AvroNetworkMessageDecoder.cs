@@ -35,250 +35,251 @@ using System.Threading;
 using System.Threading.Tasks;
 using Opc.Ua.PubSub.Diagnostics;
 
-namespace Opc.Ua.PubSub.Encoding;
-
-/// <summary>
-/// Decodes experimental Avro PubSub network frames and resolves referenced DataSet schemas.
-/// </summary>
-public sealed class AvroNetworkMessageDecoder : INetworkMessageDecoder
+namespace Opc.Ua.PubSub.Encoding
 {
-    private const string Magic = "OPC-UA-PubSub-Avro";
-    private const ushort Version = 1;
-
-    /// <inheritdoc/>
-    public string TransportProfileUri
-    {
-        get { return AvroNetworkMessage.PubSubMqttAvroTransport; }
-    }
-
     /// <summary>
-    /// Gets the SchemaId cache used by the decoder.
+    /// Decodes experimental Avro PubSub network frames and resolves referenced DataSet schemas.
     /// </summary>
-    public SchemaCache SchemaCache { get; } = new();
-
-    /// <summary>
-    /// Gets or sets the resolver invoked when a referenced SchemaId is not cached.
-    /// </summary>
-    public ISchemaResolver? SchemaResolver { get; set; }
-
-    /// <summary>
-    /// Ingests an Avro schema announcement into the decoder cache.
-    /// </summary>
-    /// <param name="announcement">The schema announcement to ingest.</param>
-    public void Ingest(AvroSchemaAnnouncement announcement)
+    public sealed class AvroNetworkMessageDecoder : INetworkMessageDecoder
     {
-        SchemaCache.Add(announcement);
-    }
+        private const string Magic = "OPC-UA-PubSub-Avro";
+        private const ushort Version = 1;
 
-    /// <inheritdoc/>
-    public ValueTask<PubSubNetworkMessage?> TryDecodeAsync(
-        ReadOnlyMemory<byte> frame,
-        PubSubNetworkMessageContext context,
-        CancellationToken cancellationToken = default)
-    {
-        if (context is null)
+        /// <inheritdoc/>
+        public string TransportProfileUri
         {
-            throw new ArgumentNullException(nameof(context));
+            get { return AvroNetworkMessage.PubSubMqttAvroTransport; }
         }
-        cancellationToken.ThrowIfCancellationRequested();
-        return new ValueTask<PubSubNetworkMessage?>(DecodeCore(frame, context));
-    }
 
-    private PubSubNetworkMessage? DecodeCore(
-        ReadOnlyMemory<byte> frame,
-        PubSubNetworkMessageContext context)
-    {
-        try
+        /// <summary>
+        /// Gets the SchemaId cache used by the decoder.
+        /// </summary>
+        public SchemaCache SchemaCache { get; } = new();
+
+        /// <summary>
+        /// Gets or sets the resolver invoked when a referenced SchemaId is not cached.
+        /// </summary>
+        public ISchemaResolver? SchemaResolver { get; set; }
+
+        /// <summary>
+        /// Ingests an Avro schema announcement into the decoder cache.
+        /// </summary>
+        /// <param name="announcement">The schema announcement to ingest.</param>
+        public void Ingest(AvroSchemaAnnouncement announcement)
         {
-            using AvroDecoder decoder = new(frame.ToArray(), context.MessageContext);
-            string? magic = decoder.ReadString(null);
-            ushort version = decoder.ReadUInt16(null);
-            if (!string.Equals(magic, Magic, StringComparison.Ordinal) || version != Version)
+            SchemaCache.Add(announcement);
+        }
+
+        /// <inheritdoc/>
+        public ValueTask<PubSubNetworkMessage?> TryDecodeAsync(
+            ReadOnlyMemory<byte> frame,
+            PubSubNetworkMessageContext context,
+            CancellationToken cancellationToken = default)
+        {
+            if (context is null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+            return new ValueTask<PubSubNetworkMessage?>(DecodeCore(frame, context));
+        }
+
+        private PubSubNetworkMessage? DecodeCore(
+            ReadOnlyMemory<byte> frame,
+            PubSubNetworkMessageContext context)
+        {
+            try
+            {
+                using AvroDecoder decoder = new(frame.ToArray(), context.MessageContext);
+                string? magic = decoder.ReadString(null);
+                ushort version = decoder.ReadUInt16(null);
+                if (!string.Equals(magic, Magic, StringComparison.Ordinal) || version != Version)
+                {
+                    context.Diagnostics.Increment(
+                        PubSubDiagnosticsCounterKind.ReceivedInvalidNetworkMessages);
+                    return null;
+                }
+
+                PublisherId publisherId = ReadPublisherId(decoder);
+                ushort? writerGroupId = ReadNullableUInt16(decoder);
+                Uuid dataSetClassId = decoder.ReadGuid(null);
+                string schemaId = decoder.ReadString(null) ?? string.Empty;
+                if (SchemaCache.TryParseKey(schemaId, out ByteString schemaIdBytes)
+                    && !SchemaCache.TryGetOrResolve(schemaIdBytes, SchemaResolver, out _))
+                {
+                    throw new FormatException($"Avro schema '{schemaId}' is not available.");
+                }
+                int count = decoder.ReadInt32(null);
+                if (count < 0)
+                {
+                    throw new FormatException("Avro NetworkMessage contains a negative DataSetMessage count.");
+                }
+
+                var messages = new List<PubSubDataSetMessage>(count);
+                var envelope = new AvroNetworkMessage
+                {
+                    PublisherId = publisherId,
+                    WriterGroupId = writerGroupId,
+                    DataSetClassId = dataSetClassId,
+                    SchemaId = schemaId
+                };
+
+                for (int i = 0; i < count; i++)
+                {
+                    messages.Add(ReadDataSetMessage(decoder, envelope, context));
+                }
+
+                context.Diagnostics.Increment(
+                    PubSubDiagnosticsCounterKind.ReceivedNetworkMessages);
+                context.Diagnostics.Increment(
+                    PubSubDiagnosticsCounterKind.ReceivedDataSetMessages,
+                    messages.Count);
+
+                return envelope with { DataSetMessages = messages };
+            }
+            catch (Exception ex) when (ex is FormatException
+                or EndOfStreamException
+                or OverflowException
+                or ArgumentException
+                or NotSupportedException)
             {
                 context.Diagnostics.Increment(
                     PubSubDiagnosticsCounterKind.ReceivedInvalidNetworkMessages);
+                context.Diagnostics.RecordError(
+                    (StatusCode)StatusCodes.BadDecodingError,
+                    ex.Message);
                 return null;
             }
+        }
 
-            PublisherId publisherId = ReadPublisherId(decoder);
-            ushort? writerGroupId = ReadNullableUInt16(decoder);
-            Uuid dataSetClassId = decoder.ReadGuid(null);
-            string schemaId = decoder.ReadString(null) ?? string.Empty;
-            if (SchemaCache.TryParseKey(schemaId, out ByteString schemaIdBytes)
-                && !SchemaCache.TryGetOrResolve(schemaIdBytes, SchemaResolver, out _))
-            {
-                throw new FormatException($"Avro schema '{schemaId}' is not available.");
-            }
-            int count = decoder.ReadInt32(null);
-            if (count < 0)
-            {
-                throw new FormatException("Avro NetworkMessage contains a negative DataSetMessage count.");
-            }
+        private static AvroDataSetMessage ReadDataSetMessage(
+            AvroDecoder decoder,
+            AvroNetworkMessage envelope,
+            PubSubNetworkMessageContext context)
+        {
+            ushort dataSetWriterId = decoder.ReadUInt16(null);
+            PubSubDataSetMessageType messageType = decoder.ReadEnumerated<PubSubDataSetMessageType>(null);
+            uint majorVersion = decoder.ReadUInt32(null);
+            uint minorVersion = decoder.ReadUInt32(null);
+            uint sequenceNumber = decoder.ReadUInt32(null);
+            StatusCode status = decoder.ReadStatusCode(null);
+            DateTimeUtc timestamp = decoder.ReadDateTime(null);
+            DataSetFieldContentMask fieldContentMask =
+                (DataSetFieldContentMask)unchecked((uint)decoder.ReadInt64(null));
 
-            var messages = new List<PubSubDataSetMessage>(count);
-            var envelope = new AvroNetworkMessage
+            var message = new AvroDataSetMessage
             {
-                PublisherId = publisherId,
-                WriterGroupId = writerGroupId,
-                DataSetClassId = dataSetClassId,
-                SchemaId = schemaId
+                DataSetWriterId = dataSetWriterId,
+                MessageType = messageType,
+                MetaDataVersion = new ConfigurationVersionDataType
+                {
+                    MajorVersion = majorVersion,
+                    MinorVersion = minorVersion
+                },
+                SequenceNumber = sequenceNumber,
+                Status = status,
+                Timestamp = timestamp,
+                FieldContentMask = fieldContentMask
             };
 
-            for (int i = 0; i < count; i++)
+            int fieldCount = decoder.ReadInt32(null);
+            if (fieldCount < 0)
             {
-                messages.Add(ReadDataSetMessage(decoder, envelope, context));
+                throw new FormatException("Avro DataSetMessage contains a negative field count.");
+            }
+            if (messageType == PubSubDataSetMessageType.KeepAlive)
+            {
+                return message;
             }
 
-            context.Diagnostics.Increment(
-                PubSubDiagnosticsCounterKind.ReceivedNetworkMessages);
-            context.Diagnostics.Increment(
-                PubSubDiagnosticsCounterKind.ReceivedDataSetMessages,
-                messages.Count);
-
-            return envelope with { DataSetMessages = messages };
-        }
-        catch (Exception ex) when (ex is FormatException
-            or EndOfStreamException
-            or OverflowException
-            or ArgumentException
-            or NotSupportedException)
-        {
-            context.Diagnostics.Increment(
-                PubSubDiagnosticsCounterKind.ReceivedInvalidNetworkMessages);
-            context.Diagnostics.RecordError(
-                (StatusCode)StatusCodes.BadDecodingError,
-                ex.Message);
-            return null;
-        }
-    }
-
-    private static AvroDataSetMessage ReadDataSetMessage(
-        AvroDecoder decoder,
-        AvroNetworkMessage envelope,
-        PubSubNetworkMessageContext context)
-    {
-        ushort dataSetWriterId = decoder.ReadUInt16(null);
-        PubSubDataSetMessageType messageType = decoder.ReadEnumerated<PubSubDataSetMessageType>(null);
-        uint majorVersion = decoder.ReadUInt32(null);
-        uint minorVersion = decoder.ReadUInt32(null);
-        uint sequenceNumber = decoder.ReadUInt32(null);
-        StatusCode status = decoder.ReadStatusCode(null);
-        DateTimeUtc timestamp = decoder.ReadDateTime(null);
-        DataSetFieldContentMask fieldContentMask =
-            (DataSetFieldContentMask)unchecked((uint)decoder.ReadInt64(null));
-
-        var message = new AvroDataSetMessage
-        {
-            DataSetWriterId = dataSetWriterId,
-            MessageType = messageType,
-            MetaDataVersion = new ConfigurationVersionDataType
+            DataSetMetaDataType? metaData = ExperimentalMessageEncoding.ResolveMetaData(
+                envelope,
+                message,
+                context,
+                envelope.DataSetClassId);
+            var fields = new List<DataSetField>(fieldCount);
+            for (int i = 0; i < fieldCount; i++)
             {
-                MajorVersion = majorVersion,
-                MinorVersion = minorVersion
-            },
-            SequenceNumber = sequenceNumber,
-            Status = status,
-            Timestamp = timestamp,
-            FieldContentMask = fieldContentMask
-        };
-
-        int fieldCount = decoder.ReadInt32(null);
-        if (fieldCount < 0)
-        {
-            throw new FormatException("Avro DataSetMessage contains a negative field count.");
-        }
-        if (messageType == PubSubDataSetMessageType.KeepAlive)
-        {
-            return message;
-        }
-
-        DataSetMetaDataType? metaData = ExperimentalMessageEncoding.ResolveMetaData(
-            envelope,
-            message,
-            context,
-            envelope.DataSetClassId);
-        var fields = new List<DataSetField>(fieldCount);
-        for (int i = 0; i < fieldCount; i++)
-        {
-            string name = decoder.ReadString(null) ?? string.Empty;
-            int fieldIndex = decoder.ReadInt32(null);
-            PubSubFieldEncoding fieldEncoding = decoder.ReadEnumerated<PubSubFieldEncoding>(null);
-            fields.Add(ReadFieldValue(
-                decoder,
-                fieldEncoding,
-                fieldContentMask,
-                metaData,
-                name,
-                fieldIndex >= 0 ? fieldIndex : i));
-        }
-
-        return message with { Fields = fields };
-    }
-
-    private static DataSetField ReadFieldValue(
-        AvroDecoder decoder,
-        PubSubFieldEncoding fieldEncoding,
-        DataSetFieldContentMask fieldContentMask,
-        DataSetMetaDataType? metaData,
-        string name,
-        int fieldIndex)
-    {
-        ByteString valueBytes = decoder.ReadByteString(null);
-        using AvroDecoder valueDecoder = new(valueBytes.Span.ToArray(), decoder.Context);
-        switch (fieldEncoding)
-        {
-            case PubSubFieldEncoding.RawData:
-                TypeInfo? typeInfo = ExperimentalMessageEncoding.ResolveFieldType(
+                string name = decoder.ReadString(null) ?? string.Empty;
+                int fieldIndex = decoder.ReadInt32(null);
+                PubSubFieldEncoding fieldEncoding = decoder.ReadEnumerated<PubSubFieldEncoding>(null);
+                fields.Add(ReadFieldValue(
+                    decoder,
+                    fieldEncoding,
+                    fieldContentMask,
                     metaData,
                     name,
-                    fieldIndex);
-                if (typeInfo is null)
-                {
-                    throw new FormatException(
-                        $"RawData Avro field '{name}' requires DataSetMetaData.");
-                }
-                return new DataSetField
-                {
-                    Name = name,
-                    FieldIndex = fieldIndex,
-                    Value = valueDecoder.ReadVariantValue(null, typeInfo.Value),
-                    Encoding = PubSubFieldEncoding.RawData
-                };
-            case PubSubFieldEncoding.DataValue:
-                return ExperimentalMessageEncoding.FromDataValue(
-                    name,
-                    fieldIndex,
-                    valueDecoder.ReadDataValue(null),
-                    fieldContentMask);
-            case PubSubFieldEncoding.Variant:
-            default:
-                return new DataSetField
-                {
-                    Name = name,
-                    FieldIndex = fieldIndex,
-                    Value = valueDecoder.ReadVariant(null),
-                    Encoding = PubSubFieldEncoding.Variant
-                };
+                    fieldIndex >= 0 ? fieldIndex : i));
+            }
+
+            return message with { Fields = fields };
         }
-    }
 
-    private static ushort? ReadNullableUInt16(AvroDecoder decoder)
-    {
-        return decoder.ReadBoolean(null) ? decoder.ReadUInt16(null) : null;
-    }
-
-    private static PublisherId ReadPublisherId(AvroDecoder decoder)
-    {
-        PublisherIdType type = decoder.ReadEnumerated<PublisherIdType>(null);
-        return type switch
+        private static DataSetField ReadFieldValue(
+            AvroDecoder decoder,
+            PubSubFieldEncoding fieldEncoding,
+            DataSetFieldContentMask fieldContentMask,
+            DataSetMetaDataType? metaData,
+            string name,
+            int fieldIndex)
         {
-            PublisherIdType.Byte => PublisherId.FromByte(decoder.ReadByte(null)),
-            PublisherIdType.UInt16 => PublisherId.FromUInt16(decoder.ReadUInt16(null)),
-            PublisherIdType.UInt32 => PublisherId.FromUInt32(decoder.ReadUInt32(null)),
-            PublisherIdType.UInt64 => PublisherId.FromUInt64(decoder.ReadUInt64(null)),
-            PublisherIdType.String => PublisherId.FromString(decoder.ReadString(null) ?? string.Empty),
-            PublisherIdType.Guid => PublisherId.FromGuid(decoder.ReadGuid(null).Guid),
-            _ => throw new FormatException($"Invalid PublisherId type {type}.")
-        };
+            ByteString valueBytes = decoder.ReadByteString(null);
+            using AvroDecoder valueDecoder = new(valueBytes.Span.ToArray(), decoder.Context);
+            switch (fieldEncoding)
+            {
+                case PubSubFieldEncoding.RawData:
+                    TypeInfo? typeInfo = ExperimentalMessageEncoding.ResolveFieldType(
+                        metaData,
+                        name,
+                        fieldIndex);
+                    if (typeInfo is null)
+                    {
+                        throw new FormatException(
+                            $"RawData Avro field '{name}' requires DataSetMetaData.");
+                    }
+                    return new DataSetField
+                    {
+                        Name = name,
+                        FieldIndex = fieldIndex,
+                        Value = valueDecoder.ReadVariantValue(null, typeInfo.Value),
+                        Encoding = PubSubFieldEncoding.RawData
+                    };
+                case PubSubFieldEncoding.DataValue:
+                    return ExperimentalMessageEncoding.FromDataValue(
+                        name,
+                        fieldIndex,
+                        valueDecoder.ReadDataValue(null),
+                        fieldContentMask);
+                case PubSubFieldEncoding.Variant:
+                default:
+                    return new DataSetField
+                    {
+                        Name = name,
+                        FieldIndex = fieldIndex,
+                        Value = valueDecoder.ReadVariant(null),
+                        Encoding = PubSubFieldEncoding.Variant
+                    };
+            }
+        }
+
+        private static ushort? ReadNullableUInt16(AvroDecoder decoder)
+        {
+            return decoder.ReadBoolean(null) ? decoder.ReadUInt16(null) : null;
+        }
+
+        private static PublisherId ReadPublisherId(AvroDecoder decoder)
+        {
+            PublisherIdType type = decoder.ReadEnumerated<PublisherIdType>(null);
+            return type switch
+            {
+                PublisherIdType.Byte => PublisherId.FromByte(decoder.ReadByte(null)),
+                PublisherIdType.UInt16 => PublisherId.FromUInt16(decoder.ReadUInt16(null)),
+                PublisherIdType.UInt32 => PublisherId.FromUInt32(decoder.ReadUInt32(null)),
+                PublisherIdType.UInt64 => PublisherId.FromUInt64(decoder.ReadUInt64(null)),
+                PublisherIdType.String => PublisherId.FromString(decoder.ReadString(null) ?? string.Empty),
+                PublisherIdType.Guid => PublisherId.FromGuid(decoder.ReadGuid(null).Guid),
+                _ => throw new FormatException($"Invalid PublisherId type {type}.")
+            };
+        }
     }
 }

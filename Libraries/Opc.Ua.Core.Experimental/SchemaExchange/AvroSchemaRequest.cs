@@ -30,111 +30,112 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Opc.Ua;
-
-/// <summary>
-/// Requests one or more Avro schemas by their raw SchemaId values.
-/// </summary>
-/// <param name = "RequesterId">The optional receiver or session identifier.</param>
-/// <param name = "SchemaIds">The raw 8-byte SchemaId values requested by the receiver.</param>
-public sealed record AvroSchemaRequest(string? RequesterId, IReadOnlyList<ByteString> SchemaIds)
+namespace Opc.Ua
 {
     /// <summary>
-    /// Encodes the request using the published Avro field order.
+    /// Requests one or more Avro schemas by their raw SchemaId values.
     /// </summary>
-    /// <returns>The encoded Avro binary payload.</returns>
-    public byte[] Encode()
+    /// <param name = "RequesterId">The optional receiver or session identifier.</param>
+    /// <param name = "SchemaIds">The raw 8-byte SchemaId values requested by the receiver.</param>
+    public sealed record AvroSchemaRequest(string? RequesterId, IReadOnlyList<ByteString> SchemaIds)
     {
-        using MemoryStream stream = new();
-        Encode(stream);
-        return stream.ToArray();
-    }
-
-    /// <summary>
-    /// Encodes the request using the published Avro field order.
-    /// </summary>
-    /// <param name = "stream">The destination stream.</param>
-    public void Encode(Stream stream)
-    {
-        if (stream is null)
+        /// <summary>
+        /// Encodes the request using the published Avro field order.
+        /// </summary>
+        /// <returns>The encoded Avro binary payload.</returns>
+        public byte[] Encode()
         {
-            throw new ArgumentNullException(nameof(stream));
+            using MemoryStream stream = new();
+            Encode(stream);
+            return stream.ToArray();
         }
 
-        AvroBinaryWriter writer = new(stream);
-        writer.WriteLong(RequesterId is null ? 0 : 1);
-        if (RequesterId is not null)
+        /// <summary>
+        /// Encodes the request using the published Avro field order.
+        /// </summary>
+        /// <param name = "stream">The destination stream.</param>
+        public void Encode(Stream stream)
         {
-            writer.WriteString(RequesterId);
-        }
-
-        writer.WriteLong(SchemaIds.Count);
-        for (int i = 0; i < SchemaIds.Count; i++)
-        {
-            if (SchemaIds[i].IsNull)
+            if (stream is null)
             {
-                throw new InvalidOperationException("SchemaIds cannot contain null values.");
+                throw new ArgumentNullException(nameof(stream));
             }
 
-            writer.WriteBytes(SchemaIds[i].Span);
-        }
-
-        writer.WriteLong(0);
-        writer.Flush();
-    }
-
-    /// <summary>
-    /// Decodes a request from its Avro binary payload.
-    /// </summary>
-    /// <param name = "payload">The encoded Avro binary payload.</param>
-    /// <returns>The decoded request.</returns>
-    public static AvroSchemaRequest Decode(ReadOnlyMemory<byte> payload)
-    {
-        using MemoryStream stream = new(payload.ToArray(), writable: false);
-        return Decode(stream);
-    }
-
-    /// <summary>
-    /// Decodes a request from its Avro binary payload.
-    /// </summary>
-    /// <param name = "stream">The source stream.</param>
-    /// <returns>The decoded request.</returns>
-    public static AvroSchemaRequest Decode(Stream stream)
-    {
-        if (stream is null)
-        {
-            throw new ArgumentNullException(nameof(stream));
-        }
-
-        AvroBinaryReader reader = new(stream);
-        long requesterBranch = reader.ReadLong();
-        string? requesterId = requesterBranch switch
-        {
-            0 => null,
-            1 => reader.ReadString(),
-            _ => throw new FormatException("Invalid Avro RequesterId union branch."),
-        };
-        var schemaIds = new List<ByteString>();
-        while (true)
-        {
-            long count = reader.ReadLong();
-            if (count == 0)
+            AvroBinaryWriter writer = new(stream);
+            writer.WriteLong(RequesterId is null ? 0 : 1);
+            if (RequesterId is not null)
             {
-                break;
+                writer.WriteString(RequesterId);
             }
 
-            if (count < 0)
+            writer.WriteLong(SchemaIds.Count);
+            for (int i = 0; i < SchemaIds.Count; i++)
             {
-                _ = reader.ReadLong();
-                count = -count;
+                if (SchemaIds[i].IsNull)
+                {
+                    throw new InvalidOperationException("SchemaIds cannot contain null values.");
+                }
+
+                writer.WriteBytes(SchemaIds[i].Span);
             }
 
-            for (long i = 0; i < count; i++)
-            {
-                schemaIds.Add(ByteString.From(reader.ReadBytes()));
-            }
+            writer.WriteLong(0);
+            writer.Flush();
         }
 
-        return new AvroSchemaRequest(requesterId, schemaIds);
+        /// <summary>
+        /// Decodes a request from its Avro binary payload.
+        /// </summary>
+        /// <param name = "payload">The encoded Avro binary payload.</param>
+        /// <returns>The decoded request.</returns>
+        public static AvroSchemaRequest Decode(ReadOnlyMemory<byte> payload)
+        {
+            using MemoryStream stream = new(payload.ToArray(), writable: false);
+            return Decode(stream);
+        }
+
+        /// <summary>
+        /// Decodes a request from its Avro binary payload.
+        /// </summary>
+        /// <param name = "stream">The source stream.</param>
+        /// <returns>The decoded request.</returns>
+        public static AvroSchemaRequest Decode(Stream stream)
+        {
+            if (stream is null)
+            {
+                throw new ArgumentNullException(nameof(stream));
+            }
+
+            AvroBinaryReader reader = new(stream);
+            long requesterBranch = reader.ReadLong();
+            string? requesterId = requesterBranch switch
+            {
+                0 => null,
+                1 => reader.ReadString(),
+                _ => throw new FormatException("Invalid Avro RequesterId union branch."),
+            };
+            var schemaIds = new List<ByteString>();
+            while (true)
+            {
+                long count = reader.ReadLong();
+                if (count == 0)
+                {
+                    break;
+                }
+
+                if (count < 0)
+                {
+                    _ = reader.ReadLong();
+                    count = -count;
+                }
+
+                for (long i = 0; i < count; i++)
+                {
+                    schemaIds.Add(ByteString.From(reader.ReadBytes()));
+                }
+            }
+
+            return new AvroSchemaRequest(requesterId, schemaIds);
+        }
     }
 }

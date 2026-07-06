@@ -40,213 +40,214 @@ using Opc.Ua.PubSub.Diagnostics;
 using Opc.Ua.PubSub.Encoding;
 using Opc.Ua.PubSub.MetaData;
 
-namespace Opc.Ua.PubSub.Encoding.Tests;
-
-/// <summary>
-/// Verifies that Arrow PubSub network messages produce typed record-batch columns and round-trip dataset rows.
-/// </summary>
-[TestFixture]
-public sealed class ArrowPubSubRoundTripTests
+namespace Opc.Ua.PubSub.Encoding.Tests
 {
-    private static readonly double[] FirstSamples = [1.0, 2.0];
-    private static readonly double[] SecondSamples = [];
-    private static readonly double[] ThirdSamples = [3.5, 4.5, 5.5];
-
-    [Test]
-    public async Task EncoderProducesTypedColumnarBatchAndDecoderRoundTripsRows()
+    /// <summary>
+    /// Verifies that Arrow PubSub network messages produce typed record-batch columns and round-trip dataset rows.
+    /// </summary>
+    [TestFixture]
+    public sealed class ArrowPubSubRoundTripTests
     {
-        PublisherId publisherId = PublisherId.FromString("publisher-arrow");
-        Uuid dataSetClassId = new(new Guid("95669f76-285a-41c6-ac2b-27793a3eac10"));
-        DataSetMetaDataType metaData = CreateMetaData();
-        PubSubNetworkMessageContext context = CreateContext(
-            publisherId,
-            writerGroupId: 9,
-            dataSetClassId,
-            metaData,
-            dataSetWriterId: 501);
+        private static readonly double[] FirstSamples = [1.0, 2.0];
+        private static readonly double[] SecondSamples = [];
+        private static readonly double[] ThirdSamples = [3.5, 4.5, 5.5];
 
-        ArrowNetworkMessage message = new()
+        [Test]
+        public async Task EncoderProducesTypedColumnarBatchAndDecoderRoundTripsRows()
         {
-            PublisherId = publisherId,
-            WriterGroupId = 9,
-            DataSetClassId = dataSetClassId,
-            SchemaId = "arrow-schema-1",
-            MetaData = metaData,
-            DataSetMessages =
-            [
-                CreateSample(501, 100, 21.5, "pump-a", FirstSamples, true, metaData),
-                CreateSample(501, 101, 22.25, null, SecondSamples, false, metaData),
-                CreateSample(501, 102, 23.75, "pump-c", ThirdSamples, true, metaData)
-            ]
-        };
+            PublisherId publisherId = PublisherId.FromString("publisher-arrow");
+            Uuid dataSetClassId = new(new Guid("95669f76-285a-41c6-ac2b-27793a3eac10"));
+            DataSetMetaDataType metaData = CreateMetaData();
+            PubSubNetworkMessageContext context = CreateContext(
+                publisherId,
+                writerGroupId: 9,
+                dataSetClassId,
+                metaData,
+                dataSetWriterId: 501);
 
-        ArrowNetworkMessageEncoder encoder = new();
-        ReadOnlyMemory<byte> frame = await encoder.EncodeAsync(message, context);
-
-        using (ArrowStreamReader reader = new(new MemoryStream(frame.ToArray(), writable: false)))
-        using (RecordBatch? batch = reader.ReadNextRecordBatch())
-        {
-            Assert.That(batch, Is.Not.Null);
-            Assert.That(batch!.Length, Is.EqualTo(message.DataSetMessages.Count));
-            Assert.That(batch.Schema.GetFieldByIndex(5).Name, Is.EqualTo("Temperature"));
-            Assert.That(batch.Schema.GetFieldByIndex(5).DataType, Is.TypeOf<DoubleType>());
-            Assert.That(batch.Schema.GetFieldByIndex(7).DataType, Is.TypeOf<ListType>());
-            for (int i = 5; i < batch.ColumnCount; i++)
+            ArrowNetworkMessage message = new()
             {
-                Assert.That(batch.Schema.GetFieldByIndex(i).DataType, Is.Not.TypeOf<BinaryType>());
+                PublisherId = publisherId,
+                WriterGroupId = 9,
+                DataSetClassId = dataSetClassId,
+                SchemaId = "arrow-schema-1",
+                MetaData = metaData,
+                DataSetMessages =
+                [
+                    CreateSample(501, 100, 21.5, "pump-a", FirstSamples, true, metaData),
+                    CreateSample(501, 101, 22.25, null, SecondSamples, false, metaData),
+                    CreateSample(501, 102, 23.75, "pump-c", ThirdSamples, true, metaData)
+                ]
+            };
+
+            ArrowNetworkMessageEncoder encoder = new();
+            ReadOnlyMemory<byte> frame = await encoder.EncodeAsync(message, context);
+
+            using (ArrowStreamReader reader = new(new MemoryStream(frame.ToArray(), writable: false)))
+            using (RecordBatch? batch = reader.ReadNextRecordBatch())
+            {
+                Assert.That(batch, Is.Not.Null);
+                Assert.That(batch!.Length, Is.EqualTo(message.DataSetMessages.Count));
+                Assert.That(batch.Schema.GetFieldByIndex(5).Name, Is.EqualTo("Temperature"));
+                Assert.That(batch.Schema.GetFieldByIndex(5).DataType, Is.TypeOf<DoubleType>());
+                Assert.That(batch.Schema.GetFieldByIndex(7).DataType, Is.TypeOf<ListType>());
+                for (int i = 5; i < batch.ColumnCount; i++)
+                {
+                    Assert.That(batch.Schema.GetFieldByIndex(i).DataType, Is.Not.TypeOf<BinaryType>());
+                }
             }
+
+            ArrowNetworkMessageDecoder decoder = new();
+            PubSubNetworkMessage? decoded = await decoder.TryDecodeAsync(frame, context);
+
+            Assert.That(decoded, Is.TypeOf<ArrowNetworkMessage>());
+            ArrowNetworkMessage decodedMessage = (ArrowNetworkMessage)decoded!;
+            Assert.That(decodedMessage.PublisherId, Is.EqualTo(message.PublisherId));
+            Assert.That(decodedMessage.WriterGroupId, Is.EqualTo(message.WriterGroupId));
+            Assert.That(decodedMessage.DataSetMessages.Count, Is.EqualTo(3));
+
+            for (int i = 0; i < decodedMessage.DataSetMessages.Count; i++)
+            {
+                ArrowDataSetMessage actual = (ArrowDataSetMessage)decodedMessage.DataSetMessages[i];
+                ArrowDataSetMessage expected = (ArrowDataSetMessage)message.DataSetMessages[i];
+                Assert.That(actual.DataSetWriterId, Is.EqualTo(expected.DataSetWriterId));
+                Assert.That(actual.SequenceNumber, Is.EqualTo(expected.SequenceNumber));
+                Assert.That(actual.Status, Is.EqualTo(expected.Status));
+                Assert.That(actual.Timestamp, Is.EqualTo(expected.Timestamp));
+                Assert.That(actual.MessageType, Is.EqualTo(PubSubDataSetMessageType.KeyFrame));
+            }
+
+            ArrowDataSetMessage first = (ArrowDataSetMessage)decodedMessage.DataSetMessages[0];
+            Assert.That(first.Fields[0].Value.TryGetValue(out double temperature), Is.True);
+            Assert.That(temperature, Is.EqualTo(21.5));
+            Assert.That(first.Fields[1].Value.TryGetValue(out string label), Is.True);
+            Assert.That(label, Is.EqualTo("pump-a"));
+            Assert.That(first.Fields[2].Value.TryGetValue(out ArrayOf<double> samples), Is.True);
+            Assert.That(samples.ToArray(), Is.EqualTo(FirstSamples));
+            Assert.That(first.Fields[3].Value.TryGetValue(out bool enabled), Is.True);
+            Assert.That(enabled, Is.True);
+
+            ArrowDataSetMessage second = (ArrowDataSetMessage)decodedMessage.DataSetMessages[1];
+            Assert.That(second.Fields[1].Value.IsNull, Is.True);
+            Assert.That(second.Fields[2].Value.TryGetValue(out ArrayOf<double> emptySamples), Is.True);
+            Assert.That(emptySamples.Count, Is.Zero);
         }
 
-        ArrowNetworkMessageDecoder decoder = new();
-        PubSubNetworkMessage? decoded = await decoder.TryDecodeAsync(frame, context);
-
-        Assert.That(decoded, Is.TypeOf<ArrowNetworkMessage>());
-        ArrowNetworkMessage decodedMessage = (ArrowNetworkMessage)decoded!;
-        Assert.That(decodedMessage.PublisherId, Is.EqualTo(message.PublisherId));
-        Assert.That(decodedMessage.WriterGroupId, Is.EqualTo(message.WriterGroupId));
-        Assert.That(decodedMessage.DataSetMessages.Count, Is.EqualTo(3));
-
-        for (int i = 0; i < decodedMessage.DataSetMessages.Count; i++)
+        /// <summary>
+        /// Creates a keyed Arrow dataset message containing scalar, nullable, array, and boolean sample fields.
+        /// </summary>
+        private static ArrowDataSetMessage CreateSample(
+            ushort writerId,
+            uint sequenceNumber,
+            double temperature,
+            string? label,
+            double[] samples,
+            bool enabled,
+            DataSetMetaDataType metaData)
         {
-            ArrowDataSetMessage actual = (ArrowDataSetMessage)decodedMessage.DataSetMessages[i];
-            ArrowDataSetMessage expected = (ArrowDataSetMessage)message.DataSetMessages[i];
-            Assert.That(actual.DataSetWriterId, Is.EqualTo(expected.DataSetWriterId));
-            Assert.That(actual.SequenceNumber, Is.EqualTo(expected.SequenceNumber));
-            Assert.That(actual.Status, Is.EqualTo(expected.Status));
-            Assert.That(actual.Timestamp, Is.EqualTo(expected.Timestamp));
-            Assert.That(actual.MessageType, Is.EqualTo(PubSubDataSetMessageType.KeyFrame));
+            return new ArrowDataSetMessage
+            {
+                DataSetWriterId = writerId,
+                SequenceNumber = sequenceNumber,
+                Status = (StatusCode)StatusCodes.Good,
+                Timestamp = new DateTimeUtc(
+                    new DateTime(2026, 7, 4, 9, 30, 0, DateTimeKind.Utc).AddSeconds(sequenceNumber)),
+                MessageType = PubSubDataSetMessageType.KeyFrame,
+                MetaDataVersion = metaData.ConfigurationVersion,
+                FieldContentMask = DataSetFieldContentMask.RawData,
+                Fields =
+                [
+                    new DataSetField
+                    {
+                        Name = "Temperature",
+                        Value = new Variant(temperature),
+                        Encoding = PubSubFieldEncoding.RawData
+                    },
+                    new DataSetField
+                    {
+                        Name = "Label",
+                        Value = label is null ? Variant.Null : new Variant(label),
+                        Encoding = PubSubFieldEncoding.RawData
+                    },
+                    new DataSetField
+                    {
+                        Name = "Samples",
+                        Value = new Variant(new ArrayOf<double>(samples.AsMemory())),
+                        Encoding = PubSubFieldEncoding.RawData
+                    },
+                    new DataSetField
+                    {
+                        Name = "Enabled",
+                        Value = new Variant(enabled),
+                        Encoding = PubSubFieldEncoding.RawData
+                    }
+                ]
+            };
         }
 
-        ArrowDataSetMessage first = (ArrowDataSetMessage)decodedMessage.DataSetMessages[0];
-        Assert.That(first.Fields[0].Value.TryGetValue(out double temperature), Is.True);
-        Assert.That(temperature, Is.EqualTo(21.5));
-        Assert.That(first.Fields[1].Value.TryGetValue(out string label), Is.True);
-        Assert.That(label, Is.EqualTo("pump-a"));
-        Assert.That(first.Fields[2].Value.TryGetValue(out ArrayOf<double> samples), Is.True);
-        Assert.That(samples.ToArray(), Is.EqualTo(FirstSamples));
-        Assert.That(first.Fields[3].Value.TryGetValue(out bool enabled), Is.True);
-        Assert.That(enabled, Is.True);
-
-        ArrowDataSetMessage second = (ArrowDataSetMessage)decodedMessage.DataSetMessages[1];
-        Assert.That(second.Fields[1].Value.IsNull, Is.True);
-        Assert.That(second.Fields[2].Value.TryGetValue(out ArrayOf<double> emptySamples), Is.True);
-        Assert.That(emptySamples.Count, Is.Zero);
-    }
-
-    /// <summary>
-    /// Creates a keyed Arrow dataset message containing scalar, nullable, array, and boolean sample fields.
-    /// </summary>
-    private static ArrowDataSetMessage CreateSample(
-        ushort writerId,
-        uint sequenceNumber,
-        double temperature,
-        string? label,
-        double[] samples,
-        bool enabled,
-        DataSetMetaDataType metaData)
-    {
-        return new ArrowDataSetMessage
+        /// <summary>
+        /// Builds a PubSub decoding context registered with the dataset metadata for the requested writer.
+        /// </summary>
+        private static PubSubNetworkMessageContext CreateContext(
+            PublisherId publisherId,
+            ushort writerGroupId,
+            Uuid dataSetClassId,
+            DataSetMetaDataType metaData,
+            ushort dataSetWriterId)
         {
-            DataSetWriterId = writerId,
-            SequenceNumber = sequenceNumber,
-            Status = (StatusCode)StatusCodes.Good,
-            Timestamp = new DateTimeUtc(
-                new DateTime(2026, 7, 4, 9, 30, 0, DateTimeKind.Utc).AddSeconds(sequenceNumber)),
-            MessageType = PubSubDataSetMessageType.KeyFrame,
-            MetaDataVersion = metaData.ConfigurationVersion,
-            FieldContentMask = DataSetFieldContentMask.RawData,
-            Fields =
-            [
-                new DataSetField
-                {
-                    Name = "Temperature",
-                    Value = new Variant(temperature),
-                    Encoding = PubSubFieldEncoding.RawData
-                },
-                new DataSetField
-                {
-                    Name = "Label",
-                    Value = label is null ? Variant.Null : new Variant(label),
-                    Encoding = PubSubFieldEncoding.RawData
-                },
-                new DataSetField
-                {
-                    Name = "Samples",
-                    Value = new Variant(new ArrayOf<double>(samples.AsMemory())),
-                    Encoding = PubSubFieldEncoding.RawData
-                },
-                new DataSetField
-                {
-                    Name = "Enabled",
-                    Value = new Variant(enabled),
-                    Encoding = PubSubFieldEncoding.RawData
-                }
-            ]
-        };
-    }
+            DataSetMetaDataRegistry registry = new();
+            DataSetMetaDataKey key = new(
+                publisherId,
+                writerGroupId,
+                dataSetWriterId,
+                dataSetClassId,
+                metaData.ConfigurationVersion.MajorVersion);
+            registry.Register(in key, metaData);
 
-    /// <summary>
-    /// Builds a PubSub decoding context registered with the dataset metadata for the requested writer.
-    /// </summary>
-    private static PubSubNetworkMessageContext CreateContext(
-        PublisherId publisherId,
-        ushort writerGroupId,
-        Uuid dataSetClassId,
-        DataSetMetaDataType metaData,
-        ushort dataSetWriterId)
-    {
-        DataSetMetaDataRegistry registry = new();
-        DataSetMetaDataKey key = new(
-            publisherId,
-            writerGroupId,
-            dataSetWriterId,
-            dataSetClassId,
-            metaData.ConfigurationVersion.MajorVersion);
-        registry.Register(in key, metaData);
+            return new PubSubNetworkMessageContext(
+                ServiceMessageContext.CreateEmpty(null!),
+                registry,
+                new PubSubDiagnostics(PubSubDiagnosticsLevel.High),
+                TimeProvider.System);
+        }
 
-        return new PubSubNetworkMessageContext(
-            ServiceMessageContext.CreateEmpty(null!),
-            registry,
-            new PubSubDiagnostics(PubSubDiagnosticsLevel.High),
-            TimeProvider.System);
-    }
-
-    /// <summary>
-    /// Defines the Arrow dataset fields and configuration version expected by the test network message.
-    /// </summary>
-    private static DataSetMetaDataType CreateMetaData()
-    {
-        return new DataSetMetaDataType
+        /// <summary>
+        /// Defines the Arrow dataset fields and configuration version expected by the test network message.
+        /// </summary>
+        private static DataSetMetaDataType CreateMetaData()
         {
-            Name = "ArrowDataSet",
-            ConfigurationVersion = new ConfigurationVersionDataType { MajorVersion = 1, MinorVersion = 0 },
-            Fields =
-            [
-                new FieldMetaData
-                {
-                    Name = "Temperature",
-                    BuiltInType = (byte)BuiltInType.Double,
-                    ValueRank = ValueRanks.Scalar
-                },
-                new FieldMetaData
-                {
-                    Name = "Label",
-                    BuiltInType = (byte)BuiltInType.String,
-                    ValueRank = ValueRanks.Scalar
-                },
-                new FieldMetaData
-                {
-                    Name = "Samples",
-                    BuiltInType = (byte)BuiltInType.Double,
-                    ValueRank = ValueRanks.OneDimension
-                },
-                new FieldMetaData
-                {
-                    Name = "Enabled",
-                    BuiltInType = (byte)BuiltInType.Boolean,
-                    ValueRank = ValueRanks.Scalar
-                }
-            ]
-        };
+            return new DataSetMetaDataType
+            {
+                Name = "ArrowDataSet",
+                ConfigurationVersion = new ConfigurationVersionDataType { MajorVersion = 1, MinorVersion = 0 },
+                Fields =
+                [
+                    new FieldMetaData
+                    {
+                        Name = "Temperature",
+                        BuiltInType = (byte)BuiltInType.Double,
+                        ValueRank = ValueRanks.Scalar
+                    },
+                    new FieldMetaData
+                    {
+                        Name = "Label",
+                        BuiltInType = (byte)BuiltInType.String,
+                        ValueRank = ValueRanks.Scalar
+                    },
+                    new FieldMetaData
+                    {
+                        Name = "Samples",
+                        BuiltInType = (byte)BuiltInType.Double,
+                        ValueRank = ValueRanks.OneDimension
+                    },
+                    new FieldMetaData
+                    {
+                        Name = "Enabled",
+                        BuiltInType = (byte)BuiltInType.Boolean,
+                        ValueRank = ValueRanks.Scalar
+                    }
+                ]
+            };
+        }
     }
 }

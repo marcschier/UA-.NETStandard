@@ -29,16 +29,17 @@
 
 using Opc.Ua;
 
-namespace Opc.Ua.PubSub.Encoding;
-
-/// <summary>
-/// Carries one PubSub DataSetMessage encoded with the experimental Avro mapping.
-/// </summary>
-public sealed record AvroDataSetMessage : PubSubDataSetMessage
+namespace Opc.Ua.PubSub.Encoding
 {
     /// <summary>
-    /// Gets the DataSet field-content bits that determine how field values are represented in Avro.
+    /// Carries one PubSub DataSetMessage encoded with the experimental Avro mapping.
     /// </summary>
-    public DataSetFieldContentMask FieldContentMask { get; init; }
-        = DataSetFieldContentMask.None;
+    public sealed record AvroDataSetMessage : PubSubDataSetMessage
+    {
+        /// <summary>
+        /// Gets the DataSet field-content bits that determine how field values are represented in Avro.
+        /// </summary>
+        public DataSetFieldContentMask FieldContentMask { get; init; }
+            = DataSetFieldContentMask.None;
+    }
 }

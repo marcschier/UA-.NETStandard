@@ -36,174 +36,175 @@ using Apache.Arrow.Ipc;
 using Apache.Arrow.Memory;
 using Apache.Arrow.Types;
 
-namespace Opc.Ua;
-
-/// <summary>
-/// Carries an Arrow SchemaId and serialized Arrow schema bytes.
-/// </summary>
-/// <param name = "SchemaId">The raw 8-byte SHA-256-prefix schema identifier.</param>
-/// <param name = "Schema">The serialized Arrow schema bytes.</param>
-/// <param name = "SchemaEpoch">The optional operational schema epoch.</param>
-public sealed record ArrowSchemaAnnouncement(ByteString SchemaId, ByteString Schema, long? SchemaEpoch)
+namespace Opc.Ua
 {
-    private static readonly MemoryAllocator s_allocator = MemoryAllocator.Default.Value;
-
     /// <summary>
-    /// Encodes the announcement as a one-row Arrow IPC stream matching the descriptor.
+    /// Carries an Arrow SchemaId and serialized Arrow schema bytes.
     /// </summary>
-    /// <returns>The encoded Arrow IPC stream.</returns>
-    [SuppressMessage(
-        "Reliability",
-        "CA2000:Dispose objects before losing scope",
-        Justification = "Arrow arrays are owned by the RecordBatch until it is written."
-    )]
-    public byte[] Encode()
+    /// <param name = "SchemaId">The raw 8-byte SHA-256-prefix schema identifier.</param>
+    /// <param name = "Schema">The serialized Arrow schema bytes.</param>
+    /// <param name = "SchemaEpoch">The optional operational schema epoch.</param>
+    public sealed record ArrowSchemaAnnouncement(ByteString SchemaId, ByteString Schema, long? SchemaEpoch)
     {
-        Apache.Arrow.Schema schema = new Apache.Arrow.Schema.Builder()
-            .Metadata("opcua.mapping", "arrow-schema-announcement")
-            .Field(new Field("SchemaId", new FixedSizeBinaryType(8), nullable: false, metadata: null))
-            .Field(new Field("Schema", BinaryType.Default, nullable: false, metadata: null))
-            .Field(new Field("SchemaEpoch", Int64Type.Default, nullable: true, metadata: null))
-            .Build();
-        IArrowArray[] arrays = [BuildFixed8([SchemaId]), BuildBinary([Schema]), BuildInt64([SchemaEpoch])];
-        using RecordBatch batch = new(schema, arrays, 1);
-        return WriteBatch(schema, batch);
-    }
+        private static readonly MemoryAllocator s_allocator = MemoryAllocator.Default.Value;
 
-    /// <summary>
-    /// Decodes an announcement from a one-row Arrow IPC stream.
-    /// </summary>
-    /// <param name = "payload">The encoded Arrow IPC stream.</param>
-    /// <returns>The decoded announcement.</returns>
-    public static ArrowSchemaAnnouncement Decode(ReadOnlyMemory<byte> payload)
-    {
-        using MemoryStream stream = new(payload.ToArray(), writable: false);
-        using ArrowStreamReader reader = new(stream, leaveOpen: true);
-        using RecordBatch? batch = reader.ReadNextRecordBatch();
-        if (batch is null || batch.Length != 1)
+        /// <summary>
+        /// Encodes the announcement as a one-row Arrow IPC stream matching the descriptor.
+        /// </summary>
+        /// <returns>The encoded Arrow IPC stream.</returns>
+        [SuppressMessage(
+            "Reliability",
+            "CA2000:Dispose objects before losing scope",
+            Justification = "Arrow arrays are owned by the RecordBatch until it is written."
+        )]
+        public byte[] Encode()
         {
-            throw new FormatException("ArrowSchemaAnnouncement requires one row.");
+            Apache.Arrow.Schema schema = new Apache.Arrow.Schema.Builder()
+                .Metadata("opcua.mapping", "arrow-schema-announcement")
+                .Field(new Field("SchemaId", new FixedSizeBinaryType(8), nullable: false, metadata: null))
+                .Field(new Field("Schema", BinaryType.Default, nullable: false, metadata: null))
+                .Field(new Field("SchemaEpoch", Int64Type.Default, nullable: true, metadata: null))
+                .Build();
+            IArrowArray[] arrays = [BuildFixed8([SchemaId]), BuildBinary([Schema]), BuildInt64([SchemaEpoch])];
+            using RecordBatch batch = new(schema, arrays, 1);
+            return WriteBatch(schema, batch);
         }
 
-        ByteString schemaId = ReadFixed8((FixedSizeBinaryArray)batch.Column(0), 0);
-        ByteString schema = ByteString.From(((BinaryArray)batch.Column(1)).GetBytes(0).ToArray());
-        var epochs = (Int64Array)batch.Column(2);
-        long? epoch = epochs.IsNull(0) ? null : epochs.GetValue(0);
-        return new ArrowSchemaAnnouncement(schemaId, schema, epoch);
-    }
-
-    /// <summary>
-    /// Computes the SchemaId bytes for serialized Arrow schema bytes.
-    /// </summary>
-    /// <param name = "schema">The serialized Arrow schema bytes.</param>
-    /// <returns>The raw 8-byte SHA-256-prefix SchemaId.</returns>
-    public static ByteString ComputeSchemaId(ByteString schema)
-    {
-        if (schema.IsNull)
+        /// <summary>
+        /// Decodes an announcement from a one-row Arrow IPC stream.
+        /// </summary>
+        /// <param name = "payload">The encoded Arrow IPC stream.</param>
+        /// <returns>The decoded announcement.</returns>
+        public static ArrowSchemaAnnouncement Decode(ReadOnlyMemory<byte> payload)
         {
-            throw new ArgumentException("Schema bytes are required.", nameof(schema));
-        }
-
-        return ByteString.From(global::Opc.Ua.SchemaId.Sha256Id(schema.Span, 8));
-    }
-
-    internal static byte[] WriteBatch(Apache.Arrow.Schema schema, RecordBatch batch)
-    {
-        using MemoryStream stream = new();
-        using (ArrowStreamWriter writer = new(stream, schema, leaveOpen: true))
-        {
-            writer.WriteStart();
-            writer.WriteRecordBatch(batch);
-            writer.WriteEnd();
-        }
-
-        return stream.ToArray();
-    }
-
-    [SuppressMessage(
-        "Reliability",
-        "CA2000:Dispose objects before losing scope",
-        Justification = "ArrayData ownership is transferred to the Arrow array."
-    )]
-    internal static FixedSizeBinaryArray BuildFixed8(IReadOnlyList<ByteString> values)
-    {
-        var bytes = new List<byte>(values.Count * 8);
-        var validity = new ArrowBuffer.BitmapBuilder(values.Count);
-        for (int i = 0; i < values.Count; i++)
-        {
-            bool valid = !values[i].IsNull;
-            if (valid && values[i].Length != 8)
+            using MemoryStream stream = new(payload.ToArray(), writable: false);
+            using ArrowStreamReader reader = new(stream, leaveOpen: true);
+            using RecordBatch? batch = reader.ReadNextRecordBatch();
+            if (batch is null || batch.Length != 1)
             {
-                throw new ArgumentException("SchemaId values must be 8 bytes.", nameof(values));
+                throw new FormatException("ArrowSchemaAnnouncement requires one row.");
             }
 
-            validity.Append(valid);
-            bytes.AddRange(valid ? values[i].Span.ToArray() : new byte[8]);
+            ByteString schemaId = ReadFixed8((FixedSizeBinaryArray)batch.Column(0), 0);
+            ByteString schema = ByteString.From(((BinaryArray)batch.Column(1)).GetBytes(0).ToArray());
+            var epochs = (Int64Array)batch.Column(2);
+            long? epoch = epochs.IsNull(0) ? null : epochs.GetValue(0);
+            return new ArrowSchemaAnnouncement(schemaId, schema, epoch);
         }
 
-        return new FixedSizeBinaryArray(
-            new ArrayData(
-                new FixedSizeBinaryType(8),
-                values.Count,
-                values.Count - validity.SetBitCount,
-                0,
-                [validity.Build(s_allocator), BuildBuffer(bytes.ToArray())],
-                []
-            )
-        );
-    }
-
-    internal static BinaryArray BuildBinary(IReadOnlyList<ByteString> values)
-    {
-        var builder = new BinaryArray.Builder();
-        for (int i = 0; i < values.Count; i++)
+        /// <summary>
+        /// Computes the SchemaId bytes for serialized Arrow schema bytes.
+        /// </summary>
+        /// <param name = "schema">The serialized Arrow schema bytes.</param>
+        /// <returns>The raw 8-byte SHA-256-prefix SchemaId.</returns>
+        public static ByteString ComputeSchemaId(ByteString schema)
         {
-            if (values[i].IsNull)
+            if (schema.IsNull)
             {
-                builder.AppendNull();
+                throw new ArgumentException("Schema bytes are required.", nameof(schema));
             }
-            else
-            {
-                builder.Append(values[i].Span);
-            }
+
+            return ByteString.From(global::Opc.Ua.SchemaId.Sha256Id(schema.Span, 8));
         }
 
-        return builder.Build(s_allocator);
-    }
-
-    internal static Int64Array BuildInt64(IReadOnlyList<long?> values)
-    {
-        var builder = new Int64Array.Builder();
-        for (int i = 0; i < values.Count; i++)
+        internal static byte[] WriteBatch(Apache.Arrow.Schema schema, RecordBatch batch)
         {
-            if (values[i].HasValue)
+            using MemoryStream stream = new();
+            using (ArrowStreamWriter writer = new(stream, schema, leaveOpen: true))
             {
-                builder.Append(values[i].GetValueOrDefault());
+                writer.WriteStart();
+                writer.WriteRecordBatch(batch);
+                writer.WriteEnd();
             }
-            else
-            {
-                builder.AppendNull();
-            }
+
+            return stream.ToArray();
         }
 
-        return builder.Build(s_allocator);
-    }
-
-    internal static ByteString ReadFixed8(FixedSizeBinaryArray array, int index)
-    {
-        if (array.IsNull(index))
+        [SuppressMessage(
+            "Reliability",
+            "CA2000:Dispose objects before losing scope",
+            Justification = "ArrayData ownership is transferred to the Arrow array."
+        )]
+        internal static FixedSizeBinaryArray BuildFixed8(IReadOnlyList<ByteString> values)
         {
-            return default;
+            var bytes = new List<byte>(values.Count * 8);
+            var validity = new ArrowBuffer.BitmapBuilder(values.Count);
+            for (int i = 0; i < values.Count; i++)
+            {
+                bool valid = !values[i].IsNull;
+                if (valid && values[i].Length != 8)
+                {
+                    throw new ArgumentException("SchemaId values must be 8 bytes.", nameof(values));
+                }
+
+                validity.Append(valid);
+                bytes.AddRange(valid ? values[i].Span.ToArray() : new byte[8]);
+            }
+
+            return new FixedSizeBinaryArray(
+                new ArrayData(
+                    new FixedSizeBinaryType(8),
+                    values.Count,
+                    values.Count - validity.SetBitCount,
+                    0,
+                    [validity.Build(s_allocator), BuildBuffer(bytes.ToArray())],
+                    []
+                )
+            );
         }
 
-        return ByteString.From(array.GetBytes(index).ToArray());
-    }
+        internal static BinaryArray BuildBinary(IReadOnlyList<ByteString> values)
+        {
+            var builder = new BinaryArray.Builder();
+            for (int i = 0; i < values.Count; i++)
+            {
+                if (values[i].IsNull)
+                {
+                    builder.AppendNull();
+                }
+                else
+                {
+                    builder.Append(values[i].Span);
+                }
+            }
 
-    private static ArrowBuffer BuildBuffer<T>(params T[] values)
-        where T : struct
-    {
-        var builder = new ArrowBuffer.Builder<T>(values.Length);
-        builder.Append(values.AsSpan());
-        return builder.Build(s_allocator);
+            return builder.Build(s_allocator);
+        }
+
+        internal static Int64Array BuildInt64(IReadOnlyList<long?> values)
+        {
+            var builder = new Int64Array.Builder();
+            for (int i = 0; i < values.Count; i++)
+            {
+                if (values[i].HasValue)
+                {
+                    builder.Append(values[i].GetValueOrDefault());
+                }
+                else
+                {
+                    builder.AppendNull();
+                }
+            }
+
+            return builder.Build(s_allocator);
+        }
+
+        internal static ByteString ReadFixed8(FixedSizeBinaryArray array, int index)
+        {
+            if (array.IsNull(index))
+            {
+                return default;
+            }
+
+            return ByteString.From(array.GetBytes(index).ToArray());
+        }
+
+        private static ArrowBuffer BuildBuffer<T>(params T[] values)
+            where T : struct
+        {
+            var builder = new ArrowBuffer.Builder<T>(values.Length);
+            builder.Append(values.AsSpan());
+            return builder.Build(s_allocator);
+        }
     }
 }

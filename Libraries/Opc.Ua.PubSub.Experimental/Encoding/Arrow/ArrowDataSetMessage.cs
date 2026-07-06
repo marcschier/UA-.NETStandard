@@ -29,19 +29,20 @@
 
 using Opc.Ua;
 
-namespace Opc.Ua.PubSub.Encoding;
-
-/// <summary>
-/// PubSub DataSetMessage row in an Arrow IPC RecordBatch. The first
-/// adapter version supports RawData field columns for the built-in
-/// scalar and one-dimensional array types listed by the Part 14 Arrow
-/// draft; unsupported field built-in types fail with NotSupportedException.
-/// </summary>
-public sealed record ArrowDataSetMessage : PubSubDataSetMessage
+namespace Opc.Ua.PubSub.Encoding
 {
     /// <summary>
-    /// Gets the DataSet field-content bits emitted as Arrow RawData columns.
+    /// PubSub DataSetMessage row in an Arrow IPC RecordBatch. The first
+    /// adapter version supports RawData field columns for the built-in
+    /// scalar and one-dimensional array types listed by the Part 14 Arrow
+    /// draft; unsupported field built-in types fail with NotSupportedException.
     /// </summary>
-    public DataSetFieldContentMask FieldContentMask { get; init; }
-        = DataSetFieldContentMask.RawData;
+    public sealed record ArrowDataSetMessage : PubSubDataSetMessage
+    {
+        /// <summary>
+        /// Gets the DataSet field-content bits emitted as Arrow RawData columns.
+        /// </summary>
+        public DataSetFieldContentMask FieldContentMask { get; init; }
+            = DataSetFieldContentMask.RawData;
+    }
 }
