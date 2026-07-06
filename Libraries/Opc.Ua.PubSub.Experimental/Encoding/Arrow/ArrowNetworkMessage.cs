@@ -32,17 +32,19 @@ using Opc.Ua;
 namespace Opc.Ua.PubSub.Encoding;
 
 /// <summary>
-/// Carries one PubSub NetworkMessage encoded with the experimental Avro transport profile.
+/// Apache Arrow IPC-stream PubSub NetworkMessage. The stream schema
+/// describes one DataSet; each RecordBatch row is one DataSetMessage
+/// sample and each DataSet field is a typed Arrow column.
 /// </summary>
-public sealed record AvroNetworkMessage : PubSubNetworkMessage
+public sealed record ArrowNetworkMessage : PubSubNetworkMessage
 {
     /// <summary>
-    /// Identifies the MQTT transport profile URI used for Avro PubSub frames.
+    /// Identifies the MQTT transport profile URI used for Arrow PubSub frames.
     /// </summary>
-    public const string PubSubMqttAvroTransport = "http://opcfoundation.org/UA-Profile/Transport/pubsub-mqtt-avro";
+    public const string PubSubMqttArrowTransport = "http://opcfoundation.org/UA-Profile/Transport/pubsub-mqtt-arrow";
 
     /// <summary>
-    /// Gets the DataSetClassId advertised with the Avro network envelope.
+    /// Gets the DataSetClassId advertised with the Arrow stream schema metadata.
     /// </summary>
     public Uuid DataSetClassId { get; init; }
 
@@ -54,6 +56,6 @@ public sealed record AvroNetworkMessage : PubSubNetworkMessage
     /// <inheritdoc/>
     public override string TransportProfileUri
     {
-        get { return PubSubMqttAvroTransport; }
+        get { return PubSubMqttArrowTransport; }
     }
 }

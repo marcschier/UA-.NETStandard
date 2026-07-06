@@ -27,11 +27,11 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using Opc.Ua;
 using System;
-using Opc.Ua.PubSub.Encoding;
 using Opc.Ua.PubSub.MetaData;
 
-namespace Opc.Ua.PubSub.Experimental;
+namespace Opc.Ua.PubSub.Encoding;
 
 /// <summary>
 /// Resolves PubSub metadata and converts field payloads shared by the experimental encoders.

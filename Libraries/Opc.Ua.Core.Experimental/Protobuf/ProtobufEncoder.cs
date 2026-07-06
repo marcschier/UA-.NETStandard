@@ -26,7 +26,6 @@
  * The complete license agreement can be found here:
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
-
 using System;
 using System.Buffers;
 using System.Collections.Generic;
@@ -36,7 +35,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Opc.Ua.Core.Experimental
+namespace Opc.Ua
 {
     /// <summary>
     /// Encodes OPC UA values into the Protobuf wire format defined by the Part 6 Protobuf DataEncoding.
@@ -46,16 +45,16 @@ namespace Opc.Ua.Core.Experimental
         /// <summary>
         /// Initializes a new ProtobufEncoder instance for the experimental OPC UA encoding support.
         /// </summary>
-        /// <param name="context">The service message context that supplies namespace, server URI, and encodeable type resolution tables.</param>
+        /// <param name = "context">The service message context that supplies namespace, server URI, and encodeable type resolution tables.</param>
         public ProtobufEncoder(IServiceMessageContext context)
             : this(new MemoryStream(), context, false) { }
 
         /// <summary>
         /// Initializes a new ProtobufEncoder instance for the experimental OPC UA encoding support.
         /// </summary>
-        /// <param name="stream">The stream that receives or supplies the encoded payload.</param>
-        /// <param name="context">The service message context that supplies namespace, server URI, and encodeable type resolution tables.</param>
-        /// <param name="leaveOpen">True to leave the caller-owned stream open when the codec is closed.</param>
+        /// <param name = "stream">The stream that receives or supplies the encoded payload.</param>
+        /// <param name = "context">The service message context that supplies namespace, server URI, and encodeable type resolution tables.</param>
+        /// <param name = "leaveOpen">True to leave the caller-owned stream open when the codec is closed.</param>
         public ProtobufEncoder(Stream stream, IServiceMessageContext context, bool leaveOpen = true)
         {
             Context = context ?? throw new ArgumentNullException(nameof(context));
@@ -65,10 +64,16 @@ namespace Opc.Ua.Core.Experimental
         }
 
         /// <inheritdoc/>
-        public EncodingType EncodingType => EncodingType.Json;
+        public EncodingType EncodingType
+        {
+            get { return EncodingType.Json; }
+        }
 
         /// <inheritdoc/>
-        public bool CanOmitFields => true;
+        public bool CanOmitFields
+        {
+            get { return true; }
+        }
 
         /// <inheritdoc/>
         public IServiceMessageContext Context { get; }
@@ -83,6 +88,7 @@ namespace Opc.Ua.Core.Experimental
             {
                 return ms.ToArray();
             }
+
             throw new NotSupportedException("ProtobufEncoder.ToArray requires the internally managed MemoryStream.");
         }
 
@@ -93,18 +99,23 @@ namespace Opc.Ua.Core.Experimental
             {
                 throw new ObjectDisposedException(nameof(ProtobufEncoder));
             }
+
             m_stack.Peek().Writer.Flush();
             int length = m_stream is MemoryStream ms ? checked((int)ms.Length) : 0;
             if (!m_leaveOpen)
             {
                 m_stream.Dispose();
             }
+
             m_disposed = true;
             return length;
         }
 
         /// <inheritdoc/>
-        public string? CloseAndReturnText() => Convert.ToHexString(ToArray()).ToLowerInvariant();
+        public string? CloseAndReturnText()
+        {
+            return Convert.ToHexString(ToArray()).ToLowerInvariant();
+        }
 
         /// <inheritdoc/>
         public void Dispose()
@@ -130,7 +141,10 @@ namespace Opc.Ua.Core.Experimental
 
         /// <inheritdoc/>
         public void EncodeMessage<T>(T message)
-            where T : IEncodeable, new() => EncodeMessage(message, message.TypeId);
+            where T : IEncodeable, new()
+        {
+            EncodeMessage(message, message.TypeId);
+        }
 
         /// <inheritdoc/>
         public void EncodeMessage<T>(T message, ExpandedNodeId encodeableTypeId)
@@ -141,42 +155,74 @@ namespace Opc.Ua.Core.Experimental
         }
 
         /// <inheritdoc/>
-        public void WriteBoolean(string? fieldName, bool value) => WriteVarint(fieldName, value ? 1UL : 0UL);
+        public void WriteBoolean(string? fieldName, bool value)
+        {
+            WriteVarint(fieldName, value ? 1UL : 0UL);
+        }
 
         /// <inheritdoc/>
-        public void WriteSByte(string? fieldName, sbyte value) => WriteSignedVarint(fieldName, value);
+        public void WriteSByte(string? fieldName, sbyte value)
+        {
+            WriteSignedVarint(fieldName, value);
+        }
 
         /// <inheritdoc/>
-        public void WriteByte(string? fieldName, byte value) => WriteVarint(fieldName, value);
+        public void WriteByte(string? fieldName, byte value)
+        {
+            WriteVarint(fieldName, value);
+        }
 
         /// <inheritdoc/>
-        public void WriteInt16(string? fieldName, short value) => WriteSignedVarint(fieldName, value);
+        public void WriteInt16(string? fieldName, short value)
+        {
+            WriteSignedVarint(fieldName, value);
+        }
 
         /// <inheritdoc/>
-        public void WriteUInt16(string? fieldName, ushort value) => WriteVarint(fieldName, value);
+        public void WriteUInt16(string? fieldName, ushort value)
+        {
+            WriteVarint(fieldName, value);
+        }
 
         /// <inheritdoc/>
-        public void WriteInt32(string? fieldName, int value) => WriteSignedVarint(fieldName, value);
+        public void WriteInt32(string? fieldName, int value)
+        {
+            WriteSignedVarint(fieldName, value);
+        }
 
         /// <inheritdoc/>
-        public void WriteUInt32(string? fieldName, uint value) => WriteVarint(fieldName, value);
+        public void WriteUInt32(string? fieldName, uint value)
+        {
+            WriteVarint(fieldName, value);
+        }
 
         /// <inheritdoc/>
-        public void WriteInt64(string? fieldName, long value) => WriteSignedVarint(fieldName, value);
+        public void WriteInt64(string? fieldName, long value)
+        {
+            WriteSignedVarint(fieldName, value);
+        }
 
         /// <inheritdoc/>
-        public void WriteUInt64(string? fieldName, ulong value) => WriteVarint(fieldName, value);
+        public void WriteUInt64(string? fieldName, ulong value)
+        {
+            WriteVarint(fieldName, value);
+        }
 
         /// <inheritdoc/>
-        public void WriteFloat(string? fieldName, float value) =>
+        public void WriteFloat(string? fieldName, float value)
+        {
             WriteFixed32(fieldName, BitConverter.SingleToUInt32Bits(value));
+        }
 
         /// <inheritdoc/>
-        public void WriteDouble(string? fieldName, double value) =>
+        public void WriteDouble(string? fieldName, double value)
+        {
             WriteFixed64(fieldName, BitConverter.DoubleToUInt64Bits(value));
+        }
 
         /// <inheritdoc/>
-        public void WriteString(string? fieldName, string? value) =>
+        public void WriteString(string? fieldName, string? value)
+        {
             WriteMessage(
                 fieldName,
                 w =>
@@ -188,16 +234,23 @@ namespace Opc.Ua.Core.Experimental
                     }
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteDateTime(string? fieldName, DateTimeUtc value) =>
+        public void WriteDateTime(string? fieldName, DateTimeUtc value)
+        {
             WriteFixed64(fieldName, unchecked((ulong)(long)value));
+        }
 
         /// <inheritdoc/>
-        public void WriteGuid(string? fieldName, Uuid value) => WriteBytes(fieldName, value.ToByteArray());
+        public void WriteGuid(string? fieldName, Uuid value)
+        {
+            WriteBytes(fieldName, value.ToByteArray());
+        }
 
         /// <inheritdoc/>
-        public void WriteByteString(string? fieldName, ByteString value) =>
+        public void WriteByteString(string? fieldName, ByteString value)
+        {
             WriteMessage(
                 fieldName,
                 w =>
@@ -209,24 +262,40 @@ namespace Opc.Ua.Core.Experimental
                     }
                 }
             );
+        }
 
 #if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
         /// <inheritdoc/>
-        public void WriteByteString(string? fieldName, ReadOnlySpan<byte> value) => WriteBytes(fieldName, value);
+        public void WriteByteString(string? fieldName, ReadOnlySpan<byte> value)
+        {
+            WriteBytes(fieldName, value);
+        }
 #endif
 
         /// <inheritdoc/>
-        public void WriteXmlElement(string? fieldName, XmlElement value) => WriteString(fieldName, value.OuterXml);
+        public void WriteXmlElement(string? fieldName, XmlElement value)
+        {
+            WriteString(fieldName, value.OuterXml);
+        }
 
         /// <inheritdoc/>
-        public void WriteStatusCode(string? fieldName, StatusCode value) => WriteFixed32(fieldName, value.Code);
+        public void WriteStatusCode(string? fieldName, StatusCode value)
+        {
+            WriteFixed32(fieldName, value.Code);
+        }
 
         /// <inheritdoc/>
         public void WriteEnumerated<T>(string? fieldName, T value)
-            where T : struct, Enum => WriteInt32(fieldName, Convert.ToInt32(value, CultureInfo.InvariantCulture));
+            where T : struct, Enum
+        {
+            WriteInt32(fieldName, Convert.ToInt32(value, CultureInfo.InvariantCulture));
+        }
 
         /// <inheritdoc/>
-        public void WriteEnumerated(string? fieldName, EnumValue value) => WriteInt32(fieldName, value.Value);
+        public void WriteEnumerated(string? fieldName, EnumValue value)
+        {
+            WriteInt32(fieldName, value.Value);
+        }
 
         /// <inheritdoc/>
         public void WriteSwitchField(uint switchField, out string? fieldName)
@@ -242,11 +311,14 @@ namespace Opc.Ua.Core.Experimental
         }
 
         /// <inheritdoc/>
-        public void WriteNodeId(string? fieldName, NodeId value) =>
+        public void WriteNodeId(string? fieldName, NodeId value)
+        {
             WriteMessage(fieldName, w => EncodeNodeId(w, value));
+        }
 
         /// <inheritdoc/>
-        public void WriteExpandedNodeId(string? fieldName, ExpandedNodeId value) =>
+        public void WriteExpandedNodeId(string? fieldName, ExpandedNodeId value)
+        {
             WriteMessage(
                 fieldName,
                 w =>
@@ -257,6 +329,7 @@ namespace Opc.Ua.Core.Experimental
                         Proto.WriteTag(w, 2, 2);
                         Proto.WriteString(w, value.NamespaceUri);
                     }
+
                     if (value.ServerIndex != 0)
                     {
                         Proto.WriteTag(w, 3, 0);
@@ -264,9 +337,11 @@ namespace Opc.Ua.Core.Experimental
                     }
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteQualifiedName(string? fieldName, QualifiedName value) =>
+        public void WriteQualifiedName(string? fieldName, QualifiedName value)
+        {
             WriteMessage(
                 fieldName,
                 w =>
@@ -276,6 +351,7 @@ namespace Opc.Ua.Core.Experimental
                         Proto.WriteTag(w, 1, 0);
                         Proto.WriteVarint(w, value.NamespaceIndex);
                     }
+
                     if (value.Name != null)
                     {
                         Proto.WriteTag(w, 2, 2);
@@ -283,9 +359,11 @@ namespace Opc.Ua.Core.Experimental
                     }
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteLocalizedText(string? fieldName, LocalizedText value) =>
+        public void WriteLocalizedText(string? fieldName, LocalizedText value)
+        {
             WriteMessage(
                 fieldName,
                 w =>
@@ -295,6 +373,7 @@ namespace Opc.Ua.Core.Experimental
                         Proto.WriteTag(w, 1, 2);
                         Proto.WriteString(w, value.Locale);
                     }
+
                     if (value.Text != null)
                     {
                         Proto.WriteTag(w, 2, 2);
@@ -302,6 +381,7 @@ namespace Opc.Ua.Core.Experimental
                     }
                 }
             );
+        }
 
         /// <inheritdoc/>
         public void WriteDiagnosticInfo(string? fieldName, DiagnosticInfo? value)
@@ -310,6 +390,7 @@ namespace Opc.Ua.Core.Experimental
             {
                 return;
             }
+
             WriteMessage(fieldName, w => EncodeDiagnosticInfo(w, value));
         }
 
@@ -321,8 +402,10 @@ namespace Opc.Ua.Core.Experimental
         }
 
         /// <inheritdoc/>
-        public void WriteExtensionObject(string? fieldName, ExtensionObject value) =>
+        public void WriteExtensionObject(string? fieldName, ExtensionObject value)
+        {
             WriteMessage(fieldName, w => EncodeExtensionObject(w, value));
+        }
 
         /// <inheritdoc/>
         public void WriteVariant(string? fieldName, in Variant value)
@@ -332,11 +415,17 @@ namespace Opc.Ua.Core.Experimental
         }
 
         /// <inheritdoc/>
-        public void WriteVariantValue(string? fieldName, in Variant value) => WriteVariant(fieldName, value);
+        public void WriteVariantValue(string? fieldName, in Variant value)
+        {
+            WriteVariant(fieldName, value);
+        }
 
         /// <inheritdoc/>
         public void WriteEncodeable<T>(string? fieldName, T value)
-            where T : IEncodeable, new() => WriteEncodeable(fieldName, value, value.TypeId);
+            where T : IEncodeable, new()
+        {
+            WriteEncodeable(fieldName, value, value.TypeId);
+        }
 
         /// <inheritdoc/>
         public void WriteEncodeable<T>(string? fieldName, T value, ExpandedNodeId encodeableTypeId)
@@ -346,26 +435,35 @@ namespace Opc.Ua.Core.Experimental
             {
                 return;
             }
+
             WriteMessage(fieldName, w => WithFrame(w, () => value.Encode(this)));
         }
 
         /// <inheritdoc/>
         public void WriteEncodeableAsExtensionObject<T>(string? fieldName, T value)
-            where T : IEncodeable => WriteExtensionObject(fieldName, new ExtensionObject(value));
+            where T : IEncodeable
+        {
+            WriteExtensionObject(fieldName, new ExtensionObject(value));
+        }
 
         /// <inheritdoc/>
         public void WriteEncodeableArray<T>(string? fieldName, ArrayOf<T> values)
-            where T : IEncodeable, new() =>
+            where T : IEncodeable, new()
+        {
             WriteArray(fieldName, values, values => WriteMessageRaw(1, w => WithFrame(w, () => values.Encode(this))));
+        }
 
         /// <inheritdoc/>
         public void WriteEncodeableArray<T>(string? fieldName, ArrayOf<T> values, ExpandedNodeId encodeableTypeId)
-            where T : IEncodeable =>
+            where T : IEncodeable
+        {
             WriteArray(fieldName, values, values => WriteMessageRaw(1, w => WithFrame(w, () => values.Encode(this))));
+        }
 
         /// <inheritdoc/>
         public void WriteEncodeableArrayAsExtensionObjects<T>(string? fieldName, ArrayOf<T> values)
-            where T : IEncodeable =>
+            where T : IEncodeable
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -375,19 +473,25 @@ namespace Opc.Ua.Core.Experimental
                     WriteMessageRaw(1, w => EncodeExtensionObject(w, eo));
                 }
             );
+        }
 
         /// <inheritdoc/>
         public void WriteEncodeableMatrix<T>(string? fieldName, MatrixOf<T> values)
-            where T : IEncodeable, new() =>
+            where T : IEncodeable, new()
+        {
             WriteMatrix(fieldName, values, values => WriteMessageRaw(2, w => WithFrame(w, () => values.Encode(this))));
+        }
 
         /// <inheritdoc/>
         public void WriteEncodeableMatrix<T>(string? fieldName, MatrixOf<T> values, ExpandedNodeId encodeableTypeId)
-            where T : IEncodeable =>
+            where T : IEncodeable
+        {
             WriteMatrix(fieldName, values, values => WriteMessageRaw(2, w => WithFrame(w, () => values.Encode(this))));
+        }
 
         /// <inheritdoc/>
-        public void WriteBooleanArray(string? fieldName, ArrayOf<bool> values) =>
+        public void WriteBooleanArray(string? fieldName, ArrayOf<bool> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -397,9 +501,11 @@ namespace Opc.Ua.Core.Experimental
                     Proto.WriteVarint(Current, x ? 1UL : 0UL);
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteSByteArray(string? fieldName, ArrayOf<sbyte> values) =>
+        public void WriteSByteArray(string? fieldName, ArrayOf<sbyte> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -409,9 +515,11 @@ namespace Opc.Ua.Core.Experimental
                     Proto.WriteSignedVarint(Current, x);
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteByteArray(string? fieldName, ArrayOf<byte> values) =>
+        public void WriteByteArray(string? fieldName, ArrayOf<byte> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -421,9 +529,11 @@ namespace Opc.Ua.Core.Experimental
                     Proto.WriteVarint(Current, x);
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteInt16Array(string? fieldName, ArrayOf<short> values) =>
+        public void WriteInt16Array(string? fieldName, ArrayOf<short> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -433,9 +543,11 @@ namespace Opc.Ua.Core.Experimental
                     Proto.WriteSignedVarint(Current, x);
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteUInt16Array(string? fieldName, ArrayOf<ushort> values) =>
+        public void WriteUInt16Array(string? fieldName, ArrayOf<ushort> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -445,9 +557,11 @@ namespace Opc.Ua.Core.Experimental
                     Proto.WriteVarint(Current, x);
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteInt32Array(string? fieldName, ArrayOf<int> values) =>
+        public void WriteInt32Array(string? fieldName, ArrayOf<int> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -457,9 +571,11 @@ namespace Opc.Ua.Core.Experimental
                     Proto.WriteSignedVarint(Current, x);
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteUInt32Array(string? fieldName, ArrayOf<uint> values) =>
+        public void WriteUInt32Array(string? fieldName, ArrayOf<uint> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -469,9 +585,11 @@ namespace Opc.Ua.Core.Experimental
                     Proto.WriteVarint(Current, x);
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteInt64Array(string? fieldName, ArrayOf<long> values) =>
+        public void WriteInt64Array(string? fieldName, ArrayOf<long> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -481,9 +599,11 @@ namespace Opc.Ua.Core.Experimental
                     Proto.WriteSignedVarint(Current, x);
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteUInt64Array(string? fieldName, ArrayOf<ulong> values) =>
+        public void WriteUInt64Array(string? fieldName, ArrayOf<ulong> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -493,9 +613,11 @@ namespace Opc.Ua.Core.Experimental
                     Proto.WriteVarint(Current, x);
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteFloatArray(string? fieldName, ArrayOf<float> values) =>
+        public void WriteFloatArray(string? fieldName, ArrayOf<float> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -505,9 +627,11 @@ namespace Opc.Ua.Core.Experimental
                     Proto.WriteFixed32(Current, BitConverter.SingleToUInt32Bits(x));
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteDoubleArray(string? fieldName, ArrayOf<double> values) =>
+        public void WriteDoubleArray(string? fieldName, ArrayOf<double> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -517,9 +641,11 @@ namespace Opc.Ua.Core.Experimental
                     Proto.WriteFixed64(Current, BitConverter.DoubleToUInt64Bits(x));
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteStringArray(string? fieldName, ArrayOf<string> values) =>
+        public void WriteStringArray(string? fieldName, ArrayOf<string> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -536,9 +662,11 @@ namespace Opc.Ua.Core.Experimental
                         }
                     )
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteDateTimeArray(string? fieldName, ArrayOf<DateTimeUtc> values) =>
+        public void WriteDateTimeArray(string? fieldName, ArrayOf<DateTimeUtc> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -548,9 +676,11 @@ namespace Opc.Ua.Core.Experimental
                     Proto.WriteFixed64(Current, unchecked((ulong)(long)x));
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteGuidArray(string? fieldName, ArrayOf<Uuid> values) =>
+        public void WriteGuidArray(string? fieldName, ArrayOf<Uuid> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -560,9 +690,11 @@ namespace Opc.Ua.Core.Experimental
                     Proto.WriteBytes(Current, x.ToByteArray());
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteByteStringArray(string? fieldName, ArrayOf<ByteString> values) =>
+        public void WriteByteStringArray(string? fieldName, ArrayOf<ByteString> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -579,9 +711,11 @@ namespace Opc.Ua.Core.Experimental
                         }
                     )
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteXmlElementArray(string? fieldName, ArrayOf<XmlElement> values) =>
+        public void WriteXmlElementArray(string? fieldName, ArrayOf<XmlElement> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -598,17 +732,23 @@ namespace Opc.Ua.Core.Experimental
                         }
                     )
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteNodeIdArray(string? fieldName, ArrayOf<NodeId> values) =>
+        public void WriteNodeIdArray(string? fieldName, ArrayOf<NodeId> values)
+        {
             WriteArray(fieldName, values, x => WriteMessageRaw(1, w => EncodeNodeId(w, x)));
+        }
 
         /// <inheritdoc/>
-        public void WriteExpandedNodeIdArray(string? fieldName, ArrayOf<ExpandedNodeId> values) =>
+        public void WriteExpandedNodeIdArray(string? fieldName, ArrayOf<ExpandedNodeId> values)
+        {
             WriteArray(fieldName, values, x => WriteExpandedNodeId(null, x));
+        }
 
         /// <inheritdoc/>
-        public void WriteStatusCodeArray(string? fieldName, ArrayOf<StatusCode> values) =>
+        public void WriteStatusCodeArray(string? fieldName, ArrayOf<StatusCode> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -618,9 +758,11 @@ namespace Opc.Ua.Core.Experimental
                     Proto.WriteFixed32(Current, x.Code);
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteDiagnosticInfoArray(string? fieldName, ArrayOf<DiagnosticInfo> values) =>
+        public void WriteDiagnosticInfoArray(string? fieldName, ArrayOf<DiagnosticInfo> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -636,9 +778,11 @@ namespace Opc.Ua.Core.Experimental
                         }
                     )
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteQualifiedNameArray(string? fieldName, ArrayOf<QualifiedName> values) =>
+        public void WriteQualifiedNameArray(string? fieldName, ArrayOf<QualifiedName> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -652,6 +796,7 @@ namespace Opc.Ua.Core.Experimental
                                 Proto.WriteTag(w, 1, 0);
                                 Proto.WriteVarint(w, x.NamespaceIndex);
                             }
+
                             if (x.Name != null)
                             {
                                 Proto.WriteTag(w, 2, 2);
@@ -660,9 +805,11 @@ namespace Opc.Ua.Core.Experimental
                         }
                     )
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteLocalizedTextArray(string? fieldName, ArrayOf<LocalizedText> values) =>
+        public void WriteLocalizedTextArray(string? fieldName, ArrayOf<LocalizedText> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -676,6 +823,7 @@ namespace Opc.Ua.Core.Experimental
                                 Proto.WriteTag(w, 1, 2);
                                 Proto.WriteString(w, x.Locale);
                             }
+
                             if (x.Text != null)
                             {
                                 Proto.WriteTag(w, 2, 2);
@@ -684,22 +832,30 @@ namespace Opc.Ua.Core.Experimental
                         }
                     )
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteVariantArray(string? fieldName, ArrayOf<Variant> values) =>
+        public void WriteVariantArray(string? fieldName, ArrayOf<Variant> values)
+        {
             WriteArray(fieldName, values, x => WriteMessageRaw(1, w => EncodeVariant(w, x)));
+        }
 
         /// <inheritdoc/>
-        public void WriteDataValueArray(string? fieldName, ArrayOf<DataValue> values) =>
+        public void WriteDataValueArray(string? fieldName, ArrayOf<DataValue> values)
+        {
             WriteArray(fieldName, values, x => WriteMessageRaw(1, w => EncodeDataValue(w, x)));
+        }
 
         /// <inheritdoc/>
-        public void WriteExtensionObjectArray(string? fieldName, ArrayOf<ExtensionObject> values) =>
+        public void WriteExtensionObjectArray(string? fieldName, ArrayOf<ExtensionObject> values)
+        {
             WriteArray(fieldName, values, x => WriteMessageRaw(1, w => EncodeExtensionObject(w, x)));
+        }
 
         /// <inheritdoc/>
         public void WriteEnumeratedArray<T>(string? fieldName, ArrayOf<T> values)
-            where T : struct, Enum =>
+            where T : struct, Enum
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -709,9 +865,11 @@ namespace Opc.Ua.Core.Experimental
                     Proto.WriteSignedVarint(Current, Convert.ToInt32(x, CultureInfo.InvariantCulture));
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public void WriteEnumeratedArray(string? fieldName, ArrayOf<EnumValue> values) =>
+        public void WriteEnumeratedArray(string? fieldName, ArrayOf<EnumValue> values)
+        {
             WriteArray(
                 fieldName,
                 values,
@@ -721,8 +879,12 @@ namespace Opc.Ua.Core.Experimental
                     Proto.WriteSignedVarint(Current, x.Value);
                 }
             );
+        }
 
-        private BinaryWriter Current => m_stack.Peek().Writer;
+        private BinaryWriter Current
+        {
+            get { return m_stack.Peek().Writer; }
+        }
 
         private void WriteVarint(string? name, ulong value)
         {
@@ -754,8 +916,10 @@ namespace Opc.Ua.Core.Experimental
             Proto.WriteBytes(Current, bytes);
         }
 
-        private void WriteMessage(string? name, Action<BinaryWriter> encode) =>
+        private void WriteMessage(string? name, Action<BinaryWriter> encode)
+        {
             WriteMessageRaw(m_stack.Peek().Next(name), encode);
+        }
 
         private void WriteMessageRaw(int field, Action<BinaryWriter> encode)
         {
@@ -786,6 +950,7 @@ namespace Opc.Ua.Core.Experimental
             {
                 return;
             }
+
             WriteMessage(
                 name,
                 w =>
@@ -808,6 +973,7 @@ namespace Opc.Ua.Core.Experimental
             {
                 return;
             }
+
             WriteMessage(
                 name,
                 w =>
@@ -820,6 +986,7 @@ namespace Opc.Ua.Core.Experimental
                                 Proto.WriteTag(Current, 1, 0);
                                 Proto.WriteSignedVarint(Current, d);
                             }
+
                             for (int i = 0; i < values.Count; i++)
                             {
                                 write(values.Span[i]);
@@ -846,6 +1013,7 @@ namespace Opc.Ua.Core.Experimental
                 Proto.WriteTag(w, 1, 0);
                 Proto.WriteVarint(w, n.NamespaceIndex);
             }
+
             switch (n.IdType)
             {
                 case IdType.Numeric:
@@ -878,31 +1046,37 @@ namespace Opc.Ua.Core.Experimental
                 Proto.WriteTag(w, 1, 0);
                 Proto.WriteSignedVarint(w, d.SymbolicId);
             }
+
             if (d.NamespaceUri >= 0)
             {
                 Proto.WriteTag(w, 2, 0);
                 Proto.WriteSignedVarint(w, d.NamespaceUri);
             }
+
             if (d.Locale >= 0)
             {
                 Proto.WriteTag(w, 3, 0);
                 Proto.WriteSignedVarint(w, d.Locale);
             }
+
             if (d.LocalizedText >= 0)
             {
                 Proto.WriteTag(w, 4, 0);
                 Proto.WriteSignedVarint(w, d.LocalizedText);
             }
+
             if (d.AdditionalInfo != null)
             {
                 Proto.WriteTag(w, 5, 2);
                 Proto.WriteString(w, d.AdditionalInfo);
             }
+
             if (d.InnerStatusCode.Code != 0)
             {
                 Proto.WriteTag(w, 6, 5);
                 Proto.WriteFixed32(w, d.InnerStatusCode.Code);
             }
+
             if (d.InnerDiagnosticInfo != null)
             {
                 using var ms = new MemoryStream();
@@ -920,12 +1094,14 @@ namespace Opc.Ua.Core.Experimental
             {
                 return;
             }
+
             using var ms = new MemoryStream();
             using var bw = new BinaryWriter(ms, Encoding.UTF8, true);
             if (!d.WrappedValue.IsNull)
             {
                 EncodeVariantField(w, 1, d.WrappedValue);
             }
+
             Proto.WriteTag(w, 2, 5);
             Proto.WriteFixed32(w, d.StatusCode.Code);
             Proto.WriteTag(w, 3, 1);
@@ -935,6 +1111,7 @@ namespace Opc.Ua.Core.Experimental
                 Proto.WriteTag(w, 4, 0);
                 Proto.WriteVarint(w, d.SourcePicoseconds);
             }
+
             Proto.WriteTag(w, 5, 1);
             Proto.WriteFixed64(w, unchecked((ulong)(long)d.ServerTimestamp));
             if (d.ServerPicoseconds != 0)
@@ -950,6 +1127,7 @@ namespace Opc.Ua.Core.Experimental
             {
                 return;
             }
+
             using (var ms = new MemoryStream())
             {
                 using var bw = new BinaryWriter(ms, Encoding.UTF8, true);
@@ -958,12 +1136,14 @@ namespace Opc.Ua.Core.Experimental
                 Proto.WriteTag(w, 1, 2);
                 Proto.WriteBytes(w, ms.ToArray());
             }
+
             if (e.TryGetAsBinary(out ByteString bs, Context) && !bs.IsNull)
             {
                 Proto.WriteTag(w, 3, 2);
                 Proto.WriteBytes(w, bs.Span);
             }
 #pragma warning disable CS0618 // Justification: raw byte[] bodies have no non-obsolete type-safe accessor.
+
             else if (e.Body is byte[] bytes)
 #pragma warning restore CS0618
             {
@@ -997,6 +1177,7 @@ namespace Opc.Ua.Core.Experimental
             {
                 return;
             }
+
             BuiltInType t = values.TypeInfo.BuiltInType;
             Proto.WriteTag(w, 1, 0);
             Proto.WriteVarint(w, (uint)t);
@@ -1005,6 +1186,7 @@ namespace Opc.Ua.Core.Experimental
             {
                 return;
             }
+
             using var ms = new MemoryStream();
             using var bw = new BinaryWriter(ms, Encoding.UTF8, true);
             WithFrame(bw, () => WriteObjectAsField1(t, o));
@@ -1102,7 +1284,7 @@ namespace Opc.Ua.Core.Experimental
             /// <summary>
             /// Initializes a new Frame instance for the experimental OPC UA encoding support.
             /// </summary>
-            /// <param name="writer">The binary writer used by the nested frame.</param>
+            /// <param name = "writer">The binary writer used by the nested frame.</param>
             public Frame(BinaryWriter writer)
             {
                 Writer = writer;
@@ -1131,9 +1313,12 @@ namespace Opc.Ua.Core.Experimental
             /// <summary>
             /// Returns the Protobuf field number for the supplied OPC UA field name.
             /// </summary>
-            /// <param name="name">The field or column name to assign.</param>
+            /// <param name = "name">The field or column name to assign.</param>
             /// <returns>The result produced by this codec helper.</returns>
-            public int Next(string? name) => NextField++;
+            public int Next(string? name)
+            {
+                return NextField++;
+            }
         }
 
         private readonly Stack<Frame> m_stack = new();

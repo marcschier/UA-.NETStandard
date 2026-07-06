@@ -27,16 +27,15 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using Opc.Ua;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Opc.Ua.Core.Experimental;
 using Opc.Ua.PubSub.Diagnostics;
-using Opc.Ua.PubSub.Encoding;
 
-namespace Opc.Ua.PubSub.Experimental;
+namespace Opc.Ua.PubSub.Encoding;
 
 /// <summary>
 /// Decodes experimental Avro PubSub network frames and resolves referenced DataSet schemas.
@@ -47,7 +46,10 @@ public sealed class AvroNetworkMessageDecoder : INetworkMessageDecoder
     private const ushort Version = 1;
 
     /// <inheritdoc/>
-    public string TransportProfileUri => AvroNetworkMessage.PubSubMqttAvroTransport;
+    public string TransportProfileUri
+    {
+        get { return AvroNetworkMessage.PubSubMqttAvroTransport; }
+    }
 
     /// <summary>
     /// Gets the SchemaId cache used by the decoder.

@@ -27,6 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using Opc.Ua;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -38,11 +39,9 @@ using Apache.Arrow;
 using Apache.Arrow.Arrays;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
-using Opc.Ua.Core.Experimental;
 using Opc.Ua.PubSub.Diagnostics;
-using Opc.Ua.PubSub.Encoding;
 
-namespace Opc.Ua.PubSub.Experimental;
+namespace Opc.Ua.PubSub.Encoding;
 
 /// <summary>
 /// Decodes the experimental Arrow PubSub IPC-stream mapping. It expects
@@ -57,7 +56,10 @@ public sealed class ArrowNetworkMessageDecoder : INetworkMessageDecoder
     private const int HeaderColumnCount = 5;
 
     /// <inheritdoc/>
-    public string TransportProfileUri => ArrowNetworkMessage.PubSubMqttArrowTransport;
+    public string TransportProfileUri
+    {
+        get { return ArrowNetworkMessage.PubSubMqttArrowTransport; }
+    }
 
     /// <summary>
     /// Gets the SchemaId cache used by the decoder.
@@ -339,7 +341,8 @@ public sealed class ArrowNetworkMessageDecoder : INetworkMessageDecoder
                 Enumerable.Range(start, length)
                     .Select(i => new StatusCode(((UInt32Array)values).GetValue(i) ?? 0))
                     .ToArray())),
-            _ => throw new NotSupportedException($"Arrow list field '{fieldName}' with element type {type} is not supported.")
+            _ => throw new NotSupportedException(
+                $"Arrow list field '{fieldName}' with element type {type} is not supported.")
         };
     }
 
@@ -379,7 +382,9 @@ public sealed class ArrowNetworkMessageDecoder : INetworkMessageDecoder
 
     private static ushort ParseUInt16(string value)
     {
-        return ushort.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out ushort parsed) ? parsed : (ushort)0;
+        return ushort.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out ushort parsed)
+            ? parsed
+            : (ushort)0;
     }
 
     private static uint ParseUInt32(string value)

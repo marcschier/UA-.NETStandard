@@ -26,37 +26,34 @@
  * The complete license agreement can be found here:
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using Apache.Arrow;
+using Apache.Arrow.Arrays;
+using Apache.Arrow.Ipc;
+using Apache.Arrow.Memory;
+using Apache.Arrow.Types;
 
-using System.Text;
-using NUnit.Framework;
-
-namespace Opc.Ua.Core.Experimental.Tests
+namespace Opc.Ua
 {
     /// <summary>
-    /// Verifies stable schema identifier helpers for Avro single-object prefixes and canonical CRC fingerprints.
+    /// Pairs an Arrow field template with the single-column array produced for an encoded OPC UA value.
     /// </summary>
-    [TestFixture]
-    public sealed class SchemaIdTests
+    /// <param name = "Template">The input required by this experimental codec helper.</param>
+    /// <param name = "Array">The input required by this experimental codec helper.</param>
+    internal sealed record Slot(Field Template, IArrowArray Array)
     {
-        [Test]
-        public void AvroSingleObjectPrefixUsesMagicAndLittleEndianFingerprint()
+        /// <summary>
+        /// Creates an Arrow field with the supplied column name and this slot's template metadata.
+        /// </summary>
+        /// <param name = "name">The field or column name to assign.</param>
+        /// <returns>The Arrow field with the supplied name.</returns>
+        public Field Field(string name)
         {
-            byte[] prefix = SchemaId.AvroSingleObjectPrefix(0x0102030405060708UL);
-
-            Assert.That(
-                prefix,
-                Is.EqualTo(new byte[] { 0xC3, 0x01, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01 }));
-        }
-
-        [Test]
-        public void RabinCrc64AvroIsStableForSameCanonicalBytes()
-        {
-            byte[] canonical = Encoding.UTF8.GetBytes("""{"type":"record","name":"Stable","fields":[]}""");
-
-            ulong first = SchemaId.RabinCrc64Avro(canonical);
-            ulong second = SchemaId.RabinCrc64Avro(canonical);
-
-            Assert.That(second, Is.EqualTo(first));
+            return new(name, Template.DataType, Template.IsNullable, Template.Metadata);
         }
     }
 }

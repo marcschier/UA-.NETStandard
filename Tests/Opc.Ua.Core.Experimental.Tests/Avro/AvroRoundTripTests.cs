@@ -31,9 +31,8 @@ using System;
 using System.IO;
 using NUnit.Framework;
 using Opc.Ua;
-using Opc.Ua.Core.Experimental;
 
-namespace Opc.Ua.Core.Experimental.Tests
+namespace Opc.Ua.Core.Tests
 {
     /// <summary>
     /// Exercises the Avro experimental encoder and decoder for OPC UA scalar, array, matrix, variant,
@@ -46,7 +45,13 @@ namespace Opc.Ua.Core.Experimental.Tests
         private static readonly double[] MatrixValues = [1.0, -0.0, double.NaN, double.PositiveInfinity];
         private static readonly int[] ArrayVariantValues = [10, 20, 30];
 
-        private static IServiceMessageContext Context => ServiceMessageContext.CreateEmpty(null!);
+        private static IServiceMessageContext Context
+        {
+            get
+            {
+                return ServiceMessageContext.CreateEmpty(null!);
+            }
+        }
 
         [Test]
         public void AvroBuiltInEdgesRoundTrip()
@@ -293,9 +298,27 @@ namespace Opc.Ua.Core.Experimental.Tests
         {
             public int Id { get; set; }
             public string? Name { get; set; }
-            public ExpandedNodeId TypeId => new NodeId(5001u, 2);
-            public ExpandedNodeId BinaryEncodingId => new NodeId(5002u, 2);
-            public ExpandedNodeId XmlEncodingId => new NodeId(5003u, 2);
+            public ExpandedNodeId TypeId
+            {
+                get
+                {
+                    return new NodeId(5001u, 2);
+                }
+            }
+            public ExpandedNodeId BinaryEncodingId
+            {
+                get
+                {
+                    return new NodeId(5002u, 2);
+                }
+            }
+            public ExpandedNodeId XmlEncodingId
+            {
+                get
+                {
+                    return new NodeId(5003u, 2);
+                }
+            }
             public void Encode(IEncoder encoder)
             {
                 encoder.WriteInt32(nameof(Id), Id);
@@ -307,11 +330,26 @@ namespace Opc.Ua.Core.Experimental.Tests
                 Id = decoder.ReadInt32(nameof(Id));
                 Name = decoder.ReadString(nameof(Name));
             }
-            public bool IsEqual(IEncodeable? encodeable) => encodeable is PlainStruct other && Equals(other);
-            public object Clone() => new PlainStruct { Id = Id, Name = Name };
-            public bool Equals(PlainStruct? other) => other != null && Id == other.Id && Name == other.Name;
-            public override bool Equals(object? obj) => Equals(obj as PlainStruct);
-            public override int GetHashCode() => HashCode.Combine(Id, Name);
+            public bool IsEqual(IEncodeable? encodeable)
+            {
+                return encodeable is PlainStruct other && Equals(other);
+            }
+            public object Clone()
+            {
+                return new PlainStruct { Id = Id, Name = Name };
+            }
+            public bool Equals(PlainStruct? other)
+            {
+                return other != null && Id == other.Id && Name == other.Name;
+            }
+            public override bool Equals(object? obj)
+            {
+                return Equals(obj as PlainStruct);
+            }
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(Id, Name);
+            }
         }
     }
 }

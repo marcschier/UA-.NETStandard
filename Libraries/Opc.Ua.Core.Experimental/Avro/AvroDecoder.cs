@@ -26,19 +26,17 @@
  * The complete license agreement can be found here:
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
-
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Opc.Ua;
 using Opc.Ua.Types;
 
-namespace Opc.Ua.Core.Experimental
+namespace Opc.Ua
 {
     /// <summary>
     /// Decodes OPC UA values using the experimental Avro binary mapping.
     /// </summary>
-    public sealed partial class AvroDecoder : IDecoder
+    public sealed class AvroDecoder : IDecoder
     {
         private readonly Stream m_stream;
         private readonly AvroBinaryReader m_reader;
@@ -47,17 +45,17 @@ namespace Opc.Ua.Core.Experimental
         /// <summary>
         /// Initializes a new AvroDecoder instance for the experimental OPC UA encoding support.
         /// </summary>
-        /// <param name="buffer">The encoded payload buffer to decode.</param>
-        /// <param name="context">The service message context that supplies namespace, server URI, and encodeable type resolution tables.</param>
+        /// <param name = "buffer">The encoded payload buffer to decode.</param>
+        /// <param name = "context">The service message context that supplies namespace, server URI, and encodeable type resolution tables.</param>
         public AvroDecoder(byte[] buffer, IServiceMessageContext context)
             : this(new MemoryStream(buffer, false), context, false) { }
 
         /// <summary>
         /// Initializes a new AvroDecoder instance for the experimental OPC UA encoding support.
         /// </summary>
-        /// <param name="stream">The stream that receives or supplies the encoded payload.</param>
-        /// <param name="context">The service message context that supplies namespace, server URI, and encodeable type resolution tables.</param>
-        /// <param name="leaveOpen">True to leave the caller-owned stream open when the codec is closed.</param>
+        /// <param name = "stream">The stream that receives or supplies the encoded payload.</param>
+        /// <param name = "context">The service message context that supplies namespace, server URI, and encodeable type resolution tables.</param>
+        /// <param name = "leaveOpen">True to leave the caller-owned stream open when the codec is closed.</param>
         public AvroDecoder(Stream stream, IServiceMessageContext context, bool leaveOpen = true)
         {
             Context = context ?? throw new ArgumentNullException(nameof(context));
@@ -67,13 +65,19 @@ namespace Opc.Ua.Core.Experimental
         }
 
         /// <inheritdoc/>
-        public EncodingType EncodingType => AvroEncoder.AvroEncodingType;
+        public EncodingType EncodingType
+        {
+            get { return AvroEncoder.AvroEncodingType; }
+        }
 
         /// <inheritdoc/>
         public IServiceMessageContext Context { get; }
 
         /// <inheritdoc/>
-        public void Dispose() => Close();
+        public void Dispose()
+        {
+            Close();
+        }
 
         /// <inheritdoc/>
         public void Close()
@@ -105,46 +109,88 @@ namespace Opc.Ua.Core.Experimental
         }
 
         /// <inheritdoc/>
-        public bool ReadBoolean(string? fieldName) => m_reader.ReadBoolean();
+        public bool ReadBoolean(string? fieldName)
+        {
+            return m_reader.ReadBoolean();
+        }
 
         /// <inheritdoc/>
-        public sbyte ReadSByte(string? fieldName) => checked((sbyte)m_reader.ReadInt());
+        public sbyte ReadSByte(string? fieldName)
+        {
+            return checked((sbyte)m_reader.ReadInt());
+        }
 
         /// <inheritdoc/>
-        public byte ReadByte(string? fieldName) => checked((byte)m_reader.ReadInt());
+        public byte ReadByte(string? fieldName)
+        {
+            return checked((byte)m_reader.ReadInt());
+        }
 
         /// <inheritdoc/>
-        public short ReadInt16(string? fieldName) => checked((short)m_reader.ReadInt());
+        public short ReadInt16(string? fieldName)
+        {
+            return checked((short)m_reader.ReadInt());
+        }
 
         /// <inheritdoc/>
-        public ushort ReadUInt16(string? fieldName) => checked((ushort)m_reader.ReadInt());
+        public ushort ReadUInt16(string? fieldName)
+        {
+            return checked((ushort)m_reader.ReadInt());
+        }
 
         /// <inheritdoc/>
-        public int ReadInt32(string? fieldName) => m_reader.ReadInt();
+        public int ReadInt32(string? fieldName)
+        {
+            return m_reader.ReadInt();
+        }
 
         /// <inheritdoc/>
-        public uint ReadUInt32(string? fieldName) => unchecked((uint)m_reader.ReadInt());
+        public uint ReadUInt32(string? fieldName)
+        {
+            return unchecked((uint)m_reader.ReadInt());
+        }
 
         /// <inheritdoc/>
-        public long ReadInt64(string? fieldName) => m_reader.ReadLong();
+        public long ReadInt64(string? fieldName)
+        {
+            return m_reader.ReadLong();
+        }
 
         /// <inheritdoc/>
-        public ulong ReadUInt64(string? fieldName) => unchecked((ulong)m_reader.ReadLong());
+        public ulong ReadUInt64(string? fieldName)
+        {
+            return unchecked((ulong)m_reader.ReadLong());
+        }
 
         /// <inheritdoc/>
-        public float ReadFloat(string? fieldName) => m_reader.ReadFloat();
+        public float ReadFloat(string? fieldName)
+        {
+            return m_reader.ReadFloat();
+        }
 
         /// <inheritdoc/>
-        public double ReadDouble(string? fieldName) => m_reader.ReadDouble();
+        public double ReadDouble(string? fieldName)
+        {
+            return m_reader.ReadDouble();
+        }
 
         /// <inheritdoc/>
-        public string? ReadString(string? fieldName) => ReadNullable(() => m_reader.ReadString());
+        public string? ReadString(string? fieldName)
+        {
+            return ReadNullable(() => m_reader.ReadString());
+        }
 
         /// <inheritdoc/>
-        public DateTimeUtc ReadDateTime(string? fieldName) => new DateTimeUtc(m_reader.ReadLong());
+        public DateTimeUtc ReadDateTime(string? fieldName)
+        {
+            return new DateTimeUtc(m_reader.ReadLong());
+        }
 
         /// <inheritdoc/>
-        public Uuid ReadGuid(string? fieldName) => new Uuid(m_reader.ReadFixed(16));
+        public Uuid ReadGuid(string? fieldName)
+        {
+            return new Uuid(m_reader.ReadFixed(16));
+        }
 
         /// <inheritdoc/>
         public ByteString ReadByteString(string? fieldName)
@@ -154,7 +200,10 @@ namespace Opc.Ua.Core.Experimental
         }
 
         /// <inheritdoc/>
-        public XmlElement ReadXmlElement(string? fieldName) => XmlElement.From(ReadString(fieldName));
+        public XmlElement ReadXmlElement(string? fieldName)
+        {
+            return XmlElement.From(ReadString(fieldName));
+        }
 
         /// <inheritdoc/>
         public NodeId ReadNodeId(string? fieldName)
@@ -172,11 +221,16 @@ namespace Opc.Ua.Core.Experimental
         }
 
         /// <inheritdoc/>
-        public ExpandedNodeId ReadExpandedNodeId(string? fieldName) =>
-            new ExpandedNodeId(ReadNodeId(null), ReadString(null), ReadUInt32(null));
+        public ExpandedNodeId ReadExpandedNodeId(string? fieldName)
+        {
+            return new ExpandedNodeId(ReadNodeId(null), ReadString(null), ReadUInt32(null));
+        }
 
         /// <inheritdoc/>
-        public StatusCode ReadStatusCode(string? fieldName) => new StatusCode(ReadUInt32(null));
+        public StatusCode ReadStatusCode(string? fieldName)
+        {
+            return new StatusCode(ReadUInt32(null));
+        }
 
         /// <inheritdoc/>
         public QualifiedName ReadQualifiedName(string? fieldName)
@@ -190,7 +244,6 @@ namespace Opc.Ua.Core.Experimental
         public LocalizedText ReadLocalizedText(string? fieldName)
         {
             long branch = m_reader.ReadLong();
-
             if (branch == 0)
             {
                 return LocalizedText.Null;
@@ -204,7 +257,6 @@ namespace Opc.Ua.Core.Experimental
         public DiagnosticInfo? ReadDiagnosticInfo(string? fieldName)
         {
             long branch = m_reader.ReadLong();
-
             if (branch == 0)
             {
                 return null;
@@ -231,7 +283,6 @@ namespace Opc.Ua.Core.Experimental
             ushort sourcePs = ReadNullableValue(() => ReadUInt16(null), (ushort)0);
             DateTimeUtc serverTs = ReadNullableValue(() => ReadDateTime(null), DateTimeUtc.MinValue);
             ushort serverPs = ReadNullableValue(() => ReadUInt16(null), (ushort)0);
-
             if (
                 value.IsNull
                 && status.Equals(StatusCodes.Good, StatusCodeComparison.AllBits)
@@ -243,6 +294,7 @@ namespace Opc.Ua.Core.Experimental
             {
                 return DataValue.Null;
             }
+
             return new DataValue(value, status, sourceTs, serverTs, sourcePs, serverPs);
         }
 
@@ -251,7 +303,6 @@ namespace Opc.Ua.Core.Experimental
         {
             ExpandedNodeId typeId = ReadExpandedNodeId(null);
             long branch = m_reader.ReadLong();
-
             if (branch == 0)
             {
                 return new ExtensionObject(typeId);
@@ -265,10 +316,12 @@ namespace Opc.Ua.Core.Experimental
                         $"Cannot decode Avro ExtensionObject body for unregistered type {typeId}."
                     );
                 }
+
                 IEncodeable body = activator.CreateInstance();
                 body.Decode(this);
                 return new ExtensionObject(typeId, body);
             }
+
             if (branch == 2)
             {
                 return new ExtensionObject(typeId, ByteString.From(m_reader.ReadBytes()));
@@ -315,10 +368,16 @@ namespace Opc.Ua.Core.Experimental
 
         /// <inheritdoc/>
         public T ReadEnumerated<T>(string? fieldName)
-            where T : struct, Enum => EnumHelper.Int32ToEnum<T>(ReadInt32(fieldName));
+            where T : struct, Enum
+        {
+            return EnumHelper.Int32ToEnum<T>(ReadInt32(fieldName));
+        }
 
         /// <inheritdoc/>
-        public EnumValue ReadEnumerated(string? fieldName) => EnumValue.From(ReadInt32(fieldName));
+        public EnumValue ReadEnumerated(string? fieldName)
+        {
+            return EnumValue.From(ReadInt32(fieldName));
+        }
 
         /// <inheritdoc/>
         public uint ReadSwitchField(IList<string> switches, out string? fieldName)
@@ -328,10 +387,16 @@ namespace Opc.Ua.Core.Experimental
         }
 
         /// <inheritdoc/>
-        public uint ReadEncodingMask(IList<string> masks) => ReadUInt32("encodingMask");
+        public uint ReadEncodingMask(IList<string> masks)
+        {
+            return ReadUInt32("encodingMask");
+        }
 
         /// <inheritdoc/>
-        public bool HasField(string fieldName) => true;
+        public bool HasField(string fieldName)
+        {
+            return true;
+        }
 
         private T? ReadNullable<T>(Func<T> read)
             where T : class
@@ -341,6 +406,7 @@ namespace Opc.Ua.Core.Experimental
             {
                 return null;
             }
+
             ExpectBranch(b, 1);
             return read();
         }
@@ -352,6 +418,7 @@ namespace Opc.Ua.Core.Experimental
             {
                 return defaultValue;
             }
+
             ExpectBranch(b, 1);
             return read();
         }
@@ -367,7 +434,6 @@ namespace Opc.Ua.Core.Experimental
         private ArrayOf<T> ReadArray<T>(Func<T> read)
         {
             long branch = m_reader.ReadLong();
-
             if (branch == 0)
             {
                 return default;
@@ -388,18 +454,19 @@ namespace Opc.Ua.Core.Experimental
                     _ = m_reader.ReadLong();
                     count = -count;
                 }
+
                 for (long i = 0; i < count; i++)
                 {
                     values.Add(read());
                 }
             }
+
             return values.ToArray();
         }
 
         private MatrixOf<T> ReadMatrix<T>(Func<ArrayOf<T>> readArray)
         {
             long branch = m_reader.ReadLong();
-
             if (branch == 0)
             {
                 return default;
@@ -411,137 +478,367 @@ namespace Opc.Ua.Core.Experimental
         }
 
         /// <inheritdoc/>
-        public ArrayOf<bool> ReadBooleanArray(string? fieldName) => ReadArray(() => ReadBoolean(null));
+        public ArrayOf<bool> ReadBooleanArray(string? fieldName)
+        {
+            return ReadArray(() => ReadBoolean(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<sbyte> ReadSByteArray(string? fieldName) => ReadArray(() => ReadSByte(null));
+        public ArrayOf<sbyte> ReadSByteArray(string? fieldName)
+        {
+            return ReadArray(() => ReadSByte(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<byte> ReadByteArray(string? fieldName) => ReadArray(() => ReadByte(null));
+        public ArrayOf<byte> ReadByteArray(string? fieldName)
+        {
+            return ReadArray(() => ReadByte(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<short> ReadInt16Array(string? fieldName) => ReadArray(() => ReadInt16(null));
+        public ArrayOf<short> ReadInt16Array(string? fieldName)
+        {
+            return ReadArray(() => ReadInt16(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<ushort> ReadUInt16Array(string? fieldName) => ReadArray(() => ReadUInt16(null));
+        public ArrayOf<ushort> ReadUInt16Array(string? fieldName)
+        {
+            return ReadArray(() => ReadUInt16(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<int> ReadInt32Array(string? fieldName) => ReadArray(() => ReadInt32(null));
+        public ArrayOf<int> ReadInt32Array(string? fieldName)
+        {
+            return ReadArray(() => ReadInt32(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<uint> ReadUInt32Array(string? fieldName) => ReadArray(() => ReadUInt32(null));
+        public ArrayOf<uint> ReadUInt32Array(string? fieldName)
+        {
+            return ReadArray(() => ReadUInt32(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<long> ReadInt64Array(string? fieldName) => ReadArray(() => ReadInt64(null));
+        public ArrayOf<long> ReadInt64Array(string? fieldName)
+        {
+            return ReadArray(() => ReadInt64(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<ulong> ReadUInt64Array(string? fieldName) => ReadArray(() => ReadUInt64(null));
+        public ArrayOf<ulong> ReadUInt64Array(string? fieldName)
+        {
+            return ReadArray(() => ReadUInt64(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<float> ReadFloatArray(string? fieldName) => ReadArray(() => ReadFloat(null));
+        public ArrayOf<float> ReadFloatArray(string? fieldName)
+        {
+            return ReadArray(() => ReadFloat(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<double> ReadDoubleArray(string? fieldName) => ReadArray(() => ReadDouble(null));
+        public ArrayOf<double> ReadDoubleArray(string? fieldName)
+        {
+            return ReadArray(() => ReadDouble(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<string?> ReadStringArray(string? fieldName) => ReadArray(() => ReadString(null));
+        public ArrayOf<string?> ReadStringArray(string? fieldName)
+        {
+            return ReadArray(() => ReadString(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<DateTimeUtc> ReadDateTimeArray(string? fieldName) => ReadArray(() => ReadDateTime(null));
+        public ArrayOf<DateTimeUtc> ReadDateTimeArray(string? fieldName)
+        {
+            return ReadArray(() => ReadDateTime(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<Uuid> ReadGuidArray(string? fieldName) => ReadArray(() => ReadGuid(null));
+        public ArrayOf<Uuid> ReadGuidArray(string? fieldName)
+        {
+            return ReadArray(() => ReadGuid(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<ByteString> ReadByteStringArray(string? fieldName) => ReadArray(() => ReadByteString(null));
+        public ArrayOf<ByteString> ReadByteStringArray(string? fieldName)
+        {
+            return ReadArray(() => ReadByteString(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<XmlElement> ReadXmlElementArray(string? fieldName) => ReadArray(() => ReadXmlElement(null));
+        public ArrayOf<XmlElement> ReadXmlElementArray(string? fieldName)
+        {
+            return ReadArray(() => ReadXmlElement(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<NodeId> ReadNodeIdArray(string? fieldName) => ReadArray(() => ReadNodeId(null));
+        public ArrayOf<NodeId> ReadNodeIdArray(string? fieldName)
+        {
+            return ReadArray(() => ReadNodeId(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<ExpandedNodeId> ReadExpandedNodeIdArray(string? fieldName) =>
-            ReadArray(() => ReadExpandedNodeId(null));
+        public ArrayOf<ExpandedNodeId> ReadExpandedNodeIdArray(string? fieldName)
+        {
+            return ReadArray(() => ReadExpandedNodeId(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<StatusCode> ReadStatusCodeArray(string? fieldName) => ReadArray(() => ReadStatusCode(null));
+        public ArrayOf<StatusCode> ReadStatusCodeArray(string? fieldName)
+        {
+            return ReadArray(() => ReadStatusCode(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<DiagnosticInfo?> ReadDiagnosticInfoArray(string? fieldName) =>
-            ReadArray(() => ReadDiagnosticInfo(null));
+        public ArrayOf<DiagnosticInfo?> ReadDiagnosticInfoArray(string? fieldName)
+        {
+            return ReadArray(() => ReadDiagnosticInfo(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<QualifiedName> ReadQualifiedNameArray(string? fieldName) =>
-            ReadArray(() => ReadQualifiedName(null));
+        public ArrayOf<QualifiedName> ReadQualifiedNameArray(string? fieldName)
+        {
+            return ReadArray(() => ReadQualifiedName(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<LocalizedText> ReadLocalizedTextArray(string? fieldName) =>
-            ReadArray(() => ReadLocalizedText(null));
+        public ArrayOf<LocalizedText> ReadLocalizedTextArray(string? fieldName)
+        {
+            return ReadArray(() => ReadLocalizedText(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<Variant> ReadVariantArray(string? fieldName) => ReadArray(() => ReadVariant(null));
+        public ArrayOf<Variant> ReadVariantArray(string? fieldName)
+        {
+            return ReadArray(() => ReadVariant(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<DataValue> ReadDataValueArray(string? fieldName) => ReadArray(() => ReadDataValue(null));
+        public ArrayOf<DataValue> ReadDataValueArray(string? fieldName)
+        {
+            return ReadArray(() => ReadDataValue(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<ExtensionObject> ReadExtensionObjectArray(string? fieldName) =>
-            ReadArray(() => ReadExtensionObject(null));
+        public ArrayOf<ExtensionObject> ReadExtensionObjectArray(string? fieldName)
+        {
+            return ReadArray(() => ReadExtensionObject(null));
+        }
 
         /// <summary>
         /// Reads EncodeableArray from the experimental encoded representation.
         /// </summary>
-        /// <typeparam name="T">The OPC UA encodeable or value type processed by this member.</typeparam>
-        /// <param name="fieldName">The OPC UA field name associated with the encoded member.</param>
+        /// <typeparam name = "T">The OPC UA encodeable or value type processed by this member.</typeparam>
+        /// <param name = "fieldName">The OPC UA field name associated with the encoded member.</param>
         /// <returns>The result produced by this codec helper.</returns>
         public ArrayOf<T> ReadEncodeableArray<T>(string? fieldName)
-            where T : IEncodeable, new() => ReadArray(() => ReadEncodeable<T>(null));
+            where T : IEncodeable, new()
+        {
+            return ReadArray(() => ReadEncodeable<T>(null));
+        }
 
         /// <summary>
         /// Reads EncodeableArray from the experimental encoded representation.
         /// </summary>
-        /// <typeparam name="T">The OPC UA encodeable or value type processed by this member.</typeparam>
-        /// <param name="fieldName">The OPC UA field name associated with the encoded member.</param>
-        /// <param name="encodeableTypeId">The expanded type identifier used to resolve the encodeable body.</param>
+        /// <typeparam name = "T">The OPC UA encodeable or value type processed by this member.</typeparam>
+        /// <param name = "fieldName">The OPC UA field name associated with the encoded member.</param>
+        /// <param name = "encodeableTypeId">The expanded type identifier used to resolve the encodeable body.</param>
         /// <returns>The result produced by this codec helper.</returns>
         public ArrayOf<T> ReadEncodeableArray<T>(string? fieldName, ExpandedNodeId encodeableTypeId)
-            where T : IEncodeable => ReadArray(() => ReadEncodeable<T>(null, encodeableTypeId));
+            where T : IEncodeable
+        {
+            return ReadArray(() => ReadEncodeable<T>(null, encodeableTypeId));
+        }
 
         /// <summary>
         /// Reads EncodeableArrayAsExtensionObjects from the experimental encoded representation.
         /// </summary>
-        /// <typeparam name="T">The OPC UA encodeable or value type processed by this member.</typeparam>
-        /// <param name="fieldName">The OPC UA field name associated with the encoded member.</param>
+        /// <typeparam name = "T">The OPC UA encodeable or value type processed by this member.</typeparam>
+        /// <param name = "fieldName">The OPC UA field name associated with the encoded member.</param>
         /// <returns>The result produced by this codec helper.</returns>
         public ArrayOf<T> ReadEncodeableArrayAsExtensionObjects<T>(string? fieldName)
-            where T : IEncodeable => ReadArray(() => ReadEncodeableAsExtensionObject<T>(null));
+            where T : IEncodeable
+        {
+            return ReadArray(() => ReadEncodeableAsExtensionObject<T>(null));
+        }
 
         /// <summary>
         /// Reads EncodeableMatrix from the experimental encoded representation.
         /// </summary>
-        /// <typeparam name="T">The OPC UA encodeable or value type processed by this member.</typeparam>
-        /// <param name="fieldName">The OPC UA field name associated with the encoded member.</param>
-        /// <param name="encodeableTypeId">The expanded type identifier used to resolve the encodeable body.</param>
+        /// <typeparam name = "T">The OPC UA encodeable or value type processed by this member.</typeparam>
+        /// <param name = "fieldName">The OPC UA field name associated with the encoded member.</param>
+        /// <param name = "encodeableTypeId">The expanded type identifier used to resolve the encodeable body.</param>
         /// <returns>The result produced by this codec helper.</returns>
         public MatrixOf<T> ReadEncodeableMatrix<T>(string? fieldName, ExpandedNodeId encodeableTypeId)
-            where T : IEncodeable => ReadMatrix(() => ReadEncodeableArray<T>(null, encodeableTypeId));
+            where T : IEncodeable
+        {
+            return ReadMatrix(() => ReadEncodeableArray<T>(null, encodeableTypeId));
+        }
 
         /// <summary>
         /// Reads EncodeableMatrix from the experimental encoded representation.
         /// </summary>
-        /// <typeparam name="T">The OPC UA encodeable or value type processed by this member.</typeparam>
-        /// <param name="fieldName">The OPC UA field name associated with the encoded member.</param>
+        /// <typeparam name = "T">The OPC UA encodeable or value type processed by this member.</typeparam>
+        /// <param name = "fieldName">The OPC UA field name associated with the encoded member.</param>
         /// <returns>The result produced by this codec helper.</returns>
         public MatrixOf<T> ReadEncodeableMatrix<T>(string? fieldName)
-            where T : IEncodeable, new() => ReadMatrix(() => ReadEncodeableArray<T>(null));
+            where T : IEncodeable, new()
+        {
+            return ReadMatrix(() => ReadEncodeableArray<T>(null));
+        }
 
         /// <inheritdoc/>
         public ArrayOf<T> ReadEnumeratedArray<T>(string? fieldName)
-            where T : struct, Enum => ReadArray(() => ReadEnumerated<T>(null));
+            where T : struct, Enum
+        {
+            return ReadArray(() => ReadEnumerated<T>(null));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<EnumValue> ReadEnumeratedArray(string? fieldName) => ReadArray(() => ReadEnumerated(null));
+        public ArrayOf<EnumValue> ReadEnumeratedArray(string? fieldName)
+        {
+            return ReadArray(() => ReadEnumerated(null));
+        }
+
+        /// <inheritdoc/>
+        public Variant ReadVariant(string? fieldName)
+        {
+            BuiltInType type = (BuiltInType)ReadInt32(null);
+            int? valueRank = ReadNullableValue<int?>(() => ReadInt32(null), null);
+            int[]? dimensions = valueRank.HasValue && valueRank.Value >= 0 ? ReadInt32Array(null).ToArray() : null;
+            return ReadVariantBody(type, valueRank, dimensions);
+        }
+
+        /// <inheritdoc/>
+        public Variant ReadVariantValue(string? fieldName, TypeInfo typeInfo)
+        {
+            return ReadVariantBody(typeInfo.BuiltInType, typeInfo.ValueRank, null);
+        }
+
+        private Variant ReadVariantBody(BuiltInType expectedType, int? valueRank, int[]? dimensions)
+        {
+            long branch = m_reader.ReadLong();
+            if (branch == 0 || expectedType == BuiltInType.Null)
+            {
+                return Variant.Null;
+            }
+
+            if (branch != (int)expectedType)
+            {
+                throw new FormatException($"Unexpected Variant branch {branch}; expected {(int)expectedType}.");
+            }
+
+            if (!valueRank.HasValue || valueRank.Value < 0)
+            {
+                return ReadScalarVariant(expectedType);
+            }
+
+            if (dimensions == null || dimensions.Length <= 1)
+            {
+                return ReadArrayVariant(expectedType);
+            }
+
+            return ReadMatrixVariant(expectedType);
+        }
+
+        private Variant ReadScalarVariant(BuiltInType type)
+        {
+            return type switch
+            {
+                BuiltInType.Boolean => Variant.From(ReadBoolean(null)),
+                BuiltInType.SByte => Variant.From(ReadSByte(null)),
+                BuiltInType.Byte => Variant.From(ReadByte(null)),
+                BuiltInType.Int16 => Variant.From(ReadInt16(null)),
+                BuiltInType.UInt16 => Variant.From(ReadUInt16(null)),
+                BuiltInType.Int32 => Variant.From(ReadInt32(null)),
+                BuiltInType.Enumeration => Variant.From(ReadEnumerated(null)),
+                BuiltInType.UInt32 => Variant.From(ReadUInt32(null)),
+                BuiltInType.Int64 => Variant.From(ReadInt64(null)),
+                BuiltInType.UInt64 => Variant.From(ReadUInt64(null)),
+                BuiltInType.Float => Variant.From(ReadFloat(null)),
+                BuiltInType.Double => Variant.From(ReadDouble(null)),
+                BuiltInType.String => Variant.From(ReadString(null)!),
+                BuiltInType.DateTime => Variant.From(ReadDateTime(null)),
+                BuiltInType.Guid => Variant.From(ReadGuid(null)),
+                BuiltInType.ByteString => Variant.From(ReadByteString(null)),
+                BuiltInType.XmlElement => Variant.From(ReadXmlElement(null)),
+                BuiltInType.NodeId => Variant.From(ReadNodeId(null)),
+                BuiltInType.ExpandedNodeId => Variant.From(ReadExpandedNodeId(null)),
+                BuiltInType.StatusCode => Variant.From(ReadStatusCode(null)),
+                BuiltInType.QualifiedName => Variant.From(ReadQualifiedName(null)),
+                BuiltInType.LocalizedText => Variant.From(ReadLocalizedText(null)),
+                BuiltInType.ExtensionObject => Variant.From(ReadExtensionObject(null)),
+                BuiltInType.DataValue => Variant.From(ReadDataValue(null)),
+                _ => throw new NotSupportedException($"Variant scalar {type} is not supported by the Avro decoder."),
+            };
+        }
+
+        private Variant ReadArrayVariant(BuiltInType type)
+        {
+            return type switch
+            {
+                BuiltInType.Boolean => Variant.From(ReadBooleanArray(null)),
+                BuiltInType.SByte => Variant.From(ReadSByteArray(null)),
+                BuiltInType.Byte => Variant.From(ReadByteArray(null)),
+                BuiltInType.Int16 => Variant.From(ReadInt16Array(null)),
+                BuiltInType.UInt16 => Variant.From(ReadUInt16Array(null)),
+                BuiltInType.Int32 => Variant.From(ReadInt32Array(null)),
+                BuiltInType.Enumeration => Variant.From(ReadEnumeratedArray(null)),
+                BuiltInType.UInt32 => Variant.From(ReadUInt32Array(null)),
+                BuiltInType.Int64 => Variant.From(ReadInt64Array(null)),
+                BuiltInType.UInt64 => Variant.From(ReadUInt64Array(null)),
+                BuiltInType.Float => Variant.From(ReadFloatArray(null)),
+                BuiltInType.Double => Variant.From(ReadDoubleArray(null)),
+                BuiltInType.String => Variant.From(ReadStringArray(null).ConvertAll(value => value!)),
+                BuiltInType.DateTime => Variant.From(ReadDateTimeArray(null)),
+                BuiltInType.Guid => Variant.From(ReadGuidArray(null)),
+                BuiltInType.ByteString => Variant.From(ReadByteStringArray(null)),
+                BuiltInType.XmlElement => Variant.From(ReadXmlElementArray(null)),
+                BuiltInType.NodeId => Variant.From(ReadNodeIdArray(null)),
+                BuiltInType.ExpandedNodeId => Variant.From(ReadExpandedNodeIdArray(null)),
+                BuiltInType.StatusCode => Variant.From(ReadStatusCodeArray(null)),
+                BuiltInType.QualifiedName => Variant.From(ReadQualifiedNameArray(null)),
+                BuiltInType.LocalizedText => Variant.From(ReadLocalizedTextArray(null)),
+                BuiltInType.ExtensionObject => Variant.From(ReadExtensionObjectArray(null)),
+                BuiltInType.DataValue => Variant.From(ReadDataValueArray(null)),
+                BuiltInType.Variant => Variant.From(ReadVariantArray(null)),
+                _ => throw new NotSupportedException($"Variant array {type} is not supported by the Avro decoder."),
+            };
+        }
+
+        private Variant ReadMatrixVariant(BuiltInType type)
+        {
+            return type switch
+            {
+                BuiltInType.Boolean => Variant.From(ReadMatrix(() => ReadBooleanArray(null))),
+                BuiltInType.SByte => Variant.From(ReadMatrix(() => ReadSByteArray(null))),
+                BuiltInType.Byte => Variant.From(ReadMatrix(() => ReadByteArray(null))),
+                BuiltInType.Int16 => Variant.From(ReadMatrix(() => ReadInt16Array(null))),
+                BuiltInType.UInt16 => Variant.From(ReadMatrix(() => ReadUInt16Array(null))),
+                BuiltInType.Int32 => Variant.From(ReadMatrix(() => ReadInt32Array(null))),
+                BuiltInType.Enumeration => Variant.From(ReadMatrix(() => ReadEnumeratedArray(null))),
+                BuiltInType.UInt32 => Variant.From(ReadMatrix(() => ReadUInt32Array(null))),
+                BuiltInType.Int64 => Variant.From(ReadMatrix(() => ReadInt64Array(null))),
+                BuiltInType.UInt64 => Variant.From(ReadMatrix(() => ReadUInt64Array(null))),
+                BuiltInType.Float => Variant.From(ReadMatrix(() => ReadFloatArray(null))),
+                BuiltInType.Double => Variant.From(ReadMatrix(() => ReadDoubleArray(null))),
+                BuiltInType.String => Variant.From(ReadMatrix(() => ReadStringArray(null)).ConvertAll(value => value!)),
+                BuiltInType.DateTime => Variant.From(ReadMatrix(() => ReadDateTimeArray(null))),
+                BuiltInType.Guid => Variant.From(ReadMatrix(() => ReadGuidArray(null))),
+                BuiltInType.ByteString => Variant.From(ReadMatrix(() => ReadByteStringArray(null))),
+                BuiltInType.XmlElement => Variant.From(ReadMatrix(() => ReadXmlElementArray(null))),
+                BuiltInType.NodeId => Variant.From(ReadMatrix(() => ReadNodeIdArray(null))),
+                BuiltInType.ExpandedNodeId => Variant.From(ReadMatrix(() => ReadExpandedNodeIdArray(null))),
+                BuiltInType.StatusCode => Variant.From(ReadMatrix(() => ReadStatusCodeArray(null))),
+                BuiltInType.QualifiedName => Variant.From(ReadMatrix(() => ReadQualifiedNameArray(null))),
+                BuiltInType.LocalizedText => Variant.From(ReadMatrix(() => ReadLocalizedTextArray(null))),
+                BuiltInType.ExtensionObject => Variant.From(ReadMatrix(() => ReadExtensionObjectArray(null))),
+                BuiltInType.DataValue => Variant.From(ReadMatrix(() => ReadDataValueArray(null))),
+                BuiltInType.Variant => Variant.From(ReadMatrix(() => ReadVariantArray(null))),
+                _ => throw new NotSupportedException($"Variant matrix {type} is not supported by the Avro decoder."),
+            };
+        }
     }
 }

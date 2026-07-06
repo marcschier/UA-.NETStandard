@@ -26,7 +26,6 @@
  * The complete license agreement can be found here:
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
-
 using System;
 using System.Buffers;
 using System.Buffers.Binary;
@@ -34,107 +33,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Opc.Ua.Core.Experimental
+namespace Opc.Ua
 {
-    /// <summary>
-    /// Writes Avro binary primitive values to the underlying stream.
-    /// </summary>
-    internal sealed class AvroBinaryWriter
-    {
-        private readonly Stream m_stream;
-
-        /// <summary>
-        /// Initializes a new AvroBinaryWriter instance for the experimental OPC UA encoding support.
-        /// </summary>
-        /// <param name="stream">The stream that receives or supplies the encoded payload.</param>
-        public AvroBinaryWriter(Stream stream) => m_stream = stream;
-
-        /// <summary>
-        /// Gets the current stream position when the Avro writer can seek.
-        /// </summary>
-        public long Position => m_stream.CanSeek ? m_stream.Position : 0;
-
-        /// <summary>
-        /// Flushes buffered Avro binary data to the underlying stream.
-        /// </summary>
-        public void Flush() => m_stream.Flush();
-
-        /// <summary>
-        /// Writes Boolean to the experimental encoded representation.
-        /// </summary>
-        /// <param name="value">The primitive or OPC UA value to process.</param>
-        public void WriteBoolean(bool value) => m_stream.WriteByte(value ? (byte)1 : (byte)0);
-
-        /// <summary>
-        /// Writes Fixed to the experimental encoded representation.
-        /// </summary>
-        /// <param name="bytes">The byte sequence to encode or decode.</param>
-        public void WriteFixed(ReadOnlySpan<byte> bytes) => m_stream.Write(bytes);
-
-        /// <summary>
-        /// Writes Float to the experimental encoded representation.
-        /// </summary>
-        /// <param name="value">The primitive or OPC UA value to process.</param>
-        public void WriteFloat(float value)
-        {
-            Span<byte> b = stackalloc byte[4];
-            BinaryPrimitives.WriteInt32LittleEndian(b, BitConverter.SingleToInt32Bits(value));
-            m_stream.Write(b);
-        }
-
-        /// <summary>
-        /// Writes Double to the experimental encoded representation.
-        /// </summary>
-        /// <param name="value">The primitive or OPC UA value to process.</param>
-        public void WriteDouble(double value)
-        {
-            Span<byte> b = stackalloc byte[8];
-            BinaryPrimitives.WriteInt64LittleEndian(b, BitConverter.DoubleToInt64Bits(value));
-            m_stream.Write(b);
-        }
-
-        /// <summary>
-        /// Writes Int to the experimental encoded representation.
-        /// </summary>
-        /// <param name="value">The primitive or OPC UA value to process.</param>
-        public void WriteInt(int value) => WriteLong(value);
-
-        /// <summary>
-        /// Writes Long to the experimental encoded representation.
-        /// </summary>
-        /// <param name="value">The primitive or OPC UA value to process.</param>
-        public void WriteLong(long value)
-        {
-            ulong zigzag = ((ulong)value << 1) ^ (ulong)(value >> 63);
-            while ((zigzag & ~0x7FUL) != 0)
-            {
-                m_stream.WriteByte((byte)((zigzag & 0x7F) | 0x80));
-                zigzag >>= 7;
-            }
-            m_stream.WriteByte((byte)zigzag);
-        }
-
-        /// <summary>
-        /// Writes a length-delimited Protobuf byte sequence.
-        /// </summary>
-        /// <param name="value">The primitive or OPC UA value to process.</param>
-        public void WriteBytes(ReadOnlySpan<byte> value)
-        {
-            WriteLong(value.Length);
-            m_stream.Write(value);
-        }
-
-        /// <summary>
-        /// Writes a UTF-8 Protobuf string as a length-delimited field value.
-        /// </summary>
-        /// <param name="value">The primitive or OPC UA value to process.</param>
-        public void WriteString(string value)
-        {
-            byte[] bytes = Encoding.UTF8.GetBytes(value);
-            WriteBytes(bytes);
-        }
-    }
-
     /// <summary>
     /// Reads Avro binary primitive values from the underlying stream.
     /// </summary>
@@ -145,14 +45,20 @@ namespace Opc.Ua.Core.Experimental
         /// <summary>
         /// Initializes a new AvroBinaryReader instance for the experimental OPC UA encoding support.
         /// </summary>
-        /// <param name="stream">The stream that receives or supplies the encoded payload.</param>
-        public AvroBinaryReader(Stream stream) => m_stream = stream;
+        /// <param name = "stream">The stream that receives or supplies the encoded payload.</param>
+        public AvroBinaryReader(Stream stream)
+        {
+            m_stream = stream;
+        }
 
         /// <summary>
         /// Reads Boolean from the experimental encoded representation.
         /// </summary>
         /// <returns>The result produced by this codec helper.</returns>
-        public bool ReadBoolean() => ReadByte() != 0;
+        public bool ReadBoolean()
+        {
+            return ReadByte() != 0;
+        }
 
         /// <summary>
         /// Reads Byte from the experimental encoded representation.
@@ -172,7 +78,7 @@ namespace Opc.Ua.Core.Experimental
         /// <summary>
         /// Reads Fixed from the experimental encoded representation.
         /// </summary>
-        /// <param name="length">The number of bytes to read.</param>
+        /// <param name = "length">The number of bytes to read.</param>
         /// <returns>The result produced by this codec helper.</returns>
         public byte[] ReadFixed(int length)
         {
@@ -207,7 +113,10 @@ namespace Opc.Ua.Core.Experimental
         /// Reads Int from the experimental encoded representation.
         /// </summary>
         /// <returns>The result produced by this codec helper.</returns>
-        public int ReadInt() => checked((int)ReadLong());
+        public int ReadInt()
+        {
+            return checked((int)ReadLong());
+        }
 
         /// <summary>
         /// Reads Long from the experimental encoded representation.
@@ -225,8 +134,10 @@ namespace Opc.Ua.Core.Experimental
                 {
                     return (long)(raw >> 1) ^ -((long)raw & 1L);
                 }
+
                 shift += 7;
             }
+
             throw new FormatException("Invalid Avro variable-length integer.");
         }
 
@@ -251,7 +162,10 @@ namespace Opc.Ua.Core.Experimental
         /// Reads String from the experimental encoded representation.
         /// </summary>
         /// <returns>The result produced by this codec helper.</returns>
-        public string ReadString() => Encoding.UTF8.GetString(ReadBytes());
+        public string ReadString()
+        {
+            return Encoding.UTF8.GetString(ReadBytes());
+        }
 
         private void ReadExactly(Span<byte> buffer)
         {

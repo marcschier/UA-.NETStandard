@@ -32,9 +32,8 @@ using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
 using Opc.Ua;
-using Opc.Ua.Core.Experimental;
 
-namespace Opc.Ua.PubSub.Experimental;
+namespace Opc.Ua.PubSub.Encoding;
 
 /// <summary>
 /// Thread-safe cache and per-destination announcement tracker for SchemaId handshakes.
@@ -222,11 +221,3 @@ public sealed class SchemaCache
         return (format ?? string.Empty).Trim().ToLower(CultureInfo.InvariantCulture);
     }
 }
-
-/// <summary>
-/// Represents a cached schema entry.
-/// </summary>
-/// <param name="SchemaId">The raw schema identifier.</param>
-/// <param name="Schema">The schema bytes.</param>
-/// <param name="Format">The schema format.</param>
-public readonly record struct SchemaCacheEntry(ByteString SchemaId, ByteString Schema, string Format);

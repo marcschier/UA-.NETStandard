@@ -35,11 +35,12 @@ using Apache.Arrow;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
 using NUnit.Framework;
+using Opc.Ua;
 using Opc.Ua.PubSub.Diagnostics;
 using Opc.Ua.PubSub.Encoding;
 using Opc.Ua.PubSub.MetaData;
 
-namespace Opc.Ua.PubSub.Experimental.Tests;
+namespace Opc.Ua.PubSub.Encoding.Tests;
 
 /// <summary>
 /// Verifies that Arrow PubSub network messages produce typed record-batch columns and round-trip dataset rows.

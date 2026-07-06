@@ -30,11 +30,12 @@
 using System;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Opc.Ua;
 using Opc.Ua.PubSub.Diagnostics;
 using Opc.Ua.PubSub.Encoding;
 using Opc.Ua.PubSub.MetaData;
 
-namespace Opc.Ua.PubSub.Experimental.Tests;
+namespace Opc.Ua.PubSub.Encoding.Tests;
 
 /// <summary>
 /// Verifies Avro PubSub network-message encoding and decoding for multiple dataset messages and field encodings.

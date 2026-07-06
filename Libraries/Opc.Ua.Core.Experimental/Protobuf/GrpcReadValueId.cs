@@ -26,34 +26,26 @@
  * The complete license agreement can be found here:
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
-
-using Opc.Ua;
-
-namespace Opc.Ua.PubSub.Encoding;
-
-/// <summary>
-/// Carries one PubSub NetworkMessage encoded with the experimental Avro transport profile.
-/// </summary>
-public sealed record AvroNetworkMessage : PubSubNetworkMessage
+namespace Opc.Ua
 {
     /// <summary>
-    /// Identifies the MQTT transport profile URI used for Avro PubSub frames.
+    /// Identifies one node, attribute, and optional index range requested by the experimental gRPC Read message.
     /// </summary>
-    public const string PubSubMqttAvroTransport = "http://opcfoundation.org/UA-Profile/Transport/pubsub-mqtt-avro";
-
-    /// <summary>
-    /// Gets the DataSetClassId advertised with the Avro network envelope.
-    /// </summary>
-    public Uuid DataSetClassId { get; init; }
-
-    /// <summary>
-    /// Gets the schema identifier used by schema exchange and cache lookups.
-    /// </summary>
-    public string SchemaId { get; init; } = string.Empty;
-
-    /// <inheritdoc/>
-    public override string TransportProfileUri
+    public sealed class GrpcReadValueId
     {
-        get { return PubSubMqttAvroTransport; }
+        /// <summary>
+        /// Creates an Arrow struct slot for an OPC UA NodeId.
+        /// </summary>
+        public NodeId NodeId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the OPC UA attribute id requested for the node.
+        /// </summary>
+        public uint AttributeId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the optional numeric range used to read an array slice.
+        /// </summary>
+        public string? IndexRange { get; set; }
     }
 }

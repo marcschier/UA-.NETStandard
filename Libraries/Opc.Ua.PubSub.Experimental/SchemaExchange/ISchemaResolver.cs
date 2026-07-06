@@ -29,7 +29,7 @@
 
 using Opc.Ua;
 
-namespace Opc.Ua.PubSub.Experimental;
+namespace Opc.Ua.PubSub.Encoding;
 
 /// <summary>
 /// Resolves a missing SchemaId through a deployment-specific schema source.

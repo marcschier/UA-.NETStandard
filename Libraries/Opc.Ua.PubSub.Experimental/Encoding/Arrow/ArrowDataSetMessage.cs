@@ -32,28 +32,16 @@ using Opc.Ua;
 namespace Opc.Ua.PubSub.Encoding;
 
 /// <summary>
-/// Carries one PubSub NetworkMessage encoded with the experimental Avro transport profile.
+/// PubSub DataSetMessage row in an Arrow IPC RecordBatch. The first
+/// adapter version supports RawData field columns for the built-in
+/// scalar and one-dimensional array types listed by the Part 14 Arrow
+/// draft; unsupported field built-in types fail with NotSupportedException.
 /// </summary>
-public sealed record AvroNetworkMessage : PubSubNetworkMessage
+public sealed record ArrowDataSetMessage : PubSubDataSetMessage
 {
     /// <summary>
-    /// Identifies the MQTT transport profile URI used for Avro PubSub frames.
+    /// Gets the DataSet field-content bits emitted as Arrow RawData columns.
     /// </summary>
-    public const string PubSubMqttAvroTransport = "http://opcfoundation.org/UA-Profile/Transport/pubsub-mqtt-avro";
-
-    /// <summary>
-    /// Gets the DataSetClassId advertised with the Avro network envelope.
-    /// </summary>
-    public Uuid DataSetClassId { get; init; }
-
-    /// <summary>
-    /// Gets the schema identifier used by schema exchange and cache lookups.
-    /// </summary>
-    public string SchemaId { get; init; } = string.Empty;
-
-    /// <inheritdoc/>
-    public override string TransportProfileUri
-    {
-        get { return PubSubMqttAvroTransport; }
-    }
+    public DataSetFieldContentMask FieldContentMask { get; init; }
+        = DataSetFieldContentMask.RawData;
 }

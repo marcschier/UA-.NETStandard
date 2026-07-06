@@ -26,9 +26,7 @@
  * The complete license agreement can be found here:
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
-
 using System;
-using Opc.Ua;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -37,13 +35,13 @@ using Apache.Arrow.Arrays;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
 
-namespace Opc.Ua.Core.Experimental;
+namespace Opc.Ua;
 
 /// <summary>
 /// Requests one or more Arrow schemas by their raw SchemaId values.
 /// </summary>
-/// <param name="RequesterId">The optional receiver or session identifier.</param>
-/// <param name="SchemaIds">The raw 8-byte SchemaId values requested by the receiver.</param>
+/// <param name = "RequesterId">The optional receiver or session identifier.</param>
+/// <param name = "SchemaIds">The raw 8-byte SchemaId values requested by the receiver.</param>
 public sealed record ArrowSchemaRequest(string? RequesterId, IReadOnlyList<ByteString> SchemaIds)
 {
     /// <summary>
@@ -53,17 +51,21 @@ public sealed record ArrowSchemaRequest(string? RequesterId, IReadOnlyList<ByteS
     [SuppressMessage(
         "Reliability",
         "CA2000:Dispose objects before losing scope",
-        Justification = "Arrow arrays are owned by the RecordBatch until it is written.")]
+        Justification = "Arrow arrays are owned by the RecordBatch until it is written."
+    )]
     public byte[] Encode()
     {
         Apache.Arrow.Schema schema = new Apache.Arrow.Schema.Builder()
             .Metadata("opcua.mapping", "arrow-schema-request")
             .Field(new Field("RequesterId", StringType.Default, nullable: true, metadata: null))
-            .Field(new Field(
-                "SchemaIds",
-                new ListType(new Field("item", new FixedSizeBinaryType(8), nullable: false, metadata: null)),
-                nullable: false,
-                metadata: null))
+            .Field(
+                new Field(
+                    "SchemaIds",
+                    new ListType(new Field("item", new FixedSizeBinaryType(8), nullable: false, metadata: null)),
+                    nullable: false,
+                    metadata: null
+                )
+            )
             .Build();
         using RecordBatch batch = new(schema, [BuildRequester(), BuildSchemaIds()], 1);
         return ArrowSchemaAnnouncement.WriteBatch(schema, batch);
@@ -72,7 +74,7 @@ public sealed record ArrowSchemaRequest(string? RequesterId, IReadOnlyList<ByteS
     /// <summary>
     /// Decodes a request from a one-row Arrow IPC stream.
     /// </summary>
-    /// <param name="payload">The encoded Arrow IPC stream.</param>
+    /// <param name = "payload">The encoded Arrow IPC stream.</param>
     /// <returns>The decoded request.</returns>
     public static ArrowSchemaRequest Decode(ReadOnlyMemory<byte> payload)
     {
@@ -83,6 +85,7 @@ public sealed record ArrowSchemaRequest(string? RequesterId, IReadOnlyList<ByteS
         {
             throw new FormatException("ArrowSchemaRequest requires one row.");
         }
+
         var requesterIds = (StringArray)batch.Column(0);
         string? requesterId = requesterIds.IsNull(0) ? null : requesterIds.GetString(0);
         var schemaIdsList = (ListArray)batch.Column(1);
@@ -94,6 +97,7 @@ public sealed record ArrowSchemaRequest(string? RequesterId, IReadOnlyList<ByteS
         {
             schemaIds.Add(ArrowSchemaAnnouncement.ReadFixed8(values, start + i));
         }
+
         return new ArrowSchemaRequest(requesterId, schemaIds);
     }
 
@@ -108,13 +112,15 @@ public sealed record ArrowSchemaRequest(string? RequesterId, IReadOnlyList<ByteS
         {
             builder.Append(RequesterId);
         }
+
         return builder.Build(Apache.Arrow.Memory.MemoryAllocator.Default.Value);
     }
 
     [SuppressMessage(
         "Reliability",
         "CA2000:Dispose objects before losing scope",
-        Justification = "The child array is owned by the ListArray.")]
+        Justification = "The child array is owned by the ListArray."
+    )]
     private ListArray BuildSchemaIds()
     {
         FixedSizeBinaryArray values = ArrowSchemaAnnouncement.BuildFixed8(SchemaIds);
@@ -131,6 +137,7 @@ public sealed record ArrowSchemaRequest(string? RequesterId, IReadOnlyList<ByteS
             values,
             validity.Build(Apache.Arrow.Memory.MemoryAllocator.Default.Value),
             0,
-            0);
+            0
+        );
     }
 }

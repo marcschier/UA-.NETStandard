@@ -26,22 +26,26 @@
  * The complete license agreement can be found here:
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
-
-using Opc.Ua.PubSub.Encoding;
-
-namespace Opc.Ua.PubSub.Experimental;
-
-/// <summary>
-/// PubSub DataSetMessage row in an Arrow IPC RecordBatch. The first
-/// adapter version supports RawData field columns for the built-in
-/// scalar and one-dimensional array types listed by the Part 14 Arrow
-/// draft; unsupported field built-in types fail with NotSupportedException.
-/// </summary>
-public sealed record ArrowDataSetMessage : PubSubDataSetMessage
+namespace Opc.Ua
 {
     /// <summary>
-    /// Gets the DataSet field-content bits emitted as Arrow RawData columns.
+    /// Carries OPC UA status details for the experimental gRPC status mapping.
     /// </summary>
-    public DataSetFieldContentMask FieldContentMask { get; init; }
-        = DataSetFieldContentMask.RawData;
+    public sealed class GrpcOpcUaStatusDetail
+    {
+        /// <summary>
+        /// Gets or sets the OPC UA status code represented in the gRPC status detail.
+        /// </summary>
+        public StatusCode StatusCode { get; set; }
+
+        /// <summary>
+        /// Gets or sets the symbolic status identifier represented in the gRPC status detail.
+        /// </summary>
+        public string? SymbolicId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the OPC UA diagnostic information represented in the gRPC status detail.
+        /// </summary>
+        public DiagnosticInfo? DiagnosticInfo { get; set; }
+    }
 }

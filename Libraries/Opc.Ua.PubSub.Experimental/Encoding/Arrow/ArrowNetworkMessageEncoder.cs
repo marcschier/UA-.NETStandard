@@ -27,6 +27,7 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using Opc.Ua;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -39,10 +40,8 @@ using Apache.Arrow.Arrays;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Memory;
 using Apache.Arrow.Types;
-using Opc.Ua.Core.Experimental;
-using Opc.Ua.PubSub.Encoding;
 
-namespace Opc.Ua.PubSub.Experimental;
+namespace Opc.Ua.PubSub.Encoding;
 
 /// <summary>
 /// Encodes an <see cref="ArrowNetworkMessage"/> as a genuine Apache Arrow
@@ -59,10 +58,16 @@ public sealed class ArrowNetworkMessageEncoder : INetworkMessageEncoder
     private static readonly MemoryAllocator s_allocator = MemoryAllocator.Default.Value;
 
     /// <inheritdoc/>
-    public string TransportProfileUri => ArrowNetworkMessage.PubSubMqttArrowTransport;
+    public string TransportProfileUri
+    {
+        get { return ArrowNetworkMessage.PubSubMqttArrowTransport; }
+    }
 
     /// <inheritdoc/>
-    public int EstimatedHeaderOverhead => 256;
+    public int EstimatedHeaderOverhead
+    {
+        get { return 256; }
+    }
 
     /// <summary>
     /// Gets the SchemaId cache and per-destination announcement tracker used by the encoder.
@@ -252,7 +257,9 @@ public sealed class ArrowNetworkMessageEncoder : INetworkMessageEncoder
         {
             if (candidate is not ArrowDataSetMessage dataSetMessage)
             {
-                throw new ArgumentException("DataSetMessage entries must be ArrowDataSetMessage instances.", nameof(message));
+                throw new ArgumentException(
+                    "DataSetMessage entries must be ArrowDataSetMessage instances.",
+                    nameof(message));
             }
             if (dataSetMessage.MessageType is not PubSubDataSetMessageType.KeyFrame)
             {
@@ -742,7 +749,8 @@ public sealed class ArrowNetworkMessageEncoder : INetworkMessageEncoder
         ArrowBuffer.BitmapBuilder validity,
         byte[] bytes)
     {
-#pragma warning disable CA2000 // Justification: ArrayData ownership is transferred to the returned FixedSizeBinaryArray.
+// Justification: ArrayData ownership is transferred to the returned FixedSizeBinaryArray.
+#pragma warning disable CA2000
         return new FixedSizeBinaryArray(new ArrayData(
             new FixedSizeBinaryType(16),
             length,

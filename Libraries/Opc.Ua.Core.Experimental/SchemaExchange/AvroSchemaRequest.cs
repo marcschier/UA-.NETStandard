@@ -26,19 +26,17 @@
  * The complete license agreement can be found here:
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
-
 using System;
-using Opc.Ua;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Opc.Ua.Core.Experimental;
+namespace Opc.Ua;
 
 /// <summary>
 /// Requests one or more Avro schemas by their raw SchemaId values.
 /// </summary>
-/// <param name="RequesterId">The optional receiver or session identifier.</param>
-/// <param name="SchemaIds">The raw 8-byte SchemaId values requested by the receiver.</param>
+/// <param name = "RequesterId">The optional receiver or session identifier.</param>
+/// <param name = "SchemaIds">The raw 8-byte SchemaId values requested by the receiver.</param>
 public sealed record AvroSchemaRequest(string? RequesterId, IReadOnlyList<ByteString> SchemaIds)
 {
     /// <summary>
@@ -55,19 +53,21 @@ public sealed record AvroSchemaRequest(string? RequesterId, IReadOnlyList<ByteSt
     /// <summary>
     /// Encodes the request using the published Avro field order.
     /// </summary>
-    /// <param name="stream">The destination stream.</param>
+    /// <param name = "stream">The destination stream.</param>
     public void Encode(Stream stream)
     {
         if (stream is null)
         {
             throw new ArgumentNullException(nameof(stream));
         }
+
         AvroBinaryWriter writer = new(stream);
         writer.WriteLong(RequesterId is null ? 0 : 1);
         if (RequesterId is not null)
         {
             writer.WriteString(RequesterId);
         }
+
         writer.WriteLong(SchemaIds.Count);
         for (int i = 0; i < SchemaIds.Count; i++)
         {
@@ -75,8 +75,10 @@ public sealed record AvroSchemaRequest(string? RequesterId, IReadOnlyList<ByteSt
             {
                 throw new InvalidOperationException("SchemaIds cannot contain null values.");
             }
+
             writer.WriteBytes(SchemaIds[i].Span);
         }
+
         writer.WriteLong(0);
         writer.Flush();
     }
@@ -84,7 +86,7 @@ public sealed record AvroSchemaRequest(string? RequesterId, IReadOnlyList<ByteSt
     /// <summary>
     /// Decodes a request from its Avro binary payload.
     /// </summary>
-    /// <param name="payload">The encoded Avro binary payload.</param>
+    /// <param name = "payload">The encoded Avro binary payload.</param>
     /// <returns>The decoded request.</returns>
     public static AvroSchemaRequest Decode(ReadOnlyMemory<byte> payload)
     {
@@ -95,7 +97,7 @@ public sealed record AvroSchemaRequest(string? RequesterId, IReadOnlyList<ByteSt
     /// <summary>
     /// Decodes a request from its Avro binary payload.
     /// </summary>
-    /// <param name="stream">The source stream.</param>
+    /// <param name = "stream">The source stream.</param>
     /// <returns>The decoded request.</returns>
     public static AvroSchemaRequest Decode(Stream stream)
     {
@@ -103,13 +105,14 @@ public sealed record AvroSchemaRequest(string? RequesterId, IReadOnlyList<ByteSt
         {
             throw new ArgumentNullException(nameof(stream));
         }
+
         AvroBinaryReader reader = new(stream);
         long requesterBranch = reader.ReadLong();
         string? requesterId = requesterBranch switch
         {
             0 => null,
             1 => reader.ReadString(),
-            _ => throw new FormatException("Invalid Avro RequesterId union branch.")
+            _ => throw new FormatException("Invalid Avro RequesterId union branch."),
         };
         var schemaIds = new List<ByteString>();
         while (true)
@@ -119,16 +122,19 @@ public sealed record AvroSchemaRequest(string? RequesterId, IReadOnlyList<ByteSt
             {
                 break;
             }
+
             if (count < 0)
             {
                 _ = reader.ReadLong();
                 count = -count;
             }
+
             for (long i = 0; i < count; i++)
             {
                 schemaIds.Add(ByteString.From(reader.ReadBytes()));
             }
         }
+
         return new AvroSchemaRequest(requesterId, schemaIds);
     }
 }

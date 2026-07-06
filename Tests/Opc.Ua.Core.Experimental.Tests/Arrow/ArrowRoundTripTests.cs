@@ -33,9 +33,8 @@ using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
 using NUnit.Framework;
 using Opc.Ua;
-using Opc.Ua.Core.Experimental;
 
-namespace Opc.Ua.Core.Experimental.Tests
+namespace Opc.Ua.Core.Tests
 {
     /// <summary>
     /// Verifies that the Arrow experimental encoder preserves OPC UA built-ins, composite values, presence
@@ -47,7 +46,13 @@ namespace Opc.Ua.Core.Experimental.Tests
         private static readonly int[] MatrixValues = [1, 2, 3, 4];
         private static readonly string[] SchemaStringValues = ["a", "b"];
 
-        private static IServiceMessageContext Context => ServiceMessageContext.CreateEmpty(null!);
+        private static IServiceMessageContext Context
+        {
+            get
+            {
+                return ServiceMessageContext.CreateEmpty(null!);
+            }
+        }
 
         [Test]
         public void ArrowBuiltInsRoundTripWithFloatBits()

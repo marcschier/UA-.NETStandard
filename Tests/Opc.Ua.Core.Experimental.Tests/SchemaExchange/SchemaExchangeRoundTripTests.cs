@@ -30,9 +30,8 @@
 using System.Linq;
 using NUnit.Framework;
 using Opc.Ua;
-using Opc.Ua.Core.Experimental;
 
-namespace Opc.Ua.Core.Experimental.Tests;
+namespace Opc.Ua.Core.Tests;
 
 /// <summary>
 /// Tests schema-exchange descriptor round-trips.

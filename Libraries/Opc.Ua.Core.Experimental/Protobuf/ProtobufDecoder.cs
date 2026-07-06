@@ -26,13 +26,12 @@
  * The complete license agreement can be found here:
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Opc.Ua.Core.Experimental
+namespace Opc.Ua
 {
     /// <summary>
     /// Decodes OPC UA values from the experimental Part 6 Protobuf wire representation.
@@ -42,16 +41,16 @@ namespace Opc.Ua.Core.Experimental
         /// <summary>
         /// Initializes a new ProtobufDecoder instance for the experimental OPC UA encoding support.
         /// </summary>
-        /// <param name="buffer">The encoded payload buffer to decode.</param>
-        /// <param name="context">The service message context that supplies namespace, server URI, and encodeable type resolution tables.</param>
+        /// <param name = "buffer">The encoded payload buffer to decode.</param>
+        /// <param name = "context">The service message context that supplies namespace, server URI, and encodeable type resolution tables.</param>
         public ProtobufDecoder(byte[] buffer, IServiceMessageContext context)
             : this(new ReadOnlyMemory<byte>(buffer), context) { }
 
         /// <summary>
         /// Initializes a new ProtobufDecoder instance for the experimental OPC UA encoding support.
         /// </summary>
-        /// <param name="buffer">The encoded payload buffer to decode.</param>
-        /// <param name="context">The service message context that supplies namespace, server URI, and encodeable type resolution tables.</param>
+        /// <param name = "buffer">The encoded payload buffer to decode.</param>
+        /// <param name = "context">The service message context that supplies namespace, server URI, and encodeable type resolution tables.</param>
         public ProtobufDecoder(ReadOnlyMemory<byte> buffer, IServiceMessageContext context)
         {
             Context = context ?? throw new ArgumentNullException(nameof(context));
@@ -61,8 +60,8 @@ namespace Opc.Ua.Core.Experimental
         /// <summary>
         /// Initializes a new ProtobufDecoder instance for the experimental OPC UA encoding support.
         /// </summary>
-        /// <param name="stream">The stream that receives or supplies the encoded payload.</param>
-        /// <param name="context">The service message context that supplies namespace, server URI, and encodeable type resolution tables.</param>
+        /// <param name = "stream">The stream that receives or supplies the encoded payload.</param>
+        /// <param name = "context">The service message context that supplies namespace, server URI, and encodeable type resolution tables.</param>
         public ProtobufDecoder(Stream stream, IServiceMessageContext context)
         {
             Context = context ?? throw new ArgumentNullException(nameof(context));
@@ -72,13 +71,19 @@ namespace Opc.Ua.Core.Experimental
         }
 
         /// <inheritdoc/>
-        public EncodingType EncodingType => EncodingType.Json;
+        public EncodingType EncodingType
+        {
+            get { return EncodingType.Json; }
+        }
 
         /// <inheritdoc/>
         public IServiceMessageContext Context { get; }
 
         /// <inheritdoc/>
-        public void Dispose() => Close();
+        public void Dispose()
+        {
+            Close();
+        }
 
         /// <inheritdoc/>
         public void Close()
@@ -108,7 +113,10 @@ namespace Opc.Ua.Core.Experimental
         }
 
         /// <inheritdoc/>
-        public bool HasField(string fieldName) => Current.Message.Has(Current.FieldForName(fieldName));
+        public bool HasField(string fieldName)
+        {
+            return Current.Message.Has(Current.FieldForName(fieldName));
+        }
 
         // KNOWN LIMITATION (reference decoder): optional-field presence is reconstructed by probing
         // each optional field name against the wire (HasField). Because this hand-rolled reference
@@ -121,7 +129,6 @@ namespace Opc.Ua.Core.Experimental
         // absent optionals) plus proto3 explicit presence. A schema-driven codec that reads/writes fixed
         // numbers from the generated .proto does not have this limitation; adopting fixed numbering here
         // is deferred beyond this first positional reference.
-
         /// <inheritdoc/>
         public uint ReadEncodingMask(IList<string> masks)
         {
@@ -138,6 +145,7 @@ namespace Opc.Ua.Core.Experimental
 
                 return mask;
             }
+
             return 0;
         }
 
@@ -156,41 +164,75 @@ namespace Opc.Ua.Core.Experimental
                     }
                 }
             }
+
             return 0;
         }
 
         /// <inheritdoc/>
-        public bool ReadBoolean(string? fieldName) => Get(fieldName).Varint != 0;
+        public bool ReadBoolean(string? fieldName)
+        {
+            return Get(fieldName).Varint != 0;
+        }
 
         /// <inheritdoc/>
-        public sbyte ReadSByte(string? fieldName) => unchecked((sbyte)Get(fieldName).Varint);
+        public sbyte ReadSByte(string? fieldName)
+        {
+            return unchecked((sbyte)Get(fieldName).Varint);
+        }
 
         /// <inheritdoc/>
-        public byte ReadByte(string? fieldName) => checked((byte)Get(fieldName).Varint);
+        public byte ReadByte(string? fieldName)
+        {
+            return checked((byte)Get(fieldName).Varint);
+        }
 
         /// <inheritdoc/>
-        public short ReadInt16(string? fieldName) => unchecked((short)Get(fieldName).Varint);
+        public short ReadInt16(string? fieldName)
+        {
+            return unchecked((short)Get(fieldName).Varint);
+        }
 
         /// <inheritdoc/>
-        public ushort ReadUInt16(string? fieldName) => checked((ushort)Get(fieldName).Varint);
+        public ushort ReadUInt16(string? fieldName)
+        {
+            return checked((ushort)Get(fieldName).Varint);
+        }
 
         /// <inheritdoc/>
-        public int ReadInt32(string? fieldName) => unchecked((int)Get(fieldName).Varint);
+        public int ReadInt32(string? fieldName)
+        {
+            return unchecked((int)Get(fieldName).Varint);
+        }
 
         /// <inheritdoc/>
-        public uint ReadUInt32(string? fieldName) => checked((uint)Get(fieldName).Varint);
+        public uint ReadUInt32(string? fieldName)
+        {
+            return checked((uint)Get(fieldName).Varint);
+        }
 
         /// <inheritdoc/>
-        public long ReadInt64(string? fieldName) => unchecked((long)Get(fieldName).Varint);
+        public long ReadInt64(string? fieldName)
+        {
+            return unchecked((long)Get(fieldName).Varint);
+        }
 
         /// <inheritdoc/>
-        public ulong ReadUInt64(string? fieldName) => Get(fieldName).Varint;
+        public ulong ReadUInt64(string? fieldName)
+        {
+            return Get(fieldName).Varint;
+        }
 
         /// <inheritdoc/>
-        public float ReadFloat(string? fieldName) => BitConverter.UInt32BitsToSingle(Get(fieldName).Fixed32);
+        public float ReadFloat(string? fieldName)
+        {
+            return BitConverter.UInt32BitsToSingle(Get(fieldName).Fixed32);
+        }
 
         /// <inheritdoc/>
-        public double ReadDouble(string? fieldName) => BitConverter.UInt64BitsToDouble(Get(fieldName).Fixed64);
+        public double ReadDouble(string? fieldName)
+        {
+            return BitConverter.UInt64BitsToDouble(Get(fieldName).Fixed64);
+        }
 
         /// <inheritdoc/>
         public string? ReadString(string? fieldName)
@@ -200,16 +242,23 @@ namespace Opc.Ua.Core.Experimental
             {
                 return null;
             }
+
             var m = Proto.Parse(fld.Value.Bytes);
             var values = m.First(1);
             return values.HasValue ? Proto.String(values.Value.Bytes) : null;
         }
 
         /// <inheritdoc/>
-        public DateTimeUtc ReadDateTime(string? fieldName) => new(unchecked((long)Get(fieldName).Fixed64));
+        public DateTimeUtc ReadDateTime(string? fieldName)
+        {
+            return new(unchecked((long)Get(fieldName).Fixed64));
+        }
 
         /// <inheritdoc/>
-        public Uuid ReadGuid(string? fieldName) => new(Get(fieldName).Bytes.ToArray());
+        public Uuid ReadGuid(string? fieldName)
+        {
+            return new(Get(fieldName).Bytes.ToArray());
+        }
 
         /// <inheritdoc/>
         public ByteString ReadByteString(string? fieldName)
@@ -219,6 +268,7 @@ namespace Opc.Ua.Core.Experimental
             {
                 return default;
             }
+
             var m = Proto.Parse(fld.Value.Bytes);
             var values = m.First(1);
             return values.HasValue ? ByteString.From(values.Value.Bytes.Span) : default;
@@ -232,17 +282,29 @@ namespace Opc.Ua.Core.Experimental
         }
 
         /// <inheritdoc/>
-        public StatusCode ReadStatusCode(string? fieldName) => new(Get(fieldName).Fixed32);
+        public StatusCode ReadStatusCode(string? fieldName)
+        {
+            return new(Get(fieldName).Fixed32);
+        }
 
         /// <inheritdoc/>
-        public EnumValue ReadEnumerated(string? fieldName) => new(ReadInt32(fieldName));
+        public EnumValue ReadEnumerated(string? fieldName)
+        {
+            return new(ReadInt32(fieldName));
+        }
 
         /// <inheritdoc/>
         public T ReadEnumerated<T>(string? fieldName)
-            where T : struct, Enum => (T)Enum.ToObject(typeof(T), ReadInt32(fieldName));
+            where T : struct, Enum
+        {
+            return (T)Enum.ToObject(typeof(T), ReadInt32(fieldName));
+        }
 
         /// <inheritdoc/>
-        public NodeId ReadNodeId(string? fieldName) => DecodeNodeId(Proto.Parse(Get(fieldName).Bytes));
+        public NodeId ReadNodeId(string? fieldName)
+        {
+            return DecodeNodeId(Proto.Parse(Get(fieldName).Bytes));
+        }
 
         /// <inheritdoc/>
         public ExpandedNodeId ReadExpandedNodeId(string? fieldName)
@@ -280,17 +342,28 @@ namespace Opc.Ua.Core.Experimental
         }
 
         /// <inheritdoc/>
-        public DataValue ReadDataValue(string? fieldName) => DecodeDataValue(Proto.Parse(Get(fieldName).Bytes));
+        public DataValue ReadDataValue(string? fieldName)
+        {
+            return DecodeDataValue(Proto.Parse(Get(fieldName).Bytes));
+        }
 
         /// <inheritdoc/>
-        public ExtensionObject ReadExtensionObject(string? fieldName) =>
-            DecodeExtensionObject(Proto.Parse(Get(fieldName).Bytes));
+        public ExtensionObject ReadExtensionObject(string? fieldName)
+        {
+            return DecodeExtensionObject(Proto.Parse(Get(fieldName).Bytes));
+        }
 
         /// <inheritdoc/>
-        public Variant ReadVariant(string? fieldName) => DecodeVariant(Proto.Parse(Get(fieldName).Bytes));
+        public Variant ReadVariant(string? fieldName)
+        {
+            return DecodeVariant(Proto.Parse(Get(fieldName).Bytes));
+        }
 
         /// <inheritdoc/>
-        public Variant ReadVariantValue(string? fieldName, TypeInfo typeInfo) => ReadVariant(fieldName);
+        public Variant ReadVariantValue(string? fieldName, TypeInfo typeInfo)
+        {
+            return ReadVariant(fieldName);
+        }
 
         /// <inheritdoc/>
         public T ReadEncodeable<T>(string? fieldName, ExpandedNodeId encodeableTypeId)
@@ -351,45 +424,75 @@ namespace Opc.Ua.Core.Experimental
         }
 
         /// <inheritdoc/>
-        public ArrayOf<bool> ReadBooleanArray(string? fieldName) => ReadArray(fieldName, x => x.Varint != 0);
+        public ArrayOf<bool> ReadBooleanArray(string? fieldName)
+        {
+            return ReadArray(fieldName, x => x.Varint != 0);
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<sbyte> ReadSByteArray(string? fieldName) =>
-            ReadArray(fieldName, x => unchecked((sbyte)x.Varint));
+        public ArrayOf<sbyte> ReadSByteArray(string? fieldName)
+        {
+            return ReadArray(fieldName, x => unchecked((sbyte)x.Varint));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<byte> ReadByteArray(string? fieldName) => ReadArray(fieldName, x => (byte)x.Varint);
+        public ArrayOf<byte> ReadByteArray(string? fieldName)
+        {
+            return ReadArray(fieldName, x => (byte)x.Varint);
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<short> ReadInt16Array(string? fieldName) =>
-            ReadArray(fieldName, x => unchecked((short)x.Varint));
+        public ArrayOf<short> ReadInt16Array(string? fieldName)
+        {
+            return ReadArray(fieldName, x => unchecked((short)x.Varint));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<ushort> ReadUInt16Array(string? fieldName) => ReadArray(fieldName, x => (ushort)x.Varint);
+        public ArrayOf<ushort> ReadUInt16Array(string? fieldName)
+        {
+            return ReadArray(fieldName, x => (ushort)x.Varint);
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<int> ReadInt32Array(string? fieldName) => ReadArray(fieldName, x => unchecked((int)x.Varint));
+        public ArrayOf<int> ReadInt32Array(string? fieldName)
+        {
+            return ReadArray(fieldName, x => unchecked((int)x.Varint));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<uint> ReadUInt32Array(string? fieldName) => ReadArray(fieldName, x => (uint)x.Varint);
+        public ArrayOf<uint> ReadUInt32Array(string? fieldName)
+        {
+            return ReadArray(fieldName, x => (uint)x.Varint);
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<long> ReadInt64Array(string? fieldName) => ReadArray(fieldName, x => (long)x.Varint);
+        public ArrayOf<long> ReadInt64Array(string? fieldName)
+        {
+            return ReadArray(fieldName, x => (long)x.Varint);
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<ulong> ReadUInt64Array(string? fieldName) => ReadArray(fieldName, x => x.Varint);
+        public ArrayOf<ulong> ReadUInt64Array(string? fieldName)
+        {
+            return ReadArray(fieldName, x => x.Varint);
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<float> ReadFloatArray(string? fieldName) =>
-            ReadArray(fieldName, x => BitConverter.UInt32BitsToSingle(x.Fixed32));
+        public ArrayOf<float> ReadFloatArray(string? fieldName)
+        {
+            return ReadArray(fieldName, x => BitConverter.UInt32BitsToSingle(x.Fixed32));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<double> ReadDoubleArray(string? fieldName) =>
-            ReadArray(fieldName, x => BitConverter.UInt64BitsToDouble(x.Fixed64));
+        public ArrayOf<double> ReadDoubleArray(string? fieldName)
+        {
+            return ReadArray(fieldName, x => BitConverter.UInt64BitsToDouble(x.Fixed64));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<string?> ReadStringArray(string? fieldName) =>
-            ReadArray(
+        public ArrayOf<string?> ReadStringArray(string? fieldName)
+        {
+            return ReadArray(
                 fieldName,
                 x =>
                 {
@@ -398,17 +501,24 @@ namespace Opc.Ua.Core.Experimental
                     return values.HasValue ? Proto.String(values.Value.Bytes) : null;
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<DateTimeUtc> ReadDateTimeArray(string? fieldName) =>
-            ReadArray(fieldName, x => new DateTimeUtc((long)x.Fixed64));
+        public ArrayOf<DateTimeUtc> ReadDateTimeArray(string? fieldName)
+        {
+            return ReadArray(fieldName, x => new DateTimeUtc((long)x.Fixed64));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<Uuid> ReadGuidArray(string? fieldName) => ReadArray(fieldName, x => new Uuid(x.Bytes.ToArray()));
+        public ArrayOf<Uuid> ReadGuidArray(string? fieldName)
+        {
+            return ReadArray(fieldName, x => new Uuid(x.Bytes.ToArray()));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<ByteString> ReadByteStringArray(string? fieldName) =>
-            ReadArray(
+        public ArrayOf<ByteString> ReadByteStringArray(string? fieldName)
+        {
+            return ReadArray(
                 fieldName,
                 x =>
                 {
@@ -417,10 +527,12 @@ namespace Opc.Ua.Core.Experimental
                     return values.HasValue ? ByteString.From(values.Value.Bytes.Span) : default;
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<XmlElement> ReadXmlElementArray(string? fieldName) =>
-            ReadArray(
+        public ArrayOf<XmlElement> ReadXmlElementArray(string? fieldName)
+        {
+            return ReadArray(
                 fieldName,
                 x =>
                 {
@@ -429,14 +541,18 @@ namespace Opc.Ua.Core.Experimental
                     return values.HasValue ? (XmlElement)Proto.String(values.Value.Bytes) : default!;
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<NodeId> ReadNodeIdArray(string? fieldName) =>
-            ReadArray(fieldName, x => DecodeNodeId(Proto.Parse(x.Bytes)));
+        public ArrayOf<NodeId> ReadNodeIdArray(string? fieldName)
+        {
+            return ReadArray(fieldName, x => DecodeNodeId(Proto.Parse(x.Bytes)));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<ExpandedNodeId> ReadExpandedNodeIdArray(string? fieldName) =>
-            ReadArray(
+        public ArrayOf<ExpandedNodeId> ReadExpandedNodeIdArray(string? fieldName)
+        {
+            return ReadArray(
                 fieldName,
                 x =>
                 {
@@ -451,20 +567,26 @@ namespace Opc.Ua.Core.Experimental
                     }
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<StatusCode> ReadStatusCodeArray(string? fieldName) =>
-            ReadArray(fieldName, x => new StatusCode(x.Fixed32));
+        public ArrayOf<StatusCode> ReadStatusCodeArray(string? fieldName)
+        {
+            return ReadArray(fieldName, x => new StatusCode(x.Fixed32));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<DiagnosticInfo?> ReadDiagnosticInfoArray(string? fieldName) =>
-            new ArrayOf<DiagnosticInfo?>(
+        public ArrayOf<DiagnosticInfo?> ReadDiagnosticInfoArray(string? fieldName)
+        {
+            return new ArrayOf<DiagnosticInfo?>(
                 ReadArray(fieldName, x => (DiagnosticInfo?)DecodeDiagnosticInfo(Proto.Parse(x.Bytes))).Memory
             );
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<QualifiedName> ReadQualifiedNameArray(string? fieldName) =>
-            ReadArray(
+        public ArrayOf<QualifiedName> ReadQualifiedNameArray(string? fieldName)
+        {
+            return ReadArray(
                 fieldName,
                 x =>
                 {
@@ -475,10 +597,12 @@ namespace Opc.Ua.Core.Experimental
                     );
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<LocalizedText> ReadLocalizedTextArray(string? fieldName) =>
-            ReadArray(
+        public ArrayOf<LocalizedText> ReadLocalizedTextArray(string? fieldName)
+        {
+            return ReadArray(
                 fieldName,
                 x =>
                 {
@@ -489,36 +613,49 @@ namespace Opc.Ua.Core.Experimental
                     );
                 }
             );
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<Variant> ReadVariantArray(string? fieldName) =>
-            ReadArray(fieldName, x => DecodeVariant(Proto.Parse(x.Bytes)));
+        public ArrayOf<Variant> ReadVariantArray(string? fieldName)
+        {
+            return ReadArray(fieldName, x => DecodeVariant(Proto.Parse(x.Bytes)));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<DataValue> ReadDataValueArray(string? fieldName) =>
-            ReadArray(fieldName, x => DecodeDataValue(Proto.Parse(x.Bytes)));
+        public ArrayOf<DataValue> ReadDataValueArray(string? fieldName)
+        {
+            return ReadArray(fieldName, x => DecodeDataValue(Proto.Parse(x.Bytes)));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<ExtensionObject> ReadExtensionObjectArray(string? fieldName) =>
-            ReadArray(fieldName, x => DecodeExtensionObject(Proto.Parse(x.Bytes)));
+        public ArrayOf<ExtensionObject> ReadExtensionObjectArray(string? fieldName)
+        {
+            return ReadArray(fieldName, x => DecodeExtensionObject(Proto.Parse(x.Bytes)));
+        }
 
         /// <inheritdoc/>
         public ArrayOf<T> ReadEnumeratedArray<T>(string? fieldName)
-            where T : struct, Enum => ReadArray(fieldName, x => (T)Enum.ToObject(typeof(T), (int)(long)x.Varint));
+            where T : struct, Enum
+        {
+            return ReadArray(fieldName, x => (T)Enum.ToObject(typeof(T), (int)(long)x.Varint));
+        }
 
         /// <inheritdoc/>
-        public ArrayOf<EnumValue> ReadEnumeratedArray(string? fieldName) =>
-            ReadArray(fieldName, x => new EnumValue((int)(long)x.Varint));
+        public ArrayOf<EnumValue> ReadEnumeratedArray(string? fieldName)
+        {
+            return ReadArray(fieldName, x => new EnumValue((int)(long)x.Varint));
+        }
 
         /// <summary>
         /// Reads EncodeableArray from the experimental encoded representation.
         /// </summary>
-        /// <typeparam name="T">The OPC UA encodeable or value type processed by this member.</typeparam>
-        /// <param name="fieldName">The OPC UA field name associated with the encoded member.</param>
+        /// <typeparam name = "T">The OPC UA encodeable or value type processed by this member.</typeparam>
+        /// <param name = "fieldName">The OPC UA field name associated with the encoded member.</param>
         /// <returns>The result produced by this codec helper.</returns>
         public ArrayOf<T> ReadEncodeableArray<T>(string? fieldName)
-            where T : IEncodeable, new() =>
-            ReadArray(
+            where T : IEncodeable, new()
+        {
+            return ReadArray(
                 fieldName,
                 x =>
                 {
@@ -527,17 +664,19 @@ namespace Opc.Ua.Core.Experimental
                     return values;
                 }
             );
+        }
 
         /// <summary>
         /// Reads EncodeableArray from the experimental encoded representation.
         /// </summary>
-        /// <typeparam name="T">The OPC UA encodeable or value type processed by this member.</typeparam>
-        /// <param name="fieldName">The OPC UA field name associated with the encoded member.</param>
-        /// <param name="encodeableTypeId">The expanded type identifier used to resolve the encodeable body.</param>
+        /// <typeparam name = "T">The OPC UA encodeable or value type processed by this member.</typeparam>
+        /// <param name = "fieldName">The OPC UA field name associated with the encoded member.</param>
+        /// <param name = "encodeableTypeId">The expanded type identifier used to resolve the encodeable body.</param>
         /// <returns>The result produced by this codec helper.</returns>
         public ArrayOf<T> ReadEncodeableArray<T>(string? fieldName, ExpandedNodeId encodeableTypeId)
-            where T : IEncodeable =>
-            ReadArray(
+            where T : IEncodeable
+        {
+            return ReadArray(
                 fieldName,
                 x =>
                 {
@@ -545,48 +684,56 @@ namespace Opc.Ua.Core.Experimental
                     {
                         throw new ServiceResultException(StatusCodes.BadDecodingError);
                     }
+
                     var values = (T)act.CreateInstance();
                     DecodeInto(values, x.Bytes);
                     return values;
                 }
             );
+        }
 
         /// <summary>
         /// Reads EncodeableArrayAsExtensionObjects from the experimental encoded representation.
         /// </summary>
-        /// <typeparam name="T">The OPC UA encodeable or value type processed by this member.</typeparam>
-        /// <param name="fieldName">The OPC UA field name associated with the encoded member.</param>
+        /// <typeparam name = "T">The OPC UA encodeable or value type processed by this member.</typeparam>
+        /// <param name = "fieldName">The OPC UA field name associated with the encoded member.</param>
         /// <returns>The result produced by this codec helper.</returns>
         public ArrayOf<T> ReadEncodeableArrayAsExtensionObjects<T>(string? fieldName)
-            where T : IEncodeable =>
+            where T : IEncodeable
+        {
             throw new NotSupportedException(
                 "Decoding abstract encodeable arrays requires generated subtype descriptors in the Protobuf reference decoder."
             );
+        }
 
         /// <summary>
         /// Reads EncodeableMatrix from the experimental encoded representation.
         /// </summary>
-        /// <typeparam name="T">The OPC UA encodeable or value type processed by this member.</typeparam>
-        /// <param name="fieldName">The OPC UA field name associated with the encoded member.</param>
-        /// <param name="encodeableTypeId">The expanded type identifier used to resolve the encodeable body.</param>
+        /// <typeparam name = "T">The OPC UA encodeable or value type processed by this member.</typeparam>
+        /// <param name = "fieldName">The OPC UA field name associated with the encoded member.</param>
+        /// <param name = "encodeableTypeId">The expanded type identifier used to resolve the encodeable body.</param>
         /// <returns>The result produced by this codec helper.</returns>
         public MatrixOf<T> ReadEncodeableMatrix<T>(string? fieldName, ExpandedNodeId encodeableTypeId)
-            where T : IEncodeable =>
+            where T : IEncodeable
+        {
             throw new NotSupportedException(
                 "Decode encodeable matrix with an explicit generated T is not implemented in the minimal Protobuf reference decoder."
             );
+        }
 
         /// <summary>
         /// Reads EncodeableMatrix from the experimental encoded representation.
         /// </summary>
-        /// <typeparam name="T">The OPC UA encodeable or value type processed by this member.</typeparam>
-        /// <param name="fieldName">The OPC UA field name associated with the encoded member.</param>
+        /// <typeparam name = "T">The OPC UA encodeable or value type processed by this member.</typeparam>
+        /// <param name = "fieldName">The OPC UA field name associated with the encoded member.</param>
         /// <returns>The result produced by this codec helper.</returns>
         public MatrixOf<T> ReadEncodeableMatrix<T>(string? fieldName)
-            where T : IEncodeable, new() =>
+            where T : IEncodeable, new()
+        {
             throw new NotSupportedException(
                 "Decode encodeable matrix is not implemented in the minimal Protobuf reference decoder."
             );
+        }
 
         private ArrayOf<T> ReadArray<T>(string? fieldName, Func<ProtoField, T> conv)
         {
@@ -595,11 +742,15 @@ namespace Opc.Ua.Core.Experimental
             {
                 return default;
             }
+
             var m = Proto.Parse(fld.Value.Bytes);
             return new ArrayOf<T>(m.All(1).Select(conv).ToArray());
         }
 
-        private ProtoField Get(string? fieldName) => GetNullable(fieldName) ?? default;
+        private ProtoField Get(string? fieldName)
+        {
+            return GetNullable(fieldName) ?? default;
+        }
 
         private ProtoField? GetNullable(string? fieldName)
         {
@@ -608,7 +759,10 @@ namespace Opc.Ua.Core.Experimental
             return fld.HasValue && fld.Value.Number != 0 ? fld : null;
         }
 
-        private Frame Current => m_stack.Peek();
+        private Frame Current
+        {
+            get { return m_stack.Peek(); }
+        }
 
         private static NodeId DecodeNodeId(ProtoMessage m)
         {
@@ -632,8 +786,9 @@ namespace Opc.Ua.Core.Experimental
             return new NodeId(encodeableTypeId, ns);
         }
 
-        private DiagnosticInfo DecodeDiagnosticInfo(ProtoMessage m) =>
-            new DiagnosticInfo
+        private DiagnosticInfo DecodeDiagnosticInfo(ProtoMessage m)
+        {
+            return new DiagnosticInfo
             {
                 SymbolicId = m.First(1) is var f1 && f1.HasValue ? (int)(long)f1.Value.Varint : -1,
                 NamespaceUri = m.First(2) is var f2 && f2.HasValue ? (int)(long)f2.Value.Varint : -1,
@@ -644,6 +799,7 @@ namespace Opc.Ua.Core.Experimental
                 InnerDiagnosticInfo =
                     m.First(7) is var f7 && f7.HasValue ? DecodeDiagnosticInfo(Proto.Parse(f7.Value.Bytes)) : null,
             };
+        }
 
         private DataValue DecodeDataValue(ProtoMessage m)
         {
@@ -716,8 +872,9 @@ namespace Opc.Ua.Core.Experimental
             };
         }
 
-        private object? DecodeObjectFromField1(BuiltInType t, ProtoField fieldName) =>
-            t switch
+        private object? DecodeObjectFromField1(BuiltInType t, ProtoField fieldName)
+        {
+            return t switch
             {
                 BuiltInType.Boolean => fieldName.Varint != 0,
                 BuiltInType.SByte => (sbyte)(long)fieldName.Varint,
@@ -740,13 +897,14 @@ namespace Opc.Ua.Core.Experimental
                 BuiltInType.StatusCode => new StatusCode(fieldName.Fixed32),
                 _ => null,
             };
+        }
 
         private sealed class Frame
         {
             /// <summary>
             /// Initializes a new Frame instance for the experimental OPC UA encoding support.
             /// </summary>
-            /// <param name="m">The parsed Protobuf message to decode.</param>
+            /// <param name = "m">The parsed Protobuf message to decode.</param>
             public Frame(ProtoMessage m)
             {
                 Message = m;
@@ -766,14 +924,17 @@ namespace Opc.Ua.Core.Experimental
             /// <summary>
             /// Returns the Protobuf field number for the supplied OPC UA field name.
             /// </summary>
-            /// <param name="name">The field or column name to assign.</param>
+            /// <param name = "name">The field or column name to assign.</param>
             /// <returns>The result produced by this codec helper.</returns>
-            public int Next(string? name) => FieldForName(name);
+            public int Next(string? name)
+            {
+                return FieldForName(name);
+            }
 
             /// <summary>
             /// Maps an OPC UA field name to the positional Protobuf field number used in this frame.
             /// </summary>
-            /// <param name="name">The field or column name to assign.</param>
+            /// <param name = "name">The field or column name to assign.</param>
             /// <returns>The result produced by this codec helper.</returns>
             public int FieldForName(string? name)
             {
@@ -781,11 +942,13 @@ namespace Opc.Ua.Core.Experimental
                 {
                     return NextField++;
                 }
+
                 if (!_names.TryGetValue(name, out int n))
                 {
                     n = NextField++;
                     _names[name] = n;
                 }
+
                 return n;
             }
         }

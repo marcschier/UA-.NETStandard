@@ -30,8 +30,9 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using Opc.Ua;
 
-namespace Opc.Ua.Core.Experimental.Tests
+namespace Opc.Ua.Core.Tests
 {
     /// <summary>
     /// Validates Protobuf experimental encoding for OPC UA built-ins, node identifiers, composite values,
@@ -208,11 +209,35 @@ namespace Opc.Ua.Core.Experimental.Tests
             public int Count { get; set; }
             public bool HasRatio { get; set; }
             public double Ratio { get; set; }
-            public ExpandedNodeId TypeId => new NodeId(9001u, 1);
-            public ExpandedNodeId BinaryEncodingId => new NodeId(9002u, 1);
-            public ExpandedNodeId XmlEncodingId => new NodeId(9003u, 1);
-            public object Clone() => MemberwiseClone();
-            public bool IsEqual(IEncodeable? encodeable) => encodeable is OptionalScalars other && Equals(other);
+            public ExpandedNodeId TypeId
+            {
+                get
+                {
+                    return new NodeId(9001u, 1);
+                }
+            }
+            public ExpandedNodeId BinaryEncodingId
+            {
+                get
+                {
+                    return new NodeId(9002u, 1);
+                }
+            }
+            public ExpandedNodeId XmlEncodingId
+            {
+                get
+                {
+                    return new NodeId(9003u, 1);
+                }
+            }
+            public object Clone()
+            {
+                return MemberwiseClone();
+            }
+            public bool IsEqual(IEncodeable? encodeable)
+            {
+                return encodeable is OptionalScalars other && Equals(other);
+            }
 
             public void Encode(IEncoder encoder)
             {

@@ -32,10 +32,8 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using Opc.Ua;
-using Opc.Ua.Core.Experimental;
-using Opc.Ua.PubSub.Encoding;
 
-namespace Opc.Ua.PubSub.Experimental;
+namespace Opc.Ua.PubSub.Encoding;
 
 /// <summary>
 /// Builds schema-exchange announcements for experimental PubSub messages.

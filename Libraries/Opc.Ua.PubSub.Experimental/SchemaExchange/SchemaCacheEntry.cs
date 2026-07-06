@@ -27,32 +27,14 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using Opc.Ua.PubSub.Encoding;
+using Opc.Ua;
 
-namespace Opc.Ua.PubSub.Experimental;
+namespace Opc.Ua.PubSub.Encoding;
 
 /// <summary>
-/// Apache Arrow IPC-stream PubSub NetworkMessage. The stream schema
-/// describes one DataSet; each RecordBatch row is one DataSetMessage
-/// sample and each DataSet field is a typed Arrow column.
+/// Represents a cached schema entry.
 /// </summary>
-public sealed record ArrowNetworkMessage : PubSubNetworkMessage
-{
-    /// <summary>
-    /// Identifies the MQTT transport profile URI used for Arrow PubSub frames.
-    /// </summary>
-    public const string PubSubMqttArrowTransport = "http://opcfoundation.org/UA-Profile/Transport/pubsub-mqtt-arrow";
-
-    /// <summary>
-    /// Gets the DataSetClassId advertised with the Arrow stream schema metadata.
-    /// </summary>
-    public Uuid DataSetClassId { get; init; }
-
-    /// <summary>
-    /// Gets the schema identifier used by schema exchange and cache lookups.
-    /// </summary>
-    public string SchemaId { get; init; } = string.Empty;
-
-    /// <inheritdoc/>
-    public override string TransportProfileUri => PubSubMqttArrowTransport;
-}
+/// <param name="SchemaId">The raw schema identifier.</param>
+/// <param name="Schema">The schema bytes.</param>
+/// <param name="Format">The schema format.</param>
+public readonly record struct SchemaCacheEntry(ByteString SchemaId, ByteString Schema, string Format);

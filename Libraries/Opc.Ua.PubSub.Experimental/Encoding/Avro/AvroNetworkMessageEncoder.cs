@@ -32,10 +32,8 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Opc.Ua;
-using Opc.Ua.Core.Experimental;
-using Opc.Ua.PubSub.Encoding;
 
-namespace Opc.Ua.PubSub.Experimental;
+namespace Opc.Ua.PubSub.Encoding;
 
 /// <summary>
 /// Encodes PubSub network messages into the experimental Avro frame format.
@@ -46,10 +44,16 @@ public sealed class AvroNetworkMessageEncoder : INetworkMessageEncoder
     private const ushort Version = 1;
 
     /// <inheritdoc/>
-    public string TransportProfileUri => AvroNetworkMessage.PubSubMqttAvroTransport;
+    public string TransportProfileUri
+    {
+        get { return AvroNetworkMessage.PubSubMqttAvroTransport; }
+    }
 
     /// <inheritdoc/>
-    public int EstimatedHeaderOverhead => 128;
+    public int EstimatedHeaderOverhead
+    {
+        get { return 128; }
+    }
 
     /// <summary>
     /// Gets the SchemaId cache and per-destination announcement tracker used by the encoder.

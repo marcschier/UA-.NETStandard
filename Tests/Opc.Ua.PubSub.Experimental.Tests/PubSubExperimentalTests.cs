@@ -29,7 +29,7 @@
 
 using NUnit.Framework;
 
-namespace Opc.Ua.PubSub.Experimental.Tests
+namespace Opc.Ua.PubSub.Encoding.Tests
 {
     /// <summary>
     /// Provides a baseline NUnit fixture for the PubSub experimental test assembly.

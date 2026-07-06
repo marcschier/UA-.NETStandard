@@ -26,34 +26,30 @@
  * The complete license agreement can be found here:
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
+using System;
+using System.Buffers.Binary;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
 
-using Opc.Ua;
-
-namespace Opc.Ua.PubSub.Encoding;
-
-/// <summary>
-/// Carries one PubSub NetworkMessage encoded with the experimental Avro transport profile.
-/// </summary>
-public sealed record AvroNetworkMessage : PubSubNetworkMessage
+namespace Opc.Ua
 {
     /// <summary>
-    /// Identifies the MQTT transport profile URI used for Avro PubSub frames.
+    /// Represents a decoded Protobuf field together with the wire-format value storage.
     /// </summary>
-    public const string PubSubMqttAvroTransport = "http://opcfoundation.org/UA-Profile/Transport/pubsub-mqtt-avro";
-
-    /// <summary>
-    /// Gets the DataSetClassId advertised with the Avro network envelope.
-    /// </summary>
-    public Uuid DataSetClassId { get; init; }
-
-    /// <summary>
-    /// Gets the schema identifier used by schema exchange and cache lookups.
-    /// </summary>
-    public string SchemaId { get; init; } = string.Empty;
-
-    /// <inheritdoc/>
-    public override string TransportProfileUri
-    {
-        get { return PubSubMqttAvroTransport; }
-    }
+    /// <param name = "Number">The input required by this experimental codec helper.</param>
+    /// <param name = "WireType">The input required by this experimental codec helper.</param>
+    /// <param name = "Varint">The input required by this experimental codec helper.</param>
+    /// <param name = "Bytes">The input required by this experimental codec helper.</param>
+    /// <param name = "Fixed32">The input required by this experimental codec helper.</param>
+    /// <param name = "Fixed64">The input required by this experimental codec helper.</param>
+    internal readonly record struct ProtoField(
+        int Number,
+        int WireType,
+        ulong Varint,
+        ReadOnlyMemory<byte> Bytes,
+        uint Fixed32,
+        ulong Fixed64
+    );
 }

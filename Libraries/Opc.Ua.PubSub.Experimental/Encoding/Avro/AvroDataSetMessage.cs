@@ -27,9 +27,9 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using Opc.Ua.PubSub.Encoding;
+using Opc.Ua;
 
-namespace Opc.Ua.PubSub.Experimental;
+namespace Opc.Ua.PubSub.Encoding;
 
 /// <summary>
 /// Carries one PubSub DataSetMessage encoded with the experimental Avro mapping.

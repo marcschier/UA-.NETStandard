@@ -26,7 +26,6 @@
  * The complete license agreement can be found here:
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
-
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
@@ -34,69 +33,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Opc.Ua.Core.Experimental
+namespace Opc.Ua
 {
-    /// <summary>
-    /// Represents a decoded Protobuf field together with the wire-format value storage.
-    /// </summary>
-    /// <param name="Number">The input required by this experimental codec helper.</param>
-    /// <param name="WireType">The input required by this experimental codec helper.</param>
-    /// <param name="Varint">The input required by this experimental codec helper.</param>
-    /// <param name="Bytes">The input required by this experimental codec helper.</param>
-    /// <param name="Fixed32">The input required by this experimental codec helper.</param>
-    /// <param name="Fixed64">The input required by this experimental codec helper.</param>
-    internal readonly record struct ProtoField(
-        int Number,
-        int WireType,
-        ulong Varint,
-        ReadOnlyMemory<byte> Bytes,
-        uint Fixed32,
-        ulong Fixed64
-    );
-
-    /// <summary>
-    /// Stores the decoded fields of one Protobuf message for positional lookup.
-    /// </summary>
-    internal sealed class ProtoMessage
-    {
-        /// <summary>
-        /// Stores the decoded values of one Protobuf field.
-        /// </summary>
-        /// <returns>The result produced by this codec helper.</returns>
-        public List<ProtoField> Fields { get; } = new();
-
-        /// <summary>
-        /// Returns the first decoded Protobuf field with the requested field number.
-        /// </summary>
-        /// <param name="number">The Protobuf field number to locate.</param>
-        /// <returns>The first matching field, or null when the field is absent.</returns>
-        public ProtoField? First(int number)
-        {
-            foreach (ProtoField field in Fields)
-            {
-                if (field.Number == number)
-                {
-                    return field;
-                }
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Enumerates all decoded Protobuf fields with the requested field number.
-        /// </summary>
-        /// <param name="number">The Protobuf field number to locate.</param>
-        /// <returns>The matching decoded fields.</returns>
-        public IEnumerable<ProtoField> All(int number) => Fields.Where(f => f.Number == number);
-
-        /// <summary>
-        /// Returns whether the decoded Protobuf message contains the requested field number.
-        /// </summary>
-        /// <param name="number">The Protobuf field number to locate.</param>
-        /// <returns>True when the message contains the field number.</returns>
-        public bool Has(int number) => Fields.Any(f => f.Number == number);
-    }
-
     /// <summary>
     /// Provides low-level Protobuf wire-format read and write helpers.
     /// </summary>
@@ -105,17 +43,19 @@ namespace Opc.Ua.Core.Experimental
         /// <summary>
         /// Writes a Protobuf field tag for the supplied field number and wire type.
         /// </summary>
-        /// <param name="w">The binary writer that receives wire-format bytes.</param>
-        /// <param name="field">The Protobuf field number to write.</param>
-        /// <param name="wire">The Protobuf wire type to write.</param>
-        public static void WriteTag(BinaryWriter w, int field, int wire) =>
+        /// <param name = "w">The binary writer that receives wire-format bytes.</param>
+        /// <param name = "field">The Protobuf field number to write.</param>
+        /// <param name = "wire">The Protobuf wire type to write.</param>
+        public static void WriteTag(BinaryWriter w, int field, int wire)
+        {
             WriteVarint(w, ((ulong)field << 3) | (uint)wire);
+        }
 
         /// <summary>
         /// Writes an unsigned Protobuf varint value.
         /// </summary>
-        /// <param name="w">The binary writer that receives wire-format bytes.</param>
-        /// <param name="v">The input required by this experimental codec helper.</param>
+        /// <param name = "w">The binary writer that receives wire-format bytes.</param>
+        /// <param name = "v">The input required by this experimental codec helper.</param>
         public static void WriteVarint(BinaryWriter w, ulong v)
         {
             while (v >= 0x80)
@@ -123,35 +63,45 @@ namespace Opc.Ua.Core.Experimental
                 w.Write((byte)(v | 0x80));
                 v >>= 7;
             }
+
             w.Write((byte)v);
         }
 
         /// <summary>
         /// Writes a signed integer using the Protobuf varint representation used by this reference codec.
         /// </summary>
-        /// <param name="w">The binary writer that receives wire-format bytes.</param>
-        /// <param name="v">The input required by this experimental codec helper.</param>
-        public static void WriteSignedVarint(BinaryWriter w, long v) => WriteVarint(w, unchecked((ulong)v));
+        /// <param name = "w">The binary writer that receives wire-format bytes.</param>
+        /// <param name = "v">The input required by this experimental codec helper.</param>
+        public static void WriteSignedVarint(BinaryWriter w, long v)
+        {
+            WriteVarint(w, unchecked((ulong)v));
+        }
 
         /// <summary>
         /// Writes a 32-bit fixed-width Protobuf value.
         /// </summary>
-        /// <param name="w">The binary writer that receives wire-format bytes.</param>
-        /// <param name="v">The input required by this experimental codec helper.</param>
-        public static void WriteFixed32(BinaryWriter w, uint v) => w.Write(v);
+        /// <param name = "w">The binary writer that receives wire-format bytes.</param>
+        /// <param name = "v">The input required by this experimental codec helper.</param>
+        public static void WriteFixed32(BinaryWriter w, uint v)
+        {
+            w.Write(v);
+        }
 
         /// <summary>
         /// Writes a 64-bit fixed-width Protobuf value.
         /// </summary>
-        /// <param name="w">The binary writer that receives wire-format bytes.</param>
-        /// <param name="v">The input required by this experimental codec helper.</param>
-        public static void WriteFixed64(BinaryWriter w, ulong v) => w.Write(v);
+        /// <param name = "w">The binary writer that receives wire-format bytes.</param>
+        /// <param name = "v">The input required by this experimental codec helper.</param>
+        public static void WriteFixed64(BinaryWriter w, ulong v)
+        {
+            w.Write(v);
+        }
 
         /// <summary>
         /// Writes a length-delimited Protobuf byte sequence.
         /// </summary>
-        /// <param name="w">The binary writer that receives wire-format bytes.</param>
-        /// <param name="b">The input required by this experimental codec helper.</param>
+        /// <param name = "w">The binary writer that receives wire-format bytes.</param>
+        /// <param name = "b">The input required by this experimental codec helper.</param>
         public static void WriteBytes(BinaryWriter w, ReadOnlySpan<byte> b)
         {
             WriteVarint(w, (ulong)b.Length);
@@ -161,14 +111,17 @@ namespace Opc.Ua.Core.Experimental
         /// <summary>
         /// Writes a UTF-8 Protobuf string as a length-delimited field value.
         /// </summary>
-        /// <param name="w">The binary writer that receives wire-format bytes.</param>
-        /// <param name="s">The first value index in the Arrow segment.</param>
-        public static void WriteString(BinaryWriter w, string s) => WriteBytes(w, Encoding.UTF8.GetBytes(s));
+        /// <param name = "w">The binary writer that receives wire-format bytes.</param>
+        /// <param name = "s">The first value index in the Arrow segment.</param>
+        public static void WriteString(BinaryWriter w, string s)
+        {
+            WriteBytes(w, Encoding.UTF8.GetBytes(s));
+        }
 
         /// <summary>
         /// Parses a Protobuf message buffer into positional field records.
         /// </summary>
-        /// <param name="buffer">The encoded payload buffer to decode.</param>
+        /// <param name = "buffer">The encoded payload buffer to decode.</param>
         /// <returns>The parsed Protobuf message.</returns>
         public static ProtoMessage Parse(ReadOnlyMemory<byte> buffer)
         {
@@ -207,14 +160,15 @@ namespace Opc.Ua.Core.Experimental
                         );
                 }
             }
+
             return msg;
         }
 
         /// <summary>
         /// Reads an unsigned Protobuf varint value from a span.
         /// </summary>
-        /// <param name="span">The source span containing encoded bytes.</param>
-        /// <param name="p">The current read offset, updated as bytes are consumed.</param>
+        /// <param name = "span">The source span containing encoded bytes.</param>
+        /// <param name = "p">The current read offset, updated as bytes are consumed.</param>
         /// <returns>The decoded unsigned varint value.</returns>
         public static ulong ReadVarint(ReadOnlySpan<byte> span, ref int p)
         {
@@ -228,16 +182,21 @@ namespace Opc.Ua.Core.Experimental
                 {
                     return v;
                 }
+
                 shift += 7;
             }
+
             throw new EndOfStreamException();
         }
 
         /// <summary>
         /// Decodes UTF-8 bytes from a Protobuf length-delimited string value.
         /// </summary>
-        /// <param name="bytes">The byte sequence to encode or decode.</param>
+        /// <param name = "bytes">The byte sequence to encode or decode.</param>
         /// <returns>The decoded UTF-8 string.</returns>
-        public static string String(ReadOnlyMemory<byte> bytes) => Encoding.UTF8.GetString(bytes.Span);
+        public static string String(ReadOnlyMemory<byte> bytes)
+        {
+            return Encoding.UTF8.GetString(bytes.Span);
+        }
     }
 }

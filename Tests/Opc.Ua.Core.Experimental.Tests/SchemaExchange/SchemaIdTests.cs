@@ -27,33 +27,37 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using System.Text;
+using NUnit.Framework;
 using Opc.Ua;
 
-namespace Opc.Ua.PubSub.Encoding;
-
-/// <summary>
-/// Carries one PubSub NetworkMessage encoded with the experimental Avro transport profile.
-/// </summary>
-public sealed record AvroNetworkMessage : PubSubNetworkMessage
+namespace Opc.Ua.Core.Tests
 {
     /// <summary>
-    /// Identifies the MQTT transport profile URI used for Avro PubSub frames.
+    /// Verifies stable schema identifier helpers for Avro single-object prefixes and canonical CRC fingerprints.
     /// </summary>
-    public const string PubSubMqttAvroTransport = "http://opcfoundation.org/UA-Profile/Transport/pubsub-mqtt-avro";
-
-    /// <summary>
-    /// Gets the DataSetClassId advertised with the Avro network envelope.
-    /// </summary>
-    public Uuid DataSetClassId { get; init; }
-
-    /// <summary>
-    /// Gets the schema identifier used by schema exchange and cache lookups.
-    /// </summary>
-    public string SchemaId { get; init; } = string.Empty;
-
-    /// <inheritdoc/>
-    public override string TransportProfileUri
+    [TestFixture]
+    public sealed class SchemaIdTests
     {
-        get { return PubSubMqttAvroTransport; }
+        [Test]
+        public void AvroSingleObjectPrefixUsesMagicAndLittleEndianFingerprint()
+        {
+            byte[] prefix = SchemaId.AvroSingleObjectPrefix(0x0102030405060708UL);
+
+            Assert.That(
+                prefix,
+                Is.EqualTo(new byte[] { 0xC3, 0x01, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01 }));
+        }
+
+        [Test]
+        public void RabinCrc64AvroIsStableForSameCanonicalBytes()
+        {
+            byte[] canonical = Encoding.UTF8.GetBytes("""{"type":"record","name":"Stable","fields":[]}""");
+
+            ulong first = SchemaId.RabinCrc64Avro(canonical);
+            ulong second = SchemaId.RabinCrc64Avro(canonical);
+
+            Assert.That(second, Is.EqualTo(first));
+        }
     }
 }

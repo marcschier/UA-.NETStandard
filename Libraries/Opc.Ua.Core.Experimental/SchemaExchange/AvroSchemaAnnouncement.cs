@@ -26,24 +26,19 @@
  * The complete license agreement can be found here:
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
-
 using System;
-using Opc.Ua;
 using System.IO;
 using System.Text;
 
-namespace Opc.Ua.Core.Experimental;
+namespace Opc.Ua;
 
 /// <summary>
 /// Carries an Avro SchemaId and its self-contained Avro schema JSON.
 /// </summary>
-/// <param name="SchemaId">The raw 8-byte CRC-64-AVRO schema identifier.</param>
-/// <param name="SchemaJson">The self-contained Avro schema JSON document.</param>
-/// <param name="SchemaEpoch">The optional operational schema epoch.</param>
-public sealed record AvroSchemaAnnouncement(
-    ByteString SchemaId,
-    string SchemaJson,
-    long? SchemaEpoch)
+/// <param name = "SchemaId">The raw 8-byte CRC-64-AVRO schema identifier.</param>
+/// <param name = "SchemaJson">The self-contained Avro schema JSON document.</param>
+/// <param name = "SchemaEpoch">The optional operational schema epoch.</param>
+public sealed record AvroSchemaAnnouncement(ByteString SchemaId, string SchemaJson, long? SchemaEpoch)
 {
     /// <summary>
     /// Encodes the announcement using the published Avro field order.
@@ -59,21 +54,24 @@ public sealed record AvroSchemaAnnouncement(
     /// <summary>
     /// Encodes the announcement using the published Avro field order.
     /// </summary>
-    /// <param name="stream">The destination stream.</param>
+    /// <param name = "stream">The destination stream.</param>
     public void Encode(Stream stream)
     {
         if (stream is null)
         {
             throw new ArgumentNullException(nameof(stream));
         }
+
         if (SchemaId.IsNull)
         {
             throw new InvalidOperationException("SchemaId is required.");
         }
+
         if (SchemaJson is null)
         {
             throw new InvalidOperationException("SchemaJson is required.");
         }
+
         AvroBinaryWriter writer = new(stream);
         writer.WriteBytes(SchemaId.Span);
         writer.WriteString(SchemaJson);
@@ -82,13 +80,14 @@ public sealed record AvroSchemaAnnouncement(
         {
             writer.WriteLong(SchemaEpoch.Value);
         }
+
         writer.Flush();
     }
 
     /// <summary>
     /// Decodes an announcement from its Avro binary payload.
     /// </summary>
-    /// <param name="payload">The encoded Avro binary payload.</param>
+    /// <param name = "payload">The encoded Avro binary payload.</param>
     /// <returns>The decoded announcement.</returns>
     public static AvroSchemaAnnouncement Decode(ReadOnlyMemory<byte> payload)
     {
@@ -99,7 +98,7 @@ public sealed record AvroSchemaAnnouncement(
     /// <summary>
     /// Decodes an announcement from its Avro binary payload.
     /// </summary>
-    /// <param name="stream">The source stream.</param>
+    /// <param name = "stream">The source stream.</param>
     /// <returns>The decoded announcement.</returns>
     public static AvroSchemaAnnouncement Decode(Stream stream)
     {
@@ -107,6 +106,7 @@ public sealed record AvroSchemaAnnouncement(
         {
             throw new ArgumentNullException(nameof(stream));
         }
+
         AvroBinaryReader reader = new(stream);
         ByteString schemaId = ByteString.From(reader.ReadBytes());
         string schemaJson = reader.ReadString();
@@ -115,7 +115,7 @@ public sealed record AvroSchemaAnnouncement(
         {
             0 => null,
             1 => reader.ReadLong(),
-            _ => throw new FormatException("Invalid Avro SchemaEpoch union branch.")
+            _ => throw new FormatException("Invalid Avro SchemaEpoch union branch."),
         };
         return new AvroSchemaAnnouncement(schemaId, schemaJson, schemaEpoch);
     }
@@ -123,7 +123,7 @@ public sealed record AvroSchemaAnnouncement(
     /// <summary>
     /// Computes the SchemaId bytes for an Avro schema JSON document.
     /// </summary>
-    /// <param name="schemaJson">The canonical or self-contained schema JSON.</param>
+    /// <param name = "schemaJson">The canonical or self-contained schema JSON.</param>
     /// <returns>The raw 8-byte CRC-64-AVRO SchemaId.</returns>
     public static ByteString ComputeSchemaId(string schemaJson)
     {
@@ -131,7 +131,8 @@ public sealed record AvroSchemaAnnouncement(
         {
             throw new ArgumentNullException(nameof(schemaJson));
         }
-        ulong fingerprint = Opc.Ua.Core.Experimental.SchemaId.RabinCrc64Avro(Encoding.UTF8.GetBytes(schemaJson));
-        return ByteString.From(Opc.Ua.Core.Experimental.SchemaId.AvroSingleObjectPrefix(fingerprint).AsSpan(2, 8));
+
+        ulong fingerprint = global::Opc.Ua.SchemaId.RabinCrc64Avro(Encoding.UTF8.GetBytes(schemaJson));
+        return ByteString.From(global::Opc.Ua.SchemaId.AvroSingleObjectPrefix(fingerprint).AsSpan(2, 8));
     }
 }

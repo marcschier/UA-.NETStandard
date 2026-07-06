@@ -26,34 +26,26 @@
  * The complete license agreement can be found here:
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
-
-using Opc.Ua;
-
-namespace Opc.Ua.PubSub.Encoding;
-
-/// <summary>
-/// Carries one PubSub NetworkMessage encoded with the experimental Avro transport profile.
-/// </summary>
-public sealed record AvroNetworkMessage : PubSubNetworkMessage
+namespace Opc.Ua
 {
     /// <summary>
-    /// Identifies the MQTT transport profile URI used for Avro PubSub frames.
+    /// Carries the fields of an OPC UA Read response for the experimental gRPC mapping.
     /// </summary>
-    public const string PubSubMqttAvroTransport = "http://opcfoundation.org/UA-Profile/Transport/pubsub-mqtt-avro";
-
-    /// <summary>
-    /// Gets the DataSetClassId advertised with the Avro network envelope.
-    /// </summary>
-    public Uuid DataSetClassId { get; init; }
-
-    /// <summary>
-    /// Gets the schema identifier used by schema exchange and cache lookups.
-    /// </summary>
-    public string SchemaId { get; init; } = string.Empty;
-
-    /// <inheritdoc/>
-    public override string TransportProfileUri
+    public sealed class GrpcReadResponseMessage
     {
-        get { return PubSubMqttAvroTransport; }
+        /// <summary>
+        /// Gets or sets the OPC UA response header carried by the gRPC Read response.
+        /// </summary>
+        public ResponseHeader? ResponseHeader { get; set; }
+
+        /// <summary>
+        /// Gets or sets the data values returned for the requested nodes.
+        /// </summary>
+        public ArrayOf<DataValue> Results { get; set; }
+
+        /// <summary>
+        /// Gets or sets per-operation diagnostics returned by the Read service.
+        /// </summary>
+        public ArrayOf<DiagnosticInfo?> DiagnosticInfos { get; set; }
     }
 }
