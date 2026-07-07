@@ -71,7 +71,11 @@ namespace Opc.Ua.PubSub.Encoding.Tests
                 new("UADP", new UadpEncoder(), new UadpDecoder(), CreateUadpMessages),
                 new("JSON", new PubSubJsonEncoder(PubSubJsonEncodingMode.Compact), new PubSubJsonDecoder(), CreateJsonMessages),
                 new("Avro", new AvroNetworkMessageEncoder(), new AvroNetworkMessageDecoder(), CreateAvroMessages),
-                new("Arrow", new ArrowNetworkMessageEncoder(), new ArrowNetworkMessageDecoder(), CreateArrowMessages)
+                new(
+                    "Arrow (stream)",
+                    new ArrowNetworkMessageEncoder { Framing = ArrowIpcFraming.Stream },
+                    new ArrowNetworkMessageDecoder(),
+                    CreateArrowMessages)
             ];
 
             Scenario[] scenarios =
@@ -94,47 +98,117 @@ namespace Opc.Ua.PubSub.Encoding.Tests
         public void MeasureArrowIpcFramingBreakdown()
         {
             int[] sampleCounts = [1, 10, 100, 1000];
+            int[] iterations = [500, 300, 60, 10];
             TestContext.Progress.WriteLine(string.Empty);
-            TestContext.Progress.WriteLine("Part 14: Arrow IPC framing breakdown (stream vs bare batch)");
+            TestContext.Progress.WriteLine("Part 14: Arrow IPC framing — stream vs bare batch");
             TestContext.Progress.WriteLine(
-                "Samples    Stream(B)   Schema(B)    Batch(B)   B/smp stream   B/smp batch   Saved");
+                "Samples   Framing   Payload(B)   B/sample   Encode(ns/op)   Decode(ns/op)   Alloc(B/op)");
             TestContext.Progress.WriteLine(
-                "--------   ---------   ---------   ---------   ------------   -----------   -----");
-            foreach (int samples in sampleCounts)
+                "-------   -------   ----------   --------   -------------   -------------   -----------");
+            for (int s = 0; s < sampleCounts.Length; s++)
             {
-                PubSubNetworkMessageContext context = CreateContext(samples);
-                ArrowNetworkMessage message = CreateArrowMessage(samples);
-
-                ArrowNetworkMessageEncoder streamEncoder = new();
-                ReadOnlyMemory<byte> full = streamEncoder.EncodeAsync(message, context)
-                    .AsTask().GetAwaiter().GetResult();
-                int schemaLength = streamEncoder.LastSchemaMessageLength;
-
-                ArrowNetworkMessageEncoder batchEncoder = new() { Framing = ArrowIpcFraming.Batch };
-                ReadOnlyMemory<byte> bare = batchEncoder.EncodeAsync(message, context)
-                    .AsTask().GetAwaiter().GetResult();
-
-                // Confirm the bare batch still round-trips against the announced schema.
-                ArrowNetworkMessageDecoder decoder = new();
-                decoder.CacheSchema(message.SchemaId!, batchEncoder.LastSchemaMessage);
-                PubSubNetworkMessage? decoded = decoder
-                    .TryDecodeBatchAsync(bare, message.SchemaId!, context)
-                    .AsTask().GetAwaiter().GetResult();
-                Assert.That(decoded, Is.TypeOf<ArrowNetworkMessage>());
-
-                double savedPercent = 100.0 * (full.Length - bare.Length) / full.Length;
-                TestContext.Progress.WriteLine(string.Format(
-                    CultureInfo.InvariantCulture,
-                    "{0,8}   {1,9}   {2,9}   {3,9}   {4,12:N1}   {5,11:N1}   {6,4:N1}%",
-                    samples,
-                    full.Length,
-                    schemaLength,
-                    bare.Length,
-                    full.Length / (double)samples,
-                    bare.Length / (double)samples,
-                    savedPercent));
+                PubSubNetworkMessageContext context = CreateContext(sampleCounts[s]);
+                ArrowFramingMeasurement stream =
+                    MeasureArrowFraming(ArrowIpcFraming.Stream, sampleCounts[s], iterations[s], context);
+                ArrowFramingMeasurement batch =
+                    MeasureArrowFraming(ArrowIpcFraming.Batch, sampleCounts[s], iterations[s], context);
+                WriteArrowFramingRow(sampleCounts[s], "stream", stream);
+                WriteArrowFramingRow(sampleCounts[s], "batch", batch);
             }
         }
+
+        private static ArrowFramingMeasurement MeasureArrowFraming(
+            ArrowIpcFraming framing,
+            int samples,
+            int iterations,
+            PubSubNetworkMessageContext context)
+        {
+            ArrowNetworkMessage message = CreateArrowMessage(samples);
+            ArrowNetworkMessageEncoder encoder = new() { Framing = framing };
+            ArrowNetworkMessageDecoder decoder = new();
+
+            ReadOnlyMemory<byte> payload = EncodeArrow(encoder, message, context);
+            if (framing == ArrowIpcFraming.Batch)
+            {
+                decoder.CacheSchema(message.SchemaId!, encoder.LastSchemaMessage);
+            }
+            _ = DecodeArrow(decoder, framing, payload, message.SchemaId!, context);
+            for (int ii = 0; ii < WarmupIterations; ii++)
+            {
+                _ = EncodeArrow(encoder, message, context);
+                _ = DecodeArrow(decoder, framing, payload, message.SchemaId!, context);
+            }
+
+            long beforeAlloc = GC.GetAllocatedBytesForCurrentThread();
+            long encodeStart = Stopwatch.GetTimestamp();
+            for (int ii = 0; ii < iterations; ii++)
+            {
+                _ = EncodeArrow(encoder, message, context);
+            }
+            long encodeStop = Stopwatch.GetTimestamp();
+            long afterAlloc = GC.GetAllocatedBytesForCurrentThread();
+
+            long decodeStart = Stopwatch.GetTimestamp();
+            for (int ii = 0; ii < iterations; ii++)
+            {
+                _ = DecodeArrow(decoder, framing, payload, message.SchemaId!, context);
+            }
+            long decodeStop = Stopwatch.GetTimestamp();
+
+            return new ArrowFramingMeasurement(
+                payload.Length,
+                payload.Length / (double)samples,
+                ToNanoseconds(encodeStop - encodeStart, iterations),
+                ToNanoseconds(decodeStop - decodeStart, iterations),
+                (afterAlloc - beforeAlloc) / iterations);
+        }
+
+        private static ReadOnlyMemory<byte> EncodeArrow(
+            ArrowNetworkMessageEncoder encoder,
+            ArrowNetworkMessage message,
+            PubSubNetworkMessageContext context)
+        {
+            ValueTask<ReadOnlyMemory<byte>> operation = encoder.EncodeAsync(message, context);
+            return operation.IsCompletedSuccessfully
+                ? operation.Result
+                : operation.AsTask().GetAwaiter().GetResult();
+        }
+
+        private static PubSubNetworkMessage? DecodeArrow(
+            ArrowNetworkMessageDecoder decoder,
+            ArrowIpcFraming framing,
+            ReadOnlyMemory<byte> payload,
+            string schemaId,
+            PubSubNetworkMessageContext context)
+        {
+            ValueTask<PubSubNetworkMessage?> operation = framing == ArrowIpcFraming.Batch
+                ? decoder.TryDecodeBatchAsync(payload, schemaId, context)
+                : decoder.TryDecodeAsync(payload, context);
+            return operation.IsCompletedSuccessfully
+                ? operation.Result
+                : operation.AsTask().GetAwaiter().GetResult();
+        }
+
+        private static void WriteArrowFramingRow(int samples, string framing, ArrowFramingMeasurement measurement)
+        {
+            TestContext.Progress.WriteLine(string.Format(
+                CultureInfo.InvariantCulture,
+                "{0,7}   {1,-7}   {2,10}   {3,8:N1}   {4,13:N0}   {5,13:N0}   {6,11:N0}",
+                samples,
+                framing,
+                measurement.PayloadBytes,
+                measurement.BytesPerSample,
+                measurement.EncodeNanoseconds,
+                measurement.DecodeNanoseconds,
+                measurement.AllocatedBytes));
+        }
+
+        private sealed record ArrowFramingMeasurement(
+            int PayloadBytes,
+            double BytesPerSample,
+            double EncodeNanoseconds,
+            double DecodeNanoseconds,
+            long AllocatedBytes);
 
         private static Measurement Measure(
             Scenario scenario,

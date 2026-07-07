@@ -80,7 +80,7 @@ namespace Opc.Ua.PubSub.Encoding.Tests
                 ]
             };
 
-            ArrowNetworkMessageEncoder encoder = new();
+            ArrowNetworkMessageEncoder encoder = new() { Framing = ArrowIpcFraming.Stream };
             ReadOnlyMemory<byte> frame = await encoder.EncodeAsync(message, context);
 
             using (ArrowStreamReader reader = new(new MemoryStream(frame.ToArray(), writable: false)))
@@ -148,7 +148,7 @@ namespace Opc.Ua.PubSub.Encoding.Tests
             ReadOnlyMemory<byte> bareBatch = await batchEncoder.EncodeAsync(message, context);
 
             // The self-contained stream for the same message is larger by the schema message.
-            ArrowNetworkMessageEncoder streamEncoder = new();
+            ArrowNetworkMessageEncoder streamEncoder = new() { Framing = ArrowIpcFraming.Stream };
             ReadOnlyMemory<byte> fullStream = await streamEncoder.EncodeAsync(message, context);
 
             Assert.That(batchEncoder.LastSchemaMessageLength, Is.GreaterThan(0));
@@ -195,7 +195,7 @@ namespace Opc.Ua.PubSub.Encoding.Tests
                 publisherId, writerGroupId: 9, dataSetClassId, metaData, dataSetWriterId: 501);
             ArrowNetworkMessage message = CreateNetworkMessage(publisherId, dataSetClassId, metaData);
 
-            ArrowNetworkMessageEncoder streamEncoder = new();
+            ArrowNetworkMessageEncoder streamEncoder = new() { Framing = ArrowIpcFraming.Stream };
             ReadOnlyMemory<byte> fullStream = await streamEncoder.EncodeAsync(message, context);
             ArrowNetworkMessageEncoder batchEncoder = new() { Framing = ArrowIpcFraming.Batch };
             ReadOnlyMemory<byte> bareBatch = await batchEncoder.EncodeAsync(message, context);

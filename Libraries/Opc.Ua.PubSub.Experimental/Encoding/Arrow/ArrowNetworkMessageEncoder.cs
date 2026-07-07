@@ -85,11 +85,12 @@ namespace Opc.Ua.PubSub.Encoding
         public ArrowSchemaAnnouncement? LastSchemaAnnouncement { get; private set; }
 
         /// <summary>
-        /// Gets or sets the IPC framing used for encoded payloads. <see cref="ArrowIpcFraming.Stream"/>
-        /// embeds the Arrow Schema message in every payload; <see cref="ArrowIpcFraming.Batch"/> emits a
-        /// bare RecordBatch whose schema is conveyed once out-of-band and resolved by SchemaId.
+        /// Gets or sets the IPC framing used for encoded payloads. <see cref="ArrowIpcFraming.Batch"/>
+        /// (the default) emits a bare RecordBatch whose schema is conveyed once out-of-band and resolved
+        /// by SchemaId; <see cref="ArrowIpcFraming.Stream"/> embeds the Arrow Schema message in every
+        /// payload so that it is self-contained.
         /// </summary>
-        public ArrowIpcFraming Framing { get; set; } = ArrowIpcFraming.Stream;
+        public ArrowIpcFraming Framing { get; set; } = ArrowIpcFraming.Batch;
 
         /// <summary>
         /// Gets the byte length of the Arrow Schema message produced by the most recent encode call.
