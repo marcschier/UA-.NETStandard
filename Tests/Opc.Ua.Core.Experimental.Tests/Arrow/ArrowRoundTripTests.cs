@@ -28,6 +28,7 @@
  * ======================================================================*/
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Apache.Arrow.Ipc;
 using Apache.Arrow.Types;
@@ -45,6 +46,8 @@ namespace Opc.Ua.Core.Tests
     {
         private static readonly int[] MatrixValues = [1, 2, 3, 4];
         private static readonly string[] SchemaStringValues = ["a", "b"];
+        private static readonly bool[] VariantBooleanValues = [true, false];
+        private static readonly float[] VariantFloatValues = [1.25f, 2.5f];
 
         private static IServiceMessageContext Context
         {
@@ -126,6 +129,12 @@ namespace Opc.Ua.Core.Tests
                 Is.EqualTo(diagnostic));
         }
 
+        [TestCaseSource(nameof(VariantBuiltInRoundTripCases))]
+        public void ArrowVariantBuiltInBodiesRoundTrip(Variant value)
+        {
+            Assert.That(RoundTrip(e => e.WriteVariant(null, value), d => d.ReadVariant(null)), Is.EqualTo(value));
+        }
+
         [Test]
         public void ArrowUnionAndOptionalPresenceSignalsRoundTrip()
         {
@@ -162,6 +171,111 @@ namespace Opc.Ua.Core.Tests
         private static void RoundTripEqual(NodeId value)
         {
             Assert.That(RoundTrip(e => e.WriteNodeId(null, value), d => d.ReadNodeId(null)), Is.EqualTo(value));
+        }
+
+        private static IEnumerable<TestCaseData> VariantBuiltInRoundTripCases()
+        {
+            foreach (Variant value in VariantScalarCases())
+            {
+                yield return new TestCaseData(value).SetName($"ArrowVariantScalar{value.TypeInfo.BuiltInType}RoundTrip");
+            }
+
+            foreach (Variant value in VariantArrayCases())
+            {
+                yield return new TestCaseData(value).SetName($"ArrowVariantArray{value.TypeInfo.BuiltInType}RoundTrip");
+            }
+
+            foreach (Variant value in VariantMatrixCases())
+            {
+                yield return new TestCaseData(value).SetName($"ArrowVariantMatrix{value.TypeInfo.BuiltInType}RoundTrip");
+            }
+        }
+
+        private static IEnumerable<Variant> VariantScalarCases()
+        {
+            yield return new Variant(true);
+            yield return new Variant((sbyte)-2);
+            yield return new Variant((byte)3);
+            yield return new Variant((short)-4);
+            yield return new Variant((ushort)5);
+            yield return new Variant(-6);
+            yield return new Variant(7u);
+            yield return new Variant(-8L);
+            yield return new Variant(9ul);
+            yield return new Variant(1.25f);
+            yield return new Variant(-2.5d);
+            yield return new Variant("text");
+            yield return new Variant(new DateTimeUtc(123456789L));
+            yield return new Variant(new Uuid(Guid.Parse("00112233-4455-6677-8899-aabbccddeeff")));
+            yield return new Variant(ByteString.From(1, 2, 3));
+            yield return new Variant(XmlElement.From("<a/>"));
+            yield return new Variant(new NodeId("node", 2));
+            yield return new Variant(new ExpandedNodeId(new NodeId(3u, 4), "urn:test", 5));
+            yield return new Variant(new StatusCode(0x80340000));
+            yield return new Variant(new QualifiedName("name", 6));
+            yield return new Variant(new LocalizedText("en-US", "hello"));
+            yield return new Variant(new ExtensionObject(new ExpandedNodeId(new NodeId(1u, 2)), ByteString.From(9, 8)));
+        }
+
+        private static IEnumerable<Variant> VariantArrayCases()
+        {
+            yield return new Variant(new ArrayOf<bool>(VariantBooleanValues));
+            yield return new Variant(new ArrayOf<sbyte>(new sbyte[] { -1, 2 }));
+            yield return new Variant(new ArrayOf<byte>(new byte[] { 1, 2 }));
+            yield return new Variant(new ArrayOf<short>(new short[] { -3, 4 }));
+            yield return new Variant(new ArrayOf<ushort>(new ushort[] { 3, 4 }));
+            yield return new Variant(new ArrayOf<int>(new[] { -5, 6 }));
+            yield return new Variant(new ArrayOf<uint>(new uint[] { 5, 6 }));
+            yield return new Variant(new ArrayOf<long>(new long[] { -7, 8 }));
+            yield return new Variant(new ArrayOf<ulong>(new ulong[] { 7, 8 }));
+            yield return new Variant(new ArrayOf<float>(VariantFloatValues));
+            yield return new Variant(new ArrayOf<double>(new[] { -1.25d, -2.5d }));
+            yield return new Variant(new ArrayOf<string>(new string[] { "a", null! }));
+            yield return new Variant(new ArrayOf<DateTimeUtc>(new[] { new DateTimeUtc(11L), default }));
+            yield return new Variant(new ArrayOf<Uuid>(new[] { new Uuid(Guid.Parse("11112222-3333-4444-5555-666677778888")), default }));
+            yield return new Variant(new ArrayOf<ByteString>(new[] { ByteString.From(1, 2), default }));
+            yield return new Variant(new ArrayOf<XmlElement>(new[] { XmlElement.From("<x/>"), default }));
+            yield return new Variant(new ArrayOf<NodeId>(new[] { new NodeId(1u, 1), NodeId.Null }));
+            yield return new Variant(
+                new ArrayOf<ExpandedNodeId>(new[] { new ExpandedNodeId(new NodeId(2u, 2), "urn:a", 3), ExpandedNodeId.Null }));
+            yield return new Variant(new ArrayOf<StatusCode>(new[] { new StatusCode(0x80340000), StatusCodes.Good }));
+            yield return new Variant(new ArrayOf<QualifiedName>(new[] { new QualifiedName("q", 1), QualifiedName.Null }));
+            yield return new Variant(new ArrayOf<LocalizedText>(new[] { new LocalizedText("en", "t"), LocalizedText.Null }));
+            yield return new Variant(
+                new ArrayOf<ExtensionObject>(
+                    new[] { new ExtensionObject(new ExpandedNodeId(new NodeId(1u, 2)), ByteString.From(3)), ExtensionObject.Null }));
+        }
+
+        private static IEnumerable<Variant> VariantMatrixCases()
+        {
+            yield return new Variant(new ArrayOf<bool>(VariantBooleanValues).ToMatrix(1, 2));
+            yield return new Variant(new ArrayOf<sbyte>(new sbyte[] { -1, 2 }).ToMatrix(1, 2));
+            yield return new Variant(new ArrayOf<byte>(new byte[] { 1, 2 }).ToMatrix(1, 2));
+            yield return new Variant(new ArrayOf<short>(new short[] { -3, 4 }).ToMatrix(1, 2));
+            yield return new Variant(new ArrayOf<ushort>(new ushort[] { 3, 4 }).ToMatrix(1, 2));
+            yield return new Variant(new ArrayOf<int>(new[] { -5, 6 }).ToMatrix(1, 2));
+            yield return new Variant(new ArrayOf<uint>(new uint[] { 5, 6 }).ToMatrix(1, 2));
+            yield return new Variant(new ArrayOf<long>(new long[] { -7, 8 }).ToMatrix(1, 2));
+            yield return new Variant(new ArrayOf<ulong>(new ulong[] { 7, 8 }).ToMatrix(1, 2));
+            yield return new Variant(new ArrayOf<float>(VariantFloatValues).ToMatrix(1, 2));
+            yield return new Variant(new ArrayOf<double>(new[] { -1.25d, -2.5d }).ToMatrix(1, 2));
+            yield return new Variant(new ArrayOf<string>(new string[] { "a", null! }).ToMatrix(1, 2));
+            yield return new Variant(new ArrayOf<DateTimeUtc>(new[] { new DateTimeUtc(11L), default }).ToMatrix(1, 2));
+            yield return new Variant(
+                new ArrayOf<Uuid>(new[] { new Uuid(Guid.Parse("11112222-3333-4444-5555-666677778888")), default }).ToMatrix(1, 2));
+            yield return new Variant(new ArrayOf<ByteString>(new[] { ByteString.From(1, 2), default }).ToMatrix(1, 2));
+            yield return new Variant(new ArrayOf<XmlElement>(new[] { XmlElement.From("<x/>"), default }).ToMatrix(1, 2));
+            yield return new Variant(new ArrayOf<NodeId>(new[] { new NodeId(1u, 1), NodeId.Null }).ToMatrix(1, 2));
+            yield return new Variant(
+                new ArrayOf<ExpandedNodeId>(new[] { new ExpandedNodeId(new NodeId(2u, 2), "urn:a", 3), ExpandedNodeId.Null })
+                    .ToMatrix(1, 2));
+            yield return new Variant(new ArrayOf<StatusCode>(new[] { new StatusCode(0x80340000), StatusCodes.Good }).ToMatrix(1, 2));
+            yield return new Variant(new ArrayOf<QualifiedName>(new[] { new QualifiedName("q", 1), QualifiedName.Null }).ToMatrix(1, 2));
+            yield return new Variant(new ArrayOf<LocalizedText>(new[] { new LocalizedText("en", "t"), LocalizedText.Null }).ToMatrix(1, 2));
+            yield return new Variant(
+                new ArrayOf<ExtensionObject>(
+                    new[] { new ExtensionObject(new ExpandedNodeId(new NodeId(1u, 2)), ByteString.From(3)), ExtensionObject.Null })
+                    .ToMatrix(1, 2));
         }
 
         /// <summary>
