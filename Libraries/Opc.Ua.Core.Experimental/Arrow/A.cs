@@ -45,6 +45,9 @@ namespace Opc.Ua
     internal static class A
     {
         private static readonly MemoryAllocator Alloc = MemoryAllocator.Default.Value;
+        private static readonly int[] DenseBinaryUnionTypeIds = [0, 1];
+        private const int VariantArrayCodeBase = 40;
+        private const int VariantMatrixCodeBase = 80;
 
         private static Field F(string n, IArrowType t, bool nullable = true)
         {
@@ -63,6 +66,17 @@ namespace Opc.Ua
         {
             var b = new ArrowBuffer.BitmapBuilder(length);
             b.AppendRange(valid, length);
+            return b.Build(Alloc);
+        }
+
+        private static ArrowBuffer V(ReadOnlySpan<bool> valid)
+        {
+            var b = new ArrowBuffer.BitmapBuilder(valid.Length);
+            foreach (bool value in valid)
+            {
+                b.Append(value);
+            }
+
             return b.Build(Alloc);
         }
 
@@ -493,6 +507,20 @@ namespace Opc.Ua
 #pragma warning restore CA2000
         }
 
+        private static Slot StructMany(List<Slot> children, List<string> names, ReadOnlyMemory<bool> valid)
+        {
+            var fields = children.Select((c, i) => c.Field(names[i])).ToList();
+            var t = new StructType(fields);
+            int nullCount = valid.Span.ToArray().Count(v => !v);
+#pragma warning disable CA2000 // Justification: the Arrow array is handed off to Slot and disposed with the RecordBatch.
+
+            return new(
+                F(string.Empty, t),
+                new StructArray(t, valid.Length, children.Select(c => c.Array), V(valid.Span), nullCount, 0)
+            );
+#pragma warning restore CA2000
+        }
+
         /// <summary>
         /// Creates a dense Arrow union slot with the selected child branch.
         /// </summary>
@@ -532,24 +560,133 @@ namespace Opc.Ua
                 return Union(0, new() { Null() }, new() { "null" });
             }
 
-            if (v.TypeInfo.IsMatrix && v.TypeInfo.BuiltInType == BuiltInType.Int32)
+            BuiltInType type = v.TypeInfo.BuiltInType;
+            if (!IsVariantBodyType(type))
             {
-                return Union(
-                    21,
-                    new() { Null(), Matrix(v.GetInt32Matrix(), I32Many) },
-                    new() { "null", "matrix_int32" }
-                );
+                throw new NotSupportedException($"Arrow Variant branch '{v.TypeInfo}' is not supported yet.");
             }
 
-            object? x = v.AsBoxedObject(Opc.Ua.Variant.BoxingBehavior.None);
-            return x switch
+            if (v.TypeInfo.IsScalar)
             {
-                int i => Union(6, new() { Null(), I32(i) }, new() { "null", "int32" }),
-                string s => Union(12, new() { Null(), Str(s) }, new() { "null", "string" }),
-                ExtensionObject e => Union(17, new() { Null(), Extension(e) }, new() { "null", "extensionobject" }),
-                DataValue d => Union(18, new() { Null(), DataValue(d) }, new() { "null", "datavalue" }),
-                MatrixOf<int> m => Union(21, new() { Null(), Matrix(m, I32Many) }, new() { "null", "matrix_int32" }),
-                _ => throw new NotSupportedException($"Arrow Variant branch '{v.TypeInfo}' is not supported yet."),
+                return VariantBranch((int)type, ScalarVariantSlot(v, type), "scalar", type);
+            }
+
+            if (v.TypeInfo.IsArray)
+            {
+                return VariantBranch(VariantArrayCodeBase + (int)type, ArrayVariantSlot(v, type), "array", type);
+            }
+
+            if (v.TypeInfo.IsMatrix)
+            {
+                return VariantBranch(VariantMatrixCodeBase + (int)type, MatrixVariantSlot(v, type), "matrix", type);
+            }
+
+            throw new NotSupportedException($"Arrow Variant branch '{v.TypeInfo}' is not supported yet.");
+        }
+
+        private static bool IsVariantBodyType(BuiltInType type)
+        {
+            return type >= BuiltInType.Boolean && type <= BuiltInType.ExtensionObject;
+        }
+
+        private static Slot VariantBranch(int selected, Slot value, string shape, BuiltInType type)
+        {
+            // Dense-union type ids are int8. Variant uses: null=0; scalar=built-in id
+            // (1..22); array=40+built-in id (41..62); matrix=80+built-in id (81..102).
+            return Union(
+                selected,
+                new() { Null(), value },
+                new() { "null", string.Create(CultureInfo.InvariantCulture, $"{shape}_{type}") }
+            );
+        }
+
+        private static Slot ScalarVariantSlot(Variant value, BuiltInType type)
+        {
+            return type switch
+            {
+                BuiltInType.Boolean => Bool(value.GetBoolean()),
+                BuiltInType.SByte => I8(value.GetSByte()),
+                BuiltInType.Byte => U8(value.GetByte()),
+                BuiltInType.Int16 => I16(value.GetInt16()),
+                BuiltInType.UInt16 => U16(value.GetUInt16()),
+                BuiltInType.Int32 => I32(value.GetInt32()),
+                BuiltInType.UInt32 => U32(value.GetUInt32()),
+                BuiltInType.Int64 => I64(value.GetInt64()),
+                BuiltInType.UInt64 => U64(value.GetUInt64()),
+                BuiltInType.Float => F32(value.GetFloat()),
+                BuiltInType.Double => F64(value.GetDouble()),
+                BuiltInType.String => Str(value.GetString()),
+                BuiltInType.DateTime => DateTime(value.GetDateTime()),
+                BuiltInType.Guid => Guid(value.GetGuid()),
+                BuiltInType.ByteString => Bytes(value.GetByteString()),
+                BuiltInType.XmlElement => Str(value.GetXmlElement().OuterXml),
+                BuiltInType.NodeId => NodeId(value.GetNodeId()),
+                BuiltInType.ExpandedNodeId => ExpandedNodeId(value.GetExpandedNodeId()),
+                BuiltInType.StatusCode => Status(value.GetStatusCode()),
+                BuiltInType.QualifiedName => QualifiedName(value.GetQualifiedName()),
+                BuiltInType.LocalizedText => LocalizedText(value.GetLocalizedText()),
+                BuiltInType.ExtensionObject => Extension(value.GetExtensionObject()),
+                _ => throw new NotSupportedException($"Variant scalar {type} is not supported by the Arrow encoder."),
+            };
+        }
+
+        private static Slot ArrayVariantSlot(Variant value, BuiltInType type)
+        {
+            return type switch
+            {
+                BuiltInType.Boolean => List(value.GetBooleanArray(), BoolMany),
+                BuiltInType.SByte => List(value.GetSByteArray(), I8Many),
+                BuiltInType.Byte => List(value.GetByteArray(), U8Many),
+                BuiltInType.Int16 => List(value.GetInt16Array(), I16Many),
+                BuiltInType.UInt16 => List(value.GetUInt16Array(), U16Many),
+                BuiltInType.Int32 => List(value.GetInt32Array(), I32Many),
+                BuiltInType.UInt32 => List(value.GetUInt32Array(), U32Many),
+                BuiltInType.Int64 => List(value.GetInt64Array(), I64Many),
+                BuiltInType.UInt64 => List(value.GetUInt64Array(), U64Many),
+                BuiltInType.Float => List(value.GetFloatArray(), F32Many),
+                BuiltInType.Double => List(value.GetDoubleArray(), F64Many),
+                BuiltInType.String => List(value.GetStringArray(), StrMany),
+                BuiltInType.DateTime => List(value.GetDateTimeArray(), DateTimeMany),
+                BuiltInType.Guid => List(value.GetGuidArray(), GuidMany),
+                BuiltInType.ByteString => List(value.GetByteStringArray(), BytesMany),
+                BuiltInType.XmlElement => List(value.GetXmlElementArray(), XmlMany),
+                BuiltInType.NodeId => List(value.GetNodeIdArray(), NodeIdManySlot),
+                BuiltInType.ExpandedNodeId => List(value.GetExpandedNodeIdArray(), ExpandedNodeIdManySlot),
+                BuiltInType.StatusCode => List(value.GetStatusCodeArray(), StatusManySlot),
+                BuiltInType.QualifiedName => List(value.GetQualifiedNameArray(), QualifiedNameManySlot),
+                BuiltInType.LocalizedText => List(value.GetLocalizedTextArray(), LocalizedTextManySlot),
+                BuiltInType.ExtensionObject => List(value.GetExtensionObjectArray(), ExtensionManySlot),
+                _ => throw new NotSupportedException($"Variant array {type} is not supported by the Arrow encoder."),
+            };
+        }
+
+        private static Slot MatrixVariantSlot(Variant value, BuiltInType type)
+        {
+            return type switch
+            {
+                BuiltInType.Boolean => Matrix(value.GetBooleanMatrix(), BoolMany),
+                BuiltInType.SByte => Matrix(value.GetSByteMatrix(), I8Many),
+                BuiltInType.Byte => Matrix(value.GetByteMatrix(), U8Many),
+                BuiltInType.Int16 => Matrix(value.GetInt16Matrix(), I16Many),
+                BuiltInType.UInt16 => Matrix(value.GetUInt16Matrix(), U16Many),
+                BuiltInType.Int32 => Matrix(value.GetInt32Matrix(), I32Many),
+                BuiltInType.UInt32 => Matrix(value.GetUInt32Matrix(), U32Many),
+                BuiltInType.Int64 => Matrix(value.GetInt64Matrix(), I64Many),
+                BuiltInType.UInt64 => Matrix(value.GetUInt64Matrix(), U64Many),
+                BuiltInType.Float => Matrix(value.GetFloatMatrix(), F32Many),
+                BuiltInType.Double => Matrix(value.GetDoubleMatrix(), F64Many),
+                BuiltInType.String => Matrix(value.GetStringMatrix(), StrMany),
+                BuiltInType.DateTime => Matrix(value.GetDateTimeMatrix(), DateTimeMany),
+                BuiltInType.Guid => Matrix(value.GetGuidMatrix(), GuidMany),
+                BuiltInType.ByteString => Matrix(value.GetByteStringMatrix(), BytesMany),
+                BuiltInType.XmlElement => Matrix(value.GetXmlElementMatrix(), XmlMany),
+                BuiltInType.NodeId => Matrix(value.GetNodeIdMatrix(), NodeIdManySlot),
+                BuiltInType.ExpandedNodeId => Matrix(value.GetExpandedNodeIdMatrix(), ExpandedNodeIdManySlot),
+                BuiltInType.StatusCode => Matrix(value.GetStatusCodeMatrix(), StatusManySlot),
+                BuiltInType.QualifiedName => Matrix(value.GetQualifiedNameMatrix(), QualifiedNameManySlot),
+                BuiltInType.LocalizedText => Matrix(value.GetLocalizedTextMatrix(), LocalizedTextManySlot),
+                BuiltInType.ExtensionObject => Matrix(value.GetExtensionObjectMatrix(), ExtensionManySlot),
+                _ => throw new NotSupportedException($"Variant matrix {type} is not supported by the Arrow encoder."),
             };
         }
 
@@ -856,6 +993,158 @@ namespace Opc.Ua
             return new(F(string.Empty, BinaryType.Default), b.Build(Alloc));
         }
 
+        private static Slot XmlMany(ReadOnlyMemory<XmlElement> v)
+        {
+            string[] values = new string[v.Length];
+            for (int ii = 0; ii < v.Length; ii++)
+            {
+                values[ii] = v.Span[ii].OuterXml!;
+            }
+
+            return StrMany(values);
+        }
+
+        private static Slot StatusManySlot(ReadOnlyMemory<StatusCode> v)
+        {
+            uint[] values = new uint[v.Length];
+            for (int ii = 0; ii < v.Length; ii++)
+            {
+                values[ii] = v.Span[ii].Code;
+            }
+
+            return U32Many(values);
+        }
+
+        private static Slot NodeIdManySlot(ReadOnlyMemory<NodeId> v)
+        {
+            ushort[] namespaces = new ushort[v.Length];
+            byte[] types = new byte[v.Length];
+            uint[] numeric = new uint[v.Length];
+            string[] strings = new string[v.Length];
+            Uuid[] guids = new Uuid[v.Length];
+            ByteString[] opaque = new ByteString[v.Length];
+            bool[] valid = new bool[v.Length];
+            for (int ii = 0; ii < v.Length; ii++)
+            {
+                NodeId x = v.Span[ii];
+                valid[ii] = !x.IsNull;
+                namespaces[ii] = x.NamespaceIndex;
+                types[ii] = x.IsNull ? (byte)0 : (byte)x.IdType;
+                numeric[ii] = !x.IsNull && x.TryGetValue(out uint numericIdentifier) ? numericIdentifier : 0;
+                strings[ii] = !x.IsNull && x.TryGetValue(out string stringIdentifier) ? stringIdentifier : null!;
+                guids[ii] = !x.IsNull && x.TryGetValue(out Guid guidIdentifier) ? new Uuid(guidIdentifier) : default;
+                opaque[ii] = !x.IsNull && x.TryGetValue(out ByteString opaqueIdentifier) ? opaqueIdentifier : default;
+            }
+
+            return StructMany(
+                new() { U16Many(namespaces), U8Many(types), U32Many(numeric), StrMany(strings), GuidMany(guids), BytesMany(opaque) },
+                new() { "namespace", "id_type", "numeric", "string", "guid", "opaque" },
+                valid
+            );
+        }
+
+        private static Slot ExpandedNodeIdManySlot(ReadOnlyMemory<ExpandedNodeId> v)
+        {
+            NodeId[] nodeIds = new NodeId[v.Length];
+            string[] namespaceUris = new string[v.Length];
+            uint[] serverIndexes = new uint[v.Length];
+            bool[] valid = new bool[v.Length];
+            for (int ii = 0; ii < v.Length; ii++)
+            {
+                ExpandedNodeId x = v.Span[ii];
+                valid[ii] = !x.IsNull;
+                nodeIds[ii] = x.InnerNodeId;
+                namespaceUris[ii] = x.NamespaceUri!;
+                serverIndexes[ii] = x.ServerIndex;
+            }
+
+            return StructMany(
+                new() { NodeIdManySlot(nodeIds), StrMany(namespaceUris), U32Many(serverIndexes) },
+                new() { "node_id", "namespace_uri", "server_index" },
+                valid
+            );
+        }
+
+        private static Slot QualifiedNameManySlot(ReadOnlyMemory<QualifiedName> v)
+        {
+            ushort[] namespaces = new ushort[v.Length];
+            string[] names = new string[v.Length];
+            bool[] valid = new bool[v.Length];
+            for (int ii = 0; ii < v.Length; ii++)
+            {
+                QualifiedName x = v.Span[ii];
+                valid[ii] = !x.IsNull;
+                namespaces[ii] = x.NamespaceIndex;
+                names[ii] = x.Name!;
+            }
+
+            return StructMany(new() { U16Many(namespaces), StrMany(names) }, new() { "namespace", "name" }, valid);
+        }
+
+        private static Slot LocalizedTextManySlot(ReadOnlyMemory<LocalizedText> v)
+        {
+            string[] locales = new string[v.Length];
+            string[] texts = new string[v.Length];
+            bool[] valid = new bool[v.Length];
+            for (int ii = 0; ii < v.Length; ii++)
+            {
+                LocalizedText x = v.Span[ii];
+                valid[ii] = !x.IsNull;
+                locales[ii] = x.Locale!;
+                texts[ii] = x.Text!;
+            }
+
+            return StructMany(new() { StrMany(locales), StrMany(texts) }, new() { "locale", "text" }, valid);
+        }
+
+        private static Slot ExtensionManySlot(ReadOnlyMemory<ExtensionObject> v)
+        {
+            ExpandedNodeId[] typeIds = new ExpandedNodeId[v.Length];
+            byte[] bodyTypeIds = new byte[v.Length];
+            int[] bodyOffsets = new int[v.Length];
+            var binaryBodies = new BinaryArray.Builder();
+            int nullOffset = 0;
+            int binaryOffset = 0;
+            bool[] valid = new bool[v.Length];
+            for (int ii = 0; ii < v.Length; ii++)
+            {
+                ExtensionObject x = v.Span[ii];
+                valid[ii] = !x.IsNull;
+                typeIds[ii] = x.TypeId;
+                if (!x.IsNull && x.TryGetAsBinary(out ByteString body))
+                {
+                    bodyTypeIds[ii] = 1;
+                    bodyOffsets[ii] = binaryOffset++;
+                    binaryBodies.Append(body.Span);
+                }
+                else
+                {
+                    bodyTypeIds[ii] = 0;
+                    bodyOffsets[ii] = nullOffset++;
+                }
+            }
+
+            var fields = new[] { Null().Field("null"), F("binary", BinaryType.Default) };
+            var unionType = new UnionType(fields, DenseBinaryUnionTypeIds, UnionMode.Dense);
+#pragma warning disable CA2000 // Justification: the Arrow array is handed off to Slot and disposed with the RecordBatch.
+
+            var bodyUnion = new Slot(
+                F(string.Empty, unionType),
+                new DenseUnionArray(
+                    unionType,
+                    v.Length,
+                    new IArrowArray[] { new NullArray(nullOffset), binaryBodies.Build(Alloc) },
+                    B(bodyTypeIds),
+                    B(bodyOffsets),
+                    0,
+                    0
+                )
+            );
+#pragma warning restore CA2000
+
+            return StructMany(new() { ExpandedNodeIdManySlot(typeIds), bodyUnion }, new() { "type_id", "body" }, valid);
+        }
+
         /// <inheritdoc/>
         public static Uuid ReadGuid(IArrowArray a, int i)
         {
@@ -990,23 +1279,133 @@ namespace Opc.Ua
             var u = (DenseUnionArray)a;
             int code = u.TypeIds[i];
             int off = u.ValueOffsets[i];
-            return code switch
+            if (code == 0)
             {
-                0 => Opc.Ua.Variant.Null,
-                6 => new Opc.Ua.Variant(((Int32Array)u.Fields[1]).GetValue(off) ?? 0),
-                12 => new Opc.Ua.Variant(((StringArray)u.Fields[1]).GetString(off)),
-                17 => new Opc.Ua.Variant(ReadExtension(u.Fields[1], off)),
-                18 => new Opc.Ua.Variant(ReadDataValue(u.Fields[1], off)),
-                21 => new Opc.Ua.Variant(ReadMatrixInt32(u.Fields[1], off)),
-                _ => throw new NotSupportedException($"Unknown Variant union code {code}."),
+                return Opc.Ua.Variant.Null;
+            }
+
+            if (code >= (int)BuiltInType.Boolean && code <= (int)BuiltInType.ExtensionObject)
+            {
+                return ReadScalarVariant((BuiltInType)code, u.Fields[1], off);
+            }
+
+            if (code > VariantArrayCodeBase && code <= VariantArrayCodeBase + (int)BuiltInType.ExtensionObject)
+            {
+                return ReadArrayVariant((BuiltInType)(code - VariantArrayCodeBase), u.Fields[1]);
+            }
+
+            if (code > VariantMatrixCodeBase && code <= VariantMatrixCodeBase + (int)BuiltInType.ExtensionObject)
+            {
+                return ReadMatrixVariant((BuiltInType)(code - VariantMatrixCodeBase), u.Fields[1], off);
+            }
+
+            throw new NotSupportedException($"Unknown Variant union code {code}.");
+        }
+
+        private static Opc.Ua.Variant ReadScalarVariant(BuiltInType type, IArrowArray a, int i)
+        {
+            return type switch
+            {
+                BuiltInType.Boolean => new Opc.Ua.Variant(((BooleanArray)a).GetValue(i) ?? false),
+                BuiltInType.SByte => new Opc.Ua.Variant(((Int8Array)a).GetValue(i) ?? 0),
+                BuiltInType.Byte => new Opc.Ua.Variant(((UInt8Array)a).GetValue(i) ?? 0),
+                BuiltInType.Int16 => new Opc.Ua.Variant(((Int16Array)a).GetValue(i) ?? 0),
+                BuiltInType.UInt16 => new Opc.Ua.Variant(((UInt16Array)a).GetValue(i) ?? 0),
+                BuiltInType.Int32 => new Opc.Ua.Variant(((Int32Array)a).GetValue(i) ?? 0),
+                BuiltInType.UInt32 => new Opc.Ua.Variant(((UInt32Array)a).GetValue(i) ?? 0),
+                BuiltInType.Int64 => new Opc.Ua.Variant(((Int64Array)a).GetValue(i) ?? 0),
+                BuiltInType.UInt64 => new Opc.Ua.Variant(((UInt64Array)a).GetValue(i) ?? 0),
+                BuiltInType.Float => new Opc.Ua.Variant(((FloatArray)a).GetValue(i) ?? 0),
+                BuiltInType.Double => new Opc.Ua.Variant(((DoubleArray)a).GetValue(i) ?? 0),
+                BuiltInType.String => new Opc.Ua.Variant(((StringArray)a).GetString(i)),
+                BuiltInType.DateTime => new Opc.Ua.Variant(((Int64Array)a).IsNull(i) ? default : new DateTimeUtc(((Int64Array)a).GetValue(i) ?? 0)),
+                BuiltInType.Guid => new Opc.Ua.Variant(ReadGuid(a, i)),
+                BuiltInType.ByteString => new Opc.Ua.Variant(ReadBytes(a, i)),
+                BuiltInType.XmlElement => new Opc.Ua.Variant(((StringArray)a).IsNull(i) ? default : (XmlElement)((StringArray)a).GetString(i)),
+                BuiltInType.NodeId => new Opc.Ua.Variant(ReadNodeId(a, i)),
+                BuiltInType.ExpandedNodeId => new Opc.Ua.Variant(ReadExpandedNodeId(a, i)),
+                BuiltInType.StatusCode => new Opc.Ua.Variant(new StatusCode(((UInt32Array)a).GetValue(i) ?? 0)),
+                BuiltInType.QualifiedName => new Opc.Ua.Variant(ReadQualifiedName(a, i)),
+                BuiltInType.LocalizedText => new Opc.Ua.Variant(ReadLocalizedText(a, i)),
+                BuiltInType.ExtensionObject => new Opc.Ua.Variant(ReadExtension(a, i)),
+                _ => throw new NotSupportedException($"Variant scalar {type} is not supported by the Arrow decoder."),
             };
         }
 
-        private static MatrixOf<int> ReadMatrixInt32(IArrowArray a, int i)
+        private static Opc.Ua.Variant ReadArrayVariant(BuiltInType type, IArrowArray a)
+        {
+            return type switch
+            {
+                BuiltInType.Boolean => new Opc.Ua.Variant(ReadList((null!, a), ReadBoolMany)),
+                BuiltInType.SByte => new Opc.Ua.Variant(ReadList((null!, a), ReadI8Many)),
+                BuiltInType.Byte => new Opc.Ua.Variant(ReadList((null!, a), ReadU8Many)),
+                BuiltInType.Int16 => new Opc.Ua.Variant(ReadList((null!, a), ReadI16Many)),
+                BuiltInType.UInt16 => new Opc.Ua.Variant(ReadList((null!, a), ReadU16Many)),
+                BuiltInType.Int32 => new Opc.Ua.Variant(ReadList((null!, a), ReadI32Many)),
+                BuiltInType.UInt32 => new Opc.Ua.Variant(ReadList((null!, a), ReadU32Many)),
+                BuiltInType.Int64 => new Opc.Ua.Variant(ReadList((null!, a), ReadI64Many)),
+                BuiltInType.UInt64 => new Opc.Ua.Variant(ReadList((null!, a), ReadU64Many)),
+                BuiltInType.Float => new Opc.Ua.Variant(ReadList((null!, a), ReadF32Many)),
+                BuiltInType.Double => new Opc.Ua.Variant(ReadList((null!, a), ReadF64Many)),
+                BuiltInType.String => new Opc.Ua.Variant(ReadList((null!, a), ReadStrMany).ConvertAll(value => value!)),
+                BuiltInType.DateTime => new Opc.Ua.Variant(ReadList((null!, a), ReadDateTimeMany)),
+                BuiltInType.Guid => new Opc.Ua.Variant(ReadList((null!, a), ReadGuidMany)),
+                BuiltInType.ByteString => new Opc.Ua.Variant(ReadList((null!, a), ReadBytesMany)),
+                BuiltInType.XmlElement => new Opc.Ua.Variant(
+                    ReadList((null!, a), ReadStrMany).ConvertAll(value => value == null ? default : (XmlElement)value)
+                ),
+                BuiltInType.NodeId => new Opc.Ua.Variant(ReadList((null!, a), ReadNodeIdMany)),
+                BuiltInType.ExpandedNodeId => new Opc.Ua.Variant(ReadList((null!, a), ReadExpandedNodeIdMany)),
+                BuiltInType.StatusCode => new Opc.Ua.Variant(ReadList((null!, a), ReadStatusMany)),
+                BuiltInType.QualifiedName => new Opc.Ua.Variant(ReadList((null!, a), ReadQualifiedNameMany)),
+                BuiltInType.LocalizedText => new Opc.Ua.Variant(ReadList((null!, a), ReadLocalizedTextMany)),
+                BuiltInType.ExtensionObject => new Opc.Ua.Variant(ReadList((null!, a), ReadExtensionMany)),
+                _ => throw new NotSupportedException($"Variant array {type} is not supported by the Arrow decoder."),
+            };
+        }
+
+        private static Opc.Ua.Variant ReadMatrixVariant(BuiltInType type, IArrowArray a, int i)
+        {
+            return type switch
+            {
+                BuiltInType.Boolean => new Opc.Ua.Variant(ReadMatrix(a, i, ReadBoolMany)),
+                BuiltInType.SByte => new Opc.Ua.Variant(ReadMatrix(a, i, ReadI8Many)),
+                BuiltInType.Byte => new Opc.Ua.Variant(ReadMatrix(a, i, ReadU8Many)),
+                BuiltInType.Int16 => new Opc.Ua.Variant(ReadMatrix(a, i, ReadI16Many)),
+                BuiltInType.UInt16 => new Opc.Ua.Variant(ReadMatrix(a, i, ReadU16Many)),
+                BuiltInType.Int32 => new Opc.Ua.Variant(ReadMatrix(a, i, ReadI32Many)),
+                BuiltInType.UInt32 => new Opc.Ua.Variant(ReadMatrix(a, i, ReadU32Many)),
+                BuiltInType.Int64 => new Opc.Ua.Variant(ReadMatrix(a, i, ReadI64Many)),
+                BuiltInType.UInt64 => new Opc.Ua.Variant(ReadMatrix(a, i, ReadU64Many)),
+                BuiltInType.Float => new Opc.Ua.Variant(ReadMatrix(a, i, ReadF32Many)),
+                BuiltInType.Double => new Opc.Ua.Variant(ReadMatrix(a, i, ReadF64Many)),
+                BuiltInType.String => new Opc.Ua.Variant(ReadMatrix(a, i, ReadStrMany).ConvertAll(value => value!)),
+                BuiltInType.DateTime => new Opc.Ua.Variant(ReadMatrix(a, i, ReadDateTimeMany)),
+                BuiltInType.Guid => new Opc.Ua.Variant(ReadMatrix(a, i, ReadGuidMany)),
+                BuiltInType.ByteString => new Opc.Ua.Variant(ReadMatrix(a, i, ReadBytesMany)),
+                BuiltInType.XmlElement => new Opc.Ua.Variant(
+                    ReadMatrix(a, i, ReadStrMany).ConvertAll(value => value == null ? default : (XmlElement)value)
+                ),
+                BuiltInType.NodeId => new Opc.Ua.Variant(ReadMatrix(a, i, ReadNodeIdMany)),
+                BuiltInType.ExpandedNodeId => new Opc.Ua.Variant(ReadMatrix(a, i, ReadExpandedNodeIdMany)),
+                BuiltInType.StatusCode => new Opc.Ua.Variant(ReadMatrix(a, i, ReadStatusMany)),
+                BuiltInType.QualifiedName => new Opc.Ua.Variant(ReadMatrix(a, i, ReadQualifiedNameMany)),
+                BuiltInType.LocalizedText => new Opc.Ua.Variant(ReadMatrix(a, i, ReadLocalizedTextMany)),
+                BuiltInType.ExtensionObject => new Opc.Ua.Variant(ReadMatrix(a, i, ReadExtensionMany)),
+                _ => throw new NotSupportedException($"Variant matrix {type} is not supported by the Arrow decoder."),
+            };
+        }
+
+        private static MatrixOf<T> ReadMatrix<T>(IArrowArray a, int i, Func<IArrowArray, int, int, T[]> read)
         {
             var s = (StructArray)a;
-            var dims = ReadList((null!, s.Fields[0]), ReadI32Many);
-            var vals = ReadList((null!, s.Fields[1]), ReadI32Many);
+            if (s.IsNull(i))
+            {
+                return default;
+            }
+
+            var dims = ReadListAt((null!, s.Fields[0]), i, ReadI32Many);
+            var vals = ReadListAt((null!, s.Fields[1]), i, read);
             return vals.ToMatrix(dims);
         }
 
@@ -1019,13 +1418,18 @@ namespace Opc.Ua
         /// <returns>The decoded OPC UA array.</returns>
         public static ArrayOf<T> ReadList<T>((Field Field, IArrowArray Array) c, Func<IArrowArray, int, int, T[]> read)
         {
+            return ReadListAt(c, 0, read);
+        }
+
+        private static ArrayOf<T> ReadListAt<T>((Field Field, IArrowArray Array) c, int index, Func<IArrowArray, int, int, T[]> read)
+        {
             var l = (ListArray)c.Array;
-            if (l.IsNull(0))
+            if (l.IsNull(index))
             {
                 return ArrayOf<T>.Null;
             }
 
-            return new ArrayOf<T>(read(l.Values, l.ValueOffsets[0], l.ValueOffsets[1] - l.ValueOffsets[0]));
+            return new ArrayOf<T>(read(l.Values, l.ValueOffsets[index], l.ValueOffsets[index + 1] - l.ValueOffsets[index]));
         }
 
         /// <summary>
