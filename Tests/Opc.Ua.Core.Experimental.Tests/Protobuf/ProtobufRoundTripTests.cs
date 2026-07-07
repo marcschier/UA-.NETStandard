@@ -28,6 +28,7 @@
  * ======================================================================*/
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using Opc.Ua;
@@ -172,6 +173,141 @@ namespace Opc.Ua.Core.Tests
             byte[] bytes = Encode(e => e.WriteVariant("v", value));
             var decoded = new ProtobufDecoder(bytes, Context).ReadVariant("v");
             Assert.That(decoded.GetUInt64(), Is.EqualTo(ulong.MaxValue));
+        }
+
+        [TestCaseSource(nameof(VariantBodyRoundTripCases))]
+        public void VariantBodiesRoundTrip(Variant value)
+        {
+            Variant decoded = RoundTripVariant(value);
+            AssertVariantEqual(decoded, value);
+        }
+
+        private static IEnumerable<TestCaseData> VariantBodyRoundTripCases
+        {
+            get
+            {
+                DateTimeUtc firstDate = new DateTimeUtc(new DateTime(2024, 1, 2, 3, 4, 5, DateTimeKind.Utc));
+                DateTimeUtc secondDate = new DateTimeUtc(new DateTime(2025, 6, 7, 8, 9, 10, DateTimeKind.Utc));
+                Uuid firstGuid = new Uuid(Guid.Parse("00112233-4455-6677-8899-aabbccddeeff"));
+                Uuid secondGuid = new Uuid(Guid.Parse("10213243-5465-7687-98a9-bacbdcedfe0f"));
+                NodeId firstNode = new NodeId("node-a", 2);
+                NodeId secondNode = new NodeId(123u, 3);
+                StatusCode firstStatus = StatusCodes.Good;
+                StatusCode secondStatus = StatusCodes.BadUnexpectedError;
+
+                foreach (Variant value in CreateVariantBodyCases(true, false, true, false, Variant.From, Variant.From, Variant.From))
+                {
+                    yield return new TestCaseData(value).SetName("VariantBodiesRoundTrip_Boolean_" + value.TypeInfo.ValueRank);
+                }
+
+                foreach (Variant value in CreateVariantBodyCases(1, 2, 3, 4, Variant.From, Variant.From, Variant.From))
+                {
+                    yield return new TestCaseData(value).SetName("VariantBodiesRoundTrip_Int32_" + value.TypeInfo.ValueRank);
+                }
+
+                foreach (Variant value in CreateVariantBodyCases(1L, 2L, 3L, 4L, Variant.From, Variant.From, Variant.From))
+                {
+                    yield return new TestCaseData(value).SetName("VariantBodiesRoundTrip_Int64_" + value.TypeInfo.ValueRank);
+                }
+
+                foreach (Variant value in CreateVariantBodyCases(1.25d, 2.5d, 3.75d, 4.0d, Variant.From, Variant.From, Variant.From))
+                {
+                    yield return new TestCaseData(value).SetName("VariantBodiesRoundTrip_Double_" + value.TypeInfo.ValueRank);
+                }
+
+                yield return new TestCaseData(Variant.From("scalar")).SetName("VariantBodiesRoundTrip_String_Scalar");
+                yield return new TestCaseData(Variant.From(ArrayOf.Wrapped("alpha", null!, "omega")))
+                    .SetName("VariantBodiesRoundTrip_String_ArrayWithNull");
+                yield return new TestCaseData(Variant.From(ArrayOf.Wrapped("a", "b", "c", "d").ToMatrix([2, 2])))
+                    .SetName("VariantBodiesRoundTrip_String_Matrix");
+
+                foreach (Variant value in CreateVariantBodyCases(
+                    firstDate,
+                    secondDate,
+                    firstDate,
+                    secondDate,
+                    Variant.From,
+                    Variant.From,
+                    Variant.From))
+                {
+                    yield return new TestCaseData(value).SetName("VariantBodiesRoundTrip_DateTime_" + value.TypeInfo.ValueRank);
+                }
+
+                foreach (Variant value in CreateVariantBodyCases(
+                    firstGuid,
+                    secondGuid,
+                    firstGuid,
+                    secondGuid,
+                    Variant.From,
+                    Variant.From,
+                    Variant.From))
+                {
+                    yield return new TestCaseData(value).SetName("VariantBodiesRoundTrip_Guid_" + value.TypeInfo.ValueRank);
+                }
+
+                foreach (Variant value in CreateVariantBodyCases(
+                    ByteString.From(1, 2),
+                    ByteString.From(3, 4),
+                    ByteString.From(5, 6),
+                    ByteString.From(7, 8),
+                    Variant.From,
+                    Variant.From,
+                    Variant.From))
+                {
+                    yield return new TestCaseData(value).SetName("VariantBodiesRoundTrip_ByteString_" + value.TypeInfo.ValueRank);
+                }
+
+                foreach (Variant value in CreateVariantBodyCases(
+                    firstNode,
+                    secondNode,
+                    firstNode,
+                    secondNode,
+                    Variant.From,
+                    Variant.From,
+                    Variant.From))
+                {
+                    yield return new TestCaseData(value).SetName("VariantBodiesRoundTrip_NodeId_" + value.TypeInfo.ValueRank);
+                }
+
+                foreach (Variant value in CreateVariantBodyCases(
+                    firstStatus,
+                    secondStatus,
+                    firstStatus,
+                    secondStatus,
+                    Variant.From,
+                    Variant.From,
+                    Variant.From))
+                {
+                    yield return new TestCaseData(value).SetName("VariantBodiesRoundTrip_StatusCode_" + value.TypeInfo.ValueRank);
+                }
+            }
+        }
+
+        private static IEnumerable<Variant> CreateVariantBodyCases<T>(
+            T scalar,
+            T arraySecond,
+            T matrixThird,
+            T matrixFourth,
+            Func<T, Variant> fromScalar,
+            Func<ArrayOf<T>, Variant> fromArray,
+            Func<MatrixOf<T>, Variant> fromMatrix)
+        {
+            yield return fromScalar(scalar);
+            yield return fromArray(ArrayOf.Wrapped(scalar, arraySecond));
+            yield return fromMatrix(ArrayOf.Wrapped(scalar, arraySecond, matrixThird, matrixFourth).ToMatrix([2, 2]));
+        }
+
+        private static Variant RoundTripVariant(Variant value)
+        {
+            byte[] bytes = Encode(e => e.WriteVariant("v", value));
+            return new ProtobufDecoder(bytes, Context).ReadVariant("v");
+        }
+
+        private static void AssertVariantEqual(Variant decoded, Variant expected)
+        {
+            Assert.That(decoded.TypeInfo, Is.EqualTo(expected.TypeInfo));
+            Assert.That(decoded.AsBoxedObject(Variant.BoxingBehavior.None), Is.EqualTo(
+                expected.AsBoxedObject(Variant.BoxingBehavior.None)));
         }
 
         /// <summary>

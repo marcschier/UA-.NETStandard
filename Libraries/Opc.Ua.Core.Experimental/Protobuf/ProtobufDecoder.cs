@@ -786,6 +786,28 @@ namespace Opc.Ua
             return new NodeId(encodeableTypeId, ns);
         }
 
+        private static ExpandedNodeId DecodeExpandedNodeId(ProtoMessage m)
+        {
+            NodeId n = m.First(1) is var nf && nf.HasValue ? DecodeNodeId(Proto.Parse(nf.Value.Bytes)) : NodeId.Null;
+            string? uri = m.First(2) is var uf && uf.HasValue ? Proto.String(uf.Value.Bytes) : null;
+            uint si = m.First(3) is var sf && sf.HasValue ? (uint)sf.Value.Varint : 0;
+            return new ExpandedNodeId(n, uri, si);
+        }
+
+        private static QualifiedName DecodeQualifiedName(ProtoMessage m)
+        {
+            ushort ns = m.First(1) is var nf && nf.HasValue ? (ushort)nf.Value.Varint : (ushort)0;
+            string? name = m.First(2) is var sf && sf.HasValue ? Proto.String(sf.Value.Bytes) : null;
+            return new QualifiedName(name, ns);
+        }
+
+        private static LocalizedText DecodeLocalizedText(ProtoMessage m)
+        {
+            string? loc = m.First(1) is var lf && lf.HasValue ? Proto.String(lf.Value.Bytes) : null;
+            string? text = m.First(2) is var tf && tf.HasValue ? Proto.String(tf.Value.Bytes) : null;
+            return new LocalizedText(loc, text);
+        }
+
         private DiagnosticInfo DecodeDiagnosticInfo(ProtoMessage m)
         {
             return new DiagnosticInfo
@@ -838,14 +860,127 @@ namespace Opc.Ua
             }
 
             var t = (BuiltInType)m.First(1)!.Value.Varint;
-            var payload = m.First(2) ?? m.First(3) ?? m.First(4);
-            if (!payload.HasValue)
+            var scalar = m.First(2);
+            if (scalar.HasValue)
             {
-                return Variant.Null;
+                return DecodeScalarVariant(t, Proto.Parse(scalar.Value.Bytes));
             }
 
-            var inner = Proto.Parse(payload.Value.Bytes);
-            object? value = DecodeObjectFromField1(t, inner.First(1) ?? default);
+            var array = m.First(3);
+            if (array.HasValue)
+            {
+                return DecodeArrayVariant(t, Proto.Parse(array.Value.Bytes));
+            }
+
+            var matrix = m.First(4);
+            if (matrix.HasValue)
+            {
+                return DecodeMatrixVariant(t, Proto.Parse(matrix.Value.Bytes));
+            }
+
+            return Variant.Null;
+        }
+
+        private Variant DecodeScalarVariant(BuiltInType type, ProtoMessage message)
+        {
+            object? value = DecodeObjectFromField1(type, message.First(1) ?? default);
+            return ToVariant(type, value);
+        }
+
+        private Variant DecodeArrayVariant(BuiltInType type, ProtoMessage message)
+        {
+            return type switch
+            {
+                BuiltInType.Boolean => Variant.From(DecodeVariantArray<bool>(type, message)),
+                BuiltInType.SByte => Variant.From(DecodeVariantArray<sbyte>(type, message)),
+                BuiltInType.Byte => Variant.From(DecodeVariantArray<byte>(type, message)),
+                BuiltInType.Int16 => Variant.From(DecodeVariantArray<short>(type, message)),
+                BuiltInType.UInt16 => Variant.From(DecodeVariantArray<ushort>(type, message)),
+                BuiltInType.Int32 => Variant.From(DecodeVariantArray<int>(type, message)),
+                BuiltInType.Enumeration => Variant.From(DecodeVariantArray<EnumValue>(type, message)),
+                BuiltInType.UInt32 => Variant.From(DecodeVariantArray<uint>(type, message)),
+                BuiltInType.Int64 => Variant.From(DecodeVariantArray<long>(type, message)),
+                BuiltInType.UInt64 => Variant.From(DecodeVariantArray<ulong>(type, message)),
+                BuiltInType.Float => Variant.From(DecodeVariantArray<float>(type, message)),
+                BuiltInType.Double => Variant.From(DecodeVariantArray<double>(type, message)),
+                BuiltInType.String => Variant.From(DecodeVariantArray<string>(type, message)),
+                BuiltInType.DateTime => Variant.From(DecodeVariantArray<DateTimeUtc>(type, message)),
+                BuiltInType.Guid => Variant.From(DecodeVariantArray<Uuid>(type, message)),
+                BuiltInType.ByteString => Variant.From(DecodeVariantArray<ByteString>(type, message)),
+                BuiltInType.XmlElement => Variant.From(DecodeVariantArray<XmlElement>(type, message)),
+                BuiltInType.NodeId => Variant.From(DecodeVariantArray<NodeId>(type, message)),
+                BuiltInType.ExpandedNodeId => Variant.From(DecodeVariantArray<ExpandedNodeId>(type, message)),
+                BuiltInType.StatusCode => Variant.From(DecodeVariantArray<StatusCode>(type, message)),
+                BuiltInType.QualifiedName => Variant.From(DecodeVariantArray<QualifiedName>(type, message)),
+                BuiltInType.LocalizedText => Variant.From(DecodeVariantArray<LocalizedText>(type, message)),
+                BuiltInType.ExtensionObject => Variant.From(DecodeVariantArray<ExtensionObject>(type, message)),
+                BuiltInType.DataValue => Variant.From(DecodeVariantArray<DataValue>(type, message)),
+                _ => throw new NotSupportedException(
+                    $"Variant array type {type} is not supported by the Protobuf reference decoder."
+                ),
+            };
+        }
+
+        private Variant DecodeMatrixVariant(BuiltInType type, ProtoMessage message)
+        {
+            return type switch
+            {
+                BuiltInType.Boolean => Variant.From(DecodeVariantMatrix<bool>(type, message)),
+                BuiltInType.SByte => Variant.From(DecodeVariantMatrix<sbyte>(type, message)),
+                BuiltInType.Byte => Variant.From(DecodeVariantMatrix<byte>(type, message)),
+                BuiltInType.Int16 => Variant.From(DecodeVariantMatrix<short>(type, message)),
+                BuiltInType.UInt16 => Variant.From(DecodeVariantMatrix<ushort>(type, message)),
+                BuiltInType.Int32 => Variant.From(DecodeVariantMatrix<int>(type, message)),
+                BuiltInType.Enumeration => Variant.From(DecodeVariantMatrix<EnumValue>(type, message)),
+                BuiltInType.UInt32 => Variant.From(DecodeVariantMatrix<uint>(type, message)),
+                BuiltInType.Int64 => Variant.From(DecodeVariantMatrix<long>(type, message)),
+                BuiltInType.UInt64 => Variant.From(DecodeVariantMatrix<ulong>(type, message)),
+                BuiltInType.Float => Variant.From(DecodeVariantMatrix<float>(type, message)),
+                BuiltInType.Double => Variant.From(DecodeVariantMatrix<double>(type, message)),
+                BuiltInType.String => Variant.From(DecodeVariantMatrix<string>(type, message)),
+                BuiltInType.DateTime => Variant.From(DecodeVariantMatrix<DateTimeUtc>(type, message)),
+                BuiltInType.Guid => Variant.From(DecodeVariantMatrix<Uuid>(type, message)),
+                BuiltInType.ByteString => Variant.From(DecodeVariantMatrix<ByteString>(type, message)),
+                BuiltInType.XmlElement => Variant.From(DecodeVariantMatrix<XmlElement>(type, message)),
+                BuiltInType.NodeId => Variant.From(DecodeVariantMatrix<NodeId>(type, message)),
+                BuiltInType.ExpandedNodeId => Variant.From(DecodeVariantMatrix<ExpandedNodeId>(type, message)),
+                BuiltInType.StatusCode => Variant.From(DecodeVariantMatrix<StatusCode>(type, message)),
+                BuiltInType.QualifiedName => Variant.From(DecodeVariantMatrix<QualifiedName>(type, message)),
+                BuiltInType.LocalizedText => Variant.From(DecodeVariantMatrix<LocalizedText>(type, message)),
+                BuiltInType.ExtensionObject => Variant.From(DecodeVariantMatrix<ExtensionObject>(type, message)),
+                BuiltInType.DataValue => Variant.From(DecodeVariantMatrix<DataValue>(type, message)),
+                _ => throw new NotSupportedException(
+                    $"Variant matrix type {type} is not supported by the Protobuf reference decoder."
+                ),
+            };
+        }
+
+        private ArrayOf<T> DecodeVariantArray<T>(BuiltInType type, ProtoMessage message)
+        {
+            return new ArrayOf<T>(message.All(1).Select(field => DecodeVariantElement<T>(type, field)).ToArray());
+        }
+
+        private MatrixOf<T> DecodeVariantMatrix<T>(BuiltInType type, ProtoMessage message)
+        {
+            int[] dimensions = message.All(1).Select(field => unchecked((int)(long)field.Varint)).ToArray();
+            T[] values = message.All(2).Select(field => DecodeVariantElement<T>(type, field)).ToArray();
+            return new ArrayOf<T>(values).ToMatrix(dimensions);
+        }
+
+        private T DecodeVariantElement<T>(BuiltInType type, ProtoField valueField)
+        {
+            var valueMessage = Proto.Parse(valueField.Bytes);
+            object? value = DecodeObjectFromField1(type, valueMessage.First(1) ?? default);
+            if (value == null)
+            {
+                return default!;
+            }
+
+            return (T)value;
+        }
+
+        private static Variant ToVariant(BuiltInType type, object? value)
+        {
             return value switch
             {
                 null => Variant.Null,
@@ -855,6 +990,7 @@ namespace Opc.Ua
                 short typed => Variant.From(typed),
                 ushort typed => Variant.From(typed),
                 int typed => Variant.From(typed),
+                EnumValue typed => Variant.From(typed),
                 uint typed => Variant.From(typed),
                 long typed => Variant.From(typed),
                 ulong typed => Variant.From(typed),
@@ -864,16 +1000,27 @@ namespace Opc.Ua
                 DateTimeUtc typed => Variant.From(typed),
                 Uuid typed => Variant.From(typed),
                 ByteString typed => Variant.From(typed),
+                XmlElement typed => Variant.From(typed),
                 NodeId typed => Variant.From(typed),
+                ExpandedNodeId typed => Variant.From(typed),
                 StatusCode typed => Variant.From(typed),
+                QualifiedName typed => Variant.From(typed),
+                LocalizedText typed => Variant.From(typed),
+                ExtensionObject typed => Variant.From(typed),
+                DataValue typed => Variant.From(typed),
                 _ => throw new NotSupportedException(
-                    $"Variant payload type {t} is not supported by the Protobuf reference decoder."
+                    $"Variant payload type {type} is not supported by the Protobuf reference decoder."
                 ),
             };
         }
 
         private object? DecodeObjectFromField1(BuiltInType t, ProtoField fieldName)
         {
+            if (fieldName.Number == 0)
+            {
+                return null;
+            }
+
             return t switch
             {
                 BuiltInType.Boolean => fieldName.Varint != 0,
@@ -881,7 +1028,8 @@ namespace Opc.Ua
                 BuiltInType.Byte => (byte)fieldName.Varint,
                 BuiltInType.Int16 => (short)(long)fieldName.Varint,
                 BuiltInType.UInt16 => (ushort)fieldName.Varint,
-                BuiltInType.Int32 or BuiltInType.Enumeration => (int)(long)fieldName.Varint,
+                BuiltInType.Int32 => (int)(long)fieldName.Varint,
+                BuiltInType.Enumeration => new EnumValue((int)(long)fieldName.Varint),
                 BuiltInType.UInt32 => (uint)fieldName.Varint,
                 BuiltInType.Int64 => (long)fieldName.Varint,
                 BuiltInType.UInt64 => fieldName.Varint,
@@ -892,9 +1040,19 @@ namespace Opc.Ua
                     : null,
                 BuiltInType.DateTime => new DateTimeUtc((long)fieldName.Fixed64),
                 BuiltInType.Guid => new Uuid(fieldName.Bytes.ToArray()),
-                BuiltInType.ByteString => ByteString.From(Proto.Parse(fieldName.Bytes).First(1)!.Value.Bytes.Span),
+                BuiltInType.ByteString => Proto.Parse(fieldName.Bytes).First(1) is var bf && bf.HasValue
+                    ? ByteString.From(bf.Value.Bytes.Span)
+                    : default,
+                BuiltInType.XmlElement => Proto.Parse(fieldName.Bytes).First(1) is var xf && xf.HasValue
+                    ? (XmlElement)Proto.String(xf.Value.Bytes)
+                    : null,
                 BuiltInType.NodeId => DecodeNodeId(Proto.Parse(fieldName.Bytes)),
+                BuiltInType.ExpandedNodeId => DecodeExpandedNodeId(Proto.Parse(fieldName.Bytes)),
                 BuiltInType.StatusCode => new StatusCode(fieldName.Fixed32),
+                BuiltInType.QualifiedName => DecodeQualifiedName(Proto.Parse(fieldName.Bytes)),
+                BuiltInType.LocalizedText => DecodeLocalizedText(Proto.Parse(fieldName.Bytes)),
+                BuiltInType.ExtensionObject => DecodeExtensionObject(Proto.Parse(fieldName.Bytes)),
+                BuiltInType.DataValue => DecodeDataValue(Proto.Parse(fieldName.Bytes)),
                 _ => null,
             };
         }

@@ -1187,18 +1187,246 @@ namespace Opc.Ua
                 return;
             }
 
+            if (values.TypeInfo.IsMatrix)
+            {
+                WriteVariantMatrix(w, t, values);
+                return;
+            }
+
+            if (values.TypeInfo.IsArray)
+            {
+                WriteVariantArray(w, t, values);
+                return;
+            }
+
             using var ms = new MemoryStream();
             using var bw = new BinaryWriter(ms, Encoding.UTF8, true);
             WithFrame(bw, () => WriteObjectAsField1(t, o));
             bw.Flush();
-            Proto.WriteTag(
-                w,
-                values.TypeInfo.IsMatrix ? 4
-                    : values.TypeInfo.IsArray ? 3
-                    : 2,
-                2
-            );
+            Proto.WriteTag(w, 2, 2);
             Proto.WriteBytes(w, ms.ToArray());
+        }
+
+        private void WriteVariantArray(BinaryWriter w, BuiltInType type, Variant values)
+        {
+            using var ms = new MemoryStream();
+            using var bw = new BinaryWriter(ms, Encoding.UTF8, true);
+            WithFrame(bw, () => WriteVariantArrayValues(type, values));
+            bw.Flush();
+            Proto.WriteTag(w, 3, 2);
+            Proto.WriteBytes(w, ms.ToArray());
+        }
+
+        private void WriteVariantMatrix(BinaryWriter w, BuiltInType type, Variant values)
+        {
+            using var ms = new MemoryStream();
+            using var bw = new BinaryWriter(ms, Encoding.UTF8, true);
+            WithFrame(bw, () => WriteVariantMatrixValues(type, values));
+            bw.Flush();
+            Proto.WriteTag(w, 4, 2);
+            Proto.WriteBytes(w, ms.ToArray());
+        }
+
+        private void WriteVariantArrayValues(BuiltInType type, Variant values)
+        {
+            switch (type)
+            {
+                case BuiltInType.Boolean:
+                    WriteVariantElements(1, type, values.GetBooleanArray());
+                    break;
+                case BuiltInType.SByte:
+                    WriteVariantElements(1, type, values.GetSByteArray());
+                    break;
+                case BuiltInType.Byte:
+                    WriteVariantElements(1, type, values.GetByteArray());
+                    break;
+                case BuiltInType.Int16:
+                    WriteVariantElements(1, type, values.GetInt16Array());
+                    break;
+                case BuiltInType.UInt16:
+                    WriteVariantElements(1, type, values.GetUInt16Array());
+                    break;
+                case BuiltInType.Int32:
+                    WriteVariantElements(1, type, values.GetInt32Array());
+                    break;
+                case BuiltInType.Enumeration:
+                    WriteVariantElements(1, type, values.GetEnumerationArray());
+                    break;
+                case BuiltInType.UInt32:
+                    WriteVariantElements(1, type, values.GetUInt32Array());
+                    break;
+                case BuiltInType.Int64:
+                    WriteVariantElements(1, type, values.GetInt64Array());
+                    break;
+                case BuiltInType.UInt64:
+                    WriteVariantElements(1, type, values.GetUInt64Array());
+                    break;
+                case BuiltInType.Float:
+                    WriteVariantElements(1, type, values.GetFloatArray());
+                    break;
+                case BuiltInType.Double:
+                    WriteVariantElements(1, type, values.GetDoubleArray());
+                    break;
+                case BuiltInType.String:
+                    WriteVariantElements(1, type, values.GetStringArray());
+                    break;
+                case BuiltInType.DateTime:
+                    WriteVariantElements(1, type, values.GetDateTimeArray());
+                    break;
+                case BuiltInType.Guid:
+                    WriteVariantElements(1, type, values.GetGuidArray());
+                    break;
+                case BuiltInType.ByteString:
+                    WriteVariantElements(1, type, values.GetByteStringArray());
+                    break;
+                case BuiltInType.XmlElement:
+                    WriteVariantElements(1, type, values.GetXmlElementArray());
+                    break;
+                case BuiltInType.NodeId:
+                    WriteVariantElements(1, type, values.GetNodeIdArray());
+                    break;
+                case BuiltInType.ExpandedNodeId:
+                    WriteVariantElements(1, type, values.GetExpandedNodeIdArray());
+                    break;
+                case BuiltInType.StatusCode:
+                    WriteVariantElements(1, type, values.GetStatusCodeArray());
+                    break;
+                case BuiltInType.QualifiedName:
+                    WriteVariantElements(1, type, values.GetQualifiedNameArray());
+                    break;
+                case BuiltInType.LocalizedText:
+                    WriteVariantElements(1, type, values.GetLocalizedTextArray());
+                    break;
+                case BuiltInType.ExtensionObject:
+                    WriteVariantElements(1, type, values.GetExtensionObjectArray());
+                    break;
+                case BuiltInType.DataValue:
+                    WriteVariantElements(1, type, values.GetDataValueArray());
+                    break;
+                default:
+                    throw new NotSupportedException(
+                        $"Variant array type {type} is not supported by the Protobuf reference encoder."
+                    );
+            }
+        }
+
+        private void WriteVariantMatrixValues(BuiltInType type, Variant values)
+        {
+            switch (type)
+            {
+                case BuiltInType.Boolean:
+                    WriteVariantMatrixElements(type, values.GetBooleanMatrix());
+                    break;
+                case BuiltInType.SByte:
+                    WriteVariantMatrixElements(type, values.GetSByteMatrix());
+                    break;
+                case BuiltInType.Byte:
+                    WriteVariantMatrixElements(type, values.GetByteMatrix());
+                    break;
+                case BuiltInType.Int16:
+                    WriteVariantMatrixElements(type, values.GetInt16Matrix());
+                    break;
+                case BuiltInType.UInt16:
+                    WriteVariantMatrixElements(type, values.GetUInt16Matrix());
+                    break;
+                case BuiltInType.Int32:
+                    WriteVariantMatrixElements(type, values.GetInt32Matrix());
+                    break;
+                case BuiltInType.Enumeration:
+                    WriteVariantMatrixElements(type, values.GetEnumerationMatrix());
+                    break;
+                case BuiltInType.UInt32:
+                    WriteVariantMatrixElements(type, values.GetUInt32Matrix());
+                    break;
+                case BuiltInType.Int64:
+                    WriteVariantMatrixElements(type, values.GetInt64Matrix());
+                    break;
+                case BuiltInType.UInt64:
+                    WriteVariantMatrixElements(type, values.GetUInt64Matrix());
+                    break;
+                case BuiltInType.Float:
+                    WriteVariantMatrixElements(type, values.GetFloatMatrix());
+                    break;
+                case BuiltInType.Double:
+                    WriteVariantMatrixElements(type, values.GetDoubleMatrix());
+                    break;
+                case BuiltInType.String:
+                    WriteVariantMatrixElements(type, values.GetStringMatrix());
+                    break;
+                case BuiltInType.DateTime:
+                    WriteVariantMatrixElements(type, values.GetDateTimeMatrix());
+                    break;
+                case BuiltInType.Guid:
+                    WriteVariantMatrixElements(type, values.GetGuidMatrix());
+                    break;
+                case BuiltInType.ByteString:
+                    WriteVariantMatrixElements(type, values.GetByteStringMatrix());
+                    break;
+                case BuiltInType.XmlElement:
+                    WriteVariantMatrixElements(type, values.GetXmlElementMatrix());
+                    break;
+                case BuiltInType.NodeId:
+                    WriteVariantMatrixElements(type, values.GetNodeIdMatrix());
+                    break;
+                case BuiltInType.ExpandedNodeId:
+                    WriteVariantMatrixElements(type, values.GetExpandedNodeIdMatrix());
+                    break;
+                case BuiltInType.StatusCode:
+                    WriteVariantMatrixElements(type, values.GetStatusCodeMatrix());
+                    break;
+                case BuiltInType.QualifiedName:
+                    WriteVariantMatrixElements(type, values.GetQualifiedNameMatrix());
+                    break;
+                case BuiltInType.LocalizedText:
+                    WriteVariantMatrixElements(type, values.GetLocalizedTextMatrix());
+                    break;
+                case BuiltInType.ExtensionObject:
+                    WriteVariantMatrixElements(type, values.GetExtensionObjectMatrix());
+                    break;
+                case BuiltInType.DataValue:
+                    WriteVariantMatrixElements(type, values.GetDataValueMatrix());
+                    break;
+                default:
+                    throw new NotSupportedException(
+                        $"Variant matrix type {type} is not supported by the Protobuf reference encoder."
+                    );
+            }
+        }
+
+        private void WriteVariantElements<T>(int field, BuiltInType type, ArrayOf<T> values)
+        {
+            for (int i = 0; i < values.Count; i++)
+            {
+                WriteVariantElement(field, type, values.Span[i]);
+            }
+        }
+
+        private void WriteVariantMatrixElements<T>(BuiltInType type, MatrixOf<T> values)
+        {
+            foreach (int d in values.Dimensions)
+            {
+                Proto.WriteTag(Current, 1, 0);
+                Proto.WriteSignedVarint(Current, d);
+            }
+
+            for (int i = 0; i < values.Count; i++)
+            {
+                WriteVariantElement(2, type, values.Span[i]);
+            }
+        }
+
+        private void WriteVariantElement(int field, BuiltInType type, object? value)
+        {
+            using var ms = new MemoryStream();
+            using var bw = new BinaryWriter(ms, Encoding.UTF8, true);
+            if (value != null)
+            {
+                WithFrame(bw, () => WriteObjectAsField1(type, value));
+            }
+
+            bw.Flush();
+            Proto.WriteTag(Current, field, 2);
+            Proto.WriteBytes(Current, ms.ToArray());
         }
 
         private void WriteObjectAsField1(BuiltInType t, object o)
@@ -1250,6 +1478,9 @@ namespace Opc.Ua
                     break;
                 case BuiltInType.ByteString:
                     WriteByteString("values", (ByteString)o);
+                    break;
+                case BuiltInType.XmlElement:
+                    WriteXmlElement("values", (XmlElement)o);
                     break;
                 case BuiltInType.NodeId:
                     WriteNodeId("values", (NodeId)o);
