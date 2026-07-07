@@ -133,6 +133,109 @@ namespace Opc.Ua.PubSub.Encoding.Tests
             Assert.That(emptySamples.Count, Is.Zero);
         }
 
+        [Test]
+        public async Task BareRecordBatchFramingRoundTripsUsingCachedSchema()
+        {
+            PublisherId publisherId = PublisherId.FromString("publisher-arrow");
+            Uuid dataSetClassId = new(new Guid("95669f76-285a-41c6-ac2b-27793a3eac10"));
+            DataSetMetaDataType metaData = CreateMetaData();
+            PubSubNetworkMessageContext context = CreateContext(
+                publisherId, writerGroupId: 9, dataSetClassId, metaData, dataSetWriterId: 501);
+            ArrowNetworkMessage message = CreateNetworkMessage(publisherId, dataSetClassId, metaData);
+
+            // Bare-batch framing omits the embedded Arrow Schema message.
+            ArrowNetworkMessageEncoder batchEncoder = new() { Framing = ArrowIpcFraming.Batch };
+            ReadOnlyMemory<byte> bareBatch = await batchEncoder.EncodeAsync(message, context);
+
+            // The self-contained stream for the same message is larger by the schema message.
+            ArrowNetworkMessageEncoder streamEncoder = new();
+            ReadOnlyMemory<byte> fullStream = await streamEncoder.EncodeAsync(message, context);
+
+            Assert.That(batchEncoder.LastSchemaMessageLength, Is.GreaterThan(0));
+            Assert.That(bareBatch.Length, Is.LessThan(fullStream.Length));
+            Assert.That(
+                fullStream.Length - bareBatch.Length,
+                Is.GreaterThanOrEqualTo(batchEncoder.LastSchemaMessageLength));
+
+            // The decoder resolves the schema out-of-band by SchemaId, then decodes the bare batch.
+            ArrowNetworkMessageDecoder decoder = new();
+            decoder.CacheSchema(message.SchemaId!, batchEncoder.LastSchemaMessage);
+            PubSubNetworkMessage? decoded =
+                await decoder.TryDecodeBatchAsync(bareBatch, message.SchemaId!, context);
+
+            Assert.That(decoded, Is.TypeOf<ArrowNetworkMessage>());
+            ArrowNetworkMessage decodedMessage = (ArrowNetworkMessage)decoded!;
+            Assert.That(decodedMessage.DataSetMessages.Count, Is.EqualTo(3));
+
+            ArrowDataSetMessage first = (ArrowDataSetMessage)decodedMessage.DataSetMessages[0];
+            Assert.That(first.Fields[0].Value.TryGetValue(out double temperature), Is.True);
+            Assert.That(temperature, Is.EqualTo(21.5));
+            Assert.That(first.Fields[1].Value.TryGetValue(out string label), Is.True);
+            Assert.That(label, Is.EqualTo("pump-a"));
+            Assert.That(first.Fields[2].Value.TryGetValue(out ArrayOf<double> samples), Is.True);
+            Assert.That(samples.ToArray(), Is.EqualTo(FirstSamples));
+
+            ArrowDataSetMessage second = (ArrowDataSetMessage)decodedMessage.DataSetMessages[1];
+            Assert.That(second.Fields[1].Value.IsNull, Is.True);
+
+            // Without the schema the bare batch cannot be decoded.
+            ArrowNetworkMessageDecoder coldDecoder = new();
+            PubSubNetworkMessage? cold =
+                await coldDecoder.TryDecodeBatchAsync(bareBatch, message.SchemaId!, context);
+            Assert.That(cold, Is.Null);
+        }
+
+        [Test]
+        public async Task BareRecordBatchDecodesAfterSchemaPrimedByFullStream()
+        {
+            PublisherId publisherId = PublisherId.FromString("publisher-arrow");
+            Uuid dataSetClassId = new(new Guid("95669f76-285a-41c6-ac2b-27793a3eac10"));
+            DataSetMetaDataType metaData = CreateMetaData();
+            PubSubNetworkMessageContext context = CreateContext(
+                publisherId, writerGroupId: 9, dataSetClassId, metaData, dataSetWriterId: 501);
+            ArrowNetworkMessage message = CreateNetworkMessage(publisherId, dataSetClassId, metaData);
+
+            ArrowNetworkMessageEncoder streamEncoder = new();
+            ReadOnlyMemory<byte> fullStream = await streamEncoder.EncodeAsync(message, context);
+            ArrowNetworkMessageEncoder batchEncoder = new() { Framing = ArrowIpcFraming.Batch };
+            ReadOnlyMemory<byte> bareBatch = await batchEncoder.EncodeAsync(message, context);
+
+            // Decoding a full stream primes the schema cache for its SchemaId.
+            ArrowNetworkMessageDecoder decoder = new();
+            PubSubNetworkMessage? primed = await decoder.TryDecodeAsync(fullStream, context);
+            Assert.That(primed, Is.Not.Null);
+
+            // Subsequent bare batches reuse the cached schema.
+            PubSubNetworkMessage? decoded =
+                await decoder.TryDecodeBatchAsync(bareBatch, message.SchemaId!, context);
+            Assert.That(decoded, Is.TypeOf<ArrowNetworkMessage>());
+            Assert.That(((ArrowNetworkMessage)decoded!).DataSetMessages.Count, Is.EqualTo(3));
+        }
+
+        /// <summary>
+        /// Builds the three-sample Arrow network message shared by the framing round-trip tests.
+        /// </summary>
+        private static ArrowNetworkMessage CreateNetworkMessage(
+            PublisherId publisherId,
+            Uuid dataSetClassId,
+            DataSetMetaDataType metaData)
+        {
+            return new ArrowNetworkMessage
+            {
+                PublisherId = publisherId,
+                WriterGroupId = 9,
+                DataSetClassId = dataSetClassId,
+                SchemaId = "arrow-schema-1",
+                MetaData = metaData,
+                DataSetMessages =
+                [
+                    CreateSample(501, 100, 21.5, "pump-a", FirstSamples, true, metaData),
+                    CreateSample(501, 101, 22.25, null, SecondSamples, false, metaData),
+                    CreateSample(501, 102, 23.75, "pump-c", ThirdSamples, true, metaData)
+                ]
+            };
+        }
+
         /// <summary>
         /// Creates a keyed Arrow dataset message containing scalar, nullable, array, and boolean sample fields.
         /// </summary>

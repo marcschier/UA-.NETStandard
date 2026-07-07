@@ -84,6 +84,29 @@ namespace Opc.Ua.PubSub.Encoding
         /// </summary>
         public ArrowSchemaAnnouncement? LastSchemaAnnouncement { get; private set; }
 
+        /// <summary>
+        /// Gets or sets the IPC framing used for encoded payloads. <see cref="ArrowIpcFraming.Stream"/>
+        /// embeds the Arrow Schema message in every payload; <see cref="ArrowIpcFraming.Batch"/> emits a
+        /// bare RecordBatch whose schema is conveyed once out-of-band and resolved by SchemaId.
+        /// </summary>
+        public ArrowIpcFraming Framing { get; set; } = ArrowIpcFraming.Stream;
+
+        /// <summary>
+        /// Gets the byte length of the Arrow Schema message produced by the most recent encode call.
+        /// </summary>
+        public int LastSchemaMessageLength { get; private set; }
+
+        /// <summary>
+        /// Gets the byte length of the Arrow RecordBatch message produced by the most recent encode call.
+        /// </summary>
+        public int LastRecordBatchMessageLength { get; private set; }
+
+        /// <summary>
+        /// Gets the serialized Arrow Schema IPC message bytes produced by the most recent encode call.
+        /// A decoder can cache these under the SchemaId to decode subsequent bare RecordBatch payloads.
+        /// </summary>
+        public ReadOnlyMemory<byte> LastSchemaMessage { get; private set; }
+
         /// <inheritdoc/>
         public async ValueTask<ReadOnlyMemory<byte>> EncodeAsync(
             PubSubNetworkMessage networkMessage,
@@ -140,14 +163,27 @@ namespace Opc.Ua.PubSub.Encoding
             Apache.Arrow.Schema schema = schemaBuilder.Build();
             using RecordBatch batch = new(schema, arrays, rowCount);
             using MemoryStream stream = new();
+            long schemaEnd;
+            long batchEnd;
             using (ArrowStreamWriter writer = new(stream, schema, leaveOpen: true))
             {
                 writer.WriteStart();
+                schemaEnd = stream.Position;
                 writer.WriteRecordBatch(batch);
+                batchEnd = stream.Position;
                 writer.WriteEnd();
             }
             await Task.CompletedTask.ConfigureAwait(false);
-            return stream.ToArray();
+
+            byte[] full = stream.ToArray();
+            LastSchemaMessageLength = (int)schemaEnd;
+            LastRecordBatchMessageLength = (int)(batchEnd - schemaEnd);
+            LastSchemaMessage = full.AsMemory(0, (int)schemaEnd);
+            if (Framing == ArrowIpcFraming.Batch)
+            {
+                return full.AsMemory((int)schemaEnd, (int)(batchEnd - schemaEnd));
+            }
+            return full;
         }
 
         private static DataSetMetaDataType? ResolveBatchMetaData(

@@ -90,6 +90,52 @@ namespace Opc.Ua.PubSub.Encoding.Tests
             }
         }
 
+        [Test]
+        public void MeasureArrowIpcFramingBreakdown()
+        {
+            int[] sampleCounts = [1, 10, 100, 1000];
+            TestContext.Progress.WriteLine(string.Empty);
+            TestContext.Progress.WriteLine("Part 14: Arrow IPC framing breakdown (stream vs bare batch)");
+            TestContext.Progress.WriteLine(
+                "Samples    Stream(B)   Schema(B)    Batch(B)   B/smp stream   B/smp batch   Saved");
+            TestContext.Progress.WriteLine(
+                "--------   ---------   ---------   ---------   ------------   -----------   -----");
+            foreach (int samples in sampleCounts)
+            {
+                PubSubNetworkMessageContext context = CreateContext(samples);
+                ArrowNetworkMessage message = CreateArrowMessage(samples);
+
+                ArrowNetworkMessageEncoder streamEncoder = new();
+                ReadOnlyMemory<byte> full = streamEncoder.EncodeAsync(message, context)
+                    .AsTask().GetAwaiter().GetResult();
+                int schemaLength = streamEncoder.LastSchemaMessageLength;
+
+                ArrowNetworkMessageEncoder batchEncoder = new() { Framing = ArrowIpcFraming.Batch };
+                ReadOnlyMemory<byte> bare = batchEncoder.EncodeAsync(message, context)
+                    .AsTask().GetAwaiter().GetResult();
+
+                // Confirm the bare batch still round-trips against the announced schema.
+                ArrowNetworkMessageDecoder decoder = new();
+                decoder.CacheSchema(message.SchemaId!, batchEncoder.LastSchemaMessage);
+                PubSubNetworkMessage? decoded = decoder
+                    .TryDecodeBatchAsync(bare, message.SchemaId!, context)
+                    .AsTask().GetAwaiter().GetResult();
+                Assert.That(decoded, Is.TypeOf<ArrowNetworkMessage>());
+
+                double savedPercent = 100.0 * (full.Length - bare.Length) / full.Length;
+                TestContext.Progress.WriteLine(string.Format(
+                    CultureInfo.InvariantCulture,
+                    "{0,8}   {1,9}   {2,9}   {3,9}   {4,12:N1}   {5,11:N1}   {6,4:N1}%",
+                    samples,
+                    full.Length,
+                    schemaLength,
+                    bare.Length,
+                    full.Length / (double)samples,
+                    bare.Length / (double)samples,
+                    savedPercent));
+            }
+        }
+
         private static Measurement Measure(
             Scenario scenario,
             EncoderSpec encoder,

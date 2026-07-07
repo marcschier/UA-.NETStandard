@@ -29,6 +29,7 @@
 
 using Opc.Ua;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -54,6 +55,8 @@ namespace Opc.Ua.PubSub.Encoding
         private const string Magic = "OPC-UA-PubSub-Arrow";
         private const string Version = "1";
         private const int HeaderColumnCount = 5;
+        private static readonly byte[] s_streamEnd = [0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00];
+        private readonly Dictionary<string, byte[]> m_schemaMessages = new(StringComparer.Ordinal);
 
         /// <inheritdoc/>
         public string TransportProfileUri
@@ -78,6 +81,59 @@ namespace Opc.Ua.PubSub.Encoding
         public void Ingest(ArrowSchemaAnnouncement announcement)
         {
             SchemaCache.Add(announcement);
+        }
+
+        /// <summary>
+        /// Caches a serialized Arrow Schema IPC message under a SchemaId so that subsequent bare
+        /// RecordBatch payloads referencing that SchemaId can be decoded. This is the out-of-band
+        /// counterpart to embedding the Schema message in every stream.
+        /// </summary>
+        /// <param name="schemaId">The SchemaId that identifies the schema.</param>
+        /// <param name="schemaMessage">The serialized Arrow Schema IPC message bytes.</param>
+        public void CacheSchema(string schemaId, ReadOnlyMemory<byte> schemaMessage)
+        {
+            if (string.IsNullOrEmpty(schemaId) || schemaMessage.IsEmpty)
+            {
+                return;
+            }
+            m_schemaMessages[schemaId] = schemaMessage.ToArray();
+        }
+
+        /// <summary>
+        /// Decodes a bare Arrow RecordBatch payload (a <see cref="ArrowIpcFraming.Batch"/> message)
+        /// whose schema was previously cached for the referenced SchemaId, either by decoding a
+        /// full IPC stream for the same SchemaId or via <see cref="CacheSchema"/>.
+        /// </summary>
+        /// <param name="recordBatch">The bare Arrow RecordBatch message bytes.</param>
+        /// <param name="schemaId">The SchemaId that selects the cached schema.</param>
+        /// <param name="context">The PubSub decoding context.</param>
+        /// <param name="cancellationToken">A token that cancels the operation.</param>
+        /// <returns>The decoded network message, or null when the schema is not available.</returns>
+        public ValueTask<PubSubNetworkMessage?> TryDecodeBatchAsync(
+            ReadOnlyMemory<byte> recordBatch,
+            string schemaId,
+            PubSubNetworkMessageContext context,
+            CancellationToken cancellationToken = default)
+        {
+            if (context is null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+            if (schemaId is null || !m_schemaMessages.TryGetValue(schemaId, out byte[]? schemaMessage))
+            {
+                context.Diagnostics.Increment(PubSubDiagnosticsCounterKind.ReceivedInvalidNetworkMessages);
+                context.Diagnostics.RecordError(
+                    (StatusCode)StatusCodes.BadDecodingError,
+                    $"Arrow schema '{schemaId}' is not cached for bare-batch decoding.");
+                return new ValueTask<PubSubNetworkMessage?>((PubSubNetworkMessage?)null);
+            }
+
+            byte[] reconstructed = new byte[schemaMessage.Length + recordBatch.Length + s_streamEnd.Length];
+            schemaMessage.CopyTo(reconstructed.AsSpan(0));
+            recordBatch.Span.CopyTo(reconstructed.AsSpan(schemaMessage.Length));
+            s_streamEnd.CopyTo(reconstructed.AsSpan(schemaMessage.Length + recordBatch.Length));
+            return new ValueTask<PubSubNetworkMessage?>(DecodeCore(reconstructed, context));
         }
 
         /// <inheritdoc/>
@@ -124,6 +180,7 @@ namespace Opc.Ua.PubSub.Encoding
                 ushort writerGroupId = ParseUInt16(ReadMeta(metadata, "writerGroupId"));
                 Uuid dataSetClassId = ParseUuid(ReadMeta(metadata, "dataSetClassId"));
                 string schemaId = ReadMeta(metadata, "schemaId");
+                CacheSchemaMessage(frame, schemaId);
                 if (SchemaCache.TryParseKey(schemaId, out ByteString schemaIdBytes)
                     && !SchemaCache.TryGetOrResolve(schemaIdBytes, SchemaResolver, out _))
                 {
@@ -401,6 +458,35 @@ namespace Opc.Ua.PubSub.Encoding
         {
             return new NotSupportedException(
                 $"Arrow RawData field '{fieldName}' with type {typeInfo} is not supported by this adapter.");
+        }
+
+        private void CacheSchemaMessage(ReadOnlyMemory<byte> frame, string schemaId)
+        {
+            if (string.IsNullOrEmpty(schemaId))
+            {
+                return;
+            }
+            int length = SchemaMessageLength(frame.Span);
+            if (length > 0 && length <= frame.Length)
+            {
+                m_schemaMessages[schemaId] = frame.Slice(0, length).ToArray();
+            }
+        }
+
+        private static int SchemaMessageLength(ReadOnlySpan<byte> frame)
+        {
+            // Arrow encapsulated IPC message: [0xFFFFFFFF continuation][int32 metadata size][metadata...].
+            // A Schema message carries no body buffers, so its total length is 8 + metadata size.
+            if (frame.Length < 8 || BinaryPrimitives.ReadUInt32LittleEndian(frame) != 0xFFFFFFFFu)
+            {
+                return 0;
+            }
+            int metadataSize = BinaryPrimitives.ReadInt32LittleEndian(frame.Slice(4));
+            if (metadataSize < 0 || 8L + metadataSize > frame.Length)
+            {
+                return 0;
+            }
+            return 8 + metadataSize;
         }
     }
 }
