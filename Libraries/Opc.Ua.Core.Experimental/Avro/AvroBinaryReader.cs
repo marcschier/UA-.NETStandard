@@ -40,7 +40,12 @@ namespace Opc.Ua
     /// </summary>
     internal sealed class AvroBinaryReader
     {
+        private const int BufferSize = 8192;
+        private const int StackallocThreshold = 256;
         private readonly Stream m_stream;
+        private readonly byte[] m_buffer;
+        private int m_bufferOffset;
+        private int m_bufferLength;
 
         /// <summary>
         /// Initializes a new AvroBinaryReader instance for the experimental OPC UA encoding support.
@@ -49,6 +54,7 @@ namespace Opc.Ua
         public AvroBinaryReader(Stream stream)
         {
             m_stream = stream;
+            m_buffer = new byte[BufferSize];
         }
 
         /// <summary>
@@ -66,13 +72,12 @@ namespace Opc.Ua
         /// <returns>The result produced by this codec helper.</returns>
         public byte ReadByte()
         {
-            int value = m_stream.ReadByte();
-            if (value < 0)
+            if (m_bufferOffset == m_bufferLength)
             {
-                throw new EndOfStreamException();
+                FillBuffer();
             }
 
-            return (byte)value;
+            return m_buffer[m_bufferOffset++];
         }
 
         /// <summary>
@@ -164,23 +169,77 @@ namespace Opc.Ua
         /// <returns>The result produced by this codec helper.</returns>
         public string ReadString()
         {
-            return Encoding.UTF8.GetString(ReadBytes());
+            long length = ReadLong();
+            if (length < 0 || length > int.MaxValue)
+            {
+                throw new FormatException("Invalid Avro string length.");
+            }
+
+            if (length == 0)
+            {
+                return string.Empty;
+            }
+
+            int count = (int)length;
+            if (count <= m_bufferLength - m_bufferOffset)
+            {
+                string value = Encoding.UTF8.GetString(m_buffer.AsSpan(m_bufferOffset, count));
+                m_bufferOffset += count;
+                return value;
+            }
+
+            if (count <= StackallocThreshold)
+            {
+                Span<byte> bytes = stackalloc byte[StackallocThreshold];
+                ReadExactly(bytes[..count]);
+                return Encoding.UTF8.GetString(bytes[..count]);
+            }
+
+            byte[] rented = ArrayPool<byte>.Shared.Rent(count);
+            try
+            {
+                Span<byte> bytes = rented.AsSpan(0, count);
+                ReadExactly(bytes);
+                return Encoding.UTF8.GetString(bytes);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(rented);
+            }
         }
 
         private void ReadExactly(Span<byte> buffer)
         {
-#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
-            m_stream.ReadExactly(buffer);
-#else
-            int offset = 0;
-            while (offset < buffer.Length)
+            while (buffer.Length > 0)
             {
-                int read = m_stream.Read(buffer.Slice(offset).ToArray(), 0, buffer.Length - offset);
-                if (read == 0)
-                    throw new EndOfStreamException();
-                offset += read;
+                int buffered = m_bufferLength - m_bufferOffset;
+                if (buffered > 0)
+                {
+                    int copy = Math.Min(buffered, buffer.Length);
+                    m_buffer.AsSpan(m_bufferOffset, copy).CopyTo(buffer);
+                    m_bufferOffset += copy;
+                    buffer = buffer[copy..];
+                    continue;
+                }
+
+                if (buffer.Length >= m_buffer.Length)
+                {
+                    m_stream.ReadExactly(buffer);
+                    return;
+                }
+
+                FillBuffer();
             }
-#endif
+        }
+
+        private void FillBuffer()
+        {
+            m_bufferOffset = 0;
+            m_bufferLength = m_stream.Read(m_buffer);
+            if (m_bufferLength == 0)
+            {
+                throw new EndOfStreamException();
+            }
         }
     }
 }

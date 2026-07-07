@@ -40,7 +40,11 @@ namespace Opc.Ua
     /// </summary>
     internal sealed class AvroBinaryWriter
     {
+        private const int BufferSize = 8192;
+        private const int StackallocThreshold = 256;
         private readonly Stream m_stream;
+        private readonly byte[] m_buffer;
+        private int m_buffered;
 
         /// <summary>
         /// Initializes a new AvroBinaryWriter instance for the experimental OPC UA encoding support.
@@ -49,6 +53,7 @@ namespace Opc.Ua
         public AvroBinaryWriter(Stream stream)
         {
             m_stream = stream;
+            m_buffer = new byte[BufferSize];
         }
 
         /// <summary>
@@ -56,7 +61,7 @@ namespace Opc.Ua
         /// </summary>
         public long Position
         {
-            get { return m_stream.CanSeek ? m_stream.Position : 0; }
+            get { return m_stream.CanSeek ? m_stream.Position + m_buffered : 0; }
         }
 
         /// <summary>
@@ -64,6 +69,7 @@ namespace Opc.Ua
         /// </summary>
         public void Flush()
         {
+            FlushBuffer();
             m_stream.Flush();
         }
 
@@ -73,7 +79,7 @@ namespace Opc.Ua
         /// <param name = "value">The primitive or OPC UA value to process.</param>
         public void WriteBoolean(bool value)
         {
-            m_stream.WriteByte(value ? (byte)1 : (byte)0);
+            WriteByte(value ? (byte)1 : (byte)0);
         }
 
         /// <summary>
@@ -82,7 +88,7 @@ namespace Opc.Ua
         /// <param name = "bytes">The byte sequence to encode or decode.</param>
         public void WriteFixed(ReadOnlySpan<byte> bytes)
         {
-            m_stream.Write(bytes);
+            WriteRaw(bytes);
         }
 
         /// <summary>
@@ -93,7 +99,7 @@ namespace Opc.Ua
         {
             Span<byte> b = stackalloc byte[4];
             BinaryPrimitives.WriteInt32LittleEndian(b, BitConverter.SingleToInt32Bits(value));
-            m_stream.Write(b);
+            WriteRaw(b);
         }
 
         /// <summary>
@@ -104,7 +110,7 @@ namespace Opc.Ua
         {
             Span<byte> b = stackalloc byte[8];
             BinaryPrimitives.WriteInt64LittleEndian(b, BitConverter.DoubleToInt64Bits(value));
-            m_stream.Write(b);
+            WriteRaw(b);
         }
 
         /// <summary>
@@ -123,13 +129,16 @@ namespace Opc.Ua
         public void WriteLong(long value)
         {
             ulong zigzag = ((ulong)value << 1) ^ (ulong)(value >> 63);
+            Span<byte> bytes = stackalloc byte[10];
+            int count = 0;
             while ((zigzag & ~0x7FUL) != 0)
             {
-                m_stream.WriteByte((byte)((zigzag & 0x7F) | 0x80));
+                bytes[count++] = (byte)((zigzag & 0x7F) | 0x80);
                 zigzag >>= 7;
             }
 
-            m_stream.WriteByte((byte)zigzag);
+            bytes[count++] = (byte)zigzag;
+            WriteRaw(bytes[..count]);
         }
 
         /// <summary>
@@ -139,7 +148,7 @@ namespace Opc.Ua
         public void WriteBytes(ReadOnlySpan<byte> value)
         {
             WriteLong(value.Length);
-            m_stream.Write(value);
+            WriteRaw(value);
         }
 
         /// <summary>
@@ -148,8 +157,71 @@ namespace Opc.Ua
         /// <param name = "value">The primitive or OPC UA value to process.</param>
         public void WriteString(string value)
         {
-            byte[] bytes = Encoding.UTF8.GetBytes(value);
-            WriteBytes(bytes);
+            int length = Encoding.UTF8.GetByteCount(value);
+            WriteLong(length);
+            if (length <= StackallocThreshold)
+            {
+                Span<byte> bytes = stackalloc byte[StackallocThreshold];
+                int written = Encoding.UTF8.GetBytes(value, bytes);
+                WriteRaw(bytes[..written]);
+                return;
+            }
+
+            byte[] rented = ArrayPool<byte>.Shared.Rent(length);
+            try
+            {
+                Span<byte> bytes = rented.AsSpan(0, length);
+                int written = Encoding.UTF8.GetBytes(value, bytes);
+                WriteRaw(bytes[..written]);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(rented);
+            }
+        }
+
+        private void WriteByte(byte value)
+        {
+            if (m_buffered == m_buffer.Length)
+            {
+                FlushBuffer();
+            }
+
+            m_buffer[m_buffered++] = value;
+        }
+
+        private void WriteRaw(ReadOnlySpan<byte> value)
+        {
+            if (value.Length == 0)
+            {
+                return;
+            }
+
+            if (value.Length > m_buffer.Length)
+            {
+                FlushBuffer();
+                m_stream.Write(value);
+                return;
+            }
+
+            if (value.Length > m_buffer.Length - m_buffered)
+            {
+                FlushBuffer();
+            }
+
+            value.CopyTo(m_buffer.AsSpan(m_buffered));
+            m_buffered += value.Length;
+        }
+
+        private void FlushBuffer()
+        {
+            if (m_buffered == 0)
+            {
+                return;
+            }
+
+            m_stream.Write(m_buffer.AsSpan(0, m_buffered));
+            m_buffered = 0;
         }
     }
 }

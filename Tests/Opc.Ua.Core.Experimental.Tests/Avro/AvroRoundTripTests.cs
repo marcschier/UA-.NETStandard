@@ -242,6 +242,31 @@ namespace Opc.Ua.Core.Tests
             Assert.That(decodedEmpty.GetInt32Array().Count, Is.Zero);
         }
 
+        [Test]
+        public void AvroBufferedLargeMatrixAndStringRoundTrip()
+        {
+            int[] values = new int[2500];
+            for (int ii = 0; ii < values.Length; ii++)
+            {
+                values[ii] = ii - 1250;
+            }
+
+            Variant matrix = new Variant(new ArrayOf<int>(values).ToMatrix(50, 50));
+            string text = new string('å', 4096);
+            byte[] payload = Encode(e =>
+            {
+                e.WriteVariant("Int32Matrix", matrix);
+                e.WriteString("LongString", text);
+            });
+
+            using var decoder = new AvroDecoder(payload, Context);
+            Variant decodedMatrix = decoder.ReadVariant("Int32Matrix");
+            string? decodedText = decoder.ReadString("LongString");
+            Assert.That(decodedMatrix.TypeInfo, Is.EqualTo(matrix.TypeInfo));
+            Assert.That(decodedMatrix.GetInt32Matrix().Memory.ToArray(), Is.EqualTo(values));
+            Assert.That(decodedText, Is.EqualTo(text));
+        }
+
         /// <summary>
         /// Compares diagnostic information recursively so nested diagnostic fields survive Avro round trips.
         /// </summary>
