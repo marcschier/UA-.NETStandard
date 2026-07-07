@@ -43,9 +43,10 @@ namespace Opc.Ua
         private const int BufferSize = 8192;
         private const int StackallocThreshold = 256;
         private readonly Stream m_stream;
-        private readonly byte[] m_buffer;
+        private byte[] m_buffer;
         private int m_bufferOffset;
         private int m_bufferLength;
+        private bool m_released;
 
         /// <summary>
         /// Initializes a new AvroBinaryReader instance for the experimental OPC UA encoding support.
@@ -54,7 +55,23 @@ namespace Opc.Ua
         public AvroBinaryReader(Stream stream)
         {
             m_stream = stream;
-            m_buffer = new byte[BufferSize];
+            m_buffer = ArrayPool<byte>.Shared.Rent(BufferSize);
+        }
+
+        /// <summary>
+        /// Returns the pooled read buffer to the shared array pool.
+        /// </summary>
+        public void Release()
+        {
+            if (m_released)
+            {
+                return;
+            }
+
+            m_released = true;
+            byte[] buffer = m_buffer;
+            m_buffer = Array.Empty<byte>();
+            ArrayPool<byte>.Shared.Return(buffer);
         }
 
         /// <summary>

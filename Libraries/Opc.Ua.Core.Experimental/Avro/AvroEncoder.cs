@@ -99,6 +99,7 @@ namespace Opc.Ua
             m_writer.Flush();
             m_closed = true;
             int p = m_stream.CanSeek ? (int)m_stream.Position : 0;
+            m_writer.Release();
             if (!m_leaveOpen)
             {
                 m_stream.Dispose();

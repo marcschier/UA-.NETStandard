@@ -82,6 +82,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public void Close()
         {
+            m_reader.Release();
             if (!m_leaveOpen)
             {
                 m_stream.Dispose();
