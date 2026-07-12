@@ -62,25 +62,32 @@ namespace Opc.Ua
             }
 
             AvroBinaryWriter writer = new(stream);
-            writer.WriteLong(RequesterId is null ? 0 : 1);
-            if (RequesterId is not null)
+            try
             {
-                writer.WriteString(RequesterId);
-            }
-
-            writer.WriteLong(SchemaIds.Count);
-            for (int i = 0; i < SchemaIds.Count; i++)
-            {
-                if (SchemaIds[i].IsNull)
+                writer.WriteLong(RequesterId is null ? 0 : 1);
+                if (RequesterId is not null)
                 {
-                    throw new InvalidOperationException("SchemaIds cannot contain null values.");
+                    writer.WriteString(RequesterId);
                 }
 
-                writer.WriteBytes(SchemaIds[i].Span);
-            }
+                writer.WriteLong(SchemaIds.Count);
+                for (int i = 0; i < SchemaIds.Count; i++)
+                {
+                    if (SchemaIds[i].IsNull)
+                    {
+                        throw new InvalidOperationException("SchemaIds cannot contain null values.");
+                    }
 
-            writer.WriteLong(0);
-            writer.Flush();
+                    writer.WriteBytes(SchemaIds[i].Span);
+                }
+
+                writer.WriteLong(0);
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Release();
+            }
         }
 
         /// <summary>
@@ -107,35 +114,42 @@ namespace Opc.Ua
             }
 
             AvroBinaryReader reader = new(stream);
-            long requesterBranch = reader.ReadLong();
-            string? requesterId = requesterBranch switch
+            try
             {
-                0 => null,
-                1 => reader.ReadString(),
-                _ => throw new FormatException("Invalid Avro RequesterId union branch."),
-            };
-            var schemaIds = new List<ByteString>();
-            while (true)
-            {
-                long count = reader.ReadLong();
-                if (count == 0)
+                long requesterBranch = reader.ReadLong();
+                string? requesterId = requesterBranch switch
                 {
-                    break;
+                    0 => null,
+                    1 => reader.ReadString(),
+                    _ => throw new FormatException("Invalid Avro RequesterId union branch."),
+                };
+                var schemaIds = new List<ByteString>();
+                while (true)
+                {
+                    long count = reader.ReadLong();
+                    if (count == 0)
+                    {
+                        break;
+                    }
+
+                    if (count < 0)
+                    {
+                        _ = reader.ReadLong();
+                        count = -count;
+                    }
+
+                    for (long i = 0; i < count; i++)
+                    {
+                        schemaIds.Add(ByteString.From(reader.ReadBytes()));
+                    }
                 }
 
-                if (count < 0)
-                {
-                    _ = reader.ReadLong();
-                    count = -count;
-                }
-
-                for (long i = 0; i < count; i++)
-                {
-                    schemaIds.Add(ByteString.From(reader.ReadBytes()));
-                }
+                return new AvroSchemaRequest(requesterId, schemaIds);
             }
-
-            return new AvroSchemaRequest(requesterId, schemaIds);
+            finally
+            {
+                reader.Release();
+            }
         }
     }
 }

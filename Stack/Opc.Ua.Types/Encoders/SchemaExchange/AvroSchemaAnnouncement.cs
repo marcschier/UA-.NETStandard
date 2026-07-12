@@ -73,15 +73,22 @@ namespace Opc.Ua
             }
 
             AvroBinaryWriter writer = new(stream);
-            writer.WriteBytes(SchemaId.Span);
-            writer.WriteString(SchemaJson);
-            writer.WriteLong(SchemaEpoch.HasValue ? 1 : 0);
-            if (SchemaEpoch.HasValue)
+            try
             {
-                writer.WriteLong(SchemaEpoch.Value);
-            }
+                writer.WriteBytes(SchemaId.Span);
+                writer.WriteString(SchemaJson);
+                writer.WriteLong(SchemaEpoch.HasValue ? 1 : 0);
+                if (SchemaEpoch.HasValue)
+                {
+                    writer.WriteLong(SchemaEpoch.Value);
+                }
 
-            writer.Flush();
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Release();
+            }
         }
 
         /// <summary>
@@ -108,16 +115,23 @@ namespace Opc.Ua
             }
 
             AvroBinaryReader reader = new(stream);
-            ByteString schemaId = ByteString.From(reader.ReadBytes());
-            string schemaJson = reader.ReadString();
-            long branch = reader.ReadLong();
-            long? schemaEpoch = branch switch
+            try
             {
-                0 => null,
-                1 => reader.ReadLong(),
-                _ => throw new FormatException("Invalid Avro SchemaEpoch union branch."),
-            };
-            return new AvroSchemaAnnouncement(schemaId, schemaJson, schemaEpoch);
+                ByteString schemaId = ByteString.From(reader.ReadBytes());
+                string schemaJson = reader.ReadString();
+                long branch = reader.ReadLong();
+                long? schemaEpoch = branch switch
+                {
+                    0 => null,
+                    1 => reader.ReadLong(),
+                    _ => throw new FormatException("Invalid Avro SchemaEpoch union branch."),
+                };
+                return new AvroSchemaAnnouncement(schemaId, schemaJson, schemaEpoch);
+            }
+            finally
+            {
+                reader.Release();
+            }
         }
 
         /// <summary>
