@@ -1450,8 +1450,17 @@ namespace Opc.Ua
                     WriteUInt16("values", (ushort)o);
                     break;
                 case BuiltInType.Int32:
-                case BuiltInType.Enumeration:
                     WriteInt32("values", Convert.ToInt32(o, CultureInfo.InvariantCulture));
+                    break;
+                case BuiltInType.Enumeration:
+                    // Array/matrix enumeration variants box their elements as EnumValue (which does
+                    // not implement IConvertible), so extract the integer directly; the scalar path
+                    // may still hand us a boxed enum/int, which Convert.ToInt32 handles.
+                    WriteInt32(
+                        "values",
+                        o is EnumValue enumValue
+                            ? enumValue.Value
+                            : Convert.ToInt32(o, CultureInfo.InvariantCulture));
                     break;
                 case BuiltInType.UInt32:
                     WriteUInt32("values", (uint)o);

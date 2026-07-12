@@ -811,46 +811,70 @@ namespace Opc.Ua
 
         private DiagnosticInfo DecodeDiagnosticInfo(ProtoMessage m)
         {
-            return new DiagnosticInfo
+            CheckAndIncrementNestingLevel();
+            try
             {
-                SymbolicId = m.First(1) is var f1 && f1.HasValue ? (int)(long)f1.Value.Varint : -1,
-                NamespaceUri = m.First(2) is var f2 && f2.HasValue ? (int)(long)f2.Value.Varint : -1,
-                Locale = m.First(3) is var f3 && f3.HasValue ? (int)(long)f3.Value.Varint : -1,
-                LocalizedText = m.First(4) is var f4 && f4.HasValue ? (int)(long)f4.Value.Varint : -1,
-                AdditionalInfo = m.First(5) is var f5 && f5.HasValue ? Proto.String(f5.Value.Bytes) : null,
-                InnerStatusCode = m.First(6) is var f6 && f6.HasValue ? new StatusCode(f6.Value.Fixed32) : default,
-                InnerDiagnosticInfo =
-                    m.First(7) is var f7 && f7.HasValue ? DecodeDiagnosticInfo(Proto.Parse(f7.Value.Bytes)) : null,
-            };
+                return new DiagnosticInfo
+                {
+                    SymbolicId = m.First(1) is var f1 && f1.HasValue ? (int)(long)f1.Value.Varint : -1,
+                    NamespaceUri = m.First(2) is var f2 && f2.HasValue ? (int)(long)f2.Value.Varint : -1,
+                    Locale = m.First(3) is var f3 && f3.HasValue ? (int)(long)f3.Value.Varint : -1,
+                    LocalizedText = m.First(4) is var f4 && f4.HasValue ? (int)(long)f4.Value.Varint : -1,
+                    AdditionalInfo = m.First(5) is var f5 && f5.HasValue ? Proto.String(f5.Value.Bytes) : null,
+                    InnerStatusCode = m.First(6) is var f6 && f6.HasValue ? new StatusCode(f6.Value.Fixed32) : default,
+                    InnerDiagnosticInfo =
+                        m.First(7) is var f7 && f7.HasValue ? DecodeDiagnosticInfo(Proto.Parse(f7.Value.Bytes)) : null,
+                };
+            }
+            finally
+            {
+                m_nestingLevel--;
+            }
         }
 
         private DataValue DecodeDataValue(ProtoMessage m)
         {
-            Variant values =
-                m.First(1) is var vf && vf.HasValue ? DecodeVariant(Proto.Parse(vf.Value.Bytes)) : Variant.Null;
-            StatusCode sc = m.First(2) is var sf && sf.HasValue ? new StatusCode(sf.Value.Fixed32) : StatusCodes.Good;
-            DateTimeUtc st = m.First(3) is var stf && stf.HasValue ? new DateTimeUtc((long)stf.Value.Fixed64) : default;
-            DateTimeUtc sv = m.First(5) is var svf && svf.HasValue ? new DateTimeUtc((long)svf.Value.Fixed64) : default;
-            ushort sp = m.First(4) is var spf && spf.HasValue ? (ushort)spf.Value.Varint : (ushort)0;
-            ushort vp = m.First(6) is var vpf && vpf.HasValue ? (ushort)vpf.Value.Varint : (ushort)0;
-            return new DataValue(values, sc, st, sv, sp, vp);
+            CheckAndIncrementNestingLevel();
+            try
+            {
+                Variant values =
+                    m.First(1) is var vf && vf.HasValue ? DecodeVariant(Proto.Parse(vf.Value.Bytes)) : Variant.Null;
+                StatusCode sc = m.First(2) is var sf && sf.HasValue ? new StatusCode(sf.Value.Fixed32) : StatusCodes.Good;
+                DateTimeUtc st = m.First(3) is var stf && stf.HasValue ? new DateTimeUtc((long)stf.Value.Fixed64) : default;
+                DateTimeUtc sv = m.First(5) is var svf && svf.HasValue ? new DateTimeUtc((long)svf.Value.Fixed64) : default;
+                ushort sp = m.First(4) is var spf && spf.HasValue ? (ushort)spf.Value.Varint : (ushort)0;
+                ushort vp = m.First(6) is var vpf && vpf.HasValue ? (ushort)vpf.Value.Varint : (ushort)0;
+                return new DataValue(values, sc, st, sv, sp, vp);
+            }
+            finally
+            {
+                m_nestingLevel--;
+            }
         }
 
         private ExtensionObject DecodeExtensionObject(ProtoMessage m)
         {
-            ExpandedNodeId type =
-                m.First(1) is var tf && tf.HasValue ? DecodeNodeId(Proto.Parse(tf.Value.Bytes)) : ExpandedNodeId.Null;
-            if (m.First(3) is var of && of.HasValue)
+            CheckAndIncrementNestingLevel();
+            try
             {
-                return new ExtensionObject(type, ByteString.From(of.Value.Bytes.Span));
-            }
+                ExpandedNodeId type =
+                    m.First(1) is var tf && tf.HasValue ? DecodeNodeId(Proto.Parse(tf.Value.Bytes)) : ExpandedNodeId.Null;
+                if (m.First(3) is var of && of.HasValue)
+                {
+                    return new ExtensionObject(type, ByteString.From(of.Value.Bytes.Span));
+                }
 
-            if (m.First(2) is var bf && bf.HasValue)
+                if (m.First(2) is var bf && bf.HasValue)
+                {
+                    return new ExtensionObject(type, ByteString.From(bf.Value.Bytes.Span));
+                }
+
+                return new ExtensionObject(type);
+            }
+            finally
             {
-                return new ExtensionObject(type, ByteString.From(bf.Value.Bytes.Span));
+                m_nestingLevel--;
             }
-
-            return new ExtensionObject(type);
         }
 
         private Variant DecodeVariant(ProtoMessage m)
@@ -860,26 +884,34 @@ namespace Opc.Ua
                 return Variant.Null;
             }
 
-            var t = (BuiltInType)m.First(1)!.Value.Varint;
-            var scalar = m.First(2);
-            if (scalar.HasValue)
+            CheckAndIncrementNestingLevel();
+            try
             {
-                return DecodeScalarVariant(t, Proto.Parse(scalar.Value.Bytes));
-            }
+                var t = (BuiltInType)m.First(1)!.Value.Varint;
+                var scalar = m.First(2);
+                if (scalar.HasValue)
+                {
+                    return DecodeScalarVariant(t, Proto.Parse(scalar.Value.Bytes));
+                }
 
-            var array = m.First(3);
-            if (array.HasValue)
+                var array = m.First(3);
+                if (array.HasValue)
+                {
+                    return DecodeArrayVariant(t, Proto.Parse(array.Value.Bytes));
+                }
+
+                var matrix = m.First(4);
+                if (matrix.HasValue)
+                {
+                    return DecodeMatrixVariant(t, Proto.Parse(matrix.Value.Bytes));
+                }
+
+                return Variant.Null;
+            }
+            finally
             {
-                return DecodeArrayVariant(t, Proto.Parse(array.Value.Bytes));
+                m_nestingLevel--;
             }
-
-            var matrix = m.First(4);
-            if (matrix.HasValue)
-            {
-                return DecodeMatrixVariant(t, Proto.Parse(matrix.Value.Bytes));
-            }
-
-            return Variant.Null;
         }
 
         private Variant DecodeScalarVariant(BuiltInType type, ProtoMessage message)
@@ -1058,6 +1090,25 @@ namespace Opc.Ua
             };
         }
 
+        /// <summary>
+        /// Guards against unbounded decode recursion on hostile input by enforcing
+        /// <see cref="IServiceMessageContext.MaxEncodingNestingLevels"/>, mirroring the built-in
+        /// BinaryDecoder/XmlDecoder/JsonDecoder. Callers must decrement <c>m_nestingLevel</c> in a
+        /// <c>finally</c> block.
+        /// </summary>
+        /// <exception cref="ServiceResultException">The maximum nesting level was exceeded.</exception>
+        private void CheckAndIncrementNestingLevel()
+        {
+            if (m_nestingLevel > Context.MaxEncodingNestingLevels)
+            {
+                throw ServiceResultException.Create(
+                    StatusCodes.BadEncodingLimitsExceeded,
+                    "Maximum nesting level of {0} was exceeded",
+                    Context.MaxEncodingNestingLevels);
+            }
+            m_nestingLevel++;
+        }
+
         private sealed class Frame
         {
             /// <summary>
@@ -1115,5 +1166,6 @@ namespace Opc.Ua
         private readonly Stack<Frame> m_stack = new();
         private ushort[]? m_namespaceMappings;
         private ushort[]? m_serverMappings;
+        private uint m_nestingLevel;
     }
 }

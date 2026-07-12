@@ -184,6 +184,49 @@ namespace Opc.Ua.Core.Tests
             AssertVariantEqual(decoded, value);
         }
 
+        [Test]
+        public void VariantEnumerationArrayRoundTrip()
+        {
+            // Regression: array/matrix enumeration variants box their elements as EnumValue, which is
+            // not IConvertible, so the encoder previously threw InvalidCastException on this path.
+            Variant value = Variant.From(ArrayOf.Wrapped(
+                new EnumValue(10), new EnumValue(20), new EnumValue(30)));
+            Variant decoded = RoundTripVariant(value);
+            AssertVariantEqual(decoded, value);
+        }
+
+        [Test]
+        public void VariantEnumerationMatrixRoundTrip()
+        {
+            Variant value = Variant.From(ArrayOf.Wrapped(
+                new EnumValue(1), new EnumValue(2), new EnumValue(3), new EnumValue(4)).ToMatrix([2, 2]));
+            Variant decoded = RoundTripVariant(value);
+            AssertVariantEqual(decoded, value);
+        }
+
+        [Test]
+        public void DeeplyNestedDataValueThrowsEncodingLimitsInsteadOfStackOverflow()
+        {
+            // Regression: the decoder must bound recursion (DataValue <-> Variant nesting) with
+            // Context.MaxEncodingNestingLevels, like the built-in decoders, instead of overflowing
+            // the stack on hostile input.
+            var context = ServiceMessageContext.CreateEmpty(null!);
+            context.MaxEncodingNestingLevels = 8;
+
+            var value = new DataValue(new Variant(42));
+            for (int i = 0; i < 20; i++)
+            {
+                value = new DataValue(Variant.From(value));
+            }
+
+            byte[] bytes = Encode(e => e.WriteDataValue("v", value), context);
+
+            var decoder = new ProtobufDecoder(bytes, context);
+            ServiceResultException ex = Assert.Throws<ServiceResultException>(
+                () => decoder.ReadDataValue("v"))!;
+            Assert.That(ex.StatusCode, Is.EqualTo(StatusCodes.BadEncodingLimitsExceeded));
+        }
+
         private static IEnumerable<TestCaseData> VariantBodyRoundTripCases
         {
             get
@@ -328,8 +371,16 @@ namespace Opc.Ua.Core.Tests
         /// </summary>
         private static byte[] Encode(Action<ProtobufEncoder> encode)
         {
+            return Encode(encode, Context);
+        }
+
+        /// <summary>
+        /// Writes a Protobuf payload using the supplied context and returns the completed bytes.
+        /// </summary>
+        private static byte[] Encode(Action<ProtobufEncoder> encode, IServiceMessageContext context)
+        {
             using var stream = new MemoryStream();
-            using var encoder = new ProtobufEncoder(stream, Context);
+            using var encoder = new ProtobufEncoder(stream, context);
             encode(encoder);
             encoder.Close();
             return stream.ToArray();
