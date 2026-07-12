@@ -28,6 +28,7 @@
  * ======================================================================*/
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -131,6 +132,47 @@ namespace Opc.Ua.PubSub.Encoding.Tests
             Assert.That(second.Fields[1].Value.IsNull, Is.True);
             Assert.That(second.Fields[2].Value.TryGetValue(out ArrayOf<double> emptySamples), Is.True);
             Assert.That(emptySamples.Count, Is.Zero);
+        }
+
+        [Test]
+        public async Task ShortRecordBatchIsRejectedInsteadOfThrowing()
+        {
+            // Regression: a record batch with fewer than the required header columns must be treated
+            // as an invalid message (null + ReceivedInvalidNetworkMessages) instead of crashing the
+            // receive loop with an uncaught ArgumentOutOfRangeException from RecordBatch.Column.
+            PublisherId publisherId = PublisherId.FromString("publisher-arrow");
+            Uuid dataSetClassId = new(new Guid("95669f76-285a-41c6-ac2b-27793a3eac10"));
+            DataSetMetaDataType metaData = CreateMetaData();
+            PubSubNetworkMessageContext context = CreateContext(
+                publisherId, writerGroupId: 9, dataSetClassId, metaData, dataSetWriterId: 501);
+
+            var schemaMetadata = new Dictionary<string, string>
+            {
+                ["magic"] = "OPC-UA-PubSub-Arrow",
+                ["version"] = "1"
+            };
+            var schema = new Apache.Arrow.Schema(
+                new[]
+                {
+                    new Field("writerId", UInt16Type.Default, nullable: false),
+                    new Field("sequence", UInt32Type.Default, nullable: false)
+                },
+                schemaMetadata);
+
+            UInt16Array writerIds = new UInt16Array.Builder().Append((ushort)1).Build();
+            UInt32Array sequences = new UInt32Array.Builder().Append(1u).Build();
+            using var batch = new RecordBatch(schema, new IArrowArray[] { writerIds, sequences }, length: 1);
+
+            using var stream = new MemoryStream();
+            using (var writer = new ArrowStreamWriter(stream, schema))
+            {
+                await writer.WriteRecordBatchAsync(batch);
+                await writer.WriteEndAsync();
+            }
+
+            ArrowNetworkMessageDecoder decoder = new();
+            PubSubNetworkMessage? decoded = await decoder.TryDecodeAsync(stream.ToArray(), context);
+            Assert.That(decoded, Is.Null);
         }
 
         [Test]

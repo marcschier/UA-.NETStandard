@@ -219,7 +219,9 @@ namespace Opc.Ua.PubSub.Encoding
                 or InvalidCastException
                 or EndOfStreamException
                 or OverflowException
-                or NotSupportedException)
+                or NotSupportedException
+                or ArgumentException
+                or ServiceResultException)
             {
                 context.Diagnostics.Increment(PubSubDiagnosticsCounterKind.ReceivedInvalidNetworkMessages);
                 context.Diagnostics.RecordError((StatusCode)StatusCodes.BadDecodingError, ex.Message);
@@ -235,6 +237,12 @@ namespace Opc.Ua.PubSub.Encoding
             uint majorVersion,
             uint minorVersion)
         {
+            if (batch.ColumnCount < HeaderColumnCount)
+            {
+                throw new FormatException(
+                    $"Arrow DataSetMessage record batch has {batch.ColumnCount} columns; expected at least {HeaderColumnCount}.");
+            }
+
             ushort writerId = ((UInt16Array)batch.Column(0)).GetValue(row) ?? 0;
             uint sequenceNumber = ((UInt32Array)batch.Column(1)).GetValue(row) ?? 0;
             StatusCode status = new(((UInt32Array)batch.Column(2)).GetValue(row) ?? 0);
@@ -350,6 +358,12 @@ namespace Opc.Ua.PubSub.Encoding
             int start = list.ValueOffsets[row];
             int length = list.ValueOffsets[row + 1] - start;
             IArrowArray values = list.Values;
+            if (start < 0 || length < 0 || (long)start + length > values.Length)
+            {
+                throw new FormatException(
+                    $"Arrow list offsets for field '{fieldName}' are out of range " +
+                    $"(start={start}, length={length}, values={values.Length}).");
+            }
             return type switch
             {
                 BuiltInType.Boolean => new Variant(new ArrayOf<bool>(
