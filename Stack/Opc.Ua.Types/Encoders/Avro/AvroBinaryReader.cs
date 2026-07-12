@@ -32,6 +32,7 @@ using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Opc.Ua.Types;
 
 namespace Opc.Ua
 {
@@ -166,13 +167,23 @@ namespace Opc.Ua
         /// <summary>
         /// Reads one OPC UA byte string from an Arrow binary array.
         /// </summary>
+        /// <param name = "maxLength">The maximum permitted length, or 0 for unbounded.</param>
         /// <returns>The result produced by this codec helper.</returns>
-        public byte[] ReadBytes()
+        public byte[] ReadBytes(int maxLength = 0)
         {
             long length = ReadLong();
             if (length < 0 || length > int.MaxValue)
             {
                 throw new FormatException("Invalid Avro byte length.");
+            }
+
+            if (maxLength > 0 && length > maxLength)
+            {
+                throw ServiceResultException.Create(
+                    StatusCodes.BadEncodingLimitsExceeded,
+                    "MaxByteStringLength {0} < {1}",
+                    maxLength,
+                    length);
             }
 
             byte[] bytes = new byte[length];
@@ -183,13 +194,23 @@ namespace Opc.Ua
         /// <summary>
         /// Reads String from the experimental encoded representation.
         /// </summary>
+        /// <param name = "maxLength">The maximum permitted length, or 0 for unbounded.</param>
         /// <returns>The result produced by this codec helper.</returns>
-        public string ReadString()
+        public string ReadString(int maxLength = 0)
         {
             long length = ReadLong();
             if (length < 0 || length > int.MaxValue)
             {
                 throw new FormatException("Invalid Avro string length.");
+            }
+
+            if (maxLength > 0 && length > maxLength)
+            {
+                throw ServiceResultException.Create(
+                    StatusCodes.BadEncodingLimitsExceeded,
+                    "MaxStringLength {0} < {1}",
+                    maxLength,
+                    length);
             }
 
             if (length == 0)

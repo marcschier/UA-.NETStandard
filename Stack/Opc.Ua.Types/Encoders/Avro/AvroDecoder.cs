@@ -42,6 +42,7 @@ namespace Opc.Ua
         private readonly Stream m_stream;
         private readonly AvroBinaryReader m_reader;
         private readonly bool m_leaveOpen;
+        private uint m_nestingLevel;
 
         /// <summary>
         /// Initializes a new AvroDecoder instance for the experimental OPC UA encoding support.
@@ -181,7 +182,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public string? ReadString(string? fieldName)
         {
-            return ReadNullable(() => m_reader.ReadString());
+            return ReadNullable(() => m_reader.ReadString(Context.MaxStringLength));
         }
 
         /// <inheritdoc/>
@@ -199,7 +200,7 @@ namespace Opc.Ua
         /// <inheritdoc/>
         public ByteString ReadByteString(string? fieldName)
         {
-            byte[]? bytes = ReadNullable(() => m_reader.ReadBytes());
+            byte[]? bytes = ReadNullable(() => m_reader.ReadBytes(Context.MaxByteStringLength));
             return bytes == null ? default : ByteString.From(bytes);
         }
 
@@ -267,39 +268,55 @@ namespace Opc.Ua
             }
 
             ExpectBranch(branch, 1);
-            var d = new DiagnosticInfo();
-            d.SymbolicId = ReadNullableValue(() => ReadInt32(null), -1);
-            d.NamespaceUri = ReadNullableValue(() => ReadInt32(null), -1);
-            d.Locale = ReadNullableValue(() => ReadInt32(null), -1);
-            d.LocalizedText = ReadNullableValue(() => ReadInt32(null), -1);
-            d.AdditionalInfo = ReadString(null);
-            d.InnerStatusCode = ReadNullableValue(() => ReadStatusCode(null), StatusCodes.Good);
-            d.InnerDiagnosticInfo = ReadDiagnosticInfo(null);
-            return d;
+            CheckAndIncrementNestingLevel();
+            try
+            {
+                var d = new DiagnosticInfo();
+                d.SymbolicId = ReadNullableValue(() => ReadInt32(null), -1);
+                d.NamespaceUri = ReadNullableValue(() => ReadInt32(null), -1);
+                d.Locale = ReadNullableValue(() => ReadInt32(null), -1);
+                d.LocalizedText = ReadNullableValue(() => ReadInt32(null), -1);
+                d.AdditionalInfo = ReadString(null);
+                d.InnerStatusCode = ReadNullableValue(() => ReadStatusCode(null), StatusCodes.Good);
+                d.InnerDiagnosticInfo = ReadDiagnosticInfo(null);
+                return d;
+            }
+            finally
+            {
+                m_nestingLevel--;
+            }
         }
 
         /// <inheritdoc/>
         public DataValue ReadDataValue(string? fieldName)
         {
-            Variant value = ReadNullableValue(() => ReadVariant(null), Variant.Null);
-            StatusCode status = ReadNullableValue(() => ReadStatusCode(null), StatusCodes.Good);
-            DateTimeUtc sourceTs = ReadNullableValue(() => ReadDateTime(null), DateTimeUtc.MinValue);
-            ushort sourcePs = ReadNullableValue(() => ReadUInt16(null), (ushort)0);
-            DateTimeUtc serverTs = ReadNullableValue(() => ReadDateTime(null), DateTimeUtc.MinValue);
-            ushort serverPs = ReadNullableValue(() => ReadUInt16(null), (ushort)0);
-            if (
-                value.IsNull
-                && status.Equals(StatusCodes.Good, StatusCodeComparison.AllBits)
-                && sourceTs.IsNull
-                && serverTs.IsNull
-                && sourcePs == 0
-                && serverPs == 0
-            )
+            CheckAndIncrementNestingLevel();
+            try
             {
-                return DataValue.Null;
-            }
+                Variant value = ReadNullableValue(() => ReadVariant(null), Variant.Null);
+                StatusCode status = ReadNullableValue(() => ReadStatusCode(null), StatusCodes.Good);
+                DateTimeUtc sourceTs = ReadNullableValue(() => ReadDateTime(null), DateTimeUtc.MinValue);
+                ushort sourcePs = ReadNullableValue(() => ReadUInt16(null), (ushort)0);
+                DateTimeUtc serverTs = ReadNullableValue(() => ReadDateTime(null), DateTimeUtc.MinValue);
+                ushort serverPs = ReadNullableValue(() => ReadUInt16(null), (ushort)0);
+                if (
+                    value.IsNull
+                    && status.Equals(StatusCodes.Good, StatusCodeComparison.AllBits)
+                    && sourceTs.IsNull
+                    && serverTs.IsNull
+                    && sourcePs == 0
+                    && serverPs == 0
+                )
+                {
+                    return DataValue.Null;
+                }
 
-            return new DataValue(value, status, sourceTs, serverTs, sourcePs, serverPs);
+                return new DataValue(value, status, sourceTs, serverTs, sourcePs, serverPs);
+            }
+            finally
+            {
+                m_nestingLevel--;
+            }
         }
 
         /// <inheritdoc/>
@@ -321,19 +338,27 @@ namespace Opc.Ua
                     );
                 }
 
-                IEncodeable body = activator.CreateInstance();
-                body.Decode(this);
-                return new ExtensionObject(typeId, body);
+                CheckAndIncrementNestingLevel();
+                try
+                {
+                    IEncodeable body = activator.CreateInstance();
+                    body.Decode(this);
+                    return new ExtensionObject(typeId, body);
+                }
+                finally
+                {
+                    m_nestingLevel--;
+                }
             }
 
             if (branch == 2)
             {
-                return new ExtensionObject(typeId, ByteString.From(m_reader.ReadBytes()));
+                return new ExtensionObject(typeId, ByteString.From(m_reader.ReadBytes(Context.MaxByteStringLength)));
             }
 
             if (branch == 3)
             {
-                return new ExtensionObject(typeId, XmlElement.From(m_reader.ReadString()));
+                return new ExtensionObject(typeId, XmlElement.From(m_reader.ReadString(Context.MaxStringLength)));
             }
 
             throw new FormatException($"Invalid ExtensionObject Avro body branch {branch}.");
@@ -348,18 +373,34 @@ namespace Opc.Ua
                 throw new NotSupportedException($"Cannot decode type {encodeableTypeId}.");
             }
 
-            var value = (T)activator.CreateInstance();
-            value.Decode(this);
-            return value;
+            CheckAndIncrementNestingLevel();
+            try
+            {
+                var value = (T)activator.CreateInstance();
+                value.Decode(this);
+                return value;
+            }
+            finally
+            {
+                m_nestingLevel--;
+            }
         }
 
         /// <inheritdoc/>
         public T ReadEncodeable<T>(string? fieldName)
             where T : IEncodeable, new()
         {
-            var value = new T();
-            value.Decode(this);
-            return value;
+            CheckAndIncrementNestingLevel();
+            try
+            {
+                var value = new T();
+                value.Decode(this);
+                return value;
+            }
+            finally
+            {
+                m_nestingLevel--;
+            }
         }
 
         /// <inheritdoc/>
@@ -734,17 +775,44 @@ namespace Opc.Ua
                 throw new FormatException($"Unexpected Variant branch {branch}; expected {(int)expectedType}.");
             }
 
-            if (!valueRank.HasValue || valueRank.Value < 0)
+            CheckAndIncrementNestingLevel();
+            try
             {
-                return ReadScalarVariant(expectedType);
-            }
+                if (!valueRank.HasValue || valueRank.Value < 0)
+                {
+                    return ReadScalarVariant(expectedType);
+                }
 
-            if (dimensions == null || dimensions.Length <= 1)
+                if (dimensions == null || dimensions.Length <= 1)
+                {
+                    return ReadArrayVariant(expectedType);
+                }
+
+                return ReadMatrixVariant(expectedType);
+            }
+            finally
             {
-                return ReadArrayVariant(expectedType);
+                m_nestingLevel--;
             }
+        }
 
-            return ReadMatrixVariant(expectedType);
+        /// <summary>
+        /// Guards against unbounded decode recursion on hostile input by enforcing
+        /// <see cref="IServiceMessageContext.MaxEncodingNestingLevels"/>, mirroring the built-in
+        /// BinaryDecoder/XmlDecoder/JsonDecoder. Callers must decrement <c>m_nestingLevel</c> in a
+        /// <c>finally</c> block.
+        /// </summary>
+        /// <exception cref="ServiceResultException">The maximum nesting level was exceeded.</exception>
+        private void CheckAndIncrementNestingLevel()
+        {
+            if (m_nestingLevel > Context.MaxEncodingNestingLevels)
+            {
+                throw ServiceResultException.Create(
+                    StatusCodes.BadEncodingLimitsExceeded,
+                    "Maximum nesting level of {0} was exceeded",
+                    Context.MaxEncodingNestingLevels);
+            }
+            m_nestingLevel++;
         }
 
         private Variant ReadScalarVariant(BuiltInType type)

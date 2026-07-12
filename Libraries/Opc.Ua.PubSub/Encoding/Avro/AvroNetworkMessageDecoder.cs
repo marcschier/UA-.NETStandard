@@ -114,6 +114,11 @@ namespace Opc.Ua.PubSub.Encoding
                 {
                     throw new FormatException("Avro NetworkMessage contains a negative DataSetMessage count.");
                 }
+                if (decoder.Context.MaxArrayLength > 0 && count > decoder.Context.MaxArrayLength)
+                {
+                    throw new FormatException(
+                        $"Avro NetworkMessage DataSetMessage count {count} exceeds MaxArrayLength {decoder.Context.MaxArrayLength}.");
+                }
 
                 var messages = new List<PubSubDataSetMessage>(count);
                 var envelope = new AvroNetworkMessage
@@ -141,7 +146,8 @@ namespace Opc.Ua.PubSub.Encoding
                 or EndOfStreamException
                 or OverflowException
                 or ArgumentException
-                or NotSupportedException)
+                or NotSupportedException
+                or ServiceResultException)
             {
                 context.Diagnostics.Increment(
                     PubSubDiagnosticsCounterKind.ReceivedInvalidNetworkMessages);
@@ -186,6 +192,11 @@ namespace Opc.Ua.PubSub.Encoding
             if (fieldCount < 0)
             {
                 throw new FormatException("Avro DataSetMessage contains a negative field count.");
+            }
+            if (decoder.Context.MaxArrayLength > 0 && fieldCount > decoder.Context.MaxArrayLength)
+            {
+                throw new FormatException(
+                    $"Avro DataSetMessage field count {fieldCount} exceeds MaxArrayLength {decoder.Context.MaxArrayLength}.");
             }
             if (messageType == PubSubDataSetMessageType.KeepAlive)
             {

@@ -245,6 +245,55 @@ namespace Opc.Ua.Core.Tests
         }
 
         [Test]
+        public void DeeplyNestedDiagnosticInfoThrowsEncodingLimitsInsteadOfStackOverflow()
+        {
+            // Regression: the decoder must bound recursion with Context.MaxEncodingNestingLevels,
+            // like the built-in decoders, instead of overflowing the stack on hostile input.
+            var di = new DiagnosticInfo { SymbolicId = 1 };
+            for (int i = 0; i < 40; i++)
+            {
+                di = new DiagnosticInfo { InnerDiagnosticInfo = di };
+            }
+
+            byte[] bytes = Encode(e => e.WriteDiagnosticInfo(null, di));
+
+            var limited = ServiceMessageContext.CreateEmpty(null!);
+            limited.MaxEncodingNestingLevels = 8;
+            using var decoder = new AvroDecoder(bytes, limited);
+            ServiceResultException ex = Assert.Throws<ServiceResultException>(
+                () => decoder.ReadDiagnosticInfo(null))!;
+            Assert.That(ex.StatusCode, Is.EqualTo(StatusCodes.BadEncodingLimitsExceeded));
+        }
+
+        [Test]
+        public void OversizedStringThrowsEncodingLimits()
+        {
+            // Regression: decoded string/byte-string lengths must be validated against the context
+            // limits before allocating, instead of trusting an attacker-controlled length prefix.
+            byte[] bytes = Encode(e => e.WriteString(null, new string('x', 100)));
+
+            var limited = ServiceMessageContext.CreateEmpty(null!);
+            limited.MaxStringLength = 10;
+            using var decoder = new AvroDecoder(bytes, limited);
+            ServiceResultException ex = Assert.Throws<ServiceResultException>(
+                () => decoder.ReadString(null))!;
+            Assert.That(ex.StatusCode, Is.EqualTo(StatusCodes.BadEncodingLimitsExceeded));
+        }
+
+        [Test]
+        public void OversizedByteStringThrowsEncodingLimits()
+        {
+            byte[] bytes = Encode(e => e.WriteByteString(null, ByteString.From(new byte[100])));
+
+            var limited = ServiceMessageContext.CreateEmpty(null!);
+            limited.MaxByteStringLength = 10;
+            using var decoder = new AvroDecoder(bytes, limited);
+            ServiceResultException ex = Assert.Throws<ServiceResultException>(
+                () => decoder.ReadByteString(null))!;
+            Assert.That(ex.StatusCode, Is.EqualTo(StatusCodes.BadEncodingLimitsExceeded));
+        }
+
+        [Test]
         public void AvroBufferedLargeMatrixAndStringRoundTrip()
         {
             int[] values = new int[2500];
