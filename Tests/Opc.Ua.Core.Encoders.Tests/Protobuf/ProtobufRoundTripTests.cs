@@ -227,6 +227,63 @@ namespace Opc.Ua.Core.Tests
             Assert.That(ex.StatusCode, Is.EqualTo(StatusCodes.BadEncodingLimitsExceeded));
         }
 
+        [Test]
+        public void UnionSwitchFieldRoundTripsNonFirstMember()
+        {
+            // Regression: the union discriminator must be carried on the wire. Selecting a non-first
+            // member (switch 2) previously decoded as member 1 because presence was probed positionally.
+            byte[] bytes = Encode(e =>
+            {
+                e.WriteSwitchField(2, out _);
+                e.WriteString("B", "hello");
+            });
+
+            var decoder = new ProtobufDecoder(bytes, Context);
+            string[] switches = ["A", "B", "C"];
+            uint sw = decoder.ReadSwitchField(switches, out string? field);
+            Assert.That(sw, Is.EqualTo(2u));
+            Assert.That(field, Is.EqualTo("B"));
+            Assert.That(decoder.ReadString("B"), Is.EqualTo("hello"));
+        }
+
+        [Test]
+        public void EncodingMaskRoundTripsWithAbsentEarlierOptional()
+        {
+            // Regression: with an absent earlier optional (A) and a present later one (B), the mask must
+            // be reconstructed authoritatively from the wire (0b10), not by positional presence probing.
+            byte[] bytes = Encode(e =>
+            {
+                e.WriteEncodingMask(0b10u);
+                e.WriteString("B", "world");
+            });
+
+            var decoder = new ProtobufDecoder(bytes, Context);
+            string[] masks = ["A", "B"];
+            uint mask = decoder.ReadEncodingMask(masks);
+            Assert.That(mask, Is.EqualTo(0b10u));
+            Assert.That(decoder.ReadString("B"), Is.EqualTo("world"));
+        }
+
+        [Test]
+        public void TruncatedFixed64ThrowsBadDecodingError()
+        {
+            // field 3, wire 1 (fixed64) with only two payload bytes instead of eight.
+            byte[] truncated = [0x19, 0x01, 0x02];
+            ServiceResultException ex = Assert.Throws<ServiceResultException>(
+                () => new ProtobufDecoder(truncated, Context))!;
+            Assert.That(ex.StatusCode, Is.EqualTo(StatusCodes.BadDecodingError));
+        }
+
+        [Test]
+        public void TruncatedLengthDelimitedThrowsBadDecodingError()
+        {
+            // field 1, wire 2 (length-delimited) declaring length 10 with no payload bytes following.
+            byte[] truncated = [0x0A, 0x0A];
+            ServiceResultException ex = Assert.Throws<ServiceResultException>(
+                () => new ProtobufDecoder(truncated, Context))!;
+            Assert.That(ex.StatusCode, Is.EqualTo(StatusCodes.BadDecodingError));
+        }
+
         private static IEnumerable<TestCaseData> VariantBodyRoundTripCases
         {
             get

@@ -303,12 +303,20 @@ namespace Opc.Ua
         {
             fieldName = null;
             m_stack.Peek().UnionSwitch = switchField;
+            // Persist the union discriminator on the wire so a union whose selected member is not the
+            // first one decodes correctly (the positional field probe alone always resolves member 1).
+            Proto.WriteTag(Current, Proto.UnionSwitchField, 0);
+            Proto.WriteVarint(Current, switchField);
         }
 
         /// <inheritdoc/>
         public void WriteEncodingMask(uint encodingMask)
         {
             m_stack.Peek().EncodingMask = encodingMask;
+            // Persist the optional-field presence mask so structures with multiple optionals (where an
+            // earlier optional is absent) round-trip without relying on positional presence probing.
+            Proto.WriteTag(Current, Proto.UnionMaskField, 0);
+            Proto.WriteVarint(Current, encodingMask);
         }
 
         /// <inheritdoc/>

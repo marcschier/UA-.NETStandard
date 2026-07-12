@@ -42,6 +42,19 @@ namespace Opc.Ua
     internal static class Proto
     {
         /// <summary>
+        /// Reserved Protobuf field number carrying a union's switch (discriminator) value. Chosen well
+        /// above the positional member range and outside Protobuf's reserved 19000-19999 range so it
+        /// never collides with a real field. See ProtobufEncoder.WriteSwitchField.
+        /// </summary>
+        public const int UnionSwitchField = 60000;
+
+        /// <summary>
+        /// Reserved Protobuf field number carrying a structure's optional-field presence mask. See
+        /// ProtobufEncoder.WriteEncodingMask.
+        /// </summary>
+        public const int UnionMaskField = 60001;
+
+        /// <summary>
         /// Writes a Protobuf field tag for the supplied field number and wire type.
         /// </summary>
         /// <param name = "w">The binary writer that receives wire-format bytes.</param>
@@ -140,16 +153,38 @@ namespace Opc.Ua
                         msg.Fields.Add(new ProtoField(field, wire, ReadVarint(span, ref p), default, 0, 0));
                         break;
                     case 1:
+                        if (p + 8 > span.Length)
+                        {
+                            throw new ServiceResultException(
+                                StatusCodes.BadDecodingError,
+                                "Truncated Protobuf fixed64 value."
+                            );
+                        }
                         ulong f64 = BinaryPrimitives.ReadUInt64LittleEndian(span[p..]);
                         p += 8;
                         msg.Fields.Add(new ProtoField(field, wire, 0, default, 0, f64));
                         break;
                     case 2:
-                        int len = checked((int)ReadVarint(span, ref p));
+                        long rawLen = (long)ReadVarint(span, ref p);
+                        if (rawLen < 0 || rawLen > span.Length - p)
+                        {
+                            throw new ServiceResultException(
+                                StatusCodes.BadDecodingError,
+                                "Truncated or invalid Protobuf length-delimited field."
+                            );
+                        }
+                        int len = (int)rawLen;
                         msg.Fields.Add(new ProtoField(field, wire, 0, buffer.Slice(p, len), 0, 0));
                         p += len;
                         break;
                     case 5:
+                        if (p + 4 > span.Length)
+                        {
+                            throw new ServiceResultException(
+                                StatusCodes.BadDecodingError,
+                                "Truncated Protobuf fixed32 value."
+                            );
+                        }
                         uint f32 = BinaryPrimitives.ReadUInt32LittleEndian(span[p..]);
                         p += 4;
                         msg.Fields.Add(new ProtoField(field, wire, 0, default, f32, 0));
@@ -187,7 +222,10 @@ namespace Opc.Ua
                 shift += 7;
             }
 
-            throw new EndOfStreamException();
+            throw new ServiceResultException(
+                StatusCodes.BadDecodingError,
+                "Truncated Protobuf varint."
+            );
         }
 
         /// <summary>

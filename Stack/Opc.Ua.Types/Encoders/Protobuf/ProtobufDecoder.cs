@@ -119,20 +119,24 @@ namespace Opc.Ua
             return Current.Message.Has(Current.FieldForName(fieldName));
         }
 
-        // KNOWN LIMITATION (reference decoder): optional-field presence is reconstructed by probing
-        // each optional field name against the wire (HasField). Because this hand-rolled reference
-        // numbers protobuf fields positionally and omits absent optionals, the reconstruction is only
-        // reliable when at most one optional precedes a given field, or no preceding optional is absent.
-        // Structures with two or more optional fields where an earlier one is absent can mis-map presence.
-        // The in-scope gRPC service messages (ProtobufGrpcMessages) do not use such structures. The spec
-        // (OPC-UA-Part6-Protobuf-DataEncoding §5.6.4 and encoding step 3) already prescribes the robust
-        // approach: assign FIXED field numbers from DataTypeDefinition field order (reserving numbers for
-        // absent optionals) plus proto3 explicit presence. A schema-driven codec that reads/writes fixed
-        // numbers from the generated .proto does not have this limitation; adopting fixed numbering here
-        // is deferred beyond this first positional reference.
+        // Optional-field presence and union discriminators are carried explicitly on the wire in
+        // reserved fields (Proto.UnionMaskField / Proto.UnionSwitchField) written by the encoder, so
+        // ReadEncodingMask / ReadSwitchField reconstruct them authoritatively rather than by positional
+        // probing. The positional HasField probe is retained only as a fallback for payloads that omit
+        // those reserved fields. Field VALUES themselves are still numbered positionally (present fields
+        // compacted from 1), which matches the encoder; the spec's fully fixed-numbering scheme
+        // (OPC-UA-Part6-Protobuf-DataEncoding §5.6.4) remains a possible future refinement.
         /// <inheritdoc/>
         public uint ReadEncodingMask(IList<string> masks)
         {
+            // Prefer the persisted presence mask written by the encoder; it is authoritative and avoids
+            // the positional-probe limitation for structures with multiple optional fields.
+            ProtoField? persisted = Current.Message.First(Proto.UnionMaskField);
+            if (persisted.HasValue)
+            {
+                return (uint)persisted.Value.Varint;
+            }
+
             if (masks != null)
             {
                 uint mask = 0;
@@ -154,6 +158,19 @@ namespace Opc.Ua
         public uint ReadSwitchField(IList<string> switches, out string? fieldName)
         {
             fieldName = null;
+            // Prefer the persisted union discriminator written by the encoder; the positional probe
+            // below cannot distinguish which member is present and always resolves the first one.
+            ProtoField? persisted = Current.Message.First(Proto.UnionSwitchField);
+            if (persisted.HasValue)
+            {
+                uint switchValue = (uint)persisted.Value.Varint;
+                if (switches != null && switchValue >= 1 && switchValue <= switches.Count)
+                {
+                    fieldName = switches[(int)switchValue - 1];
+                }
+                return switchValue;
+            }
+
             if (switches != null)
             {
                 for (int i = 0; i < switches.Count; i++)
