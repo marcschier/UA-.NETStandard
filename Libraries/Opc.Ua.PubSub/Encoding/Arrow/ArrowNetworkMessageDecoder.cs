@@ -30,6 +30,7 @@
 using Opc.Ua;
 using System;
 using System.Buffers.Binary;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -56,7 +57,9 @@ namespace Opc.Ua.PubSub.Encoding
         private const string Version = "1";
         private const int HeaderColumnCount = 5;
         private static readonly byte[] s_streamEnd = [0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00];
-        private readonly Dictionary<string, byte[]> m_schemaMessages = new(StringComparer.Ordinal);
+        // Concurrent so a decoder instance shared across receive threads cannot corrupt the cache
+        // (the schema message is written from CacheSchema/CacheSchemaMessage and read from decode).
+        private readonly ConcurrentDictionary<string, byte[]> m_schemaMessages = new(StringComparer.Ordinal);
 
         /// <inheritdoc/>
         public string TransportProfileUri
