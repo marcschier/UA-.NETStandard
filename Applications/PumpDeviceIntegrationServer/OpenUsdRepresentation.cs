@@ -118,7 +118,7 @@ namespace Pumps
 
             CreateBinding(rep, ns, "MassFlowSpin",
                 new Guid("6e63cf2c-f2de-4f78-a8f8-f0ccdbb7647a"),
-                massFlow, string.Empty, "xformOp:rotateZ", "double",
+                massFlow, "/Plant/Pumps/P101/Impeller", "xformOp:rotateZ", "double",
                 OpenUsdRenderTargetKindEnum.Rotation, 1.0);
             CreateBinding(rep, ns, "BearingTempColor",
                 new Guid("b1a1f6f0-5c2b-5a1e-9f3a-2b7c4d8e0011"),
@@ -126,7 +126,7 @@ namespace Pumps
                 OpenUsdRenderTargetKindEnum.DisplayColor, 1.0);
             CreateBinding(rep, ns, "DiffPressureEmissive",
                 new Guid("c2b2a7e1-6d3c-5b2f-a04b-3c8d5e9f1122"),
-                diffPressure, string.Empty, "inputs:emissiveColor", "color3f",
+                diffPressure, "/Plant/Pumps/P101/StatusLight/Mat/Surface", "inputs:emissiveColor", "color3f",
                 OpenUsdRenderTargetKindEnum.EmissiveColor, 1.0);
 
             AssignChildNodeIds(rep);

@@ -38,6 +38,14 @@ using Opc.Ua.Di.Server.SoftwareUpdate;
 using Opc.Ua.Server.Fluent;
 using Pumps;
 
+// Connector run-mode: `dotnet run -- connect [--server <url>] [--out <live.usda>] [--seconds N]`
+// runs the generic OpenUSD connector against a running server and authors a live
+// USD override layer. Anything else starts the pump server (below).
+if (args.Length > 0 && string.Equals(args[0], "connect", StringComparison.OrdinalIgnoreCase))
+{
+    return await OpenUsdConnectorRunner.RunAsync(args).ConfigureAwait(false);
+}
+
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
 builder.Logging.ClearProviders();
@@ -130,3 +138,4 @@ builder.Services
     });
 
 await builder.Build().RunAsync().ConfigureAwait(false);
+return 0;
