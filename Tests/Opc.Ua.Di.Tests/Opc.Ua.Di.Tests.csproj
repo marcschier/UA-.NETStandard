@@ -9,6 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Moq" />
     <PackageReference Include="NUnit" />
@@ -47,5 +48,6 @@
     <Compile Remove="PumpHostingIntegrationTests.cs" />
     <Compile Remove="PumpNodeManagerFactoryTests.cs" />
     <Compile Remove="PumpsNodeSetLoadingTests.cs" />
+    <Compile Remove="PumpOpenUsdE2eTests.cs" />
   </ItemGroup>
 </Project>
