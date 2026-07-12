@@ -37,6 +37,7 @@ using Opc.Ua.Di;
 using Opc.Ua.Di.Server;
 using Opc.Ua.Di.Server.Hosting;
 using Opc.Ua.Machinery;
+using Opc.Ua.OpenUsd;
 using Opc.Ua.Pumps;
 using Opc.Ua.Server;
 using Opc.Ua.Server.Fluent;
@@ -75,7 +76,8 @@ namespace Pumps
                   configuration,
                   postSetupRunner,
                   Opc.Ua.Pumps.Namespaces.Pumps,
-                  Opc.Ua.Machinery.Namespaces.Machinery)
+                  Opc.Ua.Machinery.Namespaces.Machinery,
+                  Opc.Ua.OpenUsd.Namespaces.OpenUSD)
         {
             // Base class constructor sets SystemContext.NodeIdFactory to
             // itself; our New() override takes over.
@@ -116,6 +118,7 @@ namespace Pumps
             nodes.AddOpcUaDi(context);
             nodes.AddOpcUaMachinery(context);
             nodes.AddOpcUaPumps(context);
+            nodes.AddOpcUaOpenUsd(context);
             return new ValueTask<NodeStateCollection>(nodes);
         }
 
@@ -174,8 +177,18 @@ namespace Pumps
             ushort pumpsNs = (ushort)Server.NamespaceUris
                 .GetIndex(Opc.Ua.Pumps.Namespaces.Pumps);
             var pumpBrowseName = new QualifiedName("Pump #1", pumpsNs);
+
+            // OpenUSD facility first so the pump representation can reference the stage.
+            await MaterialiseOpenUsdFacilityAsync(cancellationToken)
+                .ConfigureAwait(false);
+
             await MaterialisePumpInstanceAsync(pumpBrowseName, cancellationToken)
                 .ConfigureAwait(false);
+
+            if (m_pump1 != null)
+            {
+                OrganiseRepresentation(m_pump1);
+            }
         }
 
         /// <summary>
@@ -237,6 +250,10 @@ namespace Pumps
             // TYPE NodeId on every new child; without this walk every
             // instance of PumpType would collide on those NodeIds.
             AssignChildNodeIds(pump);
+
+            // Attach the OpenUSD representation + live bindings after per-instance
+            // NodeIds are assigned and before registration.
+            AttachOpenUsdRepresentation(pump);
 
             await AddPredefinedNodeAsync(SystemContext, pump, cancellationToken)
                 .ConfigureAwait(false);
@@ -374,7 +391,8 @@ namespace Pumps
         {
             Opc.Ua.Pumps.Namespaces.Pumps,
             Opc.Ua.Machinery.Namespaces.Machinery,
-            Opc.Ua.Di.Namespaces.OpcUaDi
+            Opc.Ua.Di.Namespaces.OpcUaDi,
+            Opc.Ua.OpenUsd.Namespaces.OpenUSD
         };
 
         /// <inheritdoc/>

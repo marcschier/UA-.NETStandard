@@ -51,6 +51,10 @@
       <ModelSourceGeneratorPrefix>Opc.Ua.Pumps</ModelSourceGeneratorPrefix>
     </AdditionalFiles>
     <AdditionalFiles Include="Model\Opc.Ua.Pumps.NodeSet2.csv" />
+    <AdditionalFiles Include="Model\Opc.Ua.OpenUsdBinding.NodeSet2.xml">
+      <ModelSourceGeneratorPrefix>Opc.Ua.OpenUsd</ModelSourceGeneratorPrefix>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Model\Opc.Ua.OpenUsdBinding.NodeSet2.csv" />
   </ItemGroup>
   <Import Project="..\..\Tools\Opc.Ua.SourceGeneration\OPCFoundation.Opc.Ua.SourceGeneration.props" />
   <PropertyGroup>
