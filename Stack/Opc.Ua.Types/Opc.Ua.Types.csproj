@@ -17,11 +17,28 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Opc.Ua.Core.Types" />
     <InternalsVisibleTo Include="Opc.Ua.Types.Tests" />
+    <InternalsVisibleTo Include="Opc.Ua.Core.Encoders.Tests" />
     <InternalsVisibleTo Include="Opc.Ua.SourceGeneration.Core.Tests" />
+  </ItemGroup>
+  <!-- The Avro, Protobuf and Arrow reference encoders require modern .NET (net5+
+       BCL APIs such as BitConverter.SingleToUInt32Bits / Convert.ToHexString /
+       Stream.ReadExactly, and Apache.Arrow for Arrow). Exclude them on the legacy
+       target frameworks (net472/net48/netstandard2.0/netstandard2.1). -->
+  <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+    <Compile Remove="Encoders\Avro\**\*.cs" />
+    <Compile Remove="Encoders\Arrow\**\*.cs" />
+    <Compile Remove="Encoders\Protobuf\**\*.cs" />
+    <Compile Remove="Encoders\SchemaExchange\**\*.cs" />
+    <Compile Remove="Encoders\SchemaId.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.Collections.Immutable" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+  <!-- Apache.Arrow backs the Arrow reference encoder; it is only referenced on the
+       modern target frameworks where the Arrow encoders are compiled (net8+). -->
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+    <PackageReference Include="Apache.Arrow" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48'">
     <PackageReference Include="Microsoft.Bcl.HashCode" />
