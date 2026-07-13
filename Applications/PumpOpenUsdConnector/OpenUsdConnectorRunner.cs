@@ -35,14 +35,14 @@ using Microsoft.Extensions.Logging;
 using Opc.Ua;
 using Opc.Ua.Client;
 
-namespace Pumps
+namespace PumpOpenUsdConnector
 {
     /// <summary>
-    /// Standalone runner for the generic <see cref="OpenUsdConnector"/>. Connects to a
-    /// running PumpDeviceIntegrationServer, discovers the OpenUSD representation and
-    /// bindings via <c>Server/OpenUSD/Representations</c>, and streams live values into
-    /// a <see cref="UsdFileSink"/> (an override <c>live.usda</c>). Invoked as
-    /// <c>dotnet run -- connect [--server &lt;url&gt;] [--out &lt;live.usda&gt;] [--seconds N]</c>.
+    /// Runs the generic <see cref="OpenUsdConnector"/>: connects to a running OPC UA
+    /// server (e.g. PumpDeviceIntegrationServer), discovers the OpenUSD representation
+    /// and bindings via <c>Server/OpenUSD/Representations</c>, and streams live values
+    /// into a <see cref="UsdFileSink"/> (an override <c>live.usda</c>). Invoked as
+    /// <c>PumpOpenUsdConnector [--server &lt;url&gt;] [--out &lt;live.usda&gt;] [--seconds N]</c>.
     /// </summary>
     public static class OpenUsdConnectorRunner
     {

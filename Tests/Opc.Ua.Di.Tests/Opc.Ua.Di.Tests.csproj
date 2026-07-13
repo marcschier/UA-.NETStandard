@@ -41,6 +41,8 @@
          so the reference and the Pump-specific fixtures are skipped on net472. -->
     <ProjectReference Include="..\..\Applications\PumpDeviceIntegrationServer\PumpDeviceIntegrationServer.csproj"
                       Condition="'$(TargetFramework)' != 'net472'" />
+    <ProjectReference Include="..\..\Applications\PumpOpenUsdConnector\PumpOpenUsdConnector.csproj"
+                      Condition="'$(TargetFramework)' != 'net472'" />
     <ProjectReference Include="..\Opc.Ua.Server.TestFramework\Opc.Ua.Server.TestFramework.csproj" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">

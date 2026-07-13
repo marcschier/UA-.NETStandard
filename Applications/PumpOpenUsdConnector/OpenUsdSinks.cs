@@ -35,7 +35,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 
-namespace Pumps
+namespace PumpOpenUsdConnector
 {
     /// <summary>USD-side sink the <see cref="OpenUsdConnector"/> writes into.</summary>
     public interface IUsdSink

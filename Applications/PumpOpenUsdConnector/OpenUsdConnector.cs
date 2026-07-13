@@ -33,9 +33,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Opc.Ua;
 using Opc.Ua.Client;
-using Opc.Ua.OpenUsd;
 
-namespace Pumps
+namespace PumpOpenUsdConnector
 {
     /// <summary>
     /// Generic OPC UA — OpenUSD connector. It discovers an
@@ -58,7 +57,7 @@ namespace Pumps
         {
             m_session = session;
             m_sink = sink;
-            m_ns = (ushort)m_session.NamespaceUris.GetIndex(Opc.Ua.OpenUsd.Namespaces.OpenUSD);
+            m_ns = (ushort)m_session.NamespaceUris.GetIndex(OpenUsdModel.NamespaceUri);
             m_representationTypeId = new NodeId(1003u, m_ns);
             m_bindingTypeId = new NodeId(1004u, m_ns);
         }
@@ -68,7 +67,7 @@ namespace Pumps
             public NodeId? SourceNodeId { get; set; }
             public string? PrimPath { get; set; }
             public string? PropertyName { get; set; }
-            public OpenUsdRenderTargetKindEnum Kind { get; set; }
+            public OpenUsdRenderTargetKind Kind { get; set; }
             public double Scale { get; set; } = 1.0;
         }
 
@@ -140,7 +139,7 @@ namespace Pumps
                     SourceNodeId = await ReadNodeIdAsync(bp, "SourceNodeId", ct).ConfigureAwait(false),
                     PrimPath = await ReadStringAsync(bp, "TargetPrimPath", ct).ConfigureAwait(false),
                     PropertyName = await ReadStringAsync(bp, "TargetPropertyName", ct).ConfigureAwait(false),
-                    Kind = (OpenUsdRenderTargetKindEnum)await ReadInt32Async(bp, "RenderTargetKind", ct)
+                    Kind = (OpenUsdRenderTargetKind)await ReadInt32Async(bp, "RenderTargetKind", ct)
                         .ConfigureAwait(false),
                     Scale = await ReadDoubleAsync(bp, "Scale", 1.0, ct).ConfigureAwait(false)
                 };
@@ -225,7 +224,7 @@ namespace Pumps
         }
 
         /// <summary>
-        /// Applies the binding's declared <see cref="OpenUsdRenderTargetKindEnum"/> to a
+        /// Applies the binding's declared <see cref="OpenUsdRenderTargetKind"/> to a
         /// raw source value, returning the USD-side value (double for scalars, a
         /// three-float array for colours, a token for visibility).
         /// </summary>
@@ -234,20 +233,20 @@ namespace Pumps
             double d = ToDouble(raw);
             switch (b.Kind)
             {
-                case OpenUsdRenderTargetKindEnum.Rotation:
-                case OpenUsdRenderTargetKindEnum.Translation:
-                case OpenUsdRenderTargetKindEnum.Scale:
-                case OpenUsdRenderTargetKindEnum.Opacity:
+                case OpenUsdRenderTargetKind.Rotation:
+                case OpenUsdRenderTargetKind.Translation:
+                case OpenUsdRenderTargetKind.Scale:
+                case OpenUsdRenderTargetKind.Opacity:
                     return d * b.Scale;
-                case OpenUsdRenderTargetKindEnum.DisplayColor:
+                case OpenUsdRenderTargetKind.DisplayColor:
                     // Temperature: blue (cool) -> red (hot).
                     double t = System.Math.Max(0.0, System.Math.Min(1.0, (d - 20.0) / 80.0));
                     return new[] { (float)t, 0f, (float)(1.0 - t) };
-                case OpenUsdRenderTargetKindEnum.EmissiveColor:
+                case OpenUsdRenderTargetKind.EmissiveColor:
                     // Pressure: dark -> bright green-white glow.
                     double e = System.Math.Max(0.0, System.Math.Min(1.0, d / 6.0));
                     return new[] { (float)(0.1 * e), (float)e, (float)(0.2 * e) };
-                case OpenUsdRenderTargetKindEnum.Visibility:
+                case OpenUsdRenderTargetKind.Visibility:
                     return d != 0.0 ? "inherited" : "invisible";
                 default:
                     return d * b.Scale;
