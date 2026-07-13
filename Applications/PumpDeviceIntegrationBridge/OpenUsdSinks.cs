@@ -41,6 +41,10 @@ namespace PumpDeviceIntegrationBridge
     public interface IUsdSink
     {
         void SetAttribute(string primPath, string propertyName, object value);
+
+        // Authors a USD time sample (for UaHistoryToUsd playback/scrubbing). The
+        // DateTime is mapped to a USD frame (seconds since the Unix epoch).
+        void SetTimeSample(string primPath, string propertyName, DateTime time, object value);
     }
 
     /// <summary>In-memory, thread-safe sink (used by tests and diagnostics).</summary>
@@ -48,14 +52,23 @@ namespace PumpDeviceIntegrationBridge
     {
         private readonly ConcurrentDictionary<string, (object Value, int Count)> m_state = new();
         private int m_total;
+        private int m_timeSamples;
 
         public int TotalWrites => Volatile.Read(ref m_total);
+        public int TimeSampleWrites => Volatile.Read(ref m_timeSamples);
 
         public void SetAttribute(string primPath, string propertyName, object value)
         {
             m_state.AddOrUpdate(primPath + "." + propertyName, (value, 1),
                 (_, prev) => (value, prev.Count + 1));
             Interlocked.Increment(ref m_total);
+        }
+
+        public void SetTimeSample(string primPath, string propertyName, DateTime time, object value)
+        {
+            m_state.AddOrUpdate(primPath + "." + propertyName, (value, 1),
+                (_, prev) => (value, prev.Count + 1));
+            Interlocked.Increment(ref m_timeSamples);
         }
 
         public bool WasWritten(string primPath, string propertyName)
@@ -73,10 +86,15 @@ namespace PumpDeviceIntegrationBridge
     public sealed class UsdFileSink : IUsdSink
     {
         private static readonly char[] s_pathSeparator = ['/'];
+        private static readonly DateTime s_epoch =
+            new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         private readonly string m_path;
         private readonly object m_gate = new();
         private readonly Dictionary<string, object> m_values = new(StringComparer.Ordinal);
         private readonly List<(string Prim, string Prop)> m_order = new();
+        private readonly Dictionary<string, SortedList<double, object>> m_timeSamples =
+            new(StringComparer.Ordinal);
+        private readonly List<(string Prim, string Prop)> m_tsOrder = new();
 
         public UsdFileSink(string path)
         {
@@ -102,6 +120,27 @@ namespace PumpDeviceIntegrationBridge
                     m_order.Add((primPath, propertyName));
                 }
                 m_values[key] = value;
+                Write();
+            }
+        }
+
+        public void SetTimeSample(string primPath, string propertyName, DateTime time, object value)
+        {
+            if (!IsValidPrimPath(primPath) || !IsValidPropertyName(propertyName))
+            {
+                return;
+            }
+            double frame = (time.ToUniversalTime() - s_epoch).TotalSeconds;
+            lock (m_gate)
+            {
+                string key = primPath + "|" + propertyName;
+                if (!m_timeSamples.TryGetValue(key, out SortedList<double, object>? samples))
+                {
+                    samples = new SortedList<double, object>();
+                    m_timeSamples[key] = samples;
+                    m_tsOrder.Add((primPath, propertyName));
+                }
+                samples[frame] = value;
                 Write();
             }
         }
@@ -171,6 +210,7 @@ namespace PumpDeviceIntegrationBridge
         private sealed class Node
         {
             public List<(string Prop, string UsdType, string Value)> Props { get; } = new();
+            public List<(string Prop, string UsdType, string Block)> TimeSamples { get; } = new();
             public Dictionary<string, Node> Children { get; } = new(StringComparer.Ordinal);
             public List<string> ChildOrder { get; } = new();
 
@@ -186,6 +226,20 @@ namespace PumpDeviceIntegrationBridge
             }
         }
 
+        private Node NavigateTo(Node root, List<string> rootOrder, string prim)
+        {
+            Node node = root;
+            foreach (string seg in prim.Split(s_pathSeparator, StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (node == root && !rootOrder.Contains(seg))
+                {
+                    rootOrder.Add(seg);
+                }
+                node = node.Child(seg);
+            }
+            return node;
+        }
+
         private void Write()
         {
             var root = new Node();
@@ -193,17 +247,27 @@ namespace PumpDeviceIntegrationBridge
             foreach ((string prim, string prop) in m_order)
             {
                 object value = m_values[prim + "|" + prop];
-                Node node = root;
-                foreach (string seg in prim.Split(s_pathSeparator, StringSplitOptions.RemoveEmptyEntries))
-                {
-                    if (node == root && !rootOrder.Contains(seg))
-                    {
-                        rootOrder.Add(seg);
-                    }
-                    node = node.Child(seg);
-                }
+                Node node = NavigateTo(root, rootOrder, prim);
                 (string usdType, string formatted) = FormatValue(prop, value);
                 node.Props.Add((prop, usdType, formatted));
+            }
+            foreach ((string prim, string prop) in m_tsOrder)
+            {
+                SortedList<double, object> samples = m_timeSamples[prim + "|" + prop];
+                Node node = NavigateTo(root, rootOrder, prim);
+                string usdType = "double";
+                var block = new StringBuilder();
+                block.Append("{\n");
+                foreach (KeyValuePair<double, object> kv in samples)
+                {
+                    (string t, string formatted) = FormatValue(prop, kv.Value);
+                    usdType = t;
+                    block.Append("                ")
+                         .Append(kv.Key.ToString("0.000", CultureInfo.InvariantCulture))
+                         .Append(": ").Append(formatted).Append(",\n");
+                }
+                block.Append("            }");
+                node.TimeSamples.Add((prop, usdType, block.ToString()));
             }
 
             var sb = new StringBuilder();
@@ -230,6 +294,11 @@ namespace PumpDeviceIntegrationBridge
             {
                 sb.Append(indent).Append("    ").Append(usdType).Append(' ')
                   .Append(prop).Append(" = ").Append(value).Append('\n');
+            }
+            foreach ((string prop, string usdType, string block) in node.TimeSamples)
+            {
+                sb.Append(indent).Append("    ").Append(usdType).Append(' ')
+                  .Append(prop).Append(".timeSamples = ").Append(block).Append('\n');
             }
             foreach (string child in node.ChildOrder)
             {

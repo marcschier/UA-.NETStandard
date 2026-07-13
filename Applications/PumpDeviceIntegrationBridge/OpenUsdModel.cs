@@ -56,4 +56,38 @@ namespace PumpDeviceIntegrationBridge
         Opacity = 7,
         Custom = 8
     }
+
+    /// <summary>Binding intent/direction (NodeSet i=3001).</summary>
+    public enum OpenUsdIntentProfile
+    {
+        UaToUsdTelemetry = 0,
+        UaAlarmToUsd = 1,
+        UaHistoryToUsd = 2,
+        UsdToUaCommand = 3
+    }
+
+    /// <summary>Role of the bound signal (NodeSet i=3005).</summary>
+    public enum OpenUsdSignalRole
+    {
+        Observable = 0,
+        Controllable = 1
+    }
+
+    /// <summary>A&amp;C condition aspect a UaAlarmToUsd binding drives (NodeSet i=3006).</summary>
+    public enum OpenUsdAlarmAspect
+    {
+        ActiveState = 0,
+        Severity = 1,
+        AckedState = 2,
+        EnabledState = 3
+    }
+
+    /// <summary>Digest algorithm for OpenUsdStageType.RootLayerDigest (NodeSet i=3007).</summary>
+    public enum OpenUsdDigestAlgorithm
+    {
+        None = 0,
+        Sha256 = 1,
+        Sha384 = 2,
+        Sha512 = 3
+    }
 }

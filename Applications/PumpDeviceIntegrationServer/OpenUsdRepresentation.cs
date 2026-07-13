@@ -48,6 +48,8 @@ namespace Pumps
     {
         private OpenUsdRootState? m_openUsdRoot;
         private OpenUsdStageState? m_plantStage;
+        private BaseDataVariableState? m_alarmActiveVar;
+        private BaseDataVariableState? m_speedSetpointVar;
 
         private const string PlantRootLayerIdentifier = "asset-repo/Plant.usd";
         private const string PumpPrimPath = "/Plant/Pumps/P101";
@@ -73,6 +75,27 @@ namespace Pumps
                 stages.AddChild(m_plantStage);
                 m_plantStage.CreateOrReplaceRootLayerIdentifier(SystemContext, null!)
                     .Value = PlantRootLayerIdentifier;
+
+                // 0.2 Twin-BOM content integrity: publish a deterministic digest of
+                // the resolved root layer identity so a connector can verify the
+                // stage before composing it. A production server digests the actual
+                // resolved bytes; here we digest the identifier as a testable stand-in.
+                byte[] digest;
+#pragma warning disable CA1850 // Prefer static HashData (net48/netstandard2.0 compatibility)
+                using (var sha = System.Security.Cryptography.SHA256.Create())
+                {
+                    digest = sha.ComputeHash(
+                        System.Text.Encoding.UTF8.GetBytes(PlantRootLayerIdentifier));
+                }
+#pragma warning restore CA1850
+                m_plantStage.CreateOrReplaceRootLayerDigest(
+                    SystemContext,
+                    SystemContext.CreateOpenUsdStageType_RootLayerDigest(m_plantStage, forInstance: true))
+                    .Value = (ByteString)digest;
+                m_plantStage.CreateOrReplaceRootLayerDigestAlgorithm(
+                    SystemContext,
+                    SystemContext.CreateOpenUsdStageType_RootLayerDigestAlgorithm(m_plantStage, forInstance: true))
+                    .Value = OpenUsdDigestAlgorithmEnum.Sha256;
 
                 // Per the companion spec §4.2 the OpenUSD facility SHALL be a
                 // component of the Server Object (i=2253) so that any conformant
@@ -164,7 +187,8 @@ namespace Pumps
             CreateBinding(rep, ns, "MassFlowSpin",
                 new Guid("6e63cf2c-f2de-4f78-a8f8-f0ccdbb7647a"),
                 massFlow, "/Plant/Pumps/P101/Impeller", "xformOp:rotateZ", "double",
-                OpenUsdRenderTargetKindEnum.Rotation, 1.0);
+                OpenUsdRenderTargetKindEnum.Rotation, 1.0,
+                sourceSemanticId: MassFlowSemanticId);
             CreateBinding(rep, ns, "BearingTempColor",
                 new Guid("b1a1f6f0-5c2b-5a1e-9f3a-2b7c4d8e0011"),
                 bearingTemp, "/Plant/Pumps/P101/Body", "primvars:displayColor", "color3f",
@@ -174,7 +198,66 @@ namespace Pumps
                 diffPressure, "/Plant/Pumps/P101/StatusLight/Mat/Surface", "inputs:emissiveColor", "color3f",
                 OpenUsdRenderTargetKindEnum.EmissiveColor, 1.0);
 
+            // 0.2 UaAlarmToUsd: a supervision alarm active-state drives the status
+            // light visibility. A dedicated Boolean variable exposes the alarm
+            // aspect the simulation toggles (see AdvanceSimulation).
+            m_alarmActiveVar = CreatePumpVariable(
+                pump, "AlarmActive", Opc.Ua.DataTypeIds.Boolean, new Variant(false), writable: false);
+            CreateBinding(rep, ns, "AlarmActiveVisibility",
+                new Guid("d3c3b8f2-7e4d-5c30-b15c-4d9e6a0b2233"),
+                m_alarmActiveVar.NodeId, "/Plant/Pumps/P101/StatusLight", "visibility", "token",
+                OpenUsdRenderTargetKindEnum.Visibility, 1.0,
+                intentProfile: OpenUsdIntentProfileEnum.UaAlarmToUsd,
+                alarmAspect: OpenUsdAlarmAspectEnum.ActiveState);
+
+            // 0.2 UsdToUaCommand (opt-in): a writable speed setpoint Variable is the
+            // command target. The binding is Controllable and present, but a
+            // connector only issues the write when explicitly enabled AND authorized
+            // (single-writer, fail-closed). Enabled=true means "declared", NOT
+            // "auto-actuated" — the opt-in lives on the connector, not on Enabled.
+            m_speedSetpointVar = CreatePumpVariable(
+                pump, "SpeedSetpoint", Opc.Ua.DataTypeIds.Double, new Variant(0.0), writable: true);
+            CreateBinding(rep, ns, "SpeedSetpointCommand",
+                new Guid("e4d4c9a3-8f5e-5d41-c26d-5e0f7b1c3344"),
+                null, "/Plant/Pumps/P101/Impeller", "inputs:speedSetpoint", "double",
+                kind: null, 1.0,
+                intentProfile: OpenUsdIntentProfileEnum.UsdToUaCommand,
+                signalRole: OpenUsdSignalRoleEnum.Controllable,
+                commandTargetNodeId: m_speedSetpointVar.NodeId,
+                commandTriggerPropertyName: "inputs:speedSetpoint");
+
             AssignChildNodeIds(rep);
+        }
+
+        // ECLASS-style IRDI for "volume flow rate" — a portable semantic id a
+        // connector can use to resolve the source across vendors (0.2 SemanticSource).
+        private const string MassFlowSemanticId = "0173-1#02-AAO677#002";
+
+        // Creates a simple Variable child on the pump (used for the 0.2 command
+        // setpoint and alarm-active demo signals), assigning a per-instance NodeId
+        // immediately because AssignChildNodeIds(pump) already ran.
+        private BaseDataVariableState CreatePumpVariable(
+            PumpState pump, string name, NodeId dataType, Variant initialValue, bool writable)
+        {
+            byte access = writable
+                ? AccessLevels.CurrentReadOrWrite
+                : AccessLevels.CurrentRead;
+            var v = new BaseDataVariableState(pump)
+            {
+                SymbolicName = name,
+                BrowseName = new QualifiedName(name, pump.BrowseName.NamespaceIndex),
+                DisplayName = new LocalizedText(name),
+                ReferenceTypeId = ReferenceTypeIds.HasComponent,
+                TypeDefinitionId = VariableTypeIds.BaseDataVariableType,
+                DataType = dataType,
+                ValueRank = ValueRanks.Scalar,
+                AccessLevel = access,
+                UserAccessLevel = access,
+                Value = initialValue,
+            };
+            pump.AddChild(v);
+            v.NodeId = SystemContext.NodeIdFactory.New(SystemContext, v);
+            return v;
         }
 
         private void OrganiseRepresentation(PumpState pump)
@@ -205,7 +288,13 @@ namespace Pumps
             OpenUsdRepresentationState rep, ushort ns, string name,
             Guid bindingDefinitionId, NodeId? sourceNodeId, string targetPrimPath,
             string targetPropertyName, string targetUsdTypeName,
-            OpenUsdRenderTargetKindEnum kind, double scale)
+            OpenUsdRenderTargetKindEnum? kind, double scale,
+            OpenUsdIntentProfileEnum intentProfile = OpenUsdIntentProfileEnum.UaToUsdTelemetry,
+            OpenUsdSignalRoleEnum signalRole = OpenUsdSignalRoleEnum.Observable,
+            string? sourceSemanticId = null,
+            OpenUsdAlarmAspectEnum? alarmAspect = null,
+            NodeId? commandTargetNodeId = null,
+            string? commandTriggerPropertyName = null)
         {
             // AddxBinding_ instantiates the <Binding> placeholder as a concrete
             // HasComponent child (browsable) and creates its mandatory members.
@@ -214,7 +303,7 @@ namespace Pumps
             // Mandatory members already exist on the instance; set their values.
             b.CreateOrReplaceBindingDefinitionId(SystemContext, null!).Value = new Uuid(bindingDefinitionId);
             b.CreateOrReplaceEnabled(SystemContext, null!).Value = true;
-            b.CreateOrReplaceIntentProfile(SystemContext, null!).Value = OpenUsdIntentProfileEnum.UaToUsdTelemetry;
+            b.CreateOrReplaceIntentProfile(SystemContext, null!).Value = intentProfile;
             b.CreateOrReplaceTargetStage(SystemContext, null!).Value = m_plantStage!.NodeId;
             b.CreateOrReplaceTargetPrimPath(SystemContext, null!).Value = targetPrimPath;
             b.CreateOrReplaceTargetPropertyName(SystemContext, null!).Value = targetPropertyName;
@@ -229,10 +318,48 @@ namespace Pumps
                     SystemContext.CreateOpenUsdLiveBindingType_SourceNodeId(b, forInstance: true))
                     .Value = (NodeId)sourceNodeId;
             }
-            b.CreateOrReplaceRenderTargetKind(
+            // 0.2 additions: SignalRole is always asserted; the semantic id,
+            // alarm aspect, and command target members are set per intent.
+            b.CreateOrReplaceSignalRole(
                 SystemContext,
-                SystemContext.CreateOpenUsdLiveBindingType_RenderTargetKind(b, forInstance: true))
-                .Value = kind;
+                SystemContext.CreateOpenUsdLiveBindingType_SignalRole(b, forInstance: true))
+                .Value = signalRole;
+            if (!string.IsNullOrEmpty(sourceSemanticId))
+            {
+                b.CreateOrReplaceSourceSemanticId(
+                    SystemContext,
+                    SystemContext.CreateOpenUsdLiveBindingType_SourceSemanticId(b, forInstance: true))
+                    .Value = sourceSemanticId;
+            }
+            if (alarmAspect != null)
+            {
+                b.CreateOrReplaceAlarmAspect(
+                    SystemContext,
+                    SystemContext.CreateOpenUsdLiveBindingType_AlarmAspect(b, forInstance: true))
+                    .Value = alarmAspect.Value;
+            }
+            if (commandTargetNodeId != null)
+            {
+                b.CreateOrReplaceCommandTargetNodeId(
+                    SystemContext,
+                    SystemContext.CreateOpenUsdLiveBindingType_CommandTargetNodeId(b, forInstance: true))
+                    .Value = (NodeId)commandTargetNodeId;
+            }
+            if (!string.IsNullOrEmpty(commandTriggerPropertyName))
+            {
+                b.CreateOrReplaceCommandTriggerPropertyName(
+                    SystemContext,
+                    SystemContext.CreateOpenUsdLiveBindingType_CommandTriggerPropertyName(b, forInstance: true))
+                    .Value = commandTriggerPropertyName;
+            }
+
+            if (kind != null)
+            {
+                b.CreateOrReplaceRenderTargetKind(
+                    SystemContext,
+                    SystemContext.CreateOpenUsdLiveBindingType_RenderTargetKind(b, forInstance: true))
+                    .Value = kind.Value;
+            }
             b.CreateOrReplaceScale(
                 SystemContext,
                 SystemContext.CreateOpenUsdLiveBindingType_Scale(b, forInstance: true))

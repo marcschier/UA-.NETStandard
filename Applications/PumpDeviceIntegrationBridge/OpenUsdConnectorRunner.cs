@@ -59,6 +59,13 @@ namespace PumpDeviceIntegrationBridge
             // appropriate for a localhost demo with self-signed certificates.
             bool insecure = HasFlag(args, "--insecure");
 
+            // Command bindings (UsdToUaCommand) are opt-in and disabled by default
+            // (fail-closed). --enable-commands lets the connector actuate the single
+            // controllable command binding; --command-value <double> supplies the
+            // setpoint to write once at start (demo).
+            bool enableCommands = HasFlag(args, "--enable-commands");
+            string? commandValueOpt = GetOption(args, "--command-value");
+
             ITelemetryContext telemetry = DefaultTelemetry.Create(b => b.SetMinimumLevel(LogLevel.Warning));
 
             string pkiRoot = Path.Combine(Path.GetTempPath(), "PumpDeviceIntegrationBridge", Path.GetRandomFileName());
@@ -139,9 +146,20 @@ namespace PumpDeviceIntegrationBridge
                 preferredLocales: default, ct: CancellationToken.None).ConfigureAwait(false);
 
             var sink = new UsdFileSink(outPath);
-            var connector = new OpenUsdConnector(session, sink);
+            var connector = new OpenUsdConnector(session, sink, enableCommands);
             await connector.StartAsync(CancellationToken.None).ConfigureAwait(false);
             Console.WriteLine($"Streaming live OPC UA values into {outPath}. Press Ctrl+C to stop.");
+
+            if (enableCommands && commandValueOpt != null
+                && double.TryParse(commandValueOpt, System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out double commandValue))
+            {
+                bool ok = await connector.IssueCommandAsync(commandValue, CancellationToken.None)
+                    .ConfigureAwait(false);
+                Console.WriteLine(ok
+                    ? $"Command issued: setpoint <- {commandValue}."
+                    : "Command binding not found or write rejected.");
+            }
 
             using var stop = new SemaphoreSlim(0, 1);
             ConsoleCancelEventHandler handler = (_, e) => { e.Cancel = true; stop.Release(); };

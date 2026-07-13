@@ -48,15 +48,26 @@ namespace PumpDeviceIntegrationBridge
     {
         private readonly ISession m_session;
         private readonly IUsdSink m_sink;
+        private readonly bool m_enableCommands;
         private readonly ushort m_ns;
         private readonly NodeId m_representationTypeId;
         private readonly NodeId m_bindingTypeId;
         private Subscription? m_subscription;
 
         public OpenUsdConnector(ISession session, IUsdSink sink)
+            : this(session, sink, enableCommands: false)
+        {
+        }
+
+        // enableCommands is the opt-in gate for UsdToUaCommand bindings. Command
+        // bindings are always DISCOVERED, but the connector refuses to actuate one
+        // unless explicitly enabled (fail-closed); read-only telemetry/alarm/history
+        // bindings are unaffected.
+        public OpenUsdConnector(ISession session, IUsdSink sink, bool enableCommands)
         {
             m_session = session;
             m_sink = sink;
+            m_enableCommands = enableCommands;
             m_ns = (ushort)m_session.NamespaceUris.GetIndex(OpenUsdModel.NamespaceUri);
             m_representationTypeId = new NodeId(1003u, m_ns);
             m_bindingTypeId = new NodeId(1004u, m_ns);
@@ -69,6 +80,13 @@ namespace PumpDeviceIntegrationBridge
             public string? PropertyName { get; set; }
             public OpenUsdRenderTargetKind Kind { get; set; }
             public double Scale { get; set; } = 1.0;
+            public OpenUsdIntentProfile Intent { get; set; } = OpenUsdIntentProfile.UaToUsdTelemetry;
+            public OpenUsdSignalRole SignalRole { get; set; } = OpenUsdSignalRole.Observable;
+            public string? SourceSemanticId { get; set; }
+            public OpenUsdAlarmAspect? AlarmAspect { get; set; }
+            public bool TimeSampled { get; set; }
+            public NodeId? CommandTargetNodeId { get; set; }
+            public string? CommandTriggerPropertyName { get; set; }
         }
 
         public sealed class RepresentationInfo
@@ -77,6 +95,8 @@ namespace PumpDeviceIntegrationBridge
             public NodeId? StageNodeId { get; set; }
             public string? PrimPath { get; set; }
             public string? RootLayerIdentifier { get; set; }
+            public byte[]? RootLayerDigest { get; set; }
+            public OpenUsdDigestAlgorithm DigestAlgorithm { get; set; } = OpenUsdDigestAlgorithm.None;
             public List<BindingInfo> Bindings { get; } = new();
         }
 
@@ -123,6 +143,10 @@ namespace PumpDeviceIntegrationBridge
                     await ChildrenByNameAsync(info.StageNodeId.Value, ct).ConfigureAwait(false);
                 info.RootLayerIdentifier =
                     await ReadStringAsync(stageProps, "RootLayerIdentifier", ct).ConfigureAwait(false);
+                info.RootLayerDigest =
+                    await ReadByteStringAsync(stageProps, "RootLayerDigest", ct).ConfigureAwait(false);
+                info.DigestAlgorithm = (OpenUsdDigestAlgorithm)await ReadInt32Async(
+                    stageProps, "RootLayerDigestAlgorithm", ct).ConfigureAwait(false);
             }
 
             foreach ((NodeId? childId, NodeId? typeDef) in await ChildrenWithTypeAsync(repNodeId.Value, ct)
@@ -141,8 +165,24 @@ namespace PumpDeviceIntegrationBridge
                     PropertyName = await ReadStringAsync(bp, "TargetPropertyName", ct).ConfigureAwait(false),
                     Kind = (OpenUsdRenderTargetKind)await ReadInt32Async(bp, "RenderTargetKind", ct)
                         .ConfigureAwait(false),
-                    Scale = await ReadDoubleAsync(bp, "Scale", 1.0, ct).ConfigureAwait(false)
+                    Scale = await ReadDoubleAsync(bp, "Scale", 1.0, ct).ConfigureAwait(false),
+                    Intent = (OpenUsdIntentProfile)await ReadInt32Async(bp, "IntentProfile", ct)
+                        .ConfigureAwait(false),
+                    SignalRole = (OpenUsdSignalRole)await ReadInt32Async(bp, "SignalRole", ct)
+                        .ConfigureAwait(false),
+                    SourceSemanticId = await ReadStringAsync(bp, "SourceSemanticId", ct)
+                        .ConfigureAwait(false),
+                    TimeSampled = await ReadBoolAsync(bp, "TimeSampled", ct).ConfigureAwait(false),
+                    CommandTargetNodeId = await ReadNodeIdAsync(bp, "CommandTargetNodeId", ct)
+                        .ConfigureAwait(false),
+                    CommandTriggerPropertyName = await ReadStringAsync(bp, "CommandTriggerPropertyName", ct)
+                        .ConfigureAwait(false)
                 };
+                if (bp.ContainsKey("AlarmAspect"))
+                {
+                    b.AlarmAspect = (OpenUsdAlarmAspect)await ReadInt32Async(bp, "AlarmAspect", ct)
+                        .ConfigureAwait(false);
+                }
                 if (string.IsNullOrEmpty(b.PrimPath))
                 {
                     b.PrimPath = info.PrimPath;
@@ -160,6 +200,17 @@ namespace PumpDeviceIntegrationBridge
                 throw new InvalidOperationException("No OpenUSD representation discovered.");
             }
 
+            // Twin-BOM integrity (0.2): if the stage advertises a content digest,
+            // verify it before authoring any opinions into the stage. A mismatch is
+            // fail-closed — we do not compose an unverified stage.
+            if (rep.RootLayerDigest is { Length: > 0 }
+                && rep.DigestAlgorithm != OpenUsdDigestAlgorithm.None
+                && !VerifyStageDigest(rep))
+            {
+                throw new InvalidOperationException(
+                    "OpenUSD stage RootLayerDigest verification failed — refusing to compose.");
+            }
+
             var subscription = new Subscription(m_session.DefaultSubscription)
             {
                 DisplayName = "OpenUsdConnector",
@@ -174,7 +225,12 @@ namespace PumpDeviceIntegrationBridge
 
             foreach (BindingInfo b in rep.Bindings)
             {
-                if (b.SourceNodeId == null)
+                // Command bindings are actuated on demand (IssueCommandAsync), and
+                // history bindings are replayed via ReplayHistoryAsync — neither is a
+                // live MonitoredItem. Telemetry and alarm bindings subscribe here.
+                if (b.SourceNodeId == null
+                    || b.Intent == OpenUsdIntentProfile.UsdToUaCommand
+                    || b.Intent == OpenUsdIntentProfile.UaHistoryToUsd)
                 {
                     continue;
                 }
@@ -263,6 +319,190 @@ namespace PumpDeviceIntegrationBridge
             {
                 return 0.0;
             }
+        }
+
+        /// <summary>
+        /// Verifies the stage's advertised RootLayerDigest (Twin-BOM integrity).
+        /// The demo server digests the RootLayerIdentifier as a deterministic
+        /// stand-in; a production connector digests the resolved root-layer bytes.
+        /// </summary>
+        public bool VerifyStageDigest(RepresentationInfo rep)
+        {
+            if (rep.RootLayerDigest == null || rep.RootLayerDigest.Length == 0
+                || rep.DigestAlgorithm == OpenUsdDigestAlgorithm.None
+                || string.IsNullOrEmpty(rep.RootLayerIdentifier))
+            {
+                return false;
+            }
+            byte[] computed = ComputeDigest(rep.DigestAlgorithm, rep.RootLayerIdentifier!);
+            return FixedTimeEquals(computed, rep.RootLayerDigest);
+        }
+
+        /// <summary>
+        /// Actuates the single opt-in UsdToUaCommand binding by writing the supplied
+        /// value to its CommandTargetNodeId. Fail-closed: throws when commands were
+        /// not explicitly enabled. Single-writer: uses the first controllable command
+        /// binding found. Returns true when the UA write succeeds.
+        /// </summary>
+        public async Task<bool> IssueCommandAsync(double value, CancellationToken ct)
+        {
+            if (!m_enableCommands)
+            {
+                throw new InvalidOperationException(
+                    "Command bindings are disabled. Construct the connector with enableCommands: true.");
+            }
+            RepresentationInfo? rep = await DiscoverRepresentationAsync(ct).ConfigureAwait(false);
+            BindingInfo? cmd = null;
+            if (rep != null)
+            {
+                foreach (BindingInfo b in rep.Bindings)
+                {
+                    if (b.Intent == OpenUsdIntentProfile.UsdToUaCommand
+                        && b.SignalRole == OpenUsdSignalRole.Controllable
+                        && b.CommandTargetNodeId != null)
+                    {
+                        cmd = b;
+                        break;
+                    }
+                }
+            }
+            if (cmd?.CommandTargetNodeId == null)
+            {
+                return false;
+            }
+            StatusCode sc = await WriteAsync(cmd.CommandTargetNodeId.Value, value, ct)
+                .ConfigureAwait(false);
+            return StatusCode.IsGood(sc);
+        }
+
+        /// <summary>
+        /// Replays history (Part 11 HistoryRead) for every UaHistoryToUsd binding,
+        /// authoring returned values as USD time samples through the sink. Returns the
+        /// number of samples authored. Sources that do not historize yield 0 without
+        /// throwing (a documented degrade — history binding requires a historizing source).
+        /// </summary>
+        public async Task<int> ReplayHistoryAsync(DateTime startTime, DateTime endTime, CancellationToken ct)
+        {
+            RepresentationInfo? rep = await DiscoverRepresentationAsync(ct).ConfigureAwait(false);
+            if (rep == null)
+            {
+                return 0;
+            }
+            int authored = 0;
+            foreach (BindingInfo b in rep.Bindings)
+            {
+                if (b.Intent != OpenUsdIntentProfile.UaHistoryToUsd || b.SourceNodeId == null)
+                {
+                    continue;
+                }
+                var details = new ReadRawModifiedDetails
+                {
+                    IsReadModified = false,
+                    StartTime = startTime,
+                    EndTime = endTime,
+                    NumValuesPerNode = 0,
+                    ReturnBounds = false
+                };
+                var toRead = new HistoryReadValueId[]
+                {
+                    new HistoryReadValueId { NodeId = b.SourceNodeId.Value }
+                };
+                HistoryReadResponse resp;
+                try
+                {
+                    resp = await m_session.HistoryReadAsync(
+                        null!, new ExtensionObject(details), TimestampsToReturn.Source,
+                        false, toRead, ct).ConfigureAwait(false);
+                }
+                catch (ServiceResultException)
+                {
+                    continue; // Source does not support history — graceful degrade.
+                }
+                HistoryReadResult r = resp.Results[0];
+                if (StatusCode.IsNotGood(r.StatusCode))
+                {
+                    continue;
+                }
+                if (ExtensionObject.ToEncodeable(r.HistoryData) is HistoryData hd)
+                {
+                    foreach (DataValue dv in hd.DataValues)
+                    {
+                        object? raw = dv.WrappedValue.AsBoxedObject();
+                        if (raw == null || StatusCode.IsNotGood(dv.StatusCode))
+                        {
+                            continue;
+                        }
+                        object? usd = Convert(b, raw);
+                        if (usd != null && b.TimeSampled)
+                        {
+                            m_sink.SetTimeSample(b.PrimPath!, b.PropertyName!,
+                                dv.SourceTimestamp.ToDateTime(), usd);
+                            authored++;
+                        }
+                    }
+                }
+            }
+            return authored;
+        }
+
+        private static byte[] ComputeDigest(OpenUsdDigestAlgorithm algorithm, string identifier)
+        {
+            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(identifier);
+            // ComputeHash (not the static HashData) is used for netstandard2.0/net48
+            // compatibility where the static overloads do not exist.
+#pragma warning disable CA1850 // Prefer static HashData
+            switch (algorithm)
+            {
+                case OpenUsdDigestAlgorithm.Sha256:
+                    using (var h = System.Security.Cryptography.SHA256.Create())
+                    {
+                        return h.ComputeHash(bytes);
+                    }
+                case OpenUsdDigestAlgorithm.Sha384:
+                    using (var h = System.Security.Cryptography.SHA384.Create())
+                    {
+                        return h.ComputeHash(bytes);
+                    }
+                case OpenUsdDigestAlgorithm.Sha512:
+                    using (var h = System.Security.Cryptography.SHA512.Create())
+                    {
+                        return h.ComputeHash(bytes);
+                    }
+                default:
+                    return System.Array.Empty<byte>();
+            }
+#pragma warning restore CA1850
+        }
+
+        private static bool FixedTimeEquals(byte[] a, byte[] b)
+        {
+            if (a.Length != b.Length)
+            {
+                return false;
+            }
+            int diff = 0;
+            for (int i = 0; i < a.Length; i++)
+            {
+                diff |= a[i] ^ b[i];
+            }
+            return diff == 0;
+        }
+
+        private async Task<StatusCode> WriteAsync(NodeId nodeId, double value, CancellationToken ct)
+        {
+            var toWrite = new WriteValue[]
+            {
+                new WriteValue
+                {
+                    NodeId = nodeId,
+                    AttributeId = Attributes.Value,
+                    Value = new DataValue(new Variant(value))
+                }
+            };
+            WriteResponse resp = await m_session.WriteAsync(null!, toWrite, ct).ConfigureAwait(false);
+            return resp.Results.Count > 0
+                ? resp.Results[0]
+                : (StatusCode)StatusCodes.BadUnexpectedError;
         }
 
         public async Task<string> ReadBrowseNameAsync(NodeId nodeId, CancellationToken ct)
@@ -379,6 +619,36 @@ namespace PumpDeviceIntegrationBridge
             object? v = dv.WrappedValue.AsBoxedObject();
             return v == null ? fallback
                 : System.Convert.ToDouble(v, System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        private async Task<bool> ReadBoolAsync(
+            Dictionary<string, NodeId> props, string name, CancellationToken ct)
+        {
+            if (!props.TryGetValue(name, out NodeId id))
+            {
+                return false;
+            }
+            DataValue dv = await ReadAsync(id, ct).ConfigureAwait(false);
+            object? v = dv.WrappedValue.AsBoxedObject();
+            return v != null
+                && System.Convert.ToBoolean(v, System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        private async Task<byte[]?> ReadByteStringAsync(
+            Dictionary<string, NodeId> props, string name, CancellationToken ct)
+        {
+            if (!props.TryGetValue(name, out NodeId id))
+            {
+                return null;
+            }
+            DataValue dv = await ReadAsync(id, ct).ConfigureAwait(false);
+            object? v = dv.WrappedValue.AsBoxedObject();
+            return v switch
+            {
+                byte[] ba => ba,
+                ByteString bs => bs.ToArray(),
+                _ => null
+            };
         }
     }
 }

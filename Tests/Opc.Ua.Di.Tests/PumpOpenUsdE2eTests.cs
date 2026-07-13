@@ -276,7 +276,134 @@ namespace Opc.Ua.Di.Tests
             Assert.That(rep!.PrimPath, Is.EqualTo("/Plant/Pumps/P101"));
             Assert.That(rep.StageNodeId, Is.Not.Null);
             Assert.That(rep.RootLayerIdentifier, Is.EqualTo("asset-repo/Plant.usd"));
-            Assert.That(rep.Bindings, Has.Count.EqualTo(3));
+            // 0.1 telemetry (3) + 0.2 alarm (1) + 0.2 command (1) = 5 bindings.
+            Assert.That(rep.Bindings, Has.Count.EqualTo(5));
+        }
+
+        [Test]
+        public async Task SemanticIdAndSignalRoleAreSurfacedAsync()
+        {
+            var connector = new OpenUsdConnector(m_session!, new MockUsdSink());
+            OpenUsdConnector.RepresentationInfo? rep = await connector
+                .DiscoverRepresentationAsync(CancellationToken.None).ConfigureAwait(false);
+            Assert.That(rep, Is.Not.Null);
+
+            OpenUsdConnector.BindingInfo? massFlow = null;
+            OpenUsdConnector.BindingInfo? command = null;
+            foreach (OpenUsdConnector.BindingInfo b in rep!.Bindings)
+            {
+                if (b.SourceSemanticId == "0173-1#02-AAO677#002")
+                {
+                    massFlow = b;
+                }
+                if (b.Intent == OpenUsdIntentProfile.UsdToUaCommand)
+                {
+                    command = b;
+                }
+            }
+
+            Assert.Multiple(() =>
+            {
+                // Semantic-ID source: the flow binding carries a portable IRDI.
+                Assert.That(massFlow, Is.Not.Null, "MassFlow binding has no SourceSemanticId.");
+                Assert.That(massFlow!.SignalRole, Is.EqualTo(OpenUsdSignalRole.Observable));
+                // Controllable/command: a UsdToUaCommand binding is declared and marked Controllable.
+                Assert.That(command, Is.Not.Null, "No UsdToUaCommand binding discovered.");
+                Assert.That(command!.SignalRole, Is.EqualTo(OpenUsdSignalRole.Controllable));
+                Assert.That(command.CommandTargetNodeId, Is.Not.Null);
+            });
+        }
+
+        [Test]
+        public async Task StageRootLayerDigestVerifiesAsync()
+        {
+            var connector = new OpenUsdConnector(m_session!, new MockUsdSink());
+            OpenUsdConnector.RepresentationInfo? rep = await connector
+                .DiscoverRepresentationAsync(CancellationToken.None).ConfigureAwait(false);
+            Assert.That(rep, Is.Not.Null);
+
+            Assert.Multiple(() =>
+            {
+                // Twin-BOM integrity: the stage advertises a content digest ...
+                Assert.That(rep!.DigestAlgorithm, Is.EqualTo(OpenUsdDigestAlgorithm.Sha256));
+                Assert.That(rep.RootLayerDigest, Is.Not.Null.And.Length.EqualTo(32));
+                // ... and it verifies against the resolved root-layer identity.
+                Assert.That(connector.VerifyStageDigest(rep!), Is.True,
+                    "RootLayerDigest failed verification.");
+            });
+        }
+
+        [Test]
+        public async Task AlarmBindingDrivesUsdVisibilityAsync()
+        {
+            var sink = new MockUsdSink();
+            var connector = new OpenUsdConnector(m_session!, sink);
+            await connector.StartAsync(CancellationToken.None).ConfigureAwait(false);
+            await Task.Delay(2000, CancellationToken.None).ConfigureAwait(false);
+            await connector.StopAsync().ConfigureAwait(false);
+
+            // The UaAlarmToUsd binding subscribes the alarm-active aspect and authors
+            // the status-light visibility token (initially "invisible" until an alarm).
+            Assert.That(sink.WasWritten("/Plant/Pumps/P101/StatusLight", "visibility"), Is.True,
+                "Alarm binding did not author StatusLight visibility.");
+        }
+
+        [Test]
+        public void CommandBindingIsFailClosedByDefault()
+        {
+            var connector = new OpenUsdConnector(m_session!, new MockUsdSink());
+            // Opt-in: with commands disabled (the default), actuation is refused.
+            Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                await connector.IssueCommandAsync(10.0, CancellationToken.None).ConfigureAwait(false));
+        }
+
+        [Test]
+        public async Task CommandBindingWritesServerVariableWhenEnabledAsync()
+        {
+            var connector = new OpenUsdConnector(m_session!, new MockUsdSink(), enableCommands: true);
+            OpenUsdConnector.RepresentationInfo? rep = await connector
+                .DiscoverRepresentationAsync(CancellationToken.None).ConfigureAwait(false);
+            NodeId? target = null;
+            foreach (OpenUsdConnector.BindingInfo b in rep!.Bindings)
+            {
+                if (b.Intent == OpenUsdIntentProfile.UsdToUaCommand)
+                {
+                    target = b.CommandTargetNodeId;
+                }
+            }
+            Assert.That(target, Is.Not.Null, "Command target NodeId missing.");
+
+            const double setpoint = 42.5;
+            bool ok = await connector.IssueCommandAsync(setpoint, CancellationToken.None)
+                .ConfigureAwait(false);
+            Assert.That(ok, Is.True, "Command write did not succeed.");
+
+            var toRead = new ReadValueId[]
+            {
+                new ReadValueId { NodeId = target!.Value, AttributeId = Attributes.Value }
+            };
+            ReadResponse rr = await m_session!.ReadAsync(
+                null!, 0, TimestampsToReturn.Neither, toRead, CancellationToken.None)
+                .ConfigureAwait(false);
+            double actual = System.Convert.ToDouble(
+                rr.Results[0].WrappedValue.AsBoxedObject(),
+                System.Globalization.CultureInfo.InvariantCulture);
+            Assert.That(actual, Is.EqualTo(setpoint).Within(1e-9),
+                "Server SpeedSetpoint was not updated by the command binding.");
+        }
+
+        [Test]
+        public async Task HistoryReplayDegradesGracefullyOnNonHistorizingSourceAsync()
+        {
+            // The demo pump does not historize, so history replay finds no
+            // UaHistoryToUsd binding and returns 0 without throwing. This validates
+            // the connector's Part 11 code path and documents the requirement that a
+            // history binding needs a historizing source (spec finding).
+            var connector = new OpenUsdConnector(m_session!, new MockUsdSink());
+            int authored = await connector.ReplayHistoryAsync(
+                DateTime.UtcNow.AddMinutes(-5), DateTime.UtcNow, CancellationToken.None)
+                .ConfigureAwait(false);
+            Assert.That(authored, Is.Zero);
         }
 
         [Test]
