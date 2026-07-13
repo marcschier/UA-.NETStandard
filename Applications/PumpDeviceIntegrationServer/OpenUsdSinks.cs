@@ -72,6 +72,7 @@ namespace Pumps
     /// </summary>
     public sealed class UsdFileSink : IUsdSink
     {
+        private static readonly char[] s_pathSeparator = ['/'];
         private readonly string m_path;
         private readonly object m_gate = new();
         private readonly Dictionary<string, object> m_values = new(StringComparer.Ordinal);
@@ -122,7 +123,7 @@ namespace Pumps
             {
                 object value = m_values[prim + "|" + prop];
                 Node node = root;
-                foreach (string seg in prim.Split('/', StringSplitOptions.RemoveEmptyEntries))
+                foreach (string seg in prim.Split(s_pathSeparator, StringSplitOptions.RemoveEmptyEntries))
                 {
                     if (node == root && !rootOrder.Contains(seg))
                     {
@@ -173,7 +174,7 @@ namespace Pumps
         {
             switch (value)
             {
-                case float[] c when prop.Contains("displayColor", StringComparison.OrdinalIgnoreCase):
+                case float[] c when prop.EndsWith("displayColor", StringComparison.OrdinalIgnoreCase):
                     return ("color3f[]", "[(" + F(c[0]) + ", " + F(c[1]) + ", " + F(c[2]) + ")]");
                 case float[] c:
                     return ("color3f", "(" + F(c[0]) + ", " + F(c[1]) + ", " + F(c[2]) + ")");
