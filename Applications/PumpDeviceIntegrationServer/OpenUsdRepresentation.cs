@@ -28,6 +28,7 @@
  * ======================================================================*/
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -73,6 +74,14 @@ namespace Pumps
                 m_plantStage.CreateOrReplaceRootLayerIdentifier(SystemContext, null!)
                     .Value = PlantRootLayerIdentifier;
 
+                // Per the companion spec §4.2 the OpenUSD facility SHALL be a
+                // component of the Server Object (i=2253) so that any conformant
+                // connector can Browse Server -> OpenUSD -> Representations. Record
+                // the inverse reference here; the matching forward reference from
+                // the Server Object (owned by the core node manager) is added via
+                // the externalReferences dictionary in LinkOpenUsdRootToServer.
+                root.AddReference(ReferenceTypeIds.HasComponent, true, Opc.Ua.ObjectIds.Server);
+
                 AssignChildNodeIds(root);
                 await AddPredefinedNodeAsync(SystemContext, root, cancellationToken)
                     .ConfigureAwait(false);
@@ -88,6 +97,42 @@ namespace Pumps
                 m_openUsdRoot = null;
                 m_logger.LogError(ex, "Failed to materialise the OpenUSD facility.");
             }
+        }
+
+        /// <inheritdoc/>
+        public override async ValueTask CreateAddressSpaceAsync(
+            IDictionary<NodeId, IList<IReference>> externalReferences,
+            CancellationToken cancellationToken = default)
+        {
+            // base.CreateAddressSpaceAsync loads predefined nodes and runs
+            // OnAddressSpaceReadyAsync, which materialises the OpenUSD facility.
+            await base.CreateAddressSpaceAsync(externalReferences, cancellationToken)
+                .ConfigureAwait(false);
+
+            // Now that the root exists, add the forward HasComponent reference from
+            // the Server Object (i=2253, owned by the core node manager) to it.
+            LinkOpenUsdRootToServer(externalReferences);
+        }
+
+        // Adds the Server -> OpenUSD forward reference into the externalReferences
+        // dictionary the master node manager applies across managers, so the
+        // well-known facility is browsable from the Server Object (spec §4.2).
+        private void LinkOpenUsdRootToServer(
+            IDictionary<NodeId, IList<IReference>> externalReferences)
+        {
+            if (m_openUsdRoot == null)
+            {
+                return;
+            }
+            if (!externalReferences.TryGetValue(Opc.Ua.ObjectIds.Server, out IList<IReference>? references)
+                || references == null)
+            {
+                externalReferences[Opc.Ua.ObjectIds.Server] = references = new List<IReference>();
+            }
+            references.Add(new NodeStateReference(
+                ReferenceTypeIds.HasComponent, false, m_openUsdRoot.NodeId));
+            m_logger.LogInformation(
+                "Linked OpenUSD facility under the Server Object (i=2253).");
         }
 
         // Call between AssignChildNodeIds(pump) and AddPredefinedNodeAsync(pump).

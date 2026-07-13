@@ -83,11 +83,15 @@ which is what makes the render *live*.
 
 ```bash
 dotnet run --project Applications/PumpDeviceIntegrationBridge -c Release -f net10.0 -- \
-  --server opc.tcp://localhost:62810/PumpDeviceIntegrationServer --out ~/pump-live/live.usda
+  --server opc.tcp://localhost:62810/PumpDeviceIntegrationServer --out ~/pump-live/live.usda --insecure
 ```
 
 Options: `--server <opc.tcp url>` (default `opc.tcp://localhost:62542/PumpDeviceIntegrationServer`),
-`--out <live.usda>`, `--seconds N` (run for a fixed time instead of until Ctrl+C).
+`--out <live.usda>`, `--seconds N` (run for a fixed time instead of until Ctrl+C), and
+`--insecure`. The bridge is **secure by default** (encrypted, signed channel with server-certificate
+trust required, per spec §9). `--insecure` opts into an unsecured endpoint and blanket certificate
+acceptance — appropriate only for this localhost demo, whose server uses a self-signed certificate.
+Omit `--insecure` and place the server certificate in the bridge's trusted store for a secured run.
 
 It rewrites `live.usda` on every value change, e.g.:
 

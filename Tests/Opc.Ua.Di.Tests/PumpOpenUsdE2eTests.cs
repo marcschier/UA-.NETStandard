@@ -207,6 +207,65 @@ namespace Opc.Ua.Di.Tests
         }
 
         [Test]
+        public async Task OpenUsdFacilityIsBrowsableFromServerObjectAsync()
+        {
+            // F1 regression: the well-known OpenUSD facility must be a browsable
+            // component of the Server Object (i=2253), so a spec-conformant connector
+            // can Browse Server -> OpenUSD -> Representations without hard-coding NodeIds.
+            var browseServer = new BrowseDescription
+            {
+                NodeId = Opc.Ua.ObjectIds.Server,
+                BrowseDirection = BrowseDirection.Forward,
+                ReferenceTypeId = Opc.Ua.ReferenceTypeIds.HierarchicalReferences,
+                IncludeSubtypes = true,
+                NodeClassMask = 0,
+                ResultMask = (uint)BrowseResultMask.All
+            };
+            BrowseResponse serverChildren = await m_session!.BrowseAsync(
+                null!, null!, 0, new BrowseDescription[] { browseServer }, CancellationToken.None)
+                .ConfigureAwait(false);
+
+            ReferenceDescription? openUsd = null;
+            ArrayOf<ReferenceDescription> refs = serverChildren.Results[0].References;
+            for (int i = 0; i < refs.Count; i++)
+            {
+                if (refs[i].BrowseName.Name == "OpenUSD")
+                {
+                    openUsd = refs[i];
+                    break;
+                }
+            }
+            Assert.That(openUsd, Is.Not.Null, "OpenUSD facility is not browsable from the Server Object.");
+
+            // ... and Representations is reachable one hop below it.
+            NodeId openUsdId = ExpandedNodeId.ToNodeId(openUsd!.NodeId, m_session!.NamespaceUris);
+            var browseRoot = new BrowseDescription
+            {
+                NodeId = openUsdId,
+                BrowseDirection = BrowseDirection.Forward,
+                ReferenceTypeId = Opc.Ua.ReferenceTypeIds.HierarchicalReferences,
+                IncludeSubtypes = true,
+                NodeClassMask = 0,
+                ResultMask = (uint)BrowseResultMask.All
+            };
+            BrowseResponse rootChildren = await m_session!.BrowseAsync(
+                null!, null!, 0, new BrowseDescription[] { browseRoot }, CancellationToken.None)
+                .ConfigureAwait(false);
+            bool hasRepresentations = false;
+            ArrayOf<ReferenceDescription> rootRefs = rootChildren.Results[0].References;
+            for (int i = 0; i < rootRefs.Count; i++)
+            {
+                if (rootRefs[i].BrowseName.Name == "Representations")
+                {
+                    hasRepresentations = true;
+                    break;
+                }
+            }
+            Assert.That(hasRepresentations, Is.True,
+                "Representations registry is not reachable from Server/OpenUSD.");
+        }
+
+        [Test]
         public async Task RepresentationAndBindingsAreDiscoverableAsync()
         {
             var connector = new OpenUsdConnector(m_session!, new MockUsdSink());

@@ -85,6 +85,15 @@ namespace PumpDeviceIntegrationBridge
 
         public void SetAttribute(string primPath, string propertyName, object value)
         {
+            // Validate names before authoring: prim-path segments and the
+            // (namespaced) property name come from the server's binding model,
+            // which the connector treats as untrusted for the purpose of file
+            // authoring. Reject anything that is not a valid USD identifier so a
+            // hostile or malformed name cannot corrupt or inject into the layer.
+            if (!IsValidPrimPath(primPath) || !IsValidPropertyName(propertyName))
+            {
+                return;
+            }
             lock (m_gate)
             {
                 string key = primPath + "|" + propertyName;
@@ -95,6 +104,68 @@ namespace PumpDeviceIntegrationBridge
                 m_values[key] = value;
                 Write();
             }
+        }
+
+        private static bool IsValidPrimPath(string primPath)
+        {
+            if (string.IsNullOrEmpty(primPath))
+            {
+                return false;
+            }
+            string[] segs = primPath.Split(s_pathSeparator, StringSplitOptions.RemoveEmptyEntries);
+            if (segs.Length == 0)
+            {
+                return false;
+            }
+            foreach (string seg in segs)
+            {
+                if (!IsValidIdentifier(seg))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // A USD property name is one or more identifier segments separated by ':'
+        // (the USD namespace separator), e.g. "xformOp:rotateZ", "inputs:emissiveColor".
+        private static bool IsValidPropertyName(string propertyName)
+        {
+            if (string.IsNullOrEmpty(propertyName))
+            {
+                return false;
+            }
+            foreach (string part in propertyName.Split(':'))
+            {
+                if (!IsValidIdentifier(part))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // USD identifier: starts with a letter or '_', then letters/digits/'_'.
+        private static bool IsValidIdentifier(string s)
+        {
+            if (string.IsNullOrEmpty(s))
+            {
+                return false;
+            }
+            char c0 = s[0];
+            if (!(char.IsLetter(c0) || c0 == '_'))
+            {
+                return false;
+            }
+            for (int i = 1; i < s.Length; i++)
+            {
+                char c = s[i];
+                if (!(char.IsLetterOrDigit(c) || c == '_'))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private sealed class Node
@@ -170,6 +241,27 @@ namespace PumpDeviceIntegrationBridge
         private static string F(double x)
             => x.ToString("0.0000", CultureInfo.InvariantCulture);
 
+        // Escape a USD string/token value: backslash and quote are escaped and
+        // control characters (newline, carriage return, tab) are rendered as
+        // escape sequences so a value cannot break out of the quoted literal.
+        private static string EscapeToken(string s)
+        {
+            var sb = new StringBuilder(s.Length);
+            foreach (char c in s)
+            {
+                switch (c)
+                {
+                    case '\\': sb.Append("\\\\"); break;
+                    case '"': sb.Append("\\\""); break;
+                    case '\n': sb.Append("\\n"); break;
+                    case '\r': sb.Append("\\r"); break;
+                    case '\t': sb.Append("\\t"); break;
+                    default: sb.Append(c); break;
+                }
+            }
+            return sb.ToString();
+        }
+
         private static (string UsdType, string Value) FormatValue(string prop, object value)
         {
             switch (value)
@@ -179,7 +271,7 @@ namespace PumpDeviceIntegrationBridge
                 case float[] c:
                     return ("color3f", "(" + F(c[0]) + ", " + F(c[1]) + ", " + F(c[2]) + ")");
                 case string s:
-                    return ("token", "\"" + s + "\"");
+                    return ("token", "\"" + EscapeToken(s) + "\"");
                 case double d:
                     return ("double", F(d));
                 default:

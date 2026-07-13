@@ -53,6 +53,12 @@ namespace PumpDeviceIntegrationBridge
             string outPath = GetOption(args, "--out") ?? Path.Combine(Environment.CurrentDirectory, "live.usda");
             int seconds = int.TryParse(GetOption(args, "--seconds"), out int s) ? s : 0;
 
+            // Secure by default (spec §9: an authenticated, integrity-protected endpoint
+            // with server-certificate trust is required). The --insecure flag opts into
+            // an unsecured endpoint and blanket certificate acceptance, which is only
+            // appropriate for a localhost demo with self-signed certificates.
+            bool insecure = HasFlag(args, "--insecure");
+
             ITelemetryContext telemetry = DefaultTelemetry.Create(b => b.SetMinimumLevel(LogLevel.Warning));
 
             string pkiRoot = Path.Combine(Path.GetTempPath(), "PumpDeviceIntegrationBridge", Path.GetRandomFileName());
@@ -84,7 +90,7 @@ namespace PumpDeviceIntegrationBridge
                         StoreType = CertificateStoreType.Directory,
                         StorePath = Path.Combine(pkiRoot, "rejected")
                     },
-                    AutoAcceptUntrustedCertificates = true
+                    AutoAcceptUntrustedCertificates = insecure
                 },
                 TransportQuotas = new TransportQuotas { MaxMessageSize = 4 * 1024 * 1024 },
                 ClientConfiguration = new ClientConfiguration(),
@@ -96,7 +102,12 @@ namespace PumpDeviceIntegrationBridge
             await appInstance.CheckApplicationInstanceCertificatesAsync(true).ConfigureAwait(false);
             await appInstance.DisposeAsync().ConfigureAwait(false);
             config.CertificateManager ??= CertificateManagerFactory.Create(config.SecurityConfiguration, telemetry);
-            config.CertificateManager.AcceptError = static (cert, err) => true;
+            if (insecure)
+            {
+                // Demo-only: accept any server certificate.
+                config.CertificateManager.AcceptError = static (cert, err) => true;
+                Console.WriteLine("WARNING: --insecure: using an unsecured endpoint and accepting any server certificate.");
+            }
 
             Console.WriteLine($"Connecting to {server} ...");
             EndpointDescription? endpointDescription = null;
@@ -105,7 +116,7 @@ namespace PumpDeviceIntegrationBridge
                 try
                 {
                     endpointDescription = await CoreClientUtils.SelectEndpointAsync(
-                        config, server, useSecurity: false, telemetry, CancellationToken.None)
+                        config, server, useSecurity: !insecure, telemetry, CancellationToken.None)
                         .ConfigureAwait(false);
                 }
                 catch (Exception)
@@ -169,6 +180,18 @@ namespace PumpDeviceIntegrationBridge
                 }
             }
             return null;
+        }
+
+        private static bool HasFlag(string[] args, string name)
+        {
+            foreach (string a in args)
+            {
+                if (string.Equals(a, name, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
