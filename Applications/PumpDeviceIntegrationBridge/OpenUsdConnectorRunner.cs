@@ -35,14 +35,14 @@ using Microsoft.Extensions.Logging;
 using Opc.Ua;
 using Opc.Ua.Client;
 
-namespace PumpOpenUsdConnector
+namespace PumpDeviceIntegrationBridge
 {
     /// <summary>
     /// Runs the generic <see cref="OpenUsdConnector"/>: connects to a running OPC UA
     /// server (e.g. PumpDeviceIntegrationServer), discovers the OpenUSD representation
     /// and bindings via <c>Server/OpenUSD/Representations</c>, and streams live values
     /// into a <see cref="UsdFileSink"/> (an override <c>live.usda</c>). Invoked as
-    /// <c>PumpOpenUsdConnector [--server &lt;url&gt;] [--out &lt;live.usda&gt;] [--seconds N]</c>.
+    /// <c>PumpDeviceIntegrationBridge [--server &lt;url&gt;] [--out &lt;live.usda&gt;] [--seconds N]</c>.
     /// </summary>
     public static class OpenUsdConnectorRunner
     {
@@ -55,11 +55,11 @@ namespace PumpOpenUsdConnector
 
             ITelemetryContext telemetry = DefaultTelemetry.Create(b => b.SetMinimumLevel(LogLevel.Warning));
 
-            string pkiRoot = Path.Combine(Path.GetTempPath(), "PumpOpenUsdConnector", Path.GetRandomFileName());
+            string pkiRoot = Path.Combine(Path.GetTempPath(), "PumpDeviceIntegrationBridge", Path.GetRandomFileName());
             var config = new ApplicationConfiguration(telemetry)
             {
-                ApplicationName = "PumpOpenUsdConnector",
-                ApplicationUri = "urn:localhost:OPCFoundation:PumpOpenUsdConnector",
+                ApplicationName = "PumpDeviceIntegrationBridge",
+                ApplicationUri = "urn:localhost:OPCFoundation:PumpDeviceIntegrationBridge",
                 ApplicationType = ApplicationType.Client,
                 SecurityConfiguration = new SecurityConfiguration
                 {
@@ -67,7 +67,7 @@ namespace PumpOpenUsdConnector
                     {
                         StoreType = CertificateStoreType.Directory,
                         StorePath = Path.Combine(pkiRoot, "own"),
-                        SubjectName = "CN=PumpOpenUsdConnector, O=OPC Foundation"
+                        SubjectName = "CN=PumpDeviceIntegrationBridge, O=OPC Foundation"
                     },
                     TrustedIssuerCertificates = new CertificateTrustList
                     {
@@ -123,7 +123,7 @@ namespace PumpOpenUsdConnector
             var sessionFactory = new DefaultSessionFactory(telemetry);
             ISession session = await sessionFactory.CreateAsync(
                 config, endpoint, updateBeforeConnect: false,
-                sessionName: "PumpOpenUsdConnector", sessionTimeout: 60000,
+                sessionName: "PumpDeviceIntegrationBridge", sessionTimeout: 60000,
                 identity: new UserIdentity(new AnonymousIdentityToken()),
                 preferredLocales: default, ct: CancellationToken.None).ConfigureAwait(false);
 

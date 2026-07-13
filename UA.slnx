@@ -10,7 +10,7 @@
     <Project Path="Applications/MinimalCalcServer/MinimalCalcServer.csproj" />
     <Project Path="Applications/McpServer/Opc.Ua.Mcp.csproj" />
     <Project Path="Applications/PumpDeviceIntegrationServer/PumpDeviceIntegrationServer.csproj" />
-    <Project Path="Applications/PumpOpenUsdConnector/PumpOpenUsdConnector.csproj" />
+    <Project Path="Applications/PumpDeviceIntegrationBridge/PumpDeviceIntegrationBridge.csproj" />
     <Project Path="Applications/Quickstarts.Servers/Quickstarts.Servers.csproj" />
     <Project Path="Applications/RedundantClient/RedundantClient.csproj" />
   </Folder>

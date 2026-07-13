@@ -27,9 +27,33 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
-using System.Threading.Tasks;
-using PumpOpenUsdConnector;
+namespace PumpDeviceIntegrationBridge
+{
+    /// <summary>
+    /// The small slice of the OPC UA - OpenUSD Bindings companion model the client
+    /// needs. A connector is a client: it does not need the server-side generated
+    /// NodeState model, only the namespace URI, the well-known type NodeIds, and the
+    /// meaning of the <c>RenderTargetKind</c> enumeration (values mirror
+    /// <c>Opc.Ua.OpenUsdBinding.NodeSet2.xml</c>, DataType i=3002).
+    /// </summary>
+    internal static class OpenUsdModel
+    {
+        public const string NamespaceUri = "http://opcfoundation.org/UA/OpenUSD/";
+        public const uint RepresentationTypeId = 1003;
+        public const uint LiveBindingTypeId = 1004;
+    }
 
-// Standalone OPC UA -> OpenUSD connector client.
-// Usage: PumpOpenUsdConnector [--server <opc.tcp url>] [--out <live.usda>] [--seconds N]
-return await OpenUsdConnectorRunner.RunAsync(args).ConfigureAwait(false);
+    /// <summary>How a bound value drives the target USD attribute (NodeSet i=3002).</summary>
+    public enum OpenUsdRenderTargetKind
+    {
+        Translation = 0,
+        Rotation = 1,
+        Scale = 2,
+        Transform = 3,
+        Visibility = 4,
+        DisplayColor = 5,
+        EmissiveColor = 6,
+        Opacity = 7,
+        Custom = 8
+    }
+}
