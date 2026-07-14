@@ -154,6 +154,9 @@ PY
   composition (Twin-BOM content integrity, §5.11/§9); a mismatch is fail-closed.
 - **Command safety** — command bindings are normative but opt-in: disabled by default,
   single-writer, authorized, fail-closed (§5.10).
+- **Composition** — the bridge assembles the asset's component hierarchy into USD prims
+  (`OpenUsdComponentBindingType`, §5.12–5.14): 1:1 child prims, 1..n instanceable references,
+  dynamic add/remove reconciled from model-change events, and cross-server federation.
 - **Layering** — OPC UA is the single mapping authority; the base USD asset is never
   modified. Live values live in a composed override layer (the equivalent of an Omniverse
   Nucleus `.live` layer, Part 3).
