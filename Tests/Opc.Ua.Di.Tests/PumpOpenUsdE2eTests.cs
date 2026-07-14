@@ -269,8 +269,7 @@ namespace Opc.Ua.Di.Tests
         public async Task RepresentationAndBindingsAreDiscoverableAsync()
         {
             var connector = new OpenUsdConnector(m_session!, new MockUsdSink());
-            OpenUsdConnector.RepresentationInfo? rep = await connector
-                .DiscoverRepresentationAsync(CancellationToken.None).ConfigureAwait(false);
+            OpenUsdConnector.RepresentationInfo? rep = await PumpRepAsync(connector).ConfigureAwait(false);
 
             Assert.That(rep, Is.Not.Null, "OpenUsdRepresentation not discovered on Pump #1.");
             Assert.That(rep!.PrimPath, Is.EqualTo("/Plant/Pumps/P101"));
@@ -284,8 +283,7 @@ namespace Opc.Ua.Di.Tests
         public async Task SemanticIdAndSignalRoleAreSurfacedAsync()
         {
             var connector = new OpenUsdConnector(m_session!, new MockUsdSink());
-            OpenUsdConnector.RepresentationInfo? rep = await connector
-                .DiscoverRepresentationAsync(CancellationToken.None).ConfigureAwait(false);
+            OpenUsdConnector.RepresentationInfo? rep = await PumpRepAsync(connector).ConfigureAwait(false);
             Assert.That(rep, Is.Not.Null);
 
             OpenUsdConnector.BindingInfo? massFlow = null;
@@ -318,8 +316,7 @@ namespace Opc.Ua.Di.Tests
         public async Task StageRootLayerDigestVerifiesAsync()
         {
             var connector = new OpenUsdConnector(m_session!, new MockUsdSink());
-            OpenUsdConnector.RepresentationInfo? rep = await connector
-                .DiscoverRepresentationAsync(CancellationToken.None).ConfigureAwait(false);
+            OpenUsdConnector.RepresentationInfo? rep = await PumpRepAsync(connector).ConfigureAwait(false);
             Assert.That(rep, Is.Not.Null);
 
             Assert.Multiple(() =>
@@ -361,8 +358,7 @@ namespace Opc.Ua.Di.Tests
         public async Task CommandBindingWritesServerVariableWhenEnabledAsync()
         {
             var connector = new OpenUsdConnector(m_session!, new MockUsdSink(), enableCommands: true);
-            OpenUsdConnector.RepresentationInfo? rep = await connector
-                .DiscoverRepresentationAsync(CancellationToken.None).ConfigureAwait(false);
+            OpenUsdConnector.RepresentationInfo? rep = await PumpRepAsync(connector).ConfigureAwait(false);
             NodeId? target = null;
             foreach (OpenUsdConnector.BindingInfo b in rep!.Bindings)
             {
@@ -426,6 +422,146 @@ namespace Opc.Ua.Di.Tests
                     "EmissiveColor binding produced no value.");
                 Assert.That(sink.TotalWrites, Is.GreaterThan(0));
             });
+        }
+
+        [Test]
+        public async Task PumpComponentsComposeChildPrimsAsync()
+        {
+            // 1:1 composition (§5.12): the pump is composed of an Impeller and a Bearing,
+            // each mapped to a child prim (arc=Child).
+            var sink = new MockUsdSink();
+            var connector = new OpenUsdConnector(m_session!, sink);
+            await connector.StartAsync(CancellationToken.None).ConfigureAwait(false);
+            try
+            {
+                Assert.Multiple(() =>
+                {
+                    Assert.That(sink.WasPrimComposed("/Plant/Pumps/P101/Impeller"), Is.True,
+                        "Impeller component prim not composed.");
+                    Assert.That(sink.WasPrimComposed("/Plant/Pumps/P101/Bearing"), Is.True,
+                        "Bearing component prim not composed.");
+                });
+            }
+            finally
+            {
+                await connector.StopAsync().ConfigureAwait(false);
+            }
+        }
+
+        [Test]
+        public async Task ProductionLineAggregatesPumpsAsync()
+        {
+            // 1..n composition (§5.12): a ProductionLine aggregates its pumps as
+            // instanceable reference prims under a Pumps scope.
+            var sink = new MockUsdSink();
+            var connector = new OpenUsdConnector(m_session!, sink);
+            await connector.StartAsync(CancellationToken.None).ConfigureAwait(false);
+            try
+            {
+                Assert.Multiple(() =>
+                {
+                    Assert.That(sink.WasPrimComposed("/Plant/Line1/Pumps/P_201"), Is.True,
+                        "Aggregated pump P-201 prim not composed.");
+                    Assert.That(sink.WasPrimComposed("/Plant/Line1/Pumps/P_202"), Is.True,
+                        "Aggregated pump P-202 prim not composed.");
+                    Assert.That(sink.IsPrimActive("/Plant/Line1/Pumps/P_201"), Is.True);
+                });
+            }
+            finally
+            {
+                await connector.StopAsync().ConfigureAwait(false);
+            }
+        }
+
+        [Test]
+        public async Task CrossServerComponentIsComposedAsync()
+        {
+            // Cross-server composition (§5.14): the Line declares a component on another
+            // server; the connector composes its reference prim (federation drives its
+            // bindings only when a remote session factory is supplied — not here).
+            var sink = new MockUsdSink();
+            var connector = new OpenUsdConnector(m_session!, sink);
+            await connector.StartAsync(CancellationToken.None).ConfigureAwait(false);
+            try
+            {
+                Assert.That(sink.WasPrimComposed("/Plant/Line1/RemotePump"), Is.True,
+                    "Cross-server component prim not composed.");
+            }
+            finally
+            {
+                await connector.StopAsync().ConfigureAwait(false);
+            }
+        }
+
+        [Test]
+        public async Task DynamicPumpIsComposedThenDeactivatedAsync()
+        {
+            // Dynamic composition (§5.13): the server periodically adds then removes a
+            // pump, emitting model-change events; the connector reconciles the prim
+            // (composed active on add, active=false on remove).
+            var sink = new MockUsdSink();
+            var connector = new OpenUsdConnector(m_session!, sink);
+            await connector.StartAsync(CancellationToken.None).ConfigureAwait(false);
+            try
+            {
+                const string dyn = "/Plant/Line1/Pumps/P_203";
+                bool appeared = await PollAsync(
+                    () => sink.WasPrimComposed(dyn) && sink.IsPrimActive(dyn), TimeSpan.FromSeconds(20))
+                    .ConfigureAwait(false);
+                Assert.That(appeared, Is.True, "Dynamically added pump prim was not composed.");
+
+                bool deactivated = await PollAsync(
+                    () => sink.WasPrimComposed(dyn) && !sink.IsPrimActive(dyn), TimeSpan.FromSeconds(20))
+                    .ConfigureAwait(false);
+                Assert.That(deactivated, Is.True, "Dynamically removed pump prim was not deactivated.");
+            }
+            finally
+            {
+                await connector.StopAsync().ConfigureAwait(false);
+            }
+        }
+
+        [Test]
+        public async Task ComponentBindingsAreDiscoverableAsync()
+        {
+            var connector = new OpenUsdConnector(m_session!, new MockUsdSink());
+            System.Collections.Generic.List<OpenUsdConnector.RepresentationInfo> reps =
+                await connector.DiscoverAllRepresentationsAsync(CancellationToken.None).ConfigureAwait(false);
+
+            OpenUsdConnector.RepresentationInfo? pump = reps.Find(r => r.PrimPath == "/Plant/Pumps/P101");
+            OpenUsdConnector.RepresentationInfo? line = reps.Find(r => r.PrimPath == "/Plant/Line1");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(reps, Has.Count.GreaterThanOrEqualTo(2), "Expected pump + line representations.");
+                Assert.That(pump, Is.Not.Null);
+                Assert.That(pump!.Components, Has.Count.EqualTo(2), "Pump should have 2 (1:1) component bindings.");
+                Assert.That(line, Is.Not.Null);
+                // Line: a Many aggregation + a cross-server component.
+                Assert.That(line!.Components.Exists(c => c.Cardinality == OpenUsdCardinality.Many), Is.True);
+                Assert.That(line.Components.Exists(c => !string.IsNullOrEmpty(c.ComponentEndpointUrl)), Is.True);
+            });
+        }
+
+        private static async Task<OpenUsdConnector.RepresentationInfo?> PumpRepAsync(OpenUsdConnector connector)
+        {
+            System.Collections.Generic.List<OpenUsdConnector.RepresentationInfo> all =
+                await connector.DiscoverAllRepresentationsAsync(CancellationToken.None).ConfigureAwait(false);
+            return all.Find(r => r.PrimPath == "/Plant/Pumps/P101");
+        }
+
+        private static async Task<bool> PollAsync(Func<bool> condition, TimeSpan timeout)
+        {
+            DateTime deadline = DateTime.UtcNow + timeout;
+            while (DateTime.UtcNow < deadline)
+            {
+                if (condition())
+                {
+                    return true;
+                }
+                await Task.Delay(250).ConfigureAwait(false);
+            }
+            return condition();
         }
     }
 }

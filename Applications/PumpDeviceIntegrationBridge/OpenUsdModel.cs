@@ -41,6 +41,23 @@ namespace PumpDeviceIntegrationBridge
         public const string NamespaceUri = "http://opcfoundation.org/UA/OpenUSD/";
         public const uint RepresentationTypeId = 1003;
         public const uint LiveBindingTypeId = 1004;
+        public const uint ComponentBindingTypeId = 1005;
+    }
+
+    /// <summary>Cardinality of a component binding (NodeSet i=3008).</summary>
+    public enum OpenUsdCardinality
+    {
+        One = 0,
+        Many = 1
+    }
+
+    /// <summary>USD composition arc for a component prim (NodeSet i=3009).</summary>
+    public enum OpenUsdCompositionArc
+    {
+        Child = 0,
+        Reference = 1,
+        Payload = 2,
+        Instance = 3
     }
 
     /// <summary>How a bound value drives the target USD attribute (NodeSet i=3002).</summary>
