@@ -179,19 +179,27 @@ namespace Pumps
         {
             try
             {
-                for (int i = 0; i < 40; i++)
+                for (int i = 0; i < 3; i++)
                 {
-                    await Task.Delay(3000).ConfigureAwait(false);
+                    await Task.Delay(4000).ConfigureAwait(false);
                     m_dynamicPumpNodeId = await AddLinePumpAsync("P-203",
                         LinePrimPath + "/Pumps/P_203", ns).ConfigureAwait(false);
-                    await Task.Delay(3000).ConfigureAwait(false);
+                    await Task.Delay(4000).ConfigureAwait(false);
                     if (m_dynamicPumpNodeId != null)
                     {
                         await DeleteNodeAsync(SystemContext, (NodeId)m_dynamicPumpNodeId, CancellationToken.None)
                             .ConfigureAwait(false);
+                        m_logger.LogInformation(
+                            "Dynamic composition: removed line pump (NodeId={NodeId}); model-change emitted.",
+                            m_dynamicPumpNodeId);
                         m_dynamicPumpNodeId = null;
                     }
                 }
+                // Final add: leave P-203 in place so the composed stage renders it.
+                await Task.Delay(2000).ConfigureAwait(false);
+                m_dynamicPumpNodeId = await AddLinePumpAsync("P-203",
+                    LinePrimPath + "/Pumps/P_203", ns).ConfigureAwait(false);
+                m_logger.LogInformation("Dynamic composition: P-203 left added (final state).");
             }
             catch (Exception ex)
             {
@@ -222,6 +230,9 @@ namespace Pumps
             NodeId newId = await CreateNodeAsync(SystemContext, m_linePumps.NodeId,
                 ReferenceTypeIds.Organizes, new QualifiedName(name, ns), pump, CancellationToken.None)
                 .ConfigureAwait(false);
+            m_logger.LogInformation(
+                "Dynamic composition: added line pump '{Name}' (NodeId={NodeId}); model-change emitted.",
+                name, newId);
             return newId;
         }
 
