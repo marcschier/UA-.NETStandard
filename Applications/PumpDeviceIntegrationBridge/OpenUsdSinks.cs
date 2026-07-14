@@ -45,12 +45,20 @@ namespace PumpDeviceIntegrationBridge
         // Authors a USD time sample (for UaHistoryToUsd playback/scrubbing). The
         // DateTime is mapped to a USD frame (seconds since the Unix epoch).
         void SetTimeSample(string primPath, string propertyName, DateTime time, object value);
+
+        // Composes a component prim (§5.12): a Child is an inline over/def prim; a
+        // Reference/Payload/Instance authors references/payload (+ instanceable for
+        // Instance) to the component asset. active=false deactivates a removed
+        // component prim (dynamic composition, §5.13).
+        void ComposePrim(string primPath, OpenUsdCompositionArc arc,
+            string? assetReference, bool active);
     }
 
     /// <summary>In-memory, thread-safe sink (used by tests and diagnostics).</summary>
     public sealed class MockUsdSink : IUsdSink
     {
         private readonly ConcurrentDictionary<string, (object Value, int Count)> m_state = new();
+        private readonly ConcurrentDictionary<string, (OpenUsdCompositionArc Arc, string? Asset, bool Active)> m_prims = new();
         private int m_total;
         private int m_timeSamples;
 
@@ -70,6 +78,17 @@ namespace PumpDeviceIntegrationBridge
                 (_, prev) => (value, prev.Count + 1));
             Interlocked.Increment(ref m_timeSamples);
         }
+
+        public void ComposePrim(string primPath, OpenUsdCompositionArc arc,
+            string? assetReference, bool active)
+            => m_prims[primPath] = (arc, assetReference, active);
+
+        public bool WasPrimComposed(string primPath) => m_prims.ContainsKey(primPath);
+
+        public bool IsPrimActive(string primPath)
+            => m_prims.TryGetValue(primPath, out (OpenUsdCompositionArc Arc, string? Asset, bool Active) p) && p.Active;
+
+        public int ComposedPrimCount => m_prims.Count;
 
         public bool WasWritten(string primPath, string propertyName)
             => m_state.TryGetValue(primPath + "." + propertyName, out (object Value, int Count) v)
@@ -95,10 +114,31 @@ namespace PumpDeviceIntegrationBridge
         private readonly Dictionary<string, SortedList<double, object>> m_timeSamples =
             new(StringComparer.Ordinal);
         private readonly List<(string Prim, string Prop)> m_tsOrder = new();
+        private readonly Dictionary<string, (OpenUsdCompositionArc Arc, string? Asset, bool Active)> m_prims =
+            new(StringComparer.Ordinal);
+        private readonly List<string> m_primOrder = new();
 
         public UsdFileSink(string path)
         {
             m_path = path;
+        }
+
+        public void ComposePrim(string primPath, OpenUsdCompositionArc arc,
+            string? assetReference, bool active)
+        {
+            if (!IsValidPrimPath(primPath))
+            {
+                return;
+            }
+            lock (m_gate)
+            {
+                if (!m_prims.ContainsKey(primPath))
+                {
+                    m_primOrder.Add(primPath);
+                }
+                m_prims[primPath] = (arc, assetReference, active);
+                Write();
+            }
         }
 
         public void SetAttribute(string primPath, string propertyName, object value)
@@ -213,6 +253,11 @@ namespace PumpDeviceIntegrationBridge
             public List<(string Prop, string UsdType, string Block)> TimeSamples { get; } = new();
             public Dictionary<string, Node> Children { get; } = new(StringComparer.Ordinal);
             public List<string> ChildOrder { get; } = new();
+            // Composition metadata (§5.12/§5.13): reference/payload asset, instanceable, active.
+            public string? Reference { get; set; }
+            public string? Payload { get; set; }
+            public bool Instanceable { get; set; }
+            public bool? Active { get; set; }
 
             public Node Child(string name)
             {
@@ -269,6 +314,24 @@ namespace PumpDeviceIntegrationBridge
                 block.Append("            }");
                 node.TimeSamples.Add((prop, usdType, block.ToString()));
             }
+            foreach (string prim in m_primOrder)
+            {
+                (OpenUsdCompositionArc arc, string? asset, bool active) = m_prims[prim];
+                Node node = NavigateTo(root, rootOrder, prim);
+                node.Active = active;
+                if (arc != OpenUsdCompositionArc.Child && IsSafeAssetRef(asset))
+                {
+                    if (arc == OpenUsdCompositionArc.Payload)
+                    {
+                        node.Payload = asset;
+                    }
+                    else
+                    {
+                        node.Reference = asset;
+                        node.Instanceable = arc == OpenUsdCompositionArc.Instance;
+                    }
+                }
+            }
 
             var sb = new StringBuilder();
             sb.Append("#usda 1.0\n(\n    doc = \"OPC UA -> OpenUSD live bindings (override layer)\"\n)\n\n");
@@ -288,7 +351,35 @@ namespace PumpDeviceIntegrationBridge
 
         private static void Emit(StringBuilder sb, Node node, string name, string indent)
         {
-            sb.Append(indent).Append("over \"").Append(name).Append("\"\n");
+            sb.Append(indent).Append("over \"").Append(name).Append('"');
+            // Composition metadata block (references/payload/instanceable/active).
+            var meta = new List<string>();
+            if (node.Reference != null)
+            {
+                meta.Add($"prepend references = {node.Reference}");
+            }
+            if (node.Payload != null)
+            {
+                meta.Add($"prepend payload = {node.Payload}");
+            }
+            if (node.Instanceable)
+            {
+                meta.Add("instanceable = true");
+            }
+            if (node.Active.HasValue)
+            {
+                meta.Add("active = " + (node.Active.Value ? "true" : "false"));
+            }
+            if (meta.Count > 0)
+            {
+                sb.Append(" (\n");
+                foreach (string m in meta)
+                {
+                    sb.Append(indent).Append("    ").Append(m).Append('\n');
+                }
+                sb.Append(indent).Append(')');
+            }
+            sb.Append('\n');
             sb.Append(indent).Append("{\n");
             foreach ((string prop, string usdType, string value) in node.Props)
             {
@@ -306,6 +397,12 @@ namespace PumpDeviceIntegrationBridge
             }
             sb.Append(indent).Append("}\n");
         }
+
+        // A USD asset reference (e.g. @pump.usda@</Pump>) must not contain characters
+        // that would break the layer syntax; reject newlines and quotes.
+        private static bool IsSafeAssetRef(string? assetRef)
+            => !string.IsNullOrEmpty(assetRef)
+               && assetRef!.IndexOfAny(['\n', '\r', '"']) < 0;
 
         private static string F(double x)
             => x.ToString("0.0000", CultureInfo.InvariantCulture);

@@ -226,6 +226,11 @@ namespace Pumps
                 commandTargetNodeId: m_speedSetpointVar.NodeId,
                 commandTriggerPropertyName: "inputs:speedSetpoint");
 
+            // Composition (§5.12): the pump is composed of an Impeller and a Bearing,
+            // each a component Object with its own representation, mapped 1:1 to a child
+            // prim (arc=Child). This adds <Component> bindings on the pump representation.
+            AttachPumpComponents(pump, rep, ns);
+
             AssignChildNodeIds(rep);
         }
 

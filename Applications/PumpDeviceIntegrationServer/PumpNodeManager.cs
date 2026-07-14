@@ -189,6 +189,11 @@ namespace Pumps
             {
                 OrganiseRepresentation(m_pump1);
             }
+
+            // Composition demo: a ProductionLine aggregating 1..n pumps (Many), with a
+            // dynamically added/removed pump (model-change events) and a cross-server
+            // component (federation). See OpenUsdComposition.cs.
+            await MaterialiseProductionLineAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>

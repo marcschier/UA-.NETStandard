@@ -44,33 +44,47 @@ namespace PumpDeviceIntegrationBridge
     /// USD attributes into an <see cref="IUsdSink"/>. It is domain-agnostic — it
     /// knows only the OpenUSD binding model, never "pump".
     /// </summary>
-    public sealed class OpenUsdConnector
+    public sealed partial class OpenUsdConnector
     {
         private readonly ISession m_session;
         private readonly IUsdSink m_sink;
         private readonly bool m_enableCommands;
+        private readonly Func<string, CancellationToken, Task<ISession>>? m_remoteSessionFactory;
         private readonly ushort m_ns;
         private readonly NodeId m_representationTypeId;
         private readonly NodeId m_bindingTypeId;
+        private readonly NodeId m_componentTypeId;
         private Subscription? m_subscription;
+        private readonly List<OpenUsdConnector> m_remoteConnectors = new();
 
         public OpenUsdConnector(ISession session, IUsdSink sink)
-            : this(session, sink, enableCommands: false)
+            : this(session, sink, enableCommands: false, remoteSessionFactory: null)
+        {
+        }
+
+        public OpenUsdConnector(ISession session, IUsdSink sink, bool enableCommands)
+            : this(session, sink, enableCommands, remoteSessionFactory: null)
         {
         }
 
         // enableCommands is the opt-in gate for UsdToUaCommand bindings. Command
         // bindings are always DISCOVERED, but the connector refuses to actuate one
         // unless explicitly enabled (fail-closed); read-only telemetry/alarm/history
-        // bindings are unaffected.
-        public OpenUsdConnector(ISession session, IUsdSink sink, bool enableCommands)
+        // bindings are unaffected. remoteSessionFactory, when supplied, lets the
+        // connector open sessions to OTHER servers for cross-server components (§5.14);
+        // when null, a cross-server component is composed structurally (its reference
+        // prim is authored) but its remote bindings are not driven.
+        public OpenUsdConnector(ISession session, IUsdSink sink, bool enableCommands,
+            Func<string, CancellationToken, Task<ISession>>? remoteSessionFactory)
         {
             m_session = session;
             m_sink = sink;
             m_enableCommands = enableCommands;
+            m_remoteSessionFactory = remoteSessionFactory;
             m_ns = (ushort)m_session.NamespaceUris.GetIndex(OpenUsdModel.NamespaceUri);
             m_representationTypeId = new NodeId(1003u, m_ns);
             m_bindingTypeId = new NodeId(1004u, m_ns);
+            m_componentTypeId = new NodeId(1005u, m_ns);
         }
 
         public sealed class BindingInfo
@@ -89,6 +103,23 @@ namespace PumpDeviceIntegrationBridge
             public string? CommandTriggerPropertyName { get; set; }
         }
 
+        public sealed class ComponentInfo
+        {
+            public NodeId? NodeId { get; set; }
+            public OpenUsdCardinality Cardinality { get; set; } = OpenUsdCardinality.One;
+            public OpenUsdCompositionArc Arc { get; set; } = OpenUsdCompositionArc.Child;
+            public NodeId? ComponentReferenceType { get; set; }
+            public NodeId? ComponentTypeDefinition { get; set; }
+            public string? TargetPrimPath { get; set; }
+            public string? TargetPrimNameSource { get; set; }
+            public string? ComponentAssetReference { get; set; }
+            public NodeId? ComponentRepresentation { get; set; }
+            public bool Dynamic { get; set; }
+            public NodeId? ChangeEventSource { get; set; }
+            public string? ComponentServerUri { get; set; }
+            public string? ComponentEndpointUrl { get; set; }
+        }
+
         public sealed class RepresentationInfo
         {
             public NodeId? NodeId { get; set; }
@@ -98,6 +129,7 @@ namespace PumpDeviceIntegrationBridge
             public byte[]? RootLayerDigest { get; set; }
             public OpenUsdDigestAlgorithm DigestAlgorithm { get; set; } = OpenUsdDigestAlgorithm.None;
             public List<BindingInfo> Bindings { get; } = new();
+            public List<ComponentInfo> Components { get; } = new();
         }
 
         // Part 1 discovery: the well-known OpenUSD facility exposes a
@@ -124,16 +156,56 @@ namespace PumpDeviceIntegrationBridge
             return null;
         }
 
+        // Enumerate every representation in the registry (there may be several: the
+        // top asset, plus each component's own representation, plus aggregating
+        // representations such as a production line).
+        private async Task<List<NodeId>> FindAllRepresentationsAsync(CancellationToken ct)
+        {
+            var result = new List<NodeId>();
+            var rootId = new NodeId("OpenUSD", m_ns);
+            Dictionary<string, NodeId> rootChildren =
+                await ChildrenByNameAsync(rootId, ct).ConfigureAwait(false);
+            if (!rootChildren.TryGetValue("Representations", out NodeId registry))
+            {
+                return result;
+            }
+            foreach ((NodeId? childId, NodeId? typeDef) in
+                await ChildrenWithTypeAsync(registry, ct).ConfigureAwait(false))
+            {
+                if (childId != null && typeDef == m_representationTypeId)
+                {
+                    result.Add(childId.Value);
+                }
+            }
+            return result;
+        }
+
         public async Task<RepresentationInfo?> DiscoverRepresentationAsync(CancellationToken ct)
         {
             NodeId? repNodeId = await FindFirstRepresentationAsync(ct).ConfigureAwait(false);
-            if (repNodeId == null)
-            {
-                return null;
-            }
+            return repNodeId == null
+                ? null
+                : await ReadRepresentationAsync(repNodeId.Value, ct).ConfigureAwait(false);
+        }
 
+        public async Task<List<RepresentationInfo>> DiscoverAllRepresentationsAsync(CancellationToken ct)
+        {
+            var reps = new List<RepresentationInfo>();
+            foreach (NodeId repNodeId in await FindAllRepresentationsAsync(ct).ConfigureAwait(false))
+            {
+                RepresentationInfo? info = await ReadRepresentationAsync(repNodeId, ct).ConfigureAwait(false);
+                if (info != null)
+                {
+                    reps.Add(info);
+                }
+            }
+            return reps;
+        }
+
+        private async Task<RepresentationInfo?> ReadRepresentationAsync(NodeId repNodeId, CancellationToken ct)
+        {
             var info = new RepresentationInfo { NodeId = repNodeId };
-            Dictionary<string, NodeId> repProps = await ChildrenByNameAsync(repNodeId.Value, ct)
+            Dictionary<string, NodeId> repProps = await ChildrenByNameAsync(repNodeId, ct)
                 .ConfigureAwait(false);
             info.PrimPath = await ReadStringAsync(repProps, "PrimPath", ct).ConfigureAwait(false);
             info.StageNodeId = await ReadNodeIdAsync(repProps, "Stage", ct).ConfigureAwait(false);
@@ -149,66 +221,104 @@ namespace PumpDeviceIntegrationBridge
                     stageProps, "RootLayerDigestAlgorithm", ct).ConfigureAwait(false);
             }
 
-            foreach ((NodeId? childId, NodeId? typeDef) in await ChildrenWithTypeAsync(repNodeId.Value, ct)
+            foreach ((NodeId? childId, NodeId? typeDef) in await ChildrenWithTypeAsync(repNodeId, ct)
                 .ConfigureAwait(false))
             {
-                if (childId == null || typeDef != m_bindingTypeId)
+                if (childId == null)
                 {
                     continue;
                 }
-                Dictionary<string, NodeId> bp = await ChildrenByNameAsync(childId.Value, ct)
-                    .ConfigureAwait(false);
-                var b = new BindingInfo
+                if (typeDef == m_bindingTypeId)
                 {
-                    SourceNodeId = await ReadNodeIdAsync(bp, "SourceNodeId", ct).ConfigureAwait(false),
-                    PrimPath = await ReadStringAsync(bp, "TargetPrimPath", ct).ConfigureAwait(false),
-                    PropertyName = await ReadStringAsync(bp, "TargetPropertyName", ct).ConfigureAwait(false),
-                    Kind = (OpenUsdRenderTargetKind)await ReadInt32Async(bp, "RenderTargetKind", ct)
-                        .ConfigureAwait(false),
-                    Scale = await ReadDoubleAsync(bp, "Scale", 1.0, ct).ConfigureAwait(false),
-                    Intent = (OpenUsdIntentProfile)await ReadInt32Async(bp, "IntentProfile", ct)
-                        .ConfigureAwait(false),
-                    SignalRole = (OpenUsdSignalRole)await ReadInt32Async(bp, "SignalRole", ct)
-                        .ConfigureAwait(false),
-                    SourceSemanticId = await ReadStringAsync(bp, "SourceSemanticId", ct)
-                        .ConfigureAwait(false),
-                    TimeSampled = await ReadBoolAsync(bp, "TimeSampled", ct).ConfigureAwait(false),
-                    CommandTargetNodeId = await ReadNodeIdAsync(bp, "CommandTargetNodeId", ct)
-                        .ConfigureAwait(false),
-                    CommandTriggerPropertyName = await ReadStringAsync(bp, "CommandTriggerPropertyName", ct)
-                        .ConfigureAwait(false)
-                };
-                if (bp.ContainsKey("AlarmAspect"))
-                {
-                    b.AlarmAspect = (OpenUsdAlarmAspect)await ReadInt32Async(bp, "AlarmAspect", ct)
+                    Dictionary<string, NodeId> bp = await ChildrenByNameAsync(childId.Value, ct)
                         .ConfigureAwait(false);
+                    var b = new BindingInfo
+                    {
+                        SourceNodeId = await ReadNodeIdAsync(bp, "SourceNodeId", ct).ConfigureAwait(false),
+                        PrimPath = await ReadStringAsync(bp, "TargetPrimPath", ct).ConfigureAwait(false),
+                        PropertyName = await ReadStringAsync(bp, "TargetPropertyName", ct).ConfigureAwait(false),
+                        Kind = (OpenUsdRenderTargetKind)await ReadInt32Async(bp, "RenderTargetKind", ct)
+                            .ConfigureAwait(false),
+                        Scale = await ReadDoubleAsync(bp, "Scale", 1.0, ct).ConfigureAwait(false),
+                        Intent = (OpenUsdIntentProfile)await ReadInt32Async(bp, "IntentProfile", ct)
+                            .ConfigureAwait(false),
+                        SignalRole = (OpenUsdSignalRole)await ReadInt32Async(bp, "SignalRole", ct)
+                            .ConfigureAwait(false),
+                        SourceSemanticId = await ReadStringAsync(bp, "SourceSemanticId", ct)
+                            .ConfigureAwait(false),
+                        TimeSampled = await ReadBoolAsync(bp, "TimeSampled", ct).ConfigureAwait(false),
+                        CommandTargetNodeId = await ReadNodeIdAsync(bp, "CommandTargetNodeId", ct)
+                            .ConfigureAwait(false),
+                        CommandTriggerPropertyName = await ReadStringAsync(bp, "CommandTriggerPropertyName", ct)
+                            .ConfigureAwait(false)
+                    };
+                    if (bp.ContainsKey("AlarmAspect"))
+                    {
+                        b.AlarmAspect = (OpenUsdAlarmAspect)await ReadInt32Async(bp, "AlarmAspect", ct)
+                            .ConfigureAwait(false);
+                    }
+                    if (string.IsNullOrEmpty(b.PrimPath))
+                    {
+                        b.PrimPath = info.PrimPath;
+                    }
+                    info.Bindings.Add(b);
                 }
-                if (string.IsNullOrEmpty(b.PrimPath))
+                else if (typeDef == m_componentTypeId)
                 {
-                    b.PrimPath = info.PrimPath;
+                    Dictionary<string, NodeId> cp = await ChildrenByNameAsync(childId.Value, ct)
+                        .ConfigureAwait(false);
+                    var c = new ComponentInfo
+                    {
+                        NodeId = childId,
+                        Cardinality = (OpenUsdCardinality)await ReadInt32Async(cp, "Cardinality", ct)
+                            .ConfigureAwait(false),
+                        Arc = (OpenUsdCompositionArc)await ReadInt32Async(cp, "CompositionArc", ct)
+                            .ConfigureAwait(false),
+                        ComponentReferenceType = await ReadNodeIdAsync(cp, "ComponentReferenceType", ct)
+                            .ConfigureAwait(false),
+                        ComponentTypeDefinition = await ReadNodeIdAsync(cp, "ComponentTypeDefinition", ct)
+                            .ConfigureAwait(false),
+                        TargetPrimPath = await ReadStringAsync(cp, "TargetPrimPath", ct).ConfigureAwait(false),
+                        TargetPrimNameSource = await ReadStringAsync(cp, "TargetPrimNameSource", ct)
+                            .ConfigureAwait(false),
+                        ComponentAssetReference = await ReadStringAsync(cp, "ComponentAssetReference", ct)
+                            .ConfigureAwait(false),
+                        ComponentRepresentation = await ReadNodeIdAsync(cp, "ComponentRepresentation", ct)
+                            .ConfigureAwait(false),
+                        Dynamic = await ReadBoolAsync(cp, "Dynamic", ct).ConfigureAwait(false),
+                        ChangeEventSource = await ReadNodeIdAsync(cp, "ChangeEventSource", ct)
+                            .ConfigureAwait(false),
+                        ComponentServerUri = await ReadStringAsync(cp, "ComponentServerUri", ct)
+                            .ConfigureAwait(false),
+                        ComponentEndpointUrl = await ReadStringAsync(cp, "ComponentEndpointUrl", ct)
+                            .ConfigureAwait(false)
+                    };
+                    info.Components.Add(c);
                 }
-                info.Bindings.Add(b);
             }
             return info;
         }
 
         public async Task StartAsync(CancellationToken ct)
         {
-            RepresentationInfo? rep = await DiscoverRepresentationAsync(ct).ConfigureAwait(false);
-            if (rep == null)
+            List<RepresentationInfo> reps = await DiscoverAllRepresentationsAsync(ct).ConfigureAwait(false);
+            if (reps.Count == 0)
             {
                 throw new InvalidOperationException("No OpenUSD representation discovered.");
             }
+            m_allReps = reps;
 
-            // Twin-BOM integrity (0.2): if the stage advertises a content digest,
-            // verify it before authoring any opinions into the stage. A mismatch is
-            // fail-closed — we do not compose an unverified stage.
-            if (rep.RootLayerDigest is { Length: > 0 }
-                && rep.DigestAlgorithm != OpenUsdDigestAlgorithm.None
-                && !VerifyStageDigest(rep))
+            // Twin-BOM integrity (0.2): if a stage advertises a content digest, verify it
+            // before authoring any opinions into it. A mismatch is fail-closed.
+            foreach (RepresentationInfo rep in reps)
             {
-                throw new InvalidOperationException(
-                    "OpenUSD stage RootLayerDigest verification failed — refusing to compose.");
+                if (rep.RootLayerDigest is { Length: > 0 }
+                    && rep.DigestAlgorithm != OpenUsdDigestAlgorithm.None
+                    && !VerifyStageDigest(rep))
+                {
+                    throw new InvalidOperationException(
+                        "OpenUSD stage RootLayerDigest verification failed — refusing to compose.");
+                }
             }
 
             var subscription = new Subscription(m_session.DefaultSubscription)
@@ -223,34 +333,72 @@ namespace PumpDeviceIntegrationBridge
             m_session.AddSubscription(subscription);
             await subscription.CreateAsync(ct).ConfigureAwait(false);
 
-            foreach (BindingInfo b in rep.Bindings)
+            foreach (RepresentationInfo rep in reps)
             {
-                // Command bindings are actuated on demand (IssueCommandAsync), and
-                // history bindings are replayed via ReplayHistoryAsync — neither is a
-                // live MonitoredItem. Telemetry and alarm bindings subscribe here.
-                if (b.SourceNodeId == null
-                    || b.Intent == OpenUsdIntentProfile.UsdToUaCommand
-                    || b.Intent == OpenUsdIntentProfile.UaHistoryToUsd)
+                foreach (BindingInfo b in rep.Bindings)
                 {
-                    continue;
+                    // Command bindings are actuated on demand (IssueCommandAsync), and
+                    // history bindings are replayed via ReplayHistoryAsync — neither is a
+                    // live MonitoredItem. Telemetry and alarm bindings subscribe here.
+                    if (b.SourceNodeId == null
+                        || b.Intent == OpenUsdIntentProfile.UsdToUaCommand
+                        || b.Intent == OpenUsdIntentProfile.UaHistoryToUsd)
+                    {
+                        continue;
+                    }
+                    var item = new MonitoredItem(subscription.DefaultItem)
+                    {
+                        DisplayName = b.PropertyName ?? "binding",
+                        StartNodeId = b.SourceNodeId.Value,
+                        AttributeId = Attributes.Value,
+                        SamplingInterval = 250,
+                        QueueSize = 5,
+                        Handle = b
+                    };
+                    item.Notification += OnNotification;
+                    subscription.AddItem(item);
                 }
-                var item = new MonitoredItem(subscription.DefaultItem)
-                {
-                    DisplayName = b.PropertyName ?? "binding",
-                    StartNodeId = b.SourceNodeId.Value,
-                    AttributeId = Attributes.Value,
-                    SamplingInterval = 250,
-                    QueueSize = 5,
-                    Handle = b
-                };
-                item.Notification += OnNotification;
-                subscription.AddItem(item);
             }
             await subscription.ApplyChangesAsync(ct).ConfigureAwait(false);
+
+            // Compose each representation's components into the USD prim tree (§5.12):
+            // author child/reference/instance prims and federate to remote servers
+            // (§5.14). If any component is Dynamic, watch model-change events (§5.13).
+            bool anyDynamic = false;
+            NodeId eventSource = ObjectIds.Server;
+            foreach (RepresentationInfo rep in reps)
+            {
+                foreach (ComponentInfo c in rep.Components)
+                {
+                    await ComposeComponentAsync(rep, c, ct).ConfigureAwait(false);
+                    if (c.Dynamic)
+                    {
+                        anyDynamic = true;
+                        if (c.ChangeEventSource != null)
+                        {
+                            eventSource = c.ChangeEventSource.Value;
+                        }
+                    }
+                }
+            }
+            if (anyDynamic)
+            {
+                await SubscribeModelChangesAsync(eventSource, ct).ConfigureAwait(false);
+            }
         }
 
         public async Task StopAsync()
         {
+            foreach (OpenUsdConnector remote in m_remoteConnectors)
+            {
+                await remote.StopAsync().ConfigureAwait(false);
+            }
+            m_remoteConnectors.Clear();
+            if (m_eventSubscription != null)
+            {
+                await m_eventSubscription.DeleteAsync(true, CancellationToken.None).ConfigureAwait(false);
+                m_eventSubscription = null;
+            }
             if (m_subscription != null)
             {
                 await m_subscription.DeleteAsync(true, CancellationToken.None).ConfigureAwait(false);
@@ -351,11 +499,10 @@ namespace PumpDeviceIntegrationBridge
                 throw new InvalidOperationException(
                     "Command bindings are disabled. Construct the connector with enableCommands: true.");
             }
-            RepresentationInfo? rep = await DiscoverRepresentationAsync(ct).ConfigureAwait(false);
             BindingInfo? cmd = null;
-            if (rep != null)
+            foreach (RepresentationInfo r in await DiscoverAllRepresentationsAsync(ct).ConfigureAwait(false))
             {
-                foreach (BindingInfo b in rep.Bindings)
+                foreach (BindingInfo b in r.Bindings)
                 {
                     if (b.Intent == OpenUsdIntentProfile.UsdToUaCommand
                         && b.SignalRole == OpenUsdSignalRole.Controllable
@@ -364,6 +511,10 @@ namespace PumpDeviceIntegrationBridge
                         cmd = b;
                         break;
                     }
+                }
+                if (cmd != null)
+                {
+                    break;
                 }
             }
             if (cmd?.CommandTargetNodeId == null)
@@ -383,12 +534,9 @@ namespace PumpDeviceIntegrationBridge
         /// </summary>
         public async Task<int> ReplayHistoryAsync(DateTime startTime, DateTime endTime, CancellationToken ct)
         {
-            RepresentationInfo? rep = await DiscoverRepresentationAsync(ct).ConfigureAwait(false);
-            if (rep == null)
-            {
-                return 0;
-            }
             int authored = 0;
+            foreach (RepresentationInfo rep in await DiscoverAllRepresentationsAsync(ct).ConfigureAwait(false))
+            {
             foreach (BindingInfo b in rep.Bindings)
             {
                 if (b.Intent != OpenUsdIntentProfile.UaHistoryToUsd || b.SourceNodeId == null)
@@ -441,6 +589,7 @@ namespace PumpDeviceIntegrationBridge
                         }
                     }
                 }
+            }
             }
             return authored;
         }
