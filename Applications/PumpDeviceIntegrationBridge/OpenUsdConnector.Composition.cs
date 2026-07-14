@@ -86,6 +86,10 @@ namespace PumpDeviceIntegrationBridge
 
             var live = new HashSet<string>(StringComparer.Ordinal);
             int index = 0;
+            if (c.Cardinality == OpenUsdCardinality.Many)
+            {
+                Console.Error.WriteLine($"[composition] Many '{c.TargetPrimPath}' resolved {comps.Count} component(s)");
+            }
             foreach ((NodeId _, NodeId _, string name) in comps)
             {
                 if (c.Cardinality == OpenUsdCardinality.One && index >= 1)
@@ -264,12 +268,14 @@ namespace PumpDeviceIntegrationBridge
             item.Notification += OnModelChangeEvent;
             subscription.AddItem(item);
             await subscription.ApplyChangesAsync(ct).ConfigureAwait(false);
+            Console.Error.WriteLine($"[composition] subscribed to model-change events on {eventSource}");
         }
 
         private void OnModelChangeEvent(MonitoredItem item, MonitoredItemNotificationEventArgs e)
         {
             // Fail-safe (§5.13): any model-change event triggers a full re-resolve rather
             // than a partial delta. Fire-and-forget; reconciliation is idempotent.
+            Console.Error.WriteLine("[composition] model-change event received -> recompose");
             _ = RecomposeAsync(CancellationToken.None);
         }
 
