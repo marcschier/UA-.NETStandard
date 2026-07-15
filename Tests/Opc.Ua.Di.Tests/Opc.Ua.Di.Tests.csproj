@@ -43,6 +43,8 @@
                       Condition="'$(TargetFramework)' != 'net472'" />
     <ProjectReference Include="..\..\Applications\PumpDeviceIntegrationBridge\PumpDeviceIntegrationBridge.csproj"
                       Condition="'$(TargetFramework)' != 'net472'" />
+    <ProjectReference Include="..\..\Applications\RoboticsDeviceIntegrationServer\RoboticsDeviceIntegrationServer.csproj"
+                      Condition="'$(TargetFramework)' != 'net472'" />
     <ProjectReference Include="..\Opc.Ua.Server.TestFramework\Opc.Ua.Server.TestFramework.csproj" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
@@ -51,5 +53,6 @@
     <Compile Remove="PumpNodeManagerFactoryTests.cs" />
     <Compile Remove="PumpsNodeSetLoadingTests.cs" />
     <Compile Remove="PumpOpenUsdE2eTests.cs" />
+    <Compile Remove="RobotOpenUsdE2eTests.cs" />
   </ItemGroup>
 </Project>

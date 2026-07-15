@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(AppTargetFrameworks)</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>RoboticsDeviceIntegrationServer</AssemblyName>
+    <PackageId>RoboticsDeviceIntegrationServer</PackageId>
+    <Description>Self-contained .NET console OPC UA server demonstrating the OPC 40010 Robotics companion specification (a MotionDeviceSystem robot cell of two 6-axis articulated robots) bound to OpenUSD via the draft OPC UA - OpenUSD Bindings companion model, so a generic connector renders the cell live: each Axis' ActualPosition articulates one joint, the cell emergency-stop drives a safety visual, and the robots compose recursively (system -> devices -> axes).</Description>
+    <RootNamespace>Robotics</RootNamespace>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);CA1822</NoWarn>
+    <PublishAot Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">true</PublishAot>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\Opc.Ua.Configuration\Opc.Ua.Configuration.csproj" />
+    <ProjectReference Include="..\..\Libraries\Opc.Ua.Server\Opc.Ua.Server.csproj" />
+    <ProjectReference Include="..\..\Libraries\Opc.Ua.Di\Opc.Ua.Di.csproj" />
+    <ProjectReference Include="..\..\Libraries\Opc.Ua.Di.Server\Opc.Ua.Di.Server.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Tools\Opc.Ua.SourceGeneration\Opc.Ua.SourceGeneration.csproj">
+      <OutputItemType>Analyzer</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" />
+  </ItemGroup>
+  <!-- Only the OpenUsdBinding NodeSet2 XML is source-generated (its typed
+       NodeStates + AddOpcUaOpenUsd loader are used by OpenUsdRepresentation.cs).
+       The IA + Robotics companion NodeSets are loaded at RUNTIME from embedded
+       XML instead of source-generated: the OPC 40010 Robotics model uses base
+       state-machine/method types whose generated NodeState proxies are not all
+       present in this fork's Opc.Ua.Core, so the generator's fluent/proxy output
+       does not compile. Runtime import (UANodeSet.Read + Import) loads the full,
+       faithful type structure without depending on the generator. This server
+       builds Robotics instances from BaseObjectState + the numeric type NodeIds,
+       so no generated Robotics/IA typed classes are needed. Cross-namespace
+       references to DI resolve via [assembly: ModelDependencyAttribute] in the
+       Opc.Ua.Di assembly. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Model\Opc.Ua.IA.NodeSet2.xml">
+      <LogicalName>Opc.Ua.IA.NodeSet2.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Opc.Ua.Robotics.NodeSet2.xml">
+      <LogicalName>Opc.Ua.Robotics.NodeSet2.xml</LogicalName>
+    </EmbeddedResource>
+    <AdditionalFiles Include="Model\Opc.Ua.OpenUsdBinding.NodeSet2.xml">
+      <ModelSourceGeneratorPrefix>Opc.Ua.OpenUsd</ModelSourceGeneratorPrefix>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Model\Opc.Ua.OpenUsdBinding.NodeSet2.csv" />
+  </ItemGroup>
+  <Import Project="..\..\Tools\Opc.Ua.SourceGeneration\OPCFoundation.Opc.Ua.SourceGeneration.props" />
+  <PropertyGroup>
+    <ModelSourceGeneratorVersion>v105</ModelSourceGeneratorVersion>
+    <ModelSourceGeneratorUseAllowSubtypes>true</ModelSourceGeneratorUseAllowSubtypes>
+  </PropertyGroup>
+</Project>
