@@ -106,7 +106,7 @@ namespace PumpDeviceIntegrationBridge
     }
 
     /// <summary>Binding intent/direction — a connector-internal runtime discriminator
-    /// derived from the concrete binding subtype (OpenUsdTelemetry/Alarm/History/CommandBindingType,
+    /// derived from the concrete binding subtype (OpenUsdValueChange/Alarm/History/CommandBindingType,
     /// §5.4). The former NodeSet enum (i=3001) was removed in favour of the subtype hierarchy.</summary>
     public enum OpenUsdIntentProfile
     {

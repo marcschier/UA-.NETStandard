@@ -102,6 +102,7 @@ namespace PumpDeviceIntegrationBridge
             public string? PropertyName { get; set; }
             public OpenUsdRenderTargetKind Kind { get; set; }
             public double Scale { get; set; } = 1.0;
+            public double Offset { get; set; }
             public OpenUsdIntentProfile Intent { get; set; } = OpenUsdIntentProfile.UaToUsdTelemetry;
             public OpenUsdSignalRole SignalRole { get; set; } = OpenUsdSignalRole.Observable;
             public string? SourceSemanticId { get; set; }
@@ -249,6 +250,7 @@ namespace PumpDeviceIntegrationBridge
                         Kind = (OpenUsdRenderTargetKind)await ReadInt32Async(bp, "RenderTargetKind", ct)
                             .ConfigureAwait(false),
                         Scale = await ReadDoubleAsync(bp, "Scale", 1.0, ct).ConfigureAwait(false),
+                        Offset = await ReadDoubleAsync(bp, "Offset", 0.0, ct).ConfigureAwait(false),
                         Intent = intent,
                         SignalRole = (OpenUsdSignalRole)await ReadInt32Async(bp, "SignalRole", ct)
                             .ConfigureAwait(false),
@@ -449,7 +451,7 @@ namespace PumpDeviceIntegrationBridge
                 case OpenUsdRenderTargetKind.Translation:
                 case OpenUsdRenderTargetKind.Scale:
                 case OpenUsdRenderTargetKind.Opacity:
-                    return d * b.Scale;
+                    return d * b.Scale + b.Offset;
                 case OpenUsdRenderTargetKind.DisplayColor:
                     // Temperature: blue (cool) -> red (hot).
                     double t = System.Math.Max(0.0, System.Math.Min(1.0, (d - 20.0) / 80.0));
@@ -461,7 +463,7 @@ namespace PumpDeviceIntegrationBridge
                 case OpenUsdRenderTargetKind.Visibility:
                     return d != 0.0 ? "inherited" : "invisible";
                 default:
-                    return d * b.Scale;
+                    return d * b.Scale + b.Offset;
             }
         }
 

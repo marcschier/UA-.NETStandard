@@ -334,7 +334,7 @@ namespace Pumps
             // AddxBinding_ instantiates the <Binding> placeholder as a HasComponent
             // child (browsable) and creates its mandatory base members. The binding
             // intent is now the concrete subtype (§5.4): retype the instance to the
-            // requested OpenUsd{Telemetry,Alarm,History,Command}BindingType.
+            // requested OpenUsd{ValueChange,Alarm,History,Command}BindingType.
             OpenUsdLiveBindingState b = rep.AddxBinding_(SystemContext, new QualifiedName(name, ns));
             b.TypeDefinitionId = new NodeId(bindingTypeId, ns);
 
