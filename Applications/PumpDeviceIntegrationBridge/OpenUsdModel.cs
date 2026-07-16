@@ -42,6 +42,18 @@ namespace PumpDeviceIntegrationBridge
         public const uint RepresentationTypeId = 1003;
         public const uint LiveBindingTypeId = 1004;
         public const uint ComponentBindingTypeId = 1005;
+        public const uint AssetTypeId = 1006;
+    }
+
+    /// <summary>Role of a served USD asset within a stage's closure (NodeSet i=3010).</summary>
+    public enum OpenUsdAssetKind
+    {
+        RootLayer = 0,
+        SubLayer = 1,
+        Reference = 2,
+        Payload = 3,
+        Texture = 4,
+        Package = 5
     }
 
     /// <summary>Cardinality of a component binding (NodeSet i=3008).</summary>

@@ -563,5 +563,47 @@ namespace Opc.Ua.Di.Tests
             }
             return condition();
         }
+
+        [Test]
+        public async Task ServedAssetsAreFetchedVerifiedAndCachedAsync()
+        {
+            // §5.15 asset content delivery: the server serves its USD layer closure
+            // (Plant.usda RootLayer + pump.usda + remote-pump.usda) via Part 5 FileType;
+            // the connector streams, verifies each digest, and caches them locally.
+            var connector = new OpenUsdConnector(m_session!, new MockUsdSink());
+            string cacheDir = System.IO.Path.Combine(
+                System.IO.Path.GetTempPath(), "PumpAssetCache", System.IO.Path.GetRandomFileName());
+            try
+            {
+                System.Collections.Generic.List<OpenUsdConnector.FetchedAsset> assets =
+                    await connector.FetchServedAssetsAsync(cacheDir, CancellationToken.None).ConfigureAwait(false);
+
+                OpenUsdConnector.FetchedAsset? root = assets.Find(a => a.Kind == OpenUsdAssetKind.RootLayer);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(assets, Has.Count.EqualTo(3), "Expected 3 served layers.");
+                    Assert.That(assets.Exists(a => a.Identifier == "Plant.usda"
+                        && a.Kind == OpenUsdAssetKind.RootLayer), Is.True, "Plant.usda RootLayer not served.");
+                    Assert.That(assets.Exists(a => a.Identifier == "pump.usda"), Is.True, "pump.usda not served.");
+                    Assert.That(assets.Exists(a => a.Identifier == "remote-pump.usda"), Is.True,
+                        "remote-pump.usda not served.");
+                    Assert.That(assets.TrueForAll(a => a.DigestVerified), Is.True,
+                        "A served layer failed digest verification.");
+                    Assert.That(assets.TrueForAll(a =>
+                        System.IO.File.Exists(a.LocalPath) && new System.IO.FileInfo(a.LocalPath).Length > 0),
+                        Is.True, "A served layer was not cached to disk.");
+                    Assert.That(root, Is.Not.Null, "No RootLayer served.");
+                    Assert.That(System.IO.File.ReadAllText(root!.LocalPath).TrimStart(),
+                        Does.StartWith("#usda"), "Cached root layer is not valid USD text.");
+                });
+            }
+            finally
+            {
+                if (System.IO.Directory.Exists(cacheDir))
+                {
+                    System.IO.Directory.Delete(cacheDir, recursive: true);
+                }
+            }
+        }
     }
 }

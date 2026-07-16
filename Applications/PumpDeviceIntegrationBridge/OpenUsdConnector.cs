@@ -54,6 +54,7 @@ namespace PumpDeviceIntegrationBridge
         private readonly NodeId m_representationTypeId;
         private readonly NodeId m_bindingTypeId;
         private readonly NodeId m_componentTypeId;
+        private readonly NodeId m_assetTypeId;
         private Subscription? m_subscription;
         private readonly List<OpenUsdConnector> m_remoteConnectors = new();
 
@@ -85,6 +86,7 @@ namespace PumpDeviceIntegrationBridge
             m_representationTypeId = new NodeId(1003u, m_ns);
             m_bindingTypeId = new NodeId(1004u, m_ns);
             m_componentTypeId = new NodeId(1005u, m_ns);
+            m_assetTypeId = new NodeId(1006u, m_ns);
         }
 
         public sealed class BindingInfo

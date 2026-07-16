@@ -29,12 +29,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Opc.Ua;
 using Opc.Ua.OpenUsd;
 using Opc.Ua.Pumps;
+using OpenUsdShared;
 
 namespace Pumps
 {
@@ -105,6 +107,11 @@ namespace Pumps
                 // the externalReferences dictionary in LinkOpenUsdRootToServer.
                 root.AddReference(ReferenceTypeIds.HasComponent, true, Opc.Ua.ObjectIds.Server);
 
+                // §5.15 asset content delivery (OU-AssetDelivery): serve this stage's
+                // artist-authored USD layer closure so a connector can render the twin
+                // with no external asset resolver.
+                UsdAssetDelivery.AttachStageAssets(SystemContext, m_plantStage, ns, LoadServedAssets());
+
                 AssignChildNodeIds(root);
                 await AddPredefinedNodeAsync(SystemContext, root, cancellationToken)
                     .ConfigureAwait(false);
@@ -120,6 +127,29 @@ namespace Pumps
                 m_openUsdRoot = null;
                 m_logger.LogError(ex, "Failed to materialise the OpenUSD facility.");
             }
+        }
+
+        // Loads the embedded artist-authored USD layers this server serves (spec §5.15).
+        private static List<ServedAsset> LoadServedAssets()
+        {
+            return new List<ServedAsset>
+            {
+                new ServedAsset("Plant.usda", OpenUsdAssetKindEnum.RootLayer, ReadEmbeddedAsset("Plant.usda")),
+                new ServedAsset("pump.usda", OpenUsdAssetKindEnum.Reference, ReadEmbeddedAsset("pump.usda")),
+                new ServedAsset("remote-pump.usda", OpenUsdAssetKindEnum.Reference, ReadEmbeddedAsset("remote-pump.usda")),
+            };
+        }
+
+        private static byte[] ReadEmbeddedAsset(string resourceName)
+        {
+            using Stream? s = typeof(PumpNodeManager).Assembly.GetManifestResourceStream(resourceName);
+            if (s == null)
+            {
+                return Array.Empty<byte>();
+            }
+            using var ms = new MemoryStream();
+            s.CopyTo(ms);
+            return ms.ToArray();
         }
 
         /// <inheritdoc/>

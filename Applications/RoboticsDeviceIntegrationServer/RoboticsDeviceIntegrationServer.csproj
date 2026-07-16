@@ -28,6 +28,19 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" />
   </ItemGroup>
+  <!-- Shared OpenUSD asset-content-delivery helper (spec §5.15): serves the
+       embedded USD layers via a read-only Part 5 FileType. Linked from both the
+       robotics and pump samples. -->
+  <ItemGroup>
+    <Compile Include="..\OpenUsdShared\UsdAssetDelivery.cs" Link="UsdAssetDelivery.cs" />
+  </ItemGroup>
+  <!-- Artist-authored USD layers embedded so the server ships (and serves) its own
+       twin geometry: Cell.usda (RootLayer) + robot.usda + tool.usda (References). -->
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Cell.usda"><LogicalName>Cell.usda</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="Assets\robot.usda"><LogicalName>robot.usda</LogicalName></EmbeddedResource>
+    <EmbeddedResource Include="Assets\tool.usda"><LogicalName>tool.usda</LogicalName></EmbeddedResource>
+  </ItemGroup>
   <!-- Only the OpenUsdBinding NodeSet2 XML is source-generated (its typed
        NodeStates + AddOpcUaOpenUsd loader are used by OpenUsdRepresentation.cs).
        The IA + Robotics companion NodeSets are loaded at RUNTIME from embedded
