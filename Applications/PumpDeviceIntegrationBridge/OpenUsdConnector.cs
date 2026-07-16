@@ -86,7 +86,7 @@ namespace PumpDeviceIntegrationBridge
             m_representationTypeId = new NodeId(1003u, m_ns);
             m_bindingTypeIntents = new Dictionary<NodeId, OpenUsdIntentProfile>
             {
-                { new NodeId(OpenUsdModel.TelemetryBindingTypeId, m_ns), OpenUsdIntentProfile.UaToUsdTelemetry },
+                { new NodeId(OpenUsdModel.ValueChangeBindingTypeId, m_ns), OpenUsdIntentProfile.UaToUsdTelemetry },
                 { new NodeId(OpenUsdModel.AlarmBindingTypeId, m_ns), OpenUsdIntentProfile.UaAlarmToUsd },
                 { new NodeId(OpenUsdModel.HistoryBindingTypeId, m_ns), OpenUsdIntentProfile.UaHistoryToUsd },
                 { new NodeId(OpenUsdModel.CommandBindingTypeId, m_ns), OpenUsdIntentProfile.UsdToUaCommand },

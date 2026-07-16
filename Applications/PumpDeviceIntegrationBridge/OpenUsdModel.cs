@@ -41,7 +41,7 @@ namespace PumpDeviceIntegrationBridge
         public const string NamespaceUri = "http://opcfoundation.org/UA/OpenUSD/";
         public const uint RepresentationTypeId = 1003;
         public const uint LiveBindingTypeId = 1004;       // abstract base
-        public const uint TelemetryBindingTypeId = 1007;  // : OpenUsdLiveBindingType
+        public const uint ValueChangeBindingTypeId = 1007;  // : OpenUsdLiveBindingType
         public const uint AlarmBindingTypeId = 1008;
         public const uint HistoryBindingTypeId = 1009;
         public const uint CommandBindingTypeId = 1011;
@@ -56,7 +56,7 @@ namespace PumpDeviceIntegrationBridge
         /// </summary>
         public static OpenUsdIntentProfile? IntentFromTypeId(uint id) => id switch
         {
-            TelemetryBindingTypeId => OpenUsdIntentProfile.UaToUsdTelemetry,
+            ValueChangeBindingTypeId => OpenUsdIntentProfile.UaToUsdTelemetry,
             AlarmBindingTypeId => OpenUsdIntentProfile.UaAlarmToUsd,
             HistoryBindingTypeId => OpenUsdIntentProfile.UaHistoryToUsd,
             CommandBindingTypeId => OpenUsdIntentProfile.UsdToUaCommand,
