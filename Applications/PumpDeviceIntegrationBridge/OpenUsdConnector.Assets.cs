@@ -93,8 +93,7 @@ namespace PumpDeviceIntegrationBridge
                     }
                     Dictionary<string, NodeId> ap = await ChildrenByNameAsync(assetId.Value, ct).ConfigureAwait(false);
                     string? identifier = await ReadStringAsync(ap, "AssetIdentifier", ct).ConfigureAwait(false);
-                    if (string.IsNullOrEmpty(identifier) || !seen.Add(identifier!)
-                        || !ap.TryGetValue("File", out NodeId fileNode))
+                    if (string.IsNullOrEmpty(identifier) || !seen.Add(identifier!))
                     {
                         continue;
                     }
@@ -102,7 +101,9 @@ namespace PumpDeviceIntegrationBridge
                     byte[]? digest = await ReadByteStringAsync(ap, "Digest", ct).ConfigureAwait(false);
                     int alg = await ReadInt32Async(ap, "DigestAlgorithm", ct).ConfigureAwait(false);
 
-                    byte[] bytes = await ReadServedFileAsync(fileNode, ct).ConfigureAwait(false);
+                    // The asset node itself is the Part 5 file (OpenUsdAssetType : FileType):
+                    // stream its bytes through its own Open/Read/Close children.
+                    byte[] bytes = await ReadServedFileAsync(assetId.Value, ct).ConfigureAwait(false);
 
                     bool verified = true;
                     if (digest is { Length: > 0 })

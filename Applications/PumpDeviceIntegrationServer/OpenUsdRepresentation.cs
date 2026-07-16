@@ -237,7 +237,7 @@ namespace Pumps
                 new Guid("d3c3b8f2-7e4d-5c30-b15c-4d9e6a0b2233"),
                 m_alarmActiveVar.NodeId, "/Plant/Pumps/P101/StatusLight", "visibility", "token",
                 OpenUsdRenderTargetKindEnum.Visibility, 1.0,
-                intentProfile: OpenUsdIntentProfileEnum.UaAlarmToUsd,
+                bindingTypeId: Opc.Ua.OpenUsd.ObjectTypes.OpenUsdAlarmBindingType,
                 alarmAspect: OpenUsdAlarmAspectEnum.ActiveState);
 
             // 0.2 UsdToUaCommand (opt-in): a writable speed setpoint Variable is the
@@ -251,7 +251,7 @@ namespace Pumps
                 new Guid("e4d4c9a3-8f5e-5d41-c26d-5e0f7b1c3344"),
                 null, "/Plant/Pumps/P101/Impeller", "inputs:speedSetpoint", "double",
                 kind: null, 1.0,
-                intentProfile: OpenUsdIntentProfileEnum.UsdToUaCommand,
+                bindingTypeId: Opc.Ua.OpenUsd.ObjectTypes.OpenUsdCommandBindingType,
                 signalRole: OpenUsdSignalRoleEnum.Controllable,
                 commandTargetNodeId: m_speedSetpointVar.NodeId,
                 commandTriggerPropertyName: "inputs:speedSetpoint");
@@ -324,27 +324,29 @@ namespace Pumps
             Guid bindingDefinitionId, NodeId? sourceNodeId, string targetPrimPath,
             string targetPropertyName, string targetUsdTypeName,
             OpenUsdRenderTargetKindEnum? kind, double scale,
-            OpenUsdIntentProfileEnum intentProfile = OpenUsdIntentProfileEnum.UaToUsdTelemetry,
+            uint bindingTypeId = Opc.Ua.OpenUsd.ObjectTypes.OpenUsdTelemetryBindingType,
             OpenUsdSignalRoleEnum signalRole = OpenUsdSignalRoleEnum.Observable,
             string? sourceSemanticId = null,
             OpenUsdAlarmAspectEnum? alarmAspect = null,
             NodeId? commandTargetNodeId = null,
             string? commandTriggerPropertyName = null)
         {
-            // AddxBinding_ instantiates the <Binding> placeholder as a concrete
-            // HasComponent child (browsable) and creates its mandatory members.
+            // AddxBinding_ instantiates the <Binding> placeholder as a HasComponent
+            // child (browsable) and creates its mandatory base members. The binding
+            // intent is now the concrete subtype (§5.4): retype the instance to the
+            // requested OpenUsd{Telemetry,Alarm,History,Command}BindingType.
             OpenUsdLiveBindingState b = rep.AddxBinding_(SystemContext, new QualifiedName(name, ns));
+            b.TypeDefinitionId = new NodeId(bindingTypeId, ns);
 
-            // Mandatory members already exist on the instance; set their values.
+            // Mandatory base members already exist on the instance; set their values.
             b.CreateOrReplaceBindingDefinitionId(SystemContext, null!).Value = new Uuid(bindingDefinitionId);
             b.CreateOrReplaceEnabled(SystemContext, null!).Value = true;
-            b.CreateOrReplaceIntentProfile(SystemContext, null!).Value = intentProfile;
             b.CreateOrReplaceTargetStage(SystemContext, null!).Value = m_plantStage!.NodeId;
             b.CreateOrReplaceTargetPrimPath(SystemContext, null!).Value = targetPrimPath;
             b.CreateOrReplaceTargetPropertyName(SystemContext, null!).Value = targetPropertyName;
             b.CreateOrReplaceTargetUsdTypeName(SystemContext, null!).Value = targetUsdTypeName;
 
-            // Optional members are not auto-created; supply a generated node so the
+            // Optional base members are not auto-created; supply a generated node so the
             // member carries a valid BrowseName/ReferenceType and is browsable.
             if (sourceNodeId != null)
             {
@@ -353,8 +355,7 @@ namespace Pumps
                     SystemContext.CreateOpenUsdLiveBindingType_SourceNodeId(b, forInstance: true))
                     .Value = (NodeId)sourceNodeId;
             }
-            // 0.2 additions: SignalRole is always asserted; the semantic id,
-            // alarm aspect, and command target members are set per intent.
+            // SignalRole is always asserted; the semantic id is set when provided.
             b.CreateOrReplaceSignalRole(
                 SystemContext,
                 SystemContext.CreateOpenUsdLiveBindingType_SignalRole(b, forInstance: true))
@@ -366,26 +367,25 @@ namespace Pumps
                     SystemContext.CreateOpenUsdLiveBindingType_SourceSemanticId(b, forInstance: true))
                     .Value = sourceSemanticId;
             }
+            // Intent-specific members live only on the concrete subtype (§5.4); add them
+            // directly to the retyped instance via the subtype's member factory.
             if (alarmAspect != null)
             {
-                b.CreateOrReplaceAlarmAspect(
-                    SystemContext,
-                    SystemContext.CreateOpenUsdLiveBindingType_AlarmAspect(b, forInstance: true))
-                    .Value = alarmAspect.Value;
+                var ap = SystemContext.CreateOpenUsdAlarmBindingType_AlarmAspect(b, forInstance: true);
+                b.AddChild(ap);
+                ap.Value = alarmAspect.Value;
             }
             if (commandTargetNodeId != null)
             {
-                b.CreateOrReplaceCommandTargetNodeId(
-                    SystemContext,
-                    SystemContext.CreateOpenUsdLiveBindingType_CommandTargetNodeId(b, forInstance: true))
-                    .Value = (NodeId)commandTargetNodeId;
+                var ct = SystemContext.CreateOpenUsdCommandBindingType_CommandTargetNodeId(b, forInstance: true);
+                b.AddChild(ct);
+                ct.Value = (NodeId)commandTargetNodeId;
             }
             if (!string.IsNullOrEmpty(commandTriggerPropertyName))
             {
-                b.CreateOrReplaceCommandTriggerPropertyName(
-                    SystemContext,
-                    SystemContext.CreateOpenUsdLiveBindingType_CommandTriggerPropertyName(b, forInstance: true))
-                    .Value = commandTriggerPropertyName;
+                var tp = SystemContext.CreateOpenUsdCommandBindingType_CommandTriggerPropertyName(b, forInstance: true);
+                b.AddChild(tp);
+                tp.Value = commandTriggerPropertyName;
             }
 
             if (kind != null)

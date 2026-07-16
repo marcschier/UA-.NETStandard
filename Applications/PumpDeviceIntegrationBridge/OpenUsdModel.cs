@@ -40,9 +40,28 @@ namespace PumpDeviceIntegrationBridge
     {
         public const string NamespaceUri = "http://opcfoundation.org/UA/OpenUSD/";
         public const uint RepresentationTypeId = 1003;
-        public const uint LiveBindingTypeId = 1004;
+        public const uint LiveBindingTypeId = 1004;       // abstract base
+        public const uint TelemetryBindingTypeId = 1007;  // : OpenUsdLiveBindingType
+        public const uint AlarmBindingTypeId = 1008;
+        public const uint HistoryBindingTypeId = 1009;
+        public const uint CommandBindingTypeId = 1011;
         public const uint ComponentBindingTypeId = 1005;
         public const uint AssetTypeId = 1006;
+
+        /// <summary>
+        /// Maps a concrete live-binding subtype NodeId (ns=1) to its intent, or
+        /// <c>null</c> when the type is not one of the four binding subtypes. The
+        /// binding intent is now carried by the concrete subtype (§5.4) rather than
+        /// a former <c>IntentProfile</c> enum property.
+        /// </summary>
+        public static OpenUsdIntentProfile? IntentFromTypeId(uint id) => id switch
+        {
+            TelemetryBindingTypeId => OpenUsdIntentProfile.UaToUsdTelemetry,
+            AlarmBindingTypeId => OpenUsdIntentProfile.UaAlarmToUsd,
+            HistoryBindingTypeId => OpenUsdIntentProfile.UaHistoryToUsd,
+            CommandBindingTypeId => OpenUsdIntentProfile.UsdToUaCommand,
+            _ => null
+        };
     }
 
     /// <summary>Role of a served USD asset within a stage's closure (NodeSet i=3010).</summary>
@@ -86,7 +105,9 @@ namespace PumpDeviceIntegrationBridge
         Custom = 8
     }
 
-    /// <summary>Binding intent/direction (NodeSet i=3001).</summary>
+    /// <summary>Binding intent/direction — a connector-internal runtime discriminator
+    /// derived from the concrete binding subtype (OpenUsdTelemetry/Alarm/History/CommandBindingType,
+    /// §5.4). The former NodeSet enum (i=3001) was removed in favour of the subtype hierarchy.</summary>
     public enum OpenUsdIntentProfile
     {
         UaToUsdTelemetry = 0,

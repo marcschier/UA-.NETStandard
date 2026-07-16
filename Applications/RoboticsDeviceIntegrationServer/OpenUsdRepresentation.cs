@@ -261,18 +261,20 @@ namespace Robotics
             Guid bindingDefinitionId, NodeId? sourceNodeId, string targetPrimPath,
             string targetPropertyName, string targetUsdTypeName,
             OpenUsdRenderTargetKindEnum? kind, double scale,
-            OpenUsdIntentProfileEnum intentProfile = OpenUsdIntentProfileEnum.UaToUsdTelemetry,
+            uint bindingTypeId = Opc.Ua.OpenUsd.ObjectTypes.OpenUsdTelemetryBindingType,
             OpenUsdSignalRoleEnum signalRole = OpenUsdSignalRoleEnum.Observable,
             string? sourceSemanticId = null,
             OpenUsdAlarmAspectEnum? alarmAspect = null,
             NodeId? commandTargetNodeId = null,
             string? commandTriggerPropertyName = null)
         {
+            // AddxBinding_ creates the <Binding> placeholder child + mandatory base
+            // members; the intent is now the concrete subtype (§5.4), so retype it.
             OpenUsdLiveBindingState b = rep.AddxBinding_(SystemContext, new QualifiedName(name, ns));
+            b.TypeDefinitionId = new NodeId(bindingTypeId, ns);
 
             b.CreateOrReplaceBindingDefinitionId(SystemContext, null!).Value = new Uuid(bindingDefinitionId);
             b.CreateOrReplaceEnabled(SystemContext, null!).Value = true;
-            b.CreateOrReplaceIntentProfile(SystemContext, null!).Value = intentProfile;
             b.CreateOrReplaceTargetStage(SystemContext, null!).Value = m_cellStage!.NodeId;
             b.CreateOrReplaceTargetPrimPath(SystemContext, null!).Value = targetPrimPath;
             b.CreateOrReplaceTargetPropertyName(SystemContext, null!).Value = targetPropertyName;
@@ -296,26 +298,24 @@ namespace Robotics
                     SystemContext.CreateOpenUsdLiveBindingType_SourceSemanticId(b, forInstance: true))
                     .Value = sourceSemanticId;
             }
+            // Intent-specific members live only on the concrete subtype (§5.4).
             if (alarmAspect != null)
             {
-                b.CreateOrReplaceAlarmAspect(
-                    SystemContext,
-                    SystemContext.CreateOpenUsdLiveBindingType_AlarmAspect(b, forInstance: true))
-                    .Value = alarmAspect.Value;
+                var ap = SystemContext.CreateOpenUsdAlarmBindingType_AlarmAspect(b, forInstance: true);
+                b.AddChild(ap);
+                ap.Value = alarmAspect.Value;
             }
             if (commandTargetNodeId != null)
             {
-                b.CreateOrReplaceCommandTargetNodeId(
-                    SystemContext,
-                    SystemContext.CreateOpenUsdLiveBindingType_CommandTargetNodeId(b, forInstance: true))
-                    .Value = (NodeId)commandTargetNodeId;
+                var ct = SystemContext.CreateOpenUsdCommandBindingType_CommandTargetNodeId(b, forInstance: true);
+                b.AddChild(ct);
+                ct.Value = (NodeId)commandTargetNodeId;
             }
             if (!string.IsNullOrEmpty(commandTriggerPropertyName))
             {
-                b.CreateOrReplaceCommandTriggerPropertyName(
-                    SystemContext,
-                    SystemContext.CreateOpenUsdLiveBindingType_CommandTriggerPropertyName(b, forInstance: true))
-                    .Value = commandTriggerPropertyName;
+                var tp = SystemContext.CreateOpenUsdCommandBindingType_CommandTriggerPropertyName(b, forInstance: true);
+                b.AddChild(tp);
+                tp.Value = commandTriggerPropertyName;
             }
             if (kind != null)
             {

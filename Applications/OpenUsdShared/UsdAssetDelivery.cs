@@ -104,11 +104,9 @@ namespace OpenUsdShared
                     context, context.CreateOpenUsdAssetType_DigestAlgorithm(asset, forInstance: true))
                     .Value = OpenUsdDigestAlgorithmEnum.Sha256;
 
-                // Wire the mandatory Part 5 File member to stream the layer bytes (read-only).
-                if (asset.File != null)
-                {
-                    WireReadOnlyFile(asset.File, a.Bytes, a.MediaType);
-                }
+                // The asset node itself IS the Part 5 file (OpenUsdAssetType : FileType);
+                // wire the read-only streaming handlers directly onto it.
+                WireReadOnlyFile(asset, a.Bytes, a.MediaType);
                 created.Add(asset);
             }
             return created;
