@@ -1,0 +1,1393 @@
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Net;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Opc.Ua.Redaction;
+using Opc.Ua.Security.Certificates;
+
+namespace Opc.Ua.Configuration
+{
+    /// <inheritdoc/>
+    public class ApplicationInstance : IApplicationInstance
+    {
+        /// <inheritdoc/>
+        public async ValueTask DisposeAsync()
+        {
+            if (Server != null)
+            {
+                try
+                {
+                    await StopAsync().ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    m_logger.ErrorStoppingServerDuringDispose(e);
+                }
+                Server.Dispose();
+                Server = null;
+            }
+
+            CertificateManager? localManager = CertificateManager;
+            localManager?.Dispose();
+            if (ApplicationConfiguration?.CertificateManager is CertificateManager configManager && !ReferenceEquals(configManager, localManager))
+            {
+                configManager.Dispose();
+            }
+
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Obsolete constructor
+        /// </summary>
+        [Obsolete("Use ApplicationInstance(ITelemetryContext) instead.")]
+        public ApplicationInstance()
+            : this((ITelemetryContext?)null)
+        {
+        }
+
+        /// <summary>
+        /// Obsolete constructor
+        /// </summary>
+        [Obsolete("Use ApplicationInstance(ApplicationConfiguration, ITelemetryContext) instead.")]
+        public ApplicationInstance(ApplicationConfiguration applicationConfiguration)
+            : this(applicationConfiguration, null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ApplicationInstance"/> class.
+        /// </summary>
+        public ApplicationInstance(ITelemetryContext? telemetry)
+        {
+            m_telemetry = telemetry;
+            m_logger = telemetry?.CreateLogger<ApplicationInstance>() ?? NullLogger<ApplicationInstance>.Instance;
+            DisableCertificateAutoCreation = false;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ApplicationInstance"/> class.
+        /// </summary>
+        /// <param name="applicationConfiguration">The application configuration.</param>
+        /// <param name="telemetry">The telemetry context to use to create obvservability instruments</param>
+        public ApplicationInstance(
+            ApplicationConfiguration applicationConfiguration,
+            ITelemetryContext? telemetry)
+            : this(telemetry)
+        {
+            ApplicationConfiguration = applicationConfiguration;
+        }
+
+        /// <inheritdoc/>
+        public string? ApplicationName { get; set; }
+
+        /// <inheritdoc/>
+        public ApplicationType ApplicationType { get; set; }
+
+        /// <inheritdoc/>
+        public string? ConfigSectionName { get; set; }
+
+        /// <inheritdoc/>
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+        public Type? ConfigurationType { get; set; }
+
+        /// <inheritdoc/>
+        public IServerBase? Server { get; private set; }
+
+        /// <inheritdoc/>
+        public ApplicationConfiguration? ApplicationConfiguration { get; set; }
+
+        /// <summary>
+        /// Get or set the message dialog.
+        /// </summary>
+        public static IApplicationMessageDlg? MessageDlg { get; set; }
+
+        /// <inheritdoc/>
+        public ICertificatePasswordProvider? CertificatePasswordProvider { get; set; }
+
+        /// <inheritdoc/>
+        public bool DisableCertificateAutoCreation { get; set; }
+
+        /// <summary>
+        /// Gets the certificate manager for this application instance.
+        /// </summary>
+        public CertificateManager? CertificateManager { get; private set; }
+
+        /// <inheritdoc/>
+        public async Task StartAsync(IServerBase server, CancellationToken ct = default)
+        {
+            Server = server;
+
+            ApplicationConfiguration configuration = ApplicationConfiguration
+                ?? await LoadApplicationConfigurationAsync(false, ct).ConfigureAwait(false);
+
+            await server.StartAsync(configuration, ct).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc/>
+        public ValueTask StopAsync(CancellationToken ct = default)
+        {
+            return Server?.StopAsync(ct) ?? default;
+        }
+
+        /// <summary>
+        /// Stops the UA server.
+        /// </summary>
+        [Obsolete("Use StopAsync")]
+        public void Stop()
+        {
+            Server?.StopAsync().AsTask().GetAwaiter().GetResult();
+        }
+
+        /// <inheritdoc/>
+        public async Task<ApplicationConfiguration> LoadApplicationConfigurationAsync(
+            Stream stream,
+            bool silent,
+            CancellationToken ct = default)
+        {
+            ApplicationConfiguration? configuration = null;
+
+            try
+            {
+                configuration = await LoadAppConfigAsync(
+                        silent,
+                        stream,
+                        ApplicationType,
+                        ConfigurationType,
+                        true,
+                        CertificatePasswordProvider,
+                        ct)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception) when (silent)
+            {
+            }
+
+            if (configuration == null)
+            {
+                throw ServiceResultException.ConfigurationError("Could not load configuration.");
+            }
+
+            ApplicationConfiguration = FixupAppConfig(configuration);
+
+            return configuration;
+        }
+
+        /// <inheritdoc/>
+        public async ValueTask<ApplicationConfiguration> LoadApplicationConfigurationAsync(
+            string filePath,
+            bool silent,
+            CancellationToken ct = default)
+        {
+            ApplicationConfiguration? configuration = null;
+
+            try
+            {
+                configuration = await LoadAppConfigAsync(
+                        silent,
+                        filePath,
+                        ApplicationType,
+                        ConfigurationType,
+                        true,
+                        CertificatePasswordProvider,
+                        ct)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception) when (silent)
+            {
+            }
+
+            if (configuration == null)
+            {
+                throw ServiceResultException.ConfigurationError("Could not load configuration file.");
+            }
+
+            ApplicationConfiguration = FixupAppConfig(configuration);
+
+            return configuration;
+        }
+
+        /// <inheritdoc/>
+        public ValueTask<ApplicationConfiguration> LoadApplicationConfigurationAsync(
+            bool silent,
+            CancellationToken ct = default)
+        {
+            // GetFilePathFromAppConfig tolerates a null section name (string.Concat handles null operands).
+            string filePath = ApplicationConfiguration.GetFilePathFromAppConfig(ConfigSectionName!, m_logger);
+            return LoadApplicationConfigurationAsync(filePath, silent, ct);
+        }
+
+        /// <summary>
+        /// Helper to replace localhost with the hostname
+        /// in the application uri and base addresses of the
+        /// configuration.
+        /// </summary>
+        public static ApplicationConfiguration FixupAppConfig(
+            ApplicationConfiguration configuration)
+        {
+            configuration.ApplicationUri = Utils.ReplaceLocalhost(configuration.ApplicationUri);
+            if (configuration.ServerConfiguration != null)
+            {
+                string[] baseAddresses = new string[configuration.ServerConfiguration.BaseAddresses.Count];
+                for (int i = 0; i < configuration.ServerConfiguration.BaseAddresses.Count; i++)
+                {
+                    // Base address strings in the collection are non-null; ReplaceLocalhost only returns
+                    // null when its input is null, so the result here is non-null.
+                    baseAddresses[i] =
+                        Utils.ReplaceLocalhost(configuration.ServerConfiguration.BaseAddresses[i])!;
+                }
+                configuration.ServerConfiguration.BaseAddresses = baseAddresses;
+            }
+            return configuration;
+        }
+
+        /// <inheritdoc/>
+        public IApplicationConfigurationBuilderTypes Build(string applicationUri, string productUri)
+        {
+            // ApplicationConfiguration's ctor requires a non-null ITelemetryContext while this class
+            // tolerates a null telemetry context; passing null falls through to default telemetry.
+            ApplicationConfiguration = new ApplicationConfiguration(m_telemetry!)
+            {
+                ApplicationName = ApplicationName,
+                ApplicationType = ApplicationType,
+                ApplicationUri = applicationUri,
+                ProductUri = productUri,
+                TraceConfiguration = new TraceConfiguration { TraceMasks = Utils.TraceMasks.None },
+                TransportQuotas = new TransportQuotas()
+            };
+
+            // Trace off — legacy Utils pipeline; kept for 1.5.378 -> 2.0 migration.
+#pragma warning disable CS0618 // Type or member is obsolete
+            ApplicationConfiguration.TraceConfiguration.ApplySettings();
+#pragma warning restore CS0618 // Type or member is obsolete
+
+            return new ApplicationConfigurationBuilder(this);
+        }
+
+        /// <inheritdoc/>
+        public async ValueTask DeleteApplicationInstanceCertificateAsync(
+            string[]? profileIds = null,
+            CancellationToken ct = default)
+        {
+            // TODO: delete only selected profiles
+            if (ApplicationConfiguration == null)
+            {
+                throw new ArgumentException("Missing configuration.");
+            }
+
+            ArrayOf<CertificateIdentifier> applicationCerts = ApplicationConfiguration
+                .SecurityConfiguration.ApplicationCertificates;
+            for (int ii = 0; ii < applicationCerts.Count; ii++)
+            {
+                CertificateIdentifier id = applicationCerts[ii];
+                await DeleteApplicationInstanceCertificateAsync(ApplicationConfiguration, id, ct)
+                    .ConfigureAwait(false);
+            }
+        }
+
+        /// <inheritdoc/>
+        public async ValueTask<bool> CheckApplicationInstanceCertificatesAsync(
+            bool silent,
+            ushort? lifeTimeInMonths = null,
+            CancellationToken ct = default)
+        {
+            lifeTimeInMonths ??= CertificateFactory.DefaultLifeTime;
+            m_logger.CheckingApplicationInstanceCertificate();
+
+            ApplicationConfiguration configuration = ApplicationConfiguration
+                ?? await LoadApplicationConfigurationAsync(silent, ct).ConfigureAwait(false);
+
+            // find the existing certificates.
+            SecurityConfiguration securityConfiguration = configuration.SecurityConfiguration;
+
+            if (securityConfiguration.ApplicationCertificates.Count == 0)
+            {
+                throw ServiceResultException.ConfigurationError("Need at least one Application Certificate.");
+            }
+
+            // Initialize CertificateManager early so CheckApplicationInstanceCertificateAsync
+            // can use the new ICertificateValidatorEx pipeline (with CertificateValidationOptions.AcceptError)
+            // for per-certificate validation below. Adopt the configuration's
+            // existing manager (created eagerly by ApplicationConfiguration.ValidateAsync)
+            // when present, so we do not orphan it — its disposal is otherwise
+            // overwritten below and the certificates it loaded would leak.
+            // CA2000: the created manager is stored in the CertificateManager
+            // property which this instance owns and disposes in DisposeAsync
+            // (see above); ownership is retained, not leaked.
+#pragma warning disable CA2000
+            CertificateManager ??= configuration.CertificateManager as CertificateManager
+                ?? CertificateManagerFactory.Create(
+                    securityConfiguration,
+                    m_telemetry!);
+#pragma warning restore CA2000
+
+            // Make the manager visible via the configuration so consumers
+            // that only see ApplicationConfiguration (e.g. Session) can
+            // route validation through the new pipeline.
+            ApplicationConfiguration!.CertificateManager = CertificateManager;
+
+            // Note: The FindAsync method searches certificates in this order: thumbprint, subjectName, then applicationUri.
+            // When SubjectName or Thumbprint is specified, certificates may be loaded even if their ApplicationUri
+            // doesn't match ApplicationConfiguration.ApplicationUri, however each certificate is validated individually
+            // in CheckApplicationInstanceCertificateAsync (called via CheckOrCreateCertificateAsync) to ensure it contains
+            // the configuration's ApplicationUri.
+            bool result = true;
+            for (int ii = 0; ii < securityConfiguration.ApplicationCertificates.Count; ii++)
+            {
+                CertificateIdentifier certId = securityConfiguration.ApplicationCertificates[ii];
+                ushort minimumKeySize = certId.GetMinKeySize(securityConfiguration);
+                bool nextResult = await CheckOrCreateCertificateAsync(
+                        configuration,
+                        certId,
+                        silent,
+                        minimumKeySize,
+                        lifeTimeInMonths.Value,
+                        ct)
+                    .ConfigureAwait(false);
+                result = result && nextResult;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Checks, validates, and optionally creates an application certificate.
+        /// Loads the certificate, validates it against configured requirements (ApplicationUri, key size, domains),
+        /// and creates a new certificate if none exists and auto-creation is enabled.
+        /// Note: FindAsync searches certificates in order: thumbprint, subjectName, applicationUri.
+        /// The applicationUri parameter is only used if thumbprint and subjectName don't find a match.
+        /// </summary>
+        /// <exception cref="ServiceResultException"></exception>
+        private async Task<bool> CheckOrCreateCertificateAsync(
+            ApplicationConfiguration configuration,
+            CertificateIdentifier id,
+            bool silent,
+            ushort minimumKeySize,
+            ushort lifeTimeInMonths,
+            CancellationToken ct = default)
+        {
+            if (id == null)
+            {
+                throw ServiceResultException.ConfigurationError(
+                    "Configuration file does not specify a certificate.");
+            }
+
+            // load the certificate (with private key if available).
+            ICertificatePasswordProvider? passwordProvider = configuration
+                .SecurityConfiguration
+                .CertificatePasswordProvider;
+
+            Certificate? certificate = await CertificateIdentifierResolver
+                .LoadPrivateKeyAsync(
+                    id,
+                    passwordProvider,
+                    configuration.ApplicationUri,
+                    m_telemetry,
+                    ct)
+                .ConfigureAwait(false);
+
+            try
+            {
+                // check that it is ok.
+                if (certificate != null)
+                {
+                    m_logger.CheckCertificate(certificate);
+                    bool certificateValid = await CheckApplicationInstanceCertificateAsync(
+                            configuration,
+                            id,
+                            certificate,
+                            silent,
+                            minimumKeySize,
+                            ct)
+                        .ConfigureAwait(false);
+
+                    if (!certificateValid)
+                    {
+                        throw ServiceResultException.ConfigurationError(
+                            "The certificate with subject {0} in the configuration is invalid.\n" +
+                            " Please update or delete the certificate from this location: {1}",
+                            id.SubjectName!,
+                            Utils.ReplaceSpecialFolderNames(id.StorePath)!);
+                    }
+                }
+                else
+                {
+                    // check for missing private key.
+                    certificate = await CertificateIdentifierResolver
+                        .ResolveAsync(
+                            id,
+                            registry: null,
+                            needPrivateKey: false,
+                            configuration.ApplicationUri,
+                            m_telemetry,
+                            ct)
+                        .ConfigureAwait(false);
+
+                    if (certificate != null)
+                    {
+                        throw ServiceResultException.ConfigurationError(
+                            "Cannot access private key for certificate with thumbprint={0}",
+                            certificate.Thumbprint);
+                    }
+
+                    // check for missing thumbprint.
+                    if (!string.IsNullOrEmpty(id.Thumbprint))
+                    {
+                        if (!string.IsNullOrEmpty(id.SubjectName))
+                        {
+                            var id2 = new CertificateIdentifier
+                            {
+                                StoreType = id.StoreType,
+                                StorePath = id.StorePath,
+                                SubjectName = id.SubjectName
+                            };
+                            certificate = await CertificateIdentifierResolver
+                                .LoadPrivateKeyAsync(
+                                    id2,
+                                    passwordProvider,
+                                    configuration.ApplicationUri,
+                                    m_telemetry,
+                                    ct)
+                                .ConfigureAwait(false);
+                        }
+
+                        if (certificate != null)
+                        {
+                            var message = new StringBuilder();
+                            message.AppendLine(
+                                "Thumbprint was explicitly specified in the configuration.")
+                                .AppendLine("Another certificate with the same subject name was found.")
+                                .AppendLine("Use it instead?")
+                                .AppendLine("Requested: {0}")
+                                .AppendLine("Found: {1}");
+                            if (!await ApproveMessageAsync(
+                                Utils.Format(message.ToString(), id.SubjectName!, certificate.Subject), silent)
+                                    .ConfigureAwait(false))
+                            {
+                                throw ServiceResultException.ConfigurationError(
+                                    "Thumbprint for {0} was explicitly specified in the configuration but\n" +
+                                    "another certificate with the same subject name {1} was found.",
+                                    id.SubjectName!,
+                                    certificate.Subject);
+                            }
+                        }
+                        else
+                        {
+                            throw ServiceResultException.ConfigurationError(
+                                "Thumbprint was explicitly specified in the configuration. Cannot generate a new certificate.");
+                        }
+                    }
+                }
+
+                if (certificate == null)
+                {
+                    if (!DisableCertificateAutoCreation)
+                    {
+                        certificate = await CreateApplicationInstanceCertificateAsync(
+                            configuration,
+                            id,
+                            minimumKeySize,
+                            lifeTimeInMonths,
+                            ct)
+                        .ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        m_logger.ApplicationInstanceCertificateAutoCreationDisabled();
+                    }
+
+                    if (certificate == null)
+                    {
+                        throw ServiceResultException.ConfigurationError(
+                            "There is no cert with subject {0} in the configuration.\n" +
+                            "Please generate a cert for your application, then copy the new cert to this location: {1}",
+                            id.SubjectName!,
+                            id.StorePath!);
+                    }
+                }
+                else if (configuration.SecurityConfiguration.AddAppCertToTrustedStore)
+                {
+                    // ensure it is trusted.
+                    await AddToTrustedStoreAsync(configuration, certificate, ct).ConfigureAwait(false);
+                }
+
+                return true;
+            }
+            finally
+            {
+                // The local 'certificate' variable is only used for validation /
+                // approval / trust-store warmup inside this method. Any cert that
+                // needs to outlive this call is reloaded via the CertificateManager
+                // registry by the caller. Dispose it here to balance the AddRef in
+                // Certificate.From / DirectoryCertificateStore.LoadPrivateKeyAsync.
+                certificate?.Dispose();
+            }
+        }
+
+        /// <inheritdoc/>
+        public async Task AddOwnCertificateToTrustedStoreAsync(
+            Certificate certificate,
+            CancellationToken ct)
+        {
+            // ApplicationConfiguration may be null; AddToTrustedStoreAsync checks defensively and
+            // logs a warning if no trusted store is configured, preserving prior behavior.
+            await AddToTrustedStoreAsync(ApplicationConfiguration!, certificate, ct).ConfigureAwait(
+                false);
+        }
+
+        /// <summary>
+        /// Loads the configuration.
+        /// </summary>
+        internal async ValueTask<ApplicationConfiguration?> LoadAppConfigAsync(
+            bool silent,
+            string filePath,
+            ApplicationType applicationType,
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type? configurationType,
+            bool applyTraceSettings,
+            ICertificatePasswordProvider? certificatePasswordProvider = null,
+            CancellationToken ct = default)
+        {
+            m_logger.LoadingApplicationConfigurationFile(filePath);
+
+            try
+            {
+                // load the configuration file.
+                return await ApplicationConfiguration
+                    .LoadAsync(
+                        new FileInfo(filePath),
+                        applicationType,
+                        configurationType,
+                        applyTraceSettings,
+                        m_telemetry,
+                        certificatePasswordProvider,
+                        ct)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                m_logger.CouldNotLoadConfigurationFile(e, filePath);
+
+                // warn user.
+                if (!silent)
+                {
+                    if (MessageDlg != null)
+                    {
+                        MessageDlg.Message("Load Application Configuration: " + e.Message);
+                        await MessageDlg.ShowAsync().ConfigureAwait(false);
+                    }
+
+                    throw;
+                }
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Loads the configuration.
+        /// </summary>
+        internal async ValueTask<ApplicationConfiguration?> LoadAppConfigAsync(
+            bool silent,
+            Stream stream,
+            ApplicationType applicationType,
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type? configurationType,
+            bool applyTraceSettings,
+            ICertificatePasswordProvider? certificatePasswordProvider = null,
+            CancellationToken ct = default)
+        {
+            m_logger.LoadingApplicationFromStream();
+
+            try
+            {
+                // load the configuration file.
+                return await ApplicationConfiguration
+                    .LoadAsync(
+                        stream,
+                        applicationType,
+                        configurationType,
+                        applyTraceSettings,
+                        m_telemetry,
+                        certificatePasswordProvider,
+                        ct)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                m_logger.CouldNotLoadConfigurationFromStream(e);
+
+                // warn user.
+                if (!silent)
+                {
+                    if (MessageDlg != null)
+                    {
+                        MessageDlg.Message("Load Application Configuration: " + e.Message);
+                        await MessageDlg.ShowAsync().ConfigureAwait(false);
+                    }
+
+                    throw;
+                }
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Creates an application instance certificate if one does not already exist.
+        /// </summary>
+        /// <exception cref="ServiceResultException"></exception>
+        private async Task<bool> CheckApplicationInstanceCertificateAsync(
+            ApplicationConfiguration configuration,
+            CertificateIdentifier id,
+            Certificate certificate,
+            bool silent,
+            ushort minimumKeySize,
+            CancellationToken ct)
+        {
+            if (certificate == null)
+            {
+                return false;
+            }
+
+            // set suppressible errors
+            HashSet<StatusCode> approvedCodes =
+            [
+                StatusCodes.BadCertificateUntrusted,
+                StatusCodes.BadCertificateTimeInvalid,
+                StatusCodes.BadCertificateIssuerTimeInvalid,
+                StatusCodes.BadCertificateHostNameInvalid,
+                StatusCodes.BadCertificateRevocationUnknown,
+                StatusCodes.BadCertificateIssuerRevocationUnknown
+            ];
+
+            m_logger.CheckApplicationInstanceCertificate(certificate);
+
+            try
+            {
+                // validate certificate via the new CertificateManager pipeline,
+                // suppressing the same set of errors that the legacy
+                // CertificateValidation event handler used to accept.
+                var options = new Security.Certificates.CertificateValidationOptions
+                {
+                    AcceptError = (cert, error) =>
+                    {
+                        if (approvedCodes.Contains(error.StatusCode))
+                        {
+                            m_logger.ApplicationCertificateValidationSuppressed(error.StatusCode);
+                            return true;
+                        }
+                        return false;
+                    }
+                };
+
+                using Certificate? publicKeyCert = certificate.HasPrivateKey
+                    ? Certificate.FromRawData(certificate.RawData)
+                    : null;
+                using var chain = new CertificateCollection { publicKeyCert ?? certificate };
+
+                CertificateValidationResult result = await CertificateManager!
+                    .ValidateAsync(
+                        chain,
+                        trustList: null,
+                        options: options,
+                        ct: ct)
+                    .ConfigureAwait(false);
+
+                if (!result.IsValid)
+                {
+                    throw new ServiceResultException(result.StatusCode);
+                }
+            }
+            catch (Exception ex)
+            {
+                string message = Utils.Format(
+                    "Error validating certificate. Exception: {0}. Use certificate anyway?",
+                    ex.Message);
+                if (!await ApproveMessageAsync(message, silent).ConfigureAwait(false))
+                {
+                    return false;
+                }
+            }
+
+            // check key size
+            int keySize = X509Utils.GetPublicKeySize(certificate);
+            if (minimumKeySize > keySize)
+            {
+                string message = Utils.Format(
+                    "The key size ({0}) in the certificate is less than the minimum provided ({1}). Use certificate anyway?",
+                    keySize,
+                    minimumKeySize);
+
+                if (!await ApproveMessageAsync(message, silent).ConfigureAwait(false))
+                {
+                    return false;
+                }
+            }
+
+            // check domains.
+            if (configuration.ApplicationType != ApplicationType.Client &&
+                !await CheckDomainsInCertificateAsync(configuration, certificate, silent, ct)
+                    .ConfigureAwait(false))
+            {
+                return false;
+            }
+
+            // Validate that the certificate contains the configuration's ApplicationUri
+            // ApplicationUri may be null; CompareApplicationUriWithCertificate's contract is non-null
+            // but its implementation returns false on null/empty, preserving prior behavior.
+            if (!X509Utils.CompareApplicationUriWithCertificate(
+                certificate,
+                configuration.ApplicationUri!,
+                out IReadOnlyList<string> certificateUris))
+            {
+                if (certificateUris.Count == 0)
+                {
+                    const string message =
+                        "The Application URI could not be found in the certificate. Use certificate anyway?";
+                    if (!await ApproveMessageAsync(message, silent).ConfigureAwait(false))
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    string message = Utils.Format(
+                        "The certificate with subject '{0}' does not contain the ApplicationUri '{1}' " +
+                        "from the configuration. Certificate contains: {2}. Use certificate anyway?",
+                        certificate.Subject,
+                        configuration.ApplicationUri!,
+                        string.Join(", ", certificateUris));
+
+                    if (!await ApproveMessageAsync(message, silent).ConfigureAwait(false))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            m_logger.CertificateValidatedForApplicationUri(certificate, configuration.ApplicationUri);
+
+            // Sync the identifier metadata so subsequent resolver lookups
+            // by Thumbprint find the validated cert (the configured XML
+            // identifier may carry no Thumbprint).
+            id.Thumbprint = certificate.Thumbprint;
+            id.SubjectName = certificate.Subject;
+            if (id.CertificateType.IsNull)
+            {
+                id.CertificateType = CertificateIdentifier.GetCertificateType(certificate);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Checks that the domains in the server addresses match the domains in the certificates.
+        /// </summary>
+        private async Task<bool> CheckDomainsInCertificateAsync(
+            ApplicationConfiguration configuration,
+            Certificate certificate,
+            bool silent,
+            CancellationToken ct)
+        {
+            m_logger.CheckDomainsInCertificate();
+
+            bool valid = true;
+            ArrayOf<string> serverDomainNames = configuration.GetServerDomainNames();
+            ArrayOf<string> certificateDomainNames = X509Utils.GetDomainsFromCertificate(certificate);
+
+            m_logger.ServerDomainNames();
+            foreach (string name in serverDomainNames)
+            {
+                m_logger.ServerDomainName(name);
+            }
+
+            m_logger.CertificateDomainNames();
+            foreach (string name in certificateDomainNames)
+            {
+                m_logger.ClientDomainName(name);
+            }
+
+            // get computer name.
+            string computerName = Utils.GetHostName();
+
+            // get IP addresses.
+            IPAddress[]? addresses = null;
+
+            for (int ii = 0; ii < serverDomainNames.Count; ii++)
+            {
+                if (certificateDomainNames.Contains(serverDomainNames[ii], StringComparer.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (string.Equals(
+                    serverDomainNames[ii],
+                    "localhost",
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    if (certificateDomainNames.Contains(computerName, StringComparer.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    // check for aliases.
+                    bool found = false;
+
+                    // get IP addresses only if necessary.
+                    addresses ??= await Utils.GetHostAddressesAsync(computerName, ct).ConfigureAwait(false);
+
+                    // check for ip addresses.
+                    for (int jj = 0; jj < addresses.Length; jj++)
+                    {
+                        if (certificateDomainNames.Contains(addresses[jj].ToString(), StringComparer.OrdinalIgnoreCase))
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (found)
+                    {
+                        continue;
+                    }
+                }
+
+                string message = Utils.Format(
+                    "The server is configured to use domain '{0}' which does not appear in the certificate. Use certificate anyway?",
+                    serverDomainNames[ii]);
+
+                valid = false;
+
+                if (await ApproveMessageAsync(message, silent).ConfigureAwait(false))
+                {
+                    valid = true;
+                    continue;
+                }
+
+                break;
+            }
+
+            return valid;
+        }
+
+        /// <summary>
+        /// Creates the application instance certificate.
+        /// </summary>
+        /// <param name="configuration">The configuration.</param>
+        /// <param name="id">The certificate identifier.</param>
+        /// <param name="minimumKeySize">Minimum RSA key size to use when creating the certificate.</param>
+        /// <param name="lifeTimeInMonths">The lifetime in months.</param>
+        /// <param name="ct">Cancellation token to cancel operation with</param>
+        /// <returns>The new certificate</returns>
+        /// <exception cref="ServiceResultException"></exception>
+        private async Task<Certificate?> CreateApplicationInstanceCertificateAsync(
+            ApplicationConfiguration configuration,
+            CertificateIdentifier id,
+            ushort minimumKeySize,
+            ushort lifeTimeInMonths,
+            CancellationToken ct)
+        {
+            // delete any existing certificate.
+            await DeleteApplicationInstanceCertificateAsync(configuration, id, ct).ConfigureAwait(
+                false);
+
+            m_logger.CreatingApplicationInstanceCertificate();
+
+            // get the domains from the configuration file.
+            ArrayOf<string> serverDomainNames = configuration.GetServerDomainNames();
+
+            if (serverDomainNames.IsEmpty)
+            {
+                serverDomainNames = [Utils.GetHostName()];
+            }
+
+            // ensure the certificate store directory exists.
+            if (id.StoreType == CertificateStoreType.Directory)
+            {
+                // GetAbsoluteDirectoryPath requires non-null; StorePath is checked above by StoreType comparison.
+                Utils.GetAbsoluteDirectoryPath(id.StorePath!, true, true, true);
+            }
+
+            ICertificateBuilder builder = DefaultCertificateFactory.Instance
+                .CreateApplicationCertificate(
+                    configuration.ApplicationUri!,
+                    configuration.ApplicationName!,
+                    id.SubjectName!,
+                    serverDomainNames.ToList())
+                .SetLifeTime(lifeTimeInMonths);
+
+            Certificate newCertificate;
+            if (id.CertificateType.IsNull ||
+                id.CertificateType == ObjectTypeIds.ApplicationCertificateType ||
+                id.CertificateType == ObjectTypeIds.RsaMinApplicationCertificateType ||
+                id.CertificateType == ObjectTypeIds.RsaSha256ApplicationCertificateType)
+            {
+                ushort keySize = minimumKeySize == 0
+                    ? CertificateFactory.DefaultKeySize
+                    : minimumKeySize;
+
+                newCertificate = builder.SetRSAKeySize(keySize).CreateForRSA();
+
+                m_logger.CertificateCreatedForRsa(newCertificate, keySize);
+            }
+            else
+            {
+                ECCurve? curve =
+                    CryptoUtils.GetCurveFromCertificateTypeId(id.CertificateType)
+                    ?? throw ServiceResultException.ConfigurationError(
+                        "The Ecc certificate type is not supported.");
+
+                newCertificate = builder.SetECCurve(curve.Value).CreateForECDsa();
+
+                m_logger.CertificateCreatedForCurve(newCertificate, curve.Value.Oid.FriendlyName);
+            }
+
+            // Update the identifier metadata so subsequent resolver lookups
+            // (which key by Thumbprint / SubjectName) match the freshly
+            // generated cert. The identifier itself remains pure metadata.
+            id.SubjectName = newCertificate.Subject;
+            id.Thumbprint = newCertificate.Thumbprint;
+            if (id.CertificateType.IsNull)
+            {
+                id.CertificateType = CertificateIdentifier.GetCertificateType(newCertificate);
+            }
+
+            ICertificatePasswordProvider? passwordProvider = configuration
+                .SecurityConfiguration
+                .CertificatePasswordProvider;
+            await newCertificate.AddToStoreAsync(
+                    id.StoreType!,
+                    id.StorePath!,
+                    passwordProvider?.GetPassword(id),
+                    m_telemetry,
+                    ct)
+                .ConfigureAwait(false);
+
+            // ensure the certificate is trusted.
+            if (configuration.SecurityConfiguration.AddAppCertToTrustedStore)
+            {
+                await AddToTrustedStoreAsync(configuration, newCertificate, ct).ConfigureAwait(
+                    false);
+            }
+
+            // reload the certificate from disk to get the durable on-disk
+            // private-key handle (the in-memory cert from CreateForXxx is a
+            // builder-produced ephemeral instance).
+            Certificate? reloaded = await CertificateIdentifierResolver
+                .LoadPrivateKeyAsync(
+                    id,
+                    passwordProvider,
+                    configuration.ApplicationUri,
+                    m_telemetry,
+                    ct)
+                .ConfigureAwait(false);
+            if (reloaded != null)
+            {
+                newCertificate.Dispose();
+                newCertificate = reloaded;
+            }
+
+            // Refresh CertificateManager so newly-created certificates are
+            // visible to subsequent ValidateAsync / GetInstanceCertificate
+            // callers (replaces the legacy validator.UpdateAsync hot-update
+            // path).
+            if (configuration.CertificateManager != null)
+            {
+                await configuration.CertificateManager.UpdateAsync(
+                    configuration.SecurityConfiguration,
+                    configuration.ApplicationUri,
+                    ct)
+                    .ConfigureAwait(false);
+            }
+
+            m_logger.CertificateCreatedForApplicationUri(newCertificate, configuration.ApplicationUri);
+
+            // do not dispose temp cert, or X509Store certs become unusable
+
+            return newCertificate;
+        }
+
+        /// <summary>
+        /// Deletes an existing application instance certificate.
+        /// </summary>
+        /// <param name="configuration">The configuration instance that stores the configurable information for a UA application.</param>
+        /// <param name="id">The certificate identifier.</param>
+        /// <param name="ct">Cancellation token to cancel operation with</param>
+        private async Task DeleteApplicationInstanceCertificateAsync(
+            ApplicationConfiguration configuration,
+            CertificateIdentifier id,
+            CancellationToken ct)
+        {
+            if (id == null)
+            {
+                return;
+            }
+
+            // delete certificate and private key.
+            Certificate? certificate = await CertificateIdentifierResolver
+                .ResolveAsync(
+                    id,
+                    registry: null,
+                    needPrivateKey: false,
+                    configuration.ApplicationUri,
+                    m_telemetry,
+                    ct)
+                .ConfigureAwait(false);
+
+            if (certificate != null)
+            {
+                m_logger.DeletingApplicationInstanceCertificate(certificate);
+            }
+
+            // delete trusted peer certificate.
+            if (configuration.SecurityConfiguration != null &&
+                configuration.SecurityConfiguration.TrustedPeerCertificates != null)
+            {
+                string? thumbprint = id.Thumbprint;
+
+                if (certificate != null)
+                {
+                    thumbprint = certificate.Thumbprint;
+                }
+
+                if (!string.IsNullOrEmpty(thumbprint))
+                {
+                    using ICertificateStore store = configuration.SecurityConfiguration
+                        .TrustedPeerCertificates
+                        .OpenStore(m_telemetry!);
+                    if (store != null)
+                    {
+                        bool deleted = await store.DeleteAsync(thumbprint!, ct)
+                            .ConfigureAwait(false);
+                        if (deleted)
+                        {
+                            m_logger.ApplicationInstanceCertificateDeletedFromTrustedStore(thumbprint);
+                        }
+                    }
+                }
+            }
+
+            // delete certificate and private key from owner store.
+            if (certificate != null)
+            {
+                using ICertificateStore? store = CertificateIdentifierResolver
+                    .OpenStore(id, m_telemetry);
+                if (store != null)
+                {
+                    bool deleted = await store.DeleteAsync(certificate.Thumbprint, ct)
+                        .ConfigureAwait(false);
+                    if (deleted)
+                    {
+                        m_logger.ApplicationCertificateAndPrivateKeyDeleted(certificate);
+                    }
+                }
+                certificate.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Adds the certificate to the Trusted Certificate Store
+        /// </summary>
+        /// <param name="configuration">The application's configuration which specifies the location of the TrustedStore.</param>
+        /// <param name="certificate">The certificate to register.</param>
+        /// <param name="ct">The cancellation token.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="certificate"/> is <c>null</c>.</exception>
+        private async Task AddToTrustedStoreAsync(
+            ApplicationConfiguration configuration,
+            Certificate certificate,
+            CancellationToken ct)
+        {
+            if (certificate == null)
+            {
+                throw new ArgumentNullException(nameof(certificate));
+            }
+
+            if (configuration == null ||
+                configuration.SecurityConfiguration == null ||
+                configuration.SecurityConfiguration.TrustedPeerCertificates == null ||
+                string.IsNullOrEmpty(configuration.SecurityConfiguration.TrustedPeerCertificates.StorePath))
+            {
+                m_logger.TrustedPeerStoreNotSpecified();
+                return;
+            }
+
+            try
+            {
+                using ICertificateStore? store = configuration.SecurityConfiguration
+                    .TrustedPeerCertificates
+                    .OpenStore(m_telemetry!);
+
+                if (store == null)
+                {
+                    m_logger.CouldNotOpenTrustedPeerStore();
+                    return;
+                }
+
+                // check if it already exists.
+                using CertificateCollection existingCertificates = await store
+                    .FindByThumbprintAsync(certificate.Thumbprint, ct)
+                    .ConfigureAwait(false);
+
+                if (existingCertificates.Count > 0)
+                {
+                    return;
+                }
+
+                m_logger.AddingApplicationCertificateToTrustedPeerStore(certificate);
+
+                List<string> subjectName = X509Utils.ParseDistinguishedName(
+                    certificate.Subject);
+
+                // check for old certificate.
+                using CertificateCollection certificates = await store.EnumerateAsync(ct)
+                    .ConfigureAwait(false);
+
+                for (int ii = 0; ii < certificates.Count; ii++)
+                {
+                    if (X509Utils.CompareDistinguishedName(certificates[ii], subjectName))
+                    {
+                        if (certificates[ii].Thumbprint == certificate.Thumbprint)
+                        {
+                            return;
+                        }
+
+                        bool deleteCert = false;
+                        if (X509Utils.IsECDsaSignature(certificates[ii]) &&
+                            X509Utils.IsECDsaSignature(certificate))
+                        {
+                            if (X509Utils
+                                    .GetECDsaQualifier(certificates[ii])
+                                    .Equals(
+                                        X509Utils.GetECDsaQualifier(certificate),
+                                        StringComparison.Ordinal))
+                            {
+                                deleteCert = true;
+                            }
+                        }
+                        else if (!X509Utils.IsECDsaSignature(certificates[ii]) &&
+                            !X509Utils.IsECDsaSignature(certificate))
+                        {
+                            deleteCert = true;
+                        }
+
+                        if (deleteCert)
+                        {
+                            m_logger.DeleteCertificateFromTrustedStore(certificate);
+                            await store.DeleteAsync(certificates[ii].Thumbprint, ct)
+                                .ConfigureAwait(false);
+                            break;
+                        }
+                    }
+                }
+
+                // add new certificate.
+                using var publicKey = Certificate.FromRawData(certificate.RawData);
+                await store.AddAsync(publicKey, ct: ct).ConfigureAwait(false);
+
+                m_logger.AddedApplicationCertificateToTrustedPeerStore();
+            }
+            catch (Exception e)
+            {
+                m_logger.CouldNotAddCertificateToTrustedPeerStore(Redact.Create(e));
+            }
+        }
+
+        /// <summary>
+        /// Show a message for approval and return result.
+        /// </summary>
+        /// <returns>True if approved, false otherwise.</returns>
+        private async Task<bool> ApproveMessageAsync(string message, bool silent)
+        {
+            if (!silent && MessageDlg != null)
+            {
+                MessageDlg.Message(message, true);
+                return await MessageDlg.ShowAsync().ConfigureAwait(false);
+            }
+            m_logger.ApproveMessagePromptRejected(message);
+            return false;
+        }
+
+        private readonly ITelemetryContext? m_telemetry;
+        private readonly ILogger m_logger;
+    }
+
+    internal static partial class ApplicationInstanceLog
+    {
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 0, Level = LogLevel.Error,
+            Message = "Error stopping server during dispose.")]
+        public static partial void ErrorStoppingServerDuringDispose(this ILogger logger, Exception e);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 1, Level = LogLevel.Information,
+            Message = "Checking application instance certificate.")]
+        public static partial void CheckingApplicationInstanceCertificate(this ILogger logger);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 2, Level = LogLevel.Information,
+            Message = "Check certificate: {Certificate}")]
+        public static partial void CheckCertificate(this ILogger logger, Certificate certificate);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 3, Level = LogLevel.Warning,
+            Message = "Application Instance certificate auto creation is disabled.")]
+        public static partial void ApplicationInstanceCertificateAutoCreationDisabled(this ILogger logger);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 4, Level = LogLevel.Information,
+            Message = "Loading application configuration file. {FilePath}")]
+        public static partial void LoadingApplicationConfigurationFile(this ILogger logger, string filePath);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 5, Level = LogLevel.Error,
+            Message = "Could not load configuration file. {FilePath}")]
+        public static partial void CouldNotLoadConfigurationFile(this ILogger logger, Exception e, string filePath);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 6, Level = LogLevel.Information,
+            Message = "Loading application from stream.")]
+        public static partial void LoadingApplicationFromStream(this ILogger logger);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 7, Level = LogLevel.Error,
+            Message = "Could not load configuration from stream.")]
+        public static partial void CouldNotLoadConfigurationFromStream(this ILogger logger, Exception e);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 8, Level = LogLevel.Information,
+            Message = "Check application instance certificate {Certificate}.")]
+        public static partial void CheckApplicationInstanceCertificate(this ILogger logger, Certificate certificate);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 9, Level = LogLevel.Warning,
+            Message = "Application Certificate Validation suppressed {ErrorMessage}")]
+        public static partial void ApplicationCertificateValidationSuppressed(
+            this ILogger logger,
+            StatusCode errorMessage);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 10, Level = LogLevel.Information,
+            Message = "Certificate {Certificate} validated for ApplicationUri: {ApplicationUri}")]
+        public static partial void CertificateValidatedForApplicationUri(
+            this ILogger logger,
+            Certificate certificate,
+            string? applicationUri);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 11, Level = LogLevel.Information,
+            Message = "Check domains in certificate.")]
+        public static partial void CheckDomainsInCertificate(this ILogger logger);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 12, Level = LogLevel.Information,
+            Message = "Server Domain names:")]
+        public static partial void ServerDomainNames(this ILogger logger);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 13, Level = LogLevel.Information,
+            Message = " {ServerDomainName}")]
+        public static partial void ServerDomainName(this ILogger logger, string serverDomainName);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 14, Level = LogLevel.Information,
+            Message = "Certificate Domain names:")]
+        public static partial void CertificateDomainNames(this ILogger logger);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 15, Level = LogLevel.Information,
+            Message = " {ClientDomainName}")]
+        public static partial void ClientDomainName(this ILogger logger, string clientDomainName);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 16, Level = LogLevel.Information,
+            Message = "Creating application instance certificate.")]
+        public static partial void CreatingApplicationInstanceCertificate(this ILogger logger);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 17, Level = LogLevel.Information,
+            Message = "Certificate {Certificate} created for RSA with key size {KeySize} bits.")]
+        public static partial void CertificateCreatedForRsa(
+            this ILogger logger,
+            Certificate certificate,
+            ushort keySize);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 18, Level = LogLevel.Information,
+            Message = "Certificate {Certificate} created for {Curve}.")]
+        public static partial void CertificateCreatedForCurve(
+            this ILogger logger,
+            Certificate certificate,
+            string? curve);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 19, Level = LogLevel.Information,
+            Message = "Certificate {Certificate} created for {ApplicationUri}.")]
+        public static partial void CertificateCreatedForApplicationUri(
+            this ILogger logger,
+            Certificate certificate,
+            string? applicationUri);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 20, Level = LogLevel.Information,
+            Message = "Deleting application instance certificate {Certificate} and private key.")]
+        public static partial void DeletingApplicationInstanceCertificate(this ILogger logger, Certificate certificate);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 21, Level = LogLevel.Information,
+            Message = "Application Instance Certificate [{Thumbprint}] deleted from trusted store.")]
+        public static partial void ApplicationInstanceCertificateDeletedFromTrustedStore(
+            this ILogger logger,
+            string thumbprint);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 22, Level = LogLevel.Information,
+            Message = "Application certificate {Certificate} and private key deleted.")]
+        public static partial void ApplicationCertificateAndPrivateKeyDeleted(
+            this ILogger logger,
+            Certificate certificate);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 23, Level = LogLevel.Warning,
+            Message = "Trusted peer store not specified.")]
+        public static partial void TrustedPeerStoreNotSpecified(this ILogger logger);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 24, Level = LogLevel.Warning,
+            Message = "Could not open trusted peer store.")]
+        public static partial void CouldNotOpenTrustedPeerStore(this ILogger logger);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 25, Level = LogLevel.Information,
+            Message = "Adding application certificate {Certificate} to trusted peer store.")]
+        public static partial void AddingApplicationCertificateToTrustedPeerStore(
+            this ILogger logger,
+            Certificate certificate);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 26, Level = LogLevel.Information,
+            Message = "Delete Certificate {Certificate} from trusted store.")]
+        public static partial void DeleteCertificateFromTrustedStore(this ILogger logger, Certificate certificate);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 27, Level = LogLevel.Information,
+            Message = "Added application certificate to trusted peer store.")]
+        public static partial void AddedApplicationCertificateToTrustedPeerStore(this ILogger logger);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 28, Level = LogLevel.Error,
+            Message = "Could not add certificate to trusted peer store: {ErrorMessage}")]
+        public static partial void CouldNotAddCertificateToTrustedPeerStore(
+            this ILogger logger,
+            RedactionWrapper<Exception> errorMessage);
+
+        [LoggerMessage(EventId = ConfigurationEventIds.ApplicationInstance + 29, Level = LogLevel.Error,
+            Message = "Approve Message prompt: {Message} -> Rejected")]
+        public static partial void ApproveMessagePromptRejected(this ILogger logger, string message);
+    }
+}

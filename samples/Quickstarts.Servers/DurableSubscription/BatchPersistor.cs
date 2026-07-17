@@ -1,0 +1,306 @@
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Opc.Ua;
+
+namespace Quickstarts.Servers
+{
+    /// <inheritdoc/>
+    public class BatchPersistor : IBatchPersistor
+    {
+        private static readonly string s_storage_path = Path.Combine(
+            Environment.CurrentDirectory,
+            "Durable Subscriptions",
+            "Batches");
+
+        private const string kBaseFilename = "_batch.bin";
+
+        public BatchPersistor(ITelemetryContext telemetry)
+        {
+            m_logger = telemetry.CreateLogger<DurableDataChangeMonitoredItemQueue>();
+            m_telemetry = telemetry;
+        }
+
+        /// <inheritdoc/>
+        public void RequestBatchPersist(BatchBase batch)
+        {
+            lock (batch)
+            {
+                if (batch.IsPersisted || batch.PersistingInProgress || batch.RestoreInProgress)
+                {
+                    return;
+                }
+                batch.PersistingInProgress = true;
+
+                if (m_batchesToPersist.TryAdd(batch.Id, batch))
+                {
+                    _ = Task.Run(() => PersistSynchronously(batch));
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public void RequestBatchRestore(BatchBase batch)
+        {
+            lock (batch)
+            {
+                if (!batch.IsPersisted || batch.RestoreInProgress || batch.PersistingInProgress)
+                {
+                    if (batch.PersistingInProgress)
+                    {
+                        batch.CancelBatchPersist?.Cancel();
+                    }
+                    return;
+                }
+
+                batch.RestoreInProgress = true;
+
+                if (m_batchesToRestore.TryAdd(batch.Id, batch))
+                {
+                    _ = Task.Run(() => RestoreSynchronously(batch));
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public void RestoreSynchronously(BatchBase batch)
+        {
+            string filePath = Path.Combine(
+                s_storage_path,
+                $"{batch.MonitoredItemId}_{batch.Id}{kBaseFilename}");
+            try
+            {
+                if (File.Exists(filePath))
+                {
+                    using IDisposable scope = AmbientMessageContext.SetScopedContext(m_telemetry);
+                    IServiceMessageContext context = AmbientMessageContext.CurrentContext;
+
+                    using FileStream stream = File.OpenRead(filePath);
+                    using var decoder = new BinaryDecoder(stream, context, true);
+
+                    ArrayOf<string> nsUris = decoder.ReadStringArray(null)!;
+                    ArrayOf<string> srvUris = decoder.ReadStringArray(null)!;
+                    decoder.SetMappingTables(
+                        new NamespaceTable(nsUris.Memory.ToArray()),
+                        new StringTable(srvUris.Memory.ToArray()));
+
+                    lock (batch)
+                    {
+                        if (batch is DataChangeBatch dataChangeBatch)
+                        {
+                            DataChangeBatch? restored =
+                                DurableMonitoredItemQueueFactory.DecodeDataChangeBatch(decoder);
+                            dataChangeBatch.Restore(restored?.Values);
+                        }
+                        else if (batch is EventBatch eventBatch)
+                        {
+                            EventBatch? restored =
+                                DurableMonitoredItemQueueFactory.DecodeEventBatch(decoder);
+                            eventBatch.Restore(restored?.Events);
+                        }
+                        m_batchesToRestore.TryRemove(batch.Id, out _);
+                    }
+
+                    File.Delete(filePath);
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                m_logger.FailedToRestoreBatch(ex);
+            }
+
+            batch.RestoreInProgress = false;
+            m_batchesToRestore.TryRemove(batch.Id, out _);
+        }
+
+        /// <inheritdoc/>
+        public void PersistSynchronously(BatchBase batch)
+        {
+            using var cancellationTokenSource = new CancellationTokenSource();
+            batch.CancelBatchPersist = cancellationTokenSource;
+            try
+            {
+                if (!Directory.Exists(s_storage_path))
+                {
+                    Directory.CreateDirectory(s_storage_path);
+                }
+
+                string filePath = Path.Combine(
+                    s_storage_path,
+                    $"{batch.MonitoredItemId}_{batch.Id}{kBaseFilename}");
+
+                using IDisposable scope = AmbientMessageContext.SetScopedContext(m_telemetry);
+                IServiceMessageContext context = AmbientMessageContext.CurrentContext;
+
+                using (FileStream stream = File.Create(filePath))
+                using (var encoder = new BinaryEncoder(stream, context, true))
+                {
+                    encoder.WriteStringArray(null, context.NamespaceUris.ToArrayOf());
+                    encoder.WriteStringArray(null, context.ServerUris.ToArrayOf());
+
+                    if (batch is DataChangeBatch dataChangeBatch)
+                    {
+                        DurableMonitoredItemQueueFactory.EncodeDataChangeBatch(
+                            encoder, dataChangeBatch);
+                    }
+                    else if (batch is EventBatch eventBatch)
+                    {
+                        DurableMonitoredItemQueueFactory.EncodeEventBatch(
+                            encoder, eventBatch);
+                    }
+                }
+
+                if (cancellationTokenSource.IsCancellationRequested)
+                {
+                    File.Delete(filePath);
+                    lock (batch)
+                    {
+                        batch.PersistingInProgress = false;
+                        batch.CancelBatchPersist = null;
+                    }
+                }
+                else
+                {
+                    lock (batch)
+                    {
+                        batch.SetPersisted();
+                    }
+                }
+                m_batchesToPersist.TryRemove(batch.Id, out _);
+            }
+            catch (Exception ex)
+            {
+                m_logger.FailedToStoreBatch(ex);
+                lock (batch)
+                {
+                    batch.PersistingInProgress = false;
+                    m_batchesToPersist.TryRemove(batch.Id, out _);
+                    batch.CancelBatchPersist = null;
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public void DeleteBatches(IEnumerable<uint> batchesToKeep)
+        {
+            try
+            {
+                if (Directory.Exists(s_storage_path))
+                {
+                    var directory = new DirectoryInfo(s_storage_path);
+
+                    // Create a single regex pattern that matches any of the batches to keep
+                    string pattern = string.Join(
+                        "|",
+                        batchesToKeep.Select(batch => $"{batch}_.*{kBaseFilename}$"));
+                    var regex = new Regex(pattern, RegexOptions.Compiled);
+
+                    foreach (FileInfo file in directory.GetFiles())
+                    {
+                        if (!regex.IsMatch(file.Name))
+                        {
+                            file.Delete();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                m_logger.FailedToCleanUpBatches(ex);
+            }
+        }
+
+        public void DeleteBatch(BatchBase batchToRemove)
+        {
+            try
+            {
+                if (Directory.Exists(s_storage_path))
+                {
+                    var directory = new DirectoryInfo(s_storage_path);
+                    var regex = new Regex(
+                        $"{batchToRemove.MonitoredItemId}_.{batchToRemove.Id}._{kBaseFilename}$",
+                        RegexOptions.Compiled);
+
+                    foreach (FileInfo file in directory.GetFiles())
+                    {
+                        // Delete files matching this batch (a batch persists to a single file).
+                        if (regex.IsMatch(file.Name))
+                        {
+                            file.Delete();
+                            return;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                m_logger.FailedToCleanUpSingleBatch(ex);
+            }
+        }
+
+        private readonly ConcurrentDictionary<Uuid, BatchBase> m_batchesToRestore = new();
+        private readonly ConcurrentDictionary<Uuid, BatchBase> m_batchesToPersist = new();
+        private readonly ILogger m_logger;
+        private readonly ITelemetryContext m_telemetry;
+    }
+
+    internal static partial class BatchPersistorLog
+    {
+        [LoggerMessage(
+            EventId = QuickstartsServersEventIds.BatchPersistor + 0, Level = LogLevel.Error,
+            Message = "Failed to restore batch")]
+        public static partial void FailedToRestoreBatch(this ILogger logger, Exception exception);
+
+        [LoggerMessage(
+            EventId = QuickstartsServersEventIds.BatchPersistor + 1, Level = LogLevel.Warning,
+            Message = "Failed to store batch")]
+        public static partial void FailedToStoreBatch(this ILogger logger, Exception exception);
+
+        [LoggerMessage(
+            EventId = QuickstartsServersEventIds.BatchPersistor + 2, Level = LogLevel.Warning,
+            Message = "Failed to clean up batches")]
+        public static partial void FailedToCleanUpBatches(this ILogger logger, Exception exception);
+
+        [LoggerMessage(
+            EventId = QuickstartsServersEventIds.BatchPersistor + 3, Level = LogLevel.Warning,
+            Message = "Failed to clean up single batch")]
+        public static partial void FailedToCleanUpSingleBatch(this ILogger logger, Exception exception);
+    }
+
+}

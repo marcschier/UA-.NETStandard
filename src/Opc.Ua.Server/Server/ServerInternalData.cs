@@ -1,0 +1,1253 @@
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Threading;
+using System.Threading.Tasks;
+using Opc.Ua.Identity;
+
+namespace Opc.Ua.Server
+{
+    /// <summary>
+    /// A class that stores the globally accessible state of a server instance.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This is a readonly class that is initialized when the server starts up. It provides
+    /// access to global objects and data that different parts of the server may require.
+    /// It also defines some global methods.
+    /// </para>
+    /// <para>
+    /// This object is constructed is three steps:
+    /// - the configuration is provided.
+    /// - the node managers et. al. are provided.
+    /// - the session/subscription managers are provided.
+    /// </para>
+    /// <para>The server is not running until all three steps are complete.</para>
+    /// <para>
+    /// The references returned from this object do not change after all three states are complete.
+    /// This ensures the object is thread safe even though it does not use a lock.
+    /// Objects returned from this object can be assumed to be threadsafe unless otherwise stated.
+    /// </para>
+    /// </remarks>
+    public class ServerInternalData :
+        IServerInternal,
+        AliasNames.IAliasNameStoreRegistryProvider,
+        Historian.IHistorianRegistryProvider,
+        ITransportListenerRegistryProvider,
+        IServerEndpointRegistryProvider,
+        ITimeProviderProvider
+    {
+        /// <summary>
+        /// Initializes the datastore with the server configuration.
+        /// </summary>
+        /// <param name="serverDescription">The server description.</param>
+        /// <param name="configuration">The configuration.</param>
+        /// <param name="messageContext">The message context.</param>
+        public ServerInternalData(
+            ServerProperties serverDescription,
+            ApplicationConfiguration configuration,
+            IServiceMessageContext messageContext)
+            : this(serverDescription, configuration, messageContext, null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes the datastore with the server configuration.
+        /// </summary>
+        /// <param name="serverDescription">The server description.</param>
+        /// <param name="configuration">The configuration.</param>
+        /// <param name="messageContext">The message context.</param>
+        /// <param name="timeProvider">The time provider used for all
+        /// time / duration calculations performed by the server, or
+        /// <c>null</c> to use <see cref="TimeProvider.System"/>.</param>
+        public ServerInternalData(
+            ServerProperties serverDescription,
+            ApplicationConfiguration configuration,
+            IServiceMessageContext messageContext,
+            TimeProvider? timeProvider)
+        {
+            TimeProvider = timeProvider ?? TimeProvider.System;
+            m_serverDescription = serverDescription;
+            m_configuration = configuration;
+            MessageContext = messageContext;
+
+            m_endpointAddresses = [];
+
+            foreach (string baseAddresses in m_configuration.ServerConfiguration!.BaseAddresses)
+            {
+                Uri? url = Utils.ParseUri(baseAddresses);
+
+                if (url != null)
+                {
+                    m_endpointAddresses.Add(url);
+                }
+            }
+
+            NamespaceUris = MessageContext.NamespaceUris;
+            Factory = MessageContext.Factory;
+
+            ServerUris = new StringTable();
+            TypeTree = new TypeTable(NamespaceUris);
+            HistorianRegistry = new Historian.HistorianProviderRegistry(NamespaceUris);
+
+            // add the server uri to the server table.
+            ServerUris.Append(m_configuration.ApplicationUri!);
+
+            // create the default system context.
+            DefaultSystemContext = new ServerSystemContext(this);
+        }
+
+        /// <summary>
+        /// Frees any unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// An overrideable version of the Dispose.
+        /// </summary>
+        /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                m_roleStateBinding?.Dispose();
+                m_roleStateBinding = null;
+                (RoleManager as IDisposable)?.Dispose();
+                ResourceManager?.Dispose();
+                RequestManager?.Dispose();
+                AggregateManager?.Dispose();
+                ModellingRulesManager?.Dispose();
+                ConformanceUnitsManager?.Dispose();
+                (NodeManager as IDisposable)?.Dispose();
+                SessionManager?.Dispose();
+                SubscriptionManager?.Dispose();
+                MonitoredItemQueueFactory?.Dispose();
+                (AliasNameStoreRegistry as IDisposable)?.Dispose();
+                (HistorianRegistry as IDisposable)?.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// The server-wide registry of OPC UA Part 17 alias-name stores.
+        /// Surfaces through the optional
+        /// <see cref="AliasNames.IAliasNameStoreRegistryProvider"/>
+        /// interface so consumers can discover it without any change to
+        /// <see cref="IServerInternal"/>; never <c>null</c>.
+        /// </summary>
+        public AliasNames.IAliasNameStoreRegistry AliasNameStoreRegistry { get; }
+            = new AliasNames.AliasNameStoreRegistry();
+
+        /// <summary>
+        /// A snapshot of the transport listeners currently bound to the
+        /// server. Populated by <see cref="StandardServer"/> once
+        /// listeners are opened so consumers such as
+        /// <see cref="ConfigurationNodeManager"/> can fan-out post-
+        /// response channel cuts per OPC UA Part 12 §7.10.9.
+        /// </summary>
+        /// <remarks>
+        /// Returns an empty list before listeners are bound or after the
+        /// server has shut them down. Surfaced through the optional
+        /// <see cref="ITransportListenerRegistryProvider"/> interface so
+        /// external/mocked <see cref="IServerInternal"/> implementations
+        /// remain unaffected.
+        /// </remarks>
+        public IReadOnlyList<ITransportListener> TransportListeners
+            => m_transportListeners ?? [];
+
+        /// <summary>
+        /// Called by <see cref="StandardServer"/> after listeners are
+        /// bound (or torn down) to make them visible to downstream
+        /// consumers via <see cref="ITransportListenerRegistryProvider"/>.
+        /// </summary>
+        /// <param name="listeners">
+        /// The current listener registry. Passing <c>null</c> resets to
+        /// an empty snapshot.
+        /// </param>
+        public void SetTransportListenerRegistry(IReadOnlyList<ITransportListener>? listeners)
+        {
+            m_transportListeners = listeners;
+        }
+
+        /// <summary>
+        /// A snapshot of the endpoints currently advertised by the server,
+        /// populated by <see cref="StandardServer"/> once endpoints are
+        /// created so <see cref="ConfigurationNodeManager"/> can enforce the
+        /// OPC UA Part 12 §7.10.7 endpoint-reference rule for
+        /// <c>DeleteCertificate</c>. Surfaced through the optional
+        /// <see cref="IServerEndpointRegistryProvider"/> interface so
+        /// external/mocked <see cref="IServerInternal"/> implementations
+        /// remain unaffected.
+        /// </summary>
+        public ArrayOf<EndpointDescription> ServerEndpoints => m_serverEndpoints;
+
+        /// <summary>
+        /// Called by <see cref="StandardServer"/> after the endpoints are
+        /// created (or torn down) to make them visible to downstream
+        /// consumers via <see cref="IServerEndpointRegistryProvider"/>.
+        /// </summary>
+        /// <param name="endpoints">The current endpoint set.</param>
+        public void SetServerEndpoints(ArrayOf<EndpointDescription> endpoints)
+        {
+            m_serverEndpoints = endpoints;
+        }
+
+        /// <summary>
+        /// The server-wide registry of Part 11 historian providers.
+        /// Surfaces through the optional
+        /// <see cref="Historian.IHistorianRegistryProvider"/> interface so
+        /// consumers can discover it without any change to
+        /// <see cref="IServerInternal"/>; never <c>null</c>.
+        /// </summary>
+        public Historian.IHistorianProviderRegistry HistorianRegistry { get; }
+
+        /// <summary>
+        /// The time provider used for all time / duration calculations
+        /// performed by the server. Surfaces through the optional
+        /// <see cref="ITimeProviderProvider"/> interface so consumers can
+        /// discover it without any change to <see cref="IServerInternal"/>;
+        /// never <c>null</c>.
+        /// </summary>
+        public TimeProvider TimeProvider { get; }
+
+        /// <summary>
+        /// The session manager to use with the server.
+        /// </summary>
+        /// <value>The session manager.</value>
+        public ISessionManager SessionManager { get; private set; } = null!;
+
+        /// <inheritdoc/>
+        public IRoleManager RoleManager { get; private set; } = new RoleManager();
+
+        /// <inheritdoc/>
+        public IServerIdentityRegistry IdentityRegistry { get; private set; } = new ServerIdentityRegistry();
+
+        /// <inheritdoc/>
+        public UserManagement.IUserManagement? UserManagement { get; private set; }
+
+        /// <summary>
+        /// The subscription manager to use with the server.
+        /// </summary>
+        /// <value>The subscription manager.</value>
+        public ISubscriptionManager SubscriptionManager { get; private set; } = null!;
+
+        /// <summary>
+        /// Stores the MasterNodeManager, the DiagnosticsNodeManager and the CoreNodeManager
+        /// </summary>
+        /// <param name="nodeManager">The node manager.</param>
+        [MemberNotNull(
+            nameof(NodeManager),
+            nameof(DiagnosticsNodeManager),
+            nameof(ConfigurationNodeManager),
+            nameof(CoreNodeManager))]
+        public void SetNodeManager(IMasterNodeManager nodeManager)
+        {
+            NodeManager = nodeManager;
+            DiagnosticsNodeManager = nodeManager.DiagnosticsNodeManager!;
+            ConfigurationNodeManager = nodeManager.ConfigurationNodeManager!;
+            CoreNodeManager = nodeManager.CoreNodeManager!;
+        }
+
+        /// <summary>
+        /// Stores the MainNodeManagerFactory
+        /// </summary>
+        /// <param name="mainNodeManagerFactory">The main node manager factory.</param>
+        [MemberNotNull(nameof(MainNodeManagerFactory))]
+        public void SetMainNodeManagerFactory(IMainNodeManagerFactory mainNodeManagerFactory)
+        {
+            MainNodeManagerFactory = mainNodeManagerFactory;
+        }
+
+        /// <summary>
+        /// Sets the EventManager, the ResourceManager, the RequestManager and the AggregateManager.
+        /// </summary>
+        /// <param name="eventManager">The event manager.</param>
+        /// <param name="resourceManager">The resource manager.</param>
+        /// <param name="requestManager">The request manager.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        [MemberNotNull(
+            nameof(EventManager),
+            nameof(ResourceManager),
+            nameof(RequestManager),
+            nameof(ServerObject),
+            nameof(NonThreadSafeStatus),
+            nameof(ServerDiagnostics))]
+        public async ValueTask CreateServerObjectAsync(
+            EventManager eventManager,
+            ResourceManager resourceManager,
+            RequestManager requestManager,
+            CancellationToken cancellationToken = default)
+        {
+            EventManager = eventManager;
+            ResourceManager = resourceManager;
+            RequestManager = requestManager;
+
+            // create the server object.
+            await CreateServerObjectAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Stores the SessionManager, the SubscriptionManager in the datastore.
+        /// </summary>
+        /// <param name="sessionManager">The session manager.</param>
+        /// <param name="subscriptionManager">The subscription manager.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="sessionManager"/> is <c>null</c>.</exception>
+        [MemberNotNull(nameof(SessionManager), nameof(SubscriptionManager))]
+        public void SetSessionManager(
+            ISessionManager sessionManager,
+            ISubscriptionManager subscriptionManager)
+        {
+            if (SessionManager != null)
+            {
+                SessionManager.SessionCreated -= OnSessionCountChanged;
+                SessionManager.SessionClosing -= OnSessionCountChanged;
+            }
+
+            SessionManager = sessionManager ?? throw new ArgumentNullException(nameof(sessionManager));
+            SubscriptionManager = subscriptionManager ?? throw new ArgumentNullException(nameof(subscriptionManager));
+
+            SessionManager.SessionCreated += OnSessionCountChanged;
+            SessionManager.SessionClosing += OnSessionCountChanged;
+            UpdateServerServiceLevel();
+        }
+
+        /// <summary>
+        /// Stores the MonitoredItemQueueFactory in the datastore.
+        /// </summary>
+        /// <param name="monitoredItemQueueFactory">The MonitoredItemQueueFactory.</param>
+        [MemberNotNull(nameof(MonitoredItemQueueFactory))]
+        public void SetMonitoredItemQueueFactory(
+            IMonitoredItemQueueFactory monitoredItemQueueFactory)
+        {
+            MonitoredItemQueueFactory = monitoredItemQueueFactory;
+        }
+
+        /// <summary>
+        /// Stores the Subscriptionstore in the datastore.
+        /// </summary>
+        /// <param name="subscriptionStore">The subscriptionstore.</param>
+        [MemberNotNull(nameof(SubscriptionStore))]
+        public void SetSubscriptionStore(ISubscriptionStore subscriptionStore)
+        {
+            SubscriptionStore = subscriptionStore;
+        }
+
+        /// <inheritdoc/>
+        public void SetRoleManager(IRoleManager roleManager)
+        {
+            RoleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
+        }
+
+        /// <inheritdoc/>
+        public void SetIdentityRegistry(IServerIdentityRegistry registry)
+        {
+            IdentityRegistry = registry ?? throw new ArgumentNullException(nameof(registry));
+        }
+
+        /// <inheritdoc/>
+        public void SetUserManagement(UserManagement.IUserManagement userManagement)
+        {
+            UserManagement = userManagement ?? throw new ArgumentNullException(nameof(userManagement));
+        }
+
+        /// <summary>
+        /// Stores the AggregateManager in the datastore.
+        /// </summary>
+        /// <param name="aggregateManager">The AggregateManager.</param>
+        [MemberNotNull(nameof(AggregateManager))]
+        public void SetAggregateManager(AggregateManager aggregateManager)
+        {
+            AggregateManager = aggregateManager;
+        }
+
+        /// <summary>
+        /// Stores the ModellingRulesManager in the datastore.
+        /// </summary>
+        /// <param name="modellingRulesManager">The ModellingRulesManager.</param>
+        [MemberNotNull(nameof(ModellingRulesManager))]
+        public void SetModellingRulesManager(ModellingRulesManager modellingRulesManager)
+        {
+            ModellingRulesManager = modellingRulesManager;
+        }
+
+        /// <summary>
+        /// Stores the ConformanceUnitsManager in the datastore.
+        /// </summary>
+        /// <param name="conformanceUnitsManager">The ConformanceUnitsManager.</param>
+        [MemberNotNull(nameof(ConformanceUnitsManager))]
+        public void SetConformanceUnitsManager(ConformanceUnitsManager conformanceUnitsManager)
+        {
+            ConformanceUnitsManager = conformanceUnitsManager;
+        }
+
+        /// <summary>
+        /// The endpoint addresses used by the server.
+        /// </summary>
+        /// <value>The endpoint addresses.</value>
+        public IEnumerable<Uri> EndpointAddresses => m_endpointAddresses;
+
+        /// <summary>
+        /// The context to use when serializing/deserializing extension objects.
+        /// </summary>
+        /// <value>The message context.</value>
+        public IServiceMessageContext MessageContext { get; }
+
+        /// <summary>
+        /// The default system context for the server.
+        /// </summary>
+        /// <value>The default system context.</value>
+        public ServerSystemContext DefaultSystemContext { get; }
+
+        /// <summary>
+        /// The table of namespace uris known to the server.
+        /// </summary>
+        /// <value>The namespace URIs.</value>
+        public NamespaceTable NamespaceUris { get; }
+
+        /// <summary>
+        /// The table of remote server uris known to the server.
+        /// </summary>
+        /// <value>The server URIs.</value>
+        public StringTable ServerUris { get; }
+
+        /// <summary>
+        /// The factory used to create encodeable objects that the server understands.
+        /// </summary>
+        /// <value>The factory.</value>
+        public IEncodeableFactory Factory { get; }
+
+        /// <summary>
+        /// The datatypes, object types and variable types known to the server.
+        /// </summary>
+        /// <value>The type tree.</value>
+        /// <remarks>
+        /// The type tree table is a global object that all components of a server have access to.
+        /// Node managers must populate this table with all types that they define.
+        /// This object is thread safe.
+        /// </remarks>
+        public TypeTable TypeTree { get; }
+
+        /// <summary>
+        /// The master node manager for the server.
+        /// </summary>
+        /// <value>The node manager.</value>
+        public IMasterNodeManager NodeManager { get; private set; } = null!;
+
+        /// <inheritdoc/>
+        public IMainNodeManagerFactory MainNodeManagerFactory { get; private set; } = null!;
+
+        /// <summary>
+        /// The internal node manager for the servers.
+        /// </summary>
+        /// <value>The core node manager.</value>
+        public ICoreNodeManager CoreNodeManager { get; private set; } = null!;
+
+        /// <summary>
+        /// Returns the node manager that managers the server diagnostics.
+        /// </summary>
+        /// <value>The diagnostics node manager.</value>
+        public IDiagnosticsNodeManager DiagnosticsNodeManager { get; private set; } = null!;
+
+        /// <inheritdoc/>
+        public IConfigurationNodeManager ConfigurationNodeManager { get; private set; } = null!;
+
+        /// <summary>
+        /// The manager for events that all components use to queue events that occur.
+        /// </summary>
+        /// <value>The event manager.</value>
+        public EventManager EventManager { get; private set; } = null!;
+
+        /// <summary>
+        /// A manager for localized resources that components can use to localize text.
+        /// </summary>
+        /// <value>The resource manager.</value>
+        public ResourceManager ResourceManager { get; private set; } = null!;
+
+        /// <summary>
+        /// A manager for outstanding requests that allows components to receive notifications if the timeout or are cancelled.
+        /// </summary>
+        /// <value>The request manager.</value>
+        public RequestManager RequestManager { get; private set; } = null!;
+
+        /// <summary>
+        /// A manager for aggregate calculators supported by the server.
+        /// </summary>
+        /// <value>The aggregate manager.</value>
+        public AggregateManager AggregateManager { get; private set; } = null!;
+
+        /// <summary>
+        /// A manager for modelling rules supported by the server.
+        /// </summary>
+        /// <value>The modelling rules manager.</value>
+        public ModellingRulesManager ModellingRulesManager { get; private set; } = null!;
+
+        /// <summary>
+        /// A manager for the conformance units and server profiles the server
+        /// advertises.
+        /// </summary>
+        /// <value>The conformance units manager.</value>
+        public ConformanceUnitsManager ConformanceUnitsManager { get; private set; } = null!;
+
+        /// <summary>
+        /// The manager for active sessions.
+        /// </summary>
+        /// <value>The session manager.</value>
+        ISessionManager IServerInternal.SessionManager => SessionManager;
+
+        /// <summary>
+        /// The manager for active subscriptions.
+        /// </summary>
+        ISubscriptionManager IServerInternal.SubscriptionManager => SubscriptionManager;
+
+        /// <summary>
+        /// The factory for durable monitored item queues
+        /// </summary>
+        public IMonitoredItemQueueFactory MonitoredItemQueueFactory { get; private set; } = null!;
+
+        /// <summary>
+        /// The store to persist and retrieve subscriptions
+        /// </summary>
+        public ISubscriptionStore SubscriptionStore { get; private set; } = null!;
+
+        /// <inheritdoc/>
+        public ITelemetryContext Telemetry => MessageContext.Telemetry;
+
+        /// <summary>
+        /// Returns the status object for the server.
+        /// </summary>
+        /// <value>The status.</value>
+        [Obsolete("No longer thread safe. To read the value use CurrentState, to write use UpdateServerStatus.")]
+        public ServerStatusValue Status => NonThreadSafeStatus;
+
+        /// <summary>
+        /// Gets or sets the current state of the server.
+        /// </summary>
+        /// <value>The state of the current.</value>
+        public ServerState CurrentState
+        {
+            get
+            {
+                lock (NonThreadSafeStatus.Lock)
+                {
+                    return NonThreadSafeStatus.Value.State;
+                }
+            }
+            set
+            {
+                lock (NonThreadSafeStatus.Lock)
+                {
+                    NonThreadSafeStatus.Value.State = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the Server object node
+        /// </summary>
+        /// <value>The Server object node.</value>
+        public ServerObjectState ServerObject { get; private set; } = null!;
+
+        /// <summary>
+        /// Used to synchronize access to the server diagnostics.
+        /// </summary>
+        /// <value>The diagnostics lock.</value>
+        public object DiagnosticsLock { get; } = new object();
+
+        /// <summary>
+        /// Used to synchronize write access to
+        /// the server diagnostics.
+        /// </summary>
+        /// <value>The diagnostics lock.</value>
+        public object DiagnosticsWriteLock
+        {
+            get
+            {
+                // implicitly force diagnostics update
+                DiagnosticsNodeManager?.ForceDiagnosticsScan();
+                return DiagnosticsLock;
+            }
+        }
+
+        /// <summary>
+        /// Returns the diagnostics structure for the server.
+        /// </summary>
+        /// <value>The server diagnostics.</value>
+        public ServerDiagnosticsSummaryDataType ServerDiagnostics { get; private set; } = null!;
+
+        /// <summary>
+        /// Whether the server is currently running.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if this instance is running; otherwise, <c>false</c>.
+        /// </value>
+        /// <remarks>
+        /// This flag is set to false when the server shuts down. Threads running should check this flag whenever
+        /// they return from a blocking operation. If it is false the thread should clean up and terminate.
+        /// </remarks>
+        public bool IsRunning
+        {
+            get
+            {
+                if (NonThreadSafeStatus == null)
+                {
+                    return false;
+                }
+
+                lock (NonThreadSafeStatus.Lock)
+                {
+                    if (NonThreadSafeStatus.Value.State == ServerState.Running)
+                    {
+                        return true;
+                    }
+
+                    if (NonThreadSafeStatus.Value.State == ServerState.Shutdown &&
+                        NonThreadSafeStatus.Value.SecondsTillShutdown > 0)
+                    {
+                        return true;
+                    }
+
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Whether the server is collecting diagnostics.
+        /// </summary>
+        /// <value><c>true</c> if diagnostics are enabled; otherwise, <c>false</c>.</value>
+        public bool DiagnosticsEnabled
+        {
+            get
+            {
+                if (DiagnosticsNodeManager == null)
+                {
+                    return false;
+                }
+
+                return DiagnosticsNodeManager.DiagnosticsEnabled;
+            }
+        }
+
+        /// <summary>
+        /// Status but non thread safe - internal so not part of public api
+        /// </summary>
+        internal ServerStatusValue NonThreadSafeStatus { get; private set; } = null!;
+
+        /// <summary>
+        /// Closes the specified session.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <param name="sessionId">The session identifier.</param>
+        /// <param name="deleteSubscriptions">if set to <c>true</c> subscriptions are to be deleted.</param>
+        [Obsolete("Use CloseSessionAsync instead.")]
+        public void CloseSession(
+            OperationContext context,
+            NodeId sessionId,
+            bool deleteSubscriptions)
+        {
+            CloseSessionAsync(context, sessionId, deleteSubscriptions)
+                .AsTask().GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Closes the specified session.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <param name="sessionId">The session identifier.</param>
+        /// <param name="deleteSubscriptions">if set to <c>true</c> subscriptions are to be deleted.</param>
+        /// <param name="cancellationToken">The cancellationToken</param>
+        public async ValueTask CloseSessionAsync(
+            OperationContext context,
+            NodeId sessionId,
+            bool deleteSubscriptions,
+            CancellationToken cancellationToken = default)
+        {
+            await NodeManager.SessionClosingAsync(context, sessionId, deleteSubscriptions, cancellationToken)
+                .ConfigureAwait(false);
+            await SubscriptionManager.SessionClosingAsync(context, sessionId, deleteSubscriptions, cancellationToken)
+                .ConfigureAwait(false);
+            await SessionManager.CloseSessionAsync(sessionId, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Deletes the specified subscription.
+        /// </summary>
+        /// <param name="subscriptionId">The subscription identifier.</param>
+        /// <param name="cancellationToken">The cancellation token</param>
+        public async ValueTask DeleteSubscriptionAsync(uint subscriptionId, CancellationToken cancellationToken = default)
+        {
+            await SubscriptionManager.DeleteSubscriptionAsync(null!, subscriptionId, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Called by any component to report a global event.
+        /// </summary>
+        /// <param name="e">The event.</param>
+        public void ReportEvent(IFilterTarget e)
+        {
+            ReportEvent(DefaultSystemContext, e);
+        }
+
+        /// <summary>
+        /// Called by any component to report a global event.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <param name="e">The event.</param>
+        public void ReportEvent(ISystemContext context, IFilterTarget e)
+        {
+            if ((!Auditing) && (e is AuditEventState))
+            {
+                // do not report auditing events if server Auditing flag is false
+                return;
+            }
+
+            ServerObject?.ReportEvent(context, e);
+        }
+
+        /// <summary>
+        /// Called by any component to asynchronously report a global event.
+        /// </summary>
+        /// <param name="e">The event.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        public ValueTask ReportEventAsync(IFilterTarget e, CancellationToken cancellationToken = default)
+        {
+            return ReportEventAsync(DefaultSystemContext, e, cancellationToken);
+        }
+
+        /// <summary>
+        /// Called by any component to asynchronously report a global event, awaiting an asynchronous
+        /// report sink so the caller is never blocked.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <param name="e">The event.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        public ValueTask ReportEventAsync(
+            ISystemContext context,
+            IFilterTarget e,
+            CancellationToken cancellationToken = default)
+        {
+            if ((!Auditing) && (e is AuditEventState))
+            {
+                // do not report auditing events if server Auditing flag is false
+                return default;
+            }
+
+            NodeState? serverObject = ServerObject;
+            if (serverObject == null)
+            {
+                return default;
+            }
+
+            return serverObject.ReportEventAsync(context, e, cancellationToken);
+        }
+
+        /// <summary>
+        /// Refreshes the conditions for the specified subscription.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <param name="subscriptionId">The subscription identifier.</param>
+        public void ConditionRefresh(OperationContext context, uint subscriptionId)
+        {
+            SubscriptionManager.ConditionRefresh(context, subscriptionId);
+        }
+
+        /// <summary>
+        /// Refreshes the conditions for the specified subscription.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <param name="subscriptionId">The subscription identifier.</param>
+        /// <param name="monitoredItemId">The monitored item identifier.</param>
+        public void ConditionRefresh2(
+            OperationContext context,
+            uint subscriptionId,
+            uint monitoredItemId)
+        {
+            SubscriptionManager.ConditionRefresh2(context, subscriptionId, monitoredItemId);
+        }
+
+        /// <summary>
+        /// Updates the server status safely.
+        /// </summary>
+        /// <param name="action">Action to perform on the server status object.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+        public void UpdateServerStatus(Action<ServerStatusValue> action)
+        {
+            if (action == null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+
+            lock (NonThreadSafeStatus.Lock)
+            {
+                action.Invoke(NonThreadSafeStatus);
+            }
+        }
+
+        /// <inheritdoc/>
+        public bool Auditing { get; private set; }
+
+        /// <inheritdoc/>
+        public ISystemContext DefaultAuditContext => DefaultSystemContext.Copy();
+
+        /// <inheritdoc/>
+        public void ReportAuditEvent(ISystemContext context, AuditEventState e)
+        {
+            if (!Auditing)
+            {
+                // do not report auditing events if server Auditing flag is false
+                return;
+            }
+
+            ReportEvent(context, e);
+        }
+
+        /// <summary>
+        /// Updates Server.ServiceLevel after the session count changes.
+        /// </summary>
+        private void OnSessionCountChanged(ISession session, SessionEventReason reason)
+        {
+            UpdateServerServiceLevel();
+        }
+
+        /// <summary>
+        /// Recomputes Server.ServiceLevel from current session-establishment headroom.
+        /// </summary>
+        private void UpdateServerServiceLevel()
+        {
+            if (ServerObject?.ServiceLevel == null || SessionManager == null)
+            {
+                return;
+            }
+
+            int currentSessionCount = SessionManager.GetSessions().Count;
+            int maxSessionCount = m_configuration.ServerConfiguration!.MaxSessionCount;
+            byte targetServiceLevel = ServerServiceLevelCalculator.CalculateTarget(
+                currentSessionCount,
+                maxSessionCount);
+
+            lock (m_serviceLevelLock)
+            {
+                byte currentServiceLevel = Convert.ToByte(
+                    ServerObject.ServiceLevel.Value,
+                    CultureInfo.InvariantCulture);
+
+                if (!ServerServiceLevelCalculator.ShouldUpdate(currentServiceLevel, targetServiceLevel))
+                {
+                    return;
+                }
+
+                ServerObject.ServiceLevel.Value = targetServiceLevel;
+                ServerObject.ServiceLevel.Timestamp = TimeProvider.GetUtcNow().UtcDateTime;
+                ServerObject.ServiceLevel.ClearChangeMasks(DefaultSystemContext, false);
+            }
+        }
+
+        /// <summary>
+        /// Creates the ServerObject and attaches it to the NodeManager.
+        /// </summary>
+        [MemberNotNull(
+            nameof(ServerObject),
+            nameof(NonThreadSafeStatus),
+            nameof(ServerDiagnostics))]
+        private async ValueTask CreateServerObjectAsync(CancellationToken cancellationToken = default)
+        {
+            // get the server object.
+            ServerObjectState serverObject = ServerObject =
+                DiagnosticsNodeManager.FindPredefinedNode<ServerObjectState>(ObjectIds.Server);
+
+            // update server capabilities.
+            ServerCapabilitiesState serverCapabilities = serverObject.ServerCapabilities!;
+            serverObject.ServiceLevel!.Value = 255;
+            serverCapabilities.LocaleIdArray!.Value = ResourceManager
+                .GetAvailableLocales();
+            serverCapabilities.ServerProfileArray!.Value =
+            [
+                .. m_configuration.ServerConfiguration!.ServerProfileArray
+            ];
+
+            BaseVariableState conformanceUnits = DiagnosticsNodeManager.FindPredefinedNode<BaseVariableState>(
+                VariableIds.Server_ServerCapabilities_ConformanceUnits);
+            conformanceUnits?.Value = Variant.From(Array.Empty<QualifiedName>().ToArrayOf());
+
+            serverCapabilities.MinSupportedSampleRate!.Value = 0;
+            serverCapabilities.MaxBrowseContinuationPoints!.Value = (ushort)
+                m_configuration.ServerConfiguration.MaxBrowseContinuationPoints;
+            serverCapabilities.MaxQueryContinuationPoints!.Value = (ushort)
+                m_configuration.ServerConfiguration.MaxQueryContinuationPoints;
+            serverCapabilities.MaxHistoryContinuationPoints!.Value = (ushort)
+                m_configuration.ServerConfiguration.MaxHistoryContinuationPoints;
+            serverCapabilities.MaxArrayLength!.Value = (uint)
+                m_configuration.TransportQuotas!.MaxArrayLength;
+            serverCapabilities.MaxStringLength!.Value = (uint)
+                m_configuration.TransportQuotas.MaxStringLength;
+            serverCapabilities.MaxByteStringLength!.Value = (uint)
+                m_configuration.TransportQuotas.MaxByteStringLength;
+            serverCapabilities.MaxSessions!.Value = (uint)
+                m_configuration.ServerConfiguration.MaxSessionCount;
+            serverCapabilities.MaxSubscriptions!.Value = (uint)
+                m_configuration.ServerConfiguration.MaxSubscriptionCount;
+
+            // Expose MaxSubscriptionsPerSession (Optional property on
+            // ServerCapabilitiesType per Part 5 §6.3) using the configured
+            // global MaxSubscriptionCount as the per-session ceiling — the
+            // SDK doesn't track per-session limits separately at this
+            // layer. The node itself is lazy-added by
+            // DiagnosticsNodeManager.LoadPredefinedNodesAsync.
+            serverCapabilities.MaxSubscriptionsPerSession!.Value = (uint)Math.Max(1,
+                m_configuration.ServerConfiguration.MaxSubscriptionCount);
+
+            // Operational-limit Properties: per Part 5 §6.3.4, any exposed
+            // operational-limit Property shall have a non-zero value.
+            // DiagnosticsNodeManager.LoadPredefinedNodesAsync lazy-adds the
+            // typed slots for every Property; here we either set the value
+            // when the configured value is non-zero, or null out the typed
+            // slot so the Property is not exposed in the address space.
+            OperationLimitsState? operationLimits = serverCapabilities.OperationLimits;
+            OperationLimits configOperationLimits = m_configuration.ServerConfiguration
+                .OperationLimits;
+            if (operationLimits != null && configOperationLimits != null)
+            {
+                operationLimits.MaxNodesPerRead = ApplyOrHide(
+                    operationLimits.MaxNodesPerRead, configOperationLimits.MaxNodesPerRead);
+                operationLimits.MaxNodesPerHistoryReadData = ApplyOrHide(
+                    operationLimits.MaxNodesPerHistoryReadData,
+                    configOperationLimits.MaxNodesPerHistoryReadData);
+                operationLimits.MaxNodesPerHistoryReadEvents = ApplyOrHide(
+                    operationLimits.MaxNodesPerHistoryReadEvents,
+                    configOperationLimits.MaxNodesPerHistoryReadEvents);
+                operationLimits.MaxNodesPerWrite = ApplyOrHide(
+                    operationLimits.MaxNodesPerWrite, configOperationLimits.MaxNodesPerWrite);
+                operationLimits.MaxNodesPerHistoryUpdateData = ApplyOrHide(
+                    operationLimits.MaxNodesPerHistoryUpdateData,
+                    configOperationLimits.MaxNodesPerHistoryUpdateData);
+                operationLimits.MaxNodesPerHistoryUpdateEvents = ApplyOrHide(
+                    operationLimits.MaxNodesPerHistoryUpdateEvents,
+                    configOperationLimits.MaxNodesPerHistoryUpdateEvents);
+                operationLimits.MaxNodesPerMethodCall = ApplyOrHide(
+                    operationLimits.MaxNodesPerMethodCall,
+                    configOperationLimits.MaxNodesPerMethodCall);
+                operationLimits.MaxNodesPerBrowse = ApplyOrHide(
+                    operationLimits.MaxNodesPerBrowse, configOperationLimits.MaxNodesPerBrowse);
+                operationLimits.MaxNodesPerRegisterNodes = ApplyOrHide(
+                    operationLimits.MaxNodesPerRegisterNodes,
+                    configOperationLimits.MaxNodesPerRegisterNodes);
+                operationLimits.MaxNodesPerTranslateBrowsePathsToNodeIds = ApplyOrHide(
+                    operationLimits.MaxNodesPerTranslateBrowsePathsToNodeIds,
+                    configOperationLimits.MaxNodesPerTranslateBrowsePathsToNodeIds);
+                operationLimits.MaxNodesPerNodeManagement = ApplyOrHide(
+                    operationLimits.MaxNodesPerNodeManagement,
+                    configOperationLimits.MaxNodesPerNodeManagement);
+                operationLimits.MaxMonitoredItemsPerCall = ApplyOrHide(
+                    operationLimits.MaxMonitoredItemsPerCall,
+                    configOperationLimits.MaxMonitoredItemsPerCall);
+            }
+
+            // setup PublishSubscribe Status State value
+            const PubSubState pubSubState = PubSubState.Disabled;
+
+            BaseVariableState default_PubSubState =
+                DiagnosticsNodeManager.FindPredefinedNode<BaseVariableState>(
+                    VariableIds.PublishSubscribe_Status_State);
+            default_PubSubState.Value = Variant.From(pubSubState);
+
+            // setup value for SupportedTransportProfiles
+            BaseVariableState default_SupportedTransportProfiles =
+                DiagnosticsNodeManager.FindPredefinedNode<BaseVariableState>(
+                    VariableIds.PublishSubscribe_SupportedTransportProfiles);
+            default_SupportedTransportProfiles.Value = "uadp";
+
+            // setup callbacks for dynamic values.
+            serverObject.NamespaceArray!.OnSimpleReadValue = OnReadNamespaceArray;
+            serverObject.NamespaceArray.MinimumSamplingInterval = 1000;
+
+            serverObject.ServerArray!.OnSimpleReadValue = OnReadServerArray;
+            serverObject.ServerArray.MinimumSamplingInterval = 1000;
+
+            // dynamic change of enabledFlag is disabled to pass CTT
+            serverObject.ServerDiagnostics!.EnabledFlag!.AccessLevel = AccessLevels.CurrentRead;
+            serverObject.ServerDiagnostics.EnabledFlag.UserAccessLevel = AccessLevels
+                .CurrentRead;
+            serverObject.ServerDiagnostics.EnabledFlag.OnSimpleReadValue
+                = OnReadDiagnosticsEnabledFlag;
+            serverObject.ServerDiagnostics.EnabledFlag.OnSimpleWriteValue
+                = OnWriteDiagnosticsEnabledFlag;
+            serverObject.ServerDiagnostics.EnabledFlag.MinimumSamplingInterval = 1000;
+
+            // initialize status.
+            DateTime nowUtc = TimeProvider.GetUtcNow().UtcDateTime;
+            var serverStatus = new ServerStatusDataType
+            {
+                StartTime = nowUtc,
+                CurrentTime = nowUtc,
+                State = ServerState.Shutdown
+            };
+
+            var buildInfo = new BuildInfo
+            {
+                ProductName = m_serverDescription.ProductName,
+                ProductUri = m_serverDescription.ProductUri,
+                ManufacturerName = m_serverDescription.ManufacturerName,
+                SoftwareVersion = m_serverDescription.SoftwareVersion,
+                BuildNumber = m_serverDescription.BuildNumber,
+                BuildDate = m_serverDescription.BuildDate
+            };
+            BuildInfoVariableState buildInfoVariableState =
+                DiagnosticsNodeManager.FindPredefinedNode<BuildInfoVariableState>(
+                    VariableIds.Server_ServerStatus_BuildInfo);
+            var buildInfoVariable = new BuildInfoVariableValue(
+                buildInfoVariableState,
+                buildInfo,
+                null!);
+            serverStatus.BuildInfo = buildInfoVariable.Value;
+
+            serverObject.ServerStatus!.MinimumSamplingInterval = 1000;
+            serverObject.ServerStatus.CurrentTime!.MinimumSamplingInterval = 1000;
+
+            NonThreadSafeStatus = new ServerStatusValue(
+                serverObject.ServerStatus,
+                serverStatus,
+                DiagnosticsLock)
+            {
+                Timestamp = nowUtc,
+                OnBeforeRead = OnReadServerStatus
+            };
+
+            // initialize diagnostics.
+            ServerDiagnostics = new ServerDiagnosticsSummaryDataType
+            {
+                ServerViewCount = 0,
+                CurrentSessionCount = 0,
+                CumulatedSessionCount = 0,
+                SecurityRejectedSessionCount = 0,
+                RejectedSessionCount = 0,
+                SessionTimeoutCount = 0,
+                SessionAbortCount = 0,
+                PublishingIntervalCount = 0,
+                CurrentSubscriptionCount = 0,
+                CumulatedSubscriptionCount = 0,
+                SecurityRejectedRequestsCount = 0,
+                RejectedRequestsCount = 0
+            };
+
+            await DiagnosticsNodeManager.CreateServerDiagnosticsAsync(
+                DefaultSystemContext,
+                ServerDiagnostics,
+                OnUpdateDiagnostics,
+                cancellationToken).ConfigureAwait(false);
+
+            // set the diagnostics enabled state.
+            await DiagnosticsNodeManager.SetDiagnosticsEnabledAsync(
+                DefaultSystemContext,
+                m_configuration.ServerConfiguration.DiagnosticsEnabled,
+                cancellationToken).ConfigureAwait(false);
+
+            var configurationNodeManager = DiagnosticsNodeManager as ConfigurationNodeManager;
+            configurationNodeManager?.CreateServerConfiguration(
+                    DefaultSystemContext,
+                m_configuration);
+
+            // Initialize history capabilities and update Server EventNotifier accordingly
+            await DiagnosticsNodeManager.UpdateServerEventNotifierAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            Auditing = m_configuration.ServerConfiguration.AuditingEnabled;
+            PropertyState<bool>? auditing = serverObject.Auditing;
+            auditing!.OnSimpleWriteValue += OnWriteAuditing;
+            auditing.OnSimpleReadValue += OnReadAuditing;
+            auditing.Value = Auditing;
+            auditing.AccessLevel = AccessLevels.CurrentRead;
+            auditing.UserAccessLevel = AccessLevels.CurrentReadOrWrite;
+            auditing.MinimumSamplingInterval = 1000;
+
+            // Wire RoleManager into the well-known role nodes per Part 18 §4.
+            // The binding upgrades RoleSet to the typed RoleSetState proxy,
+            // wires typed OnCallAsync delegates on each Role's method-state
+            // children, applies the SecurityAdmin + SignAndEncrypt
+            // authorization gate, and raises RoleMappingRuleChangedAuditEvent
+            // on every successful mutation.
+            if (DiagnosticsNodeManager is AsyncCustomNodeManager diagnosticsCustom)
+            {
+                m_roleStateBinding = RoleStateBinding.Bind(diagnosticsCustom, RoleManager, this);
+            }
+        }
+
+        /// <summary>
+        /// Per Part 5 §6.3.4, any exposed operational-limit Property shall
+        /// have a non-zero value. Returns the slot unchanged with its
+        /// <see cref="PropertyState{T}.Value"/> set when
+        /// <paramref name="value"/> is non-zero, or <c>null</c> when the
+        /// value is zero so the Property is hidden from the address space.
+        /// </summary>
+        private static PropertyState<uint>? ApplyOrHide(
+            PropertyState<uint>? slot, uint value)
+        {
+            if (slot == null)
+            {
+                return null;
+            }
+            if (value == 0)
+            {
+                return null;
+            }
+            slot.Value = value;
+            return slot;
+        }
+
+        /// <summary>
+        /// Updates the server status before a read.
+        /// </summary>
+        private void OnReadServerStatus(
+            ISystemContext context,
+            BaseVariableValue variable,
+            NodeState component)
+        {
+            lock (NonThreadSafeStatus.Lock)
+            {
+                DateTime now = TimeProvider.GetUtcNow().UtcDateTime;
+                NonThreadSafeStatus.Timestamp = now;
+                NonThreadSafeStatus.Value.CurrentTime = now;
+
+                // update other timestamps in NodeState objects which are used to derive the source timestamp
+                if (variable is ServerStatusValue serverStatusValue &&
+                    serverStatusValue.Variable is ServerStatusState serverStatusState)
+                {
+                    serverStatusState.Timestamp = now;
+                    serverStatusState.CurrentTime!.Timestamp = now;
+                    serverStatusState.State!.Timestamp = now;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns a copy of the namespace array.
+        /// </summary>
+        private ServiceResult OnReadNamespaceArray(
+            ISystemContext context,
+            NodeState node,
+            ref Variant value)
+        {
+            value = NamespaceUris.ToArrayOf();
+            return ServiceResult.Good;
+        }
+
+        /// <summary>
+        /// Returns a copy of the server array.
+        /// </summary>
+        private ServiceResult OnReadServerArray(
+            ISystemContext context,
+            NodeState node,
+            ref Variant value)
+        {
+            value = ServerUris.ToArrayOf();
+            return ServiceResult.Good;
+        }
+
+        /// <summary>
+        /// Returns Diagnostics.EnabledFlag
+        /// </summary>
+        private ServiceResult OnReadDiagnosticsEnabledFlag(
+            ISystemContext context,
+            NodeState node,
+            ref Variant value)
+        {
+            value = DiagnosticsNodeManager.DiagnosticsEnabled;
+            return ServiceResult.Good;
+        }
+
+        /// <summary>
+        /// Sets the Diagnostics.EnabledFlag
+        /// </summary>
+        private ServiceResult OnWriteDiagnosticsEnabledFlag(
+            ISystemContext context,
+            NodeState node,
+            ref Variant value)
+        {
+            bool enabled = (bool)value;
+            DiagnosticsNodeManager.SetDiagnosticsEnabledAsync(DefaultSystemContext, enabled)
+                .AsTask().GetAwaiter().GetResult();
+
+            return ServiceResult.Good;
+        }
+
+        /// <summary>
+        /// Updates the Server.Auditing flag.
+        /// </summary>
+        private ServiceResult OnWriteAuditing(
+            ISystemContext context,
+            NodeState node,
+            ref Variant value)
+        {
+            Auditing = Convert.ToBoolean(value, CultureInfo.InvariantCulture);
+            return ServiceResult.Good;
+        }
+
+        /// <summary>
+        /// Reads the Server.Auditing flag.
+        /// </summary>
+        private ServiceResult OnReadAuditing(
+            ISystemContext context,
+            NodeState node,
+            ref Variant value)
+        {
+            value = Auditing;
+            return ServiceResult.Good;
+        }
+
+        /// <summary>
+        /// Returns a copy of the current diagnostics.
+        /// </summary>
+        private ServiceResult OnUpdateDiagnostics(
+            ISystemContext context,
+            NodeState node,
+            ref Variant value)
+        {
+            lock (ServerDiagnostics)
+            {
+                value = Variant.FromStructure(ServerDiagnostics);
+            }
+
+            return ServiceResult.Good;
+        }
+
+        private readonly ServerProperties m_serverDescription;
+        private readonly ApplicationConfiguration m_configuration;
+        private readonly List<Uri> m_endpointAddresses;
+        private readonly Lock m_serviceLevelLock = new();
+        private RoleStateBinding? m_roleStateBinding;
+        private volatile IReadOnlyList<ITransportListener>? m_transportListeners;
+        private ArrayOf<EndpointDescription> m_serverEndpoints;
+    }
+}

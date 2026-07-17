@@ -192,6 +192,32 @@ this.GetRequestEntry = function ( requestEntries, requestDefinition ) {
 decodes) and **write** (CTT encodes the value, server decodes). Every failing case is a
 **multi-dimensional array**; single-dimensional and scalar cases of the same tests pass.
 
+### Run 12 Attribute Services evidence
+
+`D:\git\NewCTT2.results 12.xml` (CTT script `1.05.513`, specification `1.05.006`) contains
+exactly **96 Error nodes**:
+
+The installed scripts were inspected under
+`C:\Program Files\OPC Foundation\UA 1.05\Compliance Test Tool\ServerProjects\Standard\maintree\Attribute Services`.
+
+| Failure class | Count | Tests and interpretation |
+|---|---:|---|
+| `BadDecodingError` | 14 | Read `030`-`034`; Write Index `007`-`010`; Write Values `020`/`021`. These are the direct matrix-codec failures. |
+| `BadTypeMismatch` | 40 | 19 whole-matrix writes in each of Write Values `020` and `021`, plus one indexed write in each of Write Index `008` and `009`. The CTT payload reaches the server as the wrong value rank/type after CTT matrix construction/encoding. |
+| Write Index `010` follow-on assertions | 38 | 19 `BadIndexRangeInvalid` checks plus 19 "SourceTimestamp not set" checks. The test continues to construct/read ranges after its initial matrix `BadDecodingError`; the timestamp checks are secondary because Part 4 §5.11.2.2 only associates an Attribute Value with a successful operation result. |
+| CTT JavaScript exceptions | 4 | Attribute Read `026`/`036` reject configured `StatusCode` arrays; Read `034` indexes `Dimensions[-1]`; Write Index `007` dereferences an undefined decoded matrix. |
+
+Per-test Error-node totals are: Read `026` (1), `030` (1), `031` (1), `032` (1),
+`033` (1), `034` (2), `036` (1); Write Index `007` (2), `008` (3), `009` (3),
+`010` (39); Write Values `020` (20), `021` (21).
+
+The counts reconcile exactly: **14 + 40 + 38 + 4 = 96**. In particular, the 19 missing
+timestamp messages in Write Index `010` are not independent server timestamp defects. Part 4
+§7.27 says `Bad_IndexRangeInvalid` is reserved for invalid `NumericRange` syntax; the installed
+script continues after the preceding matrix decode failure and derives the next range from
+unusable matrix metadata. A fixed literal valid range is covered by the in-process server proof
+below.
+
 ### Why this is a CTT defect (the server is byte-exact spec-compliant)
 
 Per **OPC UA Part 6 §5.2.2.16, Table 26 (Variant Binary DataEncoding)** a multi-dimensional
@@ -232,6 +258,14 @@ symmetrically on both encode and decode (e.g. writing/expecting the `ArrayDimens
 wrong position relative to the `Value`, or an `ArrayLength`/dimensions mismatch). A server that
 is spec-compliant therefore cannot pass these cases against the current CTT codec.
 
+The repository now locks this conclusion down with non-randomized proof:
+
+- `BinaryEncoderTests.WriteVariantWithInt32MatrixMatchesPart6Table26` compares the complete
+  encoded 2x3 `Int32` Variant to the 41-byte Table 26 golden vector above.
+- `ReferenceServerTests.MatrixReadWriteAndNumericRangeAsync` writes and reads a deterministic
+  3x3 `Int32` matrix in-process, reads the valid Part 4 §7.27 range `1,0:2`, writes the matching
+  `1,1:2` slice, and verifies the updated row.
+
 ### Recommended CTT fix
 
 Align the CTT's multi-dimensional-array Variant encoder **and** decoder with Part 6 §5.2.2.16
@@ -239,6 +273,165 @@ Table 26: encode/expect `EncodingMask (bits 6+7 set) → ArrayLength → Value �
 → ArrayDimensions`, with `ArrayLength == product(ArrayDimensions)`, the value flattened
 higher-rank-first, and the dimensions listed lower-rank-first. The byte sequence above is a
 ready-made golden vector to validate the CTT codec against.
+
+### CTT script defect: Write Index `007.js` dereferences a failed matrix decode
+
+Installed script:
+`maintree/Attribute Services/Attribute Write Index/Test Cases/007.js`, lines 38-44.
+After the batch Value read reports `BadDecodingError`, line 41 calls `getMatrixValues` before
+checking `Results[i].StatusCode`; the skip message then evaluates
+`MDArrays[i].Value.Value[1].length`. Run 12 consequently records:
+
+> `Result of expression 'TC_Variables.MDArrays[i].Value.Value[1]' [undefined] is not an object`
+
+This is an unsafe error path in the test, not a second server failure. The exact script fix is:
+
+1. Check `ReadHelper.Response.Results[i].StatusCode` immediately after the read and remove/skip
+   the item before calling `getMatrixValues`.
+2. After a good result, require a defined `Dimensions` array with at least two entries and
+   `Dimensions[1] >= 2` (the test selects index 1).
+3. Report the guarded `Dimensions[1]`; never inspect `Value.Value[1]` in the failure message.
+
+This follows Part 4 §5.11.2.2: a Value is available when the per-operation StatusCode indicates
+success. It also preserves the Part 6 §5.2.2.16 requirement that a matrix dimension mismatch
+terminates decoding with `Bad_DecodingError`.
+
+### CTT script defect: Attribute Read `026.js`/`036.js` omit `StatusCode` array support
+
+Both tests iterate every configured array setting, including the `StatusCode` node for which
+`UaNodeId.GuessType(...)` returns BuiltInType Id **19**. Run 12 records the same JavaScript
+exception in both tests:
+
+> `Built in type not specified or detectable within the parameter: StatusCode (19)`
+
+There are two missing helper paths:
+
+- `026.js` line 12 calls `generateArrayWriteValue(...)` even though this is a read test.
+  `library/Base/indexRangeRelatedUtilities.js` has no `BuiltInType.StatusCode` case in either
+  `getWriteValues` or `generateArrayWriteValue`.
+- `036.js` line 24 calls `GetArrayTypeToNativeType(...)`.
+  `library/Base/UaVariantToSimpleType.js` has no `BuiltInType.StatusCode` branch.
+
+Recommended CTT changes:
+
+1. Remove the unused `item.Value.Value = generateArrayWriteValue(...)` assignment from `026.js`.
+2. For callers that do need generated StatusCode arrays, create a `UaStatusCodes`, populate it
+   with `UaStatusCode` values, and call `UaVariant.setStatusCodeArray(...)`.
+3. Add `case BuiltInType.StatusCode: returnValue = uaValue.toStatusCodeArray();` to
+   `GetArrayTypeToNativeType`.
+
+Part 6 §5.1.9 permits Variants containing arrays of any built-in type, and Part 6 §5.2.2.11
+defines `StatusCode` as a built-in UInt32 encoding. A generic array test must therefore either
+support BuiltInType 19 or explicitly exclude that configured node.
+
+### CTT script defect: Attribute Read `034.js` uses a negative dimension index after decode failure
+
+Line 40 calls `getMatrixValues` before checking the operation StatusCode. The next expression
+uses `Dimensions[Dimensions.length - 1]`; after the matrix `BadDecodingError`, the dimensions are
+empty and the CTT throws `CttInt32s: Trying to access element -1`. Check the StatusCode first,
+then require a non-empty defined `Dimensions` collection before calculating the last-dimension
+index.
+
+---
+
+## 5. HA Aggregate helper — multi-node path dereferences `possibleNodeId` without an `isDefined` guard
+
+`ServerProjects/Standard/library/ServiceBased/AttributeServiceSet/HistoryRead/HAAggregateHelper.js`,
+`PerformMultipleNodeTest` (around line 1484), raises `possibleNodeId [undefined] is not an object`
+(a JavaScript `TypeError`) roughly 100 times across the aggregate conformance units, aborting the
+affected multi-node aggregate cases.
+
+### What the test does
+
+For the multi-node aggregate cases (`configObject.Items.length > 1`) the helper walks the raw-data
+cache and, for every node referenced by a cached request entry, maps the cached position back to the
+current test's variable list:
+
+```js
+for ( var nodeIndex = 0; nodeIndex < requestEntry.Nodes.length; nodeIndex++ ) {
+    var originalItemIndex = requestEntry.Nodes[ nodeIndex ].Index;
+    var possibleNodeId = variables.Items[ originalItemIndex ];   // may be undefined
+    if ( itemLookup.Contains( possibleNodeId.NodeId.toString() ) ) {   // <-- throws here
+        ...
+    }
+}
+```
+
+`originalItemIndex` is an index that was captured against the **full** variable set when the raw-data
+cache was built, but `variables.Items` here is the **current** (potentially smaller / re-ordered)
+per-configuration subset. When the cached index has no corresponding entry in `variables.Items`,
+`possibleNodeId` is `undefined` and the immediate `possibleNodeId.NodeId.toString()` throws.
+
+### Why this is a CTT defect
+
+Every other place in the same helper that indexes `variables.Items` guards the lookup with
+`isDefined(...)` before dereferencing (e.g. the single-node path). This one call site does not, so a
+perfectly valid server address space (whose node ordering simply differs from the cache's captured
+indices) makes the script throw instead of skipping the unmatched entry. The server returns no error
+here — the failure is entirely inside the CTT script.
+
+### Recommended CTT fix
+
+Guard the dereference exactly as the sibling code paths already do:
+
+```js
+var possibleNodeId = variables.Items[ originalItemIndex ];
+if ( isDefined( possibleNodeId ) && itemLookup.Contains( possibleNodeId.NodeId.toString() ) ) {
+    ...
+}
+```
+
+Alternatively, resolve the node through `itemLookup` by the cached NodeId rather than by positional
+index, so the current-subset ordering is irrelevant.
+
+---
+
+## 6. Security User X509 — the "prevent user lockout" cleanup activation can fail an otherwise-passing negative test
+
+`ServerProjects/Standard/maintree/Security User Token/Security User X509/Test Cases/*.js` — the
+negative cases (`002`, `004`-`010`, `014`-`018`) append a second `ActivateSession` after the real
+assertion, commented `// to prevent user lockout`:
+
+```js
+// to prevent user lockout
+Test.Connect( { OpenSecureChannel: { ... }, SkipActivateSession: true } );
+ActivateSessionHelper.Execute( {
+    Session: Test.Session,
+    UserIdentityToken: UaUserIdentityToken.FromUserCredentials( { ... ctt_usrT } ),
+    UserTokenSignature: UaSignatureData.New( { ... ctt_usrT } ) } );   // no ServiceResult
+Test.Disconnect();
+```
+
+### What the test does
+
+The real assertion runs first (e.g. present an untrusted / expired / invalid user certificate and
+require a `Bad…` rejection) and passes. The suite then logs in again with the **trusted** `ctt_usrT`
+certificate purely to reset a presumed server-side account lockout, so the next negative case starts
+from a clean slate.
+
+### Why this is a CTT defect
+
+That cleanup `ActivateSessionHelper.Execute(...)` is called **without** a `ServiceResult`
+(`ExpectedAndAcceptedResults`) and **without** `SuppressErrors`. Per `library/ClassBased/UaR.js:219`,
+when no expected result is supplied and the response is `Bad`, the harness raises
+`addError("… ServiceResult is Bad: …")` and fails the enclosing test. So if that reset login returns
+anything other than `Good` — e.g. because `ctt_usrT` has not been provisioned into the server's
+trusted-user store, or because the server (correctly) does not implement lockout — the **cleanup
+step fails a test whose actual assertion already passed**. A cleanup / workaround step must never be
+able to change the verdict of the case it follows.
+
+The workaround is also questionable in principle: OPC UA does **not** require a server to implement
+authentication lockout (Part 4 ActivateSession defines only the per-token `Bad…` results), so a
+conformance test should not assume lockout exists and should not need a "reset" login at all.
+
+### Recommended CTT fix
+
+Make the cleanup non-fatal — either pass `SuppressErrors: true`, or supply
+`ServiceResult: new ExpectedAndAcceptedResults( [ StatusCode.Good, StatusCode.BadIdentityTokenRejected,
+StatusCode.BadUserAccessDenied ] )` so a non-`Good` reset does not fail the case — and gate the reset
+on the server actually advertising/implementing lockout. Better still, remove the lockout workaround
+entirely and rely on the server returning the correct per-token result for each case (lockout is not
+a conformance requirement).
 
 ---
 
@@ -364,3 +557,373 @@ model / test-script inputs (which the XML does not carry).
   above (the item `.Value` was empty for denied nodes); expected to clear once the
   server permission fix lets the initial read succeed. Re-confirm on the next CTT
   run.
+
+### Latest run (everything except security in pass 1, security in pass 2) — new findings
+
+This run was taken after the RolePermissions / conformance / X.509-signing / cert-error fixes had
+landed, so the earlier cascades are cleared and the residual clusters below are what remains.
+
+* **Security User X509 — `ActivateSession` returns `BadUserAccessDenied` for tests 005-018 (server
+  brute-force lockout, now fixed by configuration).** The first few X.509 negative cases (001-004)
+  return their expected token-specific codes, but from 005 onward **every** activation — including the
+  positive cases 011/013 that send a valid token and expect `Good` — returns
+  `BadUserAccessDenied (0x801f0000)`. A valid token cannot be access-denied by token validation, which
+  pinpoints the cause: the session manager's **brute-force lockout**
+  (`SessionManager.cs`, `MaxFailedAuthenticationAttempts`, default **5**) is keyed on the *client
+  application-instance certificate thumbprint* — which is identical for every case in the suite — and
+  **every rejected attempt counts, even the ones the CTT deliberately expects to fail**. After five
+  the client is locked out for five minutes and all remaining activations short-circuit to
+  `BadUserAccessDenied`, masking the real per-token result. The lockout is a vendor hardening feature,
+  **not** an OPC UA conformance requirement, so it is disabled for compliance testing by setting
+  `<MaxFailedAuthenticationAttempts>0</MaxFailedAuthenticationAttempts>` in
+  `Ctt.ReferenceServer.Config.xml` (production keeps the default of 5). This behaviour is proven by
+  `ClientLockoutTests.ClientIsNotLockedOutWhenLockoutDisabledAsync`. *Note for the CTT team:* because
+  a compliant server MAY implement account/endpoint lockout, a robust conformance harness should not
+  assume that a long run of intentional authentication failures leaves the client able to
+  authenticate — consider spacing the negative cases, using a distinct client instance certificate per
+  case, or tolerating a lockout status on the positive cases that follow a burst of failures.
+
+* **Security Certificate Validation — valid client certs report `BadSecurityChecksFailed` where `Good`
+  is expected (037/044/051/052): certificate-trust provisioning, not a server code defect.** The
+  specific-code surfacing for expired / wrong-usage certs is already fixed (see the Run2 note above:
+  `TcpServerChannel` now forwards `BadCertificateTimeInvalid` / `BadCertificateUseNotAllowed`). The
+  remaining cases expect `Good` for a **valid** client certificate but receive
+  `BadSecurityChecksFailed` — which is exactly the code the server (deliberately, per Part 4 §7.39
+  non-disclosure) returns for an **untrusted** certificate. That means the CTT's client certificates
+  for these cases were not present in the server's trusted store when the security pass ran. This is a
+  certificate-provisioning step in the test environment (push the CTT client certs to the server trust
+  list, or run the reference server with auto-accept for the security pass), not a server bug. Confirm
+  via a CTT loop once the CTT client certs are trusted.
+
+* **Aggregates — the dominant cluster is the server-vs-CTT value comparison and needs the CTT loop to
+  attribute.** With the earlier cascades cleared, the aggregate units now reach
+  `HAAggregateHelper.js` `PerformAggregateCheck`, which reads the aggregate from the **server**
+  (`ReadProcessedDetails`) and compares it, value by value, against the aggregate the **CTT computes
+  itself** from the raw-data cache; a mismatch is reported as *"Query did not result in identical
+  readings"* (`:1291`). The equality test (`equals`, `:2411`) requires the `StatusCode` **and** the
+  `SourceTimestamp` to match exactly (with a 0.01 numeric tolerance on the value). The reference
+  server's calculator timestamps each interval at the slice start
+  (`AggregateCalculator.GetTimestamp`, spec-correct per Part 11), and the reference server's own
+  history archive for the aggregated nodes is static (seeded, not mutated by the simulation timer), so
+  there is no obvious non-determinism. However, the results XML only carries the CTT's `addError`
+  lines — the per-value `Server Value = … / CTT Value = …` diagnostics are emitted with `print()` and
+  are **not** in the XML — so which of {status, timestamp binning, value} diverges cannot be
+  determined from the file alone. Attributing this cluster (server calculator vs CTT-bundled
+  calculator version skew vs raw-cache alignment) requires running the CTT against the current
+  reference server and capturing its live log. → **Needs the CTT loop.** (The repo's own aggregate
+  tests assert only `Good`/`Uncertain` status, not exact values, so they neither confirm nor refute a
+  value-level discrepancy.)
+
+### X509-only re-run (Security User X509, 17 errors) — after the lockout fix
+
+With the brute-force lockout disabled for compliance testing, the masking `BadUserAccessDenied` is
+gone and the real per-token results surface. Of the 17 residual errors:
+
+* **16 = user-certificate provisioning (environment, not a server or CTT-script defect).** The
+  reference server validates X509 **user** identity tokens against the `Users` trust list
+  (`TrustedUserCertificates` → `pki/trustedUser`); an untrusted user certificate is correctly rejected
+  with `BadIdentityTokenRejected` (Part 4 ActivateSession user-token validation). On the test host the
+  `pki/trustedUser` store did not even exist, so **every** X509 user certificate — including the ones
+  the positive cases (`001`, `011`, `013`) mark as trusted (`ctt_usrT`, `ctt_ca1T_usrT`,
+  `ctt_ca1I_usrT`), and the `ctt_usrT` login used by the `// to prevent user lockout` cleanup in the
+  negative cases (see §6) — was rejected. Fix (operator step): provision the CTT's **trusted** user
+  certificates into the server's trusted-user store before the run:
+  * copy the trusted user leaf/CA certificates into `%LocalApplicationData%/OPC Foundation/pki/trustedUser/certs`
+    (and any issuing CA into `%LocalApplicationData%/OPC Foundation/pki/issuerUser/certs`), leaving the
+    deliberately-untrusted `…usrU` certificates out;
+  * to make this easy, the reference server now writes every rejected X509 **user** certificate to a
+    dedicated `pki/rejectedUser` review store (sibling of `pki/trustedUser`), so after one failing run
+    an operator can simply move the legitimate `ctt_usrT` / `ctt_ca1T_usrT` / `ctt_ca1I_usrT`
+    certificates from `pki/rejectedUser/certs` into `pki/trustedUser/certs` and re-run. The negative
+    cases keep failing as required because their `…usrU` certificates stay untrusted.
+
+* **1 = genuine server bug (018), now fixed.** `securityx509_018` presents a valid user certificate but
+  builds the user-token signature with a **wrong algorithm**; the CTT accepts
+  `BadUserSignatureInvalid` / `BadIdentityTokenInvalid` / `BadIdentityTokenRejected`, but the server
+  returned the channel-level `BadSecurityChecksFailed`. Root cause:
+  `SecurityPolicies.VerifySignatureData` (shared with the secure-channel signature checks) throws
+  `BadSecurityChecksFailed` for an unexpected `SignatureData.Algorithm`, and
+  `X509IdentityTokenHandler.VerifyAsync` propagated it unchanged. Fixed by mapping that
+  algorithm-mismatch `BadSecurityChecksFailed` to the token-level `BadIdentityTokenInvalid` in the
+  user-token verification path (Part 4), leaving the shared channel-signature behaviour untouched.
+  Regression: `X509IdentityTokenHandlerTests.VerifyWithMismatchedSignatureAlgorithmYieldsBadIdentityTokenInvalid`.
+
+### Aggregates-only re-run (6016 errors) — server advertised the wrong aggregate defaults (now fixed)
+
+With the CTT console log (`ctt output.txt`) the per-value divergence became visible: the CTT reads each
+aggregate from the server (`ReadProcessed`) and compares it to the aggregate it computes itself from the
+raw data it read from the same server (the reference server's all-Good ramp). SourceTimestamps match
+exactly; the disagreement is the **quality of partial intervals**. For an interval where part of the
+window has *no data* (e.g. the first interval, before the first raw sample), the server returns a
+partial value with **`UncertainDataSubNormal`** while the CTT expects **`Bad`/`Null`**. Both set the
+`Partial` bit — they agree it is partial, they disagree on severity.
+
+* **Root cause was a server bug, now fixed — not a CTT defect.** The `Aggregate - Base 001-01` unit
+  (dominant *"Query did not result in identical readings"*) uses `UseServerCapabilitiesDefaults=TRUE`, so
+  the CTT reads the server's advertised aggregate defaults from the node's
+  `HistoricalDataConfiguration` → `AggregateConfiguration` object and computes with them. The reference
+  server *computes* with `PercentDataGood=100 / PercentDataBad=100 / TreatUncertainAsBad=true`
+  (`AggregateManager` / Part 13 v1.05.07 §4.2.1.2), under which a partial interval is **Uncertain** — but
+  `HistoricalDataConfigurationInstaller.PopulateProperties` materialised the mandatory
+  `AggregateConfiguration` child **without populating it**, leaving it at the type's all-zero defaults
+  (`PercentDataGood=0 / PercentDataBad=0 / TreatUncertainAsBad=false`). Those are not only inconsistent
+  with what the server computes with, they are an invalid `AggregateConfiguration`
+  (`PercentDataGood < 100 - PercentDataBad`). A CTT reading `0/0/false` classifies every partial
+  interval as **Bad** while the server returns **Uncertain** — the exact systematic divergence seen
+  across every aggregate and node. **Fixed** by populating the `AggregateConfiguration` object from the
+  server's defaults (`HistorianNodeCapabilities.DefaultAggregateConfiguration`, defaulting to
+  `100/100/true/false`) in the installer, so a `UseServerCapabilitiesDefaults` client now reads the same
+  configuration the server computes with. A latent client-side bug was fixed alongside:
+  `HistoryClient.GetConfigurationAsync` resolved the companion object via `HasAddIn` instead of
+  `HasHistoricalConfiguration` (Part 11 §5.2.3) and never read `AggregateConfiguration`. Regression:
+  `HistoryClientIntegrationTests.GetConfigurationReturnsHistoricalDataConfigurationAsync` (now asserts
+  the advertised `PercentDataGood/PercentDataBad=100`, `TreatUncertainAsBad=true`).
+
+* **CTT-script defects still present (documented previously):** `possibleNodeId [undefined]` (100, §5)
+  and `GetRequestEntry failed due to incorrect test configuration` (74). The latter is the CTT aborting
+  a unit when a cached raw-data request sub-entry it expects (`StartEntry` / `EndEntry` / `BadDataEntry`)
+  is missing from `Test.AggregateTestData.RawDataCache`; it reflects the CTT's own test-data cache
+  bootstrap, not a server response, and the harness should skip (`addSkipped`) rather than `throw` so a
+  single missing sub-entry does not abort the remaining aggregate cases.
+
+### Aggregates-only re-run 11 (5576 errors) — additional server bugs now fixed
+
+The aggregate-default advertisement fix reduced the total from 6016 to 5576 and changed several
+families materially (for example Count 180 → 60 and Average 90 → 36), but the new console log
+(`ctt output 2.txt`) exposed additional independent calculator and HistoryRead routing defects.
+These are **server fixes**, not CTT issues:
+
+* **Equal StartTime and EndTime returned Good instead of `BadInvalidArgument`.** The CTT Base
+  `001-01` (single node) and `002-01` (multiple nodes) cases use `StartTime == EndTime`. Part 11
+  §6.5.4.2 states that the Server shall return `Bad_InvalidArgument` because there is no meaningful
+  interpretation of the request. The server previously calculated and returned per-node Good results.
+  `HistorianDispatcher.DispatchProcessedReadAsync` now returns per-node `BadInvalidArgument` while the
+  HistoryRead service call itself succeeds, matching the CTT and Part 11. Regression coverage includes
+  multi-node routing and ensures reverse ranges are not accidentally rejected.
+
+* **Reverse processed reads fed raw values in forward order.** The dispatcher normalised the requested
+  time range but always set `HistorianReadRequest.IsForward = true`. For `StartTime > EndTime`, Part 11
+  §6.5.4.2 requires data in reverse order; the backward calculator consequently saw the wrong stream
+  order and produced `BadNoData`, 1 ms durations, and incorrect bounds. `IsForward` now follows the
+  request direction.
+
+* **Exact reverse interpolation bounds were replaced by synthesized values.** When a raw value landed
+  exactly on an interpolated boundary, the reverse slice could miss it and interpolate/extrapolate
+  instead. `AggregateCalculator.Interpolate` now preserves an exact **non-Bad** raw point (Good or
+  Uncertain) regardless of `TreatUncertainAsBad`; an exact Bad point remains excluded from interpolation
+  as required. Forward/reverse Good, Uncertain, and Bad boundary tests assert exact value, StatusCode,
+  aggregate bits, and timestamp.
+
+* **PercentGood/PercentBad ignored `TreatUncertainAsBad`.** Part 13 §5.4.3.2.1 requires Uncertain
+  regions to contribute to Good when `TreatUncertainAsBad=false`, and to Bad when it is true. The status
+  aggregate calculator previously counted only native Good/Bad regions, producing the inverted 100/0
+  versus 0/100 comparisons visible in the log. It now applies the explicit configuration.
+
+* **WorstQuality/WorstQuality2 mishandled eligible values and StatusCodes.** WorstQuality now preserves
+  the first StatusCode at the worst severity (for example `GoodClamped`, rather than collapsing it to
+  plain Good) and sets `MultipleValues` for repeated Good worst-quality values. WorstQuality2 now uses
+  the request start bound plus in-domain raw values and excludes the end bound, per Part 13
+  §5.4.3.35-.36; the excluded end bound can no longer spuriously set `MultipleValues`.
+
+* **Reverse Minimum/Maximum used the chronological lower bound to decide Raw versus Calculated.** For a
+  reverse interval the request-direction start is the later timestamp. Min/Max and Min/Max2 now compare
+  the selected raw sample to `GetTimestamp(slice)` (the returned interval timestamp), so a value at the
+  reverse interval start is marked Raw as required by Part 13 §5.4.3.10-.11. ActualTime variants retain
+  the selected sample timestamp.
+
+The fixes are covered by direct calculator and live in-memory historian Part 11/13 oracle tests for
+forward/reverse ten-interval requests, one-interval ranges, Start/End/StartBound/EndBound,
+PercentGood/Bad, WorstQuality/2, DurationInState, Min/Max/Range/TimeAverage, and equal-time multi-node
+validation. Residual CTT comparisons involving string-status aggregates, integer EndBound conversion,
+or Boolean duration calculations require the next focused CTT run before either side is classified;
+no speculative compatibility changes were made.
+
+### Alarms & Conditions re-run (152 errors) — findings from the console log (`ctt output 1.txt`)
+
+* **`After Acknowledge Retain in invalid state` (42): server Retain logic is spec-correct; the failures
+  reflect outstanding condition *branches*.** The console log shows
+  `ValidateRetain failed retain=true, ActiveState=false, AckedState=true, ConfirmedState=Confirmed`.
+  The core `GetRetainState` chain (`AlarmConditionState.cs:338`, `AcknowledgeableConditionState.cs:548`,
+  `ConditionState.cs:329`) returns `false` for an inactive, acknowledged **and** confirmed condition
+  *when it has no retaining branches* — and `OnConfirmCalled`/`OnAcknowledgeCalled` call
+  `UpdateRetainState()` **before** `ReportStateChange`, so the reported event carries the post-transition
+  Retain. A `Retain=true` in that state therefore means an outstanding **branch** is still retained
+  (Part 9 §5.8.2 / §5.7.3: when an active alarm returns to inactive before being acknowledged, the
+  Server creates a branch to track the acknowledgement of that prior active occurrence, and the main
+  Condition retains while any branch retains). The CTT's `AlarmCollector::ValidateRetain` evaluates only
+  the current (main) event's `ActiveState`/`AckedState`/`ConfirmedState` and does not account for a
+  branch whose own event has not yet been acknowledged/confirmed, so it flags a spec-correct
+  `Retain=true` as invalid. **Recommended CTT fix:** before asserting `Retain=false`, verify there is no
+  outstanding branch (e.g. acknowledge/confirm every `ConditionBranchId != null` event first, or treat
+  `Retain=true` as valid while any branch event is unacknowledged).
+
+* **`Error validating variables for state ConditionDisabled` (60) and `Unable to read input node`
+  (42):** these need a live A&C loop to attribute conclusively; the console log shows the disabling
+  transition (`Disabling alarm … / Disabled State ConditionDisabled`) and the input-node read
+  (`Test_004.js:43`) failing at the **service** level (`readResult` falsy). Verify the reference
+  server's alarm source variable (`ns=7;s=Alarms.AnalogSource`, `samples/Quickstarts.Servers/Alarms/
+  AlarmNodeManager.cs`) is readable and that the disabled-condition event fields match Part 9 §5.5.2.
+  Not pinned to a concrete server defect from the log alone.
+
+### AliasName re-run (12 errors) — reference server is FindAlias-only; one CTT-script defect
+
+* **The reference server serves aliases via `FindAlias` (store) but does not materialise browsable
+  `AliasNameType` instance nodes under the categories.** `ReferenceServer.ConfigureAliasNameStore`
+  registers an `InMemoryAliasNameStore` and seeds tag/topic aliases (`TICN_Setpoint`, `FICN_Flow`,
+  `ServerEvents`, `AuditEvents`, …), so `FindAlias`/`FindAliasVerbose` return them (Part 17 §6.3.2, the
+  scalable mechanism intended for large alias sets). The CTT conformance units *AliasName Category Tags
+  / Topics / Hierarchy* instead **browse** each category (recursively, via `HierarchicalReferences`) for
+  `AliasNameType` instance nodes (`GetAliasNamesFromCategories`) and then assert every `FindAlias`
+  result corresponds to a browsed instance — producing `No instance of AliasNameType found under
+  TagVariables/Topics` and `… AliasName (…) is not part of the current category`. Whether this is a
+  server gap or a CTT over-restriction depends on the claimed Part 17 profile: if the server advertises
+  only *Base/FindAlias* support, `FindAlias`-only with no per-alias instance nodes is compliant and the
+  CTT should not require browsable instances; if the *Category/Hierarchy* browse profile is claimed, the
+  reference server must additionally materialise an `AliasNameType` instance node per alias under its
+  category. **Recommended:** either (server) expose `AliasNameType` instances for the seeded aliases, or
+  (CTT) gate the "returned alias must be a browsed instance" assertion on the server advertising the
+  browsable-instance profile rather than on `FindAlias` returning results.
+
+* **CTT-script defect — `AliasName Hierarchy/002.js:80` references an undefined variable.** After the
+  per-alias loop the success branch reads `TC_Variables.ListOfNodes.length`, but `ListOfNodes` is never
+  assigned in this test (the results were stored in `TC_Variables.OutputArguments`), raising
+  `Result of expression 'TC_Variables.ListOfNodes' [undefined] is not an object`. **Recommended CTT
+  fix:** use `TC_Variables.OutputArguments.length` (the array actually populated at line 37), or track a
+  running count of returned aliases.
+
+## 7. Aggregate `Err-004.js` creates an unintended equal-time request when ProcessingInterval is blank
+
+**Tests:** every Aggregate Conformance Unit reuses
+`maintree/Aggregates/Aggregate - Base/Test Cases/Err-004.js`.
+
+**Observed in run 14:** 552 errors:
+
+- 276 generic `HistoryRead.js` / `assertions.js` errors reporting per-node
+  `BadInvalidArgument`;
+- 276 explicit `HAAggregateHelper.js:1764` errors rejecting the same
+  `BadInvalidArgument`.
+
+The normal Base `001-01` / `002-01` comparisons correctly accept this response (the console log
+contains hundreds of `Server and CTT have status codes of BadInvalidArgument` confirmations).
+Only `Err-004.js` rejects it.
+
+### Why this is a CTT/configuration defect
+
+`Err-004.js:25` calls `PerformExpectedErrorTest`. The helper constructs the request range from the
+configured Aggregate `ProcessingInterval`, but the run's CTT configuration leaves that setting blank.
+JavaScript coerces the blank value multiplied by ten to zero, so the helper sends
+`StartTime == EndTime`.
+
+OPC UA Part 11 §6.5.4.2 is explicit: when `StartTime` and `EndTime` are equal, the Server shall
+return `Bad_InvalidArgument` because the request has no meaningful processed time domain. Per Part 4
+§5.11.3.2, this is the per-node operation result while the HistoryRead ServiceResult remains Good.
+The reference server therefore returns the required result; the error test accidentally combines its
+intended invalid condition with a second invalid condition and then rejects the mandated status.
+
+### Recommended CTT fix
+
+Validate the setting before building the request in `HAAggregateHelper.js`:
+
+```js
+var interval = parseInt(
+    Settings.ServerTest.NodeIds.Static.HAProfile.Aggregates.ProcessingInterval);
+if (isNaN(interval) || interval <= 0) {
+    interval = 1;
+}
+```
+
+Alternatively, skip the test with a clear configuration error when a positive interval is missing.
+Apply the same guard to `PerformMismatchTest`. The immediate configuration workaround is to set
+Aggregate `ProcessingInterval` to a positive value.
+
+## 8. Historical Access Read Raw scripts contain independent result-validation defects
+
+Run 15 exposed five CTT script defects alongside genuine server raw-history defects (the server
+ordering/bounds/paging/continuation fixes are described below).
+
+### `004.js` rejects correct reverse ordering
+
+At lines 78, 91, and 105 the test uses:
+
+```js
+if (OPCF.HA.Analysis.Date.FlowsBackward(...)) result = false;
+```
+
+Those branches are specifically validating reverse reads, so `FlowsBackward(...) == true` is success,
+not failure. Replace each predicate with:
+
+```js
+if (!OPCF.HA.Analysis.Date.FlowsBackward(...)) result = false;
+```
+
+Part 11 §6.5.3.2 requires raw values to be returned in the direction implied by StartTime/EndTime.
+
+### `014.js` indexes a nonexistent second node result
+
+The test requests one node but lines 46 and 78 inspect `Response.Results[1]`. The intended check is the
+second returned `DataValue` for the first node. Validate
+`haItems[0].Value[1].StatusCode` (with length guards) and describe it as record 2, not result 2.
+
+### `019.js` bypasses the CTT test harness
+
+The script invokes `readraw019()` directly while the normal `Test.Execute` wrapper is commented out.
+Use:
+
+```js
+Test.Execute({ Procedure: readraw019 });
+```
+
+This ensures exceptions, result accounting, setup, and cleanup follow the same path as the other
+Historical Access cases.
+
+### `Err-013.js` describes an operation error as a ServiceResult
+
+Reusing a consumed ContinuationPoint shall produce per-node
+`BadContinuationPointInvalid`; the HistoryRead ServiceResult remains Good. Update the message to:
+
+> HistoryRead test #3 expected a Good ServiceResult and
+> `Results[0].StatusCode` `BadContinuationPointInvalid`.
+
+This matches Part 11 §6.3 and Part 4 §5.11.3.2.
+
+### `Err-019.js` uses an undefined loop variable in error messages
+
+Lines 25 and 43 interpolate undeclared `i`. Use literal test numbers `#1` and `#2` (or define a
+proper case index) so a failed assertion reports the actual case instead of throwing another
+JavaScript error.
+
+### Aggregate run 14 residual value findings (not additional server fixes)
+
+Focused direct-calculator and live-historian Part 13 oracle tests reproduce the reference server's
+actual seed data: an all-Good linear ramp (`value = sample index`, 10 s spacing). They establish:
+
+- Float/Double sloped Interpolative, StartBound, and EndBound results match the Part 13 linear oracle.
+- Int32 interpolation differs from the CTT by exactly one where the mathematical value is fractional:
+  the stack converts with `Convert.ToInt32` (round-to-nearest, unchanged from 1.5.378), while the CTT
+  truncates. Part 13 §5.4.3.2.2 does not mandate integer truncation, so the CTT must not require that
+  conversion convention; compare the mathematical result using the source type's documented rounding
+  policy or accept either conforming conversion.
+- DurationGood/Bad, PercentGood/Bad, WorstQuality2, and DurationInState results over the configured
+  reference data are necessarily all-Good/full-duration. The CTT log warns that no start of Bad data
+  is configured but still compares against an oracle that assumes a Bad-data region. Configure the
+  required Bad/Uncertain test region before running those cases, or skip them when the prerequisite is
+  absent.
+- Small TimeAverage/Total/NumberOfTransitions boundary-convention deltas remain unclassified. No CTT
+  issue or server compatibility change is claimed without a normative oracle.
+
+### Historical Access run 15 server defects now fixed
+
+The server fixes (not CTT issues) cover:
+
+- correct start-only forward and end-only reverse reads;
+- exact equal-time raw reads;
+- exact versus outside bounding values, including synthetic `BadBoundNotFound` FIRST/LAST values at
+  the requested timestamps;
+- bounds counting toward `NumValuesPerNode` and continuation-point paging of a trailing bound;
+- no residual ContinuationPoint for a completed open-ended N-value request;
+- fresh single-use ContinuationPoint identifiers after every resume;
+- `BadInvalidArgument` for modified reads with `ReturnBounds=true`;
+- exclusion of synthetic `BadBoundNotFound` protocol markers from AtTime interpolation input.
+
+These behaviors are covered by historian provider/dispatcher and end-to-end tests on net10 and net48.
+

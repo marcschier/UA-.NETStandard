@@ -1,0 +1,740 @@
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Opc.Ua;
+using Opc.Ua.Server;
+using Opc.Ua.Server.Historian;
+using Quickstarts.Servers;
+
+namespace TestData
+{
+    /// <summary>
+    /// The node manager factory for test data.
+    /// </summary>
+    public class TestDataNodeManagerFactory : IAsyncNodeManagerFactory
+    {
+        /// <inheritdoc/>
+        public ValueTask<IAsyncNodeManager> CreateAsync(
+            IServerInternal server,
+            ApplicationConfiguration configuration,
+            CancellationToken cancellationToken = default)
+        {
+#pragma warning disable CA2000 // ownership of TestDataNodeManager transfers to the caller via the returned ValueTask<IAsyncNodeManager>
+            return new ValueTask<IAsyncNodeManager>(
+                new TestDataNodeManager(server, configuration, [.. NamespacesUris]));
+#pragma warning restore CA2000
+        }
+
+        /// <inheritdoc/>
+        public ArrayOf<string> NamespacesUris
+            => [Namespaces.TestData, Namespaces.TestData + "Instance"];
+    }
+
+    /// <summary>
+    /// A node manager for a variety of test data.
+    /// </summary>
+    public class TestDataNodeManager : AsyncCustomNodeManager, ITestDataSystemCallback
+    {
+        /// <summary>
+        /// Initializes the node manager.
+        /// </summary>
+        public TestDataNodeManager(
+            IServerInternal server,
+            ApplicationConfiguration configuration,
+            string[] namespaceUris)
+            : base(server, configuration, server.Telemetry.CreateLogger<TestDataNodeManager>())
+        {
+            // update the namespaces.
+            NamespaceUris = namespaceUris;
+
+            Server.Factory.Builder.AddTestData().Commit();
+
+            // get the configuration for the node manager.
+            m_configuration =
+                configuration.ParseExtension<TestDataNodeManagerConfiguration>()
+                ?? new TestDataNodeManagerConfiguration();
+
+            // use suitable defaults if no configuration exists.
+
+            m_lastUsedId = m_configuration.NextUnusedId - 1;
+
+            // create the object used to access the test system.
+            m_system = new TestDataSystem(
+                this,
+                server.NamespaceUris,
+                server.ServerUris,
+                server.Telemetry,
+                (server as ITimeProviderProvider)?.TimeProvider);
+
+            // update the default context.
+            SystemContext.SystemHandle = m_system;
+        }
+
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+#if CONDITION_SAMPLES
+                m_systemStatusTimer?.Dispose();
+                m_systemStatusCondition?.Dispose();
+                m_dialog?.Dispose();
+
+                m_systemStatusTimer = null;
+                m_systemStatusCondition = null;
+                m_dialog = null;
+#endif
+                (m_dataStaticStructureScalarStructure as IDisposable)?.Dispose();
+                (m_dataDynamicStructureScalarStructure as IDisposable)?.Dispose();
+                (m_dataStaticStructureVectorStructure as IDisposable)?.Dispose();
+                (m_dataDynamicStructureVectorStructure as IDisposable)?.Dispose();
+                (m_dataStaticVectorScalarValue as IDisposable)?.Dispose();
+                (m_dataDynamicVectorScalarValue as IDisposable)?.Dispose();
+
+                m_dataStaticStructureScalarStructure = null;
+                m_dataDynamicStructureScalarStructure = null;
+                m_dataStaticStructureVectorStructure = null;
+                m_dataDynamicStructureVectorStructure = null;
+                m_dataStaticVectorScalarValue = null;
+                m_dataDynamicVectorScalarValue = null;
+            }
+            base.Dispose(disposing);
+        }
+
+        /// <summary>
+        /// Updates the variable after receiving a notification that it has changed in the underlying system.
+        /// </summary>
+        public void OnDataChange(
+            BaseVariableState variable,
+            Variant value,
+            StatusCode statusCode,
+            DateTime timestamp)
+        {
+            lock (m_lock)
+            {
+                variable.Value = value;
+                variable.StatusCode = statusCode;
+                variable.Timestamp = timestamp;
+
+                // notifies any monitored items that the value has changed.
+                variable.ClearChangeMasks(SystemContext, false);
+            }
+        }
+
+        /// <summary>
+        /// Generates values for variables with properties.
+        /// </summary>
+        public void OnGenerateValues(BaseVariableState variable)
+        {
+            lock (m_lock)
+            {
+                if (variable is ITestDataSystemValuesGenerator generator)
+                {
+                    generator.OnGenerateValues(SystemContext);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates the NodeId for the specified node.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <param name="node">The node.</param>
+        /// <returns>The new NodeId.</returns>
+        public override NodeId New(ISystemContext context, NodeState node)
+        {
+            uint id = Opc.Ua.Utils.IncrementIdentifier(ref m_lastUsedId);
+            return new NodeId(id, m_namespaceIndex);
+        }
+
+        /// <summary>
+        /// Does any initialization required before the address space can be used.
+        /// </summary>
+        /// <remarks>
+        /// The externalReferences is an out parameter that allows the node manager to link to nodes
+        /// in other node managers. For example, the 'Objects' node is managed by the CoreNodeManager and
+        /// should have a reference to the root folder node(s) exposed by this node manager.
+        /// </remarks>
+        public override async ValueTask CreateAddressSpaceAsync(
+            IDictionary<NodeId, IList<IReference>> externalReferences,
+            CancellationToken cancellationToken = default)
+        {
+            // ensure the namespace used by the node manager is in the server's namespace table.
+            m_typeNamespaceIndex = Server.NamespaceUris.GetIndexOrAppend(Namespaces.TestData);
+            m_namespaceIndex = Server.NamespaceUris
+                .GetIndexOrAppend(Namespaces.TestData + "Instance");
+
+            await base.CreateAddressSpaceAsync(externalReferences, cancellationToken).ConfigureAwait(false);
+
+#if CONDITION_SAMPLES
+            // start monitoring the system status.
+            m_systemStatusCondition = FindPredefinedNode<TestSystemConditionState>(
+                new NodeId(Objects.Data_Conditions_SystemStatus, m_typeNamespaceIndex));
+
+            if (m_systemStatusCondition != null)
+            {
+                m_systemStatusTimer?.Dispose();
+                m_systemStatusTimer = new Timer(OnCheckSystemStatus, null, 5000, 5000);
+                m_systemStatusCondition.Retain.Value = true;
+            }
+#endif
+            // link all conditions to the conditions folder.
+            NodeState? conditionsFolder = FindPredefinedNode<NodeState>(
+                new NodeId(Objects.Data_Conditions, m_typeNamespaceIndex));
+
+            foreach (NodeState node in PredefinedNodes.Values)
+            {
+                if (node is ConditionState condition &&
+                    !ReferenceEquals(condition.Parent, conditionsFolder))
+                {
+                    condition.AddNotifier(SystemContext, default, true, conditionsFolder);
+                    conditionsFolder!.AddNotifier(SystemContext, default, false, condition);
+                }
+            }
+
+            // enable history for all numeric scalar values.
+            ScalarValueObjectState? scalarValues = FindPredefinedNode<ScalarValueObjectState>(
+                new NodeId(Objects.Data_Dynamic_Scalar, m_typeNamespaceIndex));
+
+            BaseDataVariableState<int> int32Value = scalarValues!.Int32Value!;
+            int32Value.Historizing = true;
+            int32Value.AccessLevel = (byte)(
+                int32Value.AccessLevel | AccessLevels.HistoryRead);
+
+            m_system.EnableHistoryArchiving(SystemContext, int32Value);
+
+            // Initialize Root Variable for structures with variables
+            {
+                ScalarStructureVariableState variable
+                    = FindTypeState<ScalarStructureVariableState>(
+                    Variables.Data_Static_Structure_ScalarStructure)!;
+                m_dataStaticStructureScalarStructure = new ScalarStructureVariableValue(
+                    variable,
+                    m_system.GetRandomScalarStructureDataType(),
+                    null!);
+            }
+            {
+                ScalarStructureVariableState variable
+                    = FindTypeState<ScalarStructureVariableState>(
+                    Variables.Data_Dynamic_Structure_ScalarStructure)!;
+                m_dataDynamicStructureScalarStructure = new ScalarStructureVariableValue(
+                    variable,
+                    m_system.GetRandomScalarStructureDataType(),
+                    null!);
+            }
+            {
+                VectorVariableState variable = FindTypeState<VectorVariableState>(
+                    Variables.Data_Static_Structure_VectorStructure)!;
+                m_dataStaticStructureVectorStructure = new VectorVariableValue(
+                    variable,
+                    m_system.GetRandomVector(),
+                    null!);
+            }
+            {
+                VectorVariableState variable = FindTypeState<VectorVariableState>(
+                    Variables.Data_Dynamic_Structure_VectorStructure)!;
+                m_dataDynamicStructureVectorStructure = new VectorVariableValue(
+                    variable,
+                    m_system.GetRandomVector(),
+                    null!);
+            }
+            {
+                VectorVariableState variable = FindTypeState<VectorVariableState>(
+                    Variables.Data_Static_Scalar_VectorValue)!;
+                m_dataStaticVectorScalarValue = new VectorVariableValue(
+                    variable,
+                    m_system.GetRandomVector(),
+                    null!);
+            }
+            {
+                VectorVariableState variable = FindTypeState<VectorVariableState>(
+                    Variables.Data_Dynamic_Scalar_VectorValue)!;
+                m_dataDynamicVectorScalarValue = new VectorVariableValue(
+                    variable,
+                    m_system.GetRandomVector(),
+                    null!);
+            }
+        }
+
+        /// <summary>
+        /// Loads a node set from a file or resource and adds them to the set of predefined nodes.
+        /// </summary>
+        protected override ValueTask<NodeStateCollection> LoadPredefinedNodesAsync(ISystemContext context,
+            CancellationToken cancellationToken = default)
+        {
+            return new ValueTask<NodeStateCollection>(new NodeStateCollection().AddTestData(context));
+        }
+
+        /// <summary>
+        /// Routes HistoryRead / HistoryUpdate dispatch to the in-memory
+        /// historian owned by <see cref="TestDataSystem"/>. Without this
+        /// override the dispatcher's resolution falls through to the
+        /// server-wide registry — and TestData deliberately keeps its
+        /// archive private so it does not compete with other node
+        /// managers (e.g. ReferenceNodeManager) that may also register
+        /// a default provider in the same process.
+        /// </summary>
+        protected override IHistorianProvider? GetHistorianProvider(NodeState node)
+        {
+            return m_system.Historian;
+        }
+
+        /// <summary>
+        /// Replaces the generic node with a node specific to the model.
+        /// </summary>
+        protected override ValueTask<NodeState> AddBehaviourToPredefinedNodeAsync(
+            ISystemContext context,
+            NodeState predefinedNode,
+            CancellationToken cancellationToken = default)
+        {
+            if (predefinedNode is BaseObjectState passiveNode)
+            {
+                NodeId typeId = passiveNode.TypeDefinitionId;
+
+                if (!IsNodeIdInNamespace(typeId) || !typeId.TryGetValue(out uint typeIdNumeric))
+                {
+                    return new ValueTask<NodeState>(predefinedNode);
+                }
+
+                switch (typeIdNumeric)
+                {
+                    case ObjectTypes.TestSystemConditionType:
+                    {
+                        if (passiveNode is not TestSystemConditionState activeNode)
+                        {
+                            activeNode = new TestSystemConditionState(passiveNode.Parent);
+                            activeNode.Create(context, passiveNode);
+
+                            passiveNode.Parent?.ReplaceChild(context, activeNode);
+                        }
+                        return new ValueTask<NodeState>(activeNode);
+                    }
+                    case ObjectTypes.ScalarValueObjectType:
+                    {
+                        if (passiveNode is not ScalarValueObjectState activeNode)
+                        {
+                            activeNode = new ScalarValueObjectState(passiveNode.Parent);
+                            activeNode.Create(context, passiveNode);
+
+                            passiveNode.Parent?.ReplaceChild(context, activeNode);
+                        }
+                        return new ValueTask<NodeState>(activeNode);
+                    }
+                    case ObjectTypes.StructureValueObjectType:
+                    {
+                        if (passiveNode is not StructureValueObjectState activeNode)
+                        {
+                            activeNode = new StructureValueObjectState(passiveNode.Parent);
+                            activeNode.Create(context, passiveNode);
+
+                            passiveNode.Parent?.ReplaceChild(context, activeNode);
+                        }
+                        return new ValueTask<NodeState>(activeNode);
+                    }
+                    case ObjectTypes.AnalogScalarValueObjectType:
+                    {
+                        if (passiveNode is not AnalogScalarValueObjectState activeNode)
+                        {
+                            activeNode = new AnalogScalarValueObjectState(passiveNode.Parent);
+                            activeNode.Create(context, passiveNode);
+
+                            passiveNode.Parent?.ReplaceChild(context, activeNode);
+                        }
+                        return new ValueTask<NodeState>(activeNode);
+                    }
+                    case ObjectTypes.ArrayValueObjectType:
+                    {
+                        if (passiveNode is not ArrayValueObjectState activeNode)
+                        {
+                            activeNode = new ArrayValueObjectState(passiveNode.Parent);
+                            activeNode.Create(context, passiveNode);
+
+                            passiveNode.Parent?.ReplaceChild(context, activeNode);
+                        }
+                        return new ValueTask<NodeState>(activeNode);
+                    }
+                    case ObjectTypes.AnalogArrayValueObjectType:
+                    {
+                        if (passiveNode is not AnalogArrayValueObjectState activeNode)
+                        {
+                            activeNode = new AnalogArrayValueObjectState(passiveNode.Parent);
+                            activeNode.Create(context, passiveNode);
+
+                            passiveNode.Parent?.ReplaceChild(context, activeNode);
+                        }
+                        return new ValueTask<NodeState>(activeNode);
+                    }
+                    case ObjectTypes.UserScalarValueObjectType:
+                    {
+                        if (passiveNode is not UserScalarValueObjectState activeNode)
+                        {
+                            activeNode = new UserScalarValueObjectState(passiveNode.Parent);
+                            activeNode.Create(context, passiveNode);
+
+                            passiveNode.Parent?.ReplaceChild(context, activeNode);
+                        }
+                        return new ValueTask<NodeState>(activeNode);
+                    }
+                    case ObjectTypes.UserArrayValueObjectType:
+                    {
+                        if (passiveNode is not UserArrayValueObjectState activeNode)
+                        {
+                            activeNode = new UserArrayValueObjectState(passiveNode.Parent);
+                            activeNode.Create(context, passiveNode);
+
+                            passiveNode.Parent?.ReplaceChild(context, activeNode);
+                        }
+                        return new ValueTask<NodeState>(activeNode);
+                    }
+                    case ObjectTypes.MethodTestType:
+                    {
+                        if (passiveNode is not MethodTestState activeNode)
+                        {
+                            activeNode = new MethodTestState(passiveNode.Parent);
+                            activeNode.Create(context, passiveNode);
+
+                            passiveNode.Parent?.ReplaceChild(context, activeNode);
+                        }
+                        return new ValueTask<NodeState>(activeNode);
+                    }
+                }
+            }
+            else if (predefinedNode is BaseVariableState variableNode)
+            {
+                NodeId typeId = variableNode.TypeDefinitionId;
+
+                if (!IsNodeIdInNamespace(typeId) || !typeId.TryGetValue(out uint typeIdNumeric))
+                {
+                    return new ValueTask<NodeState>(predefinedNode);
+                }
+
+                switch (typeIdNumeric)
+                {
+                    case VariableTypes.ScalarStructureVariableType:
+                    {
+                        if (variableNode is not ScalarStructureVariableState activeNode)
+                        {
+                            activeNode = new ScalarStructureVariableState(variableNode.Parent);
+                            activeNode.Create(context, variableNode);
+
+                            variableNode.Parent?.ReplaceChild(context, activeNode);
+                        }
+                        return new ValueTask<NodeState>(activeNode);
+                    }
+                    case VariableTypes.VectorVariableType:
+                    {
+                        if (variableNode is not VectorVariableState activeNode)
+                        {
+                            activeNode = new VectorVariableState(variableNode.Parent);
+                            activeNode.Create(context, variableNode);
+
+                            variableNode.Parent?.ReplaceChild(context, activeNode);
+                        }
+                        return new ValueTask<NodeState>(activeNode);
+                    }
+                }
+            }
+            return new ValueTask<NodeState>(predefinedNode);
+        }
+
+        /// <summary>
+        /// Returns true if the system must be scanning to provide updates for the monitored item.
+        /// </summary>
+        private static bool SystemScanRequired(
+            MonitoredNode2 monitoredNode,
+            IDataChangeMonitoredItem2 monitoredItem)
+        {
+            // ingore other types of monitored items.
+            if (monitoredItem == null)
+            {
+                return false;
+            }
+
+            // only care about variables and properties.
+            if (monitoredNode.Node is not BaseVariableState source)
+            {
+                return false;
+            }
+
+            // check for variables that need to be scanned.
+            if (monitoredItem.AttributeId == Attributes.Value)
+            {
+                if (source.Parent is TestDataObjectState test && test.SimulationActive!.Value)
+                {
+                    return true;
+                }
+
+                var sourcesource = source.Parent as BaseVariableState;
+                if (sourcesource?.Parent is TestDataObjectState testtest &&
+                    testtest.SimulationActive!.Value)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Called after creating a MonitoredItem.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <param name="handle">The handle for the node.</param>
+        /// <param name="monitoredItem">The monitored item.</param>
+        protected override void OnMonitoredItemCreated(
+            ServerSystemContext context,
+            NodeHandle handle,
+            ISampledDataChangeMonitoredItem monitoredItem)
+        {
+            if (SystemScanRequired(handle.MonitoredNode, monitoredItem) &&
+                monitoredItem.MonitoringMode != MonitoringMode.Disabled &&
+                handle.Node is BaseVariableState variable)
+            {
+                m_system.StartMonitoringValue(
+                    monitoredItem.Id,
+                    monitoredItem.SamplingInterval,
+                    variable);
+            }
+        }
+
+        /// <summary>
+        /// Called after modifying a MonitoredItem.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <param name="handle">The handle for the node.</param>
+        /// <param name="monitoredItem">The monitored item.</param>
+        protected override ValueTask OnMonitoredItemModifiedAsync(
+            ServerSystemContext context,
+            NodeHandle handle,
+            ISampledDataChangeMonitoredItem monitoredItem,
+            CancellationToken cancellationToken = default)
+        {
+            if (SystemScanRequired(handle.MonitoredNode, monitoredItem) &&
+                monitoredItem.MonitoringMode != MonitoringMode.Disabled)
+            {
+                var source = handle.Node as BaseVariableState;
+                m_system.StopMonitoringValue(monitoredItem.Id);
+                m_system.StartMonitoringValue(
+                    monitoredItem.Id,
+                    monitoredItem.SamplingInterval,
+                    source!);
+            }
+
+            return default;
+        }
+
+        /// <summary>
+        /// Called after deleting a MonitoredItem.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <param name="handle">The handle for the node.</param>
+        /// <param name="monitoredItem">The monitored item.</param>
+        protected override ValueTask OnMonitoredItemDeletedAsync(
+            ServerSystemContext context,
+            NodeHandle handle,
+            ISampledDataChangeMonitoredItem monitoredItem,
+            CancellationToken cancellationToken = default)
+        {
+            // check for variables that need to be scanned.
+            if (SystemScanRequired(handle.MonitoredNode, monitoredItem))
+            {
+                m_system.StopMonitoringValue(monitoredItem.Id);
+            }
+
+            return default;
+        }
+
+        /// <summary>
+        /// Called after changing the MonitoringMode for a MonitoredItem.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <param name="handle">The handle for the node.</param>
+        /// <param name="monitoredItem">The monitored item.</param>
+        /// <param name="previousMode">The previous monitoring mode.</param>
+        /// <param name="monitoringMode">The current monitoring mode.</param>
+        protected override ValueTask OnMonitoringModeChangedAsync(
+            ServerSystemContext context,
+            NodeHandle handle,
+            ISampledDataChangeMonitoredItem monitoredItem,
+            MonitoringMode previousMode,
+            MonitoringMode monitoringMode,
+            CancellationToken cancellationToken = default)
+        {
+            if (SystemScanRequired(handle.MonitoredNode, monitoredItem))
+            {
+                var source = handle.Node as BaseVariableState;
+
+                if (previousMode != MonitoringMode.Disabled &&
+                    monitoredItem.MonitoringMode == MonitoringMode.Disabled)
+                {
+                    m_system.StopMonitoringValue(monitoredItem.Id);
+                }
+
+                if (previousMode == MonitoringMode.Disabled &&
+                    monitoredItem.MonitoringMode != MonitoringMode.Disabled)
+                {
+                    m_system.StartMonitoringValue(
+                        monitoredItem.Id,
+                        monitoredItem.SamplingInterval,
+                        source!);
+                }
+            }
+
+            return default;
+        }
+
+        private TS? FindTypeState<TS>(uint nodeId)
+            where TS : NodeState
+        {
+            var expandedNodeId = new ExpandedNodeId(nodeId, Namespaces.TestData);
+            return FindPredefinedNode<TS>(
+                ExpandedNodeId.ToNodeId(expandedNodeId, Server.NamespaceUris));
+        }
+
+#if CONDITION_SAMPLES
+        /// <summary>
+        /// Peridically checks the system state.
+        /// </summary>
+        private void OnCheckSystemStatus(object state)
+        {
+            lock (m_lock)
+            {
+                try
+                {
+                    // create the dialog.
+                    if (m_dialog == null)
+                    {
+                        m_dialog = new DialogConditionState(null);
+
+                        CreateNode(
+                            SystemContext,
+                            ExpandedNodeId.ToNodeId(ObjectIds.Data_Conditions, SystemContext.NamespaceUris),
+                            ReferenceTypeIds.HasComponent,
+                            new QualifiedName("ResetSystemDialog", m_namespaceIndex),
+                            m_dialog);
+
+                        m_dialog.OnAfterResponse = OnDialogComplete;
+                    }
+
+                    StatusCode systemStatus = m_system.SystemStatus;
+                    m_systemStatusCondition.UpdateStatus(systemStatus);
+
+                    // cycle through different status codes in order to simulate a real system.
+                    if (StatusCode.IsGood(systemStatus))
+                    {
+                        m_systemStatusCondition.UpdateSeverity((ushort)EventSeverity.Low);
+                        m_system.SystemStatus = StatusCodes.Uncertain;
+                    }
+                    else if (StatusCode.IsUncertain(systemStatus))
+                    {
+                        m_systemStatusCondition.UpdateSeverity((ushort)EventSeverity.Medium);
+                        m_system.SystemStatus = StatusCodes.Bad;
+                    }
+                    else
+                    {
+                        m_systemStatusCondition.UpdateSeverity((ushort)EventSeverity.High);
+                        m_system.SystemStatus = StatusCodes.Good;
+                    }
+
+                    // request a reset if status is bad.
+                    if (StatusCode.IsBad(systemStatus))
+                    {
+                        m_dialog.RequestResponse(
+                            SystemContext,
+                            "Reset the test system?",
+                            (uint)(int)(DialogConditionChoice.Ok | DialogConditionChoice.Cancel),
+                            (ushort)EventSeverity.MediumHigh);
+                    }
+
+                    // report the event.
+                    TranslationInfo info = new TranslationInfo(
+                        "TestSystemStatusChange",
+                        "en-US",
+                        "The TestSystem status is now {0}.",
+                        systemStatus);
+
+                    m_systemStatusCondition.ReportConditionChange(SystemContext, null, new LocalizedText(info), false);
+                }
+                catch (Exception e)
+                {
+                    m_logger.UnexpectedErrorMonitoringSystemStatus(e);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles a user response to a dialog.
+        /// </summary>
+        private ServiceResult OnDialogComplete(
+            ISystemContext context,
+            DialogConditionState dialog,
+            DialogConditionChoice response)
+        {
+            if (m_dialog != null)
+            {
+                DeleteNode(SystemContext, m_dialog.NodeId);
+                m_dialog = null;
+            }
+
+            return ServiceResult.Good;
+        }
+#endif
+        private readonly TestDataNodeManagerConfiguration m_configuration;
+        private readonly Lock m_lock = new();
+        private ushort m_namespaceIndex;
+        private ushort m_typeNamespaceIndex;
+        private readonly TestDataSystem m_system;
+        private uint m_lastUsedId;
+#if CONDITION_SAMPLES
+        private Timer m_systemStatusTimer;
+        private TestSystemConditionState m_systemStatusCondition;
+        private DialogConditionState m_dialog;
+#endif
+        private ScalarStructureVariableValue? m_dataStaticStructureScalarStructure;
+        private ScalarStructureVariableValue? m_dataDynamicStructureScalarStructure;
+        private VectorVariableValue? m_dataStaticStructureVectorStructure;
+        private VectorVariableValue? m_dataDynamicStructureVectorStructure;
+        private VectorVariableValue? m_dataStaticVectorScalarValue;
+        private VectorVariableValue? m_dataDynamicVectorScalarValue;
+    }
+
+    internal static partial class TestDataNodeManagerLog
+    {
+        [LoggerMessage(
+            EventId = QuickstartsServersEventIds.TestDataNodeManager + 0, Level = LogLevel.Error,
+            Message = "Unexpected error monitoring system status.")]
+        public static partial void UnexpectedErrorMonitoringSystemStatus(this ILogger logger, Exception exception);
+    }
+
+}

@@ -1,0 +1,574 @@
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Opc.Ua.Security.Certificates;
+
+namespace Opc.Ua.Security
+{
+    /// <summary>
+    /// Stores the security settings for an application.
+    /// </summary>
+    public partial class SecuredApplication
+    {
+        /// <summary>
+        /// Casts a ApplicationType value.
+        /// </summary>
+        public static Ua.ApplicationType FromApplicationType(ApplicationType input)
+        {
+            return (Ua.ApplicationType)(int)input;
+        }
+
+        /// <summary>
+        /// Casts a ApplicationType value.
+        /// </summary>
+        public static ApplicationType ToApplicationType(Ua.ApplicationType input)
+        {
+            return (ApplicationType)(int)input;
+        }
+
+        /// <summary>
+        /// Creates a CertificateIdentifier object.
+        /// </summary>
+        public static CertificateIdentifier? ToCertificateIdentifier(Ua.CertificateIdentifier input)
+        {
+            if (input != null &&
+                !string.IsNullOrEmpty(input.StoreType) &&
+                !string.IsNullOrEmpty(input.StorePath))
+            {
+                return new CertificateIdentifier
+                {
+                    StoreType = input.StoreType,
+                    StorePath = input.StorePath,
+                    SubjectName = input.SubjectName,
+                    Thumbprint = input.Thumbprint,
+                    ValidationOptions = (int)input.ValidationOptions,
+                    OfflineRevocationList = null,
+                    OnlineRevocationList = null
+                };
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Creates a CertificateIdentifier object.
+        /// </summary>
+        public static Ua.CertificateIdentifier FromCertificateIdentifier(
+            CertificateIdentifier? input)
+        {
+            var output = new Ua.CertificateIdentifier();
+
+            if (input != null)
+            {
+                output.StoreType = input.StoreType;
+                output.StorePath = input.StorePath;
+                output.SubjectName = input.SubjectName;
+                output.Thumbprint = input.Thumbprint;
+                output.ValidationOptions = (CertificateValidationOptions)input.ValidationOptions;
+            }
+
+            return output;
+        }
+
+        /// <summary>
+        /// Creates a CertificateStoreIdentifier object.
+        /// </summary>
+        public static CertificateStoreIdentifier? ToCertificateStoreIdentifier(
+            Ua.CertificateStoreIdentifier input)
+        {
+            if (input != null &&
+                !string.IsNullOrEmpty(input.StoreType) &&
+                !string.IsNullOrEmpty(input.StorePath))
+            {
+                return new CertificateStoreIdentifier
+                {
+                    StoreType = input.StoreType,
+                    StorePath = input.StorePath,
+                    ValidationOptions = (int)input.ValidationOptions
+                };
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Creates a CertificateTrustList object.
+        /// </summary>
+        public static CertificateTrustList FromCertificateStoreIdentifierToTrustList(
+            CertificateStoreIdentifier? input)
+        {
+            var output = new CertificateTrustList();
+
+            if (input != null)
+            {
+                output.StoreType = input.StoreType;
+                output.StorePath = input.StorePath;
+                output.ValidationOptions = (CertificateValidationOptions)input.ValidationOptions;
+            }
+
+            return output;
+        }
+
+        /// <summary>
+        /// Creates a CertificateStoreIdentifier object.
+        /// </summary>
+        public static Ua.CertificateStoreIdentifier FromCertificateStoreIdentifier(
+            CertificateStoreIdentifier? input)
+        {
+            var output = new Ua.CertificateStoreIdentifier();
+
+            if (input != null)
+            {
+                output.StoreType = input.StoreType;
+                output.StorePath = input.StorePath;
+                output.ValidationOptions = (CertificateValidationOptions)input.ValidationOptions;
+            }
+
+            return output;
+        }
+
+        /// <summary>
+        /// Creates a CertificateTrustList object.
+        /// </summary>
+        public static CertificateTrustList ToCertificateTrustList(CertificateStoreIdentifier? input)
+        {
+            var output = new CertificateTrustList();
+
+            if (input != null)
+            {
+                output.StoreType = input.StoreType;
+                output.StorePath = input.StorePath;
+                output.ValidationOptions = (CertificateValidationOptions)input.ValidationOptions;
+            }
+
+            return output;
+        }
+
+        /// <summary>
+        /// Creates a CertificateList object.
+        /// </summary>
+        public static CertificateList ToCertificateList(ArrayOf<Ua.CertificateIdentifier> input)
+        {
+            var output = new CertificateList();
+
+            if (!input.IsEmpty)
+            {
+                output.ValidationOptions = 0;
+                output.Certificates = [];
+
+                for (int ii = 0; ii < input.Count; ii++)
+                {
+                    CertificateIdentifier? converted = ToCertificateIdentifier(input[ii]);
+                    if (converted != null)
+                    {
+                        output.Certificates.Add(converted);
+                    }
+                }
+            }
+
+            return output;
+        }
+
+        /// <summary>
+        /// Creates an ArrayOf&lt;CertificateIdentifier&gt; object.
+        /// </summary>
+        public static ArrayOf<Ua.CertificateIdentifier> FromCertificateList(CertificateList? input)
+        {
+            var output = new List<Ua.CertificateIdentifier>();
+
+            if (input != null && input.Certificates != null)
+            {
+                for (int ii = 0; ii < input.Certificates.Count; ii++)
+                {
+                    output.Add(FromCertificateIdentifier(input.Certificates[ii]));
+                }
+            }
+
+            return output.ToArrayOf();
+        }
+
+        /// <summary>
+        /// Creates a ListOfBaseAddresses object.
+        /// </summary>
+        public static ListOfBaseAddresses ToListOfBaseAddresses(
+            ServerBaseConfiguration configuration)
+        {
+            var addresses = new ListOfBaseAddresses();
+
+            if (configuration != null)
+            {
+                if (!configuration.BaseAddresses.IsEmpty)
+                {
+                    for (int ii = 0; ii < configuration.BaseAddresses.Count; ii++)
+                    {
+                        addresses.Add(configuration.BaseAddresses[ii]);
+                    }
+                }
+
+                if (!configuration.AlternateBaseAddresses.IsEmpty)
+                {
+                    for (int ii = 0; ii < configuration.AlternateBaseAddresses.Count; ii++)
+                    {
+                        addresses.Add(configuration.AlternateBaseAddresses[ii]);
+                    }
+                }
+            }
+
+            return addresses;
+        }
+
+        /// <summary>
+        /// Creates a ListOfBaseAddresses object.
+        /// </summary>
+        public static void FromListOfBaseAddresses(
+            ServerBaseConfiguration? configuration,
+            ListOfBaseAddresses? addresses)
+        {
+            var map = new Dictionary<string, string>();
+
+            if (addresses != null && configuration != null)
+            {
+                List<string> baseAddresses = [];
+                List<string> alternateBaseAddresses = [];
+
+                for (int ii = 0; ii < addresses.Count; ii++)
+                {
+                    Uri? url = Utils.ParseUri(addresses[ii]);
+
+                    if (url != null)
+                    {
+                        if (!map.TryAdd(url.Scheme, string.Empty))
+                        {
+                            alternateBaseAddresses.Add(url.ToString());
+                        }
+                        else
+                        {
+                            baseAddresses.Add(url.ToString());
+                        }
+                    }
+                }
+
+                configuration.BaseAddresses = baseAddresses;
+                configuration.AlternateBaseAddresses = alternateBaseAddresses;
+            }
+        }
+
+        /// <summary>
+        /// Creates a ListOfSecurityProfiles object.
+        /// </summary>
+        public static ListOfSecurityProfiles ToListOfSecurityProfiles(
+            ArrayOf<ServerSecurityPolicy> policies)
+        {
+            var profiles = new ListOfSecurityProfiles
+            {
+                CreateProfile(SecurityPolicies.None),
+                CreateProfile(SecurityPolicies.Basic128Rsa15),
+                CreateProfile(SecurityPolicies.Basic256),
+                CreateProfile(SecurityPolicies.Basic256Sha256),
+                CreateProfile(SecurityPolicies.Aes128_Sha256_RsaOaep),
+                CreateProfile(SecurityPolicies.Aes256_Sha256_RsaPss)
+            };
+
+            if (!policies.IsEmpty)
+            {
+                for (int ii = 0; ii < policies.Count; ii++)
+                {
+                    for (int jj = 0; jj < profiles.Count; jj++)
+                    {
+                        if (policies[ii].SecurityPolicyUri == profiles[jj].ProfileUri)
+                        {
+                            profiles[jj].Enabled = true;
+                        }
+                    }
+                }
+            }
+
+            return profiles;
+        }
+
+        /// <summary>
+        /// Creates an ArrayOf&lt;ServerSecurityPolicy&gt; object.
+        /// </summary>
+        public static ArrayOf<ServerSecurityPolicy> FromListOfSecurityProfiles(
+            ListOfSecurityProfiles? profiles)
+        {
+            var policies = new List<ServerSecurityPolicy>();
+
+            if (profiles != null)
+            {
+                for (int ii = 0; ii < profiles.Count; ii++)
+                {
+                    if (profiles[ii].Enabled && !string.IsNullOrEmpty(profiles[ii].ProfileUri))
+                    {
+                        policies.Add(CreatePolicy(profiles[ii].ProfileUri!));
+                    }
+                }
+            }
+
+            if (policies.Count == 0)
+            {
+                policies.Add(CreatePolicy(SecurityPolicies.None));
+            }
+
+            return policies.ToArrayOf();
+        }
+
+        /// <summary>
+        /// Obsolete version of CalculateSecurityLevel that does not take a logger.
+        /// </summary>
+        [Obsolete("Use CalculateSecurityLevel(MessageSecurityMode mode, string policyUri, ILogger logger) instead.")]
+        public static byte CalculateSecurityLevel(
+            MessageSecurityMode mode,
+            string policyUri)
+        {
+            ILogger logger = AmbientMessageContext.Telemetry.CreateLogger<SecuredApplication>();
+            return CalculateSecurityLevel(mode, policyUri, logger);
+        }
+
+        /// <summary>
+        /// Calculates the security level, given the security mode and policy
+        /// Invalid and none is discouraged
+        /// Just signing is always weaker than any use of encryption
+        /// </summary>
+        public static byte CalculateSecurityLevel(
+            MessageSecurityMode mode,
+            string policyUri,
+            ILogger logger)
+        {
+            if ((mode != MessageSecurityMode.Sign && mode != MessageSecurityMode.SignAndEncrypt) ||
+                policyUri == null)
+            {
+                return 0;
+            }
+
+            byte result;
+            switch (policyUri)
+            {
+                case SecurityPolicies.Basic128Rsa15:
+                    logger.SecuredApplicationHelpersLogMessage0();
+                    result = 2;
+                    break;
+                case SecurityPolicies.Basic256:
+                    logger.SecuredApplicationHelpersLogMessage1();
+                    result = 4;
+                    break;
+                case SecurityPolicies.ECC_nistP256:
+                case SecurityPolicies.ECC_nistP384:
+                    logger.SecuredApplicationHelpersLogMessage2(policyUri);
+                    result = 4;
+                    break;
+                case SecurityPolicies.ECC_brainpoolP256r1:
+                case SecurityPolicies.ECC_brainpoolP384r1:
+                    logger.SecuredApplicationHelpersLogMessage3(policyUri);
+                    result = 4;
+                    break;
+                case SecurityPolicies.Basic256Sha256:
+                    result = 6;
+                    break;
+                case SecurityPolicies.Aes128_Sha256_RsaOaep:
+                    result = 8;
+                    break;
+                case SecurityPolicies.Aes256_Sha256_RsaPss:
+                    result = 10;
+                    break;
+                case SecurityPolicies.RSA_DH_AesGcm:
+                case SecurityPolicies.RSA_DH_ChaChaPoly:
+                case SecurityPolicies.ECC_brainpoolP256r1_AesGcm:
+                case SecurityPolicies.ECC_brainpoolP256r1_ChaChaPoly:
+                case SecurityPolicies.ECC_nistP256_AesGcm:
+                case SecurityPolicies.ECC_nistP256_ChaChaPoly:
+                    result = 12;
+                    break;
+                case SecurityPolicies.ECC_nistP384_AesGcm:
+                case SecurityPolicies.ECC_nistP384_ChaChaPoly:
+                case SecurityPolicies.ECC_brainpoolP384r1_AesGcm:
+                case SecurityPolicies.ECC_brainpoolP384r1_ChaChaPoly:
+                    result = 14;
+                    break;
+                case SecurityPolicies.None:
+                    return 0;
+                default:
+                    logger.SecuredApplicationHelpersLogMessage4(policyUri);
+                    return 0;
+            }
+
+            if (mode == MessageSecurityMode.SignAndEncrypt)
+            {
+                result += 100;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Creates a new policy object.
+        /// Always uses sign and encrypt for all security policies except none
+        /// </summary>
+        private static ServerSecurityPolicy CreatePolicy(string profileUri)
+        {
+            return new ServerSecurityPolicy
+            {
+                SecurityPolicyUri = profileUri,
+                SecurityMode = profileUri == SecurityPolicies.None ?
+                    MessageSecurityMode.None :
+                    MessageSecurityMode.SignAndEncrypt
+            };
+        }
+
+        /// <summary>
+        /// Creates a new policy object.
+        /// </summary>
+        private static SecurityProfile CreateProfile(string profileUri)
+        {
+            return new SecurityProfile { ProfileUri = profileUri, Enabled = false };
+        }
+
+        /// <summary>
+        ///  TODO: Holds the application certificates but should be generated and the Opc.Ua.Security namespace automatically
+        ///  TODO: Should replace ApplicationCertificateField in the generated Opc.Ua.Security.SecuredApplication class
+        /// </summary>
+        public CertificateList? ApplicationCertificates { get; set; }
+    }
+
+    /// <summary>
+    /// An identifier for a certificate.
+    /// </summary>
+    public partial class CertificateIdentifier
+    {
+        /// <summary>
+        /// Gets the certificate associated with the identifier.
+        /// </summary>
+        [Obsolete("Use FindAsync()")]
+        public Task<Certificate?> Find()
+        {
+            return FindAsync(null);
+        }
+
+        /// <summary>
+        /// Gets the certificate associated with the identifier.
+        /// </summary>
+        public Task<Certificate?> FindAsync(
+            ITelemetryContext? telemetry,
+            CancellationToken ct = default)
+        {
+            Ua.CertificateIdentifier output = SecuredApplication.FromCertificateIdentifier(this);
+            return CertificateIdentifierResolver.ResolveAsync(
+                output,
+                registry: null,
+                needPrivateKey: false,
+                applicationUri: null,
+                telemetry,
+                ct);
+        }
+
+        /// <summary>
+        /// Gets the certificate associated with the identifier.
+        /// </summary>
+        [Obsolete("Use FindAsync(needPrivateKey)")]
+        public Task<Certificate?> Find(bool needPrivateKey)
+        {
+            return FindAsync(needPrivateKey, null);
+        }
+
+        /// <summary>
+        /// Gets the certificate associated with the identifier.
+        /// </summary>
+        public Task<Certificate?> FindAsync(
+            bool needPrivateKey,
+            ITelemetryContext? telemetry,
+            CancellationToken ct = default)
+        {
+            Ua.CertificateIdentifier output = SecuredApplication.FromCertificateIdentifier(this);
+            return CertificateIdentifierResolver.ResolveAsync(
+                output,
+                registry: null,
+                needPrivateKey,
+                applicationUri: null,
+                telemetry,
+                ct);
+        }
+
+        /// <summary>
+        /// Opens the certificate store.
+        /// </summary>
+        public ICertificateStore OpenStore(ITelemetryContext telemetry)
+        {
+            Ua.CertificateIdentifier output = SecuredApplication.FromCertificateIdentifier(this);
+            return CertificateIdentifierResolver.OpenStore(output, telemetry)!;
+        }
+    }
+
+    /// <summary>
+    /// An identifier for a certificate store.
+    /// </summary>
+    public partial class CertificateStoreIdentifier
+    {
+        /// <summary>
+        /// Opens the certificate store.
+        /// </summary>
+        public ICertificateStore OpenStore(ITelemetryContext telemetry)
+        {
+            Ua.CertificateStoreIdentifier output = SecuredApplication
+                .FromCertificateStoreIdentifier(this);
+            return output.OpenStore(telemetry);
+        }
+    }
+
+    /// <summary>
+    /// Source-generated log messages for SecuredApplicationHelpers.
+    /// </summary>
+    internal static partial class SecuredApplicationHelpersLog
+    {
+        [LoggerMessage(EventId = CoreEventIds.SecuredApplicationHelpers + 0, Level = LogLevel.Warning,
+            Message = "Deprecated Security Policy Basic128Rsa15 requested - Not recommended.")]
+        public static partial void SecuredApplicationHelpersLogMessage0(this ILogger logger);
+
+        [LoggerMessage(EventId = CoreEventIds.SecuredApplicationHelpers + 1, Level = LogLevel.Warning,
+            Message = "Deprecated Security Policy Basic256 requested - Not recommended.")]
+        public static partial void SecuredApplicationHelpersLogMessage1(this ILogger logger);
+
+        [LoggerMessage(EventId = CoreEventIds.SecuredApplicationHelpers + 2, Level = LogLevel.Warning,
+            Message = "Deprecated Security Policy {PolicyUri} requested - Use ECC_nistP[256/384]_AES.")]
+        public static partial void SecuredApplicationHelpersLogMessage2(this ILogger logger, string policyUri);
+
+        [LoggerMessage(EventId = CoreEventIds.SecuredApplicationHelpers + 3, Level = LogLevel.Warning,
+            Message = "Deprecated Security Policy {PolicyUri} requested - Use ECC_brainpoolP[256/384]r1_AES.")]
+        public static partial void SecuredApplicationHelpersLogMessage3(this ILogger logger, string policyUri);
+
+        [LoggerMessage(EventId = CoreEventIds.SecuredApplicationHelpers + 4, Level = LogLevel.Warning,
+            Message = "Security level requested for unknown Security Policy {Policy}. Returning security level 0")]
+        public static partial void SecuredApplicationHelpersLogMessage4(this ILogger logger, string policy);
+    }
+
+}
