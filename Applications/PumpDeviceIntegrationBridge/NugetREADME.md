@@ -39,9 +39,9 @@ server.
 | `BearingTemperature` | `/Plant/Pumps/P101/Body` · `primvars:displayColor` | DisplayColor | body colour (blue→red) |
 | `DifferentialPressure` | `/Plant/Pumps/P101/StatusLight/Mat/Surface` · `inputs:emissiveColor` | EmissiveColor | status-light glow |
 
-Two further bindings exercise the rest of the model: an **alarm** binding (`UaAlarmToUsd`)
+Two further bindings exercise the rest of the model: an **alarm** binding (`OpenUsdAlarmBindingType`)
 drives `/Plant/Pumps/P101/StatusLight` · `visibility` from the supervision alarm, and an
-**opt-in command** binding (`UsdToUaCommand`) writes a USD `inputs:speedSetpoint` intent back
+**opt-in command** binding (`OpenUsdCommandBindingType`) writes a USD `inputs:speedSetpoint` intent back
 into the server's `SpeedSetpoint` Variable. The stage also advertises a `RootLayerDigest`
 (`Sha256`) the bridge verifies before composing (Twin-BOM content integrity).
 
@@ -100,7 +100,7 @@ acceptance — appropriate only for this localhost demo, whose server uses a sel
 Omit `--insecure` and place the server certificate in the bridge's trusted store for a secured run.
 
 Command bindings are **disabled by default** (fail-closed). Add `--enable-commands` and
-`--command-value <double>` to actuate the single `UsdToUaCommand` binding once at start, e.g.
+`--command-value <double>` to actuate the single `OpenUsdCommandBindingType` binding once at start, e.g.
 `--enable-commands --command-value 1450` writes `1450` into the server's `SpeedSetpoint`
 Variable (single-writer, authorized, fail-closed). Read-only telemetry/alarm flow is unaffected.
 
@@ -148,8 +148,8 @@ PY
   never at "the pump". One binary serves any conforming server.
 - **Bindings** — each `OpenUsdLiveBinding` declares `SourceNodeId`, target prim/property,
   `RenderTargetKind`, and `Scale`; the bridge reads them and applies the conversion
-  (§5.7–§5.8). 0.2 adds `SignalRole`, `SourceSemanticId`, alarm (`UaAlarmToUsd`/`AlarmAspect`),
-  and opt-in command (`UsdToUaCommand`/`CommandTargetNodeId`) members.
+  (§5.7–§5.8). 0.2 adds `SignalRole`, `SourceSemanticId`, alarm (`OpenUsdAlarmBindingType`/`AlarmAspect`),
+  and opt-in command (`OpenUsdCommandBindingType`/`CommandTargetNodeId`) members.
 - **Integrity** — the stage's `RootLayerDigest`/`RootLayerDigestAlgorithm` are verified before
   composition (Twin-BOM content integrity, §5.11/§9); a mismatch is fail-closed.
 - **Command safety** — command bindings are normative but opt-in: disabled by default,

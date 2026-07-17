@@ -29,11 +29,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Opc.Ua;
 using Opc.Ua.OpenUsd;
+using OpenUsdShared;
 
 namespace Robotics
 {
@@ -100,6 +102,11 @@ namespace Robotics
                 // via the externalReferences dictionary in LinkOpenUsdRootToServer.
                 root.AddReference(ReferenceTypeIds.HasComponent, true, Opc.Ua.ObjectIds.Server);
 
+                // §5.15 asset content delivery (OU-AssetDelivery): serve this stage's
+                // artist-authored USD layer closure so a connector can render the twin
+                // with no external asset resolver.
+                UsdAssetDelivery.AttachStageAssets(SystemContext, m_cellStage, ns, LoadServedAssets());
+
                 AssignChildNodeIds(root);
                 await AddPredefinedNodeAsync(SystemContext, root, cancellationToken)
                     .ConfigureAwait(false);
@@ -115,6 +122,29 @@ namespace Robotics
                 m_openUsdRoot = null;
                 m_logger.LogError(ex, "Failed to materialise the OpenUSD facility.");
             }
+        }
+
+        // Loads the embedded artist-authored USD layers this server serves (spec §5.15).
+        private static List<ServedAsset> LoadServedAssets()
+        {
+            return new List<ServedAsset>
+            {
+                new ServedAsset("Cell.usda", OpenUsdAssetKindEnum.RootLayer, ReadEmbeddedAsset("Cell.usda")),
+                new ServedAsset("robot.usda", OpenUsdAssetKindEnum.Reference, ReadEmbeddedAsset("robot.usda")),
+                new ServedAsset("tool.usda", OpenUsdAssetKindEnum.Reference, ReadEmbeddedAsset("tool.usda")),
+            };
+        }
+
+        private static byte[] ReadEmbeddedAsset(string resourceName)
+        {
+            using Stream? s = typeof(RoboticsNodeManager).Assembly.GetManifestResourceStream(resourceName);
+            if (s == null)
+            {
+                return Array.Empty<byte>();
+            }
+            using var ms = new MemoryStream();
+            s.CopyTo(ms);
+            return ms.ToArray();
         }
 
         /// <inheritdoc/>
@@ -231,18 +261,20 @@ namespace Robotics
             Guid bindingDefinitionId, NodeId? sourceNodeId, string targetPrimPath,
             string targetPropertyName, string targetUsdTypeName,
             OpenUsdRenderTargetKindEnum? kind, double scale,
-            OpenUsdIntentProfileEnum intentProfile = OpenUsdIntentProfileEnum.UaToUsdTelemetry,
+            uint bindingTypeId = Opc.Ua.OpenUsd.ObjectTypes.OpenUsdValueChangeBindingType,
             OpenUsdSignalRoleEnum signalRole = OpenUsdSignalRoleEnum.Observable,
             string? sourceSemanticId = null,
             OpenUsdAlarmAspectEnum? alarmAspect = null,
             NodeId? commandTargetNodeId = null,
             string? commandTriggerPropertyName = null)
         {
+            // AddxBinding_ creates the <Binding> placeholder child + mandatory base
+            // members; the intent is now the concrete subtype (§5.4), so retype it.
             OpenUsdLiveBindingState b = rep.AddxBinding_(SystemContext, new QualifiedName(name, ns));
+            b.TypeDefinitionId = new NodeId(bindingTypeId, ns);
 
             b.CreateOrReplaceBindingDefinitionId(SystemContext, null!).Value = new Uuid(bindingDefinitionId);
             b.CreateOrReplaceEnabled(SystemContext, null!).Value = true;
-            b.CreateOrReplaceIntentProfile(SystemContext, null!).Value = intentProfile;
             b.CreateOrReplaceTargetStage(SystemContext, null!).Value = m_cellStage!.NodeId;
             b.CreateOrReplaceTargetPrimPath(SystemContext, null!).Value = targetPrimPath;
             b.CreateOrReplaceTargetPropertyName(SystemContext, null!).Value = targetPropertyName;
@@ -266,26 +298,24 @@ namespace Robotics
                     SystemContext.CreateOpenUsdLiveBindingType_SourceSemanticId(b, forInstance: true))
                     .Value = sourceSemanticId;
             }
+            // Intent-specific members live only on the concrete subtype (§5.4).
             if (alarmAspect != null)
             {
-                b.CreateOrReplaceAlarmAspect(
-                    SystemContext,
-                    SystemContext.CreateOpenUsdLiveBindingType_AlarmAspect(b, forInstance: true))
-                    .Value = alarmAspect.Value;
+                var ap = SystemContext.CreateOpenUsdAlarmBindingType_AlarmAspect(b, forInstance: true);
+                b.AddChild(ap);
+                ap.Value = alarmAspect.Value;
             }
             if (commandTargetNodeId != null)
             {
-                b.CreateOrReplaceCommandTargetNodeId(
-                    SystemContext,
-                    SystemContext.CreateOpenUsdLiveBindingType_CommandTargetNodeId(b, forInstance: true))
-                    .Value = (NodeId)commandTargetNodeId;
+                var ct = SystemContext.CreateOpenUsdCommandBindingType_CommandTargetNodeId(b, forInstance: true);
+                b.AddChild(ct);
+                ct.Value = (NodeId)commandTargetNodeId;
             }
             if (!string.IsNullOrEmpty(commandTriggerPropertyName))
             {
-                b.CreateOrReplaceCommandTriggerPropertyName(
-                    SystemContext,
-                    SystemContext.CreateOpenUsdLiveBindingType_CommandTriggerPropertyName(b, forInstance: true))
-                    .Value = commandTriggerPropertyName;
+                var tp = SystemContext.CreateOpenUsdCommandBindingType_CommandTriggerPropertyName(b, forInstance: true);
+                b.AddChild(tp);
+                tp.Value = commandTriggerPropertyName;
             }
             if (kind != null)
             {

@@ -164,7 +164,7 @@ namespace Robotics
                     new Guid("a1b2c3d4-0002-4a10-9c01-100000000002"),
                     m_estopVar.NodeId, "/Cell/SafetyBeacon", "visibility", "token",
                     OpenUsdRenderTargetKindEnum.Visibility, 1.0,
-                    intentProfile: OpenUsdIntentProfileEnum.UaAlarmToUsd,
+                    bindingTypeId: Opc.Ua.OpenUsd.ObjectTypes.OpenUsdAlarmBindingType,
                     alarmAspect: OpenUsdAlarmAspectEnum.ActiveState);
 
                 // SpeedOverrideCommand (UsdToUaCommand, opt-in): a USD-side speed-override
@@ -173,7 +173,7 @@ namespace Robotics
                     new Guid("a1b2c3d4-0003-4a10-9c01-100000000003"),
                     null, "/Cell", "inputs:speedOverride", "double",
                     kind: null, 1.0,
-                    intentProfile: OpenUsdIntentProfileEnum.UsdToUaCommand,
+                    bindingTypeId: Opc.Ua.OpenUsd.ObjectTypes.OpenUsdCommandBindingType,
                     signalRole: OpenUsdSignalRoleEnum.Controllable,
                     commandTargetNodeId: m_speedOverrideVar.NodeId,
                     commandTriggerPropertyName: "inputs:speedOverride");
@@ -245,7 +245,7 @@ namespace Robotics
                 GuidFor(r.BrowseName + ":warning"),
                 m_estopVar!.NodeId, r.PrimPath + "/Warning", "visibility", "token",
                 OpenUsdRenderTargetKindEnum.Visibility, 1.0,
-                intentProfile: OpenUsdIntentProfileEnum.UaAlarmToUsd,
+                bindingTypeId: Opc.Ua.OpenUsd.ObjectTypes.OpenUsdAlarmBindingType,
                 alarmAspect: OpenUsdAlarmAspectEnum.ActiveState);
 
             // GripperTool (One, Reference, dynamic): a tool is composed on R1's flange at

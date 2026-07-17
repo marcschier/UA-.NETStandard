@@ -28,7 +28,9 @@
  * ======================================================================*/
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -52,6 +54,18 @@ namespace PumpDeviceIntegrationBridge
                 ?? "opc.tcp://localhost:62542/PumpDeviceIntegrationServer";
             string outPath = GetOption(args, "--out") ?? Path.Combine(Environment.CurrentDirectory, "live.usda");
             int seconds = int.TryParse(GetOption(args, "--seconds"), out int s) ? s : 0;
+
+            // §5.15 asset content delivery (OU-AssetDelivery): when set, the connector
+            // downloads the server's served USD layer closure into this cache directory
+            // (verifying each digest) and writes a self-contained stage.usda there, so a
+            // viewer renders the twin with no external asset resolver. live.usda is
+            // written into the same directory.
+            string? cacheDir = GetOption(args, "--fetch-assets");
+            if (!string.IsNullOrEmpty(cacheDir))
+            {
+                Directory.CreateDirectory(cacheDir!);
+                outPath = Path.Combine(cacheDir!, "live.usda");
+            }
 
             // Secure by default (spec §9: an authenticated, integrity-protected endpoint
             // with server-certificate trust is required). The --insecure flag opts into
@@ -147,6 +161,25 @@ namespace PumpDeviceIntegrationBridge
 
             var sink = new UsdFileSink(outPath);
             var connector = new OpenUsdConnector(session, sink, enableCommands);
+
+            if (!string.IsNullOrEmpty(cacheDir))
+            {
+                List<OpenUsdConnector.FetchedAsset> fetched =
+                    await connector.FetchServedAssetsAsync(cacheDir!, CancellationToken.None).ConfigureAwait(false);
+                if (fetched.Count > 0)
+                {
+                    WriteStageUsda(cacheDir!, fetched);
+                    Console.WriteLine(
+                        $"Fetched {fetched.Count} server-delivered USD layer(s) into {cacheDir}; " +
+                        "wrote a self-contained stage.usda (open it in usdview).");
+                }
+                else
+                {
+                    Console.WriteLine(
+                        "Server does not advertise served assets (OU-AssetDelivery); using the external base asset.");
+                }
+            }
+
             await connector.StartAsync(CancellationToken.None).ConfigureAwait(false);
             Console.WriteLine($"Streaming live OPC UA values into {outPath}. Press Ctrl+C to stop.");
 
@@ -186,6 +219,20 @@ namespace PumpDeviceIntegrationBridge
             (config.CertificateManager as IDisposable)?.Dispose();
             Console.WriteLine($"Stopped. Final override layer: {outPath}");
             return 0;
+        }
+
+        // Writes a self-contained stage.usda that composes the connector's live override
+        // layer over the server-delivered root layer (both now local in the cache dir).
+        private static void WriteStageUsda(string cacheDir, List<OpenUsdConnector.FetchedAsset> fetched)
+        {
+            OpenUsdConnector.FetchedAsset? root = fetched.Find(a => a.Kind == OpenUsdAssetKind.RootLayer);
+            string rootName = root != null ? Path.GetFileName(root.LocalPath) : "base.usda";
+            var sb = new StringBuilder();
+            sb.Append("#usda 1.0\n(\n");
+            sb.Append("    doc = \"Self-contained OpenUSD stage: server-delivered base layers + the live OPC UA override.\"\n");
+            sb.Append("    subLayers = [\n        @./live.usda@,\n        @./").Append(rootName).Append("@\n    ]\n");
+            sb.Append(")\n");
+            File.WriteAllText(Path.Combine(cacheDir, "stage.usda"), sb.ToString());
         }
 
         private static string? GetOption(string[] args, string name)
