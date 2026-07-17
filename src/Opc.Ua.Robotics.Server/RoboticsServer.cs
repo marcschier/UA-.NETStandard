@@ -29,6 +29,7 @@
 
 using System;
 using Opc.Ua.Di;
+using Opc.Ua.IA;
 
 namespace Opc.Ua.Robotics.Server
 {
@@ -42,10 +43,10 @@ namespace Opc.Ua.Robotics.Server
     {
         /// <summary>
         /// Loads the full Robotics type system into <paramref name="nodes"/>: the
-        /// OPC UA DI base model (source-generated), then the IA and Robotics
-        /// NodeSets (runtime import, in that order). Call this while building the
+        /// OPC UA DI base model, then the IA and Robotics companion models (all
+        /// source-generated), in dependency order. Call this while building the
         /// predefined-node collection of a node manager. Returns the number of
-        /// nodes added by the IA + Robotics import.
+        /// nodes added by the IA + Robotics models.
         /// </summary>
         public static int AddRoboticsTypeSystem(
             this NodeStateCollection nodes, ISystemContext context)
@@ -59,7 +60,10 @@ namespace Opc.Ua.Robotics.Server
                 throw new ArgumentNullException(nameof(context));
             }
             nodes.AddOpcUaDi(context);
-            return RoboticsNodeSets.ImportInto(context, nodes);
+            int before = nodes.Count;
+            nodes.AddOpcUaIA(context);
+            nodes.AddOpcUaRobotics(context);
+            return nodes.Count - before;
         }
 
         /// <summary>

@@ -5,8 +5,8 @@ Server-side reusable functionality for the **OPC 40010 Robotics** companion mode
 Built on **Opc.Ua.Robotics**, it helps an OPC UA server expose a robot cell:
 
 - `AddRoboticsTypeSystem` — loads the OPC UA DI base model plus the IA and
-  Robotics NodeSets (runtime import) into a node manager's predefined-node
-  collection, in dependency order;
+  Robotics companion models (all source-generated) into a node manager's
+  predefined-node collection, in dependency order;
 - `CreateTypedObject` — instantiates a Robotics-typed Object
   (`MotionDeviceSystem` / `MotionDevice` / `Axis` / `Controller`) from the numeric
   type NodeIds in `RoboticsModel`.

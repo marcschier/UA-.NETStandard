@@ -32,11 +32,10 @@ using System;
 namespace Opc.Ua.Robotics
 {
     /// <summary>
-    /// Key type NodeIds of the OPC 40010 Robotics companion model. Because the
-    /// Robotics NodeSet is imported at runtime rather than source-generated (see
-    /// <see cref="RoboticsNodeSets"/>), a consumer builds instances from
-    /// <c>BaseObjectState</c> plus these numeric type identifiers, resolved into
-    /// the server's namespace table with <see cref="TypeNodeId"/>.
+    /// Key type NodeIds of the OPC 40010 Robotics companion model. A consumer
+    /// builds instances from <c>BaseObjectState</c> plus these numeric type
+    /// identifiers, resolved into the server's namespace table with
+    /// <see cref="TypeNodeId"/>.
     /// </summary>
     public static class RoboticsModel
     {

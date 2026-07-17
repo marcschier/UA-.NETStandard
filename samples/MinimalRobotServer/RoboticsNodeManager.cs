@@ -112,15 +112,13 @@ namespace Robotics
             // Compose the predefined-node tree:
             //   - Opc.Ua.Di + Opc.Ua.IA + Opc.Ua.Robotics: the OPC 40010 Robotics
             //     type system, loaded via Opc.Ua.Robotics.Server.AddRoboticsTypeSystem
-            //     (the DI source-generated loader followed by the IA and Robotics
-            //     NodeSets, imported at runtime in dependency order).
+            //     (the DI, IA and Robotics source-generated loaders, in dependency
+            //     order).
             //   - Opc.Ua.OpenUsd: the source-generated OpenUSD companion loader
             //     (from the referenced Opc.Ua.OpenUsd library).
-            // The Robotics/IA NodeSets are imported at runtime rather than
-            // source-generated because their generated proxies reference base
-            // state-machine types not present in this Core; this server builds
-            // instances from BaseObjectState + the numeric type NodeIds in
-            // RoboticsModel, so no generated Robotics/IA typed classes are needed.
+            // This server builds instances from BaseObjectState + the numeric type
+            // NodeIds in RoboticsModel, so it does not depend on the generated
+            // Robotics/IA typed classes (the loaders populate the address space).
             var nodes = new NodeStateCollection();
             nodes.AddRoboticsTypeSystem(context);
             nodes.AddOpcUaOpenUsd(context);

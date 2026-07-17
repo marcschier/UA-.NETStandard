@@ -4,9 +4,9 @@
     <TargetFrameworks>$(LibTargetFrameworks)</TargetFrameworks>
     <PackageId>$(PackagePrefix).Opc.Ua.Robotics</PackageId>
     <RootNamespace>Opc.Ua.Robotics</RootNamespace>
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <NoWarn>$(NoWarn);CS1591;CS0108</NoWarn>
     <Nullable>enable</Nullable>
-    <Description>Shared foundation for the OPC 40010 Robotics companion specification (MotionDeviceSystem -&gt; MotionDevice -&gt; Axis). Carries the Robotics + Industrial Automation (IA) NodeSet2 XMLs and imports them at runtime into a server node manager, plus the Robotics namespace URIs and key type NodeIds. Used together with the draft OPC UA - OpenUSD Bindings model to render a live robot-cell twin.</Description>
+    <Description>Shared foundation for the OPC 40010 Robotics companion specification (MotionDeviceSystem -&gt; MotionDevice -&gt; Axis). Source-generated from the Robotics + Industrial Automation (IA) NodeSet2 XMLs over the OPC UA DI base model, exposing the typed model, the AddOpcUaRobotics / AddOpcUaIA loaders, and key type NodeIds. Used together with the draft OPC UA - OpenUSD Bindings model to render a live robot-cell twin.</Description>
     <IsPackable>true</IsPackable>
     <PackageReadmeFile>NugetREADME.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -17,24 +17,46 @@
     <PackageId>$(PackageId).Debug</PackageId>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Opc.Ua.Core\Opc.Ua.Core.csproj" />
+    <InternalsVisibleTo Include="Opc.Ua.Robotics.Server" />
+    <InternalsVisibleTo Include="Opc.Ua.Robotics.Client" />
+    <InternalsVisibleTo Include="MinimalRobotServer" />
+    <InternalsVisibleTo Include="Opc.Ua.Di.Tests" />
   </ItemGroup>
-  <!-- The OPC 40010 Robotics model and its required IA model are carried as
-       embedded NodeSet2 XML and imported at RUNTIME (UANodeSet.Read + Import),
-       not source-generated: the Robotics model uses base state-machine/method
-       types whose generated NodeState proxies are not all present in this Core,
-       so the generator's fluent/proxy output does not compile. Runtime import
-       loads the full, faithful type structure without the generator. A consumer
-       builds instances from BaseObjectState + the numeric type NodeIds in
-       RoboticsModel, so no generated Robotics/IA typed classes are needed. -->
   <ItemGroup>
-    <EmbeddedResource Include="Model\Opc.Ua.IA.NodeSet2.xml">
-      <LogicalName>Opc.Ua.IA.NodeSet2.xml</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Model\Opc.Ua.Robotics.NodeSet2.xml">
-      <LogicalName>Opc.Ua.Robotics.NodeSet2.xml</LogicalName>
-    </EmbeddedResource>
+    <ProjectReference Include="..\Opc.Ua.Di\Opc.Ua.Di.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\tools\Opc.Ua.SourceGeneration\Opc.Ua.SourceGeneration.csproj">
+      <OutputItemType>Analyzer</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <!-- The OPC 40010 Robotics model and its required OPC 40001-1 IA base model are
+       source-generated from their NodeSet2 XML over the source-generated OPC UA
+       DI base model. The Robotics Programs facet uses the standard
+       FileDirectoryType, whose method-state classes a curated Core omits; the
+       model generator degrades those absent standard method-state references to
+       the base MethodState (see StandardMethodStateFallback), so the model
+       compiles. OmitFluentApi keeps the output model-only (Core + DI, no Server
+       dependency). -->
+  <ItemGroup>
+    <None Remove="Model\Opc.Ua.IA.NodeSet2.xml" />
+    <None Remove="Model\Opc.Ua.Robotics.NodeSet2.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="Model\Opc.Ua.IA.NodeSet2.xml">
+      <ModelSourceGeneratorPrefix>Opc.Ua.IA</ModelSourceGeneratorPrefix>
+    </AdditionalFiles>
+    <AdditionalFiles Include="Model\Opc.Ua.Robotics.NodeSet2.xml">
+      <ModelSourceGeneratorPrefix>Opc.Ua.Robotics</ModelSourceGeneratorPrefix>
+    </AdditionalFiles>
+  </ItemGroup>
+  <Import Project="..\..\tools\Opc.Ua.SourceGeneration\OPCFoundation.Opc.Ua.SourceGeneration.props" />
+  <PropertyGroup>
+    <ModelSourceGeneratorVersion>v105</ModelSourceGeneratorVersion>
+    <ModelSourceGeneratorUseAllowSubtypes>true</ModelSourceGeneratorUseAllowSubtypes>
+    <ModelSourceGeneratorOmitFluentApi>true</ModelSourceGeneratorOmitFluentApi>
+  </PropertyGroup>
   <ItemGroup>
     <None Include="NugetREADME.md" Pack="true" PackagePath="\" />
   </ItemGroup>
