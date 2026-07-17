@@ -35,26 +35,22 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Opc.Ua;
 using Opc.Ua.OpenUsd;
-using Opc.Ua.Pumps;
 using OpenUsdShared;
 
-namespace Pumps
+namespace Robotics
 {
     /// <summary>
-    /// Wires the draft OPC UA — OpenUSD Bindings companion model onto the Pumps
+    /// Wires the draft OPC UA — OpenUSD Bindings companion model onto the Robotics
     /// server: the well-known OpenUSD facility (stage + representation registries),
-    /// a PlantStage descriptor, and an OpenUsdRepresentation AddIn on Pump #1 with
-    /// three read-only live bindings (Part 2, UaToUsdTelemetry).
+    /// a RobotCellStage descriptor, and the generic representation/binding helpers
+    /// used by RobotCell.cs.
     /// </summary>
-    public partial class PumpNodeManager
+    public partial class RoboticsNodeManager
     {
         private OpenUsdRootState? m_openUsdRoot;
-        private OpenUsdStageState? m_plantStage;
-        private BaseDataVariableState? m_alarmActiveVar;
-        private BaseDataVariableState? m_speedSetpointVar;
+        private OpenUsdStageState? m_cellStage;
 
-        private const string PlantRootLayerIdentifier = "asset-repo/Plant.usd";
-        private const string PumpPrimPath = "/Plant/Pumps/P101";
+        private const string CellRootLayerIdentifier = "asset-repo/Cell.usd";
 
         private async ValueTask MaterialiseOpenUsdFacilityAsync(
             CancellationToken cancellationToken)
@@ -72,45 +68,44 @@ namespace Pumps
                 _ = root.Representations
                     ?? root.CreateOrReplaceRepresentations(SystemContext, null!);
 
-                m_plantStage = SystemContext.CreateInstanceOfOpenUsdStageType(
-                    stages, new QualifiedName("PlantStage", ns));
-                stages.AddChild(m_plantStage);
-                m_plantStage.CreateOrReplaceRootLayerIdentifier(SystemContext, null!)
-                    .Value = PlantRootLayerIdentifier;
+                m_cellStage = SystemContext.CreateInstanceOfOpenUsdStageType(
+                    stages, new QualifiedName("RobotCellStage", ns));
+                stages.AddChild(m_cellStage);
+                m_cellStage.CreateOrReplaceRootLayerIdentifier(SystemContext, null!)
+                    .Value = CellRootLayerIdentifier;
 
-                // 0.2 Twin-BOM content integrity: publish a deterministic digest of
-                // the resolved root layer identity so a connector can verify the
-                // stage before composing it. A production server digests the actual
-                // resolved bytes; here we digest the identifier as a testable stand-in.
+                // 0.2 Twin-BOM content integrity: publish a deterministic digest of the
+                // resolved root layer identity so a connector can verify the stage
+                // before composing it. A production server digests the actual resolved
+                // bytes; here we digest the identifier as a testable stand-in.
                 byte[] digest;
 #pragma warning disable CA1850 // Prefer static HashData (net48/netstandard2.0 compatibility)
                 using (var sha = System.Security.Cryptography.SHA256.Create())
                 {
                     digest = sha.ComputeHash(
-                        System.Text.Encoding.UTF8.GetBytes(PlantRootLayerIdentifier));
+                        System.Text.Encoding.UTF8.GetBytes(CellRootLayerIdentifier));
                 }
 #pragma warning restore CA1850
-                m_plantStage.CreateOrReplaceRootLayerDigest(
+                m_cellStage.CreateOrReplaceRootLayerDigest(
                     SystemContext,
-                    SystemContext.CreateOpenUsdStageType_RootLayerDigest(m_plantStage, forInstance: true))
+                    SystemContext.CreateOpenUsdStageType_RootLayerDigest(m_cellStage, forInstance: true))
                     .Value = (ByteString)digest;
-                m_plantStage.CreateOrReplaceRootLayerDigestAlgorithm(
+                m_cellStage.CreateOrReplaceRootLayerDigestAlgorithm(
                     SystemContext,
-                    SystemContext.CreateOpenUsdStageType_RootLayerDigestAlgorithm(m_plantStage, forInstance: true))
+                    SystemContext.CreateOpenUsdStageType_RootLayerDigestAlgorithm(m_cellStage, forInstance: true))
                     .Value = OpenUsdDigestAlgorithmEnum.Sha256;
 
-                // Per the companion spec §4.2 the OpenUSD facility SHALL be a
-                // component of the Server Object (i=2253) so that any conformant
-                // connector can Browse Server -> OpenUSD -> Representations. Record
-                // the inverse reference here; the matching forward reference from
-                // the Server Object (owned by the core node manager) is added via
-                // the externalReferences dictionary in LinkOpenUsdRootToServer.
+                // Per the companion spec §4.2 the OpenUSD facility SHALL be a component
+                // of the Server Object (i=2253) so any conformant connector can Browse
+                // Server -> OpenUSD -> Representations. Record the inverse reference
+                // here; the matching forward reference from the Server Object is added
+                // via the externalReferences dictionary in LinkOpenUsdRootToServer.
                 root.AddReference(ReferenceTypeIds.HasComponent, true, Opc.Ua.ObjectIds.Server);
 
                 // §5.15 asset content delivery (OU-AssetDelivery): serve this stage's
                 // artist-authored USD layer closure so a connector can render the twin
                 // with no external asset resolver.
-                UsdAssetDelivery.AttachStageAssets(SystemContext, m_plantStage, ns, LoadServedAssets());
+                UsdAssetDelivery.AttachStageAssets(SystemContext, m_cellStage, ns, LoadServedAssets());
 
                 AssignChildNodeIds(root);
                 await AddPredefinedNodeAsync(SystemContext, root, cancellationToken)
@@ -118,12 +113,12 @@ namespace Pumps
 
                 m_openUsdRoot = root;
                 m_logger.LogInformation(
-                    "Materialised OpenUSD facility (root {RootId}, PlantStage {StageId}).",
-                    root.NodeId, m_plantStage.NodeId);
+                    "Materialised OpenUSD facility (root {RootId}, RobotCellStage {StageId}).",
+                    root.NodeId, m_cellStage.NodeId);
             }
             catch (Exception ex)
             {
-                m_plantStage = null;
+                m_cellStage = null;
                 m_openUsdRoot = null;
                 m_logger.LogError(ex, "Failed to materialise the OpenUSD facility.");
             }
@@ -134,15 +129,15 @@ namespace Pumps
         {
             return new List<ServedAsset>
             {
-                new ServedAsset("Plant.usda", OpenUsdAssetKindEnum.RootLayer, ReadEmbeddedAsset("Plant.usda")),
-                new ServedAsset("pump.usda", OpenUsdAssetKindEnum.Reference, ReadEmbeddedAsset("pump.usda")),
-                new ServedAsset("remote-pump.usda", OpenUsdAssetKindEnum.Reference, ReadEmbeddedAsset("remote-pump.usda")),
+                new ServedAsset("Cell.usda", OpenUsdAssetKindEnum.RootLayer, ReadEmbeddedAsset("Cell.usda")),
+                new ServedAsset("robot.usda", OpenUsdAssetKindEnum.Reference, ReadEmbeddedAsset("robot.usda")),
+                new ServedAsset("tool.usda", OpenUsdAssetKindEnum.Reference, ReadEmbeddedAsset("tool.usda")),
             };
         }
 
         private static byte[] ReadEmbeddedAsset(string resourceName)
         {
-            using Stream? s = typeof(PumpNodeManager).Assembly.GetManifestResourceStream(resourceName);
+            using Stream? s = typeof(RoboticsNodeManager).Assembly.GetManifestResourceStream(resourceName);
             if (s == null)
             {
                 return Array.Empty<byte>();
@@ -162,14 +157,11 @@ namespace Pumps
             await base.CreateAddressSpaceAsync(externalReferences, cancellationToken)
                 .ConfigureAwait(false);
 
-            // Now that the root exists, add the forward HasComponent reference from
-            // the Server Object (i=2253, owned by the core node manager) to it.
+            // Now that the root exists, add the forward HasComponent reference from the
+            // Server Object (i=2253, owned by the core node manager) to it.
             LinkOpenUsdRootToServer(externalReferences);
         }
 
-        // Adds the Server -> OpenUSD forward reference into the externalReferences
-        // dictionary the master node manager applies across managers, so the
-        // well-known facility is browsable from the Server Object (spec §4.2).
         private void LinkOpenUsdRootToServer(
             IDictionary<NodeId, IList<IReference>> externalReferences)
         {
@@ -188,99 +180,50 @@ namespace Pumps
                 "Linked OpenUSD facility under the Server Object (i=2253).");
         }
 
-        // Call between AssignChildNodeIds(pump) and AddPredefinedNodeAsync(pump).
-        private void AttachOpenUsdRepresentation(PumpState pump)
+        // Attaches an OpenUsdRepresentation AddIn to an Object and registers it in the
+        // discovery registry (Server/OpenUSD/Representations, Organizes). Returns the
+        // representation so the caller can add live/component bindings to it.
+        private OpenUsdRepresentationState AttachRepresentation(
+            NodeState owner, string primPath, ushort ns)
         {
-            if (m_plantStage == null)
+            OpenUsdRepresentationState rep = SystemContext
+                .CreateInstanceOfOpenUsdRepresentationType(
+                    owner, new QualifiedName("OpenUsdRepresentation", ns));
+            // The instance factory leaves ReferenceTypeId = Null; set HasComponent so
+            // the AddIn is browsable from the represented object.
+            rep.ReferenceTypeId = ReferenceTypeIds.HasComponent;
+            owner.AddChild(rep);
+            rep.NodeId = SystemContext.NodeIdFactory.New(SystemContext, rep);
+            rep.CreateOrReplaceStage(SystemContext, null!).Value = m_cellStage!.NodeId;
+            rep.CreateOrReplacePrimPath(SystemContext, null!).Value = primPath;
+            return rep;
+        }
+
+        // Adds the Organizes reference pair between the discovery registry and a
+        // representation, so a generic connector discovers it without domain knowledge.
+        private void OrganiseRepresentation(OpenUsdRepresentationState rep)
+        {
+            FolderState? registry = m_openUsdRoot?.Representations;
+            if (registry == null)
             {
                 return;
             }
-            ushort ns = (ushort)Server.NamespaceUris.GetIndex(Opc.Ua.OpenUsd.Namespaces.OpenUSD);
-
-            OpenUsdRepresentationState rep = SystemContext
-                .CreateInstanceOfOpenUsdRepresentationType(
-                    pump, new QualifiedName("OpenUsdRepresentation", ns));
-            // The instance factory leaves ReferenceTypeId = Null; set HasComponent
-            // so the AddIn is browsable from the represented object.
-            rep.ReferenceTypeId = ReferenceTypeIds.HasComponent;
-            pump.AddChild(rep);
-            rep.NodeId = SystemContext.NodeIdFactory.New(SystemContext, rep);
-
-            rep.CreateOrReplaceStage(SystemContext, null!).Value = m_plantStage.NodeId;
-            rep.CreateOrReplacePrimPath(SystemContext, null!).Value = PumpPrimPath;
-
-            MeasurementsState? m = pump.Operational?.Measurements;
-            NodeId? massFlow = m?.MassFlow?.NodeId;
-            NodeId? bearingTemp = m?.BearingTemperature?.NodeId;
-            NodeId? diffPressure = m?.DifferentialPressure?.NodeId;
-
-            CreateBinding(rep, ns, "MassFlowSpin",
-                new Guid("6e63cf2c-f2de-4f78-a8f8-f0ccdbb7647a"),
-                massFlow, "/Plant/Pumps/P101/Impeller", "xformOp:rotateZ", "double",
-                OpenUsdRenderTargetKindEnum.Rotation, 1.0,
-                sourceSemanticId: MassFlowSemanticId);
-            CreateBinding(rep, ns, "BearingTempColor",
-                new Guid("b1a1f6f0-5c2b-5a1e-9f3a-2b7c4d8e0011"),
-                bearingTemp, "/Plant/Pumps/P101/Body", "primvars:displayColor", "color3f",
-                OpenUsdRenderTargetKindEnum.DisplayColor, 1.0);
-            CreateBinding(rep, ns, "DiffPressureEmissive",
-                new Guid("c2b2a7e1-6d3c-5b2f-a04b-3c8d5e9f1122"),
-                diffPressure, "/Plant/Pumps/P101/StatusLight/Mat/Surface", "inputs:emissiveColor", "color3f",
-                OpenUsdRenderTargetKindEnum.EmissiveColor, 1.0);
-
-            // 0.2 UaAlarmToUsd: a supervision alarm active-state drives the status
-            // light visibility. A dedicated Boolean variable exposes the alarm
-            // aspect the simulation toggles (see AdvanceSimulation).
-            m_alarmActiveVar = CreatePumpVariable(
-                pump, "AlarmActive", Opc.Ua.DataTypeIds.Boolean, new Variant(false), writable: false);
-            CreateBinding(rep, ns, "AlarmActiveVisibility",
-                new Guid("d3c3b8f2-7e4d-5c30-b15c-4d9e6a0b2233"),
-                m_alarmActiveVar.NodeId, "/Plant/Pumps/P101/StatusLight", "visibility", "token",
-                OpenUsdRenderTargetKindEnum.Visibility, 1.0,
-                bindingTypeId: Opc.Ua.OpenUsd.ObjectTypes.OpenUsdAlarmBindingType,
-                alarmAspect: OpenUsdAlarmAspectEnum.ActiveState);
-
-            // 0.2 UsdToUaCommand (opt-in): a writable speed setpoint Variable is the
-            // command target. The binding is Controllable and present, but a
-            // connector only issues the write when explicitly enabled AND authorized
-            // (single-writer, fail-closed). Enabled=true means "declared", NOT
-            // "auto-actuated" — the opt-in lives on the connector, not on Enabled.
-            m_speedSetpointVar = CreatePumpVariable(
-                pump, "SpeedSetpoint", Opc.Ua.DataTypeIds.Double, new Variant(0.0), writable: true);
-            CreateBinding(rep, ns, "SpeedSetpointCommand",
-                new Guid("e4d4c9a3-8f5e-5d41-c26d-5e0f7b1c3344"),
-                null, "/Plant/Pumps/P101/Impeller", "inputs:speedSetpoint", "double",
-                kind: null, 1.0,
-                bindingTypeId: Opc.Ua.OpenUsd.ObjectTypes.OpenUsdCommandBindingType,
-                signalRole: OpenUsdSignalRoleEnum.Controllable,
-                commandTargetNodeId: m_speedSetpointVar.NodeId,
-                commandTriggerPropertyName: "inputs:speedSetpoint");
-
-            // Composition (§5.12): the pump is composed of an Impeller and a Bearing,
-            // each a component Object with its own representation, mapped 1:1 to a child
-            // prim (arc=Child). This adds <Component> bindings on the pump representation.
-            AttachPumpComponents(pump, rep, ns);
-
-            AssignChildNodeIds(rep);
+            registry.AddReference(ReferenceTypeIds.Organizes, false, rep.NodeId);
+            rep.AddReference(ReferenceTypeIds.Organizes, true, registry.NodeId);
         }
 
-        // ECLASS-style IRDI for "volume flow rate" — a portable semantic id a
-        // connector can use to resolve the source across vendors (0.2 SemanticSource).
-        private const string MassFlowSemanticId = "0173-1#02-AAO677#002";
-
-        // Creates a simple Variable child on the pump (used for the 0.2 command
-        // setpoint and alarm-active demo signals), assigning a per-instance NodeId
-        // immediately because AssignChildNodeIds(pump) already ran.
-        private BaseDataVariableState CreatePumpVariable(
-            PumpState pump, string name, NodeId dataType, Variant initialValue, bool writable)
+        // Creates a simple Variable child on any Object, assigning a per-instance
+        // NodeId immediately (callers assign parent NodeIds first).
+        private BaseDataVariableState CreateVariable(
+            NodeState parent, string name, NodeId dataType, Variant initialValue, bool writable, ushort ns)
         {
             byte access = writable
                 ? AccessLevels.CurrentReadOrWrite
                 : AccessLevels.CurrentRead;
-            var v = new BaseDataVariableState(pump)
+            var v = new BaseDataVariableState(parent)
             {
                 SymbolicName = name,
-                BrowseName = new QualifiedName(name, pump.BrowseName.NamespaceIndex),
+                BrowseName = new QualifiedName(name, ns),
                 DisplayName = new LocalizedText(name),
                 ReferenceTypeId = ReferenceTypeIds.HasComponent,
                 TypeDefinitionId = VariableTypeIds.BaseDataVariableType,
@@ -290,35 +233,29 @@ namespace Pumps
                 UserAccessLevel = access,
                 Value = initialValue,
             };
-            pump.AddChild(v);
+            parent.AddChild(v);
             v.NodeId = SystemContext.NodeIdFactory.New(SystemContext, v);
             return v;
         }
 
-        private void OrganiseRepresentation(PumpState pump)
+        // Creates a FolderState child on any Object.
+        private FolderState CreateFolder(NodeState parent, string name, ushort ns)
         {
-            FolderState? registry = m_openUsdRoot?.Representations;
-            if (registry == null)
+            var folder = new FolderState(parent)
             {
-                return;
-            }
-            foreach (BaseInstanceState child in EnumerateChildren(pump))
-            {
-                if (child is OpenUsdRepresentationState rep)
-                {
-                    registry.AddReference(ReferenceTypeIds.Organizes, false, rep.NodeId);
-                    rep.AddReference(ReferenceTypeIds.Organizes, true, registry.NodeId);
-                }
-            }
+                SymbolicName = name,
+                BrowseName = new QualifiedName(name, ns),
+                DisplayName = new LocalizedText(name),
+                ReferenceTypeId = ReferenceTypeIds.HasComponent,
+                TypeDefinitionId = Opc.Ua.ObjectTypeIds.FolderType
+            };
+            parent.AddChild(folder);
+            folder.NodeId = SystemContext.NodeIdFactory.New(SystemContext, folder);
+            return folder;
         }
 
-        private System.Collections.Generic.List<BaseInstanceState> EnumerateChildren(NodeState parent)
-        {
-            var children = new System.Collections.Generic.List<BaseInstanceState>();
-            parent.GetChildren(SystemContext, children);
-            return children;
-        }
-
+        // Instantiates the OpenUsdLiveBinding <Binding> placeholder as a concrete
+        // browsable child of a representation and sets its members (spec §5.4/§5.10/§5.11).
         private void CreateBinding(
             OpenUsdRepresentationState rep, ushort ns, string name,
             Guid bindingDefinitionId, NodeId? sourceNodeId, string targetPrimPath,
@@ -331,23 +268,18 @@ namespace Pumps
             NodeId? commandTargetNodeId = null,
             string? commandTriggerPropertyName = null)
         {
-            // AddxBinding_ instantiates the <Binding> placeholder as a HasComponent
-            // child (browsable) and creates its mandatory base members. The binding
-            // intent is now the concrete subtype (§5.4): retype the instance to the
-            // requested OpenUsd{ValueChange,Alarm,History,Command}BindingType.
+            // AddxBinding_ creates the <Binding> placeholder child + mandatory base
+            // members; the intent is now the concrete subtype (§5.4), so retype it.
             OpenUsdLiveBindingState b = rep.AddxBinding_(SystemContext, new QualifiedName(name, ns));
             b.TypeDefinitionId = new NodeId(bindingTypeId, ns);
 
-            // Mandatory base members already exist on the instance; set their values.
             b.CreateOrReplaceBindingDefinitionId(SystemContext, null!).Value = new Uuid(bindingDefinitionId);
             b.CreateOrReplaceEnabled(SystemContext, null!).Value = true;
-            b.CreateOrReplaceTargetStage(SystemContext, null!).Value = m_plantStage!.NodeId;
+            b.CreateOrReplaceTargetStage(SystemContext, null!).Value = m_cellStage!.NodeId;
             b.CreateOrReplaceTargetPrimPath(SystemContext, null!).Value = targetPrimPath;
             b.CreateOrReplaceTargetPropertyName(SystemContext, null!).Value = targetPropertyName;
             b.CreateOrReplaceTargetUsdTypeName(SystemContext, null!).Value = targetUsdTypeName;
 
-            // Optional base members are not auto-created; supply a generated node so the
-            // member carries a valid BrowseName/ReferenceType and is browsable.
             if (sourceNodeId != null)
             {
                 b.CreateOrReplaceSourceNodeId(
@@ -355,7 +287,6 @@ namespace Pumps
                     SystemContext.CreateOpenUsdLiveBindingType_SourceNodeId(b, forInstance: true))
                     .Value = (NodeId)sourceNodeId;
             }
-            // SignalRole is always asserted; the semantic id is set when provided.
             b.CreateOrReplaceSignalRole(
                 SystemContext,
                 SystemContext.CreateOpenUsdLiveBindingType_SignalRole(b, forInstance: true))
@@ -367,8 +298,7 @@ namespace Pumps
                     SystemContext.CreateOpenUsdLiveBindingType_SourceSemanticId(b, forInstance: true))
                     .Value = sourceSemanticId;
             }
-            // Intent-specific members live only on the concrete subtype (§5.4); add them
-            // directly to the retyped instance via the subtype's member factory.
+            // Intent-specific members live only on the concrete subtype (§5.4).
             if (alarmAspect != null)
             {
                 var ap = SystemContext.CreateOpenUsdAlarmBindingType_AlarmAspect(b, forInstance: true);
@@ -387,7 +317,6 @@ namespace Pumps
                 b.AddChild(tp);
                 tp.Value = commandTriggerPropertyName;
             }
-
             if (kind != null)
             {
                 b.CreateOrReplaceRenderTargetKind(
@@ -403,6 +332,54 @@ namespace Pumps
                 SystemContext,
                 SystemContext.CreateOpenUsdLiveBindingType_BadQualityAction(b, forInstance: true))
                 .Value = OpenUsdBadQualityActionEnum.Skip;
+        }
+
+        // Instantiates the OpenUsdComponentBinding <Component> placeholder on a
+        // representation and sets its members (spec §5.12–5.14).
+        private void CreateComponentBinding(
+            OpenUsdRepresentationState rep, ushort ns, string name, Guid bindingDefinitionId,
+            OpenUsdCardinalityEnum cardinality, OpenUsdCompositionArcEnum arc, string targetPrimPath,
+            NodeId? componentRepresentation = null, string? assetReference = null,
+            bool dynamic = false, NodeId? changeEventSource = null,
+            NodeId? componentTypeDefinition = null)
+        {
+            OpenUsdComponentBindingState b = rep.AddxComponent_(SystemContext, new QualifiedName(name, ns));
+            b.CreateOrReplaceBindingDefinitionId(SystemContext, null!).Value = new Uuid(bindingDefinitionId);
+            b.CreateOrReplaceEnabled(SystemContext, null!).Value = true;
+            b.CreateOrReplaceCardinality(SystemContext, null!).Value = cardinality;
+            b.CreateOrReplaceCompositionArc(SystemContext, null!).Value = arc;
+            b.CreateOrReplaceTargetPrimPath(SystemContext, null!).Value = targetPrimPath;
+
+            if (componentRepresentation != null)
+            {
+                b.CreateOrReplaceComponentRepresentation(SystemContext,
+                    SystemContext.CreateOpenUsdComponentBindingType_ComponentRepresentation(b, forInstance: true))
+                    .Value = (NodeId)componentRepresentation;
+            }
+            if (!string.IsNullOrEmpty(assetReference))
+            {
+                b.CreateOrReplaceComponentAssetReference(SystemContext,
+                    SystemContext.CreateOpenUsdComponentBindingType_ComponentAssetReference(b, forInstance: true))
+                    .Value = assetReference;
+            }
+            if (dynamic)
+            {
+                b.CreateOrReplaceDynamic(SystemContext,
+                    SystemContext.CreateOpenUsdComponentBindingType_Dynamic(b, forInstance: true))
+                    .Value = true;
+            }
+            if (changeEventSource != null)
+            {
+                b.CreateOrReplaceChangeEventSource(SystemContext,
+                    SystemContext.CreateOpenUsdComponentBindingType_ChangeEventSource(b, forInstance: true))
+                    .Value = (NodeId)changeEventSource;
+            }
+            if (componentTypeDefinition != null)
+            {
+                b.CreateOrReplaceComponentTypeDefinition(SystemContext,
+                    SystemContext.CreateOpenUsdComponentBindingType_ComponentTypeDefinition(b, forInstance: true))
+                    .Value = (NodeId)componentTypeDefinition;
+            }
         }
     }
 }

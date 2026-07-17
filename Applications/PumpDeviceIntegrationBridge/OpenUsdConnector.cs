@@ -52,8 +52,9 @@ namespace PumpDeviceIntegrationBridge
         private readonly Func<string, CancellationToken, Task<ISession>>? m_remoteSessionFactory;
         private readonly ushort m_ns;
         private readonly NodeId m_representationTypeId;
-        private readonly NodeId m_bindingTypeId;
+        private readonly Dictionary<NodeId, OpenUsdIntentProfile> m_bindingTypeIntents;
         private readonly NodeId m_componentTypeId;
+        private readonly NodeId m_assetTypeId;
         private Subscription? m_subscription;
         private readonly List<OpenUsdConnector> m_remoteConnectors = new();
 
@@ -83,8 +84,15 @@ namespace PumpDeviceIntegrationBridge
             m_remoteSessionFactory = remoteSessionFactory;
             m_ns = (ushort)m_session.NamespaceUris.GetIndex(OpenUsdModel.NamespaceUri);
             m_representationTypeId = new NodeId(1003u, m_ns);
-            m_bindingTypeId = new NodeId(1004u, m_ns);
+            m_bindingTypeIntents = new Dictionary<NodeId, OpenUsdIntentProfile>
+            {
+                { new NodeId(OpenUsdModel.ValueChangeBindingTypeId, m_ns), OpenUsdIntentProfile.UaToUsdTelemetry },
+                { new NodeId(OpenUsdModel.AlarmBindingTypeId, m_ns), OpenUsdIntentProfile.UaAlarmToUsd },
+                { new NodeId(OpenUsdModel.HistoryBindingTypeId, m_ns), OpenUsdIntentProfile.UaHistoryToUsd },
+                { new NodeId(OpenUsdModel.CommandBindingTypeId, m_ns), OpenUsdIntentProfile.UsdToUaCommand },
+            };
             m_componentTypeId = new NodeId(1005u, m_ns);
+            m_assetTypeId = new NodeId(1006u, m_ns);
         }
 
         public sealed class BindingInfo
@@ -94,6 +102,7 @@ namespace PumpDeviceIntegrationBridge
             public string? PropertyName { get; set; }
             public OpenUsdRenderTargetKind Kind { get; set; }
             public double Scale { get; set; } = 1.0;
+            public double Offset { get; set; }
             public OpenUsdIntentProfile Intent { get; set; } = OpenUsdIntentProfile.UaToUsdTelemetry;
             public OpenUsdSignalRole SignalRole { get; set; } = OpenUsdSignalRole.Observable;
             public string? SourceSemanticId { get; set; }
@@ -228,7 +237,8 @@ namespace PumpDeviceIntegrationBridge
                 {
                     continue;
                 }
-                if (typeDef == m_bindingTypeId)
+                if (typeDef != null
+                    && m_bindingTypeIntents.TryGetValue(typeDef.Value, out OpenUsdIntentProfile intent))
                 {
                     Dictionary<string, NodeId> bp = await ChildrenByNameAsync(childId.Value, ct)
                         .ConfigureAwait(false);
@@ -240,8 +250,8 @@ namespace PumpDeviceIntegrationBridge
                         Kind = (OpenUsdRenderTargetKind)await ReadInt32Async(bp, "RenderTargetKind", ct)
                             .ConfigureAwait(false),
                         Scale = await ReadDoubleAsync(bp, "Scale", 1.0, ct).ConfigureAwait(false),
-                        Intent = (OpenUsdIntentProfile)await ReadInt32Async(bp, "IntentProfile", ct)
-                            .ConfigureAwait(false),
+                        Offset = await ReadDoubleAsync(bp, "Offset", 0.0, ct).ConfigureAwait(false),
+                        Intent = intent,
                         SignalRole = (OpenUsdSignalRole)await ReadInt32Async(bp, "SignalRole", ct)
                             .ConfigureAwait(false),
                         SourceSemanticId = await ReadStringAsync(bp, "SourceSemanticId", ct)
@@ -441,7 +451,7 @@ namespace PumpDeviceIntegrationBridge
                 case OpenUsdRenderTargetKind.Translation:
                 case OpenUsdRenderTargetKind.Scale:
                 case OpenUsdRenderTargetKind.Opacity:
-                    return d * b.Scale;
+                    return d * b.Scale + b.Offset;
                 case OpenUsdRenderTargetKind.DisplayColor:
                     // Temperature: blue (cool) -> red (hot).
                     double t = System.Math.Max(0.0, System.Math.Min(1.0, (d - 20.0) / 80.0));
@@ -453,7 +463,7 @@ namespace PumpDeviceIntegrationBridge
                 case OpenUsdRenderTargetKind.Visibility:
                     return d != 0.0 ? "inherited" : "invisible";
                 default:
-                    return d * b.Scale;
+                    return d * b.Scale + b.Offset;
             }
         }
 
