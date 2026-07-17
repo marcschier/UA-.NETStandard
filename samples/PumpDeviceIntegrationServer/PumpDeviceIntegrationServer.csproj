@@ -17,6 +17,8 @@
     <ProjectReference Include="..\..\src\Opc.Ua.Server\Opc.Ua.Server.csproj" />
     <ProjectReference Include="..\..\src\Opc.Ua.Di\Opc.Ua.Di.csproj" />
     <ProjectReference Include="..\..\src\Opc.Ua.Di.Server\Opc.Ua.Di.Server.csproj" />
+    <ProjectReference Include="..\..\src\Opc.Ua.OpenUsd\Opc.Ua.OpenUsd.csproj" />
+    <ProjectReference Include="..\..\src\Opc.Ua.OpenUsd.Server\Opc.Ua.OpenUsd.Server.csproj" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\tools\Opc.Ua.SourceGeneration\Opc.Ua.SourceGeneration.csproj">
@@ -27,12 +29,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" />
-  </ItemGroup>
-  <!-- Shared OpenUSD asset-content-delivery helper (spec §5.15): serves the
-       embedded USD layers via a read-only Part 5 FileType. Linked from both the
-       pump and robotics samples. -->
-  <ItemGroup>
-    <Compile Include="..\OpenUsdShared\UsdAssetDelivery.cs" Link="UsdAssetDelivery.cs" />
   </ItemGroup>
   <!-- Artist-authored USD layers embedded so the server ships (and serves) its own
        twin geometry: Plant.usda (RootLayer) + pump.usda + remote-pump.usda (References). -->
@@ -64,10 +60,6 @@
       <ModelSourceGeneratorPrefix>Opc.Ua.Pumps</ModelSourceGeneratorPrefix>
     </AdditionalFiles>
     <AdditionalFiles Include="Model\Opc.Ua.Pumps.NodeSet2.csv" />
-    <AdditionalFiles Include="Model\Opc.Ua.OpenUsdBinding.NodeSet2.xml">
-      <ModelSourceGeneratorPrefix>Opc.Ua.OpenUsd</ModelSourceGeneratorPrefix>
-    </AdditionalFiles>
-    <AdditionalFiles Include="Model\Opc.Ua.OpenUsdBinding.NodeSet2.csv" />
   </ItemGroup>
   <Import Project="..\..\tools\Opc.Ua.SourceGeneration\OPCFoundation.Opc.Ua.SourceGeneration.props" />
   <PropertyGroup>

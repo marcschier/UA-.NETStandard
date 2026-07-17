@@ -36,13 +36,13 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Opc.Ua.Client;
-using PumpDeviceIntegrationBridge;
+using Opc.Ua.OpenUsd.Client;
 
 namespace Opc.Ua.Di.Tests
 {
     /// <summary>
     /// End-to-end validation of the draft OPC UA — OpenUSD Bindings companion
-    /// specification against the RoboticsDeviceIntegrationServer. Starts the robotics
+    /// specification against the MinimalRobotServer. Starts the robotics
     /// server via the generic host, connects a real client session, discovers the 15
     /// OpenUsdRepresentation AddIns (a MotionDeviceSystem "RobotCell" of two 6-axis
     /// robots composed recursively of their axes), subscribes to the bound Axis
@@ -84,7 +84,7 @@ namespace Opc.Ua.Di.Tests
             m_telemetry = DefaultTelemetry.Create(b => b.SetMinimumLevel(LogLevel.Warning));
 
             int port = GetFreeTcpPort();
-            string serverUrl = $"opc.tcp://localhost:{port}/RoboticsDeviceIntegrationServer";
+            string serverUrl = $"opc.tcp://localhost:{port}/MinimalRobotServer";
 
             HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder();
             hostBuilder.Logging.ClearProviders();

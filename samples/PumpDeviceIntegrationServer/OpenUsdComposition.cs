@@ -33,6 +33,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Opc.Ua;
 using Opc.Ua.OpenUsd;
+using Opc.Ua.OpenUsd.Server;
 using Opc.Ua.Pumps;
 using Opc.Ua.Server;
 using Opc.Ua.Server.NodeManager;
@@ -262,6 +263,9 @@ namespace Pumps
             return (obj, rep);
         }
 
+        // Thin adapter over the reusable Opc.Ua.OpenUsd.Server authoring API: the
+        // component/composition-binding logic lives in the SDK
+        // (OpenUsdRepresentationAuthoring.AddComponentBinding), not in this sample.
         private void CreateComponentBinding(
             OpenUsdRepresentationState rep, ushort ns, string name, Guid bindingDefinitionId,
             OpenUsdCardinalityEnum cardinality, OpenUsdCompositionArcEnum arc, string targetPrimPath,
@@ -270,55 +274,10 @@ namespace Pumps
             string? componentServerUri = null, string? componentEndpointUrl = null,
             NodeId? componentTypeDefinition = null)
         {
-            OpenUsdComponentBindingState b = rep.AddxComponent_(SystemContext, new QualifiedName(name, ns));
-            b.CreateOrReplaceBindingDefinitionId(SystemContext, null!).Value = new Uuid(bindingDefinitionId);
-            b.CreateOrReplaceEnabled(SystemContext, null!).Value = true;
-            b.CreateOrReplaceCardinality(SystemContext, null!).Value = cardinality;
-            b.CreateOrReplaceCompositionArc(SystemContext, null!).Value = arc;
-            b.CreateOrReplaceTargetPrimPath(SystemContext, null!).Value = targetPrimPath;
-
-            if (componentRepresentation != null)
-            {
-                b.CreateOrReplaceComponentRepresentation(SystemContext,
-                    SystemContext.CreateOpenUsdComponentBindingType_ComponentRepresentation(b, forInstance: true))
-                    .Value = (NodeId)componentRepresentation;
-            }
-            if (!string.IsNullOrEmpty(assetReference))
-            {
-                b.CreateOrReplaceComponentAssetReference(SystemContext,
-                    SystemContext.CreateOpenUsdComponentBindingType_ComponentAssetReference(b, forInstance: true))
-                    .Value = assetReference;
-            }
-            if (dynamic)
-            {
-                b.CreateOrReplaceDynamic(SystemContext,
-                    SystemContext.CreateOpenUsdComponentBindingType_Dynamic(b, forInstance: true))
-                    .Value = true;
-            }
-            if (changeEventSource != null)
-            {
-                b.CreateOrReplaceChangeEventSource(SystemContext,
-                    SystemContext.CreateOpenUsdComponentBindingType_ChangeEventSource(b, forInstance: true))
-                    .Value = (NodeId)changeEventSource;
-            }
-            if (!string.IsNullOrEmpty(componentServerUri))
-            {
-                b.CreateOrReplaceComponentServerUri(SystemContext,
-                    SystemContext.CreateOpenUsdComponentBindingType_ComponentServerUri(b, forInstance: true))
-                    .Value = componentServerUri;
-            }
-            if (!string.IsNullOrEmpty(componentEndpointUrl))
-            {
-                b.CreateOrReplaceComponentEndpointUrl(SystemContext,
-                    SystemContext.CreateOpenUsdComponentBindingType_ComponentEndpointUrl(b, forInstance: true))
-                    .Value = componentEndpointUrl;
-            }
-            if (componentTypeDefinition != null)
-            {
-                b.CreateOrReplaceComponentTypeDefinition(SystemContext,
-                    SystemContext.CreateOpenUsdComponentBindingType_ComponentTypeDefinition(b, forInstance: true))
-                    .Value = (NodeId)componentTypeDefinition;
-            }
+            _ = rep.AddComponentBinding(
+                SystemContext, ns, name, bindingDefinitionId, cardinality, arc, targetPrimPath,
+                componentRepresentation, assetReference, dynamic, changeEventSource,
+                componentServerUri, componentEndpointUrl, componentTypeDefinition);
         }
     }
 }

@@ -35,8 +35,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Opc.Ua;
 using Opc.Ua.OpenUsd;
+using Opc.Ua.OpenUsd.Server;
 using Opc.Ua.Pumps;
-using OpenUsdShared;
 
 namespace Pumps
 {
@@ -319,6 +319,9 @@ namespace Pumps
             return children;
         }
 
+        // Thin adapter over the reusable Opc.Ua.OpenUsd.Server authoring API: binds the
+        // plant stage and forwards. The binding-authoring logic lives in the SDK
+        // (OpenUsdRepresentationAuthoring.AddLiveBinding), not in this sample.
         private void CreateBinding(
             OpenUsdRepresentationState rep, ushort ns, string name,
             Guid bindingDefinitionId, NodeId? sourceNodeId, string targetPrimPath,
@@ -331,78 +334,11 @@ namespace Pumps
             NodeId? commandTargetNodeId = null,
             string? commandTriggerPropertyName = null)
         {
-            // AddxBinding_ instantiates the <Binding> placeholder as a HasComponent
-            // child (browsable) and creates its mandatory base members. The binding
-            // intent is now the concrete subtype (§5.4): retype the instance to the
-            // requested OpenUsd{ValueChange,Alarm,History,Command}BindingType.
-            OpenUsdLiveBindingState b = rep.AddxBinding_(SystemContext, new QualifiedName(name, ns));
-            b.TypeDefinitionId = new NodeId(bindingTypeId, ns);
-
-            // Mandatory base members already exist on the instance; set their values.
-            b.CreateOrReplaceBindingDefinitionId(SystemContext, null!).Value = new Uuid(bindingDefinitionId);
-            b.CreateOrReplaceEnabled(SystemContext, null!).Value = true;
-            b.CreateOrReplaceTargetStage(SystemContext, null!).Value = m_plantStage!.NodeId;
-            b.CreateOrReplaceTargetPrimPath(SystemContext, null!).Value = targetPrimPath;
-            b.CreateOrReplaceTargetPropertyName(SystemContext, null!).Value = targetPropertyName;
-            b.CreateOrReplaceTargetUsdTypeName(SystemContext, null!).Value = targetUsdTypeName;
-
-            // Optional base members are not auto-created; supply a generated node so the
-            // member carries a valid BrowseName/ReferenceType and is browsable.
-            if (sourceNodeId != null)
-            {
-                b.CreateOrReplaceSourceNodeId(
-                    SystemContext,
-                    SystemContext.CreateOpenUsdLiveBindingType_SourceNodeId(b, forInstance: true))
-                    .Value = (NodeId)sourceNodeId;
-            }
-            // SignalRole is always asserted; the semantic id is set when provided.
-            b.CreateOrReplaceSignalRole(
-                SystemContext,
-                SystemContext.CreateOpenUsdLiveBindingType_SignalRole(b, forInstance: true))
-                .Value = signalRole;
-            if (!string.IsNullOrEmpty(sourceSemanticId))
-            {
-                b.CreateOrReplaceSourceSemanticId(
-                    SystemContext,
-                    SystemContext.CreateOpenUsdLiveBindingType_SourceSemanticId(b, forInstance: true))
-                    .Value = sourceSemanticId;
-            }
-            // Intent-specific members live only on the concrete subtype (§5.4); add them
-            // directly to the retyped instance via the subtype's member factory.
-            if (alarmAspect != null)
-            {
-                var ap = SystemContext.CreateOpenUsdAlarmBindingType_AlarmAspect(b, forInstance: true);
-                b.AddChild(ap);
-                ap.Value = alarmAspect.Value;
-            }
-            if (commandTargetNodeId != null)
-            {
-                var ct = SystemContext.CreateOpenUsdCommandBindingType_CommandTargetNodeId(b, forInstance: true);
-                b.AddChild(ct);
-                ct.Value = (NodeId)commandTargetNodeId;
-            }
-            if (!string.IsNullOrEmpty(commandTriggerPropertyName))
-            {
-                var tp = SystemContext.CreateOpenUsdCommandBindingType_CommandTriggerPropertyName(b, forInstance: true);
-                b.AddChild(tp);
-                tp.Value = commandTriggerPropertyName;
-            }
-
-            if (kind != null)
-            {
-                b.CreateOrReplaceRenderTargetKind(
-                    SystemContext,
-                    SystemContext.CreateOpenUsdLiveBindingType_RenderTargetKind(b, forInstance: true))
-                    .Value = kind.Value;
-            }
-            b.CreateOrReplaceScale(
-                SystemContext,
-                SystemContext.CreateOpenUsdLiveBindingType_Scale(b, forInstance: true))
-                .Value = scale;
-            b.CreateOrReplaceBadQualityAction(
-                SystemContext,
-                SystemContext.CreateOpenUsdLiveBindingType_BadQualityAction(b, forInstance: true))
-                .Value = OpenUsdBadQualityActionEnum.Skip;
+            _ = rep.AddLiveBinding(
+                SystemContext, ns, m_plantStage!.NodeId, name, bindingDefinitionId, sourceNodeId,
+                targetPrimPath, targetPropertyName, targetUsdTypeName, kind, scale,
+                bindingTypeId, signalRole, sourceSemanticId, alarmAspect,
+                commandTargetNodeId, commandTriggerPropertyName);
         }
     }
 }

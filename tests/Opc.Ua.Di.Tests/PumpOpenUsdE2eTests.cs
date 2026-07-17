@@ -35,7 +35,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Opc.Ua.Client;
-using PumpDeviceIntegrationBridge;
+using Opc.Ua.OpenUsd.Client;
 
 namespace Opc.Ua.Di.Tests
 {

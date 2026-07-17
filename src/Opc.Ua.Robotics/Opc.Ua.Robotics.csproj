@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>$(AssemblyPrefix).Robotics</AssemblyName>
+    <TargetFrameworks>$(LibTargetFrameworks)</TargetFrameworks>
+    <PackageId>$(PackagePrefix).Opc.Ua.Robotics</PackageId>
+    <RootNamespace>Opc.Ua.Robotics</RootNamespace>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <Nullable>enable</Nullable>
+    <Description>Shared foundation for the OPC 40010 Robotics companion specification (MotionDeviceSystem -&gt; MotionDevice -&gt; Axis). Carries the Robotics + Industrial Automation (IA) NodeSet2 XMLs and imports them at runtime into a server node manager, plus the Robotics namespace URIs and key type NodeIds. Used together with the draft OPC UA - OpenUSD Bindings model to render a live robot-cell twin.</Description>
+    <IsPackable>true</IsPackable>
+    <PackageReadmeFile>NugetREADME.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">true</IsAotCompatible>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <PackageId>$(PackageId).Debug</PackageId>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Opc.Ua.Core\Opc.Ua.Core.csproj" />
+  </ItemGroup>
+  <!-- The OPC 40010 Robotics model and its required IA model are carried as
+       embedded NodeSet2 XML and imported at RUNTIME (UANodeSet.Read + Import),
+       not source-generated: the Robotics model uses base state-machine/method
+       types whose generated NodeState proxies are not all present in this Core,
+       so the generator's fluent/proxy output does not compile. Runtime import
+       loads the full, faithful type structure without the generator. A consumer
+       builds instances from BaseObjectState + the numeric type NodeIds in
+       RoboticsModel, so no generated Robotics/IA typed classes are needed. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Model\Opc.Ua.IA.NodeSet2.xml">
+      <LogicalName>Opc.Ua.IA.NodeSet2.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Opc.Ua.Robotics.NodeSet2.xml">
+      <LogicalName>Opc.Ua.Robotics.NodeSet2.xml</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="NugetREADME.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>
