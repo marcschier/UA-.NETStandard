@@ -154,7 +154,7 @@ namespace Opc.Ua.SourceGeneration
                 return false;
             }
             string remainder = candidate.Substring(standardPrefix.Length);
-            if (remainder.Length == 0 || remainder.IndexOf('.') >= 0)
+            if (remainder.Length == 0 || remainder.Contains('.', StringComparison.Ordinal))
             {
                 return false;
             }

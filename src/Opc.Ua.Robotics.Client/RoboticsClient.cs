@@ -64,7 +64,7 @@ namespace Opc.Ua.Robotics.Client
             {
                 NodeId = root,
                 BrowseDirection = BrowseDirection.Forward,
-                ReferenceTypeId = ReferenceTypeIds.HierarchicalReferences,
+                ReferenceTypeId = Opc.Ua.ReferenceTypeIds.HierarchicalReferences,
                 IncludeSubtypes = true,
                 NodeClassMask = (uint)NodeClass.Object,
                 ResultMask = (uint)BrowseResultMask.All

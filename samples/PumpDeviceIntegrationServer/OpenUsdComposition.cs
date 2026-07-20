@@ -190,9 +190,7 @@ namespace Pumps
                     {
                         await DeleteNodeAsync(SystemContext, (NodeId)m_dynamicPumpNodeId, CancellationToken.None)
                             .ConfigureAwait(false);
-                        m_logger.LogInformation(
-                            "Dynamic composition: removed line pump (NodeId={NodeId}); model-change emitted.",
-                            m_dynamicPumpNodeId);
+                        m_logger.RemovedLinePump(m_dynamicPumpNodeId);
                         m_dynamicPumpNodeId = null;
                     }
                 }
@@ -231,9 +229,7 @@ namespace Pumps
             NodeId newId = await CreateNodeAsync(SystemContext, m_linePumps.NodeId,
                 ReferenceTypeIds.Organizes, new QualifiedName(name, ns), pump, CancellationToken.None)
                 .ConfigureAwait(false);
-            m_logger.LogInformation(
-                "Dynamic composition: added line pump '{Name}' (NodeId={NodeId}); model-change emitted.",
-                name, newId);
+            m_logger.AddedLinePump(name, newId);
             return newId;
         }
 
@@ -279,5 +275,18 @@ namespace Pumps
                 componentRepresentation, assetReference, dynamic, changeEventSource,
                 componentServerUri, componentEndpointUrl, componentTypeDefinition);
         }
+    }
+
+    internal static partial class OpenUsdCompositionLog
+    {
+        [LoggerMessage(EventId = PumpDeviceIntegrationServerEventIds.OpenUsdComposition + 1,
+            Level = LogLevel.Information,
+            Message = "Dynamic composition: removed line pump (NodeId={NodeId}); model-change emitted.")]
+        public static partial void RemovedLinePump(this ILogger logger, NodeId? nodeId);
+
+        [LoggerMessage(EventId = PumpDeviceIntegrationServerEventIds.OpenUsdComposition + 2,
+            Level = LogLevel.Information,
+            Message = "Dynamic composition: added line pump '{Name}' (NodeId={NodeId}); model-change emitted.")]
+        public static partial void AddedLinePump(this ILogger logger, string name, NodeId nodeId);
     }
 }

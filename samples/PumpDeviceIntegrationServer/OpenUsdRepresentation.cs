@@ -117,9 +117,7 @@ namespace Pumps
                     .ConfigureAwait(false);
 
                 m_openUsdRoot = root;
-                m_logger.LogInformation(
-                    "Materialised OpenUSD facility (root {RootId}, PlantStage {StageId}).",
-                    root.NodeId, m_plantStage.NodeId);
+                m_logger.MaterialisedOpenUsdFacility(root.NodeId, m_plantStage.NodeId);
             }
             catch (Exception ex)
             {
@@ -340,5 +338,13 @@ namespace Pumps
                 bindingTypeId, signalRole, sourceSemanticId, alarmAspect,
                 commandTargetNodeId, commandTriggerPropertyName);
         }
+    }
+
+    internal static partial class OpenUsdRepresentationLog
+    {
+        [LoggerMessage(EventId = PumpDeviceIntegrationServerEventIds.OpenUsdRepresentation + 1,
+            Level = LogLevel.Information,
+            Message = "Materialised OpenUSD facility (root {RootId}, PlantStage {StageId}).")]
+        public static partial void MaterialisedOpenUsdFacility(this ILogger logger, NodeId rootId, NodeId stageId);
     }
 }

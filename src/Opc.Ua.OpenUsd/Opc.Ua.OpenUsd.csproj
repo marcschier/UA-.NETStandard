@@ -35,14 +35,14 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Remove="Model\Opc.Ua.OpenUsdBinding.NodeSet2.xml" />
-    <None Remove="Model\Opc.Ua.OpenUsdBinding.NodeSet2.csv" />
+    <None Remove="Model\Opc.Ua.OpenUsd.NodeSet2.xml" />
+    <None Remove="Model\Opc.Ua.OpenUsd.NodeSet2.csv" />
   </ItemGroup>
   <ItemGroup>
-    <AdditionalFiles Include="Model\Opc.Ua.OpenUsdBinding.NodeSet2.xml">
+    <AdditionalFiles Include="Model\Opc.Ua.OpenUsd.NodeSet2.xml">
       <ModelSourceGeneratorPrefix>Opc.Ua.OpenUsd</ModelSourceGeneratorPrefix>
     </AdditionalFiles>
-    <AdditionalFiles Include="Model\Opc.Ua.OpenUsdBinding.NodeSet2.csv" />
+    <AdditionalFiles Include="Model\Opc.Ua.OpenUsd.NodeSet2.csv" />
   </ItemGroup>
   <Import Project="..\..\tools\Opc.Ua.SourceGeneration\OPCFoundation.Opc.Ua.SourceGeneration.props" />
   <PropertyGroup>

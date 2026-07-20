@@ -202,8 +202,7 @@ namespace Robotics
                 ModelChangeEmissionEnabled = true;
                 _ = RunDynamicToolAsync(ns, usdNs);
 
-                m_logger.LogInformation(
-                    "Materialised RobotCell ({RobotCount} robots, {AxisCount} axes, {RepCount} representations).",
+                m_logger.MaterialisedRobotCell(
                     s_robots.Length, m_axes.Count, 1 + robotReps.Count + m_axisReps.Count);
             }
             catch (Exception ex)
@@ -366,8 +365,7 @@ namespace Robotics
             NodeId newId = await CreateNodeAsync(SystemContext, (NodeId)m_r1NodeId,
                 ReferenceTypeIds.HasComponent, new QualifiedName("MountedTool", ns), tool, CancellationToken.None)
                 .ConfigureAwait(false);
-            m_logger.LogInformation(
-                "Dynamic composition: attached gripper tool (NodeId={NodeId}); model-change emitted.", newId);
+            m_logger.AttachedGripperTool(newId);
             return newId;
         }
 
@@ -386,5 +384,19 @@ namespace Robotics
             Array.Copy(hash, g, 16);
             return new Guid(g);
         }
+    }
+
+    internal static partial class RobotCellLog
+    {
+        [LoggerMessage(EventId = MinimalRobotServerEventIds.RobotCell + 1,
+            Level = LogLevel.Information,
+            Message = "Materialised RobotCell ({RobotCount} robots, {AxisCount} axes, {RepCount} representations).")]
+        public static partial void MaterialisedRobotCell(
+            this ILogger logger, int robotCount, int axisCount, int repCount);
+
+        [LoggerMessage(EventId = MinimalRobotServerEventIds.RobotCell + 2,
+            Level = LogLevel.Information,
+            Message = "Dynamic composition: attached gripper tool (NodeId={NodeId}); model-change emitted.")]
+        public static partial void AttachedGripperTool(this ILogger logger, NodeId nodeId);
     }
 }

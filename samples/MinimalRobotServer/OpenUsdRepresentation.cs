@@ -112,9 +112,7 @@ namespace Robotics
                     .ConfigureAwait(false);
 
                 m_openUsdRoot = root;
-                m_logger.LogInformation(
-                    "Materialised OpenUSD facility (root {RootId}, RobotCellStage {StageId}).",
-                    root.NodeId, m_cellStage.NodeId);
+                m_logger.MaterialisedOpenUsdFacility(root.NodeId, m_cellStage.NodeId);
             }
             catch (Exception ex)
             {
@@ -295,5 +293,14 @@ namespace Robotics
                 componentRepresentation, assetReference, dynamic, changeEventSource,
                 componentTypeDefinition: componentTypeDefinition);
         }
+    }
+
+    internal static partial class OpenUsdRepresentationLog
+    {
+        [LoggerMessage(EventId = MinimalRobotServerEventIds.OpenUsdRepresentation + 1,
+            Level = LogLevel.Information,
+            Message = "Materialised OpenUSD facility (root {RootId}, RobotCellStage {StageId}).")]
+        public static partial void MaterialisedOpenUsdFacility(
+            this ILogger logger, NodeId rootId, NodeId stageId);
     }
 }

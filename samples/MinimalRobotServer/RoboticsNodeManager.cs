@@ -142,9 +142,7 @@ namespace Robotics
                 .Configure(Configure)
                 .Seal();
 
-            m_logger.LogInformation(
-                "RoboticsNodeManager: address space ready ({NodeCount} predefined nodes).",
-                PredefinedNodes.Count);
+            m_logger.RoboticsAddressSpaceReady(PredefinedNodes.Count);
         }
 
         /// <summary>
@@ -245,5 +243,13 @@ namespace Robotics
 #pragma warning restore CA2000
             return new ValueTask<IAsyncNodeManager>(nm);
         }
+    }
+
+    internal static partial class RoboticsNodeManagerLog
+    {
+        [LoggerMessage(EventId = MinimalRobotServerEventIds.RoboticsNodeManager + 1,
+            Level = LogLevel.Information,
+            Message = "RoboticsNodeManager: address space ready ({NodeCount} predefined nodes).")]
+        public static partial void RoboticsAddressSpaceReady(this ILogger logger, int nodeCount);
     }
 }
