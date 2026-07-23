@@ -1,0 +1,813 @@
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Opc.Ua.Security.Certificates;
+
+namespace Opc.Ua
+{
+    /// <summary>
+    /// An object used by clients to access a UA discovery service.
+    /// </summary>
+#pragma warning disable CA2000 // Factory methods transfer ownership to the caller
+    public partial class DiscoveryClient
+    {
+        /// <summary>
+        /// Creates a binding for to use for discovering servers.
+        /// </summary>
+        /// <param name="discoveryUrl">The discovery URL.</param>
+        [Obsolete("Use CreateAsync with telemetry parameter instead.")]
+        public static DiscoveryClient Create(
+            Uri discoveryUrl)
+        {
+            return CreateAsync(
+                discoveryUrl,
+                null,
+                (ITelemetryContext?)null).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Creates a binding for to use for discovering servers.
+        /// </summary>
+        /// <param name="discoveryUrl">The discovery URL.</param>
+        /// <param name="configuration">The configuration.</param>
+        [Obsolete("Use CreateAsync with telemetry parameter instead.")]
+        public static DiscoveryClient Create(
+            Uri discoveryUrl,
+            EndpointConfiguration configuration)
+        {
+            return CreateAsync(
+                discoveryUrl,
+                configuration,
+                (ITelemetryContext?)null).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Creates a binding for to use for discovering servers.
+        /// </summary>
+        [Obsolete("Use CreateAsync with telemetry parameter instead.")]
+        public static DiscoveryClient Create(
+            ITransportWaitingConnection connection,
+            EndpointConfiguration configuration)
+        {
+            return CreateAsync(
+                connection,
+                configuration,
+                null).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Creates a binding for to use for discovering servers.
+        /// </summary>
+        [Obsolete("Use CreateAsync instead.")]
+        public static DiscoveryClient Create(
+            ApplicationConfiguration application,
+            Uri discoveryUrl)
+        {
+            return CreateAsync(
+                application,
+                discoveryUrl).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Creates a binding for to use for discovering servers.
+        /// </summary>
+        [Obsolete("Use CreateAsync instead.")]
+        public static DiscoveryClient Create(
+            ApplicationConfiguration application,
+            Uri discoveryUrl,
+            EndpointConfiguration configuration)
+        {
+            return CreateAsync(
+                application,
+                discoveryUrl,
+                configuration).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Creates a binding for to use for discovering servers.
+        /// </summary>
+        [Obsolete("Use CreateAsync instead.")]
+        public static DiscoveryClient Create(
+            ApplicationConfiguration application,
+            ITransportWaitingConnection connection,
+            EndpointConfiguration configuration)
+        {
+            return CreateAsync(
+                application,
+                connection,
+                configuration).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Creates a binding to use for discovering servers.
+        /// </summary>
+        /// <param name="discoveryUrl">The discovery URL.</param>
+        /// <param name="endpointConfiguration">The endpoint configuration.</param>
+        /// <param name="applicationConfiguration">The application configuration.</param>
+        [Obsolete("Use CreateAsync instead.")]
+        public static DiscoveryClient Create(
+            Uri discoveryUrl,
+            EndpointConfiguration? endpointConfiguration,
+            ApplicationConfiguration applicationConfiguration)
+        {
+            return CreateAsync(
+                discoveryUrl,
+                endpointConfiguration,
+                applicationConfiguration).GetAwaiter().GetResult();
+        }
+#pragma warning restore CA2000
+
+        /// <summary>
+        /// Creates a binding for to use for discovering servers.
+        /// </summary>
+        /// <exception cref="ArgumentNullException"><paramref name="application"/> is <c>null</c>.</exception>
+        public static async Task<DiscoveryClient> CreateAsync(
+            ApplicationConfiguration application,
+            Uri discoveryUrl,
+            DiagnosticsMasks returnDiagnostics = DiagnosticsMasks.None,
+            CancellationToken ct = default)
+        {
+            if (application == null)
+            {
+                throw new ArgumentNullException(nameof(application));
+            }
+
+            var configuration = EndpointConfiguration.Create();
+            ServiceMessageContext messageContext = application.CreateMessageContext();
+            ITransportChannel channel = await CreateChannelAsync(
+                application,
+                discoveryUrl,
+                configuration,
+                messageContext,
+                null,
+                ct).ConfigureAwait(false);
+            return new DiscoveryClient(channel, messageContext.Telemetry)
+            {
+                ReturnDiagnostics = returnDiagnostics
+            };
+        }
+
+        /// <summary>
+        /// Creates a binding for to use for discovering servers.
+        /// </summary>
+        /// <exception cref="ArgumentNullException"><paramref name="application"/> is <c>null</c>.</exception>
+        public static async Task<DiscoveryClient> CreateAsync(
+            ApplicationConfiguration application,
+            Uri discoveryUrl,
+            EndpointConfiguration? configuration,
+            DiagnosticsMasks returnDiagnostics = DiagnosticsMasks.None,
+            CancellationToken ct = default)
+        {
+            if (application == null)
+            {
+                throw new ArgumentNullException(nameof(application));
+            }
+
+            configuration ??= EndpointConfiguration.Create();
+
+            ServiceMessageContext messageContext = application.CreateMessageContext();
+            ITransportChannel channel = await CreateChannelAsync(
+                application,
+                discoveryUrl,
+                configuration,
+                messageContext,
+                null,
+                ct).ConfigureAwait(false);
+            return new DiscoveryClient(channel, messageContext.Telemetry)
+            {
+                ReturnDiagnostics = returnDiagnostics
+            };
+        }
+
+        /// <summary>
+        /// Creates a binding for to use for discovering servers.
+        /// </summary>
+        /// <exception cref="ArgumentNullException"><paramref name="application"/> is <c>null</c>.</exception>
+        public static async Task<DiscoveryClient> CreateAsync(
+            ApplicationConfiguration application,
+            ITransportWaitingConnection connection,
+            EndpointConfiguration? configuration,
+            DiagnosticsMasks returnDiagnostics = DiagnosticsMasks.None,
+            CancellationToken ct = default)
+        {
+            if (application == null)
+            {
+                throw new ArgumentNullException(nameof(application));
+            }
+
+            configuration ??= EndpointConfiguration.Create();
+
+            ServiceMessageContext messageContext = application.CreateMessageContext();
+            ITransportChannel channel = await CreateChannelAsync(
+                application,
+                connection,
+                configuration,
+                messageContext,
+                null,
+                ct).ConfigureAwait(false);
+            return new DiscoveryClient(channel, messageContext.Telemetry)
+            {
+                ReturnDiagnostics = returnDiagnostics
+            };
+        }
+
+        /// <summary>
+        /// Creates a binding to use for discovering servers.
+        /// </summary>
+        /// <param name="discoveryUrl">The discovery URL.</param>
+        /// <param name="endpointConfiguration">The endpoint configuration.</param>
+        /// <param name="applicationConfiguration">The application configuration.</param>
+        /// <param name="returnDiagnostics">Diagnostics to return for each request</param>
+        /// <param name="ct">A cancellation token to cancel the operation with</param>
+        /// <exception cref="ArgumentNullException"><paramref name="applicationConfiguration"/> is <c>null</c>.</exception>
+        public static async Task<DiscoveryClient> CreateAsync(
+            Uri discoveryUrl,
+            EndpointConfiguration? endpointConfiguration,
+            ApplicationConfiguration applicationConfiguration,
+            DiagnosticsMasks returnDiagnostics = DiagnosticsMasks.None,
+            CancellationToken ct = default)
+        {
+            if (applicationConfiguration == null)
+            {
+                throw new ArgumentNullException(nameof(applicationConfiguration));
+            }
+
+            endpointConfiguration ??= EndpointConfiguration.Create();
+
+            // check if application configuration contains instance certificate.
+            Certificate? clientCertificate = null;
+
+            ServiceMessageContext messageContext = applicationConfiguration.CreateMessageContext();
+            try
+            {
+                // Will always use the first certificate
+                CertificateIdentifier? applicationCertificate = applicationConfiguration
+                    .SecurityConfiguration?
+                    .ApplicationCertificate;
+                if (applicationCertificate != null)
+                {
+                    clientCertificate = await CertificateIdentifierResolver.ResolveAsync(
+                        applicationCertificate,
+                        registry: null,
+                        needPrivateKey: true,
+                        applicationUri: null,
+                        telemetry: messageContext.Telemetry,
+                        ct: ct).ConfigureAwait(false);
+                }
+            }
+            catch
+            {
+                // ignore errors
+            }
+
+            try
+            {
+                ITransportChannel channel = await CreateChannelAsync(
+                    applicationConfiguration,
+                    discoveryUrl,
+                    endpointConfiguration,
+                    messageContext,
+                    clientCertificate,
+                    ct).ConfigureAwait(false);
+                return new DiscoveryClient(channel, messageContext.Telemetry)
+                {
+                    ReturnDiagnostics = returnDiagnostics
+                };
+            }
+            finally
+            {
+                // The channel stores the cert reference in TransportChannelSettings
+                // but does not take ownership. Discovery uses SecurityMode.None so
+                // the cert is not needed after the channel is opened.
+                clientCertificate?.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Creates a binding for to use for discovering servers.
+        /// </summary>
+        /// <param name="discoveryUrl">The discovery URL.</param>
+        /// <param name="telemetry">The telemetry context to use to create obvservability instruments</param>
+        /// <param name="returnDiagnostics">Diagnostics to return for each request</param>
+        /// <param name="ct">A cancellation token to cancel the operation with</param>
+        public static Task<DiscoveryClient> CreateAsync(
+            Uri discoveryUrl,
+            ITelemetryContext? telemetry,
+            DiagnosticsMasks returnDiagnostics = DiagnosticsMasks.None,
+            CancellationToken ct = default)
+        {
+            return CreateAsync(discoveryUrl, null, telemetry, returnDiagnostics, ct);
+        }
+
+        /// <summary>
+        /// Creates a binding for to use for discovering servers.
+        /// </summary>
+        public static async Task<DiscoveryClient> CreateAsync(
+            ITransportWaitingConnection connection,
+            EndpointConfiguration? configuration,
+            ITelemetryContext? telemetry,
+            DiagnosticsMasks returnDiagnostics = DiagnosticsMasks.None,
+            CancellationToken ct = default)
+        {
+            configuration ??= EndpointConfiguration.Create();
+
+            ITransportChannel channel = await CreateChannelAsync(
+                null,
+                connection,
+                configuration,
+                ServiceMessageContext.Create(telemetry),
+                null,
+                ct).ConfigureAwait(false);
+            return new DiscoveryClient(channel, telemetry!)
+            {
+                ReturnDiagnostics = returnDiagnostics
+            };
+        }
+
+        /// <summary>
+        /// Creates a binding to use for discovering servers.
+        /// </summary>
+        /// <param name="discoveryUrl">The discovery URL.</param>
+        /// <param name="endpointConfiguration">The endpoint configuration.</param>
+        /// <param name="telemetry">The telemetry context to use to create obvservability instruments</param>
+        /// <param name="returnDiagnostics">Diagnostics to return for each request</param>
+        /// <param name="ct">A cancellation token to cancel the operation with</param>
+        public static async Task<DiscoveryClient> CreateAsync(
+            Uri discoveryUrl,
+            EndpointConfiguration? endpointConfiguration,
+            ITelemetryContext? telemetry,
+            DiagnosticsMasks returnDiagnostics = DiagnosticsMasks.None,
+            CancellationToken ct = default)
+        {
+            endpointConfiguration ??= EndpointConfiguration.Create();
+
+            // check if application configuration contains instance certificate.
+            Certificate? clientCertificate = null;
+
+            ITransportChannel channel = await CreateChannelAsync(
+                null,
+                discoveryUrl,
+                endpointConfiguration,
+                ServiceMessageContext.Create(telemetry),
+                clientCertificate,
+                ct).ConfigureAwait(false);
+            return new DiscoveryClient(channel, telemetry!)
+            {
+                ReturnDiagnostics = returnDiagnostics
+            };
+        }
+
+        /// <summary>
+        /// Creates a binding to use for discovering servers with an existing channel.
+        /// </summary>
+        /// <param name="channel">The channel used for discovery requests.</param>
+        /// <param name="telemetry">The telemetry context to use to create observability instruments.</param>
+        /// <param name="returnDiagnostics">Diagnostics to return for each request.</param>
+        /// <param name="ct">A cancellation token to cancel the operation with.</param>
+        /// <returns>A discovery client that owns the supplied channel.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="channel"/> or <paramref name="telemetry"/> is <c>null</c>.
+        /// </exception>
+        public static Task<DiscoveryClient> CreateAsync(
+            ITransportChannel channel,
+            ITelemetryContext telemetry,
+            DiagnosticsMasks returnDiagnostics = DiagnosticsMasks.None,
+            CancellationToken ct = default)
+        {
+            if (channel == null)
+            {
+                throw new ArgumentNullException(nameof(channel));
+            }
+            if (telemetry == null)
+            {
+                throw new ArgumentNullException(nameof(telemetry));
+            }
+
+            try
+            {
+                ct.ThrowIfCancellationRequested();
+                return Task.FromResult(new DiscoveryClient(channel, telemetry)
+                {
+                    ReturnDiagnostics = returnDiagnostics
+                });
+            }
+            catch
+            {
+                channel.Dispose();
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Creates a binding to use for discovering servers through a shared channel manager.
+        /// </summary>
+        /// <param name="manager">The client channel manager used to acquire the shared channel.</param>
+        /// <param name="discoveryUrl">The discovery URL.</param>
+        /// <param name="endpointConfiguration">The endpoint configuration.</param>
+        /// <param name="telemetry">The telemetry context to use to create observability instruments.</param>
+        /// <param name="returnDiagnostics">Diagnostics to return for each request.</param>
+        /// <param name="ct">A cancellation token to cancel the operation with.</param>
+        /// <returns>A discovery client bound to a managed channel lease.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="manager"/>, <paramref name="discoveryUrl"/> or <paramref name="telemetry"/> is <c>null</c>.
+        /// </exception>
+        public static Task<DiscoveryClient> CreateAsync(
+            IClientChannelManager manager,
+            Uri discoveryUrl,
+            EndpointConfiguration? endpointConfiguration,
+            ITelemetryContext telemetry,
+            DiagnosticsMasks returnDiagnostics = DiagnosticsMasks.None,
+            CancellationToken ct = default)
+        {
+            if (discoveryUrl == null)
+            {
+                throw new ArgumentNullException(nameof(discoveryUrl));
+            }
+
+            ConfiguredEndpoint endpoint = CreateDiscoveryEndpoint(discoveryUrl, endpointConfiguration);
+            return CreateAsync(manager, endpoint, telemetry, returnDiagnostics, ct);
+        }
+
+        /// <summary>
+        /// Creates a binding to use for discovering servers through a shared channel manager.
+        /// </summary>
+        /// <param name="manager">The client channel manager used to acquire the shared channel.</param>
+        /// <param name="endpoint">The configured endpoint used to acquire the shared channel.</param>
+        /// <param name="telemetry">The telemetry context to use to create observability instruments.</param>
+        /// <param name="returnDiagnostics">Diagnostics to return for each request.</param>
+        /// <param name="ct">A cancellation token to cancel the operation with.</param>
+        /// <returns>A discovery client bound to a managed channel lease.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="manager"/>, <paramref name="endpoint"/> or <paramref name="telemetry"/> is <c>null</c>.
+        /// </exception>
+        public static async Task<DiscoveryClient> CreateAsync(
+            IClientChannelManager manager,
+            ConfiguredEndpoint endpoint,
+            ITelemetryContext telemetry,
+            DiagnosticsMasks returnDiagnostics = DiagnosticsMasks.None,
+            CancellationToken ct = default)
+        {
+            if (manager == null)
+            {
+                throw new ArgumentNullException(nameof(manager));
+            }
+            if (endpoint == null)
+            {
+                throw new ArgumentNullException(nameof(endpoint));
+            }
+            if (telemetry == null)
+            {
+                throw new ArgumentNullException(nameof(telemetry));
+            }
+
+            var participant = new ClientChannelReconnectParticipant(
+                nameof(DiscoveryClient),
+                endpoint);
+            IManagedTransportChannel channel = await manager.GetAsync(participant, ct).ConfigureAwait(false);
+            try
+            {
+                return new DiscoveryClient(channel, telemetry)
+                {
+                    ReturnDiagnostics = returnDiagnostics
+                };
+            }
+            catch
+            {
+                channel.Dispose();
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Invokes the GetEndpoints service.
+        /// </summary>
+        /// <param name="profileUris">The collection of profile URIs.</param>
+        [Obsolete("Use GetEndpointsAsync instead.")]
+        public virtual ArrayOf<EndpointDescription> GetEndpoints(ArrayOf<string> profileUris)
+        {
+            GetEndpoints(
+                null,
+                Endpoint.EndpointUrl,
+                default,
+                profileUris,
+                out ArrayOf<EndpointDescription> endpoints);
+
+            return PatchEndpointUrls(endpoints);
+        }
+
+        /// <summary>
+        /// Invokes the GetEndpoints service async.
+        /// </summary>
+        /// <param name="profileUris">The collection of profile URIs.</param>
+        /// <param name="ct">The cancellation token.</param>
+        public virtual async Task<ArrayOf<EndpointDescription>> GetEndpointsAsync(
+            ArrayOf<string> profileUris,
+            CancellationToken ct = default)
+        {
+            GetEndpointsResponse response = await GetEndpointsAsync(
+                null,
+                Endpoint.EndpointUrl,
+                default,
+                profileUris,
+                ct)
+                .ConfigureAwait(false);
+            return PatchEndpointUrls(response.Endpoints);
+        }
+
+        /// <summary>
+        /// Invokes the FindServers service.
+        /// </summary>
+        /// <param name="serverUris">The collection of server URIs.</param>
+        [Obsolete("Use FindServersAsync instead.")]
+        public virtual ArrayOf<ApplicationDescription> FindServers(ArrayOf<string> serverUris)
+        {
+            FindServers(
+                null,
+                Endpoint.EndpointUrl,
+                default,
+                serverUris,
+                out ArrayOf<ApplicationDescription> servers);
+
+            return servers;
+        }
+
+        /// <summary>
+        /// Invokes the FindServers service async.
+        /// </summary>
+        /// <param name="serverUris">The collection of server URIs.</param>
+        /// <param name="ct">The cancellation token.</param>
+        public virtual async Task<ArrayOf<ApplicationDescription>> FindServersAsync(
+            ArrayOf<string> serverUris,
+            CancellationToken ct = default)
+        {
+            FindServersResponse response = await FindServersAsync(
+                null,
+                Endpoint.EndpointUrl,
+                default,
+                serverUris,
+                ct)
+                .ConfigureAwait(false);
+            return response.Servers;
+        }
+
+        /// <summary>
+        /// Invokes the FindServersOnNetwork service.
+        /// </summary>
+        [Obsolete("Use FindServersOnNetworkAsync instead.")]
+        public virtual ArrayOf<ServerOnNetwork> FindServersOnNetwork(
+            uint startingRecordId,
+            uint maxRecordsToReturn,
+            ArrayOf<string> serverCapabilityFilter,
+            out DateTimeUtc lastCounterResetTime)
+        {
+            FindServersOnNetwork(
+                null,
+                startingRecordId,
+                maxRecordsToReturn,
+                serverCapabilityFilter,
+                out lastCounterResetTime,
+                out ArrayOf<ServerOnNetwork> servers);
+
+            return servers;
+        }
+
+        /// <summary>
+        /// Invokes the FindServersOnNetwork service.
+        /// </summary>
+        public virtual async Task<(
+            ArrayOf<ServerOnNetwork> servers,
+            DateTimeUtc lastCounterResetTime
+            )> FindServersOnNetworkAsync(
+                uint startingRecordId,
+                uint maxRecordsToReturn,
+                ArrayOf<string> serverCapabilityFilter,
+                CancellationToken ct = default)
+        {
+            FindServersOnNetworkResponse response = await FindServersOnNetworkAsync(
+                null,
+                startingRecordId,
+                maxRecordsToReturn,
+                serverCapabilityFilter,
+                ct)
+                .ConfigureAwait(false);
+
+            return (response.Servers, response.LastCounterResetTime);
+        }
+
+        private static ConfiguredEndpoint CreateDiscoveryEndpoint(
+            Uri discoveryUrl,
+            EndpointConfiguration? endpointConfiguration)
+        {
+            endpointConfiguration ??= EndpointConfiguration.Create();
+            var endpoint = new EndpointDescription
+            {
+                EndpointUrl = discoveryUrl.OriginalString,
+                SecurityMode = MessageSecurityMode.None,
+                SecurityPolicyUri = SecurityPolicies.None
+            };
+            endpoint.Server.ApplicationUri = endpoint.EndpointUrl;
+            endpoint.Server.ApplicationType = ApplicationType.DiscoveryServer;
+
+            return new ConfiguredEndpoint(null, endpoint, endpointConfiguration)
+            {
+                UpdateBeforeConnect = false
+            };
+        }
+
+        /// <summary>
+        /// Creates a new transport channel
+        /// </summary>
+        /// <param name="discoveryUrl">The discovery url.</param>
+        /// <param name="endpointConfiguration">The configuration to use with the endpoint.</param>
+        /// <param name="messageContext">The message context to use when serializing the messages.</param>
+        /// <param name="clientCertificate">The client certificate to use.</param>
+        /// <param name="ct">A cancellation token to cancel the operation with</param>
+        internal static ValueTask<ITransportChannel> CreateChannelAsync(
+            Uri discoveryUrl,
+            EndpointConfiguration endpointConfiguration,
+            IServiceMessageContext messageContext,
+            Certificate? clientCertificate = null,
+            CancellationToken ct = default)
+        {
+            // create a default description.
+            var endpoint = new EndpointDescription
+            {
+                EndpointUrl = discoveryUrl.OriginalString,
+                SecurityMode = MessageSecurityMode.None,
+                SecurityPolicyUri = SecurityPolicies.None
+            };
+            endpoint.Server.ApplicationUri = endpoint.EndpointUrl;
+            endpoint.Server.ApplicationType = ApplicationType.DiscoveryServer;
+
+            return ClientChannelManager.CreateUaBinaryChannelAsync(
+                null!,
+                endpoint,
+                endpointConfiguration,
+                clientCertificate,
+                null,
+                messageContext,
+                null,
+                ct);
+        }
+
+        /// <summary>
+        /// Creates a new transport channel that supports the ITransportWaitingConnection service contract.
+        /// </summary>
+        internal static ValueTask<ITransportChannel> CreateChannelAsync(
+            ApplicationConfiguration? configuration,
+            ITransportWaitingConnection connection,
+            EndpointConfiguration endpointConfiguration,
+            IServiceMessageContext messageContext,
+            Certificate? clientCertificate = null,
+            CancellationToken ct = default)
+        {
+            // create a default description.
+            var endpoint = new EndpointDescription
+            {
+                EndpointUrl = connection.EndpointUrl.OriginalString,
+                SecurityMode = MessageSecurityMode.None,
+                SecurityPolicyUri = SecurityPolicies.None
+            };
+            endpoint.Server.ApplicationUri = endpoint.EndpointUrl;
+            endpoint.Server.ApplicationType = ApplicationType.DiscoveryServer;
+
+            return ClientChannelManager.CreateUaBinaryChannelAsync(
+                configuration!,
+                connection,
+                endpoint,
+                endpointConfiguration,
+                clientCertificate,
+                null,
+                messageContext,
+                null,
+                ct);
+        }
+
+        /// <summary>
+        /// Creates a new transport channel.
+        /// </summary>
+        internal static ValueTask<ITransportChannel> CreateChannelAsync(
+            ApplicationConfiguration? configuration,
+            Uri discoveryUrl,
+            EndpointConfiguration endpointConfiguration,
+            IServiceMessageContext messageContext,
+            Certificate? clientCertificate = null,
+            CancellationToken ct = default)
+        {
+            // create a default description.
+            var endpoint = new EndpointDescription
+            {
+                EndpointUrl = discoveryUrl.OriginalString,
+                SecurityMode = MessageSecurityMode.None,
+                SecurityPolicyUri = SecurityPolicies.None
+            };
+            endpoint.Server.ApplicationUri = endpoint.EndpointUrl;
+            endpoint.Server.ApplicationType = ApplicationType.DiscoveryServer;
+
+            return ClientChannelManager.CreateUaBinaryChannelAsync(
+                configuration!,
+                endpoint,
+                endpointConfiguration,
+                clientCertificate,
+                null,
+                messageContext,
+                null,
+                ct);
+        }
+
+        /// <summary>
+        /// Patch returned endpoints urls with url used to reached the endpoint.
+        /// </summary>
+        private ArrayOf<EndpointDescription> PatchEndpointUrls(
+            ArrayOf<EndpointDescription> endpoints)
+        {
+            // if a server is behind a firewall, can only be accessed with a FQDN or IP address
+            // it may return URLs that are not accessible to the client. This problem can be avoided
+            // by assuming that the domain in the URL used to call GetEndpoints can be used to
+            // access any of the endpoints. This code patches the returned endpoints accordingly.
+            Uri? endpointUrl = Utils.ParseUri(Endpoint.EndpointUrl);
+            if (endpointUrl != null)
+            {
+                string endpointHost = endpointUrl.IdnHost;
+                string endpointUrlString = Endpoint.EndpointUrl!;
+
+                // patch discovery Url to endpoint Url used for service call
+                foreach (EndpointDescription discoveryEndPoint in endpoints)
+                {
+                    Uri? discoveryEndPointUri = Utils.ParseUri(discoveryEndPoint.EndpointUrl);
+                    if (discoveryEndPointUri == null)
+                    {
+                        m_logger.DiscoveryClientLogMessage0(discoveryEndPoint.EndpointUrl);
+                        continue;
+                    }
+
+                    if ((endpointUrl.Scheme == discoveryEndPointUri.Scheme) &&
+                        (endpointUrl.Port == discoveryEndPointUri.Port) &&
+                        !string.Equals(discoveryEndPointUri.IdnHost, endpointHost, StringComparison.Ordinal))
+                    {
+                        var builder = new UriBuilder(discoveryEndPointUri)
+                        {
+                            Host = endpointHost
+                        };
+                        discoveryEndPoint.EndpointUrl = builder.Uri.OriginalString;
+                    }
+
+                    if (discoveryEndPoint.Server != null &&
+                        !discoveryEndPoint.Server.DiscoveryUrls.IsNull &&
+                        ShouldPatchDiscoveryUrls(discoveryEndPoint.Server.DiscoveryUrls, endpointUrlString))
+                    {
+                        discoveryEndPoint.Server.DiscoveryUrls = [endpointUrlString];
+                    }
+                }
+            }
+            return endpoints;
+        }
+
+        private static bool ShouldPatchDiscoveryUrls(ArrayOf<string> discoveryUrls, string endpointUrl)
+        {
+            return discoveryUrls.Count != 1 ||
+                !string.Equals(discoveryUrls[0], endpointUrl, StringComparison.Ordinal);
+        }
+    }
+
+    /// <summary>
+    /// Source-generated log messages for DiscoveryClient.
+    /// </summary>
+    internal static partial class DiscoveryClientLog
+    {
+        [LoggerMessage(EventId = CoreEventIds.DiscoveryClient + 0, Level = LogLevel.Warning,
+            Message = "Discovery endpoint contains invalid Url: {EndpointUrl}")]
+        public static partial void DiscoveryClientLogMessage0(this ILogger logger, string? endpointUrl);
+    }
+
+}

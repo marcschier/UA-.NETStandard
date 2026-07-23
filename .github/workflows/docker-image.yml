@@ -1,16 +1,16 @@
-name: Docker Reference Server CI
+name: Docker Sample Images CI
 
 on:
   push:
     branches: [ master, release/*, docker* ]
     paths-ignore:
-    - 'Docs/**'
-    - 'Tests/**'
+    - 'docs/**'
+    - 'tests/**'
   pull_request:
     branches: [ master ]
     paths-ignore:
-    - 'Docs/**'
-    - 'Tests/**'
+    - 'docs/**'
+    - 'tests/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -18,13 +18,38 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: refserver
   DOCKERSIGN: false
 
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Sample servers
+          - image: refserver
+            dockerfile: ./samples/ConsoleReferenceServer/Dockerfile
+          - image: ldsserver
+            dockerfile: ./samples/ConsoleLdsServer/Dockerfile
+          - image: boilerserver
+            dockerfile: ./samples/MinimalBoilerServer/Dockerfile
+          - image: calcserver
+            dockerfile: ./samples/MinimalCalcServer/Dockerfile
+          - image: mcpserver
+            dockerfile: ./tools/Opc.Ua.Mcp/Dockerfile
+          - image: redundantserver
+            dockerfile: ./samples/RedundantServer/Dockerfile
+          # Redundant client
+          - image: redundantclient
+            dockerfile: ./samples/RedundantClient/Dockerfile
+          # PubSub samples
+          - image: redundantpubsub
+            dockerfile: ./samples/RedundantPubSub/Dockerfile
+          - image: pubsubclient
+            dockerfile: ./samples/ConsoleReferencePubSubClient/Dockerfile
     env:
+      IMAGE_NAME: ${{ matrix.image }}
       IS_NOT_PR: ${{ !github.head_ref && true }}
     permissions:
       contents: read
@@ -39,7 +64,7 @@ jobs:
         fetch-depth: 0
 
     - name: Set up .NET 8
-      uses: actions/setup-dotnet@v5
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: '8.x'
 
@@ -114,11 +139,11 @@ jobs:
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ env.TAG_BRANCH }},${{ env.TAG_LATEST }}${{ env.TAG_RELEASE }}
         platforms: linux/amd64,linux/arm64/v8
-        file: ./Applications/ConsoleReferenceServer/Dockerfile
+        file: ${{ matrix.dockerfile }}
         labels: ${{ steps.meta.outputs.labels }}
         provenance: false
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        cache-from: type=gha,scope=${{ matrix.image }}
+        cache-to: type=gha,mode=max,scope=${{ matrix.image }}
 
     # Sign the resulting Docker image digest except on PRs.
     # https://github.com/sigstore/cosign
@@ -131,4 +156,3 @@ jobs:
       run: |
         echo Signing ${{ env.IMAGE_REPOSITORY }}@${{ steps.build-and-push.outputs.digest }}
         echo "${{ env.IMAGE_REPOSITORY }}" | xargs -I {} cosign sign {}@${{ steps.build-and-push.outputs.digest }}
-

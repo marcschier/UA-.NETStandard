@@ -1,0 +1,187 @@
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
+using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.Logging;
+
+namespace Opc.Ua.SourceGeneration
+{
+    internal static class SourceGenerator
+    {
+        /// <summary>
+        /// The namespace prefix for generated code
+        /// </summary>
+        public const string Name = nameof(ModelSourceGenerator);
+
+        public static readonly DiagnosticDescriptor GenericError = new(
+            id: "MODELGEN001",
+            title: "Error",
+            messageFormat: (LocalizableString)"Error during model generation '{0}'",
+            category: Name,
+            DiagnosticSeverity.Error,
+            isEnabledByDefault: true,
+            helpLinkUri: "www.opcfoundation.org",
+            customTags: ["opcua"]);
+
+        public static readonly DiagnosticDescriptor GenericWarning = new(
+            id: "MODELGEN002",
+            title: "Warning",
+            messageFormat: (LocalizableString)"Warning during model generation '{0}'",
+            category: Name,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            helpLinkUri: "www.opcfoundation.org",
+            customTags: ["opcua"]);
+
+        public static readonly DiagnosticDescriptor Exception = new(
+            id: "MODELGEN003",
+            title: "Exception",
+            messageFormat: (LocalizableString)"Exception during model generation '{0}': {1}",
+            category: Name,
+            DiagnosticSeverity.Error,
+            isEnabledByDefault: true,
+            helpLinkUri: "www.opcfoundation.org",
+            customTags: ["opcua"]);
+
+        public static readonly DiagnosticDescriptor ModelOverrideSkipped = new(
+            id: "MODELGEN013",
+            title: "Model already provided by referenced assembly",
+            messageFormat: (LocalizableString)("Model URI '{0}' is already provided by " +
+                "referenced assembly '{1}' under prefix '{2}'; skipping local generation"),
+            category: Name,
+            DiagnosticSeverity.Info,
+            isEnabledByDefault: true,
+            helpLinkUri: "www.opcfoundation.org",
+            customTags: ["opcua"]);
+
+        public static readonly DiagnosticDescriptor ModelDependencyTieBreak = new(
+            id: "MODELGEN012",
+            title: "Multiple referenced assemblies expose same model",
+            messageFormat: (LocalizableString)("Multiple referenced assemblies provide model " +
+                "URI '{0}'; selected '{1}' and ignored '{2}'"),
+            category: Name,
+            DiagnosticSeverity.Info,
+            isEnabledByDefault: true,
+            helpLinkUri: "www.opcfoundation.org",
+            customTags: ["opcua"]);
+
+        /// <summary>
+        /// A <c>[NodeManager]</c> attribute could not be bound to a model
+        /// design (no matching URI / Design selector).
+        /// </summary>
+        public static readonly DiagnosticDescriptor NodeManagerBindingError = new(
+            id: "MODELGEN010",
+            title: "[NodeManager] binding error",
+            messageFormat: (LocalizableString)"{0}",
+            category: Name,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            helpLinkUri: "www.opcfoundation.org",
+            customTags: ["opcua"]);
+
+        /// <summary>
+        /// A class annotated with <c>[NodeManager]</c> is not declared
+        /// <c>partial</c>.
+        /// </summary>
+        public static readonly DiagnosticDescriptor NodeManagerNotPartial = new(
+            id: "MODELGEN011",
+            title: "[NodeManager] class must be partial",
+            messageFormat: (LocalizableString)"Class '{0}' annotated with [NodeManager] must be declared as partial",
+            category: Name,
+            DiagnosticSeverity.Error,
+            isEnabledByDefault: true,
+            helpLinkUri: "www.opcfoundation.org",
+            customTags: ["opcua"]);
+
+        /// <summary>
+        /// A BrowseName from the design model contained characters that
+        /// required escaping when interpolated into a generated C# string
+        /// literal (e.g. <c>"</c>, <c>\</c>, or a control character). The
+        /// generator escapes the value via
+        /// <see cref="StringLiteralEscaper"/> and continues; the warning
+        /// surfaces the offending name so the design XML can be cleaned
+        /// up. Defence-in-depth: protects the consuming build from a
+        /// confusing compiler error if a third-party design XML pulled
+        /// into a custom build carries an ill-formed BrowseName.
+        /// </summary>
+        public static readonly DiagnosticDescriptor BrowseNameUnsafe = new(
+            id: "MODELGEN020",
+            title: "BrowseName requires C# string-literal escaping (UASG_BROWSENAME_UNSAFE)",
+            messageFormat: (LocalizableString)("BrowseName '{0}' contained characters that " +
+                "required escaping when emitted into a C# string literal. The generator " +
+                "escaped the value and continued; clean up the design XML to remove the " +
+                "warning."),
+            category: Name,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            helpLinkUri: "www.opcfoundation.org",
+            customTags: ["opcua"]);
+
+        /// <summary>
+        /// A <c>[DataType]</c> namespace argument could not be resolved before
+        /// source generation.
+        /// </summary>
+        public static readonly DiagnosticDescriptor DataTypeNamespaceUnresolved = new(
+            id: "MODELGEN021",
+            title: "[DataType] namespace could not be resolved",
+            messageFormat: (LocalizableString)("The Namespace argument '{1}' on [DataType] " +
+                "type '{0}' could not be resolved during source generation. Use a string " +
+                "literal or a const declared in source or a referenced assembly; values " +
+                "generated in the same compilation are unavailable."),
+            category: Name,
+            DiagnosticSeverity.Error,
+            isEnabledByDefault: true,
+            helpLinkUri: "www.opcfoundation.org",
+            customTags: ["opcua"]);
+
+        /// <summary>
+        /// Get diagnostic descriptor for event id
+        /// </summary>
+        public static bool TryGetDiagnostic(
+            LogLevel logLevel,
+            EventId eventId,
+            out DiagnosticDescriptor descriptor)
+        {
+            descriptor = eventId.Id switch
+            {
+                1 => GenericError,
+                2 => GenericWarning,
+                3 => Exception,
+                20 => BrowseNameUnsafe,
+                _ => logLevel switch
+                {
+                    LogLevel.Error => GenericError,
+                    LogLevel.Warning => GenericWarning,
+                    _ => null
+                }
+            };
+            return descriptor != null;
+        }
+    }
+}

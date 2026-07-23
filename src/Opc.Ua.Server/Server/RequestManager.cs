@@ -1,0 +1,307 @@
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using Microsoft.Extensions.Logging;
+
+namespace Opc.Ua.Server
+{
+    /// <summary>
+    /// An object that manages requests from within the server.
+    /// </summary>
+    public class RequestManager : IDisposable
+    {
+        /// <summary>
+        /// Initilizes the manager.
+        /// </summary>
+        public RequestManager(IServerInternal server)
+            : this(server, null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes the manager with an explicit <see cref="TimeProvider"/>
+        /// so the request-expiry timer can be mocked in tests.
+        /// </summary>
+        /// <param name="server">The server context.</param>
+        /// <param name="timeProvider">The time provider used to schedule the
+        /// request-expiry timer and to evaluate request deadlines, or
+        /// <c>null</c> to use the time provider exposed by the server (or
+        /// <see cref="TimeProvider.System"/> as a fallback).</param>
+        /// <exception cref="ArgumentNullException"><paramref name="server"/>
+        /// is <c>null</c>.</exception>
+        public RequestManager(IServerInternal server, TimeProvider? timeProvider)
+        {
+            m_server = server ?? throw new ArgumentNullException(nameof(server));
+            m_logger = server.Telemetry.CreateLogger<RequestManager>();
+            m_requests = [];
+            m_requestTimer = null;
+            m_timeProvider = timeProvider
+                ?? (server as ITimeProviderProvider)?.TimeProvider
+                ?? TimeProvider.System;
+        }
+
+        /// <summary>
+        /// Frees any unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// An overrideable version of the Dispose.
+        /// </summary>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                List<OperationContext>? operations;
+                lock (m_requestsLock)
+                {
+                    operations = [.. m_requests.Values];
+                    m_requests.Clear();
+                }
+
+                foreach (OperationContext operation in operations)
+                {
+                    operation.RequestLifetime.TryCancel(StatusCodes.BadSessionClosed);
+                }
+
+                m_requestTimer?.Dispose();
+                m_requestTimer = null;
+            }
+        }
+
+        /// <summary>
+        /// Raised when the status of an outstanding request changes.
+        /// </summary>
+        public event RequestCancelledEventHandler RequestCancelled
+        {
+            add
+            {
+                lock (m_lock)
+                {
+                    m_RequestCancelled += value;
+                }
+            }
+            remove
+            {
+                lock (m_lock)
+                {
+                    m_RequestCancelled -= value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Called when a new request arrives.
+        /// </summary>
+        /// <exception cref="ArgumentNullException"><paramref name="context"/> is <c>null</c>.</exception>
+        public void RequestReceived(OperationContext context)
+        {
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            lock (m_requestsLock)
+            {
+                m_requests.Add(context.RequestId, context);
+
+                if (context.OperationDeadline < DateTime.MaxValue && m_requestTimer == null)
+                {
+                    m_requestTimer = m_timeProvider.CreateTimer(
+                        OnTimerExpired,
+                        null,
+                        TimeSpan.FromSeconds(1),
+                        TimeSpan.FromSeconds(1));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Called when a request completes (normally or abnormally).
+        /// </summary>
+        /// <exception cref="ArgumentNullException"><paramref name="context"/> is <c>null</c>.</exception>
+        public void RequestCompleted(OperationContext context)
+        {
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            lock (m_requestsLock)
+            {
+                // remove the request.
+                m_requests.Remove(context.RequestId);
+            }
+            context.RequestLifetime?.MarkCompleted();
+        }
+
+        /// <summary>
+        /// Called when the client wishes to cancel one or more requests.
+        /// </summary>
+        public void CancelRequests(NodeId sessionId, uint requestHandle, out uint cancelCount)
+        {
+            var cancelledRequests = new List<uint>();
+
+            // flag requests as cancelled.
+            lock (m_requestsLock)
+            {
+                foreach (OperationContext request in m_requests.Values)
+                {
+                    if (request.SessionId == sessionId &&
+                        request.ClientHandle == requestHandle)
+                    {
+                        request.RequestLifetime.TryCancel(StatusCodes.BadRequestCancelledByRequest);
+                        cancelledRequests.Add(request.RequestId);
+
+                        // report the AuditCancelEventType
+                        m_server.ReportAuditCancelEvent(
+                            request.SessionId,
+                            requestHandle,
+                            StatusCodes.Good,
+                            m_logger);
+                    }
+                }
+            }
+
+            // return the number of requests found.
+            cancelCount = (uint)cancelledRequests.Count;
+
+            // raise notifications.
+            lock (m_lock)
+            {
+                for (int ii = 0; ii < cancelledRequests.Count; ii++)
+                {
+                    if (m_RequestCancelled != null)
+                    {
+                        try
+                        {
+                            m_RequestCancelled(
+                                this,
+                                cancelledRequests[ii],
+                                StatusCodes.BadRequestCancelledByRequest);
+                        }
+                        catch (Exception e)
+                        {
+                            m_logger.UnexpectedErrorReportingRequestCancelledEvent(e);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks for any expired requests and changes their status.
+        /// </summary>
+        private void OnTimerExpired(object? state)
+        {
+            var expiredRequests = new List<uint>();
+
+            // flag requests as expired.
+            lock (m_requestsLock)
+            {
+                // find the completed request.
+                bool deadlineExists = false;
+
+                foreach (OperationContext request in m_requests.Values)
+                {
+                    if (request.OperationDeadline < m_timeProvider.GetUtcNow().UtcDateTime)
+                    {
+                        request.RequestLifetime.TryCancel(StatusCodes.BadTimeout);
+                        expiredRequests.Add(request.RequestId);
+                    }
+                    else if (request.OperationDeadline < DateTime.MaxValue)
+                    {
+                        deadlineExists = true;
+                    }
+                }
+
+                // check if the timer can be cancelled.
+                if (m_requestTimer != null && !deadlineExists)
+                {
+                    m_requestTimer.Dispose();
+                    m_requestTimer = null;
+                }
+            }
+
+            // raise notifications.
+            lock (m_lock)
+            {
+                for (int ii = 0; ii < expiredRequests.Count; ii++)
+                {
+                    if (m_RequestCancelled != null)
+                    {
+                        try
+                        {
+                            m_RequestCancelled(this, expiredRequests[ii], StatusCodes.BadTimeout);
+                        }
+                        catch (Exception e)
+                        {
+                            m_logger.UnexpectedErrorReportingRequestCancelledEvent(e);
+                        }
+                    }
+                }
+            }
+        }
+
+        private readonly Lock m_lock = new();
+        private readonly ILogger m_logger;
+        private readonly IServerInternal m_server;
+        private readonly TimeProvider m_timeProvider;
+        private readonly Dictionary<uint, OperationContext> m_requests;
+        private readonly Lock m_requestsLock = new();
+        private ITimer? m_requestTimer;
+        private event RequestCancelledEventHandler? m_RequestCancelled;
+    }
+
+    /// <summary>
+    /// Called when a request is cancelled.
+    /// </summary>
+    public delegate void RequestCancelledEventHandler(
+        RequestManager source,
+        uint requestId,
+        StatusCode statusCode);
+
+    /// <summary>
+    /// Source-generated log messages for RequestManager.
+    /// </summary>
+    internal static partial class RequestManagerLog
+    {
+        [LoggerMessage(EventId = ServerEventIds.RequestManager + 0, Level = LogLevel.Error,
+            Message = "Unexpected error reporting RequestCancelled event.")]
+        public static partial void UnexpectedErrorReportingRequestCancelledEvent(this ILogger logger, Exception ex);
+    }
+
+}

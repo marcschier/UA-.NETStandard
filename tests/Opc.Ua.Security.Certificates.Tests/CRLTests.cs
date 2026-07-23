@@ -1,0 +1,493 @@
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
+using System;
+using System.Formats.Asn1;
+using System.Globalization;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using NUnit.Framework;
+using Opc.Ua.Tests;
+
+namespace Opc.Ua.Security.Certificates.Tests
+{
+    /// <summary>
+    /// Tests for the CRL class.
+    /// </summary>
+    [TestFixture]
+    [Category("CRL")]
+    [Parallelizable]
+    [TestFixtureSource(nameof(FixtureArgs))]
+    [SetCulture("en-us")]
+    public class CRLTests
+    {
+        [DatapointSource]
+        public static readonly CRLAsset[] CRLTestCases =
+        [
+            .. AssetCollection<CRLAsset>.CreateFromFiles(TestUtils.EnumerateTestAssets("*.crl"))
+        ];
+
+        [DatapointSource]
+        public static readonly KeyHashPair[] KeyHashPairs = new KeyHashPairCollection
+        {
+            { 2048, HashAlgorithmName.SHA256 },
+            { 3072, HashAlgorithmName.SHA384 },
+            { 4096, HashAlgorithmName.SHA512 }
+        }.ToArray();
+
+        /// <summary>
+        /// CertificateTypes to run the Test with
+        /// </summary>
+        public static readonly object[] FixtureArgs =
+        [
+            new object[]
+            {
+                nameof(ObjectTypeIds.RsaSha256ApplicationCertificateType),
+                ObjectTypeIds.RsaSha256ApplicationCertificateType
+            },
+            new object[]
+            {
+                nameof(ObjectTypeIds.EccNistP256ApplicationCertificateType),
+                ObjectTypeIds.EccNistP256ApplicationCertificateType
+            },
+            new object[]
+            {
+                nameof(ObjectTypeIds.EccNistP384ApplicationCertificateType),
+                ObjectTypeIds.EccNistP384ApplicationCertificateType
+            },
+            new object[]
+            {
+                nameof(ObjectTypeIds.EccBrainpoolP256r1ApplicationCertificateType),
+                ObjectTypeIds.EccBrainpoolP256r1ApplicationCertificateType
+            },
+            new object[]
+            {
+                nameof(ObjectTypeIds.EccBrainpoolP384r1ApplicationCertificateType),
+                ObjectTypeIds.EccBrainpoolP384r1ApplicationCertificateType
+            }
+        ];
+
+        public CRLTests(string certificateTypeString, NodeId certificateType)
+        {
+            if (!Utils.IsSupportedCertificateType(certificateType))
+            {
+                Assert.Ignore(
+                    $"Certificate type {certificateTypeString} is not supported on this platform.");
+            }
+
+            m_certificateType = certificateType;
+        }
+
+        /// <summary>
+        /// Set up a an issuer cert to run the tests with
+        /// </summary>
+        [OneTimeSetUp]
+        protected void OneTimeSetUp()
+        {
+            ECCurve? curve = CryptoUtils.GetCurveFromCertificateTypeId(m_certificateType);
+
+            if (curve != null)
+            {
+                m_issuerCert = CertificateBuilder
+                    .Create("CN=Root CA, O=OPC Foundation")
+                    .SetCAConstraint()
+                    .SetECCurve(curve.Value)
+                    .CreateForECDsa();
+            }
+            // RSA Certificate
+            else
+            {
+                m_issuerCert = CertificateBuilder
+                    .Create("CN=Root CA, O=OPC Foundation")
+                    .SetCAConstraint()
+                    .CreateForRSA();
+            }
+        }
+
+        /// <summary>
+        /// Clean up the Test PKI folder
+        /// </summary>
+        [OneTimeTearDown]
+        protected void OneTimeTearDown()
+        {
+            m_issuerCert?.Dispose();
+        }
+
+        /// <summary>
+        /// Verify self signed app certs.
+        /// </summary>
+        [Theory]
+        public void DecodeCRLs(CRLAsset crlAsset)
+        {
+            var x509Crl = new X509CRL(crlAsset.Crl);
+            Assert.That(x509Crl, Is.Not.Null);
+            TestContext.Out.WriteLine($"CRLAsset:   {x509Crl.Issuer}");
+            string crlInfo = WriteCRL(x509Crl);
+            TestContext.Out.WriteLine(crlInfo);
+        }
+
+        /// <summary>
+        /// Validate a CRL Builder and decoder pass.
+        /// </summary>
+        [Test]
+        public void CrlInternalBuilderTest()
+        {
+            var dname = new X500DistinguishedName("CN=Test, O=OPC Foundation");
+            HashAlgorithmName hash = HashAlgorithmName.SHA256;
+            CrlBuilder crlBuilder = CrlBuilder
+                .Create(dname, hash)
+                .SetNextUpdate(DateTime.Today.AddDays(30).ToUniversalTime());
+            byte[] serial = [4, 5, 6, 7];
+            var revokedarray = new RevokedCertificate(serial);
+            crlBuilder.RevokedCertificates.Add(revokedarray);
+            const string serstring = "45678910";
+            var revokedstring = new RevokedCertificate(serstring);
+            crlBuilder.RevokedCertificates.Add(revokedstring);
+            crlBuilder.CrlExtensions.Add(X509Extensions.BuildCRLNumber(123));
+            byte[] crlEncoded = EncodeTbs(crlBuilder);
+            ValidateCRL(serial, serstring, hash, crlBuilder, crlEncoded);
+        }
+
+        /// <summary>
+        /// Verify the inner and outer CRL signature algorithms are identical.
+        /// </summary>
+        [Test]
+        public void SignedCrlUsesIdenticalSignatureAlgorithmIdentifiers()
+        {
+            CrlBuilder crlBuilder = CrlBuilder
+                .Create(m_issuerCert.SubjectName, HashAlgorithmName.SHA256)
+                .SetThisUpdate(new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc))
+                .SetNextUpdate(new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Utc));
+
+            IX509CRL crl = X509PfxUtils.IsECDsaSignature(m_issuerCert)
+                ? crlBuilder.CreateForECDsa(m_issuerCert)
+                : crlBuilder.CreateForRSA(m_issuerCert);
+
+            AssertSignatureAlgorithmIdentifiersMatch(crl.RawData);
+        }
+
+        /// <summary>
+        /// Verify <see cref="CrlBuilder.CreateSignature"/> embeds the exact signature
+        /// AlgorithmIdentifier produced by the generator into the TBSCertList, independent
+        /// of the issuer certificate key type.
+        /// </summary>
+        [Test]
+        public void CreateSignatureEmbedsGeneratorSignatureAlgorithmIdentifier()
+        {
+            CrlBuilder crlBuilder = CrlBuilder
+                .Create(m_issuerCert.SubjectName, HashAlgorithmName.SHA256)
+                .SetThisUpdate(new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc))
+                .SetNextUpdate(new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Utc));
+
+            using RSA rsa = RSA.Create(2048);
+            var generator = X509SignatureGenerator.CreateForRSA(rsa, RSASignaturePadding.Pkcs1);
+            byte[] expectedAlgorithm = generator.GetSignatureAlgorithmIdentifier(
+                HashAlgorithmName.SHA256);
+
+            IX509CRL crl = crlBuilder.CreateSignature(generator);
+
+            AssertSignatureAlgorithmIdentifiersMatch(crl.RawData);
+            Assert.That(ReadTbsSignatureAlgorithm(crl.RawData), Is.EqualTo(expectedAlgorithm));
+        }
+
+        /// <summary>
+        /// Validate the full CRL encoder and decoder pass.
+        /// </summary>
+        [Theory]
+        public void CrlBuilderTest(bool empty, bool noExtensions, KeyHashPair keyHashPair)
+        {
+            CrlBuilder crlBuilder = CrlBuilder
+                .Create(m_issuerCert.SubjectName, keyHashPair.HashAlgorithmName)
+                .SetThisUpdate(DateTime.UtcNow.Date)
+                .SetNextUpdate(DateTime.UtcNow.Date.AddDays(30));
+
+            byte[] serial = [4, 5, 6, 7];
+            const string serstring = "123456789101";
+            if (!empty)
+            {
+                // little endian byte array as serial number?
+                var revokedarray = new RevokedCertificate(serial)
+                {
+                    RevocationDate = DateTime.UtcNow.AddDays(30)
+                };
+                crlBuilder.RevokedCertificates.Add(revokedarray);
+                var revokedstring = new RevokedCertificate(serstring);
+                crlBuilder.RevokedCertificates.Add(revokedstring);
+            }
+
+            if (!noExtensions)
+            {
+                crlBuilder.CrlExtensions.Add(X509Extensions.BuildCRLNumber(1111));
+                crlBuilder.CrlExtensions.Add(m_issuerCert.BuildAuthorityKeyIdentifier());
+            }
+            IX509CRL i509Crl;
+            if (X509PfxUtils.IsECDsaSignature(m_issuerCert))
+            {
+                i509Crl = crlBuilder.CreateForECDsa(m_issuerCert);
+            }
+            else
+            {
+                i509Crl = crlBuilder.CreateForRSA(m_issuerCert);
+            }
+            var x509Crl = new X509CRL(i509Crl.RawData);
+            Assert.That(x509Crl, Is.Not.Null);
+            Assert.That(x509Crl.CrlExtensions, Is.Not.Null);
+            Assert.That(x509Crl.RevokedCertificates, Is.Not.Null);
+            Assert.That(x509Crl.IssuerName.RawData, Is.EqualTo(m_issuerCert.SubjectName.RawData));
+            Assert.That(x509Crl.ThisUpdate, Is.EqualTo(crlBuilder.ThisUpdate));
+            Assert.That(x509Crl.NextUpdate, Is.EqualTo(crlBuilder.NextUpdate));
+
+            if (empty)
+            {
+                Assert.That(x509Crl.RevokedCertificates, Is.Empty);
+            }
+            else
+            {
+                Assert.That(x509Crl.RevokedCertificates, Has.Count.EqualTo(2));
+                Assert.That(x509Crl.RevokedCertificates[0].UserCertificate, Is.EqualTo(serial));
+                Assert.That(x509Crl.RevokedCertificates[1].SerialNumber, Is.EqualTo(serstring));
+            }
+
+            if (noExtensions)
+            {
+                Assert.That(x509Crl.CrlExtensions, Is.Empty);
+            }
+            else
+            {
+                Assert.That(x509Crl.CrlExtensions, Has.Count.EqualTo(2));
+            }
+
+            using var issuerPubKey = Certificate.FromRawData(
+                m_issuerCert.RawData);
+            Assert.That(x509Crl.VerifySignature(issuerPubKey, true), Is.True);
+        }
+
+        /// <summary>
+        /// Validate the full CRL encoder and decoder pass.
+        /// </summary>
+        [Theory]
+        public void CrlBuilderTestWithSignatureGenerator(KeyHashPair keyHashPair)
+        {
+            CrlBuilder crlBuilder = CrlBuilder
+                .Create(m_issuerCert.SubjectName, keyHashPair.HashAlgorithmName)
+                .SetThisUpdate(DateTime.UtcNow.Date)
+                .SetNextUpdate(DateTime.UtcNow.Date.AddDays(30));
+
+            // little endian byte array as serial number?
+            byte[] serial = [4, 5, 6, 7];
+            var revokedarray = new RevokedCertificate(serial);
+            crlBuilder.RevokedCertificates.Add(revokedarray);
+
+            const string serstring = "709876543210";
+            var revokedstring = new RevokedCertificate(serstring);
+            crlBuilder.RevokedCertificates.Add(revokedstring);
+
+            crlBuilder.CrlExtensions.Add(X509Extensions.BuildCRLNumber(1111));
+            crlBuilder.CrlExtensions.Add(m_issuerCert.BuildAuthorityKeyIdentifier());
+
+            IX509CRL ix509Crl;
+            if (X509PfxUtils.IsECDsaSignature(m_issuerCert))
+            {
+                using ECDsa ecdsa = m_issuerCert.GetECDsaPrivateKey();
+                var generator = X509SignatureGenerator.CreateForECDsa(ecdsa);
+                ix509Crl = crlBuilder.CreateSignature(generator);
+            }
+            else
+            {
+                using RSA rsa = m_issuerCert.GetRSAPrivateKey();
+                var generator = X509SignatureGenerator.CreateForRSA(rsa, RSASignaturePadding.Pkcs1);
+                ix509Crl = crlBuilder.CreateSignature(generator);
+            }
+            var x509Crl = new X509CRL(ix509Crl);
+            Assert.That(x509Crl, Is.Not.Null);
+            Assert.That(x509Crl.CrlExtensions, Is.Not.Null);
+            Assert.That(x509Crl.RevokedCertificates, Is.Not.Null);
+            Assert.That(x509Crl.IssuerName.RawData, Is.EqualTo(m_issuerCert.SubjectName.RawData));
+            Assert.That(x509Crl.ThisUpdate, Is.EqualTo(crlBuilder.ThisUpdate));
+            Assert.That(x509Crl.NextUpdate, Is.EqualTo(crlBuilder.NextUpdate));
+            Assert.That(x509Crl.RevokedCertificates, Has.Count.EqualTo(2));
+            Assert.That(x509Crl.RevokedCertificates[0].UserCertificate, Is.EqualTo(serial));
+            Assert.That(x509Crl.RevokedCertificates[1].SerialNumber, Is.EqualTo(serstring));
+            Assert.That(x509Crl.CrlExtensions, Has.Count.EqualTo(2));
+            using var issuerPubKey = Certificate.FromRawData(
+                m_issuerCert.RawData);
+            Assert.That(x509Crl.VerifySignature(issuerPubKey, true), Is.True);
+        }
+
+        /// <summary>
+        /// Validate a CRL Builder and decoder pass on using utc and generalized times.
+        /// </summary>
+        [Test]
+        public void CrlUtcAndGeneralizedTimeTest()
+        {
+            // Generate a CRL with dates over 2050
+            var dname = new X500DistinguishedName("CN=Test, O=OPC Foundation");
+            HashAlgorithmName hash = HashAlgorithmName.SHA256;
+            var baseYear = new DateTime(2055, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            CrlBuilder crlBuilder = CrlBuilder
+                .Create(dname, hash)
+                .SetThisUpdate(baseYear)
+                .SetNextUpdate(baseYear.AddDays(100));
+            byte[] serial = [4, 5, 6, 7];
+            var revokedarray = new RevokedCertificate(serial)
+            {
+                RevocationDate = baseYear.AddDays(1)
+            };
+            crlBuilder.RevokedCertificates.Add(revokedarray);
+            const string serstring = "45678910";
+            var revokedstring = new RevokedCertificate(serstring)
+            {
+                RevocationDate = baseYear.AddDays(1)
+            };
+            crlBuilder.RevokedCertificates.Add(revokedstring);
+            crlBuilder.CrlExtensions.Add(X509Extensions.BuildCRLNumber(123));
+            byte[] crlEncoded = EncodeTbs(crlBuilder);
+            Assert.That(crlEncoded, Is.Not.Null);
+            ValidateCRL(serial, serstring, hash, crlBuilder, crlEncoded);
+
+            // Generate a CRL with dates up-to 2050
+            baseYear = new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            crlBuilder = CrlBuilder.Create(dname, hash).SetThisUpdate(baseYear)
+                .SetNextUpdate(baseYear.AddDays(100));
+            revokedarray = new RevokedCertificate(serial);
+            crlBuilder.RevokedCertificates.Add(revokedarray);
+            revokedstring = new RevokedCertificate(serstring)
+            {
+                RevocationDate = baseYear.AddDays(20)
+            };
+            crlBuilder.RevokedCertificates.Add(revokedstring);
+            crlBuilder.CrlExtensions.Add(X509Extensions.BuildCRLNumber(123));
+            crlEncoded = EncodeTbs(crlBuilder);
+            Assert.That(crlEncoded, Is.Not.Null);
+            ValidateCRL(serial, serstring, hash, crlBuilder, crlEncoded);
+        }
+
+        private static string WriteCRL(X509CRL x509Crl)
+        {
+            var stringBuilder = new StringBuilder();
+            stringBuilder.Append("Issuer:     ").AppendLine(x509Crl.Issuer)
+                .Append("ThisUpdate: ").Append(x509Crl.ThisUpdate).AppendLine()
+                .Append("NextUpdate: ").Append(x509Crl.NextUpdate).AppendLine()
+                .AppendLine("RevokedCertificates:");
+            foreach (RevokedCertificate revokedCert in x509Crl.RevokedCertificates)
+            {
+                stringBuilder
+                    .AppendFormat(
+                        CultureInfo.InvariantCulture,
+                        "{0:20}, ",
+                        revokedCert.SerialNumber)
+                    .Append(revokedCert.RevocationDate)
+                    .Append(", ");
+                foreach (X509Extension entryExt in revokedCert.CrlEntryExtensions)
+                {
+                    stringBuilder.Append(entryExt.Format(false)).Append(' ');
+                }
+                stringBuilder.AppendLine(string.Empty);
+            }
+            stringBuilder.AppendLine("Extensions:");
+            foreach (X509Extension extension in x509Crl.CrlExtensions)
+            {
+                stringBuilder.AppendLine(extension.Format(false));
+            }
+            return stringBuilder.ToString();
+        }
+
+        private static void ValidateCRL(
+            byte[] serial,
+            string serstring,
+            HashAlgorithmName hash,
+            CrlBuilder crlBuilder,
+            byte[] crlEncoded)
+        {
+            Assert.That(crlEncoded, Is.Not.Null);
+            var x509Crl = new X509CRL();
+            x509Crl.DecodeCrl(crlEncoded);
+            Assert.That(x509Crl, Is.Not.Null);
+            Assert.That(x509Crl.CrlExtensions, Is.Not.Null);
+            Assert.That(x509Crl.RevokedCertificates, Is.Not.Null);
+            Assert.That(x509Crl.IssuerName.RawData, Is.EqualTo(crlBuilder.IssuerName.RawData));
+            Assert.That(
+                crlBuilder.ThisUpdate,
+                Is.EqualTo(x509Crl.ThisUpdate).Within(TimeSpan.FromSeconds(1)));
+            Assert.That(
+                crlBuilder.NextUpdate,
+                Is.EqualTo(x509Crl.NextUpdate).Within(TimeSpan.FromSeconds(1)));
+            Assert.That(x509Crl.RevokedCertificates, Has.Count.EqualTo(2));
+            Assert.That(x509Crl.RevokedCertificates[0].UserCertificate, Is.EqualTo(serial));
+            Assert.That(x509Crl.RevokedCertificates[1].SerialNumber, Is.EqualTo(serstring));
+            Assert.That(x509Crl.CrlExtensions, Has.Count.EqualTo(1));
+            Assert.That(x509Crl.HashAlgorithmName, Is.EqualTo(hash));
+        }
+
+        private static void AssertSignatureAlgorithmIdentifiersMatch(byte[] rawData)
+        {
+            var crlReader = new AsnReader(rawData, AsnEncodingRules.DER);
+            AsnReader crl = crlReader.ReadSequence();
+            crlReader.ThrowIfNotEmpty();
+            ReadOnlyMemory<byte> tbs = crl.ReadEncodedValue();
+            byte[] outerAlgorithm = crl.ReadEncodedValue().ToArray();
+            _ = crl.ReadBitString(out int unusedBitCount);
+            crl.ThrowIfNotEmpty();
+
+            var tbsReader = new AsnReader(tbs, AsnEncodingRules.DER);
+            AsnReader tbsCrl = tbsReader.ReadSequence();
+            tbsReader.ThrowIfNotEmpty();
+            _ = tbsCrl.ReadInteger();
+            byte[] innerAlgorithm = tbsCrl.ReadEncodedValue().ToArray();
+
+            Assert.That(unusedBitCount, Is.Zero);
+            Assert.That(innerAlgorithm, Is.EqualTo(outerAlgorithm));
+        }
+
+        private static byte[] ReadTbsSignatureAlgorithm(byte[] rawData)
+        {
+            var crlReader = new AsnReader(rawData, AsnEncodingRules.DER);
+            AsnReader crl = crlReader.ReadSequence();
+            ReadOnlyMemory<byte> tbs = crl.ReadEncodedValue();
+
+            var tbsReader = new AsnReader(tbs, AsnEncodingRules.DER);
+            AsnReader tbsCrl = tbsReader.ReadSequence();
+            _ = tbsCrl.ReadInteger();
+            return tbsCrl.ReadEncodedValue().ToArray();
+        }
+
+        private static byte[] EncodeTbs(CrlBuilder crlBuilder)
+        {
+            using RSA rsa = RSA.Create();
+            var generator = X509SignatureGenerator.CreateForRSA(rsa, RSASignaturePadding.Pkcs1);
+            byte[] signatureAlgorithm = generator.GetSignatureAlgorithmIdentifier(
+                crlBuilder.HashAlgorithmName);
+            return crlBuilder.Encode(signatureAlgorithm);
+        }
+
+        private Certificate m_issuerCert;
+        private readonly NodeId m_certificateType;
+    }
+}

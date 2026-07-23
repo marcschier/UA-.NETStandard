@@ -1,0 +1,277 @@
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
+using System;
+using System.Collections.Generic;
+
+namespace Opc.Ua.Server
+{
+    /// <summary>
+    /// Calculates the value of an aggregate.
+    /// </summary>
+    public class CountAggregateCalculator : AggregateCalculator
+    {
+        /// <summary>
+        /// Initializes the aggregate calculator.
+        /// </summary>
+        /// <param name="aggregateId">The aggregate function to apply.</param>
+        /// <param name="startTime">The start time.</param>
+        /// <param name="endTime">The end time.</param>
+        /// <param name="processingInterval">The processing interval.</param>
+        /// <param name="stepped">Whether to use stepped interpolation.</param>
+        /// <param name="configuration">The aggregate configuration.</param>
+        /// <param name="telemetry">The telemetry context to use to create obvservability instruments</param>
+        public CountAggregateCalculator(
+            NodeId aggregateId,
+            DateTimeUtc startTime,
+            DateTimeUtc endTime,
+            double processingInterval,
+            bool stepped,
+            AggregateConfiguration configuration,
+            ITelemetryContext telemetry)
+            : base(aggregateId, startTime, endTime, processingInterval, stepped, configuration, telemetry)
+        {
+            SetPartialBit = true;
+        }
+
+        /// <summary>
+        /// Computes the value for the timeslice.
+        /// </summary>
+        protected override DataValue ComputeValue(TimeSlice slice)
+        {
+            if (!AggregateId.TryGetValue(out uint numericId))
+            {
+                return base.ComputeValue(slice);
+            }
+            switch (numericId)
+            {
+                case Objects.AggregateFunction_Count:
+                    return ComputeCount(slice);
+                case Objects.AggregateFunction_AnnotationCount:
+                    return ComputeAnnotationCount(slice);
+                case Objects.AggregateFunction_DurationInStateZero:
+                    return ComputeDurationInState(slice, false);
+                case Objects.AggregateFunction_DurationInStateNonZero:
+                    return ComputeDurationInState(slice, true);
+                case Objects.AggregateFunction_NumberOfTransitions:
+                    return ComputeNumberOfTransitions(slice);
+                default:
+                    return base.ComputeValue(slice);
+            }
+        }
+
+        /// <summary>
+        /// Calculates the Count aggregate for the timeslice.
+        /// </summary>
+        protected DataValue ComputeCount(TimeSlice slice)
+        {
+            // get the values in the slice.
+            List<DataValue>? values = GetValues(slice);
+
+            // check for empty slice.
+            if (values == null)
+            {
+                return GetNoDataValue(slice);
+            }
+
+            // count the values.
+            int count = 0;
+
+            for (int ii = 0; ii < values.Count; ii++)
+            {
+                if (StatusCode.IsGood(values[ii].StatusCode))
+                {
+                    count++;
+                }
+            }
+
+            // set the timestamp and status.
+            var value = new DataValue(
+                Variant.From(count),
+                StatusCodes.Good,
+                GetTimestamp(slice),
+                GetTimestamp(slice));
+            value = value.WithStatus(GetValueBasedStatusCode(slice, values, value.StatusCode));
+
+            if (!StatusCode.IsBad(value.StatusCode))
+            {
+                // set aggregate bits fon non Bad values
+                value = value.WithStatus(value.StatusCode.WithAggregateBits(AggregateBits.Calculated));
+            }
+            // return result.
+            return value;
+        }
+
+        /// <summary>
+        /// Calculates the AnnotationCount aggregate for the timeslice.
+        /// </summary>
+        /// <remarks>
+        /// Part 13 v1.05.07 §5.4.3.20 defines AnnotationCount as the number of <c>Annotation</c>s in
+        /// the interval, which live on a separate annotation stream that this calculator is not fed.
+        /// The authoritative AnnotationCount computation for history reads is performed by
+        /// <c>HistorianDispatcher</c> using <c>IHistorianAnnotationProvider</c>; this method counts
+        /// whatever values it is given and is retained only for direct/standalone calculator use.
+        /// </remarks>
+        protected DataValue ComputeAnnotationCount(TimeSlice slice)
+        {
+            // get the values in the slice.
+            List<DataValue>? values = GetValues(slice);
+
+            // check for empty slice.
+            if (values == null)
+            {
+                return GetNoDataValue(slice);
+            }
+
+            // count the values.
+            int count = 0;
+
+            for (int ii = 0; ii < values.Count; ii++)
+            {
+                count++;
+            }
+
+            // set the timestamp and status.
+            var value = new DataValue(
+                Variant.From(count),
+                StatusCodes.Good,
+                GetTimestamp(slice),
+                GetTimestamp(slice));
+
+            // return result.
+            return value.WithStatus(value.StatusCode.WithAggregateBits(AggregateBits.Calculated));
+        }
+
+        /// <summary>
+        /// Calculates the DurationInStateZero and DurationInStateNonZero aggregates for the timeslice.
+        /// </summary>
+        protected DataValue ComputeDurationInState(TimeSlice slice, bool isNonZero)
+        {
+            // get the values in the slice.
+            List<DataValue>? values = GetValuesWithSimpleBounds(slice);
+
+            // check for empty slice.
+            if (values == null)
+            {
+                return GetNoDataValue(slice);
+            }
+
+            // get the regions.
+            List<SubRegion>? regions = GetRegionsInValueSet(values, false, true);
+
+            double duration = 0;
+
+            for (int ii = 0; ii < regions!.Count; ii++)
+            {
+                if (StatusCode.IsNotGood(regions[ii].StatusCode))
+                {
+                    continue;
+                }
+
+                if (isNonZero)
+                {
+                    if (regions[ii].StartValue != 0)
+                    {
+                        duration += regions[ii].Duration;
+                    }
+                }
+                else if (regions[ii].StartValue == 0)
+                {
+                    duration += regions[ii].Duration;
+                }
+            }
+
+            // set the timestamp and status.
+            var value = new DataValue(
+                Variant.From(duration),
+                StatusCodes.Good,
+                GetTimestamp(slice),
+                GetTimestamp(slice));
+            value = value.WithStatus(GetTimeBasedStatusCode(regions, value.StatusCode));
+            value = value.WithStatus(value.StatusCode.WithAggregateBits(AggregateBits.Calculated));
+
+            // return result.
+            return value;
+        }
+
+        /// <summary>
+        /// Calculates the Count aggregate for the timeslice.
+        /// </summary>
+        protected DataValue ComputeNumberOfTransitions(TimeSlice slice)
+        {
+            // get the values in the slice.
+            List<DataValue>? values = GetValues(slice);
+
+            // check for empty slice.
+            if (values == null)
+            {
+                return GetNoDataValue(slice);
+            }
+
+            // The first non-Bad value is a transition when no previous non-Bad value exists.
+            LinkedListNode<DataValue>? previousValue = slice.NonBadEarlyBound;
+            bool hasLastValue = previousValue != null;
+            Variant lastValue = previousValue != null
+                ? previousValue.Value.WrappedValue
+                : Variant.Null;
+
+            // count the transitions.
+            int count = 0;
+
+            for (int ii = 0; ii < values.Count; ii++)
+            {
+                if (StatusCode.IsBad(values[ii].StatusCode))
+                {
+                    continue;
+                }
+
+                Variant nextValue = values[ii].WrappedValue;
+                if (!hasLastValue || lastValue != nextValue)
+                {
+                    count++;
+                }
+
+                hasLastValue = true;
+                lastValue = nextValue;
+            }
+
+            // set the timestamp and status.
+            var value = new DataValue(
+                Variant.From(count),
+                StatusCodes.Good,
+                GetTimestamp(slice),
+                GetTimestamp(slice));
+            value = value.WithStatus(value.StatusCode.WithAggregateBits(AggregateBits.Calculated));
+            value = value.WithStatus(GetValueBasedStatusCode(slice, values, value.StatusCode));
+
+            // return result.
+            return value;
+        }
+    }
+}

@@ -1,0 +1,332 @@
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using NUnit.Framework;
+using Opc.Ua.Security.Certificates;
+using Opc.Ua.Tests;
+
+namespace Opc.Ua.Gds.Tests
+{
+    [TestFixture]
+    [Category("GDSPush")]
+    [Category("GDS")]
+    [SetCulture("en-us")]
+    [SetUICulture("en-us")]
+    [NonParallelizable]
+    public class TrustListValidationTest
+    {
+        private static readonly ICertificateFactory s_factory = DefaultCertificateFactory.Instance;
+        private GlobalDiscoveryTestServer m_server;
+        private ServerConfigurationPushTestClient m_pushClient;
+        private ITelemetryContext m_telemetry;
+
+        [OneTimeSetUp]
+        public async Task OneTimeSetUpAsync()
+        {
+            // Start GDS server
+            m_telemetry = NUnitTelemetryContext.Create();
+            m_server = await TestUtils.StartGDSAsync(true, CertificateStoreType.Directory).ConfigureAwait(false);
+
+            // Load client
+            m_pushClient = new ServerConfigurationPushTestClient(true, m_telemetry);
+            await m_pushClient.LoadClientConfigurationAsync(m_server.BasePort).ConfigureAwait(false);
+
+            // Set admin credentials and connect
+            await m_pushClient.ConnectAsync(SecurityPolicies.Aes256_Sha256_RsaPss).ConfigureAwait(false);
+            m_pushClient.PushClient.AdminCredentials = m_pushClient.SysAdminUser;
+        }
+
+        [OneTimeTearDown]
+        public async Task OneTimeTearDownAsync()
+        {
+            try
+            {
+                if (m_pushClient != null)
+                {
+                    await m_pushClient.DisconnectClientAsync().ConfigureAwait(false);
+                }
+            }
+            catch
+            {
+            }
+            finally
+            {
+                m_pushClient?.Dispose();
+                m_pushClient = null;
+                if (m_server != null)
+                {
+                    await m_server.DisposeAsync().ConfigureAwait(false);
+                }
+                m_server = null;
+            }
+        }
+
+        /// <summary>
+        /// Test that normal-sized trust lists work correctly.
+        /// </summary>
+        [Test]
+        [Order(100)]
+        public async Task NormalSizeTrustListAsync()
+        {
+            // Create a normal-sized trust list
+            var normalTrustList = new TrustListDataType
+            {
+                SpecifiedLists = (uint)TrustListMasks.TrustedCertificates,
+                TrustedCertificates = [],
+                TrustedCrls = [],
+                IssuerCertificates = [],
+                IssuerCrls = []
+            };
+
+            // Add a reasonable number of certificates (10)
+            var trustList = new List<ByteString>();
+            for (int i = 0; i < 10; i++)
+            {
+                using Certificate cert = s_factory
+                    .CreateApplicationCertificate($"urn:test:cert{i}", $"NormalCert{i}", $"CN=NormalCert{i}, O=OPC Foundation")
+                    .CreateForRSA();
+                trustList.Add(cert.RawData.ToByteString());
+            }
+            normalTrustList.TrustedCertificates = trustList;
+
+            // This should succeed. UpdateTrustList is part of the PushManagement
+            // transaction and only takes effect once ApplyChanges is called, so
+            // CloseAndUpdate always reports applyChangesRequired=true and the
+            // write is not observable via ReadTrustList until applied.
+            bool applyChangesRequired = await m_pushClient.PushClient.UpdateTrustListAsync(normalTrustList).ConfigureAwait(false);
+            Assert.That(applyChangesRequired, Is.True);
+            await m_pushClient.PushClient.ApplyChangesAsync().ConfigureAwait(false);
+
+            // Read it back to verify
+            TrustListDataType readTrustList = await m_pushClient.PushClient.ReadTrustListAsync().ConfigureAwait(false);
+            Assert.That(readTrustList, Is.Not.Null);
+            Assert.That(readTrustList.TrustedCertificates.Count, Is.EqualTo(normalTrustList.TrustedCertificates.Count));
+        }
+
+        /// <summary>
+        /// Test that writing a trust list exceeding the size limit fails.
+        /// </summary>
+        [Test]
+        [Order(200)]
+        public void WriteTrustListExceedsSizeLimit()
+        {
+            // Create a trust list with a few certificates
+            var oversizedTrustList = new TrustListDataType
+            {
+                SpecifiedLists = (uint)TrustListMasks.TrustedCertificates,
+                TrustedCertificates = [],
+                TrustedCrls = [],
+                IssuerCertificates = [],
+                IssuerCrls = []
+            };
+
+            var trustList = new List<ByteString>();
+            for (int i = 0; i < 20; i++)
+            {
+                using Certificate cert = s_factory
+                    .CreateApplicationCertificate($"urn:test:cert{i}", $"TestCert{i}", $"CN=TestCert{i}, O=OPC Foundation")
+                    .SetRSAKeySize(2048)
+                    .CreateForRSA();
+                trustList.Add(cert.RawData.ToByteString());
+            }
+            oversizedTrustList.TrustedCertificates = trustList;
+
+            // Calculate the encoded size
+            long encodedSize = GetEncodedSize(oversizedTrustList);
+            TestContext.Out.WriteLine($"Generated trust list with encoded size: {encodedSize} bytes.");
+
+            // Set the client's max trust list size to be smaller than the actual size
+            uint maxTrustListSize = (uint)encodedSize - 1;
+            TestContext.Out.WriteLine($"Client MaxTrustListSize set to: {maxTrustListSize}");
+
+            // This should throw ServiceResultException with BadEncodingLimitsExceeded
+            ServiceResultException ex = Assert.ThrowsAsync<ServiceResultException>(
+                async () => await m_pushClient.PushClient.UpdateTrustListAsync(oversizedTrustList, maxTrustListSize).ConfigureAwait(false));
+
+            Assert.That(ex, Is.Not.Null);
+            Assert.That(ex.StatusCode, Is.EqualTo(StatusCodes.BadEncodingLimitsExceeded));
+            TestContext.Out.WriteLine($"Expected exception caught: {ex.Message}");
+        }
+
+        /// <summary>
+        /// Test boundary condition - trust list just under the limit.
+        /// </summary>
+        [Test]
+        [Order(300)]
+        public async Task TrustListJustUnderLimitAsync()
+        {
+            var boundaryTrustList = new TrustListDataType
+            {
+                SpecifiedLists = (uint)TrustListMasks.TrustedCertificates,
+                TrustedCertificates = [],
+                TrustedCrls = [],
+                IssuerCertificates = [],
+                IssuerCrls = []
+            };
+
+            var trustList = new List<ByteString>();
+            for (int i = 0; i < 20; i++)
+            {
+                using Certificate cert = s_factory
+                    .CreateApplicationCertificate($"urn:test:cert{i}", $"BoundaryCert{i}", $"CN=BoundaryCert{i}, O=OPC Foundation")
+                    .SetRSAKeySize(2048)
+                    .CreateForRSA();
+                trustList.Add(cert.RawData.ToByteString());
+            }
+            boundaryTrustList.TrustedCertificates = trustList;
+
+            // Calculate the encoded size
+            long encodedSize = GetEncodedSize(boundaryTrustList);
+            TestContext.Out.WriteLine($"Generated trust list with encoded size: {encodedSize} bytes.");
+
+            // Set the client's max trust list size to be exactly the encoded size (should pass)
+            uint maxTrustListSize = (uint)encodedSize;
+            TestContext.Out.WriteLine($"Client MaxTrustListSize set to: {maxTrustListSize}");
+
+            // This should succeed. UpdateTrustList is part of the PushManagement
+            // transaction and only takes effect once ApplyChanges is called, so
+            // CloseAndUpdate always reports applyChangesRequired=true and the
+            // write is not observable via ReadTrustList until applied.
+            bool applyChangesRequired = await m_pushClient.PushClient
+                .UpdateTrustListAsync(boundaryTrustList, maxTrustListSize).ConfigureAwait(false);
+            Assert.That(applyChangesRequired, Is.True);
+            await m_pushClient.PushClient.ApplyChangesAsync().ConfigureAwait(false);
+
+            // Read it back
+            TrustListDataType readTrustList = await m_pushClient.PushClient.ReadTrustListAsync().ConfigureAwait(false);
+            Assert.That(readTrustList, Is.Not.Null);
+            Assert.That(readTrustList.TrustedCertificates.Count, Is.EqualTo(boundaryTrustList.TrustedCertificates.Count));
+        }
+
+        /// <summary>
+        /// Test reading and writing with a custom MaxTrustListSize set in the ServerConfiguration.
+        /// </summary>
+        [Test]
+        [Order(400)]
+        public async Task ReadWriteWithCustomServerMaxTrustListSizeAsync()
+        {
+            // Define a custom size limit for the server
+            const int customMaxTrustListSize = 8192; // 8 KB
+
+            // Update server configuration
+            await m_server.DisposeAsync().ConfigureAwait(false);
+            m_server = await TestUtils.StartGDSAsync(false, CertificateStoreType.Directory, customMaxTrustListSize).ConfigureAwait(false);
+            await m_pushClient.LoadClientConfigurationAsync(m_server.BasePort).ConfigureAwait(false);
+            await m_pushClient.ConnectAsync(SecurityPolicies.Aes256_Sha256_RsaPss).ConfigureAwait(false);
+            m_pushClient.PushClient.AdminCredentials = m_pushClient.SysAdminUser;
+
+            TestContext.Out.WriteLine($"Server MaxTrustListSize set to: {customMaxTrustListSize}");
+
+            try
+            {
+                // 1. Test writing a trust list that exceeds the server's limit
+                var oversizedTrustList = new TrustListDataType
+                {
+                    SpecifiedLists = (uint)TrustListMasks.TrustedCertificates,
+                    TrustedCertificates = []
+                };
+
+                long currentSize = 0;
+                int certCount = 0;
+                while (currentSize <= customMaxTrustListSize)
+                {
+                    using Certificate cert =
+                        s_factory.CreateApplicationCertificate($"urn:test:oversized{certCount}", "Oversized", "CN=Oversized").CreateForRSA();
+                    oversizedTrustList.TrustedCertificates =
+                        oversizedTrustList.TrustedCertificates.AddItem(cert.RawData.ToByteString());
+                    currentSize = GetEncodedSize(oversizedTrustList);
+                    certCount++;
+                }
+                TestContext.Out.WriteLine($"Oversized trust list created with {certCount} certs and size {currentSize}");
+
+                ServiceResultException ex = Assert.ThrowsAsync<ServiceResultException>(async () =>
+                    await m_pushClient.PushClient.UpdateTrustListAsync(oversizedTrustList).ConfigureAwait(false));
+                Assert.That(ex.StatusCode, Is.EqualTo(StatusCodes.BadEncodingLimitsExceeded));
+                TestContext.Out.WriteLine("Successfully caught exception for writing oversized trust list to server.");
+
+                // 2. Test writing a valid trust list (under the server's limit)
+                var validTrustList = new TrustListDataType
+                {
+                    SpecifiedLists = (uint)TrustListMasks.TrustedCertificates,
+                    TrustedCertificates = []
+                };
+                for (int i = 0; i < 2; i++)
+                {
+                    using Certificate cert = s_factory
+                        .CreateApplicationCertificate($"urn:test:valid{i}", "Valid", "CN=Valid")
+                        .CreateForRSA();
+                    validTrustList.TrustedCertificates =
+                        validTrustList.TrustedCertificates.AddItem(cert.RawData.ToByteString());
+                }
+                long validSize = GetEncodedSize(validTrustList);
+                Assert.That(validSize, Is.LessThan(customMaxTrustListSize));
+                TestContext.Out.WriteLine($"Valid trust list created with size {validSize}");
+
+                bool reboot = await m_pushClient.PushClient.UpdateTrustListAsync(validTrustList).ConfigureAwait(false);
+                Assert.That(reboot, Is.True);
+                await m_pushClient.PushClient.ApplyChangesAsync().ConfigureAwait(false);
+                TestContext.Out.WriteLine("Successfully wrote valid trust list to server.");
+
+                // 3. Test reading the trust list with a client limit that is too small
+                ServiceResultException exRead = Assert.ThrowsAsync<ServiceResultException>(async () =>
+                    await m_pushClient.PushClient.ReadTrustListAsync(TrustListMasks.TrustedCertificates, (uint)validSize - 1).ConfigureAwait(false));
+                Assert.That(exRead.StatusCode, Is.EqualTo(StatusCodes.BadEncodingLimitsExceeded));
+                TestContext.Out.WriteLine("Successfully caught exception for reading trust list with small client limit.");
+
+                // 4. Test reading with a sufficient client limit
+                TrustListDataType readTrustList = await m_pushClient.PushClient
+                    .ReadTrustListAsync(TrustListMasks.TrustedCertificates, (uint)validSize).ConfigureAwait(false);
+                Assert.That(readTrustList, Is.Not.Null);
+                Assert.That(readTrustList.TrustedCertificates.Count, Is.EqualTo(validTrustList.TrustedCertificates.Count));
+                TestContext.Out.WriteLine("Successfully read trust list with sufficient client limit.");
+            }
+            finally
+            {
+                // Restore original server configuration
+                await m_server.DisposeAsync().ConfigureAwait(false);
+                m_server = await TestUtils.StartGDSAsync(false, CertificateStoreType.Directory, 0).ConfigureAwait(false);
+                await m_pushClient.LoadClientConfigurationAsync(m_server.BasePort).ConfigureAwait(false);
+                await m_pushClient.ConnectAsync(SecurityPolicies.Aes256_Sha256_RsaPss).ConfigureAwait(false);
+                m_pushClient.PushClient.AdminCredentials = m_pushClient.SysAdminUser;
+
+                TestContext.Out.WriteLine("Restored original server configuration.");
+            }
+        }
+
+        private long GetEncodedSize(TrustListDataType trustList)
+        {
+            using var stream = new System.IO.MemoryStream();
+            using var encoder = new BinaryEncoder(stream, m_pushClient.PushClient.Session.MessageContext, false);
+            encoder.WriteEncodeable(null, trustList);
+            return stream.Length;
+        }
+    }
+}

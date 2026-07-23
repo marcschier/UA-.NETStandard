@@ -1,0 +1,1776 @@
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Opc.Ua.Security.Certificates;
+
+namespace Opc.Ua.Bindings
+{
+    /// <summary>
+    /// Creates a new TcpTransportListener with ITransportListener interface.
+    /// </summary>
+    public class TcpTransportListenerFactory : TcpServiceHost
+    {
+        /// <summary>
+        /// Creates a listener factory using the default buffer-manager factory.
+        /// </summary>
+        public TcpTransportListenerFactory()
+            : this(DefaultBufferManagerFactory.Instance)
+        {
+        }
+
+        /// <summary>
+        /// Creates a listener factory using the specified buffer-manager factory.
+        /// </summary>
+        /// <param name="bufferManagerFactory">Factory used to create listener buffer managers.</param>
+        public TcpTransportListenerFactory(IBufferManagerFactory bufferManagerFactory)
+        {
+            m_bufferManagerFactory = bufferManagerFactory ??
+                throw new ArgumentNullException(nameof(bufferManagerFactory));
+        }
+
+        /// <inheritdoc/>
+        public override string UriScheme => Utils.UriSchemeOpcTcp;
+
+        /// <inheritdoc/>
+        public override ITransportListener Create(ITelemetryContext telemetry)
+        {
+            return new TcpTransportListener(
+                telemetry,
+                timeProvider: null,
+                bufferManagerFactory: m_bufferManagerFactory);
+        }
+
+        private readonly IBufferManagerFactory m_bufferManagerFactory;
+    }
+
+    /// <summary>
+    /// Represents a potential problematic ActiveClient
+    /// </summary>
+    public class ActiveClient
+    {
+        /// <summary>
+        /// Time of the last recorded problematic action
+        /// </summary>
+        public int LastActionTicks { get; set; }
+
+        /// <summary>
+        /// Counter for number of recorded potential problematic actions
+        /// </summary>
+        public int ActiveActionCount { get; set; }
+
+        /// <summary>
+        /// Ticks until the client is Blocked
+        /// </summary>
+        public int BlockedUntilTicks { get; set; }
+    }
+
+    /// <summary>
+    /// Manages clients with potential problematic activities
+    /// </summary>
+    internal sealed class ActiveClientTracker : IDisposable
+    {
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public ActiveClientTracker(ITelemetryContext telemetry, TimeProvider timeProvider)
+        {
+            m_timeProvider = timeProvider;
+            m_logger = telemetry.CreateLogger<ActiveClientTracker>();
+            m_cleanupTimer = m_timeProvider.CreateTimer(
+                CleanupExpiredEntries,
+                null,
+                TimeSpan.FromMilliseconds(kCleanupIntervalMs),
+                TimeSpan.FromMilliseconds(kCleanupIntervalMs));
+        }
+
+        /// <summary>
+        /// Checks if an IP address is currently blocked
+        /// </summary>
+        public bool IsBlocked(IPAddress ipAddress)
+        {
+            if (m_activeClients.TryGetValue(ipAddress, out ActiveClient? client))
+            {
+                int currentTicks = m_timeProvider.GetTickCount();
+                return IsBlockedTicks(client.BlockedUntilTicks, currentTicks);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Adds a potential problematic action entry for a client
+        /// </summary>
+        public void AddClientAction(IPAddress ipAddress)
+        {
+            int currentTicks = m_timeProvider.GetTickCount();
+
+            m_activeClients.AddOrUpdate(
+                ipAddress,
+                // If client is new , create a new entry
+                key => new ActiveClient
+                {
+                    LastActionTicks = currentTicks,
+                    ActiveActionCount = 1,
+                    BlockedUntilTicks = 0
+                },
+                // If the client exists, update its entry
+                (key, existingEntry) =>
+                {
+                    // If IP currently blocked simply do nothing
+                    if (IsBlockedTicks(existingEntry.BlockedUntilTicks, currentTicks))
+                    {
+                        return existingEntry;
+                    }
+
+                    // Elapsed time since last recorded action
+                    int elapsedSinceLastRecAction = currentTicks - existingEntry.LastActionTicks;
+
+                    if (elapsedSinceLastRecAction <= kActionsIntervalMs)
+                    {
+                        existingEntry.ActiveActionCount++;
+
+                        if (existingEntry.ActiveActionCount > kNrActionsTillBlock)
+                        {
+                            // Block the IP
+                            existingEntry.BlockedUntilTicks = currentTicks + kBlockDurationMs;
+                            if (m_logger.IsEnabled(LogLevel.Error))
+                            {
+                                m_logger.TcpTransportLog0(
+                                    ipAddress,
+                                    kBlockDurationMs,
+                                    kNrActionsTillBlock,
+                                    kActionsIntervalMs);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Reset the count as the last action was outside the interval
+                        existingEntry.ActiveActionCount = 1;
+                    }
+
+                    existingEntry.LastActionTicks = currentTicks;
+
+                    return existingEntry;
+                });
+        }
+
+        /// <summary>
+        /// Dispose the cleanup timer
+        /// </summary>
+        public void Dispose()
+        {
+            m_cleanupTimer?.Dispose();
+        }
+
+        /// <summary>
+        /// Periodically cleans up expired active client entries to avoid memory leak and unblock clients whose duration has expired.
+        /// </summary>
+        private void CleanupExpiredEntries(object? state)
+        {
+            int currentTicks = m_timeProvider.GetTickCount();
+
+            foreach (KeyValuePair<IPAddress, ActiveClient> entry in m_activeClients)
+            {
+                IPAddress clientIp = entry.Key;
+                ActiveClient rClient = entry.Value;
+
+                // Unblock client if blocking duration has been exceeded
+                if (rClient.BlockedUntilTicks != 0 &&
+                    !IsBlockedTicks(rClient.BlockedUntilTicks, currentTicks))
+                {
+                    rClient.BlockedUntilTicks = 0;
+                    rClient.ActiveActionCount = 0;
+                    if (m_logger.IsEnabled(LogLevel.Debug))
+                    {
+                        m_logger.TcpTransportLog1(clientIp, kBlockDurationMs);
+                    }
+                }
+
+                // Remove clients that haven't had any potential problematic actions in the last m_kEntryExpirationMs interval
+                int elapsedSinceBadActionTicks = currentTicks - rClient.LastActionTicks;
+                if (elapsedSinceBadActionTicks > kEntryExpirationMs)
+                {
+                    // Even if TryRemove fails it will most probably succeed at the next execution
+                    if (m_activeClients.TryRemove(clientIp, out _))
+                    {
+                        m_logger.TcpTransportLog2(
+                            clientIp,
+                            kEntryExpirationMs);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Determines if the IP is currently blocked based on the block expiration ticks and current ticks
+        /// </summary>
+        private static bool IsBlockedTicks(int blockedUntilTicks, int currentTicks)
+        {
+            if (blockedUntilTicks == 0)
+            {
+                return false;
+            }
+            // C# signed arithmetic
+            int diff = blockedUntilTicks - currentTicks;
+            // If currentTicks < blockedUntilTicks then it is still blocked
+            // Works even if TickCount has wrapped around due to C# signed integer arithmetic
+            return diff > 0;
+        }
+
+        private readonly ConcurrentDictionary<IPAddress, ActiveClient> m_activeClients = new();
+
+        private const int kActionsIntervalMs = 10_000;
+        private const int kNrActionsTillBlock = 3;
+
+        /// <summary>
+        /// 30 seconds
+        /// </summary>
+        private const int kBlockDurationMs = 30_000;
+        private const int kCleanupIntervalMs = 15_000;
+
+        /// <summary>
+        /// 10 minutes
+        /// </summary>
+        private const int kEntryExpirationMs = 600_000;
+
+        private readonly ILogger m_logger;
+        private readonly TimeProvider m_timeProvider;
+        private readonly ITimer m_cleanupTimer;
+    }
+
+    /// <summary>
+    /// Manages the transport for a UA TCP server.
+    /// </summary>
+    public class TcpTransportListener
+        : ITransportListener,
+            ITcpChannelListener,
+            ITransportListenerCertificateRotation,
+            ITransportListenerPeerCertificateRotation
+    {
+        /// <summary>
+        /// The default pending-connection backlog for the listener socket when the
+        /// configured <see cref="TransportListenerSettings.ListenBacklog"/> is not
+        /// set. Sized to absorb bursts of simultaneous connects rather than the
+        /// historical value of 10, which overflowed under a connect storm.
+        /// </summary>
+        private const int kDefaultSocketBacklog = 512;
+
+        /// <summary>
+        /// Create listener
+        /// </summary>
+        /// <param name="telemetry">Telemetry context to use</param>
+        public TcpTransportListener(ITelemetryContext telemetry)
+            : this(telemetry, null, DefaultBufferManagerFactory.Instance)
+        {
+        }
+
+        /// <summary>
+        /// Create listener
+        /// </summary>
+        /// <param name="telemetry">Telemetry context to use</param>
+        /// <param name="timeProvider">Time provider to use for timers and durations.</param>
+        public TcpTransportListener(ITelemetryContext telemetry, TimeProvider? timeProvider = null)
+            : this(telemetry, timeProvider, DefaultBufferManagerFactory.Instance)
+        {
+        }
+
+        /// <summary>
+        /// Creates a listener with explicit time and buffer-manager providers.
+        /// </summary>
+        /// <param name="telemetry">Telemetry context to use.</param>
+        /// <param name="timeProvider">Time provider to use for timers and durations.</param>
+        /// <param name="bufferManagerFactory">Factory used to create listener buffer managers.</param>
+        public TcpTransportListener(
+            ITelemetryContext telemetry,
+            TimeProvider? timeProvider,
+            IBufferManagerFactory bufferManagerFactory)
+        {
+            m_telemetry = telemetry;
+            m_logger = telemetry.CreateLogger<TcpTransportListener>();
+            m_timeProvider = timeProvider ?? TimeProvider.System;
+            m_bufferManagerFactory = bufferManagerFactory ??
+                throw new ArgumentNullException(nameof(bufferManagerFactory));
+        }
+
+        /// <summary>
+        /// Frees any unmanaged resources.
+        /// </summary>
+        public ValueTask DisposeAsync()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+            return default;
+        }
+
+        /// <summary>
+        /// An overrideable version of the Dispose.
+        /// </summary>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                lock (m_lock)
+                {
+                    m_inactivityDetectionTimer?.Dispose();
+                    m_inactivityDetectionTimer = null;
+
+                    m_activeClientTracker?.Dispose();
+
+                    m_listeningSocket?.Dispose();
+                    m_listeningSocket = null;
+
+                    m_listeningSocketIPv6?.Dispose();
+                    m_listeningSocketIPv6 = null;
+
+                    if (m_channels != null)
+                    {
+                        KeyValuePair<uint, TcpListenerChannel>[] channels = [.. m_channels];
+                        m_channels.Clear();
+                        m_channels = null;
+                        foreach (KeyValuePair<uint, TcpListenerChannel> channelKeyValue in channels)
+                        {
+                            channelKeyValue.Value?.Dispose();
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// The URI scheme handled by the listener.
+        /// </summary>
+        public string UriScheme => Utils.UriSchemeOpcTcp;
+
+        /// <summary>
+        /// The Id of the transport listener.
+        /// </summary>
+        public string ListenerId { get; private set; } = default!;
+
+        /// <summary>
+        /// Opens the listener and starts accepting connection.
+        /// </summary>
+        /// <param name="baseAddress">The base address.</param>
+        /// <param name="settings">The settings to use when creating the listener.</param>
+        /// <param name="callback">The callback to use when requests arrive via the channel.</param>
+        /// <param name="ct">Cancellation token.</param>
+        /// <exception cref="ArgumentNullException">Thrown if any parameter is null.</exception>
+        /// <exception cref="ServiceResultException">Thrown if any communication error occurs.</exception>
+        public ValueTask OpenAsync(
+            Uri baseAddress,
+            TransportListenerSettings settings,
+            ITransportListenerCallback callback,
+            CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            // assign a unique guid to the listener.
+            ListenerId = Guid.NewGuid().ToString();
+
+            EndpointUrl = baseAddress;
+            m_descriptions = settings.Descriptions!;
+            EndpointConfiguration? configuration = settings.Configuration;
+
+            // initialize the quotas.
+            var messageContext = new ServiceMessageContext(m_telemetry, settings.Factory!)
+            {
+                NamespaceUris = settings.NamespaceUris!,
+                ServerUris = new StringTable()
+            };
+            m_quotas = new ChannelQuotas(messageContext);
+
+            if (configuration != null)
+            {
+                m_inactivityDetectPeriod = configuration.ChannelLifetime / 2;
+                m_quotas.MaxBufferSize = configuration.MaxBufferSize;
+                m_quotas.MaxMessageSize = TcpMessageLimits.AlignRoundMaxMessageSize(
+                    configuration.MaxMessageSize);
+                m_quotas.ChannelLifetime = configuration.ChannelLifetime;
+                m_quotas.SecurityTokenLifetime = configuration.SecurityTokenLifetime;
+                messageContext.MaxArrayLength = configuration.MaxArrayLength;
+                messageContext.MaxByteStringLength = configuration.MaxByteStringLength;
+                messageContext.MaxMessageSize = TcpMessageLimits.AlignRoundMaxMessageSize(
+                    configuration.MaxMessageSize);
+                messageContext.MaxStringLength = configuration.MaxStringLength;
+                messageContext.MaxEncodingNestingLevels = configuration.MaxEncodingNestingLevels;
+                messageContext.MaxDecoderRecoveries = configuration.MaxDecoderRecoveries;
+            }
+
+            m_quotas.CertificateValidator = settings.CertificateValidator;
+
+            // save the server certificate.
+            m_serverCertificates = settings.ServerCertificates!;
+
+            m_bufferManager = new BufferManager(
+                m_bufferManagerFactory.Create(
+                    "Server",
+                    m_quotas.MaxBufferSize,
+                    m_telemetry));
+            m_channels = new ConcurrentDictionary<uint, TcpListenerChannel>();
+            m_reverseConnectListener = settings.ReverseConnectListener;
+            MaxChannelCount = settings.MaxChannelCount;
+            m_listenBacklog = settings.ListenBacklog > 0 ? settings.ListenBacklog : kDefaultSocketBacklog;
+            m_connectionRateLimiter = settings.ConnectionRateLimiter;
+            m_acceptedTransportDecorator = settings.AcceptedTransportDecorator;
+            m_onAcceptedChannel = settings.OnAcceptedChannel;
+
+            // save the callback to the server.
+            m_callback = callback;
+
+            // start the listener.
+            Start();
+            return default;
+        }
+
+        /// <summary>
+        /// Closes the listener and stops accepting connection.
+        /// </summary>
+        /// <param name="ct">Cancellation token.</param>
+        /// <exception cref="ServiceResultException">Thrown if any communication error occurs.</exception>
+        public ValueTask CloseAsync(CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+            Stop();
+            return default;
+        }
+
+        /// <inheritdoc/>
+        public void UpdateChannelLastActiveTime(string globalChannelId)
+        {
+            try
+            {
+                string channelIdString = globalChannelId[(ListenerId.Length + 1)..];
+                uint channelId = Convert.ToUInt32(channelIdString, CultureInfo.InvariantCulture);
+
+                if (channelId > 0 &&
+                    m_channels?.TryGetValue(channelId, out TcpListenerChannel? channel) == true)
+                {
+                    channel?.UpdateLastActiveTime();
+                }
+            }
+            catch
+            {
+                // ignore errors for calls with invalid channel id
+            }
+        }
+
+        /// <summary>
+        /// Gets the URL for the listener's endpoint.
+        /// </summary>
+        /// <value>The URL for the listener's endpoint.</value>
+        public Uri EndpointUrl { get; private set; } = default!;
+
+        /// <summary>
+        /// Binds a new transport to an existing channel.
+        /// </summary>
+        /// <exception cref="ServiceResultException"></exception>
+        public bool ReconnectToExistingChannel(
+            IUaSCByteTransport transport,
+            uint requestId,
+            uint sequenceNumber,
+            uint channelId,
+            Certificate clientCertificate,
+            ChannelToken token,
+            OpenSecureChannelRequest request)
+        {
+            TcpListenerChannel? channel = null;
+
+            lock (m_lock)
+            {
+                if (m_channels?.TryGetValue(channelId, out channel) != true)
+                {
+                    throw ServiceResultException.Create(
+                        StatusCodes.BadTcpSecureChannelUnknown,
+                        "Could not find secure channel referenced in the OpenSecureChannel request.");
+                }
+            }
+
+            channel!.Reconnect(transport, requestId, sequenceNumber, clientCertificate, token, request);
+
+            m_logger.TcpTransportLog3(channelId);
+            return true;
+        }
+
+        /// <summary>
+        /// Called when a channel closes.
+        /// </summary>
+        public void ChannelClosed(uint channelId)
+        {
+            TcpListenerChannel? channel = null;
+            try
+            {
+                if (m_channels?.TryRemove(channelId, out channel) == true)
+                {
+                    m_logger.TcpTransportLog4(channelId);
+                }
+                else
+                {
+                    m_logger.TcpTransportLog5(channelId);
+                }
+            }
+            finally
+            {
+                channel?.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Raised when a new connection is waiting for a client.
+        /// </summary>
+        public event ConnectionWaitingHandlerAsync? ConnectionWaiting;
+
+        /// <summary>
+        /// Raised when a monitored connection's status changed.
+        /// </summary>
+        public event EventHandler<ConnectionStatusEventArgs>? ConnectionStatusChanged;
+
+        /// <inheritdoc/>
+        public void CreateReverseConnection(Uri url, int timeout)
+        {
+#pragma warning disable CA2000 // Ownership of channel transfers to async callback via BeginReverseConnect
+            TcpServerChannel? channel = null;
+            try
+            {
+                channel = new TcpServerChannel(
+                    ListenerId,
+                    this,
+                    m_bufferManager,
+                    m_quotas,
+                    m_serverCertificates,
+                    m_descriptions,
+                    m_telemetry);
+
+                ConfigureAcceptedChannel(channel);
+
+                uint channelId = GetNextChannelId();
+                channel.StatusChanged += Channel_StatusChanged;
+                channel.BeginReverseConnect(
+                    channelId,
+                    url,
+                    OnReverseHelloComplete,
+                    channel,
+                    Math.Min(timeout, m_quotas.ChannelLifetime));
+                channel = null; // ownership transferred to async operation
+            }
+            finally
+            {
+                channel?.Dispose();
+            }
+#pragma warning restore CA2000
+        }
+
+        /// <summary>
+        /// Applies the optional capture seam to a freshly created accepted
+        /// channel: installs the transport decorator and invokes the
+        /// accepted-channel callback. Both are no-ops when the listener was
+        /// opened without capture settings.
+        /// </summary>
+        private void ConfigureAcceptedChannel(TcpListenerChannel channel)
+        {
+            channel.TransportDecorator = m_acceptedTransportDecorator;
+            m_onAcceptedChannel?.Invoke(channel);
+        }
+
+        private void Channel_StatusChanged(
+            TcpServerChannel channel,
+            ServiceResult status,
+            bool closed)
+        {
+            ConnectionStatusChanged?.Invoke(
+                this,
+                new ConnectionStatusEventArgs(channel.ReverseConnectionUrl!, status, closed));
+        }
+
+        /// <summary>
+        /// Indicate that the reverse hello connection attempt completed.
+        /// </summary>
+        /// <remarks>
+        /// The server tried to connect to a client using a reverse hello message.
+        /// </remarks>
+        /// <exception cref="ServiceResultException"></exception>
+        private void OnReverseHelloComplete(IAsyncResult result)
+        {
+            var channel = (TcpServerChannel?)result.AsyncState;
+            try
+            {
+                channel!.EndReverseConnect(result);
+
+                if (!m_channels!.TryAdd(channel.Id, channel))
+                {
+                    throw new ServiceResultException(StatusCodes.BadInternalError);
+                }
+
+                if (m_callback != null)
+                {
+                    channel.SetRequestReceivedCallback(
+                        new TcpChannelRequestEventHandler(OnRequestReceivedAsync));
+                    channel.SetReportOpenSecureChannelAuditCallback(
+                        new ReportAuditOpenSecureChannelEventHandler(
+                            OnReportAuditOpenSecureChannelEvent));
+                    channel.SetReportCloseSecureChannelAuditCallback(
+                        new ReportAuditCloseSecureChannelEventHandler(
+                            OnReportAuditCloseSecureChannelEvent));
+                    channel.SetReportCertificateAuditCallback(
+                        new ReportAuditCertificateEventHandler(OnReportAuditCertificateEvent));
+                }
+
+                channel = null;
+            }
+            catch (Exception e)
+            {
+                ConnectionStatusChanged?.Invoke(
+                    this,
+                    new ConnectionStatusEventArgs(
+                        channel!.ReverseConnectionUrl!,
+                        new ServiceResult(e),
+                        true));
+            }
+            finally
+            {
+                channel?.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Starts listening at the specified port.
+        /// </summary>
+        /// <exception cref="ServiceResultException"></exception>
+        public void Start()
+        {
+            lock (m_lock)
+            {
+                // Track potential problematic client behavior only if Basic128Rsa15 security policy is offered
+                if (m_descriptions != null &&
+                    m_descriptions.Any(d => d.SecurityPolicyUri == SecurityPolicies.Basic128Rsa15))
+                {
+                    m_activeClientTracker = new ActiveClientTracker(m_telemetry, m_timeProvider);
+                }
+
+                // ensure a valid port.
+                int port = EndpointUrl.Port;
+
+                if (port is <= 0 or > ushort.MaxValue)
+                {
+                    port = Utils.UaTcpDefaultPort;
+                }
+
+                UriHostNameType hostType = Uri.CheckHostName(EndpointUrl.Host);
+                bool bindToSpecifiedAddress =
+                    hostType is not UriHostNameType.Dns and not UriHostNameType.Unknown and not UriHostNameType.Basic;
+                IPAddress ipAddress = bindToSpecifiedAddress
+                    ? IPAddress.Parse(EndpointUrl.Host)
+                    : IPAddress.Any;
+
+                // create IPv4 or IPv6 socket.
+                Exception? exception = null;
+                try
+                {
+                    var endpoint = new IPEndPoint(ipAddress, port);
+                    m_listeningSocket = new Socket(
+                        endpoint.AddressFamily,
+                        SocketType.Stream,
+                        ProtocolType.Tcp)
+                    {
+                        NoDelay = true,
+                        LingerState = new LingerOption(true, 5)
+                    };
+                    m_listeningSocket.Bind(endpoint);
+                    m_listeningSocket.Listen(m_listenBacklog);
+
+                    m_inactivityDetectionTimer = m_timeProvider.CreateTimer(
+                        DetectInactiveChannels,
+                        null,
+                        TimeSpan.FromMilliseconds(m_inactivityDetectPeriod),
+                        TimeSpan.FromMilliseconds(m_inactivityDetectPeriod));
+
+                    SocketAsyncEventArgs? args = null;
+                    try
+                    {
+                        args = new SocketAsyncEventArgs();
+                        args.Completed += OnAccept;
+                        args.UserToken = m_listeningSocket;
+                        if (!m_listeningSocket.AcceptAsync(args))
+                        {
+                            OnAccept(null, args);
+                        }
+                        args = null; // ownership transferred
+                    }
+                    finally
+                    {
+                        args?.Dispose();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // no IPv4 support.
+                    m_listeningSocket?.Dispose();
+                    m_listeningSocket = null;
+                    m_logger.TcpTransportLog6(ex, port);
+                    exception = ex;
+                }
+
+                if (ipAddress == IPAddress.Any)
+                {
+                    // create IPv6 socket
+                    try
+                    {
+                        var endpointIPv6 = new IPEndPoint(IPAddress.IPv6Any, port);
+                        m_listeningSocketIPv6 = new Socket(
+                            endpointIPv6.AddressFamily,
+                            SocketType.Stream,
+                            ProtocolType.Tcp)
+                        {
+                            NoDelay = true,
+                            LingerState = new LingerOption(true, 5)
+                        };
+                        m_listeningSocketIPv6.Bind(endpointIPv6);
+                        m_listeningSocketIPv6.Listen(m_listenBacklog);
+
+                        SocketAsyncEventArgs? args = null;
+                        try
+                        {
+                            args = new SocketAsyncEventArgs();
+                            args.Completed += OnAccept;
+                            args.UserToken = m_listeningSocketIPv6;
+                            if (!m_listeningSocketIPv6.AcceptAsync(args))
+                            {
+                                OnAccept(null, args);
+                            }
+                            args = null; // ownership transferred
+                        }
+                        finally
+                        {
+                            args?.Dispose();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // no IPv6 support
+                        m_listeningSocketIPv6?.Dispose();
+                        m_listeningSocketIPv6 = null;
+                        if (m_logger.IsEnabled(LogLevel.Warning))
+                        {
+                            m_logger.TcpTransportLog7(ex, port);
+                        }
+                        exception = exception == null ? ex : new AggregateException(exception, ex);
+                    }
+                }
+                if (m_listeningSocketIPv6 == null && m_listeningSocket == null)
+                {
+                    throw ServiceResultException.Create(
+                        StatusCodes.BadNoCommunication,
+                        exception!,
+                        "Failed to establish tcp listener sockets on port {0} for Ipv4 and IPv6.",
+                        port);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Stops listening.
+        /// </summary>
+        public void Stop()
+        {
+            lock (m_lock)
+            {
+                ConnectionWaiting = null;
+                ConnectionStatusChanged = null;
+
+                m_listeningSocket?.Dispose();
+                m_listeningSocket = null;
+
+                m_listeningSocketIPv6?.Dispose();
+                m_listeningSocketIPv6 = null;
+            }
+        }
+
+        /// <summary>
+        /// Transfers the channel to a waiting connection.
+        /// </summary>
+        /// <returns>TRUE if the channel should be kept open; FALSE otherwise.</returns>
+        [Obsolete("Use TransferListenerChannelAsync instead.")]
+        public Task<bool> TransferListenerChannel(uint channelId, string serverUri, Uri endpointUrl)
+        {
+            return TransferListenerChannelAsync(channelId, serverUri, endpointUrl);
+        }
+
+        /// <summary>
+        /// Transfers the channel to a waiting connection.
+        /// </summary>
+        /// <returns>TRUE if the channel should be kept open; FALSE otherwise.</returns>
+        /// <exception cref="ServiceResultException"></exception>
+        public async Task<bool> TransferListenerChannelAsync(
+            uint channelId,
+            string serverUri,
+            Uri endpointUrl)
+        {
+            bool accepted = false;
+
+            // remove it so it does not get cleaned up as an inactive connection.
+            if (m_channels?.TryRemove(channelId, out TcpListenerChannel? channel) != true)
+            {
+                throw ServiceResultException.Create(
+                    StatusCodes.BadTcpSecureChannelUnknown,
+                    "Could not find secure channel request.");
+            }
+
+            try
+            {
+                // notify the application.
+                if (ConnectionWaiting != null)
+                {
+                    // Detach the transport (and stop the channel's receive loop)
+                    // before handing it off: otherwise this server-side channel
+                    // would race the new client-side channel for chunks on the
+                    // same socket.
+                    IUaSCByteTransport? transport = await channel!.DetachTransportAsync()
+                        .ConfigureAwait(false);
+                    if (transport != null)
+                    {
+                        var args = new TcpConnectionWaitingEventArgs(
+                            serverUri,
+                            endpointUrl,
+                            transport);
+                        await ConnectionWaiting(this, args).ConfigureAwait(false);
+                        accepted = args.Accepted;
+                        if (!accepted)
+                        {
+                            // Caller rejected the handoff: re-attach the transport so
+                            // the existing channel keeps working on retry.
+                            channel!.Transport = transport;
+                            channel!.StartReceiveLoop();
+                        }
+                    }
+                }
+
+                if (!accepted)
+                {
+                    // add back in for other connection attempt.
+                    m_channels?.TryAdd(channelId, channel!);
+                }
+                channel = null; // ownership transferred
+            }
+            finally
+            {
+                channel?.Dispose();
+            }
+
+            return accepted;
+        }
+
+        /// <summary>
+        /// Called when a UpdateCertificate event occured.
+        /// </summary>
+        public void CertificateUpdate(
+            ICertificateValidatorEx validator,
+            ICertificateRegistry serverCertificates)
+        {
+            m_quotas.CertificateValidator = validator;
+            m_serverCertificates = serverCertificates;
+            foreach (EndpointDescription description in m_descriptions)
+            {
+                // TODO: why only if SERVERCERT != null
+                if (!description.ServerCertificate.IsEmpty)
+                {
+                    using CertificateEntry? instanceEntry = serverCertificates
+                        .AcquireApplicationCertificateBySecurityPolicy(description.SecurityPolicyUri!);
+                    Certificate? serverCertificate = instanceEntry?.Certificate;
+                    if (serverCertificates.SendCertificateChain)
+                    {
+                        description.ServerCertificate =
+                            instanceEntry!.GetEncodedChainBlob().ToByteString();
+                    }
+                    else
+                    {
+                        description.ServerCertificate =
+                            serverCertificate!.RawData.ToByteString();
+                    }
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public ValueTask<IReadOnlyList<string>> CloseChannelsForCertificateAsync(
+            Certificate oldCertificate,
+            CancellationToken ct = default)
+        {
+            if (oldCertificate == null)
+            {
+                throw new ArgumentNullException(nameof(oldCertificate));
+            }
+
+            string oldThumbprint = oldCertificate.Thumbprint;
+            if (string.IsNullOrEmpty(oldThumbprint))
+            {
+                return new ValueTask<IReadOnlyList<string>>([]);
+            }
+
+            // Snapshot the channel map so we can iterate without holding
+            // m_lock while invoking per-channel close paths (each channel
+            // acquires its own DataLock internally — avoid lock inversion).
+            TcpListenerChannel[] channels;
+            lock (m_lock)
+            {
+                channels = m_channels?.Values.ToArray() ?? [];
+            }
+
+            if (channels.Length == 0)
+            {
+                return new ValueTask<IReadOnlyList<string>>([]);
+            }
+
+            var closed = new List<string>(channels.Length);
+            foreach (TcpListenerChannel channel in channels)
+            {
+                try
+                {
+                    if (channel.TryCloseForCertificateRotation(oldThumbprint, out string? globalChannelId) &&
+                        !string.IsNullOrEmpty(globalChannelId))
+                    {
+                        closed.Add(globalChannelId!);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Best-effort: log and continue closing remaining
+                    // channels. Failure to close one channel must not
+                    // block others from being renegotiated.
+                    m_logger.TcpTransportLog8(ex, oldThumbprint);
+                }
+            }
+
+            m_logger.TcpTransportLog9(closed.Count, oldThumbprint);
+
+            return new ValueTask<IReadOnlyList<string>>(closed);
+        }
+
+        /// <inheritdoc/>
+        /// <remarks>
+        /// The <c>opc.tcp</c> transport validates the client application
+        /// certificate presented during <c>OpenSecureChannel</c> against the
+        /// <see cref="TrustListIdentifier.Peers"/> store, so only a change to
+        /// that TrustList forces this listener's channels to renegotiate.
+        /// </remarks>
+        public TrustListIdentifier PeerCertificateTrustListScope => TrustListIdentifier.Peers;
+
+        /// <inheritdoc/>
+        public ValueTask<IReadOnlyList<string>> CloseChannelsForUntrustedPeersAsync(
+            Func<Certificate, CancellationToken, ValueTask<bool>> isPeerTrustedAsync,
+            CancellationToken ct = default)
+        {
+            if (isPeerTrustedAsync == null)
+            {
+                throw new ArgumentNullException(nameof(isPeerTrustedAsync));
+            }
+
+            // Snapshot the channel map so we can iterate without holding
+            // m_lock while re-validating peer certificates and invoking
+            // per-channel close paths (each channel acquires its own
+            // DataLock internally — avoid lock inversion).
+            TcpListenerChannel[] channels;
+            lock (m_lock)
+            {
+                channels = m_channels?.Values.ToArray() ?? [];
+            }
+
+            if (channels.Length == 0)
+            {
+                return new ValueTask<IReadOnlyList<string>>([]);
+            }
+
+            return CloseChannelsForUntrustedPeersCoreAsync(channels, isPeerTrustedAsync, ct);
+        }
+
+        private async ValueTask<IReadOnlyList<string>> CloseChannelsForUntrustedPeersCoreAsync(
+            TcpListenerChannel[] channels,
+            Func<Certificate, CancellationToken, ValueTask<bool>> isPeerTrustedAsync,
+            CancellationToken ct)
+        {
+            var closed = new List<string>(channels.Length);
+            foreach (TcpListenerChannel channel in channels)
+            {
+                Certificate? peerCertificate = null;
+                try
+                {
+                    peerCertificate = channel.SnapshotClientCertificateForRevalidation();
+                    if (peerCertificate == null)
+                    {
+                        // No client certificate (e.g. SecurityPolicy.None) —
+                        // the channel is unaffected by a peer-trust change.
+                        continue;
+                    }
+
+                    bool trusted;
+                    try
+                    {
+                        trusted = await isPeerTrustedAsync(peerCertificate, ct).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Best-effort: if trust cannot be determined, leave
+                        // the channel open rather than cutting a possibly
+                        // still-trusted peer.
+                        m_logger.TcpTransportLog28(ex, channel.GlobalChannelId);
+                        continue;
+                    }
+
+                    if (trusted)
+                    {
+                        continue;
+                    }
+
+                    if (channel.CloseForUntrustedPeerCertificate(out string? globalChannelId) &&
+                        !string.IsNullOrEmpty(globalChannelId))
+                    {
+                        closed.Add(globalChannelId!);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Best-effort: log and continue closing remaining
+                    // channels. Failure to close one channel must not block
+                    // others from being renegotiated.
+                    m_logger.TcpTransportLog29(ex, channel.GlobalChannelId);
+                }
+                finally
+                {
+                    peerCertificate?.Dispose();
+                }
+            }
+
+            m_logger.TcpTransportLog30(closed.Count);
+
+            return closed;
+        }
+
+        /// <summary>
+        /// Mark a remote endpoint as potential problematic
+        /// </summary>
+        internal void MarkAsPotentialProblematic(IPAddress remoteEndpoint)
+        {
+            if (m_logger.IsEnabled(LogLevel.Debug))
+            {
+                m_logger.TcpTransportLog10(remoteEndpoint);
+            }
+            m_activeClientTracker?.AddClientAction(remoteEndpoint);
+        }
+
+        /// <summary>
+        /// Handles a new connection.
+        /// </summary>
+        private void OnAccept(object? sender, SocketAsyncEventArgs e)
+        {
+            TcpListenerChannel? channel = null;
+            bool repeatAccept = false;
+            do
+            {
+                bool isBlocked = false;
+
+                // Track potential problematic client behavior only if Basic128Rsa15 security policy is offered
+                if (m_activeClientTracker != null)
+                {
+                    // Filter out the Remote IP addresses which are detected with potential problematic behavior
+                    IPAddress? ipAddress = ((IPEndPoint?)e?.AcceptSocket?.RemoteEndPoint)?.Address;
+                    if (ipAddress != null && m_activeClientTracker.IsBlocked(ipAddress))
+                    {
+                        if (m_logger.IsEnabled(LogLevel.Debug))
+                        {
+                            m_logger.TcpTransportLog11(
+                                ((IPEndPoint)e!.AcceptSocket!.RemoteEndPoint!).Address);
+                        }
+                        isBlocked = true;
+                    }
+                }
+
+                repeatAccept = false;
+                lock (m_lock)
+                {
+                    if (e!.UserToken is not Socket listeningSocket)
+                    {
+                        m_logger.TcpTransportLog12();
+                        e.Dispose();
+                        return;
+                    }
+
+                    // Apply connection admission rate limiting before spending any
+                    // resources on a channel. On rejection the socket is dropped so a
+                    // connection storm is shed cheaply; the peer's transport error and
+                    // the session-establishment BadServerTooBusy fault (see the session
+                    // rate limiter) drive an adaptive client back off.
+                    if (!isBlocked &&
+                        m_connectionRateLimiter != null &&
+                        e.AcceptSocket != null &&
+                        e.SocketError == SocketError.Success)
+                    {
+                        EndPoint? remoteEndPoint = null;
+                        try
+                        {
+                            remoteEndPoint = e.AcceptSocket.RemoteEndPoint;
+                        }
+                        catch (SocketException)
+                        {
+                            // The socket may already have been reset by the peer.
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            // The socket may already have been disposed.
+                        }
+
+                        if (!m_connectionRateLimiter.TryAdmitConnection(
+                            remoteEndPoint,
+                            out TimeSpan? retryAfter))
+                        {
+                            m_logger
+                                .TcpTransportLog13(
+                                    remoteEndPoint,
+                                    retryAfter);
+                            e.AcceptSocket.Dispose();
+                            isBlocked = true;
+                        }
+                    }
+
+                    ConcurrentDictionary<uint, TcpListenerChannel>? channels = m_channels;
+                    if (channels != null && !isBlocked)
+                    {
+                        // TODO: .Count is flagged as hotpath, implement separate counter
+                        int channelCount = channels.Count;
+
+                        // Remove oldest channels that do not have a session attached to them
+                        // before reaching m_maxChannelCount.
+                        while (MaxChannelCount > 0 && channelCount >= MaxChannelCount)
+                        {
+                            KeyValuePair<uint, TcpListenerChannel>[] snapshot = [.. channels];
+                            bool foundIdleChannel = false;
+                            KeyValuePair<uint, TcpListenerChannel> oldestIdChannel = default;
+
+                            foreach (KeyValuePair<uint, TcpListenerChannel> current in snapshot)
+                            {
+                                if (current.Value.UsedBySession)
+                                {
+                                    continue;
+                                }
+
+                                int elapsedSinceLastActiveTime = current.Value.ElapsedSinceLastActiveTime;
+                                if (!foundIdleChannel ||
+                                    elapsedSinceLastActiveTime > oldestIdChannel.Value.ElapsedSinceLastActiveTime)
+                                {
+                                    oldestIdChannel = current;
+                                    foundIdleChannel = true;
+                                }
+                            }
+
+                            if (!foundIdleChannel)
+                            {
+                                break;
+                            }
+
+                            if (m_logger.IsEnabled(LogLevel.Information))
+                            {
+                                m_logger.TcpTransportLog14(oldestIdChannel.Value.Id);
+                            }
+                            oldestIdChannel.Value.IdleCleanup();
+                            if (m_logger.IsEnabled(LogLevel.Information))
+                            {
+                                m_logger.TcpTransportLog15(oldestIdChannel.Value.Id);
+                            }
+
+                            channelCount--;
+                        }
+
+                        bool serveChannel = !(MaxChannelCount > 0 &&
+                            MaxChannelCount <= channelCount);
+                        if (!serveChannel)
+                        {
+                            if (m_logger.IsEnabled(LogLevel.Error))
+                            {
+                                m_logger.TcpTransportLog16(channelCount, MaxChannelCount);
+                            }
+                            e.AcceptSocket?.Dispose();
+                        }
+
+                        // check if the accept socket has been created.
+                        if (serveChannel &&
+                            e.AcceptSocket != null &&
+                            e.SocketError == SocketError.Success)
+                        {
+                            channel = null;
+                            try
+                            {
+                                if (m_reverseConnectListener)
+                                {
+                                    // create the channel to manage incoming reverse connections.
+                                    channel = new TcpReverseConnectChannel(
+                                        ListenerId,
+                                        this,
+                                        m_bufferManager,
+                                        m_quotas,
+                                        m_descriptions,
+                                        m_telemetry,
+                                        m_timeProvider);
+                                }
+                                else
+                                {
+                                    // create the channel to manage incoming connections.
+                                    channel = new TcpServerChannel(
+                                        ListenerId,
+                                        this,
+                                        m_bufferManager,
+                                        m_quotas,
+                                        m_serverCertificates,
+                                        m_descriptions,
+                                        m_telemetry,
+                                        m_timeProvider);
+                                }
+
+                                if (m_callback != null)
+                                {
+                                    channel.SetRequestReceivedCallback(
+                                        new TcpChannelRequestEventHandler(OnRequestReceivedAsync));
+                                    channel.SetReportOpenSecureChannelAuditCallback(
+                                        new ReportAuditOpenSecureChannelEventHandler(
+                                            OnReportAuditOpenSecureChannelEvent));
+                                    channel.SetReportCloseSecureChannelAuditCallback(
+                                        new ReportAuditCloseSecureChannelEventHandler(
+                                            OnReportAuditCloseSecureChannelEvent));
+                                    channel.SetReportCertificateAuditCallback(
+                                        new ReportAuditCertificateEventHandler(
+                                            OnReportAuditCertificateEvent));
+                                }
+
+                                ConfigureAcceptedChannel(channel);
+
+                                uint channelId;
+                                do
+                                {
+                                    // get channel id
+                                    channelId = GetNextChannelId();
+
+                                    // save the channel for shutdown and reconnects.
+                                    // retry to get a channel id if it is already in use.
+                                } while (!channels!.TryAdd(channelId, channel));
+
+                                // start accepting messages on the channel.
+                                channel.Attach(channelId, e.AcceptSocket);
+
+                                channel = null;
+                            }
+                            catch (Exception ex)
+                            {
+                                m_logger.TcpTransportLog17(ex);
+                            }
+                            finally
+                            {
+                                channel?.Dispose();
+                            }
+                        }
+                    }
+
+                    e.Dispose();
+
+                    if (e.SocketError != SocketError.OperationAborted)
+                    {
+                        // go back and wait for the next connection.
+                        SocketAsyncEventArgs? newArgs = null;
+                        try
+                        {
+                            newArgs = new SocketAsyncEventArgs();
+                            newArgs.Completed += OnAccept;
+                            newArgs.UserToken = listeningSocket;
+                            if (!listeningSocket.AcceptAsync(newArgs))
+                            {
+                                e = newArgs;
+                                repeatAccept = true;
+                            }
+                            newArgs = null; // ownership transferred
+                        }
+                        catch (Exception ex)
+                        {
+                            m_logger.TcpTransportLog18(ex);
+                        }
+                        finally
+                        {
+                            newArgs?.Dispose();
+                        }
+                    }
+                }
+            } while (repeatAccept);
+        }
+
+        /// <summary>
+        /// The inactive timer callback which detects stale channels.
+        /// </summary>
+        private void DetectInactiveChannels(object? state = null)
+        {
+            var channels = new List<TcpListenerChannel>();
+
+            bool cleanup = false;
+            foreach (KeyValuePair<uint, TcpListenerChannel> chEntry in m_channels!)
+            {
+                if (chEntry.Value.ElapsedSinceLastActiveTime > m_quotas.ChannelLifetime)
+                {
+                    channels.Add(chEntry.Value);
+                    cleanup = true;
+                }
+            }
+
+            if (cleanup)
+            {
+                m_logger.TcpTransportLog19(channels.Count);
+                foreach (TcpListenerChannel channel in channels)
+                {
+                    channel.IdleCleanup();
+                }
+                m_logger.TcpTransportLog20(channels.Count);
+            }
+        }
+
+        /// <summary>
+        /// The maximum number of secure channels
+        /// </summary>
+        public int MaxChannelCount { get; private set; }
+
+        /// <summary>
+        /// Handles requests arriving from a channel.
+        /// </summary>
+        private async void OnRequestReceivedAsync(
+            TcpListenerChannel channel,
+            uint requestId,
+            IServiceRequest request)
+        {
+            IServiceResponse? response = null;
+            try
+            {
+                if (m_callback != null)
+                {
+                    var context = new SecureChannelContext(
+                        channel.GlobalChannelId,
+                        channel.EndpointDescription,
+                        RequestEncoding.Binary,
+                        channel.ClientCertificate?.RawData,
+                        channel.ServerCertificate?.RawData,
+                        channel.ChannelThumbprint);
+
+                    response = await m_callback.ProcessRequestAsync(
+                        context,
+                        request).ConfigureAwait(false);
+
+                    try
+                    {
+                        ((TcpServerChannel)channel).SendResponse(requestId, response);
+                    }
+                    catch (ServiceResultException sre) when (sre.StatusCode == StatusCodes.BadSecureChannelClosed)
+                    {
+                        // try to find the new channel id for the authentication token to send response over new channel
+                        NodeId authenticationToken = request.RequestHeader.AuthenticationToken;
+                        if (m_callback.TryGetSecureChannelIdForAuthenticationToken(
+                                authenticationToken,
+                                out uint channelId
+                            ) &&
+                            m_channels!.TryGetValue(channelId, out TcpListenerChannel? newChannel))
+                        {
+                            var serverChannel = (TcpServerChannel)newChannel;
+
+                            // if the channel is not the same as the one we started with, send the response over the new channel
+                            if (serverChannel != channel)
+                            {
+                                serverChannel.SendResponse(requestId, response);
+                                return;
+                            }
+                        }
+                        // if we could not find a new channel, just log the error
+                        throw;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                // A closed/abandoned secure channel is an expected race: the
+                // client tore down its channel (for example after a client-side
+                // operation timeout, or during a connect/reconnect burst) while
+                // the server was still processing the request. Log it quietly
+                // instead of as an error with a stack trace - otherwise these
+                // races flood the logs under load - and do not attempt to send a
+                // fault on a channel we already know is closed.
+                if (e is ServiceResultException sre &&
+                    sre.StatusCode == StatusCodes.BadSecureChannelClosed)
+                {
+                    m_logger.TcpTransportLog21();
+                }
+                else
+                {
+                    m_logger.TcpTransportLog22(e);
+
+                    // Send a service fault back to the client so it does not hang waiting
+                    // for a response to a request the server failed to dispatch (e.g. when a
+                    // certificate became invalid mid-flight during ApplyChanges).
+                    try
+                    {
+                        ServiceFault fault = EndpointBase.CreateFault(m_logger, request, e);
+                        ((TcpServerChannel)channel).SendResponse(requestId, fault);
+                    }
+                    catch (ServiceResultException faultSre)
+                        when (faultSre.StatusCode == StatusCodes.BadSecureChannelClosed)
+                    {
+                        // The channel is gone; the fault cannot be sent. Expected under load.
+                        m_logger.TcpTransportLog23();
+                    }
+                    catch (Exception faultEx)
+                    {
+                        m_logger.TcpTransportLog24(faultEx);
+                    }
+                }
+            }
+            finally
+            {
+                // Return decoded request and response to their activator
+                // pools for reuse. Both have been fully consumed at this
+                // point: the request by the service handler and the
+                // response by the channel's wire-encode path.
+                (request as IPooledEncodeable)?.Reuse();
+                (response as IPooledEncodeable)?.Reuse();
+            }
+        }
+
+        /// <summary>
+        /// Callback for reporting the open secure channel audit event
+        /// </summary>
+        private void OnReportAuditOpenSecureChannelEvent(
+            TcpServerChannel channel,
+            OpenSecureChannelRequest request,
+            Certificate? clientCertificate,
+            Exception? exception)
+        {
+            try
+            {
+                m_callback?.ReportAuditOpenSecureChannelEvent(
+                    channel.GlobalChannelId,
+                    channel.EndpointDescription!,
+                    request,
+                    clientCertificate!,
+                    exception!);
+            }
+            catch (Exception e)
+            {
+                m_logger.TcpTransportLog25(e);
+            }
+        }
+
+        /// <summary>
+        /// Callback for reporting the close secure channel audit event
+        /// </summary>
+        private void OnReportAuditCloseSecureChannelEvent(
+            TcpServerChannel channel,
+            Exception exception)
+        {
+            try
+            {
+                m_callback?.ReportAuditCloseSecureChannelEvent(channel.GlobalChannelId, exception);
+            }
+            catch (Exception e)
+            {
+                m_logger.TcpTransportLog26(e);
+            }
+        }
+
+        /// <summary>
+        /// Callback for reporting the certificate audit events
+        /// </summary>
+        private void OnReportAuditCertificateEvent(
+            Certificate clientCertificate,
+            Exception exception)
+        {
+            try
+            {
+                m_callback?.ReportAuditCertificateEvent(clientCertificate, exception);
+            }
+            catch (Exception e)
+            {
+                m_logger.TcpTransportLog27(e);
+            }
+        }
+
+        /// <summary>
+        /// Get the next channel id. Handles overflow.
+        /// </summary>
+        private uint GetNextChannelId()
+        {
+            // wraps at Int32.MaxValue back to 1
+            return (uint)Utils.IncrementIdentifier(ref m_lastChannelId);
+        }
+
+        private readonly Lock m_lock = new();
+        private readonly ITelemetryContext m_telemetry;
+        private readonly ILogger m_logger;
+        private readonly TimeProvider m_timeProvider;
+        private readonly IBufferManagerFactory m_bufferManagerFactory;
+
+        /// <summary>
+        /// These fields are populated by Open(); they remain non-null
+        /// for the lifetime of the listener (Close()/Dispose() do not
+        /// reassign to null).
+        /// </summary>
+        private List<EndpointDescription> m_descriptions = null!;
+        private BufferManager m_bufferManager = null!;
+        private ChannelQuotas m_quotas = null!;
+        private ICertificateRegistry m_serverCertificates = null!;
+        private int m_lastChannelId;
+        private Socket? m_listeningSocket;
+        private Socket? m_listeningSocketIPv6;
+        private ConcurrentDictionary<uint, TcpListenerChannel>? m_channels;
+        private ITransportListenerCallback? m_callback;
+        private bool m_reverseConnectListener;
+        private Func<IUaSCByteTransport, IUaSCByteTransport>? m_acceptedTransportDecorator;
+        private Action<TcpListenerChannel>? m_onAcceptedChannel;
+        private int m_inactivityDetectPeriod;
+        private ITimer? m_inactivityDetectionTimer;
+        private ActiveClientTracker? m_activeClientTracker;
+        private int m_listenBacklog;
+        private IConnectionRateLimiter? m_connectionRateLimiter;
+    }
+
+    /// <summary>
+    /// The Tcp specific arguments passed to the ConnectionWaiting event.
+    /// </summary>
+    public class TcpConnectionWaitingEventArgs : ConnectionWaitingEventArgs
+    {
+        internal TcpConnectionWaitingEventArgs(
+            string serverUrl,
+            Uri endpointUrl,
+            IUaSCByteTransport transport)
+            : base(serverUrl, endpointUrl)
+        {
+            Transport = transport;
+        }
+
+        /// <inheritdoc/>
+        public override object Handle => Transport;
+
+        /// <summary>
+        /// The byte-level transport carrying the inbound reverse-connection.
+        /// </summary>
+        internal IUaSCByteTransport Transport { get; }
+    }
+
+    /// <summary>
+    /// Source-generated log messages for TcpTransportListener.
+    /// </summary>
+    internal static partial class TcpTransportListenerLog
+    {
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 0, Level = LogLevel.Error,
+            Message = "RemoteClient IPAddress: {IpAddress} blocked for {Duration} ms due to exceeding " +
+                "{ActionCOunt} actions under {ActionInterval} ms ")]
+        public static partial void TcpTransportLog0(
+            this ILogger logger,
+            global::System.Net.IPAddress ipAddress,
+            int duration,
+            int actionCOunt,
+            int actionInterval);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 1, Level = LogLevel.Debug,
+            Message = "Active Client with IP {IpAddress} is now unblocked, blocking duration of " +
+                "{BlockDurationMs} ms has been exceeded")]
+        public static partial void TcpTransportLog1(
+            this ILogger logger,
+            global::System.Net.IPAddress ipAddress,
+            int blockDurationMs);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 2, Level = LogLevel.Debug,
+            Message = "Active Client with IP {IpAddress} is not tracked any longer, hasn't had actions " +
+                "for more than {ExpirationMs} ms")]
+        public static partial void TcpTransportLog2(
+            this ILogger logger,
+            global::System.Net.IPAddress ipAddress,
+            int expirationMs);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 3, Level = LogLevel.Information,
+            Message = "ChannelId {Id}: reconnected")]
+        public static partial void TcpTransportLog3(this ILogger logger, uint id);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 4, Level = LogLevel.Information,
+            Message = "ChannelId {Id}: closed")]
+        public static partial void TcpTransportLog4(this ILogger logger, uint id);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 5, Level = LogLevel.Information,
+            Message = "ChannelId {Id}: closed, but channel was not found")]
+        public static partial void TcpTransportLog5(this ILogger logger, uint id);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 6, Level = LogLevel.Warning,
+            Message = "Failed to create IPv4 listening socket on port {Port}")]
+        public static partial void TcpTransportLog6(
+            this ILogger logger,
+            global::System.Exception? exception,
+            int port);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 7, Level = LogLevel.Warning,
+            Message = "Failed to create IPv6 listening socket on port {Port}")]
+        public static partial void TcpTransportLog7(
+            this ILogger logger,
+            global::System.Exception? exception,
+            int port);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 8, Level = LogLevel.Warning,
+            Message = "Failed to close channel for certificate rotation (thumbprint {Thumbprint}).")]
+        public static partial void TcpTransportLog8(
+            this ILogger logger,
+            global::System.Exception? exception,
+            string thumbprint);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 9, Level = LogLevel.Information,
+            Message = "Closed {Count} SecureChannel(s) for certificate rotation (thumbprint {Thumbprint}).")]
+        public static partial void TcpTransportLog9(
+            this ILogger logger,
+            int count,
+            string thumbprint);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 10, Level = LogLevel.Debug,
+            Message = "MarkClientAsPotentialProblematic address: {RemoteEndpoint} ")]
+        public static partial void TcpTransportLog10(this ILogger logger, global::System.Net.IPAddress remoteEndpoint);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 11, Level = LogLevel.Debug,
+            Message = "OnAccept: RemoteEndpoint address: {IpAddress} refused access for behaving as " +
+                "potential problematic ")]
+        public static partial void TcpTransportLog11(this ILogger logger, global::System.Net.IPAddress ipAddress);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 12, Level = LogLevel.Error,
+            Message = "OnAccept: Listensocket was null.")]
+        public static partial void TcpTransportLog12(this ILogger logger);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 13, Level = LogLevel.Warning,
+            Message = "OnAccept: connection from {RemoteEndPoint} rejected by the connection rate " +
+                "limiter; server is too busy (retry after {RetryAfter}).")]
+        public static partial void TcpTransportLog13(
+            this ILogger logger,
+            global::System.Net.EndPoint? remoteEndPoint,
+            global::System.TimeSpan? retryAfter);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 14, Level = LogLevel.Information,
+            Message = "TCPLISTENER: Channel Id {Id} scheduled for IdleCleanup - Oldest without established session.")]
+        public static partial void TcpTransportLog14(this ILogger logger, uint id);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 15, Level = LogLevel.Information,
+            Message = "TCPLISTENER: Channel Id {Id} finished IdleCleanup - Oldest without established session.")]
+        public static partial void TcpTransportLog15(this ILogger logger, uint id);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 16, Level = LogLevel.Error,
+            Message = "OnAccept: Maximum number of channels {CurrentCount} reached, serving channels is " +
+                "stopped until number is lower or equal than {MaxChannelCount} ")]
+        public static partial void TcpTransportLog16(
+            this ILogger logger,
+            int currentCount,
+            int maxChannelCount);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 17, Level = LogLevel.Error,
+            Message = "Unexpected error accepting a new connection.")]
+        public static partial void TcpTransportLog17(
+            this ILogger logger,
+            global::System.Exception? exception);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 18, Level = LogLevel.Error,
+            Message = "Unexpected error listening for a new connection.")]
+        public static partial void TcpTransportLog18(
+            this ILogger logger,
+            global::System.Exception? exception);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 19, Level = LogLevel.Information,
+            Message = "TCPLISTENER: {ChannelCount} channels scheduled for IdleCleanup.")]
+        public static partial void TcpTransportLog19(this ILogger logger, int channelCount);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 20, Level = LogLevel.Information,
+            Message = "TCPLISTENER: {ChannelCount} channels finished IdleCleanup.")]
+        public static partial void TcpTransportLog20(this ILogger logger, int channelCount);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 21, Level = LogLevel.Debug,
+            Message = "TCPLISTENER - Could not send response; secure channel was closed by the client.")]
+        public static partial void TcpTransportLog21(this ILogger logger);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 22, Level = LogLevel.Error,
+            Message = "TCPLISTENER - Unexpected error processing request.")]
+        public static partial void TcpTransportLog22(
+            this ILogger logger,
+            global::System.Exception? exception);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 23, Level = LogLevel.Debug,
+            Message = "TCPLISTENER - Could not send fault response; secure channel was closed by the client.")]
+        public static partial void TcpTransportLog23(this ILogger logger);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 24, Level = LogLevel.Error,
+            Message = "TCPLISTENER - Failed to send fault response to client.")]
+        public static partial void TcpTransportLog24(
+            this ILogger logger,
+            global::System.Exception? exception);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 25, Level = LogLevel.Error,
+            Message = "TCPLISTENER - Unexpected error sending OpenSecureChannel Audit event.")]
+        public static partial void TcpTransportLog25(
+            this ILogger logger,
+            global::System.Exception? exception);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 26, Level = LogLevel.Error,
+            Message = "TCPLISTENER - Unexpected error sending CloseSecureChannel Audit event.")]
+        public static partial void TcpTransportLog26(
+            this ILogger logger,
+            global::System.Exception? exception);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 27, Level = LogLevel.Error,
+            Message = "TCPLISTENER - Unexpected error sending Certificate Audit event.")]
+        public static partial void TcpTransportLog27(
+            this ILogger logger,
+            global::System.Exception? exception);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 28, Level = LogLevel.Warning,
+            Message = "Failed to re-validate peer certificate for channel {ChannelId}; leaving it open.")]
+        public static partial void TcpTransportLog28(
+            this ILogger logger,
+            global::System.Exception? exception,
+            string channelId);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 29, Level = LogLevel.Warning,
+            Message = "Failed to close channel {ChannelId} for peer-certificate trust change.")]
+        public static partial void TcpTransportLog29(
+            this ILogger logger,
+            global::System.Exception? exception,
+            string channelId);
+
+        [LoggerMessage(EventId = CoreEventIds.TcpTransportListener + 30, Level = LogLevel.Information,
+            Message = "Closed {Count} SecureChannel(s) whose peer certificate is no longer trusted.")]
+        public static partial void TcpTransportLog30(
+            this ILogger logger,
+            int count);
+    }
+
+}

@@ -54,7 +54,7 @@ jobs:
           fetch-depth: 0   # nbgv needs full git history
 
       - name: Setup .NET 10.0
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
 
@@ -89,7 +89,7 @@ jobs:
           dotnet tool install --version 3.0.45 --tool-path "$env:TOOLS_DIR" NuGetKeyVaultSignTool
 
       - name: Setup NuGet
-        uses: NuGet/setup-nuget@v2
+        uses: NuGet/setup-nuget@v4
         with:
           nuget-version: '>=7.0.0'
 
@@ -119,7 +119,6 @@ jobs:
         shell: pwsh
         run: |
           dotnet restore 'preview-pack.slnx' `
-            --configuration Release `
             --disable-parallel
 
       - name: Build (with optional strong-name signing)
@@ -145,10 +144,10 @@ jobs:
         if: env.SIGNING_CLIENT_SECRET != ''
         shell: cmd
         run: |
-          dir /b /s Stack\Opc.Ua*.dll > .\list.txt
-          dir /b /s Tools\Opc.Ua*.dll >> .\list.txt
-          dir /b /s Libraries\Opc.Ua*.dll >> .\list.txt
-          dir /b /s Applications\McpServer\bin\Opc.Ua*.dll >> .\list.txt
+          dir /b /s src\Opc.Ua*.dll > .\list.txt
+          dir /b /s tools\Opc.Ua*.dll >> .\list.txt
+          dir /b /s src\Opc.Ua*.dll >> .\list.txt
+          dir /b /s tools\Opc.Ua.Mcp\bin\Opc.Ua*.dll >> .\list.txt
           dir /b /s .azurepipelines\*.* >> .\list.txt
           type .\list.txt
 
@@ -186,12 +185,18 @@ jobs:
             --configuration Release `
             --output "$env:ARTIFACTS_DIR"
 
+      - name: Validate source generator packages
+        shell: pwsh
+        run: |
+          ./.azurepipelines/validate-source-generator-packages.ps1 `
+            -PackageDirectory "$env:ARTIFACTS_DIR"
+
       - name: Pack NuGet Legacy (nuget/*.nuspec, version from PACK_MODE)
         shell: pwsh
-        # Scoped to nuget/ - the MigrationAnalyzer nuspec at Tools/Opc.Ua.MigrationAnalyzer/
+        # Scoped to nuget/ - the MigrationAnalyzer nuspec at tools/Opc.Ua.MigrationAnalyzer/
         # uses MSBuild $(...) substitutions that only `dotnet pack` resolves; standalone
         # `nuget.exe pack` would crash on it. See PR #3872.
-        continueOnError: true
+        continue-on-error: true
         run: |
           $nuspecs = Get-ChildItem -Path 'nuget' -Filter 'Opc.*.nuspec' -File
           if (-not $nuspecs) {
@@ -209,7 +214,7 @@ jobs:
       - name: Sign NuGet packages (nupkg + snupkg)
         if: env.SIGNING_CLIENT_SECRET != ''
         shell: pwsh
-        continueOnError: true
+        continue-on-error: true
         run: |
           $nupkgs  = Get-ChildItem -Path "$env:ARTIFACTS_DIR" -Filter 'OPCFoundation.*.nupkg'  -File
           $snupkgs = Get-ChildItem -Path "$env:ARTIFACTS_DIR" -Filter 'OPCFoundation.*.snupkg' -File

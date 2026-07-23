@@ -1,0 +1,308 @@
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
+using Microsoft.Extensions.Logging;
+using Windows.Win32;
+using Windows.Win32.Security.Cryptography;
+
+namespace Opc.Ua.X509StoreExtensions.Internal
+{
+    /// <summary>
+    /// Helper functions to access Crls in a Windows X509 Store
+    /// </summary>
+    internal static unsafe class X509CrlHelper
+    {
+        /// <summary>
+        /// Gets all crls from the provided X509 Store on Windows
+        /// </summary>
+        /// <param name="storeHandle">HCERTSTORE Handle to X509 Store</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        /// <returns>array of all found crls as byte array</returns>
+        /// <exception cref="PlatformNotSupportedException"></exception>
+        public static byte[][] GetCrls(IntPtr storeHandle, ILogger logger)
+        {
+            if (!PlatformHelper.IsWindowsWithCrlSupport())
+            {
+                throw new PlatformNotSupportedException();
+            }
+
+            var crls = new List<byte[]>();
+
+            var crlContext = (CRL_CONTEXT*)IntPtr.Zero;
+            try
+            {
+                //read until Pointer to crlContext is NullPtr  (no more crls in store)
+                while (true)
+                {
+                    crlContext = PInvokeHelper.CertEnumCRLsInStore(
+                        (HCERTSTORE)storeHandle.ToPointer(),
+                        crlContext);
+
+                    if (crlContext != null)
+                    {
+                        byte[] crl = ReadCrlFromCrlContext(crlContext);
+
+                        if (crl != null)
+                        {
+                            crls.Add(crl);
+                        }
+                    }
+                    else
+                    {
+                        int error = Marshal.GetLastWin32Error();
+                        if (error == -2146885628)
+                        {
+                            //No more crls found in store
+                        }
+                        else if (error != 0)
+                        {
+                            logger.X509CrlHelperLogMessage0(error);
+                        }
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.X509CrlHelperLogMessage1(ex);
+            }
+            return [.. crls];
+        }
+
+        /// <summary>
+        /// gets the crl as byte array from the provided crlcontext
+        /// </summary>
+        /// <param name="crlContext">crl context as pointer</param>
+        /// <returns>crl as byte array</returns>
+        private static byte[] ReadCrlFromCrlContext(CRL_CONTEXT* crlContext)
+        {
+            uint length = crlContext->cbCrlEncoded;
+            byte[] crl = new byte[length];
+
+            Marshal.Copy((IntPtr)crlContext->pbCrlEncoded, crl, 0, (int)length);
+
+            return crl;
+        }
+
+        /// <summary>
+        /// add a crl to the provided store
+        /// </summary>
+        /// <param name="storeHandle">HCERTSTORE Handle to X509 Store</param>
+        /// <param name="crl">the crl as Asn1 or PKCS7 encoded byte array</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        /// <exception cref="PlatformNotSupportedException"></exception>
+        public static void AddCrl(IntPtr storeHandle, byte[] crl, ILogger logger)
+        {
+            if (!PlatformHelper.IsWindowsWithCrlSupport())
+            {
+                throw new PlatformNotSupportedException();
+            }
+            IntPtr crlPointer = Marshal.AllocHGlobal(crl.Length);
+
+            Marshal.Copy(crl, 0, crlPointer, crl.Length); //copy from managed array to unmanaged memory
+
+            try
+            {
+                /////+-------------------------------------------------------------------------
+                // Add certificate/CRL, encoded, context or element disposition values.
+                //--------------------------------------------------------------------------
+                //#define CERT_STORE_ADD_NEW                                  1
+                //#define CERT_STORE_ADD_USE_EXISTING                         2
+                //#define CERT_STORE_ADD_REPLACE_EXISTING                     3
+                //#define CERT_STORE_ADD_ALWAYS                               4
+                //#define CERT_STORE_ADD_REPLACE_EXISTING_INHERIT_PROPERTIES  5
+                //#define CERT_STORE_ADD_NEWER                                6
+                //#define CERT_STORE_ADD_NEWER_INHERIT_PROPERTIES             7
+                if (PInvokeHelper.CertAddEncodedCRLToStore(
+                        (HCERTSTORE)storeHandle.ToPointer(),
+                        CERT_QUERY_ENCODING_TYPE.X509_ASN_ENCODING |
+                        CERT_QUERY_ENCODING_TYPE.PKCS_7_ASN_ENCODING,
+                        (byte*)crlPointer,
+                        (uint)crl.Length,
+                        3,
+                        null))
+                {
+                    //success
+                    return;
+                }
+                int error = Marshal.GetLastWin32Error();
+                if (error == -2147024809)
+                {
+                    logger.X509CrlHelperLogMessage2(error);
+                }
+                if (error == -2146881269)
+                {
+                    logger.X509CrlHelperLogMessage3(error);
+                }
+                if (error == -2147024891)
+                {
+                    logger.X509CrlHelperLogMessage4(error);
+                }
+                if (error != 0)
+                {
+                    logger.X509CrlHelperLogMessage5(error);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.X509CrlHelperLogMessage6(ex);
+            }
+            finally
+            {
+                if (crlPointer != IntPtr.Zero)
+                {
+                    Marshal.FreeHGlobal(crlPointer);
+                }
+            }
+        }
+
+        /// <summary>
+        /// deletes a crl from the provided store
+        /// </summary>
+        /// <param name="storeHandle">HCERTSTORE Handle to X509 Store</param>
+        /// <param name="crl">asn1 encoded crl to delete from the store</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        /// <returns>true if delete sucessfully, false if failure</returns>
+        /// <exception cref="PlatformNotSupportedException"></exception>
+        public static bool DeleteCrl(IntPtr storeHandle, byte[] crl, ILogger logger)
+        {
+            if (!PlatformHelper.IsWindowsWithCrlSupport())
+            {
+                throw new PlatformNotSupportedException();
+            }
+            var crlContext = (CRL_CONTEXT*)IntPtr.Zero;
+            try
+            {
+                //read until Pointer to crlContext is NullPtr (no more crls in store)
+                while (true)
+                {
+                    crlContext = PInvokeHelper.CertEnumCRLsInStore(
+                        (HCERTSTORE)storeHandle.ToPointer(),
+                        crlContext);
+
+                    if (crlContext != null)
+                    {
+                        byte[] storeCrl = ReadCrlFromCrlContext(crlContext);
+
+                        if (crl != null && crl.SequenceEqual(storeCrl))
+                        {
+                            if (!PInvokeHelper.CertDeleteCRLFromStore(crlContext))
+                            {
+                                int error = Marshal.GetLastWin32Error();
+                                if (error != 0)
+                                {
+                                    logger.X509CrlHelperLogMessage7(error);
+                                }
+                            }
+                            else
+                            {
+                                //was freed by CertDeleteCRLFromStore
+                                crlContext = (CRL_CONTEXT*)IntPtr.Zero;
+                                return true;
+                            }
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        int error = Marshal.GetLastWin32Error();
+                        if (error == -2146885628)
+                        {
+                            //No more crls found in store
+                        }
+                        else if (error != 0)
+                        {
+                            logger.X509CrlHelperLogMessage8(error);
+                        }
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.X509CrlHelperLogMessage9(ex);
+            }
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Source-generated log messages for X509CrlHelper.
+    /// </summary>
+    internal static partial class X509CrlHelperLog
+    {
+        [LoggerMessage(EventId = CoreEventIds.X509CrlHelper + 0, Level = LogLevel.Error,
+            Message = "Error while enumerating Crls from X509Store, Win32Error-Code: {ErrorCode}")]
+        public static partial void X509CrlHelperLogMessage0(this ILogger logger, int errorCode);
+
+        [LoggerMessage(EventId = CoreEventIds.X509CrlHelper + 1, Level = LogLevel.Error,
+            Message = "Exception while enumerating Crls from X509Store")]
+        public static partial void X509CrlHelperLogMessage1(this ILogger logger, global::System.Exception? exception);
+
+        [LoggerMessage(EventId = CoreEventIds.X509CrlHelper + 2, Level = LogLevel.Error,
+            Message = "Error while adding Crl to X509Store, Win32Error-Code: {ErrorCode}: " +
+                "ERROR_INVALID_PARAMETER, The parameter is incorrect. ")]
+        public static partial void X509CrlHelperLogMessage2(this ILogger logger, int errorCode);
+
+        [LoggerMessage(EventId = CoreEventIds.X509CrlHelper + 3, Level = LogLevel.Error,
+            Message = "Error while adding Crl to X509Store, Win32Error-Code: {ErrorCode}: " +
+                "CRYPT_E_ASN1_BADTAG, ASN1 bad tag value met. ")]
+        public static partial void X509CrlHelperLogMessage3(this ILogger logger, int errorCode);
+
+        [LoggerMessage(EventId = CoreEventIds.X509CrlHelper + 4, Level = LogLevel.Error,
+            Message = "Error while adding Crl to X509Store, Win32Error-Code: {ErrorCode}: " +
+                "ERROR_ACCESS_DENIED, Access is denied. ")]
+        public static partial void X509CrlHelperLogMessage4(this ILogger logger, int errorCode);
+
+        [LoggerMessage(EventId = CoreEventIds.X509CrlHelper + 5, Level = LogLevel.Error,
+            Message = "Error while adding Crl to X509Store, Win32Error-Code: {ErrorCode}: ")]
+        public static partial void X509CrlHelperLogMessage5(this ILogger logger, int errorCode);
+
+        [LoggerMessage(EventId = CoreEventIds.X509CrlHelper + 6, Level = LogLevel.Error,
+            Message = "Exception while adding Crl to X509Store")]
+        public static partial void X509CrlHelperLogMessage6(this ILogger logger, global::System.Exception? exception);
+
+        [LoggerMessage(EventId = CoreEventIds.X509CrlHelper + 7, Level = LogLevel.Error,
+            Message = "Error while deleting Crl from X509Store, Win32Error-Code: {ErrorCode}")]
+        public static partial void X509CrlHelperLogMessage7(this ILogger logger, int errorCode);
+
+        [LoggerMessage(EventId = CoreEventIds.X509CrlHelper + 8, Level = LogLevel.Error,
+            Message = "Error while deleting Crl from X509Store, Win32Error-Code: {ErrorCode}")]
+        public static partial void X509CrlHelperLogMessage8(this ILogger logger, int errorCode);
+
+        [LoggerMessage(EventId = CoreEventIds.X509CrlHelper + 9, Level = LogLevel.Error,
+            Message = "Exception while deleting Crl from X509Store")]
+        public static partial void X509CrlHelperLogMessage9(this ILogger logger, global::System.Exception? exception);
+    }
+
+}

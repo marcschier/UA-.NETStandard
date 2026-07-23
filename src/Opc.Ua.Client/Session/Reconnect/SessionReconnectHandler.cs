@@ -1,0 +1,826 @@
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Opc.Ua.Redaction;
+
+namespace Opc.Ua.Client
+{
+    /// <summary>
+    /// Attempts to reconnect to the server using the legacy reconnect
+    /// flow. Operates against a raw <see cref="Session"/> (or a derived
+    /// type) by driving its <c>ReconnectAsync</c> /
+    /// <see cref="ISessionFactory.RecreateAsync(ISession, CancellationToken)"/>
+    /// pipeline directly.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// New code should prefer <see cref="ManagedSession"/> (created via
+    /// <see cref="ManagedSessionFactory"/> or <see cref="ManagedSessionBuilder"/>),
+    /// which encapsulates connection lifecycle, reconnect, and server
+    /// redundancy failover behind an <see cref="ISession"/> facade.
+    /// </para>
+    /// <para>
+    /// <see cref="SessionReconnectHandler"/> is intentionally retained as
+    /// a supported legacy entry point for callers that already manage
+    /// <see cref="Session"/> instances directly. It does <b>not</b>
+    /// support the <see cref="ManagedSession"/> facade — passing one to
+    /// <see cref="BeginReconnect(ISession,int,EventHandler)"/> throws
+    /// <see cref="NotSupportedException"/> because the managed session
+    /// already runs its own reconnect state machine.
+    /// </para>
+    /// </remarks>
+    public class SessionReconnectHandler : IDisposable
+    {
+        /// <summary>
+        /// The minimum reconnect period in ms.
+        /// </summary>
+        public const int MinReconnectPeriod = 500;
+
+        /// <summary>
+        /// The maximum reconnect period in ms.
+        /// </summary>
+        public const int MaxReconnectPeriod = 30000;
+
+        /// <summary>
+        /// The default reconnect period in ms.
+        /// </summary>
+        public const int DefaultReconnectPeriod = 1000;
+
+        /// <summary>
+        /// The default reconnect operation timeout in ms.
+        /// </summary>
+        public const int MinReconnectOperationTimeout = 5000;
+
+        /// <summary>
+        /// The internal state of the reconnect handler.
+        /// </summary>
+        [Flags]
+        public enum ReconnectState
+        {
+            /// <summary>
+            /// The reconnect handler is ready to start the reconnect timer.
+            /// </summary>
+            Ready = 0,
+
+            /// <summary>
+            /// The reconnect timer is triggered and waiting to reconnect.
+            /// </summary>
+            Triggered = 1,
+
+            /// <summary>
+            /// The reconnection is in progress.
+            /// </summary>
+            Reconnecting = 2,
+
+            /// <summary>
+            /// The reconnect handler is disposed and can not be used for further reconnect attempts.
+            /// </summary>
+            Disposed = 4
+        }
+
+        /// <summary>
+        /// Obsolete constructor
+        /// </summary>
+        [Obsolete("Use SessionReconnectHandler(ITelemetryContext, bool, int) instead.")]
+        public SessionReconnectHandler(bool reconnectAbort = false, int maxReconnectPeriod = -1)
+            // Telemetry is required by the modern ctor; this obsolete bridge forwards null!
+            // to preserve the parameterless reconnect-handler instantiation pattern.
+            : this(null!, reconnectAbort, maxReconnectPeriod)
+        {
+        }
+
+        /// <summary>
+        /// Create a reconnect handler.
+        /// </summary>
+        /// <param name="telemetry">The telemetry context to use to create obvservability instruments</param>
+        /// <param name="reconnectAbort">Set to <c>true</c> to allow reconnect abort if keep alive recovered.</param>
+        /// <param name="maxReconnectPeriod">
+        /// The upper limit for the reconnect period after exponential backoff.
+        /// -1 (default) indicates that no exponential backoff should be used.
+        /// </param>
+        public SessionReconnectHandler(
+            ITelemetryContext telemetry,
+            bool reconnectAbort = false,
+            int maxReconnectPeriod = -1)
+            : this(telemetry, reconnectAbort, maxReconnectPeriod, timeProvider: null)
+        {
+        }
+
+        /// <summary>
+        /// Create a reconnect handler.
+        /// </summary>
+        /// <param name="telemetry">The telemetry context to use to create obvservability instruments</param>
+        /// <param name="reconnectAbort">Set to <c>true</c> to allow reconnect abort if keep alive recovered.</param>
+        /// <param name="maxReconnectPeriod">
+        /// The upper limit for the reconnect period after exponential backoff.
+        /// -1 (default) indicates that no exponential backoff should be used.
+        /// </param>
+        /// <param name="timeProvider">Optional time provider used for timers and elapsed-time
+        /// calculations. Defaults to <see cref="TimeProvider.System"/>.</param>
+        public SessionReconnectHandler(
+            ITelemetryContext telemetry,
+            bool reconnectAbort,
+            int maxReconnectPeriod,
+            TimeProvider? timeProvider)
+        {
+            m_timeProvider = timeProvider ?? TimeProvider.System;
+            m_telemetry = telemetry;
+            m_logger = telemetry.CreateLogger<SessionReconnectHandler>();
+            m_reconnectAbort = reconnectAbort;
+            m_reconnectTimer = m_timeProvider.CreateTimer(
+                OnReconnectAsync,
+                this,
+                Timeout.InfiniteTimeSpan,
+                Timeout.InfiniteTimeSpan);
+            m_state = ReconnectState.Ready;
+            m_cancelReconnect = false;
+            m_updateFromServer = false;
+            m_baseReconnectPeriod = DefaultReconnectPeriod;
+            m_maxReconnectPeriod =
+                maxReconnectPeriod < 0
+                    ? -1
+                    : Math.Max(
+                        MinReconnectPeriod,
+                        Math.Min(maxReconnectPeriod, MaxReconnectPeriod));
+        }
+
+        /// <summary>
+        /// Frees any unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// An overrideable version of the Dispose.
+        /// </summary>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                lock (m_lock)
+                {
+                    m_reconnectTimer?.Dispose();
+                    m_reconnectTimer = null;
+                    m_state = ReconnectState.Disposed;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the session managed by the handler.
+        /// </summary>
+        /// <value>The session.</value>
+        public ISession? Session { get; private set; }
+
+        /// <summary>
+        /// The internal state of the reconnect handler.
+        /// </summary>
+        public ReconnectState State
+        {
+            get
+            {
+                lock (m_lock)
+                {
+                    if (m_reconnectTimer == null)
+                    {
+                        return ReconnectState.Disposed;
+                    }
+                    return m_state;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Cancel a reconnect in progress.
+        /// </summary>
+        public void CancelReconnect()
+        {
+            lock (m_lock)
+            {
+                if (m_reconnectTimer == null)
+                {
+                    return;
+                }
+
+                if (m_state == ReconnectState.Triggered)
+                {
+                    Session = null;
+                    EnterReadyState();
+                    return;
+                }
+
+                m_cancelReconnect = true;
+            }
+        }
+
+        /// <summary>
+        /// Begins the reconnect process.
+        /// </summary>
+        public ReconnectState BeginReconnect(
+            ISession session,
+            int reconnectPeriod,
+            EventHandler callback)
+        {
+            return BeginReconnect(session, null, reconnectPeriod, callback);
+        }
+
+        /// <summary>
+        /// Begins the reconnect process using a reverse connection.
+        /// </summary>
+        /// <exception cref="ServiceResultException">if the handler is
+        /// already disposed.</exception>
+        /// <exception cref="NotSupportedException">if <paramref name="session"/>
+        /// is not <see langword="null"/> and is not a <see cref="Session"/>
+        /// (or a type derived from it). <see cref="ManagedSession"/> and
+        /// other facade implementations of <see cref="ISession"/> drive
+        /// their own reconnect state machine and must not be passed
+        /// here.</exception>
+        public ReconnectState BeginReconnect(
+            ISession session,
+            ReverseConnectManager? reverseConnectManager,
+            int reconnectPeriod,
+            EventHandler callback)
+        {
+            // The reconnect handler drives Session.ReconnectAsync /
+            // ISessionFactory.RecreateAsync directly and assumes it owns
+            // the session lifecycle. Facade sessions (e.g. ManagedSession)
+            // already run their own reconnect / failover state machine,
+            // so mixing them here would be incorrect. Allow null
+            // (cancellation) and require Session-derived instances
+            // otherwise.
+            // (Use the fully qualified type to disambiguate from the
+            // local Session property.)
+            if (session is not null and
+                not Client.Session)
+            {
+                throw new NotSupportedException(
+                    "SessionReconnectHandler only supports the legacy " +
+                    "Session class (or types derived from it). " +
+                    "ManagedSession and other ISession facades manage " +
+                    "their own reconnection — use ManagedSession / " +
+                    "ManagedSessionFactory instead.");
+            }
+
+            lock (m_lock)
+            {
+                if (m_reconnectTimer == null)
+                {
+                    throw new ServiceResultException(StatusCodes.BadInvalidState);
+                }
+
+                // cancel reconnect requested, if possible
+                if (session == null)
+                {
+                    if (m_state == ReconnectState.Triggered)
+                    {
+                        Session = null;
+                        EnterReadyState();
+                        return m_state;
+                    }
+                    // reconnect already in progress, schedule cancel
+                    m_cancelReconnect = true;
+                    return m_state;
+                }
+
+                // set reconnect period within boundaries
+                reconnectPeriod = CheckedReconnectPeriod(reconnectPeriod);
+
+                // ignore subsequent trigger requests
+                if (m_state == ReconnectState.Ready)
+                {
+                    Session = session;
+                    m_baseReconnectPeriod = reconnectPeriod;
+                    m_reconnectFailed = false;
+                    m_cancelReconnect = false;
+                    m_callback = callback;
+                    m_reverseConnectManager = reverseConnectManager;
+                    m_reconnectTimer.Change(
+                        TimeSpan.FromMilliseconds(JitteredReconnectPeriod(reconnectPeriod)),
+                        Timeout.InfiniteTimeSpan);
+                    m_reconnectPeriod = CheckedReconnectPeriod(reconnectPeriod, true);
+                    m_state = ReconnectState.Triggered;
+                    return m_state;
+                }
+
+                // if triggered, reset timer only if requested reconnect period is shorter
+                if (m_state == ReconnectState.Triggered && reconnectPeriod < m_baseReconnectPeriod)
+                {
+                    m_baseReconnectPeriod = reconnectPeriod;
+                    m_reconnectTimer.Change(
+                        TimeSpan.FromMilliseconds(JitteredReconnectPeriod(reconnectPeriod)),
+                        Timeout.InfiniteTimeSpan);
+                    m_reconnectPeriod = CheckedReconnectPeriod(reconnectPeriod, true);
+                }
+
+                return m_state;
+            }
+        }
+
+        /// <summary>
+        /// Returns the reconnect period with a random jitter.
+        /// </summary>
+        public virtual int JitteredReconnectPeriod(int reconnectPeriod)
+        {
+            // The factors result in a jitter of 10%.
+            const int jitterResolution = 1000;
+            const int jitterFactor = 10;
+            int jitter = reconnectPeriod *
+                UnsecureRandom.Shared.Next(-jitterResolution, jitterResolution) /
+                (jitterResolution * jitterFactor);
+            return reconnectPeriod + jitter;
+        }
+
+        /// <summary>
+        /// Returns the reconnect period within the min and max boundaries.
+        /// </summary>
+        public virtual int CheckedReconnectPeriod(
+            int reconnectPeriod,
+            bool exponentialBackoff = false)
+        {
+            // exponential backoff is controlled by m_maxReconnectPeriod
+            if (m_maxReconnectPeriod > MinReconnectPeriod)
+            {
+                if (exponentialBackoff)
+                {
+                    reconnectPeriod *= 2;
+                }
+                return Math.Min(
+                    Math.Max(reconnectPeriod, MinReconnectPeriod),
+                    m_maxReconnectPeriod);
+            }
+
+            return Math.Max(reconnectPeriod, MinReconnectPeriod);
+        }
+
+        /// <summary>
+        /// Called when the reconnect timer expires.
+        /// </summary>
+        private async void OnReconnectAsync(object? state)
+        {
+            long reconnectStartTimestamp = m_timeProvider.GetTimestamp();
+            try
+            {
+                // check for exit.
+                ISession? session = Session;
+                lock (m_lock)
+                {
+                    if (m_reconnectTimer == null || session == null)
+                    {
+                        return;
+                    }
+                    if (m_state != ReconnectState.Triggered)
+                    {
+                        return;
+                    }
+                    // enter reconnecting state
+                    m_state = ReconnectState.Reconnecting;
+                }
+
+                bool keepaliveRecovered = false;
+
+                // preserve legacy behavior if reconnectAbort is not set
+                if (m_reconnectAbort &&
+                    session.Connected &&
+                    !session.KeepAliveStopped)
+                {
+                    keepaliveRecovered = true;
+                    // breaking change, the callback must only assign the new
+                    // session if the property is != null
+                    m_logger.ReconnectSessionIdAbortedKeepAliveRecovered(session.SessionId);
+                    Session = session = null;
+                }
+                else
+                {
+                    m_logger.ReconnectSessionId(session.SessionId);
+                }
+
+                // do the reconnect or recover state.
+                if (keepaliveRecovered || await DoReconnectAsync().ConfigureAwait(false))
+                {
+                    lock (m_lock)
+                    {
+                        EnterReadyState();
+                    }
+
+                    // notify the caller.
+                    m_callback?.Invoke(this, EventArgs.Empty);
+
+                    return;
+                }
+            }
+            catch (Exception exception)
+            {
+                m_logger.UnexpectedErrorDuringReconnectMessage(Redact.Create(exception));
+            }
+
+            // schedule the next reconnect.
+            lock (m_lock)
+            {
+                if (m_state != ReconnectState.Disposed)
+                {
+                    if (m_cancelReconnect)
+                    {
+                        EnterReadyState();
+                    }
+                    else
+                    {
+                        int elapsed = (int)m_timeProvider
+                            .GetElapsedTime(reconnectStartTimestamp).TotalMilliseconds;
+                        m_logger.ReconnectPeriodReconnectPeriodMsElapsedMs(
+                            m_reconnectPeriod,
+                            elapsed);
+                        int adjustedReconnectPeriod = CheckedReconnectPeriod(
+                            m_reconnectPeriod - elapsed);
+                        adjustedReconnectPeriod = JitteredReconnectPeriod(adjustedReconnectPeriod);
+                        m_reconnectTimer?.Change(TimeSpan.FromMilliseconds(adjustedReconnectPeriod), Timeout.InfiniteTimeSpan);
+                        m_logger.NextAdjustedReconnectScheduledReconnectPeriodMs(adjustedReconnectPeriod);
+                        m_reconnectPeriod = CheckedReconnectPeriod(m_reconnectPeriod, true);
+                        m_state = ReconnectState.Triggered;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reconnects to the server.
+        /// </summary>
+        /// <exception cref="ServiceResultException"></exception>
+        private async Task<bool> DoReconnectAsync()
+        {
+            // helper to override operation timeout
+            ITransportChannel? transportChannel = null;
+            ISession current = Session ??
+                throw ServiceResultException.Unexpected("Session is null");
+
+            // try a reconnect.
+            if (!m_reconnectFailed)
+            {
+                try
+                {
+                    if (m_reverseConnectManager != null)
+                    {
+                        string? endpointUrl = current.Endpoint.EndpointUrl
+                            ?? throw ServiceResultException.Unexpected(
+                                "Endpoint Url is null for reverse connect session RECONNECT.");
+                        ITransportWaitingConnection connection = await m_reverseConnectManager
+                            .WaitForConnectionAsync(
+                                new Uri(endpointUrl),
+                                current.Endpoint.Server.ApplicationUri)
+                            .ConfigureAwait(false);
+
+                        await current.ReconnectAsync(connection).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await current.ReconnectAsync().ConfigureAwait(false);
+                    }
+
+                    // monitored items should start updating on their own.
+                    return true;
+                }
+                catch (Exception exception)
+                {
+                    // recreate the session if it has been closed.
+                    if (exception is ServiceResultException sre)
+                    {
+                        m_logger.ReconnectFailedReasonReason(sre.Result);
+
+                        // check if the server endpoint could not be reached.
+                        if (sre.StatusCode == StatusCodes.BadTcpInternalError ||
+                            sre.StatusCode == StatusCodes.BadCommunicationError ||
+                            sre.StatusCode == StatusCodes.BadNotConnected ||
+                            sre.StatusCode == StatusCodes.BadRequestTimeout ||
+                            sre.StatusCode == StatusCodes.BadTimeout ||
+                            sre.StatusCode == StatusCodes.BadNoCommunication ||
+                            sre.StatusCode == StatusCodes.BadConnectionClosed)
+                        {
+                            // check if reactivating is still an option.
+                            int timeout =
+                                Convert.ToInt32(current.SessionTimeout) -
+                                (int)m_timeProvider.GetElapsedTime(
+                                    current.LastKeepAliveTimestamp).TotalMilliseconds;
+                            if (timeout > 0)
+                            {
+                                m_logger.RetryReactivateEstSessionTimeoutTimeout(timeout);
+                                return false;
+                            }
+                        }
+
+                        // check if the security configuration may have changed
+                        if (sre.StatusCode == StatusCodes.BadSecurityChecksFailed ||
+                            sre.StatusCode == StatusCodes.BadCertificateInvalid)
+                        {
+                            m_updateFromServer = true;
+                            m_logger.ReconnectFailedSecurityCheckRequestEndpoint(sre.Message);
+                        }
+                        // recreate session immediately, use existing channel
+                        else if (sre.StatusCode == StatusCodes.BadSessionIdInvalid)
+                        {
+                            transportChannel = Session.NullableTransportChannel;
+#pragma warning disable CS0618 // legacy reconnect flow still uses Detach to keep channel
+                            Session.DetachChannel();
+#pragma warning restore CS0618
+                        }
+                        else
+                        {
+                            // wait for next scheduled reconnect if connection failed,
+                            // next attempt is to recreate session
+                            m_reconnectFailed = true;
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        m_logger.ReconnectFailed(exception);
+                    }
+
+                    m_reconnectFailed = true;
+                }
+            }
+
+            // re-create the session.
+            try
+            {
+                ISession session;
+                if (m_reverseConnectManager != null)
+                {
+                    ITransportWaitingConnection? connection;
+                    do
+                    {
+                        EndpointDescription? endpointDescription =
+                            current.Endpoint ?? transportChannel?.EndpointDescription;
+                        string? endpointUrl = endpointDescription?.EndpointUrl
+                            ?? throw ServiceResultException.Unexpected(
+                                "Endpoint Url is null for reverse connect session RECREATE.");
+                        connection = await m_reverseConnectManager
+                            .WaitForConnectionAsync(
+                                new Uri(endpointUrl),
+                                endpointDescription?.Server?.ApplicationUri)
+                            .ConfigureAwait(false);
+
+                        if (m_updateFromServer)
+                        {
+                            await UpdateEndpointFromServerAsync(
+                                current.ConfiguredEndpoint,
+                                connection).ConfigureAwait(false);
+                            m_updateFromServer = false;
+                            connection = null;
+                        }
+                    } while (connection == null);
+
+                    session = await current.SessionFactory.RecreateAsync(current, connection)
+                        .ConfigureAwait(false);
+                }
+                else
+                {
+                    if (m_updateFromServer)
+                    {
+                        await UpdateEndpointFromServerAsync(
+                            current.ConfiguredEndpoint).ConfigureAwait(false);
+                        m_updateFromServer = false;
+                    }
+                    session = transportChannel == null
+                        ? await current
+                            .SessionFactory.RecreateAsync(current)
+                            .ConfigureAwait(false)
+                        : await current
+                            .SessionFactory.RecreateAsync(current, transportChannel)
+                            .ConfigureAwait(false);
+                }
+                // note: the template session is not connected at this point
+                //       and must be disposed by the owner
+                Session = session;
+                return true;
+            }
+            catch (ServiceResultException sre)
+            {
+                if (sre.InnerResult?.StatusCode == StatusCodes.BadSecureChannelClosed ||
+                    sre.InnerResult?.StatusCode == StatusCodes.BadSecurityChecksFailed ||
+                    sre.InnerResult?.StatusCode == StatusCodes.BadCertificateInvalid)
+                {
+                    // schedule a fast endpoint update and retry
+                    if (m_maxReconnectPeriod > MinReconnectPeriod &&
+                        m_reconnectPeriod >= m_maxReconnectPeriod)
+                    {
+                        m_reconnectPeriod = m_baseReconnectPeriod;
+                    }
+                    m_logger.CouldNotReconnectFailedSecurityCheck(Redact.Create(sre));
+                }
+                else
+                {
+                    m_logger.CouldNotReconnectSessionRequestEndpoint(Redact.Create(sre));
+                }
+                m_updateFromServer = true;
+                return false;
+            }
+            catch (Exception exception)
+            {
+                m_logger.CouldNotReconnectSessionErrorMessage(Redact.Create(exception));
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Updates the configured endpoint from the server discovery endpoint.
+        /// Falls back to the best available endpoint if the original security
+        /// configuration is no longer supported by the server.
+        /// </summary>
+        /// <param name="endpoint">The configured endpoint to update.</param>
+        /// <param name="connection">The optional transport connection for reverse connect.</param>
+        protected virtual async Task UpdateEndpointFromServerAsync(
+            ConfiguredEndpoint endpoint,
+            ITransportWaitingConnection? connection = null)
+        {
+            // EndpointUrl and SecurityPolicyUri are nullable on ConfiguredEndpoint but every
+            // session entering reconnect was created with both values populated, so the
+            // bangs reflect that lifecycle invariant. The null! arguments in the catch block
+            // are intentional sentinels for "no security policy" passed to the modern API
+            // which retains a non-nullable parameter for backward compatibility.
+            try
+            {
+                if (connection != null)
+                {
+                    await endpoint
+                        .UpdateFromServerAsync(
+                            endpoint.EndpointUrl!,
+                            connection,
+                            endpoint.Description.SecurityMode,
+                            endpoint.Description.SecurityPolicyUri!,
+                            m_telemetry)
+                        .ConfigureAwait(false);
+                }
+                else
+                {
+                    await endpoint
+                        .UpdateFromServerAsync(
+                            endpoint.EndpointUrl!,
+                            endpoint.Description.SecurityMode,
+                            endpoint.Description.SecurityPolicyUri!,
+                            m_telemetry)
+                        .ConfigureAwait(false);
+                }
+            }
+            catch (ServiceResultException sre) when (
+                sre.StatusCode == StatusCodes.BadSecurityPolicyRejected ||
+                sre.StatusCode == StatusCodes.BadSecurityModeRejected)
+            {
+                // The original endpoint security configuration is no longer available on the server.
+                // Fall back to the best available endpoint without security constraints.
+                m_logger.OriginalEndpointSecurityConfigurationNotAvailable(sre.Message);
+                if (connection != null)
+                {
+                    await endpoint
+                        .UpdateFromServerAsync(
+                            endpoint.EndpointUrl!,
+                            connection,
+                            MessageSecurityMode.Invalid,
+                            null!,
+                            m_telemetry)
+                        .ConfigureAwait(false);
+                }
+                else
+                {
+                    await endpoint
+                        .UpdateFromServerAsync(
+                            endpoint.EndpointUrl!,
+                            MessageSecurityMode.Invalid,
+                            null!,
+                            m_telemetry)
+                        .ConfigureAwait(false);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reset the timer and enter ready state.
+        /// </summary>
+        private void EnterReadyState()
+        {
+            m_reconnectTimer?.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+            m_state = ReconnectState.Ready;
+            m_cancelReconnect = false;
+            m_updateFromServer = false;
+        }
+
+        private readonly ITelemetryContext m_telemetry;
+        private readonly Lock m_lock = new();
+        private ReconnectState m_state;
+        private bool m_reconnectFailed;
+        private readonly ILogger m_logger;
+        private readonly bool m_reconnectAbort;
+        private bool m_cancelReconnect;
+        private bool m_updateFromServer;
+        private int m_reconnectPeriod;
+        private int m_baseReconnectPeriod;
+        private readonly int m_maxReconnectPeriod;
+        private ITimer? m_reconnectTimer;
+        private readonly TimeProvider m_timeProvider;
+        private EventHandler? m_callback;
+        private ReverseConnectManager? m_reverseConnectManager;
+    }
+
+    /// <summary>
+    /// Source-generated log messages for <see cref="SessionReconnectHandler"/>.
+    /// </summary>
+    internal static partial class SessionReconnectHandlerLog
+    {
+        [LoggerMessage(EventId = ClientEventIds.SessionReconnectHandler + 0, Level = LogLevel.Information,
+            Message = "Reconnect {SessionId} aborted, KeepAlive recovered.")]
+        public static partial void ReconnectSessionIdAbortedKeepAliveRecovered(this ILogger logger, NodeId? sessionId);
+
+        [LoggerMessage(EventId = ClientEventIds.SessionReconnectHandler + 1, Level = LogLevel.Information,
+            Message = "Reconnect {SessionId}.")]
+        public static partial void ReconnectSessionId(this ILogger logger, NodeId? sessionId);
+
+        [LoggerMessage(EventId = ClientEventIds.SessionReconnectHandler + 2, Level = LogLevel.Error,
+            Message = "Unexpected error during reconnect: {Message}")]
+        public static partial void UnexpectedErrorDuringReconnectMessage(this ILogger logger, RedactionWrapper<Exception> message);
+
+        [LoggerMessage(EventId = ClientEventIds.SessionReconnectHandler + 3, Level = LogLevel.Information,
+            Message = "Reconnect period is {ReconnectPeriod} ms, {Elapsed} ms elapsed in reconnect.")]
+        public static partial void ReconnectPeriodReconnectPeriodMsElapsedMs(
+            this ILogger logger,
+            int reconnectPeriod,
+            int elapsed);
+
+        [LoggerMessage(EventId = ClientEventIds.SessionReconnectHandler + 4, Level = LogLevel.Information,
+            Message = "Next adjusted reconnect scheduled in {ReconnectPeriod} ms.")]
+        public static partial void NextAdjustedReconnectScheduledReconnectPeriodMs(
+            this ILogger logger,
+            int reconnectPeriod);
+
+        [LoggerMessage(EventId = ClientEventIds.SessionReconnectHandler + 5, Level = LogLevel.Warning,
+            Message = "Reconnect failed. Reason={Reason}.")]
+        public static partial void ReconnectFailedReasonReason(this ILogger logger, ServiceResult reason);
+
+        [LoggerMessage(EventId = ClientEventIds.SessionReconnectHandler + 6, Level = LogLevel.Information,
+            Message = "Retry to reactivate, est. session timeout in {Timeout} ms.")]
+        public static partial void RetryReactivateEstSessionTimeoutTimeout(this ILogger logger, int timeout);
+
+        [LoggerMessage(EventId = ClientEventIds.SessionReconnectHandler + 7, Level = LogLevel.Information,
+            Message = "Reconnect failed due to security check. Request endpoint update from server. {Message}")]
+        public static partial void ReconnectFailedSecurityCheckRequestEndpoint(this ILogger logger, string message);
+
+        [LoggerMessage(EventId = ClientEventIds.SessionReconnectHandler + 8, Level = LogLevel.Error,
+            Message = "Reconnect failed.")]
+        public static partial void ReconnectFailed(this ILogger logger, Exception? exception);
+
+        [LoggerMessage(EventId = ClientEventIds.SessionReconnectHandler + 9, Level = LogLevel.Error,
+            Message = "Could not reconnect due to failed security check. Request endpoint update from server." +
+                " {Message}")]
+        public static partial void CouldNotReconnectFailedSecurityCheck(
+            this ILogger logger,
+            RedactionWrapper<ServiceResultException> message);
+
+        [LoggerMessage(EventId = ClientEventIds.SessionReconnectHandler + 10, Level = LogLevel.Error,
+            Message = "Could not reconnect the Session. Request endpoint update from server. {Message}")]
+        public static partial void CouldNotReconnectSessionRequestEndpoint(
+            this ILogger logger,
+            RedactionWrapper<ServiceResultException> message);
+
+        [LoggerMessage(EventId = ClientEventIds.SessionReconnectHandler + 11, Level = LogLevel.Error,
+            Message = "Could not reconnect the Session. {ErrorMessage}")]
+        public static partial void CouldNotReconnectSessionErrorMessage(this ILogger logger, RedactionWrapper<Exception> errorMessage);
+
+        [LoggerMessage(EventId = ClientEventIds.SessionReconnectHandler + 12, Level = LogLevel.Warning,
+            Message = "Original endpoint security configuration not available on server, falling back to best" +
+                " available endpoint. {Message}")]
+        public static partial void OriginalEndpointSecurityConfigurationNotAvailable(
+            this ILogger logger,
+            string message);
+    }
+
+}

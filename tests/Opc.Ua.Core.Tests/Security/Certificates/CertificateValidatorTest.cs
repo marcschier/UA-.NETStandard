@@ -1,0 +1,2597 @@
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using NUnit.Framework;
+using Opc.Ua.Core.TestFramework;
+using Opc.Ua.Security.Certificates;
+using Opc.Ua.Security.Certificates.Tests;
+using Opc.Ua.Tests;
+
+namespace Opc.Ua.Core.Tests.Security.Certificates
+{
+    /// <summary>
+    /// Tests for the CertificateValidator class.
+    /// </summary>
+    [TestFixture]
+    [Category("CertificateValidator")]
+    [Parallelizable]
+    [SetCulture("en-us")]
+    public class CertificateValidatorTest
+    {
+        private static readonly ICertificateFactory s_factory = DefaultCertificateFactory.Instance;
+        private static readonly ICertificateIssuer s_issuer = DefaultCertificateIssuer.Instance;
+
+        [DatapointSource]
+        public static readonly ECCurveHashPair[] ECCurveHashPairs = CertificateTestsForECDsa
+            .GetECCurveHashPairs();
+
+        public const string RootCASubject = "CN=Root CA Test Cert, O=OPC Foundation";
+
+        /// <summary>
+        /// Set up cert chains and validate.
+        /// </summary>
+        [OneTimeSetUp]
+        protected void OneTimeSetUp()
+        {
+            // set max RSA key size and max SHA-2 hash size
+            ushort keySize = 4096;
+            ushort hashSize = 512;
+
+            // good applications test set
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+            var appTestDataGenerator = new ApplicationTestDataGenerator(1, telemetry);
+            m_goodApplicationTestSet = appTestDataGenerator.ApplicationTestSet(
+                kGoodApplicationsTestCount);
+            m_notYetValidCertsApplicationTestSet = appTestDataGenerator.ApplicationTestSet(
+                kGoodApplicationsTestCount);
+
+            // create all certs and CRL
+            m_caChain = new Certificate[kCaChainCount];
+            m_caDupeChain = new Certificate[kCaChainCount];
+            m_crlChain = new X509CRL[kCaChainCount];
+            m_crlDupeChain = new X509CRL[kCaChainCount];
+            m_crlRevokedChain = new X509CRL[kCaChainCount];
+            m_appCerts = [];
+            m_appSelfSignedCerts = [];
+            m_notYetValidAppCerts = [];
+
+            DateTime rootCABaseTime = DateTime.UtcNow.AddDays(-1);
+            rootCABaseTime = new DateTime(rootCABaseTime.Year - 1, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            Certificate rootCert = s_factory
+                .CreateCertificate(RootCASubject)
+                .SetNotBefore(rootCABaseTime)
+                .SetLifeTime(25 * 12)
+                .SetCAConstraint()
+                .SetHashAlgorithm(X509Utils.GetRSAHashAlgorithmName(hashSize))
+                .SetRSAKeySize(keySize)
+                .CreateForRSA();
+
+            m_caChain[0] = rootCert;
+            m_crlChain[0] = s_issuer.RevokeCertificates(rootCert, null, null);
+
+            // to save time, the dupe chain uses just the default key size/hash
+            m_caDupeChain[0] = s_factory
+                .CreateCertificate(RootCASubject)
+                .SetNotBefore(rootCABaseTime)
+                .SetLifeTime(25 * 12)
+                .SetCAConstraint()
+                .CreateForRSA();
+
+            m_crlDupeChain[0] = s_issuer.RevokeCertificates(m_caDupeChain[0], null, null);
+            m_crlRevokedChain[0] = null;
+
+            Certificate signingCert = rootCert;
+            DateTime subCABaseTime = DateTime.UtcNow.AddDays(-1);
+            subCABaseTime = new DateTime(
+                subCABaseTime.Year,
+                subCABaseTime.Month,
+                subCABaseTime.Day,
+                0,
+                0,
+                0,
+                DateTimeKind.Utc);
+            for (int i = 1; i < kCaChainCount; i++)
+            {
+                if (keySize > 2048)
+                {
+                    keySize -= 1024;
+                }
+                if (hashSize > 256)
+                {
+                    hashSize -= 128;
+                }
+                string subject = $"CN=Sub CA {i} Test Cert, O=OPC Foundation";
+                Certificate subCACert = s_factory
+                    .CreateCertificate(subject)
+                    .SetNotBefore(subCABaseTime)
+                    .SetLifeTime(5 * 12)
+                    .SetHashAlgorithm(X509Utils.GetRSAHashAlgorithmName(hashSize))
+                    .SetCAConstraint(kCaChainCount - 1 - i)
+                    .SetIssuer(signingCert)
+                    .SetRSAKeySize(keySize)
+                    .CreateForRSA();
+                m_caChain[i] = subCACert;
+                m_crlChain[i] = s_issuer.RevokeCertificates(
+                    subCACert,
+                    null,
+                    null,
+                    subCABaseTime,
+                    subCABaseTime + TimeSpan.FromDays(10));
+                Certificate subCADupeCert = s_factory
+                    .CreateCertificate(subject)
+                    .SetNotBefore(subCABaseTime)
+                    .SetLifeTime(5 * 12)
+                    .SetCAConstraint(kCaChainCount - 1 - i)
+                    .SetIssuer(signingCert)
+                    .CreateForRSA();
+                m_caDupeChain[i] = subCADupeCert;
+                m_crlDupeChain[i] = s_issuer.RevokeCertificates(
+                    subCADupeCert,
+                    null,
+                    null,
+                    subCABaseTime,
+                    subCABaseTime + TimeSpan.FromDays(10));
+                m_crlRevokedChain[i] = null;
+                signingCert = subCACert;
+            }
+
+            // create a CRL with a revoked Sub CA
+            for (int i = 0; i < kCaChainCount - 1; i++)
+            {
+                using var revoked = new CertificateCollection { m_caChain[i + 1] };
+                m_crlRevokedChain[i] = s_issuer.RevokeCertificates(
+                    m_caChain[i],
+                    [m_crlChain[i]],
+                    revoked);
+            }
+
+            // create self signed app certs
+            foreach (ApplicationTestData app in m_goodApplicationTestSet)
+            {
+                string subject = app.Subject;
+                using Certificate appCert = s_factory
+                    .CreateApplicationCertificate(
+                        app.ApplicationUri,
+                        app.ApplicationName,
+                        subject,
+                        app.DomainNames.ToList())
+                    .CreateForRSA();
+                m_appSelfSignedCerts.Add(appCert);
+            }
+
+            // create signed app certs
+            foreach (ApplicationTestData app in m_goodApplicationTestSet)
+            {
+                string subject = app.Subject;
+                using Certificate appCert = s_factory
+                    .CreateApplicationCertificate(
+                        app.ApplicationUri,
+                        app.ApplicationName,
+                        subject,
+                        app.DomainNames.ToList())
+                    .SetIssuer(signingCert)
+                    .CreateForRSA();
+                app.Certificate = appCert.RawData;
+                m_appCerts.Add(appCert);
+            }
+
+            // create a CRL with all apps revoked
+            m_crlRevokedChain[kCaChainCount - 1] = s_issuer.RevokeCertificates(
+                m_caChain[kCaChainCount - 1],
+                [m_crlChain[kCaChainCount - 1]],
+                m_appCerts);
+
+            // create signed expired app certs
+            foreach (ApplicationTestData app in m_notYetValidCertsApplicationTestSet)
+            {
+                string subject = app.Subject;
+                using Certificate expiredappcert = s_factory
+                    .CreateApplicationCertificate(
+                        app.ApplicationUri,
+                        app.ApplicationName,
+                        subject,
+                        app.DomainNames.ToList())
+                    .SetNotAfter(subCABaseTime.AddMonths(4))
+                    .SetNotBefore(subCABaseTime.AddMonths(1))
+                    .SetIssuer(signingCert)
+                    .CreateForRSA();
+                app.Certificate = expiredappcert.RawData;
+                m_notYetValidAppCerts.Add(expiredappcert);
+            }
+        }
+
+        /// <summary>
+        /// Clean up the Test PKI folder.
+        /// </summary>
+        [OneTimeTearDown]
+        protected void OneTimeTearDown()
+        {
+            if (m_caChain != null)
+            {
+                foreach (Certificate cert in m_caChain)
+                {
+                    cert?.Dispose();
+                }
+            }
+            if (m_caDupeChain != null)
+            {
+                foreach (Certificate cert in m_caDupeChain)
+                {
+                    cert?.Dispose();
+                }
+            }
+            if (m_appCerts != null)
+            {
+                foreach (Certificate cert in m_appCerts)
+                {
+                    cert?.Dispose();
+                }
+                m_appCerts.Dispose();
+            }
+            if (m_appSelfSignedCerts != null)
+            {
+                foreach (Certificate cert in m_appSelfSignedCerts)
+                {
+                    cert?.Dispose();
+                }
+                m_appSelfSignedCerts.Dispose();
+            }
+            if (m_notYetValidAppCerts != null)
+            {
+                foreach (Certificate cert in m_notYetValidAppCerts)
+                {
+                    cert?.Dispose();
+                }
+                m_notYetValidAppCerts.Dispose();
+            }
+        }
+
+        [TearDown]
+        protected void TearDown()
+        {
+        }
+
+        /// <summary>
+        /// Verify self signed app certs are not trusted.
+        /// </summary>
+        [Test]
+        public async Task VerifySelfSignedAppCertsNotTrustedAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            // verify cert with issuer chain
+            using var validator = TemporaryCertificateManager.Create(telemetry, true);
+            CertificateManager certValidator = validator.Update();
+            foreach (Certificate cert in m_appSelfSignedCerts)
+            {
+                using var publicKey = Certificate.FromRawData(cert.RawData);
+                CertificateValidationResult result = await certValidator
+                    .ValidateAsync(publicKey, ct: CancellationToken.None)
+                    .ConfigureAwait(false);
+                Assert.That(result.IsValid, Is.False);
+                Assert.That(
+                    result.StatusCode,
+                    Is.EqualTo(StatusCodes.BadCertificateUntrusted));
+            }
+
+            await certValidator.FlushRejectedAsync().ConfigureAwait(false);
+            using CertificateCollection rejectedCerts = validator.RejectedStore
+                .EnumerateAsync().GetAwaiter().GetResult();
+            Assert.That(
+                rejectedCerts,
+                Has.Count.EqualTo(m_appSelfSignedCerts.Count),
+                "All self signed certs shall be contained in the RejectedStore");
+
+            // add auto approver
+            var approver = new CertValidationApprover([StatusCodes.BadCertificateUntrusted]);
+            certValidator.AcceptError = approver.AcceptError;
+            foreach (Certificate cert in m_appSelfSignedCerts)
+            {
+                using var publicKey = Certificate.FromRawData(cert.RawData);
+                CertificateValidationResult result = await certValidator
+                    .ValidateAsync(publicKey, ct: CancellationToken.None)
+                    .ConfigureAwait(false);
+                Assert.That(result.IsValid, Is.True, result.StatusCode.ToString());
+            }
+            // count certs written to rejected store
+            Assert.That(approver.AcceptedCount, Is.EqualTo(m_appSelfSignedCerts.Count),
+                "All self signed certs shall be accepted with StatusCode BadCertificateUntrusted");
+        }
+
+        /// <summary>
+        /// Verify self signed app certs are not trusted with other CA chains
+        /// </summary>
+        [Test]
+        public async Task VerifySelfSignedAppCertsNotTrustedWithCAAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            using var validator = TemporaryCertificateManager.Create(telemetry);
+            // add random issuer certs
+            for (int i = 0; i < kCaChainCount; i++)
+            {
+                if (i == kCaChainCount / 2)
+                {
+                    await validator.TrustedStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                    await validator.TrustedStore.AddCRLAsync(m_crlChain[i]).ConfigureAwait(false);
+                }
+                else
+                {
+                    await validator.IssuerStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                    await validator.IssuerStore.AddCRLAsync(m_crlChain[i]).ConfigureAwait(false);
+                }
+            }
+
+            CertificateManager certValidator = await validator.UpdateAsync().ConfigureAwait(false);
+            foreach (Certificate cert in m_appSelfSignedCerts)
+            {
+                using var publicKey = Certificate.FromRawData(cert.RawData);
+                CertificateValidationResult result = await certValidator
+                    .ValidateAsync(publicKey, ct: CancellationToken.None)
+                    .ConfigureAwait(false);
+                Assert.That(result.IsValid, Is.False);
+                Assert.That(
+                    result.StatusCode,
+                    Is.EqualTo(StatusCodes.BadCertificateUntrusted));
+            }
+        }
+
+        /// <summary>
+        /// Verify self signed app certs throw by default.
+        /// </summary>
+        [Test]
+        public async Task VerifySelfSignedAppCertsThrowAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            // verify cert with issuer chain
+            {
+                // add all certs to issuer store, make sure validation fails.
+                using var validator = TemporaryCertificateManager.Create(telemetry, true);
+                foreach (Certificate cert in m_appSelfSignedCerts)
+                {
+                    await validator.IssuerStore.AddAsync(cert).ConfigureAwait(false);
+                }
+                using CertificateCollection issuerCerts = await validator
+                    .IssuerStore.EnumerateAsync().ConfigureAwait(false);
+                Assert.That(
+                    issuerCerts,
+                    Has.Count.EqualTo(m_appSelfSignedCerts.Count));
+                CertificateManager certValidator = validator.Update();
+                foreach (Certificate cert in m_appSelfSignedCerts)
+                {
+                    using var publicKey = Certificate.FromRawData(cert.RawData);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(publicKey, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(
+                        result.StatusCode,
+                        Is.EqualTo(StatusCodes.BadCertificateUntrusted));
+                }
+
+                await certValidator.FlushRejectedAsync().ConfigureAwait(false);
+                using CertificateCollection rejectedCerts = await validator
+                    .RejectedStore.EnumerateAsync().ConfigureAwait(false);
+                Assert.That(
+                    rejectedCerts,
+                    Has.Count.EqualTo(m_appSelfSignedCerts.Count));
+            }
+        }
+
+        /// <summary>
+        /// Verify untrusted app certs do not overflow the rejected store.
+        /// </summary>
+        [Test]
+        public async Task VerifyRejectedCertsDoNotOverflowStoreAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            // test number of rejected certs
+            const int kNumberOfRejectCertsHistory = 5;
+
+            // add all certs to issuer store, make sure validation fails.
+            using var validator = TemporaryCertificateManager.Create(telemetry, true);
+            foreach (Certificate cert in m_appSelfSignedCerts)
+            {
+                await validator.IssuerStore.AddAsync(cert).ConfigureAwait(false);
+            }
+            CertificateCollection certificates = await validator
+                .IssuerStore.EnumerateAsync()
+                .ConfigureAwait(false);
+            Assert.That(certificates, Has.Count.EqualTo(m_appSelfSignedCerts.Count));
+            certificates.Dispose();
+
+            CertificateManager certValidator = validator.Update();
+            certValidator.MaxRejectedCertificates = kNumberOfRejectCertsHistory;
+            try
+            {
+                await certValidator.FlushRejectedAsync().ConfigureAwait(false);
+
+                foreach (Certificate cert in m_appCerts)
+                {
+                    using var certs = new CertificateCollection([cert]);
+                    foreach (Certificate c in m_caChain)
+                    {
+                        certs.Add(c);
+                    }
+
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(certs, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(
+                        result.StatusCode,
+                        Is.EqualTo(StatusCodes.BadCertificateUntrusted));
+                }
+
+                foreach (Certificate cert in m_notYetValidAppCerts)
+                {
+                    using var certs = new CertificateCollection([cert]);
+                    foreach (Certificate c in m_caChain)
+                    {
+                        certs.Add(c);
+                    }
+
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(certs, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(
+                        result.StatusCode,
+                        Is.EqualTo(StatusCodes.BadCertificateUntrusted));
+                }
+
+                await certValidator.FlushRejectedAsync().ConfigureAwait(false);
+                certificates?.Dispose();
+                certificates = await validator.RejectedStore.EnumerateAsync().ConfigureAwait(false);
+                Assert.That(
+                    m_caChain.Length + kNumberOfRejectCertsHistory + 1,
+                    Is.GreaterThanOrEqualTo(certificates.Count));
+
+                foreach (Certificate cert in m_appSelfSignedCerts)
+                {
+                    using var certCollection = new CertificateCollection([cert]);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(certCollection, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(
+                        result.StatusCode,
+                        Is.EqualTo(StatusCodes.BadCertificateUntrusted));
+                }
+
+                await certValidator.FlushRejectedAsync().ConfigureAwait(false);
+                certificates?.Dispose();
+                certificates = await validator.RejectedStore.EnumerateAsync().ConfigureAwait(false);
+                Assert.That(certificates, Has.Count.LessThanOrEqualTo(kNumberOfRejectCertsHistory));
+
+                // override with the same content
+                foreach (Certificate cert in m_appSelfSignedCerts)
+                {
+                    using var certCollection = new CertificateCollection([cert]);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(certCollection, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(
+                        result.StatusCode,
+                        Is.EqualTo(StatusCodes.BadCertificateUntrusted));
+                }
+
+                await certValidator.FlushRejectedAsync().ConfigureAwait(false);
+                certificates?.Dispose();
+                certificates = await validator.RejectedStore.EnumerateAsync().ConfigureAwait(false);
+                Assert.That(certificates, Has.Count.LessThanOrEqualTo(kNumberOfRejectCertsHistory));
+
+                // test setter if overflow certs are not deleted
+                certValidator.MaxRejectedCertificates = 300;
+                await certValidator.FlushRejectedAsync().ConfigureAwait(false);
+                certificates?.Dispose();
+                certificates = await validator.RejectedStore.EnumerateAsync().ConfigureAwait(false);
+                Assert.That(certificates, Has.Count.LessThanOrEqualTo(kNumberOfRejectCertsHistory));
+
+                // test setter if overflow certs are deleted
+                certValidator.MaxRejectedCertificates = 3;
+                await certValidator.FlushRejectedAsync().ConfigureAwait(false);
+                certificates?.Dispose();
+                certificates = await WaitForRejectedStoreCountAsync(
+                    validator, count => count <= 3, TimeSpan.FromSeconds(60)).ConfigureAwait(false);
+                Assert.That(certificates, Has.Count.LessThanOrEqualTo(3));
+
+                // test setter if allcerts are deleted
+                certValidator.MaxRejectedCertificates = -1;
+                await certValidator.FlushRejectedAsync().ConfigureAwait(false);
+                certificates?.Dispose();
+                certificates = await WaitForRejectedStoreCountAsync(
+                    validator, count => count == 0, TimeSpan.FromSeconds(60)).ConfigureAwait(false);
+                Assert.That(certificates, Is.Empty);
+
+                // ensure no certs are added to the rejected store
+                foreach (Certificate cert in m_appSelfSignedCerts)
+                {
+                    using var certCollection = new CertificateCollection([cert]);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(certCollection, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(
+                        result.StatusCode,
+                        Is.EqualTo(StatusCodes.BadCertificateUntrusted));
+                }
+                await certValidator.FlushRejectedAsync().ConfigureAwait(false);
+                certificates?.Dispose();
+                certificates = await WaitForRejectedStoreCountAsync(
+                    validator, count => count == 0, TimeSpan.FromSeconds(60)).ConfigureAwait(false);
+                Assert.That(certificates, Is.Empty);
+            }
+            finally
+            {
+                certificates?.Dispose();
+                certValidator.MaxRejectedCertificates = kNumberOfRejectCertsHistory;
+            }
+        }
+
+        /// <summary>
+        /// Verify self signed app certs are trusted.
+        /// </summary>
+        [Test]
+        public async Task VerifySelfSignedAppCertsTrustedAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            // add all certs to trusted store
+            using var validator = TemporaryCertificateManager.Create(telemetry);
+            foreach (Certificate cert in m_appSelfSignedCerts)
+            {
+                await validator.TrustedStore.AddAsync(cert).ConfigureAwait(false);
+            }
+            using CertificateCollection trustedCerts =
+                await validator.TrustedStore.EnumerateAsync().ConfigureAwait(false);
+            Assert.That(
+                trustedCerts,
+                Has.Count.EqualTo(m_appSelfSignedCerts.Count));
+            CertificateManager certValidator = await validator.UpdateAsync().ConfigureAwait(false);
+            foreach (Certificate cert in m_appSelfSignedCerts)
+            {
+                using var publicKey = Certificate.FromRawData(cert.RawData);
+                CertificateValidationResult result = await certValidator
+                    .ValidateAsync(publicKey, ct: default)
+                    .ConfigureAwait(false);
+                Assert.That(result.IsValid, Is.True, result.StatusCode.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Verify self signed app certs validate if added to all stores.
+        /// </summary>
+        [Test]
+        public async Task VerifySelfSignedAppCertsAllStoresAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            // add all certs to trusted and issuer store
+            using var validator = TemporaryCertificateManager.Create(telemetry);
+            foreach (Certificate cert in m_appSelfSignedCerts)
+            {
+                await validator.TrustedStore.AddAsync(cert).ConfigureAwait(false);
+                await validator.IssuerStore.AddAsync(cert).ConfigureAwait(false);
+            }
+            CertificateManager certValidator = await validator.UpdateAsync().ConfigureAwait(false);
+            foreach (Certificate cert in m_appSelfSignedCerts)
+            {
+                using var publicKey = Certificate.FromRawData(cert.RawData);
+                CertificateValidationResult result = await certValidator
+                    .ValidateAsync(publicKey, ct: CancellationToken.None)
+                    .ConfigureAwait(false);
+                Assert.That(result.IsValid, Is.True, result.StatusCode.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Verify signed app certs validate. One of all trusted.
+        /// </summary>
+        [Test]
+        public async Task VerifyAppChainsOneTrustedAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+            // verify cert with issuer chain
+            for (int v = 0; v < kCaChainCount; v++)
+            {
+                long start = stopWatch.ElapsedMilliseconds;
+                TestContext.Out.WriteLine($"Chain Number {v}, Total Elapsed: {start}");
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                TestContext.Out.WriteLine($"Cleanup: {stopWatch.ElapsedMilliseconds - start}");
+                for (int i = 0; i < kCaChainCount; i++)
+                {
+                    ICertificateStore store = i == v
+                        ? validator.TrustedStore
+                        : validator.IssuerStore;
+                    await store.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                    await store.AddCRLAsync(m_crlChain[i]).ConfigureAwait(false);
+                }
+                TestContext.Out.WriteLine($"AddChains: {stopWatch.ElapsedMilliseconds - start}");
+                CertificateManager certValidator = await validator.UpdateAsync().ConfigureAwait(false);
+                TestContext.Out
+                    .WriteLine($"InitValidator: {stopWatch.ElapsedMilliseconds - start}");
+                foreach (ApplicationTestData app in m_goodApplicationTestSet)
+                {
+                    using var publicKey = Certificate.FromRawData(app.Certificate);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(publicKey, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.True, result.StatusCode.ToString());
+                }
+                TestContext.Out.WriteLine($"Validation: {stopWatch.ElapsedMilliseconds - start}");
+            }
+            TestContext.Out.WriteLine($"Total: {stopWatch.ElapsedMilliseconds}");
+        }
+
+        /// <summary>
+        /// Verify signed app certs validate. All but one in trusted.
+        /// </summary>
+        [Test]
+        public async Task VerifyAppChainsAllButOneTrustedAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            // verify cert with issuer chain
+            for (int v = 0; v < kCaChainCount; v++)
+            {
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                for (int i = 0; i < kCaChainCount; i++)
+                {
+                    ICertificateStore store =
+                        i != v
+                            ? validator.TrustedStore
+                            : validator.IssuerStore;
+                    await store.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                    await store.AddCRLAsync(m_crlChain[i]).ConfigureAwait(false);
+                }
+                CertificateManager certValidator = await validator.UpdateAsync().ConfigureAwait(false);
+                foreach (ApplicationTestData app in m_goodApplicationTestSet)
+                {
+                    using var publicKey = Certificate.FromRawData(app.Certificate);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(publicKey, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.True, result.StatusCode.ToString());
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify app certs with incomplete chain throw.
+        /// </summary>
+        [Test]
+        public async Task VerifyAppChainsIncompleteChainAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            // verify cert with issuer chain
+            for (int v = 0; v < kCaChainCount; v++)
+            {
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                for (int i = 0; i < kCaChainCount; i++)
+                {
+                    if (i != v)
+                    {
+                        await validator.TrustedStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                        await validator.TrustedStore.AddCRLAsync(m_crlChain[i])
+                            .ConfigureAwait(false);
+                    }
+                }
+                CertificateManager certValidator = await validator.UpdateAsync().ConfigureAwait(false);
+                foreach (ApplicationTestData app in m_goodApplicationTestSet)
+                {
+                    using var publicKey = Certificate.FromRawData(app.Certificate);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(publicKey, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(
+                        result.StatusCode,
+                        Is.EqualTo(StatusCodes.BadCertificateChainIncomplete));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify app certs do not validate with invalid chain.
+        /// </summary>
+        [Test]
+        public async Task VerifyAppChainsInvalidChainAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            // verify cert with issuer chain
+            for (int v = 0; v < kCaChainCount; v++)
+            {
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                for (int i = 0; i < kCaChainCount; i++)
+                {
+                    if (i != v)
+                    {
+                        await validator.TrustedStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                        await validator.TrustedStore.AddCRLAsync(m_crlChain[i])
+                            .ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await validator.TrustedStore.AddAsync(m_caDupeChain[i])
+                            .ConfigureAwait(false);
+                        await validator.TrustedStore.AddCRLAsync(m_crlDupeChain[i])
+                            .ConfigureAwait(false);
+                    }
+                }
+                CertificateManager certValidator = await validator.UpdateAsync().ConfigureAwait(false);
+                foreach (ApplicationTestData app in m_goodApplicationTestSet)
+                {
+                    using var publicKey = Certificate.FromRawData(app.Certificate);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(publicKey, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(
+                        result.StatusCode,
+                        Is.EqualTo(StatusCodes.BadCertificateChainIncomplete));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify app certs with good and invalid chain
+        /// </summary>
+        [Test]
+        public async Task VerifyAppChainsWithGoodAndInvalidChainAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            // verify cert with issuer chain
+            for (int v = 0; v < kCaChainCount; v++)
+            {
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                for (int i = 0; i < kCaChainCount; i++)
+                {
+                    ICertificateStore store = i == v
+                        ? validator.TrustedStore
+                        : validator.IssuerStore;
+                    await store.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                    await store.AddCRLAsync(m_crlChain[i]).ConfigureAwait(false);
+                    await store.AddAsync(m_caDupeChain[i]).ConfigureAwait(false);
+                    await store.AddCRLAsync(m_crlDupeChain[i]).ConfigureAwait(false);
+                }
+                CertificateManager certValidator = await validator.UpdateAsync().ConfigureAwait(false);
+                foreach (ApplicationTestData app in m_goodApplicationTestSet)
+                {
+                    using var publicKey = Certificate.FromRawData(app.Certificate);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(publicKey, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.True, result.StatusCode.ToString());
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify cert is revoked with CRL in trusted store
+        /// </summary>
+        [Test]
+        public async Task VerifyRevokedTrustedStoreAppChainsAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            // verify cert is revoked with CRL in trusted store
+            for (int v = 0; v < kCaChainCount; v++)
+            {
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                for (int i = 0; i < kCaChainCount; i++)
+                {
+                    if (i == v)
+                    {
+                        await validator.TrustedStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                        await validator.TrustedStore.AddCRLAsync(m_crlRevokedChain[i])
+                            .ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await validator.IssuerStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                        await validator.IssuerStore.AddCRLAsync(m_crlChain[i])
+                            .ConfigureAwait(false);
+                    }
+                }
+                CertificateManager certValidator = await validator.UpdateAsync().ConfigureAwait(false);
+                foreach (ApplicationTestData app in m_goodApplicationTestSet)
+                {
+                    using var publicKey = Certificate.FromRawData(app.Certificate);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(publicKey, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(
+                        result.StatusCode,
+                        Is.EqualTo(v == kCaChainCount - 1
+                            ? StatusCodes.BadCertificateRevoked
+                            : StatusCodes.BadCertificateIssuerRevoked));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify cert is revoked with CRL in issuer store
+        /// </summary>
+        [Test]
+        public async Task VerifyRevokedIssuerStoreAppChainsAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            for (int v = 0; v < kCaChainCount; v++)
+            {
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                for (int i = 0; i < kCaChainCount; i++)
+                {
+                    if (i == v)
+                    {
+                        await validator.IssuerStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                        await validator.IssuerStore.AddCRLAsync(m_crlRevokedChain[i])
+                            .ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await validator.TrustedStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                        await validator.TrustedStore.AddCRLAsync(m_crlChain[i])
+                            .ConfigureAwait(false);
+                    }
+                }
+                CertificateManager certValidator = await validator.UpdateAsync().ConfigureAwait(false);
+                foreach (ApplicationTestData app in m_goodApplicationTestSet)
+                {
+                    using var publicKey = Certificate.FromRawData(app.Certificate);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(publicKey, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(
+                        result.StatusCode,
+                        Is.EqualTo(v == kCaChainCount - 1
+                            ? StatusCodes.BadCertificateRevoked
+                            : StatusCodes.BadCertificateIssuerRevoked));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify trusted app cert is revoked with CRL in issuer store
+        /// </summary>
+        [Test]
+        public async Task VerifyRevokedIssuerStoreTrustedAppChainsAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            for (int v = 0; v < kCaChainCount; v++)
+            {
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                for (int i = 0; i < kCaChainCount; i++)
+                {
+                    if (i == v)
+                    {
+                        await validator.IssuerStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                        await validator.IssuerStore.AddCRLAsync(m_crlRevokedChain[i])
+                            .ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await validator.IssuerStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                        await validator.IssuerStore.AddCRLAsync(m_crlChain[i])
+                            .ConfigureAwait(false);
+                    }
+                }
+                foreach (ApplicationTestData app in m_goodApplicationTestSet)
+                {
+                    using var publicKeyAdd = Certificate.FromRawData(app.Certificate);
+                    await validator
+                        .TrustedStore.AddAsync(publicKeyAdd)
+                        .ConfigureAwait(false);
+                }
+                CertificateManager certValidator = await validator.UpdateAsync().ConfigureAwait(false);
+                foreach (ApplicationTestData app in m_goodApplicationTestSet)
+                {
+                    using var publicKey = Certificate.FromRawData(app.Certificate);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(publicKey, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(
+                        result.StatusCode,
+                        Is.EqualTo(v == kCaChainCount - 1
+                            ? StatusCodes.BadCertificateRevoked
+                            : StatusCodes.BadCertificateIssuerRevoked));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify cert is revoked with CRL in trusted store
+        /// </summary>
+        [Test]
+        public async Task VerifyRevokedTrustedStoreNotTrustedAppChainsAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            for (int v = 0; v < kCaChainCount; v++)
+            {
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                for (int i = 0; i < kCaChainCount; i++)
+                {
+                    await validator.TrustedStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                    if (i == v)
+                    {
+                        await validator.TrustedStore.AddCRLAsync(m_crlRevokedChain[i])
+                            .ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await validator.TrustedStore.AddCRLAsync(m_crlChain[i])
+                            .ConfigureAwait(false);
+                    }
+                }
+                CertificateManager certValidator = await validator.UpdateAsync().ConfigureAwait(false);
+                foreach (ApplicationTestData app in m_goodApplicationTestSet)
+                {
+                    using var publicKey = Certificate.FromRawData(app.Certificate);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(publicKey, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(
+                        result.StatusCode,
+                        Is.EqualTo(v == kCaChainCount - 1
+                            ? StatusCodes.BadCertificateRevoked
+                            : StatusCodes.BadCertificateIssuerRevoked));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify trusted cert is revoked with CRL in trusted store.
+        /// </summary>
+        [Test]
+        public async Task VerifyRevokedTrustedStoreTrustedAppChainsAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            for (int v = 0; v < kCaChainCount; v++)
+            {
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                for (int i = 0; i < kCaChainCount; i++)
+                {
+                    await validator.TrustedStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                    if (i == v)
+                    {
+                        await validator.TrustedStore.AddCRLAsync(m_crlRevokedChain[i])
+                            .ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await validator.TrustedStore.AddCRLAsync(m_crlChain[i])
+                            .ConfigureAwait(false);
+                    }
+                }
+                foreach (ApplicationTestData app in m_goodApplicationTestSet)
+                {
+                    using var publicKeyAdd = Certificate.FromRawData(app.Certificate);
+                    await validator
+                        .TrustedStore.AddAsync(publicKeyAdd)
+                        .ConfigureAwait(false);
+                }
+                CertificateManager certValidator = await validator.UpdateAsync().ConfigureAwait(false);
+                foreach (ApplicationTestData app in m_goodApplicationTestSet)
+                {
+                    using var publicKey = Certificate.FromRawData(app.Certificate);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(publicKey, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(
+                        result.StatusCode,
+                        Is.EqualTo(v == kCaChainCount - 1
+                            ? StatusCodes.BadCertificateRevoked
+                            : StatusCodes.BadCertificateIssuerRevoked));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify trusted app certs with issuer chain.
+        /// </summary>
+        [Test]
+        public async Task VerifyIssuerChainIncompleteTrustedAppCertsAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            using var validator = TemporaryCertificateManager.Create(telemetry);
+            // issuer chain
+            for (int i = 0; i < kCaChainCount; i++)
+            {
+                await validator.IssuerStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                await validator.IssuerStore.AddCRLAsync(m_crlChain[i]).ConfigureAwait(false);
+            }
+
+            // all app certs are trusted
+            foreach (ApplicationTestData app in m_goodApplicationTestSet)
+            {
+                using var publicKeyAdd = Certificate.FromRawData(app.Certificate);
+                await validator
+                    .TrustedStore.AddAsync(publicKeyAdd)
+                    .ConfigureAwait(false);
+            }
+
+            CertificateManager certValidator = await validator.UpdateAsync().ConfigureAwait(false);
+            foreach (ApplicationTestData app in m_goodApplicationTestSet)
+            {
+                using var publicKey = Certificate.FromRawData(app.Certificate);
+                CertificateValidationResult result = await certValidator
+                    .ValidateAsync(publicKey, ct: CancellationToken.None)
+                    .ConfigureAwait(false);
+                Assert.That(result.IsValid, Is.True, result.StatusCode.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Verify trusted app certs with incomplete issuer chain.
+        /// </summary>
+        [Test]
+        public async Task VerifyIssuerChainTrustedAppCertsAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            for (int v = 0; v < kCaChainCount; v++)
+            {
+                TestContext.Out.WriteLine("Chain cert {0} not in issuer store.", v);
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                // issuer chain
+                for (int i = 0; i < kCaChainCount; i++)
+                {
+                    if (i != v)
+                    {
+                        await validator.IssuerStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                        await validator.IssuerStore.AddCRLAsync(m_crlChain[i])
+                            .ConfigureAwait(false);
+                    }
+                }
+
+                // all app certs are trusted
+                foreach (ApplicationTestData app in m_goodApplicationTestSet)
+                {
+                    using var publicKeyAdd = Certificate.FromRawData(app.Certificate);
+                    await validator
+                        .TrustedStore.AddAsync(publicKeyAdd)
+                        .ConfigureAwait(false);
+                }
+
+                CertificateManager certValidator = await validator.UpdateAsync().ConfigureAwait(false);
+                foreach (ApplicationTestData app in m_goodApplicationTestSet)
+                {
+                    using var publicKey = Certificate.FromRawData(app.Certificate);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(publicKey, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(
+                        result.StatusCode,
+                        Is.EqualTo(StatusCodes.BadCertificateChainIncomplete));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify the PEM Writer, no password
+        /// </summary>
+        [Test]
+        public void VerifyPemWriterPrivateKeys()
+        {
+            // all app certs are trusted
+            foreach (Certificate appCert in m_appSelfSignedCerts)
+            {
+                byte[] pemDataBlob = PEMWriter.ExportPrivateKeyAsPEM(appCert);
+                string pemString = Encoding.UTF8.GetString(pemDataBlob);
+                TestContext.Out.WriteLine(pemString);
+                using var pemCert1 = Certificate.FromRawData(appCert.RawData);
+                using Certificate result1 = DefaultCertificateFactory.Instance.CreateWithPEMPrivateKey(pemCert1, pemDataBlob);
+                // note: password is ignored
+                using var pemCert2 = Certificate.FromRawData(appCert.RawData);
+                using Certificate newCert = DefaultCertificateFactory.Instance.CreateWithPEMPrivateKey(
+                        pemCert2,
+                        pemDataBlob,
+                        "password".ToCharArray());
+                X509Utils.VerifyRSAKeyPair(newCert, newCert, true);
+            }
+        }
+
+        /// <summary>
+        /// Verify the PEM Writer, no password.
+        /// </summary>
+        [Test]
+        public void VerifyPemWriterPublicKeys()
+        {
+            // all app certs are trusted
+            foreach (Certificate appCert in m_appSelfSignedCerts)
+            {
+                byte[] pemDataBlob = PEMWriter.ExportCertificateAsPEM(appCert);
+                string pemString = Encoding.UTF8.GetString(pemDataBlob);
+                TestContext.Out.WriteLine(pemString);
+#if NET5_0_OR_GREATER
+                using var pemCert = Certificate.FromRawData(appCert.RawData);
+                ArgumentException exception = Assert.Throws<ArgumentException>(() =>
+                    DefaultCertificateFactory.Instance.CreateWithPEMPrivateKey(
+                        pemCert,
+                        pemDataBlob));
+#endif
+            }
+        }
+
+#if NET5_0_OR_GREATER
+        /// <summary>
+        /// Verify the PEM Writer, no password.
+        /// </summary>
+        [Test]
+        [Order(530)]
+        public void VerifyPemWriterRSAPrivateKeys()
+        {
+            // all app certs are trusted
+            foreach (Certificate appCert in m_appSelfSignedCerts)
+            {
+                byte[] pemDataBlob = PEMWriter.ExportRSAPrivateKeyAsPEM(appCert);
+                string pemString = Encoding.UTF8.GetString(pemDataBlob);
+                TestContext.Out.WriteLine(pemString);
+                using var pemCert1 = Certificate.FromRawData(appCert.RawData);
+                using Certificate cert = DefaultCertificateFactory.Instance.CreateWithPEMPrivateKey(pemCert1, pemDataBlob);
+                Assert.That(cert, Is.Not.Null);
+                // note: password is ignored
+                using var pemCert2 = Certificate.FromRawData(appCert.RawData);
+                using Certificate newCert = DefaultCertificateFactory.Instance.CreateWithPEMPrivateKey(
+                        pemCert2,
+                        pemDataBlob,
+                        "password");
+                X509Utils.VerifyRSAKeyPair(newCert, newCert, true);
+            }
+        }
+
+        /// <summary>
+        /// Verify the PEM Writer, with password
+        /// </summary>
+        [Test]
+        public void VerifyPemWriterPasswordPrivateKeys()
+        {
+            // all app certs are trusted
+            foreach (Certificate appCert in m_appSelfSignedCerts)
+            {
+                string password = Uuid.NewUuid().ToString()[..8];
+                TestContext.Out.WriteLine("Password: {0}", password);
+                byte[] pemDataBlob = PEMWriter.ExportPrivateKeyAsPEM(appCert, password);
+                string pemString = Encoding.UTF8.GetString(pemDataBlob);
+                TestContext.Out.WriteLine(pemString);
+                using var pemCert1 = Certificate.FromRawData(appCert.RawData);
+                using Certificate newCert = DefaultCertificateFactory.Instance.CreateWithPEMPrivateKey(
+                        pemCert1,
+                        pemDataBlob,
+                        password);
+                using var pemCert2 = Certificate.FromRawData(appCert.RawData);
+                CryptographicException exception = Assert
+                    .Throws<CryptographicException>(() =>
+                        _ = DefaultCertificateFactory.Instance.CreateWithPEMPrivateKey(
+                            pemCert2,
+                            pemDataBlob));
+                X509Utils.VerifyRSAKeyPair(newCert, newCert, true);
+            }
+        }
+#endif
+
+        /// <summary>
+        /// Verify self signed certs, not yet valid.
+        /// </summary>
+        [Theory]
+        public async Task VerifyNotBeforeInvalidAsync(bool trusted)
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            const string applicationName = "App Test Cert";
+            Certificate tempCert = s_factory
+                .CreateCertificate("CN=" + applicationName + " ,O=OPC Foundation")
+                .SetNotBefore(DateTime.Today.AddDays(14))
+                .CreateForRSA();
+            Assert.That(tempCert, Is.Not.Null);
+            using var cert = Certificate.FromRawData(tempCert.RawData);
+            tempCert.Dispose();
+            Assert.That(cert, Is.Not.Null);
+            Assert.That(X509Utils.CompareDistinguishedName("CN=" + applicationName + " ,O=OPC Foundation", cert.Subject), Is.True);
+            using var validator = TemporaryCertificateManager.Create(telemetry);
+            if (!trusted)
+            {
+                await validator.IssuerStore.AddAsync(cert).ConfigureAwait(false);
+            }
+            else
+            {
+                await validator.TrustedStore.AddAsync(cert).ConfigureAwait(false);
+            }
+            CertificateManager certValidator = validator.Update();
+            CertificateValidationResult result = await certValidator
+                .ValidateAsync(cert, ct: CancellationToken.None)
+                .ConfigureAwait(false);
+            Assert.That(result.IsValid, Is.False);
+            if (!trusted)
+            {
+                Assert.That(
+                    result.StatusCode,
+                    Is.EqualTo(StatusCodes.BadCertificateUntrusted));
+                // check the chained service result
+                ServiceResult innerResult = result.Errors[0].InnerResult.InnerResult;
+                Assert.That(innerResult, Is.Not.Null);
+                Assert.That(
+                    innerResult.StatusCode,
+                    Is.EqualTo(StatusCodes.BadCertificateTimeInvalid),
+                    innerResult.LocalizedText.Text);
+            }
+            else
+            {
+                Assert.That(
+                    result.StatusCode,
+                    Is.EqualTo(StatusCodes.BadCertificateTimeInvalid));
+            }
+        }
+
+        /// <summary>
+        /// Verify self signed certs, not after invalid.
+        /// </summary>
+        [Theory]
+        public async Task VerifyNotAfterInvalidAsync(bool trusted)
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            const string applicationName = "App Test Cert";
+            Certificate tempCert = s_factory
+                .CreateCertificate("CN=" + applicationName + " ,O=OPC Foundation")
+                .SetNotBefore(new DateTime(2010, 1, 1))
+                .SetLifeTime(12)
+                .CreateForRSA();
+            TestContext.Out.WriteLine($"{tempCert}:");
+            Assert.That(tempCert, Is.Not.Null);
+            using var cert = Certificate.FromRawData(tempCert.RawData);
+            tempCert.Dispose();
+            Assert.That(cert, Is.Not.Null);
+            Assert.That(X509Utils.CompareDistinguishedName("CN=" + applicationName + " ,O=OPC Foundation", cert.Subject), Is.True);
+            using var validator = TemporaryCertificateManager.Create(telemetry);
+            if (!trusted)
+            {
+                await validator.IssuerStore.AddAsync(cert).ConfigureAwait(false);
+            }
+            else
+            {
+                await validator.TrustedStore.AddAsync(cert).ConfigureAwait(false);
+            }
+            CertificateManager certValidator = validator.Update();
+            CertificateValidationResult result = await certValidator
+                .ValidateAsync(cert, ct: CancellationToken.None)
+                .ConfigureAwait(false);
+            Assert.That(result.IsValid, Is.False);
+            if (!trusted)
+            {
+                Assert.That(
+                    result.StatusCode,
+                    Is.EqualTo(StatusCodes.BadCertificateUntrusted));
+            }
+            else
+            {
+                Assert.That(
+                    result.StatusCode,
+                    Is.EqualTo(StatusCodes.BadCertificateTimeInvalid));
+            }
+        }
+
+        /// <summary>
+        /// Verify signed cert, not after invalid and chain missing.
+        /// </summary>
+        [Theory]
+        public async Task VerifySignedNotAfterInvalidAsync(bool trusted)
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            const string subject = "CN=Signed App Test Cert, O=OPC Foundation";
+            Certificate tempCert = s_factory
+                .CreateCertificate(subject)
+                .SetNotBefore(DateTime.Today.AddDays(30))
+                .SetLifeTime(12)
+                .SetIssuer(m_caChain[0])
+                .CreateForRSA();
+            TestContext.Out.WriteLine($"{tempCert}:");
+            Assert.That(tempCert, Is.Not.Null);
+            using var cert = Certificate.FromRawData(tempCert.RawData);
+            tempCert.Dispose();
+            Assert.That(cert, Is.Not.Null);
+            Assert.That(X509Utils.CompareDistinguishedName(subject, cert.Subject), Is.True);
+            using var validator = TemporaryCertificateManager.Create(telemetry);
+            if (!trusted)
+            {
+                await validator.IssuerStore.AddAsync(cert).ConfigureAwait(false);
+            }
+            else
+            {
+                await validator.TrustedStore.AddAsync(cert).ConfigureAwait(false);
+            }
+            CertificateManager certValidator = validator.Update();
+            CertificateValidationResult result = await certValidator
+                .ValidateAsync(cert, ct: CancellationToken.None)
+                .ConfigureAwait(false);
+            Assert.That(result.IsValid, Is.False);
+            Assert.That(
+                result.StatusCode,
+                Is.EqualTo(StatusCodes.BadCertificateChainIncomplete));
+            // approver tries to suppress error which is not suppressable; the
+            // attach/detach should have no effect on the captured result.
+            var approver = new CertValidationApprover(
+                [StatusCodes.BadCertificateTimeInvalid, StatusCodes.BadCertificateChainIncomplete]);
+            certValidator.AcceptError = approver.AcceptError;
+            Assert.That(
+                result.StatusCode,
+                Is.EqualTo(StatusCodes.BadCertificateChainIncomplete));
+            certValidator.AcceptError = null;
+        }
+
+        /// <summary>
+        /// Validate various null parameter return null exception.
+        /// </summary>
+        [Test]
+        public void TestNullParameters()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            using var validator = TemporaryCertificateManager.Create(telemetry);
+            CertificateManager certValidator = validator.Update();
+            Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await certValidator.UpdateAsync(null).ConfigureAwait(false));
+        }
+
+        /// <summary>
+        /// Validate the AcceptError callback and CertificateChanges
+        /// observer can be wired and removed without error.
+        /// </summary>
+        [Test]
+        public void TestEventHandler()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            using var validator = TemporaryCertificateManager.Create(telemetry);
+            CertificateManager certValidator = validator.Update();
+            certValidator.AcceptError = (cert, err) => false;
+            using IDisposable subscription = certValidator.CertificateChanges
+                .Subscribe(new NoOpCertificateChangeObserver());
+            subscription.Dispose();
+            certValidator.AcceptError = null;
+        }
+
+        /// <summary>
+        /// Validate SHA1 signed certificates cause a policy check failed.
+        /// </summary>
+        [Theory]
+        public async Task TestSHA1RejectedAsync(bool trusted, bool rejectSHA1)
+        {
+#if NET472_OR_GREATER || NET5_0_OR_GREATER
+            Assert
+                .Ignore("To create SHA1 certificates is unsupported on this .NET version");
+#endif
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            using Certificate cert = s_factory
+                .CreateCertificate("CN=SHA1 signed, O=OPC Foundation")
+                .SetHashAlgorithm(HashAlgorithmName.SHA1)
+                .CreateForRSA();
+            using var validator = TemporaryCertificateManager.Create(telemetry);
+            if (trusted)
+            {
+                await validator.TrustedStore.AddAsync(cert).ConfigureAwait(false);
+            }
+            CertificateManager certValidator = validator.Update();
+            certValidator.RejectSHA1SignedCertificates = rejectSHA1;
+            if (rejectSHA1)
+            {
+                CertificateValidationResult result = await certValidator
+                    .ValidateAsync(cert, ct: CancellationToken.None)
+                    .ConfigureAwait(false);
+                Assert.That(result.IsValid, Is.False);
+                Assert.That(
+                    result.StatusCode,
+                    Is.EqualTo(StatusCodes.BadCertificatePolicyCheckFailed));
+                Assert.That(result.Errors[0].InnerResult, Is.Not.Null);
+                ServiceResult innerResult = result.Errors[0].InnerResult.InnerResult;
+                if (!trusted)
+                {
+                    Assert.That(innerResult, Is.Not.Null);
+                    Assert.That(
+                        innerResult.StatusCode,
+                        Is.EqualTo(StatusCodes.BadCertificateUntrusted),
+                        innerResult.LocalizedText.Text);
+                }
+                else
+                {
+                    Assert.That(innerResult, Is.Null);
+                }
+            }
+            else if (trusted)
+            {
+                CertificateValidationResult result = await certValidator
+                    .ValidateAsync(cert, ct: CancellationToken.None)
+                    .ConfigureAwait(false);
+                Assert.That(result.IsValid, Is.True, result.StatusCode.ToString());
+            }
+            else
+            {
+                CertificateValidationResult result = await certValidator
+                    .ValidateAsync(cert, ct: CancellationToken.None)
+                    .ConfigureAwait(false);
+                Assert.That(result.IsValid, Is.False);
+                Assert.That(
+                    result.StatusCode,
+                    Is.EqualTo(StatusCodes.BadCertificateUntrusted));
+                Assert.That(result.Errors[0].InnerResult, Is.Not.Null);
+            }
+        }
+
+        /// <summary>
+        /// Validate invalid key usage flags cause use not allowed.
+        /// </summary>
+        [Theory]
+        public async Task TestInvalidKeyUsageAsync(bool trusted)
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            const string subject = "CN=Invalid Signature Cert, O=OPC Foundation";
+            // self signed but key usage is not valid for app cert
+            using Certificate cert = s_factory
+                .CreateCertificate(subject)
+                .SetCAConstraint(0)
+                .CreateForRSA();
+
+            Assert.That(X509Utils.VerifySelfSigned(cert), Is.True);
+            using var validator = TemporaryCertificateManager.Create(telemetry);
+            if (trusted)
+            {
+                await validator.TrustedStore.AddAsync(cert).ConfigureAwait(false);
+            }
+            CertificateManager certValidator = validator.Update();
+            CertificateValidationResult result = await certValidator
+                .ValidateAsync(cert, ct: CancellationToken.None)
+                .ConfigureAwait(false);
+            Assert.That(result.IsValid, Is.False);
+            Assert.That(
+                result.StatusCode,
+                Is.EqualTo(StatusCodes.BadCertificateUseNotAllowed));
+            Assert.That(result.Errors[0].InnerResult, Is.Not.Null);
+            ServiceResult innerResult = result.Errors[0].InnerResult.InnerResult;
+            if (trusted)
+            {
+                Assert.That(innerResult, Is.Null);
+            }
+            else
+            {
+                Assert.That(innerResult, Is.Not.Null);
+                Assert.That(
+                    (StatusCode)innerResult.StatusCode.Code,
+                    Is.EqualTo(StatusCodes.BadCertificateUntrusted),
+                    innerResult.LocalizedText.Text);
+            }
+        }
+
+        /// <summary>
+        /// Validate certificates with invalid signature are returned as invalid.
+        /// </summary>
+        [Theory]
+        public async Task TestInvalidSignatureAsync(bool ca, bool trusted)
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            const string subject = "CN=Invalid Signature Cert, O=OPC Foundation";
+            using Certificate certBase = s_factory.CreateApplicationCertificate(
+                null,
+                null,
+                subject).CreateForRSA();
+
+            var generator = X509SignatureGenerator.CreateForRSA(
+                m_caChain[0].GetRSAPrivateKey(),
+                RSASignaturePadding.Pkcs1);
+            // generate a self signed cert with invalid signature
+            ICertificateBuilder builder = s_factory.CreateApplicationCertificate(
+                null,
+                null,
+                subject);
+            if (ca)
+            {
+                // set the CA flag changes the key usage to sign only
+                builder.SetCAConstraint(0);
+            }
+            using Certificate cert = builder
+                .SetIssuer(certBase)
+                .SetRSAPublicKey(certBase.GetRSAPublicKey())
+                .CreateForRSA(generator);
+
+            Assert.That(X509Utils.VerifySelfSigned(cert), Is.False);
+            using var validator = TemporaryCertificateManager.Create(telemetry);
+            if (trusted)
+            {
+                await validator.TrustedStore.AddAsync(cert).ConfigureAwait(false);
+            }
+            CertificateManager certValidator = validator.Update();
+            var approver = new CertValidationApprover([StatusCodes.BadCertificateUntrusted]);
+            certValidator.AcceptError = approver.AcceptError;
+            ServiceResult innerResult;
+            CertificateValidationResult result = await certValidator
+                .ValidateAsync(cert, ct: CancellationToken.None)
+                .ConfigureAwait(false);
+            Assert.That(result.IsValid, Is.False);
+            if (ca)
+            {
+                // The CA version fails for the key usage flags
+                Assert.That(
+                    result.StatusCode,
+                    Is.EqualTo(StatusCodes.BadCertificateUseNotAllowed));
+                Assert.That(result.Errors[0].InnerResult, Is.Not.Null);
+                innerResult = result.Errors[0].InnerResult.InnerResult;
+            }
+            else
+            {
+                innerResult = result.Errors[0].InnerResult;
+            }
+            if (!trusted)
+            {
+                // for the untrusted case, the untrusted error is also reported.
+                Assert.That(innerResult, Is.Not.Null);
+                Assert.That(
+                    innerResult.StatusCode,
+                    Is.EqualTo(StatusCodes.BadCertificateUntrusted),
+                    innerResult.LocalizedText.Text);
+                innerResult = innerResult.InnerResult;
+            }
+            // However, all cert versions got an invalid signature, must fail...
+            Assert.That(innerResult, Is.Not.Null);
+            Assert.That(
+                innerResult.StatusCode,
+                Is.EqualTo(StatusCodes.BadCertificateInvalid),
+                innerResult.LocalizedText.Text);
+            Assert.That(approver.Count, Is.Zero);
+        }
+
+        /// <summary>
+        /// Test if a key below min length is detected.
+        /// </summary>
+        [Theory]
+        [NonParallelizable]
+        public async Task TestMinimumKeyRejectedAsync(bool trusted)
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            using Certificate cert = s_factory
+                .CreateCertificate("CN=1k Key")
+                .SetRSAKeySize(1024)
+                .CreateForRSA();
+            using var validator = TemporaryCertificateManager.Create(telemetry);
+            if (trusted)
+            {
+                await validator.TrustedStore.AddAsync(cert).ConfigureAwait(false);
+            }
+            CertificateManager certValidator = validator.Update();
+            CertificateValidationResult result = await certValidator
+                .ValidateAsync(cert, ct: CancellationToken.None)
+                .ConfigureAwait(false);
+            Assert.That(result.IsValid, Is.False);
+            Assert.That(
+                result.StatusCode,
+                Is.EqualTo(StatusCodes.BadCertificatePolicyCheckFailed));
+            Assert.That(result.Errors[0].InnerResult, Is.Not.Null);
+            ServiceResult innerResult = result.Errors[0].InnerResult.InnerResult;
+            if (!trusted)
+            {
+                Assert.That(innerResult, Is.Not.Null);
+                Assert.That(
+                    innerResult.StatusCode,
+                    Is.EqualTo(StatusCodes.BadCertificateUntrusted),
+                    innerResult.LocalizedText.Text);
+            }
+            else
+            {
+                Assert.That(innerResult, Is.Null);
+            }
+
+            // approve suppression of smaller key
+            var approver = new CertValidationApprover(
+                [StatusCodes.BadCertificatePolicyCheckFailed]);
+            certValidator.AcceptError = approver.AcceptError;
+            if (trusted)
+            {
+                CertificateValidationResult retryResult = await certValidator
+                    .ValidateAsync(cert, ct: CancellationToken.None)
+                    .ConfigureAwait(false);
+                Assert.That(retryResult.IsValid, Is.True, retryResult.StatusCode.ToString());
+            }
+            else
+            {
+                CertificateValidationResult retryResult = await certValidator
+                    .ValidateAsync(cert, ct: CancellationToken.None)
+                    .ConfigureAwait(false);
+                Assert.That(retryResult.IsValid, Is.False);
+                Assert.That(
+                    retryResult.StatusCode,
+                    Is.EqualTo(StatusCodes.BadCertificateUntrusted));
+            }
+            certValidator.AcceptError = null;
+        }
+
+        /// <summary>
+        /// Test that Hash sizes lower than public key sizes of certificates are not valid
+        /// </summary>
+        [Theory]
+        public async Task ECDsaHashSizeLowerThanPublicKeySizeAsync(ECCurveHashPair ecCurveHashPair)
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            if (ecCurveHashPair.HashSize > 0)
+            {
+                // default signing cert with custom key
+                using Certificate cert = CertificateBuilder
+                    .Create("CN=LowHash")
+                    .SetHashAlgorithm(HashAlgorithmName.SHA512)
+                    .SetECCurve(ecCurveHashPair.Curve)
+                    .CreateForECDsa();
+
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                await validator.TrustedStore.AddAsync(cert).ConfigureAwait(false);
+                CertificateManager certValidator = validator.Update();
+
+                CertificateValidationResult result = await certValidator
+                    .ValidateAsync(cert, ct: CancellationToken.None)
+                    .ConfigureAwait(false);
+                Assert.That(result.IsValid, Is.False);
+                Assert.That(
+                    result.StatusCode,
+                    Is.EqualTo(StatusCodes.BadCertificatePolicyCheckFailed));
+                Assert.That(result.Errors[0].InnerResult, Is.Not.Null);
+                ServiceResult innerResult = result.Errors[0].InnerResult.InnerResult;
+                Assert.That(innerResult, Is.Null);
+            }
+        }
+
+        /// <summary>
+        /// Test auto accept.
+        /// </summary>
+        [Theory]
+        [NonParallelizable]
+        public async Task TestAutoAcceptAsync(bool trusted, bool autoAccept)
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            using Certificate cert = s_factory.CreateApplicationCertificate(
+                null,
+                null,
+                "CN=Test").CreateForRSA();
+            using var validator = TemporaryCertificateManager.Create(telemetry);
+            if (trusted)
+            {
+                await validator.TrustedStore.AddAsync(cert).ConfigureAwait(false);
+            }
+            CertificateManager certValidator = validator.Update();
+            certValidator.AutoAcceptUntrustedCertificates = autoAccept;
+            if (autoAccept || trusted)
+            {
+                CertificateValidationResult result = await certValidator
+                    .ValidateAsync(cert, ct: CancellationToken.None)
+                    .ConfigureAwait(false);
+                Assert.That(result.IsValid, Is.True, result.StatusCode.ToString());
+            }
+            else
+            {
+                CertificateValidationResult result = await certValidator
+                    .ValidateAsync(cert, ct: CancellationToken.None)
+                    .ConfigureAwait(false);
+                Assert.That(result.IsValid, Is.False);
+                Assert.That(
+                    result.StatusCode,
+                    Is.EqualTo(StatusCodes.BadCertificateUntrusted));
+                Assert.That(result.Errors[0].InnerResult, Is.Not.Null);
+                ServiceResult innerResult = result.Errors[0].InnerResult.InnerResult;
+                Assert.That(innerResult, Is.Null);
+            }
+
+            // override the autoaccept flag, always approve
+            certValidator = validator.Update();
+            certValidator.AutoAcceptUntrustedCertificates = autoAccept;
+            CertValidationApprover approver = new([StatusCodes.BadCertificateUntrusted]);
+            certValidator.AcceptError = approver.AcceptError;
+            {
+                CertificateValidationResult result = await certValidator
+                    .ValidateAsync(cert, ct: CancellationToken.None)
+                    .ConfigureAwait(false);
+                Assert.That(result.IsValid, Is.True, result.StatusCode.ToString());
+            }
+            certValidator.AcceptError = null;
+
+            // override the autoaccept flag, but do not approve
+            certValidator = validator.Update();
+            certValidator.AutoAcceptUntrustedCertificates = autoAccept;
+            approver = new CertValidationApprover([]);
+            certValidator.AcceptError = approver.AcceptError;
+            if (trusted)
+            {
+                CertificateValidationResult result = await certValidator
+                    .ValidateAsync(cert, ct: CancellationToken.None)
+                    .ConfigureAwait(false);
+                Assert.That(result.IsValid, Is.True, result.StatusCode.ToString());
+            }
+            else
+            {
+                CertificateValidationResult result = await certValidator
+                    .ValidateAsync(cert, ct: CancellationToken.None)
+                    .ConfigureAwait(false);
+                Assert.That(result.IsValid, Is.False);
+                Assert.That(
+                    result.StatusCode,
+                    Is.EqualTo(StatusCodes.BadCertificateUntrusted));
+            }
+            certValidator.AcceptError = null;
+        }
+
+        /// <summary>
+        /// Verify the application configuration owns the supplied
+        /// certificate manager.
+        /// </summary>
+        [Test]
+        public void CertificateManagerAssignableFromAppConfig()
+        {
+            Assert.DoesNotThrow(() =>
+            {
+                ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+                using var manager = new CertificateManager(telemetry);
+                var appConfig = new ApplicationConfiguration(telemetry)
+                {
+                    CertificateManager = manager
+                };
+                Assert.That(appConfig, Is.Not.Null);
+                Assert.That(appConfig.CertificateManager, Is.SameAs(manager));
+            });
+        }
+
+        /// <summary>
+        /// Certificate chain with revoced certificate,
+        /// with CA CRLs missing and revocation status enforced.
+        /// </summary>
+        [Theory]
+        public async Task VerifySomeMissingCRLRevokedTrustedStoreAppChainsAsync(
+            bool rejectUnknownRevocationStatus)
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            // verify cert is revoked with CRL in trusted store
+            for (int v = 0; v < kCaChainCount; v++)
+            {
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                // Discussion:
+                // one CA (root or intermediate) is added to the trust store, all others to the issuer store
+                // for the one in the trust store, a CRL is added revoking the certificates signed by the CA
+                // All other CRLs are missing.
+
+                for (int i = 0; i < kCaChainCount; i++)
+                {
+                    if (i == v)
+                    {
+                        await validator.TrustedStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                        await validator.TrustedStore.AddCRLAsync(m_crlRevokedChain[i])
+                            .ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await validator.IssuerStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                    }
+                }
+                CertificateManager certValidator = validator.Update();
+
+                // ****** setting under test ******
+                certValidator.RejectUnknownRevocationStatus = rejectUnknownRevocationStatus;
+
+                foreach (ApplicationTestData app in m_goodApplicationTestSet)
+                {
+                    using var publicKey = Certificate.FromRawData(app.Certificate);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(publicKey, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(
+                        result.StatusCode,
+                        Is.EqualTo(v == kCaChainCount - 1
+                            ? StatusCodes.BadCertificateRevoked
+                            : StatusCodes.BadCertificateIssuerRevoked));
+                }
+            }
+        }
+
+        /// <summary>
+        /// certificate chain with all CRLs missing and revocation enforced.
+        /// </summary>
+        [Test]
+        public async Task VerifyAllMissingCRLRevokedTrustedStoreAppChainsAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            // verify cert is revoked with CRL in trusted store
+
+            for (int v = 0; v < kCaChainCount; v++)
+            {
+                // Discussion:
+                // no crl is placed into any store, but revocation list is required.
+                // the validator (correctly) complains about a missing CRL
+                // it does not detect the missing CA CRLs
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                for (int i = 0; i < kCaChainCount; i++)
+                {
+                    if (i == v)
+                    {
+                        await validator.TrustedStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await validator.IssuerStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                    }
+                }
+                CertificateManager certValidator = validator.Update();
+
+                // ****** setting under test ******
+                certValidator.RejectUnknownRevocationStatus = true;
+
+                foreach (ApplicationTestData app in m_goodApplicationTestSet)
+                {
+                    using var publicKey = Certificate.FromRawData(app.Certificate);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(publicKey, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(
+                        StatusCodes.BadCertificateRevocationUnknown,
+                        Is.EqualTo(result.StatusCode));
+
+                    // ensure the missing issuer certificate is detected, also.
+                    int isPresentCertificateIssuerRevocationUnknown = 0;
+                    ServiceResult inner = result.Errors[0].InnerResult;
+                    while (inner != null)
+                    {
+                        if (inner.StatusCode == StatusCodes.BadCertificateIssuerRevocationUnknown)
+                        {
+                            isPresentCertificateIssuerRevocationUnknown++;
+                        }
+                        inner = inner.InnerResult;
+                    }
+                    Assert.That(isPresentCertificateIssuerRevocationUnknown, Is.EqualTo(kCaChainCount - 1));
+                }
+            }
+        }
+
+        /// <summary>
+        /// certificate chains with missing CRL for trust store and revocation list enforced.
+        ///  No revoked certificate.
+        /// </summary>
+        [Theory]
+        public async Task VerifySomeMissingCRLTrustedStoreAppChainsAsync(
+            bool rejectUnknownRevocationStatus)
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            //Discussion:
+            // v == kCaChainCount - 1: empty CRL is placed into the issuer stores, no CRL in trust store:
+            // -> validator complains about missing revocation list for CA which signed the application certificate (ok)
+
+            // v != kCaChainCount - 1: in the trust store the CRL for one of the issuer certificates is missing.
+            // all other CRLs are present and empty
+            // -> validator complains correctly about missing issuer revocation list
+
+            for (int v = 0; v < kCaChainCount; v++)
+            {
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                for (int i = 0; i < kCaChainCount; i++)
+                {
+                    if (i == v)
+                    {
+                        await validator.TrustedStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await validator.IssuerStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                        await validator.IssuerStore.AddCRLAsync(m_crlChain[i])
+                            .ConfigureAwait(false);
+                    }
+                }
+                CertificateManager certValidator = validator.Update();
+
+                // ****** setting under test ******
+                certValidator.RejectUnknownRevocationStatus = rejectUnknownRevocationStatus;
+
+                foreach (ApplicationTestData app in m_goodApplicationTestSet)
+                {
+                    using var publicKey = Certificate.FromRawData(app.Certificate);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(publicKey, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    if (rejectUnknownRevocationStatus)
+                    {
+                        Assert.That(result.IsValid, Is.False);
+                        Assert.That(
+                            result.StatusCode,
+                            Is.EqualTo(v == kCaChainCount - 1
+                                ? StatusCodes.BadCertificateRevocationUnknown
+                                : StatusCodes.BadCertificateIssuerRevocationUnknown));
+                    }
+                    else
+                    {
+                        Assert.That(result.IsValid, Is.True, result.StatusCode.ToString());
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify app certs with incomplete chain throw.
+        /// </summary>
+        [Theory]
+        public async Task VerifyMissingCRLANDAppChainsIncompleteChainAsync(
+            bool rejectUnknownRevocationStatus)
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            // verify cert with issuer chain
+            for (int v = 0; v < kCaChainCount; v++)
+            {
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                for (int i = 0; i < kCaChainCount; i++)
+                {
+                    if (i != v)
+                    {
+                        await validator.TrustedStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                    }
+                }
+                CertificateManager certValidator = validator.Update();
+
+                // ****** setting under test ******
+                certValidator.RejectUnknownRevocationStatus = rejectUnknownRevocationStatus;
+
+                foreach (ApplicationTestData app in m_goodApplicationTestSet)
+                {
+                    using var publicKey = Certificate.FromRawData(app.Certificate);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(publicKey, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(
+                        result.StatusCode,
+                        Is.EqualTo(StatusCodes.BadCertificateChainIncomplete));
+                    // no need to check for inner exceptions, since an incomplete chain error cannot be suppressed.
+                }
+            }
+        }
+
+        /// <summary>
+        /// Comparison test for the next test:
+        /// verify not yet valid app certs in a chain with
+        /// CRL.
+        /// </summary>
+        [Theory]
+        public async Task VerifyExistingCRLAppChainsExpiredCertificatesAsync(
+            bool rejectUnknownRevocationStatus)
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            for (int v = 0; v < kCaChainCount; v++)
+            {
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                for (int i = 0; i < kCaChainCount; i++)
+                {
+                    // CA1508: kCaChainCount == 1 is currently dead (constant is 3) but kept as a
+                    // safety net so the test still exercises the trusted branch if the constant is
+                    // ever reduced to 1.
+#pragma warning disable CA1508
+                    if (i != v || kCaChainCount == 1)
+#pragma warning restore CA1508
+                    {
+                        using var publicKeyAdd = Certificate.FromRawData(m_caChain[i].RawData);
+                        await validator
+                            .TrustedStore.AddAsync(publicKeyAdd)
+                            .ConfigureAwait(false);
+                        await validator.TrustedStore.AddCRLAsync(m_crlChain[i])
+                            .ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        using var publicKeyAdd = Certificate.FromRawData(m_caChain[i].RawData);
+                        await validator
+                            .IssuerStore.AddAsync(publicKeyAdd)
+                            .ConfigureAwait(false);
+                        await validator.IssuerStore.AddCRLAsync(m_crlChain[i])
+                            .ConfigureAwait(false);
+                    }
+                }
+                CertificateManager certValidator = validator.Update();
+
+                // ****** setting under test ******
+                certValidator.RejectUnknownRevocationStatus = rejectUnknownRevocationStatus;
+
+                foreach (ApplicationTestData app in m_notYetValidCertsApplicationTestSet)
+                {
+                    using var publicKey = Certificate.FromRawData(app.Certificate);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(publicKey, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(
+                        result.StatusCode,
+                        Is.EqualTo(StatusCodes.BadCertificateTimeInvalid));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Not yet valid application certificates in a certificate chain
+        /// CRLs are missing and Revocation status check is enforced.
+        /// Should report BadCertificateTimeInvalid and (inner result)
+        /// BadCertificateRevocationUnknown or BadCertificateIssuerRevocationUnknown.
+        /// Currently misbehaves: chain
+        /// </summary>
+        [Theory]
+        public async Task VerifyMissingCRLAppChainsExpiredCertificatesAsync(
+            bool rejectUnknownRevocationStatus)
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            for (int v = 0; v < kCaChainCount; v++)
+            {
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                for (int i = 0; i < kCaChainCount; i++)
+                {
+                    // CA1508: kCaChainCount == 1 is currently dead (constant is 3) but kept as a
+                    // safety net so the test still exercises the trusted branch if the constant is
+                    // ever reduced to 1.
+#pragma warning disable CA1508
+                    if (i != v || kCaChainCount == 1)
+#pragma warning restore CA1508
+                    {
+                        await validator.TrustedStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await validator.IssuerStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                    }
+                }
+                CertificateManager certValidator = validator.Update();
+
+                // ****** setting under test ******
+                certValidator.RejectUnknownRevocationStatus = rejectUnknownRevocationStatus;
+
+                foreach (ApplicationTestData app in m_notYetValidCertsApplicationTestSet)
+                {
+                    using var publicKey = Certificate.FromRawData(app.Certificate);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(publicKey, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(
+                        result.StatusCode,
+                        Is.EqualTo(StatusCodes.BadCertificateTimeInvalid));
+
+                    // BadCertificateTimeInvalid can be suppressed. Ensure the other issues are caught, as well:
+                    int isPresentCertificateIssuerRevocationUnknown = 0;
+                    int isPresentCertificateRevocationUnknown = 0;
+                    ServiceResult inner = result.Errors[0].InnerResult;
+                    while (inner != null)
+                    {
+                        if (inner.StatusCode == StatusCodes.BadCertificateIssuerRevocationUnknown)
+                        {
+                            isPresentCertificateIssuerRevocationUnknown++;
+                        }
+                        else if (inner.StatusCode == StatusCodes.BadCertificateRevocationUnknown)
+                        {
+                            isPresentCertificateRevocationUnknown++;
+                        }
+                        inner = inner.InnerResult;
+                    }
+                    if (rejectUnknownRevocationStatus)
+                    {
+                        Assert.That(
+                            isPresentCertificateIssuerRevocationUnknown,
+                            Is.GreaterThanOrEqualTo(kCaChainCount - 1));
+                        Assert.That(isPresentCertificateRevocationUnknown, Is.EqualTo(1));
+                    }
+                    else
+                    {
+                        Assert.That(isPresentCertificateIssuerRevocationUnknown, Is.Zero);
+                        Assert.That(isPresentCertificateRevocationUnknown, Is.Zero);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// No certificate is trusted, and one CRL is missing
+        /// </summary>
+        [Theory]
+        public async Task VerifyMissingCRLNoTrustAsync(bool rejectUnknownRevocationStatus)
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            // verify cert with issuer chain
+            for (int v = 0; v < kCaChainCount; v++)
+            {
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                for (int i = 0; i < kCaChainCount; i++)
+                {
+                    await validator.IssuerStore.AddAsync(m_caChain[i]).ConfigureAwait(false);
+                    if (i != v)
+                    {
+                        await validator.IssuerStore.AddCRLAsync(m_crlChain[i])
+                            .ConfigureAwait(false);
+                    }
+                }
+                CertificateManager certValidator = validator.Update();
+
+                // ****** setting under test ******
+                certValidator.RejectUnknownRevocationStatus = rejectUnknownRevocationStatus;
+
+                foreach (ApplicationTestData app in m_goodApplicationTestSet)
+                {
+                    using var publicKey = Certificate.FromRawData(app.Certificate);
+                    CertificateValidationResult result = await certValidator
+                        .ValidateAsync(publicKey, ct: CancellationToken.None)
+                        .ConfigureAwait(false);
+                    Assert.That(result.IsValid, Is.False);
+                    Assert.That(
+                        result.StatusCode,
+                        Is.EqualTo(StatusCodes.BadCertificateUntrusted));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verifies the <see cref="ICertificateValidatorEx.AcceptError"/>
+        /// callback is invoked in a fault-tolerant manner: an exception
+        /// thrown from the user-supplied callback is caught, logged, and
+        /// treated as a rejection. The exception MUST NOT propagate out
+        /// of <see cref="ICertificateValidatorEx.ValidateAsync"/> — the
+        /// caller sees a normal validation failure with the underlying
+        /// suppressible status code, not the user's exception.
+        /// </summary>
+        [Test]
+        public Task AcceptErrorCallbackThrowingDoesNotPropagateAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            using var validator = TemporaryCertificateManager.Create(telemetry, true);
+            CertificateManager certValidator = validator.Update();
+
+            // Wire a callback that always throws a sentinel exception
+            // before returning a verdict.
+            var sentinel = new InvalidOperationException("AcceptError sentinel");
+            certValidator.AcceptError = (cert, err) => throw sentinel;
+
+            // Self-signed application certificate produces a suppressible
+            // BadCertificateUntrusted error; this is the path that runs
+            // through the AcceptError callback.
+            using Certificate selfSigned = s_factory
+                .CreateCertificate("CN=AcceptErrorThrow, O=OPC Foundation")
+                .CreateForRSA();
+            using var publicKey = Certificate.FromRawData(selfSigned.RawData);
+
+            CertificateValidationResult result = null;
+            Assert.DoesNotThrowAsync(async () => result = await certValidator
+                    .ValidateAsync(publicKey, ct: CancellationToken.None)
+                    .ConfigureAwait(false), "AcceptError callback exception must not propagate out of ValidateAsync.");
+
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.IsValid, Is.False,
+                "Throwing AcceptError must be treated as a rejection.");
+            Assert.That(result.StatusCode,
+                Is.EqualTo(StatusCodes.BadCertificateUntrusted),
+                "Caller sees the underlying validation error, not the callback exception.");
+
+            certValidator.AcceptError = null;
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Verify the issuer KeyUsage helper enforces the CA KeyUsage required
+        /// by OPC 10000-6 §6.2.4 Table 52 (keyCertSign and cRLSign) and treats
+        /// an absent / empty KeyUsage as non-compliant (issue #3944).
+        /// </summary>
+        [Test]
+        public void HasRequiredIssuerKeyUsageEnforcesCaKeyUsage()
+        {
+            // compliant: the default the builder emits for a CA
+            // (digitalSignature + keyCertSign + cRLSign).
+            using Certificate defaultCa = CreateRootCa(null, "default");
+            Assert.That(
+                CertificateValidationHelpers.HasRequiredIssuerKeyUsage(defaultCa),
+                Is.True);
+
+            // compliant: keyCertSign + cRLSign only.
+            using Certificate compliant = CreateRootCa(
+                X509KeyUsageFlags.KeyCertSign | X509KeyUsageFlags.CrlSign,
+                "compliant");
+            Assert.That(
+                CertificateValidationHelpers.HasRequiredIssuerKeyUsage(compliant),
+                Is.True);
+
+            // non-compliant: KeyUsage extension omitted entirely — the exact
+            // scenario reported in #3944 (the platform X509Chain does not flag
+            // this, so the explicit check must). This also covers the
+            // GetKeyUsage()==None code path without building a degenerate
+            // empty-KeyUsage extension (which macOS/AppleCrypto refuses to load).
+            using Certificate absentUsage = CreateCertificateWithoutKeyUsage();
+            Assert.That(
+                CertificateValidationHelpers.HasRequiredIssuerKeyUsage(absentUsage),
+                Is.False);
+
+            // non-compliant: keyCertSign only (cannot sign CRLs).
+            using Certificate certSignOnly = CreateRootCa(
+                X509KeyUsageFlags.KeyCertSign,
+                "certsign");
+            Assert.That(
+                CertificateValidationHelpers.HasRequiredIssuerKeyUsage(certSignOnly),
+                Is.False);
+
+            // non-compliant: cRLSign only (cannot sign certificates).
+            using Certificate crlSignOnly = CreateRootCa(X509KeyUsageFlags.CrlSign, "crlsign");
+            Assert.That(
+                CertificateValidationHelpers.HasRequiredIssuerKeyUsage(crlSignOnly),
+                Is.False);
+
+            // non-compliant: digitalSignature only (as reported in #3944).
+            using Certificate digitalSignatureOnly = CreateRootCa(
+                X509KeyUsageFlags.DigitalSignature,
+                "digsig");
+            Assert.That(
+                CertificateValidationHelpers.HasRequiredIssuerKeyUsage(digitalSignatureOnly),
+                Is.False);
+        }
+
+        /// <summary>
+        /// Verify that a chain whose CA does not assert the required KeyUsage
+        /// (keyCertSign, cRLSign) is rejected with
+        /// Bad_CertificateIssuerUseNotAllowed even when the CA is trusted
+        /// (OPC 10000-4 §6.1.3 Table 100 "Certificate Usage").
+        /// </summary>
+        [Test]
+        public async Task RejectCaWithoutRequiredIssuerKeyUsageAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            (Certificate rootCa, X509CRL rootCrl, Certificate appCert) =
+                CreateIssuerKeyUsageChain(X509KeyUsageFlags.DigitalSignature, "reject");
+            using (rootCa)
+            using (appCert)
+            {
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                await validator.TrustedStore.AddAsync(rootCa).ConfigureAwait(false);
+                await validator.TrustedStore.AddCRLAsync(rootCrl).ConfigureAwait(false);
+                CertificateManager certValidator = validator.Update();
+
+                using var certs = new CertificateCollection([appCert, rootCa]);
+                CertificateValidationResult result = await certValidator
+                    .ValidateAsync(certs, ct: CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                Assert.That(result.IsValid, Is.False);
+                Assert.That(
+                    ContainsStatusCode(
+                        result.Errors,
+                        StatusCodes.BadCertificateIssuerUseNotAllowed),
+                    Is.True,
+                    $"Expected an issuer-use error, got: {result.StatusCode}");
+            }
+        }
+
+        /// <summary>
+        /// Verify that the Bad_CertificateIssuerUseNotAllowed error raised for a
+        /// non-compliant CA KeyUsage can be suppressed via the AcceptError
+        /// callback (the error is suppressible per OPC 10000-4 §6.1.3
+        /// Table 100).
+        /// </summary>
+        [Test]
+        public async Task SuppressedCaWithoutRequiredIssuerKeyUsageIsAcceptedAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            (Certificate rootCa, X509CRL rootCrl, Certificate appCert) =
+                CreateIssuerKeyUsageChain(X509KeyUsageFlags.DigitalSignature, "suppress");
+            using (rootCa)
+            using (appCert)
+            {
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                await validator.TrustedStore.AddAsync(rootCa).ConfigureAwait(false);
+                await validator.TrustedStore.AddCRLAsync(rootCrl).ConfigureAwait(false);
+                CertificateManager certValidator = validator.Update();
+
+                // Approve every error the platform's certificate chain engine
+                // raises for this chain; the exact set of (suppressible) errors
+                // differs across OS chain implementations (Windows CryptoAPI vs
+                // OpenSSL). The test asserts that the issuer-use error is among
+                // them and that approving it lets validation succeed.
+                bool sawIssuerUseError = false;
+                certValidator.AcceptError = (cert, error) =>
+                {
+                    if (error.StatusCode.Code ==
+                        StatusCodes.BadCertificateIssuerUseNotAllowed.Code)
+                    {
+                        sawIssuerUseError = true;
+                    }
+                    return true;
+                };
+
+                using var certs = new CertificateCollection([appCert, rootCa]);
+                CertificateValidationResult result = await certValidator
+                    .ValidateAsync(certs, ct: CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                Assert.That(result.IsValid, Is.True, result.StatusCode.ToString());
+                Assert.That(
+                    sawIssuerUseError,
+                    Is.True,
+                    "Expected the issuer-use error to be raised and offered for suppression.");
+            }
+        }
+
+        /// <summary>
+        /// Verify that a chain whose CA asserts the required KeyUsage
+        /// (the default keyCertSign + cRLSign) passes validation.
+        /// </summary>
+        [Test]
+        public async Task AcceptCaWithRequiredIssuerKeyUsageAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+
+            (Certificate rootCa, X509CRL rootCrl, Certificate appCert) =
+                CreateIssuerKeyUsageChain(null, "accept");
+            using (rootCa)
+            using (appCert)
+            {
+                using var validator = TemporaryCertificateManager.Create(telemetry);
+                await validator.TrustedStore.AddAsync(rootCa).ConfigureAwait(false);
+                await validator.TrustedStore.AddCRLAsync(rootCrl).ConfigureAwait(false);
+                CertificateManager certValidator = validator.Update();
+
+                using var certs = new CertificateCollection([appCert, rootCa]);
+                CertificateValidationResult result = await certValidator
+                    .ValidateAsync(certs, ct: CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                Assert.That(result.IsValid, Is.True, result.StatusCode.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Creates a self-signed root CA. When <paramref name="keyUsage"/> is
+        /// null the builder emits its default CA KeyUsage
+        /// (digitalSignature + keyCertSign + cRLSign); otherwise the supplied
+        /// KeyUsage overrides the default so non-compliant CAs can be built.
+        /// </summary>
+        private static Certificate CreateRootCa(X509KeyUsageFlags? keyUsage, string slug)
+        {
+            // Relative validity window with a long lifetime so the generated CA
+            // is always valid regardless of when the tests run.
+            DateTime baseTime = DateTime.UtcNow.AddDays(-1);
+            ICertificateBuilder builder = s_factory
+                .CreateCertificate($"CN=Issuer KeyUsage {slug} Root, O=OPC Foundation")
+                .SetNotBefore(baseTime)
+                .SetLifeTime(120)
+                .SetCAConstraint();
+            if (keyUsage.HasValue)
+            {
+                builder = builder.AddExtension(
+                    new X509KeyUsageExtension(keyUsage.Value, true));
+            }
+            return builder.SetRSAKeySize(2048).CreateForRSA();
+        }
+
+        /// <summary>
+        /// Creates a self-signed CA certificate whose KeyUsage extension is
+        /// omitted entirely (only basicConstraints cA=true is set). Built via
+        /// <see cref="CertificateRequest"/> so that no default KeyUsage is
+        /// added, reproducing the absent-KeyUsage scenario from issue #3944.
+        /// </summary>
+        private static Certificate CreateCertificateWithoutKeyUsage()
+        {
+            using var rsa = RSA.Create(2048);
+            var request = new CertificateRequest(
+                "CN=Issuer KeyUsage absent Root, O=OPC Foundation",
+                rsa,
+                HashAlgorithmName.SHA256,
+                RSASignaturePadding.Pkcs1);
+            // CA basic constraints but deliberately no KeyUsage extension.
+            request.CertificateExtensions.Add(
+                new X509BasicConstraintsExtension(true, false, 0, true));
+            using X509Certificate2 certificate = request.CreateSelfSigned(
+                DateTimeOffset.UtcNow.AddDays(-1),
+                DateTimeOffset.UtcNow.AddYears(1));
+            return Certificate.FromRawData(certificate.RawData);
+        }
+
+        /// <summary>
+        /// Creates a root CA (optionally with a non-compliant KeyUsage), its
+        /// CRL and an application certificate issued by that CA.
+        /// </summary>
+        private static (Certificate rootCa, X509CRL rootCrl, Certificate appCert)
+            CreateIssuerKeyUsageChain(X509KeyUsageFlags? issuerKeyUsage, string slug)
+        {
+            Certificate rootCa = CreateRootCa(issuerKeyUsage, slug);
+            X509CRL rootCrl = s_issuer.RevokeCertificates(rootCa, null, null);
+            Certificate appCert = s_factory
+                .CreateApplicationCertificate(
+                    $"urn:opcfoundation.org:{slug}:app",
+                    $"Issuer KeyUsage {slug} App",
+                    $"CN=Issuer KeyUsage {slug} App, O=OPC Foundation",
+                    ["localhost"])
+                .SetIssuer(rootCa)
+                .CreateForRSA();
+            return (rootCa, rootCrl, appCert);
+        }
+
+        /// <summary>
+        /// Returns whether the supplied status code appears anywhere in the
+        /// (possibly nested) validation error results.
+        /// </summary>
+        private static bool ContainsStatusCode(
+            IReadOnlyList<ServiceResult> errors,
+            StatusCode expectedCode)
+        {
+            foreach (ServiceResult error in errors)
+            {
+                for (ServiceResult sr = error; sr != null; sr = sr.InnerResult)
+                {
+                    if (sr.StatusCode.Code == expectedCode.Code)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Polls the rejected storeuntil the certificate count satisfies <paramref name="predicate"/>
+        /// or the <paramref name="timeout"/> elapses, then returns the most recently read collection.
+        /// Used to reliably wait for the fire-and-forget background task fired by
+        /// <see cref="CertificateManager.MaxRejectedCertificates"/> setter.
+        /// </summary>
+        private static async Task<CertificateCollection> WaitForRejectedStoreCountAsync(
+            TemporaryCertificateManager validator,
+            Func<int, bool> predicate,
+            TimeSpan timeout)
+        {
+            var sw = Stopwatch.StartNew();
+            CertificateCollection certificates = null;
+            do
+            {
+                certificates?.Dispose();
+                certificates = await validator.RejectedStore.EnumerateAsync().ConfigureAwait(false);
+                if (predicate(certificates.Count))
+                {
+                    break;
+                }
+
+                await Task.Delay(200).ConfigureAwait(false);
+            }
+            while (sw.Elapsed < timeout);
+            return certificates;
+        }
+
+        private const int kCaChainCount = 3;
+        private const int kGoodApplicationsTestCount = 3;
+        private IList<ApplicationTestData> m_goodApplicationTestSet;
+        private IList<ApplicationTestData> m_notYetValidCertsApplicationTestSet;
+        private Certificate[] m_caChain;
+        private Certificate[] m_caDupeChain;
+        private X509CRL[] m_crlChain;
+        private X509CRL[] m_crlDupeChain;
+        private X509CRL[] m_crlRevokedChain;
+        private CertificateCollection m_appCerts;
+        private CertificateCollection m_appSelfSignedCerts;
+        private CertificateCollection m_notYetValidAppCerts;
+    }
+
+    /// <summary>
+    /// Helper to approve suppressable errors in test cases.
+    /// To catch cases where unsuppressable errors should not
+    /// call for approvals.
+    /// </summary>
+    internal sealed class CertValidationApprover
+    {
+        public StatusCode[] ApprovedCodes { get; }
+        public int Count { get; private set; }
+        public int AcceptedCount { get; private set; }
+
+        public CertValidationApprover(StatusCode[] approvedCodes)
+        {
+            ApprovedCodes = approvedCodes;
+            AcceptedCount = Count = 0;
+        }
+
+        /// <summary>
+        /// Per-error callback compatible with
+        /// <see cref="ICertificateValidatorEx.AcceptError"/> and
+        /// <see cref="Ua.Security.Certificates.CertificateValidationOptions.AcceptError"/>.
+        /// Increments <see cref="Count"/> for every invocation and
+        /// <see cref="AcceptedCount"/> for every error matching
+        /// <see cref="ApprovedCodes"/>.
+        /// </summary>
+        public bool AcceptError(Certificate certificate, ServiceResult error)
+        {
+            Count++;
+            if (ApprovedCodes.Contains(error.StatusCode))
+            {
+                AcceptedCount++;
+                return true;
+            }
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Observer used by <see cref="CertificateValidatorTest.TestEventHandler"/>
+    /// to verify that
+    /// <see cref="ICertificateLifecycle.CertificateChanges"/> can be
+    /// subscribed to and disposed without error.
+    /// </summary>
+    internal sealed class NoOpCertificateChangeObserver
+        : IObserver<CertificateChangeEvent>
+    {
+        public void OnNext(CertificateChangeEvent value)
+        {
+        }
+
+        public void OnError(Exception error)
+        {
+        }
+
+        public void OnCompleted()
+        {
+        }
+    }
+}

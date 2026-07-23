@@ -1,0 +1,2395 @@
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
+using System;
+using System.Globalization;
+using Microsoft.Extensions.Logging;
+using Opc.Ua.Security.Certificates;
+
+namespace Opc.Ua.Server
+{
+    /// <summary>
+    /// An interface to report audit events in the server.
+    /// </summary>
+    public interface IAuditEventServer
+    {
+        /// <summary>
+        /// If auditing is enabled.
+        /// </summary>
+        bool Auditing { get; }
+
+        /// <summary>
+        /// The default system context for the audit events.
+        /// </summary>
+        ISystemContext DefaultAuditContext { get; }
+
+        /// <summary>
+        /// Called by any component to report an audit event.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <param name="e">The event.</param>
+        void ReportAuditEvent(ISystemContext context, AuditEventState e);
+    }
+
+    /// <summary>
+    /// The implementation of audit events.
+    /// </summary>
+    public static class AuditEvents
+    {
+        /// <summary>
+        /// Placeholder used in audit event <c>InputArguments</c> to indicate
+        /// a private key byte string has been redacted before the event was
+        /// raised. Used by <c>UpdateCertificate</c> per OPC 10000-12 §7.10.3
+        /// to avoid leaking private-key material into audit payloads.
+        /// </summary>
+        public static readonly ByteString RedactedPrivateKey = ByteString.Empty;
+
+        /// <summary>
+        /// Report Audit event
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="operationContext">Client operation info</param>
+        /// <param name="methodName">Audit method name</param>
+        /// <param name="serviceResultException">The service exception that includes also a status code</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditEvent(
+            this IAuditEventServer? server,
+            OperationContext operationContext,
+            string methodName,
+            ServiceResultException serviceResultException,
+            ILogger logger)
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                ISystemContext systemContext = server.DefaultAuditContext;
+
+                var e = new AuditEventState(null);
+
+                var message = new TranslationInfo(
+                    "AuditEvent",
+                    "en-US",
+                    $"Method {methodName} failed. Result: {serviceResultException.Message}.");
+
+                e.Initialize(
+                    systemContext,
+                    null,
+                    EventSeverity.Min,
+                    new LocalizedText(message),
+                    StatusCode.IsGood(serviceResultException.StatusCode),
+                    DateTime.UtcNow
+                ); // initializes Status, ActionTimeStamp, ServerId, ClientAuditEntryId, ClientUserId
+
+                e.SetChildValue(systemContext, BrowseNames.SourceNode, ObjectIds.Server, false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.SourceName,
+                    $"Attribute/{methodName}",
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.LocalTime,
+                    TimeZoneDataType.Local,
+                    false);
+
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.ClientUserId,
+                    operationContext?.UserIdentity?.DisplayName!,
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.ClientAuditEntryId,
+                    operationContext?.AuditEntryId!,
+                    false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingAuditEventEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Reports an AuditWriteUpdate event.
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="systemContext">The current system context.</param>
+        /// <param name="writeValue">The value to write.</param>
+        /// <param name="oldValue">The old value of the node.</param>
+        /// <param name="statusCode">The resulted status code.</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditWriteUpdateEvent(
+            this IAuditEventServer? server,
+            ISystemContext systemContext,
+            WriteValue writeValue,
+            Variant oldValue,
+            StatusCode statusCode,
+            ILogger logger)
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            if (systemContext is not ISessionSystemContext session ||
+                session.UserIdentity == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var e = new AuditWriteUpdateEventState(null);
+
+                var message = new TranslationInfo(
+                    "AuditWriteUpdateEvent",
+                    "en-US",
+                    "AuditWriteUpdateEvent.");
+
+                e.Initialize(
+                    systemContext,
+                    null,
+                    EventSeverity.Min,
+                    new LocalizedText(message),
+                    StatusCode.IsGood(statusCode),
+                    DateTime.UtcNow
+                ); // initializes Status, ActionTimeStamp, ServerId, ClientAuditEntryId, ClientUserId
+
+                e.SetChildValue(systemContext, BrowseNames.SourceNode, writeValue.NodeId, false);
+                e.SetChildValue(systemContext, BrowseNames.SourceName, "Attribute/Write", false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.LocalTime,
+                    TimeZoneDataType.Local,
+                    false);
+
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.ClientUserId,
+                    session.UserIdentity.DisplayName,
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.ClientAuditEntryId,
+                    systemContext.AuditEntryId!,
+                    false);
+
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.AttributeId,
+                    writeValue.AttributeId,
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.IndexRange,
+                    writeValue.IndexRange!,
+                    false);
+
+                Variant newValue;
+                if (!writeValue.ParsedIndexRange.IsNull)
+                {
+                    newValue = oldValue;
+                    writeValue.ParsedIndexRange.UpdateRange(
+                        ref newValue,
+                        writeValue.Value.WrappedValue);
+                }
+                else
+                {
+                    newValue = writeValue.Value.WrappedValue;
+                }
+
+                e.SetChildValue(systemContext, BrowseNames.NewValue, newValue, false);
+                e.SetChildValue(systemContext, BrowseNames.OldValue, oldValue, false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingAuditWriteUpdateEventEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Reports an AuditHistoryValueUpdate event.
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="systemContext">The current system context.</param>
+        /// <param name="updateDataDetails">Update data details</param>
+        /// <param name="oldValues">The old values</param>
+        /// <param name="statusCode">The resulting status code</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditHistoryValueUpdateEvent(
+            this IAuditEventServer? server,
+            ISystemContext systemContext,
+            UpdateDataDetails updateDataDetails,
+            DataValue[] oldValues,
+            StatusCode statusCode,
+            ILogger logger)
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                var e = new AuditHistoryValueUpdateEventState(null);
+
+                InitializeAuditHistoryUpdateEvent(
+                    e,
+                    systemContext,
+                    "AuditHistoryValueUpdateEvent",
+                    "Attribute/HistoryValueUpdate",
+                    updateDataDetails,
+                    statusCode);
+
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.UpdatedNode,
+                    updateDataDetails.NodeId,
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.PerformInsertReplace,
+                    updateDataDetails.PerformInsertReplace);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.NewValues,
+                    updateDataDetails.UpdateValues,
+                    false);
+                e.SetChildValue(systemContext, BrowseNames.OldValues, oldValues.ToArrayOf(), false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingAuditHistoryValueUpdateEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Reports an AuditHistoryValueUpdate event.
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="systemContext">The current system context.</param>
+        /// <param name="updateStructureDataDetails">Update structure data details</param>
+        /// <param name="oldValues">The old values</param>
+        /// <param name="statusCode">The resulting status code</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditHistoryAnnotationUpdateEvent(
+            this IAuditEventServer? server,
+            ISystemContext systemContext,
+            UpdateStructureDataDetails updateStructureDataDetails,
+            ArrayOf<DataValue> oldValues,
+            StatusCode statusCode,
+            ILogger logger)
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                var e = new AuditHistoryAnnotationUpdateEventState(null);
+
+                InitializeAuditHistoryUpdateEvent(
+                    e,
+                    systemContext,
+                    "AuditHistoryAnnotationUpdateEvent",
+                    "Attribute/HistoryAnnotationUpdate",
+                    updateStructureDataDetails,
+                    statusCode);
+
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.PerformInsertReplace,
+                    updateStructureDataDetails.PerformInsertReplace);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.NewValues,
+                    updateStructureDataDetails.UpdateValues,
+                    false);
+                e.SetChildValue(systemContext, BrowseNames.OldValues, oldValues, false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingAuditHistoryValueUpdateEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Reports an AuditHistoryEventUpdate event.
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="systemContext">The current system context.</param>
+        /// <param name="updateEventDetails">Update event details</param>
+        /// <param name="oldValues">The old values</param>
+        /// <param name="statusCode">The resulting status code</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditHistoryEventUpdateEvent(
+            this IAuditEventServer? server,
+            ISystemContext systemContext,
+            UpdateEventDetails updateEventDetails,
+            ArrayOf<HistoryEventFieldList> oldValues,
+            StatusCode statusCode,
+            ILogger logger)
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                var e = new AuditHistoryEventUpdateEventState(null);
+
+                InitializeAuditHistoryUpdateEvent(
+                    e,
+                    systemContext,
+                    "AuditHistoryEventUpdateEvent",
+                    "Attribute/HistoryEventUpdate",
+                    updateEventDetails,
+                    statusCode);
+
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.UpdatedNode,
+                    updateEventDetails.NodeId,
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.PerformInsertReplace,
+                    updateEventDetails.PerformInsertReplace);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.Filter,
+                    updateEventDetails.Filter,
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.NewValues,
+                    updateEventDetails.EventData,
+                    false);
+                e.SetChildValue(systemContext, BrowseNames.OldValues, oldValues, false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingAuditHistoryEventUpdateEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Reports an AuditHistoryRawModifyDelete event.
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="systemContext">The current system context.</param>
+        /// <param name="deleteRawModifiedDetails">History raw modified details</param>
+        /// <param name="oldValues">The old values</param>
+        /// <param name="statusCode">The resulting status code</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditHistoryRawModifyDeleteEvent(
+            this IAuditEventServer? server,
+            ISystemContext systemContext,
+            DeleteRawModifiedDetails deleteRawModifiedDetails,
+            ArrayOf<DataValue> oldValues,
+            StatusCode statusCode,
+            ILogger logger)
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                var e = new AuditHistoryRawModifyDeleteEventState(null);
+
+                InitializeAuditHistoryUpdateEvent(
+                    e,
+                    systemContext,
+                    "AuditHistoryRawModifyDeleteEvent",
+                    "Attribute/HistoryRawModifyDelete",
+                    deleteRawModifiedDetails,
+                    statusCode);
+
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.UpdatedNode,
+                    deleteRawModifiedDetails.NodeId,
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.IsDeleteModified,
+                    deleteRawModifiedDetails.IsDeleteModified,
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.StartTime,
+                    deleteRawModifiedDetails.StartTime,
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.EndTime,
+                    deleteRawModifiedDetails.EndTime,
+                    false);
+                e.SetChildValue(systemContext, BrowseNames.OldValues, oldValues, false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingAuditHistoryRawModifyDeleteEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Reports an AuditHistoryAtTimeDelete event.
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="systemContext">The current system context.</param>
+        /// <param name="deleteAtTimeDetails">History delete at time details</param>
+        /// <param name="oldValues">The old values</param>
+        /// <param name="statusCode">The resulting status code</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditHistoryAtTimeDeleteEvent(
+            this IAuditEventServer? server,
+            ISystemContext systemContext,
+            DeleteAtTimeDetails deleteAtTimeDetails,
+            DataValue[] oldValues,
+            StatusCode statusCode,
+            ILogger logger)
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                var e = new AuditHistoryAtTimeDeleteEventState(null);
+
+                InitializeAuditHistoryUpdateEvent(
+                    e,
+                    systemContext,
+                    "AuditHistoryAtTimeDeleteEvent",
+                    "Attribute/HistoryAtTimeDelete",
+                    deleteAtTimeDetails,
+                    statusCode);
+
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.UpdatedNode,
+                    deleteAtTimeDetails.NodeId,
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.ReqTimes,
+                    deleteAtTimeDetails.ReqTimes,
+                    false);
+                e.SetChildValue(systemContext, BrowseNames.OldValues, Variant.From(oldValues), false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingAuditHistoryAtTimeDeleteEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Reports an AuditHistoryEventDelete event.
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="systemContext">The current system context.</param>
+        /// <param name="deleteEventDetails">History delete event details</param>
+        /// <param name="oldValues">The old values</param>
+        /// <param name="statusCode">The resulting status code</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditHistoryEventDeleteEvent(
+            this IAuditEventServer? server,
+            ISystemContext systemContext,
+            DeleteEventDetails deleteEventDetails,
+            DataValue[] oldValues,
+            StatusCode statusCode,
+            ILogger logger)
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                var e = new AuditHistoryEventDeleteEventState(null);
+
+                InitializeAuditHistoryUpdateEvent(
+                    e,
+                    systemContext,
+                    "AuditHistoryEventDeleteEvent",
+                    "Attribute/HistoryEventDelete",
+                    deleteEventDetails,
+                    statusCode);
+
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.UpdatedNode,
+                    deleteEventDetails.NodeId,
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.EventIds,
+                    Variant.From(deleteEventDetails.EventIds),
+                    false);
+                e.SetChildValue(systemContext, BrowseNames.OldValues, Variant.From(oldValues), false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingAuditHistoryEventDeleteEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Reports all audit events for client certificate ServiceResultException.
+        /// It goes recursively for all service results stored in the exception
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="clientCertificate">The client certificate.</param>
+        /// <param name="exception">The Exception that triggers a certificate audit event.</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditCertificateEvent(
+            this IAuditEventServer? server,
+            Certificate clientCertificate,
+            Exception? exception,
+            ILogger logger)
+        {
+            if (exception == null)
+            {
+                return;
+            }
+
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                ISystemContext systemContext = server.DefaultAuditContext;
+
+                while (exception != null)
+                {
+                    if (exception is ServiceResultException sre && sre.InnerResult != null)
+                    {
+                        // Each validation step has a unique error status and audit event type
+                        // that shall be reported if the check fails.
+                        server.ReportAuditCertificateEvent(logger, systemContext, clientCertificate, sre);
+                    }
+                    exception = exception.InnerException;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingReportAuditCertificateDataMismatch(ex);
+            }
+        }
+
+        /// <summary>
+        /// Report the audit certificate event for the specified ServiceResultException
+        /// </summary>
+        private static void ReportAuditCertificateEvent(
+            this IAuditEventServer server,
+            ILogger logger,
+            ISystemContext systemContext,
+            Certificate clientCertificate,
+            ServiceResultException sre)
+        {
+            try
+            {
+                if (StatusCode.IsBad(sre!.InnerResult!.Code))
+                {
+                    AuditCertificateEventState auditCertificateEventState;
+                    if (sre.StatusCode == StatusCodes.BadCertificateTimeInvalid ||
+                        sre.StatusCode == StatusCodes.BadCertificateIssuerTimeInvalid)
+                    {
+                        // create AuditCertificateExpiredEventType
+                        auditCertificateEventState = new AuditCertificateExpiredEventState(
+                            null);
+                    }
+                    else if (sre.StatusCode == StatusCodes.BadCertificateInvalid ||
+                        sre.StatusCode == StatusCodes.BadCertificateChainIncomplete ||
+                        sre.StatusCode == StatusCodes.BadCertificatePolicyCheckFailed)
+                    {
+                        // create AuditCertificateInvalidEventType
+                        auditCertificateEventState = new AuditCertificateInvalidEventState(
+                            null);
+                    }
+                    else if (sre.StatusCode == StatusCodes.BadCertificateUntrusted)
+                    {
+                        // create AuditCertificateUntrustedEventType
+                        auditCertificateEventState = new AuditCertificateUntrustedEventState(
+                            null);
+                    }
+                    else if (sre.StatusCode == StatusCodes.BadCertificateRevoked ||
+                        sre.StatusCode == StatusCodes.BadCertificateIssuerRevoked ||
+                        sre.StatusCode == StatusCodes.BadCertificateRevocationUnknown)
+                    {
+                        // create AuditCertificateRevokedEventType
+                        auditCertificateEventState = new AuditCertificateRevokedEventState(
+                            null);
+                    }
+                    else if (sre.StatusCode == StatusCodes.BadCertificateUseNotAllowed ||
+                        sre.StatusCode == StatusCodes.BadCertificateIssuerUseNotAllowed)
+                    {
+                        // create AuditCertificateMismatchEventType
+                        auditCertificateEventState = new AuditCertificateMismatchEventState(
+                            null);
+                    }
+                    else
+                    {
+                        return;
+                    }
+
+                    auditCertificateEventState.Initialize(
+                        systemContext,
+                        null,
+                        EventSeverity.Min,
+                        LocalizedText.From(sre.Message),
+                        false,
+                        DateTime.UtcNow
+                    ); // initializes Status, ActionTimeStamp, ServerId, ClientAuditEntryId, ClientUserId
+
+                    auditCertificateEventState.SetChildValue(
+                        systemContext,
+                        BrowseNames.SourceName,
+                        "Security/Certificate",
+                        false);
+
+                    // set AuditSecurityEventType fields
+                    auditCertificateEventState.SetChildValue(
+                        systemContext,
+                        BrowseNames.StatusCodeId,
+                        sre.InnerResult.StatusCode,
+                        false);
+
+                    // set AuditCertificateEventType fields
+                    auditCertificateEventState.SetChildValue(
+                        systemContext,
+                        BrowseNames.Certificate,
+                        clientCertificate?.RawData.ToByteString() ?? default,
+                        false);
+
+                    server.ReportAuditEvent(systemContext, auditCertificateEventState);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingReportAuditCertificateDataMismatch(ex);
+            }
+        }
+
+        /// <summary>
+        /// Reports the AuditCertificateDataMismatchEventType for Invalid Uri
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="clientCertificate">The client certificate</param>
+        /// <param name="invalidHostName">The string that represents the host name passed in as
+        /// part of the URL that is found to be invalid. If the host name was not invalid it can be null.</param>
+        /// <param name="invalidUri">The URI that was passed in and found to not match what is
+        /// contained in the certificate. If the URI was not invalid it can be null.</param>
+        /// <param name="statusCode">The status code.</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditCertificateDataMismatchEvent(
+            this IAuditEventServer? server,
+            Certificate clientCertificate,
+            string? invalidHostName,
+            string? invalidUri,
+            StatusCode statusCode,
+            ILogger logger)
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                ISystemContext systemContext = server.DefaultAuditContext;
+
+                // create AuditCertificateDataMismatchEventType
+                var e = new AuditCertificateDataMismatchEventState(null);
+
+                e.Initialize(
+                    systemContext,
+                    null,
+                    EventSeverity.Min,
+                    default,
+                    StatusCode.IsGood(statusCode),
+                    DateTime.UtcNow
+                ); // initializes Status, ActionTimeStamp, ServerId, ClientAuditEntryId, ClientUserId
+
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.SourceName,
+                    "Security/Certificate",
+                    false);
+                e.SetChildValue(systemContext, BrowseNames.SourceNode, ObjectIds.Server, false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.LocalTime,
+                    TimeZoneDataType.Local,
+                    false);
+
+                // set AuditSecurityEventType fields
+                e.SetChildValue(systemContext, BrowseNames.StatusCodeId, statusCode, false);
+                // set AuditCertificateEventType fields
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.Certificate,
+                    Variant.From(ByteString.From(clientCertificate?.RawData)),
+                    false);
+                // set AuditCertificateDataMismatchEventState fields
+                e.SetChildValue(systemContext, BrowseNames.InvalidUri, invalidUri!, false);
+                e.SetChildValue(systemContext, BrowseNames.InvalidHostname, invalidHostName!, false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingReportAuditCertificateDataMismatchEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Report the AuditCancelEventState
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="sessionId">Session id of the current session</param>
+        /// <param name="requestHandle">The handle of the canceled request</param>
+        /// <param name="statusCode">The resulted status code of cancel request.</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditCancelEvent(
+            this IAuditEventServer? server,
+            NodeId sessionId,
+            uint requestHandle,
+            StatusCode statusCode,
+            ILogger logger)
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                ISystemContext systemContext = server.DefaultAuditContext;
+
+                // create AuditCancelEventState
+                var e = new AuditCancelEventState(null);
+
+                e.Initialize(
+                    systemContext,
+                    null,
+                    EventSeverity.Min,
+                    LocalizedText.From($"Cancel requested for sessionId: {sessionId} with requestHandle: {requestHandle}"),
+                    StatusCode.IsGood(statusCode),
+                    DateTime.UtcNow
+                ); // initializes Status, ActionTimeStamp, ServerId, ClientAuditEntryId, ClientUserId
+
+                e.SetChildValue(systemContext, BrowseNames.SourceName, "Session/Cancel", false);
+                e.SetChildValue(systemContext, BrowseNames.SourceNode, ObjectIds.Server, false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.LocalTime,
+                    TimeZoneDataType.Local,
+                    false);
+
+                // set AuditSecurityEventType fields
+                e.SetChildValue(systemContext, BrowseNames.StatusCodeId, statusCode, false);
+                // set AuditSessionEventType fields
+                e.SetChildValue(systemContext, BrowseNames.SessionId, sessionId, false);
+                // set AuditCancelEventType fields
+                e.SetChildValue(systemContext, BrowseNames.RequestHandle, requestHandle, false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingReportAuditCancelEventEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Reports a RoleMappingRuleChangedAuditEvent when a method is called on a RoleType instance
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="systemContext">The current system context.</param>
+        /// <param name="roleStateObjectId">Role</param>
+        /// <param name="method">The method</param>
+        /// <param name="inputArguments">method arguments</param>
+        /// <param name="status">Status of call</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditRoleMappingRuleChangedEvent(
+            this IAuditEventServer? server,
+            ISystemContext systemContext,
+            NodeId roleStateObjectId,
+            MethodState method,
+            ArrayOf<Variant> inputArguments,
+            bool status,
+            ILogger logger)
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                // create RoleMappingRuleChangedAuditEventState
+                var e = new RoleMappingRuleChangedAuditEventState(null);
+
+                e.Initialize(
+                    systemContext,
+                    null,
+                    EventSeverity.Min,
+                    LocalizedText.From($"RoleMappingRuleChanged - {method?.BrowseName}"),
+                    status,
+                    DateTime.UtcNow
+                ); // initializes Status, ActionTimeStamp, ServerId, ClientAuditEntryId, ClientUserId
+
+                e.SetChildValue(systemContext, BrowseNames.SourceName, "Attribute/Call", false);
+                e.SetChildValue(systemContext, BrowseNames.SourceNode, roleStateObjectId, false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.LocalTime,
+                    TimeZoneDataType.Local,
+                    false);
+
+                // set AuditUpdateMethodEventType fields
+                e.SetChildValue(systemContext, BrowseNames.MethodId, method?.NodeId ?? default, false);
+                e.SetChildValue(systemContext, BrowseNames.InputArguments, inputArguments, false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingReportRoleMappingRuleChangedAuditEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Reports an audit create session event.
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="auditEntryId">The audit entry id.</param>
+        /// <param name="session">The session object that was created.</param>
+        /// <param name="revisedSessionTimeout">The revised session timeout</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        /// <param name="exception">The exception received during create session request</param>
+        public static void ReportAuditCreateSessionEvent(
+            this IAuditEventServer? server,
+            string auditEntryId,
+            ISession session,
+            double revisedSessionTimeout,
+            ILogger logger,
+            Exception? exception = null)
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                ISystemContext systemContext = server.DefaultAuditContext;
+
+                // raise an audit event.
+                var e = new AuditCreateSessionEventState(null);
+
+                TranslationInfo message = default;
+                if (exception == null)
+                {
+                    message = new TranslationInfo(
+                        "AuditCreateSessionEvent",
+                        "en-US",
+                        $"Session with ID:{session?.Id} was created.");
+                }
+                else
+                {
+                    message = new TranslationInfo(
+                        "AuditCreateSessionEvent",
+                        "en-US",
+                        $"Error while creating session with ID:{session?.Id}: Exception: {exception.Message}.");
+                }
+
+                InitializeAuditSessionEvent(
+                    systemContext,
+                    e,
+                    message,
+                    exception == null,
+                    session!,
+                    auditEntryId);
+
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.ClientUserId,
+                    "System/CreateSession",
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.SourceName,
+                    "Session/CreateSession",
+                    false);
+
+                // set AuditCreateSessionEventState fields
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.ClientCertificate,
+                    ByteString.From(session?.ClientCertificate?.RawData),
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.ClientCertificateThumbprint,
+                    session?.ClientCertificate?.Thumbprint!,
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.RevisedSessionTimeout,
+                    revisedSessionTimeout,
+                    false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingAuditCreateSessionEventEvent(ex, session?.Id);
+            }
+        }
+
+        /// <summary>
+        /// Reports an audit activate session event.
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        /// <param name="auditEntryId">The audit entry id.</param>
+        /// <param name="session">The session that is activated.</param>
+        /// <param name="exception">The exception received during activate session request</param>
+        public static void ReportAuditActivateSessionEvent(
+            this IAuditEventServer? server,
+            ILogger logger,
+            string auditEntryId,
+            ISession session,
+            Exception? exception = null)
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                ISystemContext systemContext = server.DefaultAuditContext;
+
+                var e = new AuditActivateSessionEventState(null);
+
+                TranslationInfo message = default;
+                if (exception == null)
+                {
+                    message = new TranslationInfo(
+                        "AuditActivateSessionEvent",
+                        "en-US",
+                        $"Session with Id:{session?.Id} was activated.");
+                }
+                else
+                {
+                    message = new TranslationInfo(
+                        "AuditActivateSessionEvent",
+                        "en-US",
+                        $"Error while activate session with ID:{session?.Id}. Exception: {exception.Message}.");
+                }
+
+                InitializeAuditSessionEvent(
+                    systemContext,
+                    e,
+                    message,
+                    exception == null,
+                    session!,
+                    auditEntryId);
+
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.SourceName,
+                    "Session/ActivateSession",
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.UserIdentityToken,
+                    CoreUtils.Clone(session?.IdentityToken?.Token)!,
+                    false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception e)
+            {
+                logger.ErrorWhileReportingAuditActivateSessionEventEvent(e, session?.Id);
+            }
+        }
+
+        /// <summary>
+        /// Reports an audit Url Mismatch event.
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="auditEntryId">The audit entry id.</param>
+        /// <param name="session">The session object that was created.</param>
+        /// <param name="revisedSessionTimeout">The revised session timeout</param>
+        /// <param name="endpointUrl">The invalid endpoint url</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditUrlMismatchEvent(
+            this IAuditEventServer? server,
+            string auditEntryId,
+            ISession session,
+            double revisedSessionTimeout,
+            string endpointUrl,
+            ILogger logger)
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                ISystemContext systemContext = server.DefaultAuditContext;
+
+                var e = new AuditUrlMismatchEventState(null);
+
+                var message = new TranslationInfo(
+                    "AuditUrlMismatchEvent",
+                    "en-US",
+                    $"Session with ID:{session.Id} was created but the endpoint URL does not match the domain names in the server certificate.");
+
+                InitializeAuditSessionEvent(
+                    systemContext,
+                    e,
+                    message,
+                    false,
+                    session,
+                    auditEntryId);
+
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.ClientUserId,
+                    "System/CreateSession",
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.SourceName,
+                    "Session/CreateSession",
+                    false);
+
+                // set AuditCreateSessionEventState fields
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.ClientCertificate,
+                    ByteString.From(session?.ClientCertificate?.RawData),
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.ClientCertificateThumbprint,
+                    session?.ClientCertificate?.Thumbprint!,
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.RevisedSessionTimeout,
+                    revisedSessionTimeout,
+                    false);
+
+                // set AuditUrlMismatchEventState
+                e.SetChildValue(systemContext, BrowseNames.EndpointUrl, endpointUrl, false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception e)
+            {
+                logger.ErrorWhileReportingAuditUrlMismatchEventEventFor(e, session?.Id);
+            }
+        }
+
+        /// <summary>
+        /// Reports an audit close session event.
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="auditEntryId">The audit entry id.</param>
+        /// <param name="session">The session object that was created.</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        /// <param name="sourceName">Session/CloseSession when the session is closed by request
+        /// “Session/Timeout” for a Session timeout
+        /// “Session/Terminated” for all other cases.</param>
+        public static void ReportAuditCloseSessionEvent(
+            this IAuditEventServer? server,
+            string auditEntryId,
+            ISession session,
+            ILogger logger,
+            string sourceName = "Session/Terminated")
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                ISystemContext systemContext = server.DefaultAuditContext;
+
+                // raise an audit event.
+                var e = new AuditSessionEventState(null);
+
+                var message = new TranslationInfo(
+                    "AuditCloseSessionEvent",
+                    "en-US",
+                    $"Session with ID:{session?.Id} was closed.");
+
+                InitializeAuditSessionEvent(systemContext, e, message, true, session!, auditEntryId);
+
+                e.SetChildValue(systemContext, BrowseNames.SourceName, sourceName, false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingAuditSessionEventStateClose(ex, session?.Id);
+            }
+        }
+
+        /// <summary>
+        /// Reports an audit event when a session is restored (materialized) from
+        /// a shared store on a standby replica during a high-availability
+        /// failover. This is a security-relevant provenance event distinct from
+        /// the regular activate-session audit.
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="auditEntryId">
+        /// The audit entry id (a one-way token digest is used for provenance so
+        /// the raw authentication token is not exposed).
+        /// </param>
+        /// <param name="session">The restored session.</param>
+        /// <param name="logger">A contextual logger to log to.</param>
+        /// <param name="sourceName">The source name of the audit event.</param>
+        public static void ReportAuditSessionRestoredEvent(
+            this IAuditEventServer? server,
+            string auditEntryId,
+            ISession session,
+            ILogger logger,
+            string sourceName = "Session/RestoredFromSharedStore")
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                ISystemContext systemContext = server.DefaultAuditContext;
+
+                // raise an audit event.
+                var e = new AuditSessionEventState(null);
+
+                var message = new TranslationInfo(
+                    "AuditSessionRestoredEvent",
+                    "en-US",
+                    $"Session with ID:{session?.Id} was restored from the shared store on this replica.");
+
+                InitializeAuditSessionEvent(systemContext, e, message, true, session!, auditEntryId);
+
+                e.SetChildValue(systemContext, BrowseNames.SourceName, sourceName, false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingAuditSessionEventStateRestored(ex, session?.Id);
+            }
+        }
+
+        /// <summary>
+        /// Reports an audit session event for the transfer subscription.
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="auditEntryId">The audit entry id.</param>
+        /// <param name="session">The session object that was created.</param>
+        /// <param name="statusCode">The status code resulting .</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditTransferSubscriptionEvent(
+            this IAuditEventServer? server,
+            string auditEntryId,
+            ISession session,
+            StatusCode statusCode,
+            ILogger logger)
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                ISystemContext systemContext = server.DefaultAuditContext;
+
+                // raise an audit event.
+                var e = new AuditSessionEventState(null);
+
+                var message = new TranslationInfo(
+                    "AuditSessionEventState",
+                    "en-US",
+                    $"Transfer subscription for session ID:{session?.Id} has statusCode {statusCode}.");
+
+                InitializeAuditSessionEvent(
+                    systemContext,
+                    e,
+                    message,
+                    StatusCode.IsGood(statusCode),
+                    session!,
+                    auditEntryId);
+
+                e.SetChildValue(systemContext, BrowseNames.SourceNode, session!.Id, false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.SourceName,
+                    "Session/TransferSubscriptions",
+                    false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingAuditSessionEventStateClose(ex, session?.Id);
+            }
+        }
+
+        /// <summary>
+        /// Raise CertificateUpdatedAudit event
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="systemContext">The current system context.</param>
+        /// <param name="objectId">The id of the object used for update certificate method</param>
+        /// <param name="method">The method that triggered the audit event.</param>
+        /// <param name="inputArguments">The input arguments used to call the method that triggered the audit event.</param>
+        /// <param name="certificateGroupId">The id of the certificate group</param>
+        /// <param name="certificateTypeId">the certificate type id</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        /// <param name="exception">The exception resulted after executing the UpdateCertificate method. If null, the operation was successfull.</param>
+        public static void ReportCertificateUpdatedAuditEvent(
+            this IAuditEventServer? server,
+            ISystemContext systemContext,
+            NodeId objectId,
+            MethodState method,
+            ArrayOf<Variant> inputArguments,
+            NodeId certificateGroupId,
+            NodeId certificateTypeId,
+            ILogger logger,
+            Exception? exception = null)
+        {
+            try
+            {
+                var e = new CertificateUpdatedAuditEventState(null);
+
+                TranslationInfo message = default;
+                if (exception == null)
+                {
+                    message = new TranslationInfo(
+                        "CertificateUpdatedAuditEvent",
+                        "en-US",
+                        "CertificateUpdatedAuditEvent.");
+                }
+                else
+                {
+                    message = new TranslationInfo(
+                        "CertificateUpdatedAuditEvent",
+                        "en-US",
+                        $"CertificateUpdatedAuditEvent - Exception: {exception.Message}.");
+                }
+
+                e.Initialize(
+                    systemContext,
+                    null,
+                    EventSeverity.Min,
+                    new LocalizedText(message),
+                    exception == null,
+                    DateTime.UtcNow
+                ); // initializes Status, ActionTimeStamp, ServerId, ClientAuditEntryId, ClientUserId
+
+                e.SetChildValue(systemContext, BrowseNames.SourceNode, objectId, false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.SourceName,
+                    "Method/UpdateCertificate",
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.LocalTime,
+                    TimeZoneDataType.Local,
+                    false);
+
+                e.SetChildValue(systemContext, BrowseNames.MethodId, method.NodeId, false);
+                e.SetChildValue(systemContext, BrowseNames.InputArguments, inputArguments, false);
+
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.CertificateGroup,
+                    certificateGroupId,
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.CertificateType,
+                    certificateTypeId,
+                    false);
+
+                server!.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingReportCertificateUpdatedAuditEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Raise CertificateUpdateRequestedAudit event.
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="systemContext">The current system context.</param>
+        /// <param name="objectId">The id of the object used for update certificate method</param>
+        /// <param name="method">The method that triggered the audit event.</param>
+        /// <param name="inputArguments">The input arguments used to call the method that triggered the audit event.</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        /// <param name="exception">
+        /// If non-null, indicates the UpdateCertificate operation failed;
+        /// the audit event is raised with <c>Status=false</c> and the
+        /// exception message is embedded in the localized text.
+        /// </param>
+        public static void ReportCertificateUpdateRequestedAuditEvent(
+            this IAuditEventServer? server,
+            ISystemContext systemContext,
+            NodeId objectId,
+            MethodState method,
+            ArrayOf<Variant> inputArguments,
+            ILogger logger,
+            Exception? exception = null)
+        {
+            try
+            {
+                var e = new CertificateUpdateRequestedAuditEventState(null);
+
+                TranslationInfo message = exception == null
+                    ? new TranslationInfo(
+                        "CertificateUpdateRequestedAuditEvent",
+                        "en-US",
+                        "CertificateUpdateRequestedAuditEvent.")
+                    : new TranslationInfo(
+                        "CertificateUpdateRequestedAuditEvent",
+                        "en-US",
+                        $"CertificateUpdateRequestedAuditEvent - Exception: {exception.Message}.");
+
+                e.Initialize(
+                    systemContext,
+                    null,
+                    EventSeverity.Min,
+                    new LocalizedText(message),
+                    exception == null,
+                    DateTime.UtcNow); // initializes Status, ActionTimeStamp, ServerId, ClientAuditEntryId, ClientUserId
+
+                e.SetChildValue(systemContext, BrowseNames.SourceNode, objectId, false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.SourceName,
+                    "Method/UpdateCertificate",
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.LocalTime,
+                    TimeZoneDataType.Local,
+                    false);
+
+                e.SetChildValue(systemContext, BrowseNames.MethodId, method?.NodeId ?? default, false);
+                e.SetChildValue(systemContext, BrowseNames.InputArguments, inputArguments, false);
+
+                server?.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingCertificateUpdateRequestedAuditEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Report the AuditAddNodesEvent
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="systemContext">The current system context.</param>
+        /// <param name="addNodesItems">The added nodes information.</param>
+        /// <param name="customMessage">Custom message for add nodes audit event.</param>
+        /// <param name="statusCode">The resulting status code.</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditAddNodesEvent(
+            this IAuditEventServer? server,
+            ISystemContext systemContext,
+            ArrayOf<AddNodesItem> addNodesItems,
+            string customMessage,
+            StatusCode statusCode,
+            ILogger logger)
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                var e = new AuditAddNodesEventState(null);
+
+                var message = new TranslationInfo(
+                    "AuditAddNodesEventState",
+                    "en-US",
+                    $"'{customMessage}' returns StatusCode: {statusCode.ToString(null, CultureInfo.InvariantCulture)}.");
+
+                e.Initialize(
+                    systemContext,
+                    null,
+                    EventSeverity.Min,
+                    new LocalizedText(message),
+                    StatusCode.IsGood(statusCode),
+                    DateTime.UtcNow
+                ); // initializes Status, ActionTimeStamp, ServerId, ClientAuditEntryId, ClientUserId
+
+                e.SetChildValue(systemContext, BrowseNames.SourceNode, ObjectIds.Server, false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.SourceName,
+                    "NodeManagement/AddNodes",
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.LocalTime,
+                    TimeZoneDataType.Local,
+                    false);
+
+                e.SetChildValue(systemContext, BrowseNames.NodesToAdd, addNodesItems, false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingAuditAddNodesEventEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Reports the AuditDeleteNodesEvent.
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="systemContext">The current system context.</param>
+        /// <param name="nodesToDelete">The delete nodes information.</param>
+        /// <param name="customMessage">Custom message for delete nodes.</param>
+        /// <param name="statusCode">The resulting status code.</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditDeleteNodesEvent(
+            this IAuditEventServer? server,
+            ISystemContext systemContext,
+            ArrayOf<DeleteNodesItem> nodesToDelete,
+            string customMessage,
+            StatusCode statusCode,
+            ILogger logger)
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                var e = new AuditDeleteNodesEventState(null);
+
+                var message = new TranslationInfo(
+                    "AuditDeleteNodesEventState",
+                    "en-US",
+                    $"'{customMessage}' returns StatusCode: {statusCode.ToString(null, CultureInfo.InvariantCulture)}.");
+
+                e.Initialize(
+                    systemContext,
+                    null,
+                    EventSeverity.Min,
+                    new LocalizedText(message),
+                    StatusCode.IsGood(statusCode),
+                    DateTime.UtcNow
+                ); // initializes Status, ActionTimeStamp, ServerId, ClientAuditEntryId, ClientUserId
+
+                e.SetChildValue(systemContext, BrowseNames.SourceNode, ObjectIds.Server, false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.SourceName,
+                    "NodeManagement/DeleteNodes",
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.LocalTime,
+                    TimeZoneDataType.Local,
+                    false);
+
+                e.SetChildValue(systemContext, BrowseNames.NodesToDelete, nodesToDelete, false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingAuditDeleteNodesEventEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Reports the AuditAddReferencesEvent.
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="systemContext">The current system context.</param>
+        /// <param name="referencesToAdd">The references being added.</param>
+        /// <param name="customMessage">Custom message for the audit event.</param>
+        /// <param name="statusCode">The resulting status code.</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditAddReferencesEvent(
+            this IAuditEventServer? server,
+            ISystemContext systemContext,
+            ArrayOf<AddReferencesItem> referencesToAdd,
+            string customMessage,
+            StatusCode statusCode,
+            ILogger logger)
+        {
+            if (server?.Auditing != true)
+            {
+                return;
+            }
+
+            try
+            {
+                var e = new AuditAddReferencesEventState(null);
+
+                var message = new TranslationInfo(
+                    "AuditAddReferencesEventState",
+                    "en-US",
+                    $"'{customMessage}' returns StatusCode: {statusCode.ToString(null, CultureInfo.InvariantCulture)}.");
+
+                e.Initialize(
+                    systemContext,
+                    null,
+                    EventSeverity.Min,
+                    new LocalizedText(message),
+                    StatusCode.IsGood(statusCode),
+                    DateTime.UtcNow
+                );
+
+                e.SetChildValue(systemContext, BrowseNames.SourceNode, ObjectIds.Server, false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.SourceName,
+                    "NodeManagement/AddReferences",
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.LocalTime,
+                    TimeZoneDataType.Local,
+                    false);
+
+                e.SetChildValue(systemContext, BrowseNames.ReferencesToAdd, referencesToAdd, false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingAuditAddReferencesEventEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Reports the AuditDeleteReferencesEvent.
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="systemContext">The current system context.</param>
+        /// <param name="referencesToDelete">The references being deleted.</param>
+        /// <param name="customMessage">Custom message for the audit event.</param>
+        /// <param name="statusCode">The resulting status code.</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditDeleteReferencesEvent(
+            this IAuditEventServer? server,
+            ISystemContext systemContext,
+            ArrayOf<DeleteReferencesItem> referencesToDelete,
+            string customMessage,
+            StatusCode statusCode,
+            ILogger logger)
+        {
+            if (server?.Auditing != true)
+            {
+                return;
+            }
+
+            try
+            {
+                var e = new AuditDeleteReferencesEventState(null);
+
+                var message = new TranslationInfo(
+                    "AuditDeleteReferencesEventState",
+                    "en-US",
+                    $"'{customMessage}' returns StatusCode: {statusCode.ToString(null, CultureInfo.InvariantCulture)}.");
+
+                e.Initialize(
+                    systemContext,
+                    null,
+                    EventSeverity.Min,
+                    new LocalizedText(message),
+                    StatusCode.IsGood(statusCode),
+                    DateTime.UtcNow
+                );
+
+                e.SetChildValue(systemContext, BrowseNames.SourceNode, ObjectIds.Server, false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.SourceName,
+                    "NodeManagement/DeleteReferences",
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.LocalTime,
+                    TimeZoneDataType.Local,
+                    false);
+
+                e.SetChildValue(systemContext, BrowseNames.ReferencesToDelete, referencesToDelete, false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingAuditDeleteReferencesEventEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Report the open secure channel audit event.
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="globalChannelId">The global unique channel id.</param>
+        /// <param name="endpointDescription">The endpoint description used for the request.</param>
+        /// <param name="request">The incoming <see cref="OpenSecureChannelRequest"/></param>
+        /// <param name="clientCertificate">The client certificate.</param>
+        /// <param name="exception">The exception resulted from the open secure channel request.</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditOpenSecureChannelEvent(
+            this IAuditEventServer? server,
+            string globalChannelId,
+            EndpointDescription endpointDescription,
+            OpenSecureChannelRequest request,
+            Certificate clientCertificate,
+            Exception? exception,
+            ILogger logger)
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                // raise an audit event.
+                var e = new AuditOpenSecureChannelEventState(null);
+                TranslationInfo message = default;
+                if (exception == null)
+                {
+                    message = new TranslationInfo(
+                        "AuditOpenSecureChannelEvent",
+                        "en-US",
+                        "AuditOpenSecureChannelEvent");
+                }
+                else
+                {
+                    message = new TranslationInfo(
+                        "AuditOpenSecureChannelEvent",
+                        "en-US",
+                        $"AuditOpenSecureChannelEvent - Exception: {exception.Message}.");
+                }
+
+                StatusCode statusCode = StatusCodes.Good;
+                while (exception is not null and not ServiceResultException)
+                {
+                    exception = exception.InnerException;
+                }
+
+                if (exception is ServiceResultException sre)
+                {
+                    if (sre.InnerResult != null)
+                    {
+                        statusCode = sre.InnerResult.StatusCode;
+                    }
+                    else
+                    {
+                        statusCode = sre.StatusCode;
+                    }
+                }
+
+                ISystemContext systemContext = server.DefaultAuditContext;
+
+                DateTime actionTimestamp = DateTime.UtcNow;
+                if (request?.RequestHeader?.Timestamp != null)
+                {
+                    actionTimestamp = (DateTime)request.RequestHeader.Timestamp;
+                }
+
+                e.Initialize(
+                    systemContext,
+                    null,
+                    EventSeverity.Min,
+                    new LocalizedText(message),
+                    exception == null,
+                    actionTimestamp
+                ); // initializes Status, ActionTimeStamp, ServerId, ClientUserId
+
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.ClientAuditEntryId,
+                    request?.RequestHeader?.AuditEntryId!,
+                    false);
+
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.SourceName,
+                    "SecureChannel/OpenSecureChannel",
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.ClientUserId,
+                    "System/OpenSecureChannel",
+                    false);
+                e.SetChildValue(systemContext, BrowseNames.SourceNode, ObjectIds.Server, false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.LocalTime,
+                    TimeZoneDataType.Local,
+                    false);
+
+                // set AuditSecurityEventType fields
+                e.SetChildValue(systemContext, BrowseNames.StatusCodeId, statusCode, false);
+
+                // set AuditChannelEventType fields
+                e.SetChildValue(systemContext, BrowseNames.SecureChannelId, globalChannelId, false);
+
+                if (clientCertificate != null)
+                {
+                    // set AuditOpenSecureChannelEventType fields
+                    e.SetChildValue(
+                        systemContext,
+                        BrowseNames.ClientCertificate,
+                        clientCertificate.RawData.ToByteString(),
+                        false);
+                    e.SetChildValue(
+                        systemContext,
+                        BrowseNames.ClientCertificateThumbprint,
+                        clientCertificate.Thumbprint,
+                        false);
+                }
+                if (endpointDescription != null)
+                {
+                    e.SetChildValue(
+                        systemContext,
+                        BrowseNames.SecurityPolicyUri,
+                        endpointDescription.SecurityPolicyUri!,
+                        false);
+                    e.SetChildValue(
+                        systemContext,
+                        BrowseNames.SecurityMode,
+                        endpointDescription.SecurityMode);
+                }
+                if (request != null)
+                {
+                    e.SetChildValue(
+                        systemContext,
+                        BrowseNames.RequestType,
+                        request.RequestType);
+                    e.SetChildValue(
+                        systemContext,
+                        BrowseNames.RequestedLifetime,
+                        request.RequestedLifetime,
+                        false);
+                }
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingAuditOpenSecureChannelEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Report the close secure channel audit event.
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="globalChannelId">The global unique channel id.</param>
+        /// <param name="exception">The exception resulted from the open secure channel request.</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditCloseSecureChannelEvent(
+            this IAuditEventServer? server,
+            string globalChannelId,
+            Exception? exception,
+            ILogger logger)
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+
+            try
+            {
+                // raise an audit event.
+                var e = new AuditChannelEventState(null);
+
+                TranslationInfo message = default;
+                if (exception == null)
+                {
+                    message = new TranslationInfo(
+                        "AuditCloseSecureChannelEvent",
+                        "en-US",
+                        "AuditCloseSecureChannelEvent");
+                }
+                else
+                {
+                    message = new TranslationInfo(
+                        "AuditCloseSecureChannelEvent",
+                        "en-US",
+                        $"AuditCloseSecureChannelEvent - Exception: {exception.Message}.");
+                }
+
+                StatusCode statusCode = StatusCodes.Good;
+                while (exception is not null and not ServiceResultException)
+                {
+                    exception = exception.InnerException;
+                }
+                if (exception is ServiceResultException sre)
+                {
+                    statusCode = sre.InnerResult?.StatusCode ?? StatusCodes.Uncertain;
+                }
+
+                ISystemContext systemContext = server.DefaultAuditContext;
+
+                e.Initialize(
+                    systemContext,
+                    null,
+                    EventSeverity.Min,
+                    new LocalizedText(message),
+                    exception == null,
+                    DateTime.UtcNow
+                ); // initializes Status, ActionTimeStamp, ServerId, ClientAuditEntryId, ClientUserId
+
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.SourceName,
+                    "SecureChannel/CloseSecureChannel",
+                    false);
+
+                const string clientUserId = "System/CloseSecureChannel";
+                //operationContext.UserIdentity?.DisplayName, or ”System/CloseSecureChannel”
+
+                e.SetChildValue(systemContext, BrowseNames.ClientUserId, clientUserId, false);
+                e.SetChildValue(systemContext, BrowseNames.SourceNode, ObjectIds.Server, false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.LocalTime,
+                    TimeZoneDataType.Local,
+                    false);
+
+                // set AuditSecurityEventType fields
+                e.SetChildValue(systemContext, BrowseNames.StatusCodeId, statusCode, false);
+
+                // set AuditChannelEventType fields
+                e.SetChildValue(systemContext, BrowseNames.SecureChannelId, globalChannelId, false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingAuditOpenSecureChannelEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Reports the AuditUpdateMethodEventType
+        /// </summary>
+        /// <param name="server">The server which reports audit events.</param>
+        /// <param name="systemContext">Server information.</param>
+        /// <param name="objectId">The id of the object where the method is executed.</param>
+        /// <param name="methodId">The NodeId of the object that the method resides in.</param>
+        /// <param name="inputArgs">The InputArguments of the method </param>
+        /// <param name="customMessage">Custom message for delete nodes.</param>
+        /// <param name="statusCode">The resulting status code.</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportAuditUpdateMethodEvent(
+            this IAuditEventServer? server,
+            ISystemContext systemContext,
+            NodeId objectId,
+            NodeId methodId,
+            ArrayOf<Variant> inputArgs,
+            string customMessage,
+            StatusCode statusCode,
+            ILogger logger)
+        {
+            if (server?.Auditing != true)
+            {
+                // current server does not support auditing
+                return;
+            }
+            try
+            {
+                var e = new AuditUpdateMethodEventState(null);
+
+                var message = new TranslationInfo(
+                    "AuditUpdateMethodEventState",
+                    "en-US",
+                    $"'{customMessage}' returns StatusCode: {statusCode.ToString(null, CultureInfo.InvariantCulture)}.");
+
+                e.Initialize(
+                    systemContext,
+                    null,
+                    EventSeverity.Min,
+                    new LocalizedText(message),
+                    StatusCode.IsGood(statusCode),
+                    DateTime.UtcNow
+                ); // initializes Status, ActionTimeStamp, ServerId, ClientAuditEntryId, ClientUserId
+
+                e.SetChildValue(systemContext, BrowseNames.SourceNode, objectId, false);
+                e.SetChildValue(systemContext, BrowseNames.SourceName, "Attribute/Call", false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.LocalTime,
+                    TimeZoneDataType.Local,
+                    false);
+
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.ClientUserId,
+                    (systemContext as ISessionSystemContext)?.UserIdentity?.DisplayName!,
+                    false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.ClientAuditEntryId,
+                    systemContext.AuditEntryId!,
+                    false);
+
+                e.SetChildValue(systemContext, BrowseNames.MethodId, methodId, false);
+                e.SetChildValue(systemContext, BrowseNames.InputArguments, inputArgs, false);
+
+                server.ReportAuditEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingAuditDeleteNodesEventEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Reports an TrustListUpdatedAudit event.
+        /// </summary>
+        /// <param name="node">The trustlist node.</param>
+        /// <param name="systemContext">The current system context</param>
+        /// <param name="objectId">The object id where the truest list update methods was called</param>
+        /// <param name="sourceName">The source name string</param>
+        /// <param name="methodId">The id of the method that was called</param>
+        /// <param name="inputParameters">The input parameters of the called method</param>
+        /// <param name="statusCode">The status code resulted when the TrustList was updated </param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportTrustListUpdatedAuditEvent(
+            this TrustListState node,
+            ISystemContext systemContext,
+            NodeId objectId,
+            string sourceName,
+            NodeId methodId,
+            ArrayOf<Variant> inputParameters,
+            StatusCode statusCode,
+            ILogger logger)
+        {
+            try
+            {
+                var e = new TrustListUpdatedAuditEventState(null);
+
+                var message = new TranslationInfo(
+                    "TrustListUpdatedAuditEvent",
+                    "en-US",
+                    $"TrustListUpdatedAuditEvent result is: {statusCode.ToString(null, CultureInfo.InvariantCulture)}");
+
+                e.Initialize(
+                    systemContext,
+                    null,
+                    EventSeverity.Min,
+                    new LocalizedText(message),
+                    StatusCode.IsGood(statusCode),
+                    DateTime.UtcNow
+                ); // initializes Status, ActionTimeStamp, ServerId, ClientAuditEntryId, ClientUserId
+
+                e.SetChildValue(systemContext, BrowseNames.SourceNode, objectId, false);
+                e.SetChildValue(systemContext, BrowseNames.SourceName, sourceName, false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.LocalTime,
+                    TimeZoneDataType.Local,
+                    false);
+
+                e.SetChildValue(systemContext, BrowseNames.MethodId, methodId, false);
+                e.SetChildValue(systemContext, BrowseNames.InputArguments, inputParameters, false);
+
+                node?.ReportEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingReportTrustListUpdatedAuditEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Reports an TrustListUpdatedAudit event.
+        /// </summary>
+        /// <param name="node">The trustlist node.</param>
+        /// <param name="systemContext">The current system context</param>
+        /// <param name="objectId">The object id where the truest list update methods was called</param>
+        /// <param name="sourceName">The source name string</param>
+        /// <param name="methodId">The id of the method that was called</param>
+        /// <param name="inputParameters">The input parameters of the called method</param>
+        /// <param name="logger">A contextual logger to log to</param>
+        public static void ReportTrustListUpdateRequestedAuditEvent(
+            this TrustListState node,
+            ISystemContext systemContext,
+            NodeId objectId,
+            string sourceName,
+            NodeId methodId,
+            ArrayOf<Variant> inputParameters,
+            ILogger logger)
+        {
+            try
+            {
+                var e = new TrustListUpdateRequestedAuditEventState(null);
+
+                var message = new TranslationInfo(
+                    "TrustListUpdateRequestedAuditEvent",
+                    "en-US",
+                    "TrustListUpdateRequestedAuditEvent.");
+
+                e.Initialize(systemContext, null, EventSeverity.Min, new LocalizedText(message), true, DateTime.UtcNow); // initializes Status, ActionTimeStamp, ServerId, ClientAuditEntryId, ClientUserId
+
+                e.SetChildValue(systemContext, BrowseNames.SourceNode, objectId, false);
+                e.SetChildValue(systemContext, BrowseNames.SourceName, sourceName, false);
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.LocalTime,
+                    TimeZoneDataType.Local,
+                    false);
+
+                e.SetChildValue(systemContext, BrowseNames.MethodId, methodId, false);
+                e.SetChildValue(systemContext, BrowseNames.InputArguments, inputParameters, false);
+
+                node?.ReportEvent(systemContext, e);
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorWhileReportingTrustListUpdateRequestedAuditEvent(ex);
+            }
+        }
+
+        /// <summary>
+        /// Initialize the properties of an AuditUpdateEventState.
+        /// </summary>
+        /// <param name="e">AuditUpdate event reference</param>
+        /// <param name="systemContext">The current system context.</param>
+        /// <param name="auditEventName">Audit event name</param>
+        /// <param name="sourceName">Source name</param>
+        /// <param name="historyUpdateDetails">History update details</param>
+        /// <param name="statusCode">The resulting status code</param>
+        private static void InitializeAuditHistoryUpdateEvent(
+            AuditUpdateEventState e,
+            ISystemContext systemContext,
+            string auditEventName,
+            string sourceName,
+            HistoryUpdateDetails historyUpdateDetails,
+            StatusCode statusCode)
+        {
+            var message = new TranslationInfo(
+                auditEventName,
+                "en-US",
+                $"{auditEventName} has Result: {statusCode.ToString(null, CultureInfo.InvariantCulture)}.");
+
+            e.Initialize(
+                systemContext,
+                null,
+                EventSeverity.Min,
+                new LocalizedText(message),
+                StatusCode.IsGood(statusCode),
+                DateTime.UtcNow
+            ); // initializes Status, ActionTimeStamp, ServerId, ClientAuditEntryId, ClientUserId
+
+            e.SetChildValue(
+                systemContext,
+                BrowseNames.SourceNode,
+                historyUpdateDetails.NodeId,
+                false);
+            e.SetChildValue(systemContext, BrowseNames.SourceName, sourceName, false);
+            e.SetChildValue(systemContext, BrowseNames.LocalTime, TimeZoneDataType.Local, false);
+
+            e.SetChildValue(
+                systemContext,
+                BrowseNames.ClientUserId,
+                (systemContext as ISessionSystemContext)?.UserIdentity?.DisplayName!,
+                false);
+            e.SetChildValue(
+                systemContext,
+                BrowseNames.ClientAuditEntryId,
+                systemContext.AuditEntryId!,
+                false);
+
+            e.SetChildValue(
+                systemContext,
+                BrowseNames.ParameterDataTypeId,
+                historyUpdateDetails.TypeId,
+                false);
+        }
+
+        /// <summary>
+        /// Initializes a session audit event.
+        /// </summary>
+        private static void InitializeAuditSessionEvent(
+            ISystemContext systemContext,
+            AuditEventState e,
+            TranslationInfo message,
+            bool status,
+            ISession session,
+            string auditEntryId)
+        {
+            e.Initialize(
+                systemContext,
+                null,
+                EventSeverity.Min,
+                new LocalizedText(message),
+                status,
+                DateTime.UtcNow);
+
+            e.SetChildValue(systemContext, BrowseNames.SourceNode, ObjectIds.Server, false);
+
+            e.SetChildValue(systemContext, BrowseNames.ClientAuditEntryId, auditEntryId, false);
+            if (session != null)
+            {
+                // set AuditEventType properties
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.ClientUserId,
+                    session.Identity?.DisplayName!,
+                    false);
+                // set AuditCreateSessionEventType & AuditActivateSessionsEventType properties
+                e.SetChildValue(
+                    systemContext,
+                    BrowseNames.SecureChannelId,
+                    session.SecureChannelId,
+                    false);
+                // set AuditSessionEventType
+                e.SetChildValue(systemContext, BrowseNames.SessionId, session.Id, false);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Source-generated log messages for AuditEvents.
+    /// </summary>
+    internal static partial class AuditEventsLog
+    {
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 0, Level = LogLevel.Error,
+            Message = "Error while reporting AuditEvent event.")]
+        public static partial void ErrorWhileReportingAuditEventEvent(this ILogger logger, Exception ex);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 1, Level = LogLevel.Error,
+            Message = "Error while reporting AuditWriteUpdateEvent event.")]
+        public static partial void ErrorWhileReportingAuditWriteUpdateEventEvent(this ILogger logger, Exception ex);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 2, Level = LogLevel.Error,
+            Message = "Error while reporting AuditHistoryValueUpdateEvent event.")]
+        public static partial void ErrorWhileReportingAuditHistoryValueUpdateEvent(this ILogger logger, Exception ex);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 3, Level = LogLevel.Error,
+            Message = "Error while reporting AuditHistoryEventUpdateEvent event.")]
+        public static partial void ErrorWhileReportingAuditHistoryEventUpdateEvent(this ILogger logger, Exception ex);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 4, Level = LogLevel.Error,
+            Message = "Error while reporting AuditHistoryRawModifyDeleteEvent event.")]
+        public static partial void ErrorWhileReportingAuditHistoryRawModifyDeleteEvent(
+            this ILogger logger,
+            Exception ex);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 5, Level = LogLevel.Error,
+            Message = "Error while reporting AuditHistoryAtTimeDeleteEvent event.")]
+        public static partial void ErrorWhileReportingAuditHistoryAtTimeDeleteEvent(this ILogger logger, Exception ex);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 6, Level = LogLevel.Error,
+            Message = "Error while reporting AuditHistoryEventDeleteEvent event.")]
+        public static partial void ErrorWhileReportingAuditHistoryEventDeleteEvent(this ILogger logger, Exception ex);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 7, Level = LogLevel.Error,
+            Message = "Error while reporting ReportAuditCertificateDataMismatch event.")]
+        public static partial void ErrorWhileReportingReportAuditCertificateDataMismatch(
+            this ILogger logger,
+            Exception ex);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 8, Level = LogLevel.Error,
+            Message = "Error while reporting ReportAuditCertificateDataMismatchEvent event.")]
+        public static partial void ErrorWhileReportingReportAuditCertificateDataMismatchEvent(
+            this ILogger logger,
+            Exception ex);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 9, Level = LogLevel.Error,
+            Message = "Error while reporting ReportAuditCancelEvent event.")]
+        public static partial void ErrorWhileReportingReportAuditCancelEventEvent(this ILogger logger, Exception ex);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 10, Level = LogLevel.Error,
+            Message = "Error while reporting ReportRoleMappingRuleChangedAuditEvent event.")]
+        public static partial void ErrorWhileReportingReportRoleMappingRuleChangedAuditEvent(
+            this ILogger logger,
+            Exception ex);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 11, Level = LogLevel.Error,
+            Message = "Error while reporting AuditCreateSessionEvent event for SessionId {SessionId}.")]
+        public static partial void ErrorWhileReportingAuditCreateSessionEventEvent(
+            this ILogger logger,
+            Exception ex,
+            NodeId? sessionId);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 12, Level = LogLevel.Error,
+            Message = "Error while reporting AuditActivateSessionEvent event for SessionId {SessionId}.")]
+        public static partial void ErrorWhileReportingAuditActivateSessionEventEvent(
+            this ILogger logger,
+            Exception ex,
+            NodeId? sessionId);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 13, Level = LogLevel.Error,
+            Message = "Error while reporting AuditUrlMismatchEvent event for SessionId {SessionId}.")]
+        public static partial void ErrorWhileReportingAuditUrlMismatchEventEventFor(
+            this ILogger logger,
+            Exception ex,
+            NodeId? sessionId);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 14, Level = LogLevel.Error,
+            Message = "Error while reporting AuditSessionEventState close event for SessionId {SessionId}.")]
+        public static partial void ErrorWhileReportingAuditSessionEventStateClose(
+            this ILogger logger,
+            Exception ex,
+            NodeId? sessionId);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 15, Level = LogLevel.Error,
+            Message = "Error while reporting AuditSessionEventState restored event for SessionId {SessionId}.")]
+        public static partial void ErrorWhileReportingAuditSessionEventStateRestored(
+            this ILogger logger,
+            Exception ex,
+            NodeId? sessionId);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 16, Level = LogLevel.Error,
+            Message = "Error while reporting ReportCertificateUpdatedAuditEvent event.")]
+        public static partial void ErrorWhileReportingReportCertificateUpdatedAuditEvent(
+            this ILogger logger,
+            Exception ex);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 17, Level = LogLevel.Error,
+            Message = "Error while reporting CertificateUpdateRequestedAuditEvent event.")]
+        public static partial void ErrorWhileReportingCertificateUpdateRequestedAuditEvent(
+            this ILogger logger,
+            Exception ex);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 18, Level = LogLevel.Error,
+            Message = "Error while reporting AuditAddNodesEvent event.")]
+        public static partial void ErrorWhileReportingAuditAddNodesEventEvent(this ILogger logger, Exception ex);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 19, Level = LogLevel.Error,
+            Message = "Error while reporting AuditDeleteNodesEvent event.")]
+        public static partial void ErrorWhileReportingAuditDeleteNodesEventEvent(this ILogger logger, Exception ex);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 20, Level = LogLevel.Error,
+            Message = "Error while reporting AuditAddReferencesEvent event.")]
+        public static partial void ErrorWhileReportingAuditAddReferencesEventEvent(this ILogger logger, Exception ex);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 21, Level = LogLevel.Error,
+            Message = "Error while reporting AuditDeleteReferencesEvent event.")]
+        public static partial void ErrorWhileReportingAuditDeleteReferencesEventEvent(
+            this ILogger logger,
+            Exception ex);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 22, Level = LogLevel.Error,
+            Message = "Error while reporting AuditOpenSecureChannelEvent event.")]
+        public static partial void ErrorWhileReportingAuditOpenSecureChannelEvent(this ILogger logger, Exception ex);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 23, Level = LogLevel.Error,
+            Message = "Error while reporting ReportTrustListUpdatedAuditEvent event.")]
+        public static partial void ErrorWhileReportingReportTrustListUpdatedAuditEvent(
+            this ILogger logger,
+            Exception ex);
+
+        [LoggerMessage(EventId = ServerEventIds.AuditEvents + 24, Level = LogLevel.Error,
+            Message = "Error while reporting TrustListUpdateRequestedAuditEvent event.")]
+        public static partial void ErrorWhileReportingTrustListUpdateRequestedAuditEvent(
+            this ILogger logger,
+            Exception ex);
+    }
+
+}

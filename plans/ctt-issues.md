@@ -1,18 +1,17 @@
-# CTT (Compliance Test Tool) script defects
+# CTT (Compliance Test Tool) conformance findings
 
-This document reports defects found in the **OPC UA Compliance Test Tool** test
-scripts (not in the server under test) while working through issue #3960 against
-the OPC Foundation .NET reference server. Each entry describes the defect, why
-the reference server's behaviour is correct per the OPC UA specification, and the
-recommended fix to the CTT script.
+This document records CTT script defects and server-side findings discovered while
+working the ctt against the OPC Foundation .NET reference server (v2). Each
+entry classifies the observed behavior, records the available evidence, and identifies
+the appropriate CTT corrective action.
 
 Paths below are relative to the CTT installation
 (`.../Compliance Test Tool/ServerProjects/Standard/`). Line numbers refer to the
-CTT build used for the run (`NewCTT2`), UA 1.05.
+CTT build used for the run (UA 1.05.06 Script 1.05.513) .
 
 ---
 
-## 1. Base Info State Machine Instance — `GeneratesEvent` target validation uses the wrong helper
+## 1. Base Info State Machine Instance — `GeneratesEvent` target validation uses the wrong helper (https://mantis.opcfoundation.org/view.php?id=11248)
 
 **Test:** `maintree/Base Information/Base Info State Machine Instance/Test Cases/001.js`, line 39
 **Helper:** `library/Information/InformationModelUtilities.js` — `IsNodeOfTypeOrSubType` / `GetTypeDefinitionOfNode`
@@ -66,7 +65,7 @@ not `HasTypeDefinition`).
 
 ---
 
-## 2. Historical Access Read Raw — `initialize.js` accesses `ArrayItems` without the guard used everywhere else
+## 2. Historical Access Read Raw — `initialize.js` accesses `ArrayItems` without the guard used everywhere else (https://mantis.opcfoundation.org/view.php?id=11249)
 
 **Test:** `maintree/Historical Access/Historical Access Read Raw/Test Cases/initialize.js`, line 28
 **Observed error:** *"Result of expression 'CUVariables.ArrayItems' [undefined] is not an object." (TypeError, lineNumber 28)* (surfaced in Historical Access Read Raw and, via the shared post-test handler, in other CUs)
@@ -120,222 +119,59 @@ CUVariables.ResetItems = function() {
     }
 };
 ```
-
 ---
 
-## 3. HA Aggregate helper — `GetRequestEntry` dereferences a null `requestEntries` (defence-in-depth)
+## 5. HA Aggregate helper — multi-node path dereferences `possibleNodeId` without an `isDefined` guard (https://mantis.opcfoundation.org/view.php?id=11251)
 
-**Helper:** `library/ServiceBased/AttributeServiceSet/HistoryRead/HAAggregateHelper.js`, line 1791
-**Observed error:** *"Result of expression 'requestEntries' [null] is not an object." (TypeError, lineNumber 1791)* — cascaded across **every** `Aggregate – *` unit (~1150 occurrences)
+`ServerProjects/Standard/library/ServiceBased/AttributeServiceSet/HistoryRead/HAAggregateHelper.js`,
+`PerformMultipleNodeTest` (around line 1484), raises `possibleNodeId [undefined] is not an object`
+(a JavaScript `TypeError`) roughly 100 times across the aggregate conformance units, aborting the
+affected multi-node aggregate cases.
 
 ### What the test does
 
-`GetRequestEntry` reads a cached raw-data entry:
+For the multi-node aggregate cases (`configObject.Items.length > 1`) the helper walks the raw-data
+cache and, for every node referenced by a cached request entry, maps the cached position back to the
+current test's variable list:
 
 ```js
-this.GetRequestEntry = function ( requestEntries, requestDefinition ) {
-    ...
-    if ( definition == this.AggregateRequestDefinition.StartRequest ) {
-        requestEntry = requestEntries.StartEntry; // line 1791 — throws when requestEntries is null
+for ( var nodeIndex = 0; nodeIndex < requestEntry.Nodes.length; nodeIndex++ ) {
+    var originalItemIndex = requestEntry.Nodes[ nodeIndex ].Index;
+    var possibleNodeId = variables.Items[ originalItemIndex ];   // may be undefined
+    if ( itemLookup.Contains( possibleNodeId.NodeId.toString() ) ) {   // <-- throws here
+        ...
     }
-    ...
-};
+}
 ```
 
-Callers pass `requestEntries` from the raw-data cache:
+`originalItemIndex` is an index that was captured against the **full** variable set when the raw-data
+cache was built, but `variables.Items` here is the **current** (potentially smaller / re-ordered)
+per-configuration subset. When the cached index has no corresponding entry in `variables.Items`,
+`possibleNodeId` is `undefined` and the immediate `possibleNodeId.NodeId.toString()` throws.
 
-```js
-var requestEntries = Test.AggregateTestData.RawDataCache.ItemMap.Get( itemName ); // may be null
-var requestEntry   = this.GetRequestEntry( requestEntries, requestDefinition );
-```
+### Why this is a CTT defect
 
-### Root cause and why a guard is still warranted
-
-The **primary** cause of the null cache in run `NewCTT2` was a *server* defect
-(the aggregate test node's `RolePermissions` denied the CTT's authenticated user
-`HistoryRead`, so the initial raw read returned `BadUserAccessDenied` and the
-cache was never populated) — that server bug has been fixed separately. However,
-`GetRequestEntry` should still fail **gracefully**: if the raw-data cache lookup
-yields `null`/`undefined` (for any reason — an unsupported item, an empty archive
-window, a service error), the helper should emit a clear `addError`/`addWarning`
-and return, rather than throwing an unhandled `TypeError` that aborts the whole
-CU. A single missing bounding read currently masks the real result of ~40
-aggregate units.
+Every other place in the same helper that indexes `variables.Items` guards the lookup with
+`isDefined(...)` before dereferencing (e.g. the single-node path). This one call site does not, so a
+perfectly valid server address space (whose node ordering simply differs from the cache's captured
+indices) makes the script throw instead of skipping the unmatched entry. The server returns no error
+here — the failure is entirely inside the CTT script.
 
 ### Recommended CTT fix
 
-Guard the argument at the top of `GetRequestEntry`:
+Guard the dereference exactly as the sibling code paths already do:
 
 ```js
-this.GetRequestEntry = function ( requestEntries, requestDefinition ) {
-    if ( !isDefined( requestEntries ) ) {
-        addError( "GetRequestEntry(): no raw-data cache entry available (check the initial HistoryRead result / permissions)." );
-        return null;
-    }
+var possibleNodeId = variables.Items[ originalItemIndex ];
+if ( isDefined( possibleNodeId ) && itemLookup.Contains( possibleNodeId.NodeId.toString() ) ) {
     ...
-};
+}
 ```
+
+Alternatively, resolve the node through `itemLookup` by the cached NodeId rather than by positional
+index, so the current-subset ordering is irrelevant.
 
 ---
-
-## 4. Multi-dimensional array (Matrix) — CTT reports `BadDecodingError` for spec-compliant Variant encoding
-
-**Tests (all multi-dimensional-array cases):**
-- `maintree/Attribute Services/Attribute Read/Test Cases/030.js` — read a multi-dim array Value
-- `maintree/Attribute Services/Attribute Write Index/Test Cases/007.js` — write one index of a multi-dim array
-- `maintree/Attribute Services/Attribute Write Values/Test Cases/020.js` — write an entire multi-dim array
-- `maintree/Monitored Item Services/Monitor Basic/Test Cases/039.js` — monitor a multi-dim array
-- `maintree/Monitored Item Services/Monitor Value Change V2/Test Cases/042.js` — monitor a multi-dim array with IndexRange
-
-**Observed error:** *"Expected: Good (0x00000000) but received: BadDecodingError (0x80070000)"*
-(`library/Base/assertions.js:386`), on both **read/monitor** (server encodes the value, CTT
-decodes) and **write** (CTT encodes the value, server decodes). Every failing case is a
-**multi-dimensional array**; single-dimensional and scalar cases of the same tests pass.
-
-### Why this is a CTT defect (the server is byte-exact spec-compliant)
-
-Per **OPC UA Part 6 §5.2.2.16, Table 26 (Variant Binary DataEncoding)** a multi-dimensional
-array Variant is encoded, in this order:
-
-1. `EncodingMask` (Byte) — bits 0:5 = BuiltInTypeId, **bit 6 = ArrayDimensions present**, **bit 7 = array**.
-2. `ArrayLength` (Int32) — the **total** element count of the flattened array.
-3. `Value` — the flattened array, **higher-rank dimensions serialized first**.
-4. `ArrayDimensionsLength` (Int32) — number of dimensions.
-5. `ArrayDimensions` (Int32[]) — each dimension, **lower-rank dimension first**.
-
-The spec also states (Table 26, `ArrayDimensions` row): *"If ArrayDimensions are inconsistent
-with the ArrayLength then the decoder shall stop and raise a **Bad_DecodingError**."* — i.e.
-`BadDecodingError` is the **mandated** decoder behaviour for an inconsistent matrix.
-
-The reference server emits exactly this layout. Encoding of the 2×3 `Int32` matrix
-`{{1,2,3},{4,5,6}}` on the wire is:
-
-```
-C6                          EncodingMask = Int32(6) | Array(0x80) | ArrayDimensions(0x40)
-06 00 00 00                 ArrayLength   = 6            (== 2×3, consistent)
-01·02·03·04·05·06 (Int32)   Value         = 1..6         (flattened, higher-rank-first)
-02 00 00 00                 ArrayDimensionsLength = 2
-02 00 00 00  03 00 00 00    ArrayDimensions       = [2,3] (lower-rank-first; product == ArrayLength)
-```
-
-Every field matches Table 26: the encoding byte sets both the array and dimensions bits, the
-value precedes the dimensions, `ArrayLength` equals the product of the dimensions, and the
-element/dimension ordering follows the spec. The server's decoder is symmetric — it reads the
-value array first and the dimensions afterwards, and it raises `BadDecodingError` **only** when
-`ArrayLength` is inconsistent with the decoded dimensions (again per Table 26). So the server is
-correct in **both** directions.
-
-Because the CTT flags `BadDecodingError` on read (decoding the server's valid bytes) **and** the
-server flags `BadDecodingError` on write (decoding the CTT's bytes), the CTT's own
-multi-dimensional-array Variant codec is internally inconsistent with Part 6 §5.2.2.16 —
-symmetrically on both encode and decode (e.g. writing/expecting the `ArrayDimensions` in the
-wrong position relative to the `Value`, or an `ArrayLength`/dimensions mismatch). A server that
-is spec-compliant therefore cannot pass these cases against the current CTT codec.
-
-### Recommended CTT fix
-
-Align the CTT's multi-dimensional-array Variant encoder **and** decoder with Part 6 §5.2.2.16
-Table 26: encode/expect `EncodingMask (bits 6+7 set) → ArrayLength → Value → ArrayDimensionsLength
-→ ArrayDimensions`, with `ArrayLength == product(ArrayDimensions)`, the value flattened
-higher-rank-first, and the dimensions listed lower-rank-first. The byte sequence above is a
-ready-made golden vector to validate the CTT codec against.
-
----
-
-## Notes on items that are **not** CTT defects
-
-### Security (Run2) — server-side / configuration items (not CTT script defects)
-
-* **Security Certificate Validation** (`007`, `008`, `029`): OpenSecureChannel returned the generic
-  `BadSecurityChecksFailed (0x80130000)` where the CTT expects the **specific** code
-  `BadCertificateTimeInvalid (0x80140000)` (expired client cert, 007/008) or
-  `BadCertificateUseNotAllowed (0x80180000)` (wrong key-usage / CA-as-app-instance, 029).
-  This was a **server bug — now fixed.** Root cause: the client certificate validation throws its
-  specific `ServiceResultException` **directly** (`UaSCBinaryChannel.Asymmetric.cs:1123`,
-  `new ServiceResultException(validationResult.StatusCode)`, which sets no `InnerException`), but
-  `TcpServerChannel.ProcessOpenSecureChannelRequest` only inspected `e.InnerException` — so the
-  specific certificate code was **always** masked as `BadSecurityChecksFailed`. Fixed by resolving
-  the effective `ServiceResultException` from the caught exception itself as well as its inner
-  exception (`TcpServerChannel.cs` OSC catch block); the deliberate masking of
-  untrusted/revoked/invalid/chain-incomplete codes (Part 4 §7.39 disclosure policy) is preserved,
-  while `BadCertificateTimeInvalid`/`BadCertificateUseNotAllowed`/hostname/uri codes now reach the
-  client (Part 6 §6.7.4). Regression covered by `SecurityCertValidationTests` (007/008/033 now
-  strictly require the time-invalid code; 029 surfaces `BadCertificateUseNotAllowed`).
-
-* **Security User X509** (`001`, `002`, `004`, …, 27 occurrences): ActivateSession previously
-  returned `BadIdentityTokenRejected`/`BadIdentityTokenInvalid`. This is **not** a CTT defect. The
-  reference **server** side already validates X.509 user certificates against the `Users` trust list;
-  the gap was on the **client** side of the conformance tests. In v1.6 the X.509 user-token signing
-  path moved to the provider model (`UserIdentity.CreateAsync(CertificateIdentifier,
-  ICertificatePasswordProvider, ICertificateProvider)`), and `X509IdentityTokenHandler.SignAsync`
-  needs a resolvable private-key certificate to sign the server nonce. The conformance-test helper
-  was still building a verify-only token from a transient in-memory certificate, so the client could
-  not produce the user-token signature (`X509IdentityTokenHandler ... must be constructed with a
-  CertificateIdentifier + ICertificateProvider to sign`) and every activation was skipped. **Fixed:**
-  `X509UserIdentityHelper` now persists the transient user certificate to a client-side directory
-  store and builds a signing identity through the provider path, so X.509 user-token activation now
-  succeeds end-to-end against the reference server. All `SecurityX509UserTests` /
-  `SecurityUserX509DepthTests` run (23 pass, 0 skipped) and assert success/rejection rather than
-  skipping. No CTT-script change is warranted.
-
-* **Security User Name Password 2** (`015`, duplicate `PolicyId`): *"The PolicyId: 2, is used for
-  multiple UserIdentityTokens."* **Not reproducible** on the current build — fix #3525 (commit
-  `029a8fbaa`) is present and a live `GetEndpoints` returns distinct `PolicyId`s (UserName+none and
-  UserName+Basic256Sha256). The CTT run most likely exercised a **stale server binary**; re-run
-  against the current build. Per Part 4 §7.37 (`UserTokenPolicy`) each `PolicyId` must be unique,
-  which the current server satisfies.
-
-* **Security None / Basic256Sha256 CloseSecureChannel** (`007`, `005`): the client-side
-  `CloseSecureChannel()` result is `BadInvalidState (0x80af0000)` where `Good` is expected
-  (`library/ServiceBased/SecureChannel/CloseSecureChannel.js:26`). This is the **final** operation
-  of the test and reflects the channel already transitioning to closed/faulted when the close is
-  issued; `ProcessCloseSecureChannelRequest` closes the channel without a service fault. It is
-  benign / CTT-side sequencing rather than a server compliance defect, but warrants a live
-  reproduce to confirm the client-observed state before any change.
-
-### Alarms & Conditions / Aggregates / GDS (Run1) — diagnosed; blocked on a CTT re-run or the CTT loop
-
-These three clusters were investigated by direct source inspection against the OPC UA
-specification. The server-side logic was found correct (or the residual is already-documented
-CTT-script noise), so the remaining failures cannot be pinned to a concrete server bug from the
-results XML alone — they need either a fresh CTT run (to clear cascades) or the CTT's own state
-model / test-script inputs (which the XML does not carry).
-
-* **Aggregates — 1156 `Aggregate –` errors are ~99% already-documented CTT-script defects.** 886
-  are the `requestEntries` [null] `TypeError` documented in **§3** above, and 266 are the
-  `CUVariables.ArrayItems` [undefined] `TypeError` documented in **§2**; one residual
-  `BadUserAccessDenied` is the `Scalar_Static_Int32` RolePermissions gap already fixed server-side.
-  The genuine aggregate-value comparisons (Count / PercentGood-Bad / Duration* / Start-End(Bound) /
-  WorstQuality / NumberOfTransitions / AnnotationCount via `AggregateCalculator`) are **masked**
-  behind that cascade and cannot be assessed until a CTT re-run that includes the RolePermissions
-  fix **and** the §2/§3 CTT-script fixes. → **Blocked on a CTT re-run.**
-
-* **Alarms & Conditions — "After Acknowledge Retain in invalid state" (14, one per alarm type) and
-  "Error validating variables for state ConditionDisabled" (A&C Enable Test_002): server Retain and
-  enable/disable logic verified spec-correct.** The Retain calculation was checked at every layer
-  and follows **Part 9**: `ConditionState.UpdateStateAfterDisable` sets `Retain = false` on Disable
-  (`ConditionState.cs:781`); `AlarmConditionState.GetRetainState` keeps `Retain = true` while
-  `ActiveState.Id` is set (`AlarmConditionState.cs:346-348`); `AcknowledgeableConditionState`/
-  `AlarmConditionTypeHolder`/`AcknowledgeableConditionTypeHolder` all keep `Retain = true` until the
-  condition is inactive **and** acked **and** (when confirm is supported) confirmed; and the SDK
-  updates Retain **before** it reports the Acknowledge event
-  (`AcknowledgeableConditionState.cs:181` precedes `:189/:221`). No server-side defect was found.
-  The CTT's `AlarmCollector` reports only *"Retain in invalid state"* without the expected-vs-actual
-  Retain value or the exact drive sequence, so isolating the discrepancy requires the CTT loop
-  (subscribe → drive Active/Ack/Confirm → observe) with the CTT's own state model. → **Blocked on
-  the CTT loop** (no speculative change made to spec-correct alarm code).
-
-* **GDS — 186 errors: 134 are the documented `CUVariables.ArrayItems` CTT bug (§2); the ~52 genuine
-  ones need the CTT scripts / a stateful register→query loop.** The `GDS Application Directory` /
-  `GDS Query Applications` status-code mismatches are **input-specific and mutually contradictory**
-  across test cases — some expect the server to be *stricter* (`Good` → `BadInvalidArgument`: 004,
-  005, 012, 032, 078), others *looser* (`BadInvalidArgument` → `Good`: 027, 060, 067, 069), and
-  others a *different* code (`BadNotFound` → `BadInvalidArgument`: 029, 038, 039). The exact
-  argument each numbered CTT case passes (empty/wildcard `ApplicationUri`, malformed `applicationId`,
-  specific capability filters, …) is **not** carried in the results XML, so mapping each case to its
-  Part 12 validation rule requires the CTT test scripts. The remaining directory/query
-  count mismatches (Expected *N* got 0/*M*) and AliasName replication to the GDS are **stateful** and
-  need a live register→query CTT loop. → **Blocked on the CTT scripts / loop.**
 
 
 * **Auditing Connections** (`Unable to Find Entry for ClientAuditEntryId`,
@@ -355,12 +191,273 @@ model / test-script inputs (which the XML does not carry).
   parameters, the `FindEntryVerbose` `whereClause`, or `ClientAuditEntryId`
   comparison / publish timing) — the CTT team should re-verify that path. This was
   *not* pinpointed to a single line and is therefore not listed as a defect above.
-* **Auditing / WriteMask / Historical Access / Aggregates** `BadUserAccessDenied`:
-  these were a *server* defect — the reference server's `Scalar_Static_Int32`
-  exposed `RolePermissions` for Anonymous + SecurityAdmin only, denying the CTT's
-  authenticated `user1`. Fixed server-side by granting `AuthenticatedUser`
-  (Browse|Read|Write|ReadHistory|ReadRolePermissions).
-* **`initialize.js:57` `Value.clone()`**: a symptom of the denied HistoryRead
-  above (the item `.Value` was empty for denied nodes); expected to clear once the
-  server permission fix lets the initial read succeed. Re-confirm on the next CTT
-  run.
+
+  ---
+
+
+## `AliasName Hierarchy/002.js:80` references an undefined variable.** (https://mantis.opcfoundation.org/view.php?id=11262)
+After the per-alias loop the success branch reads `TC_Variables.ListOfNodes.length`, but `ListOfNodes` is never
+  assigned in this test (the results were stored in `TC_Variables.OutputArguments`), raising
+  `Result of expression 'TC_Variables.ListOfNodes' [undefined] is not an object`. **Recommended CTT
+  fix:** use `TC_Variables.OutputArguments.length` (the array actually populated at line 37), or track a
+  running count of returned aliases.
+
+## 7. Aggregate `Err-004.js` creates an unintended equal-time request when ProcessingInterval is blank (https://mantis.opcfoundation.org/view.php?id=11252)
+
+**Tests:** every Aggregate Conformance Unit reuses
+`maintree/Aggregates/Aggregate - Base/Test Cases/Err-004.js`.
+
+**Observed in run 14:** 552 errors:
+
+- 276 generic `HistoryRead.js` / `assertions.js` errors reporting per-node
+  `BadInvalidArgument`;
+- 276 explicit `HAAggregateHelper.js:1764` errors rejecting the same
+  `BadInvalidArgument`.
+
+The normal Base `001-01` / `002-01` comparisons correctly accept this response (the console log
+contains hundreds of `Server and CTT have status codes of BadInvalidArgument` confirmations).
+Only `Err-004.js` rejects it.
+
+### Why this is a CTT/configuration defect
+
+`Err-004.js:25` calls `PerformExpectedErrorTest`. The helper constructs the request range from the
+configured Aggregate `ProcessingInterval`, but the run's CTT configuration leaves that setting blank.
+JavaScript coerces the blank value multiplied by ten to zero, so the helper sends
+`StartTime == EndTime`.
+
+OPC UA Part 11 §6.5.4.2 is explicit: when `StartTime` and `EndTime` are equal, the Server shall
+return `Bad_InvalidArgument` because the request has no meaningful processed time domain. Per Part 4
+§5.11.3.2, this is the per-node operation result while the HistoryRead ServiceResult remains Good.
+The reference server therefore returns the required result; the error test accidentally combines its
+intended invalid condition with a second invalid condition and then rejects the mandated status.
+
+### Recommended CTT fix
+
+Validate the setting before building the request in `HAAggregateHelper.js`:
+
+```js
+var interval = parseInt(
+    Settings.ServerTest.NodeIds.Static.HAProfile.Aggregates.ProcessingInterval);
+if (isNaN(interval) || interval <= 0) {
+    interval = 1;
+}
+```
+
+Alternatively, skip the test with a clear configuration error when a positive interval is missing.
+Apply the same guard to `PerformMismatchTest`. The immediate configuration workaround is to set
+Aggregate `ProcessingInterval` to a positive value.
+
+## Historical Access Read Raw `004.js` rejects correct reverse ordering (https://mantis.opcfoundation.org/view.php?id=11263)
+
+At lines 78, 91, and 105 the test uses:
+
+```js
+if (OPCF.HA.Analysis.Date.FlowsBackward(...)) result = false;
+```
+
+Those branches are specifically validating reverse reads, so `FlowsBackward(...) == true` is success,
+not failure. Replace each predicate with:
+
+```js
+if (!OPCF.HA.Analysis.Date.FlowsBackward(...)) result = false;
+```
+
+Part 11 §6.5.3.2 requires raw values to be returned in the direction implied by StartTime/EndTime.
+
+## Historical Access Read Raw `014.js` indexes a nonexistent second node result (https://mantis.opcfoundation.org/view.php?id=11264)
+
+The test requests one node but lines 46 and 78 inspect `Response.Results[1]`. The intended check is the
+second returned `DataValue` for the first node. Validate
+`haItems[0].Value[1].StatusCode` (with length guards) and describe it as record 2, not result 2.
+
+## Historical Access Read Raw `019.js` bypasses the CTT test harness (https://mantis.opcfoundation.org/view.php?id=11265)
+
+The script invokes `readraw019()` directly while the normal `Test.Execute` wrapper is commented out.
+Use:
+
+```js
+Test.Execute({ Procedure: readraw019 });
+```
+
+This ensures exceptions, result accounting, setup, and cleanup follow the same path as the other
+Historical Access cases.
+
+### `Err-013.js` describes an operation error as a ServiceResult
+
+Reusing a consumed ContinuationPoint shall produce per-node
+`BadContinuationPointInvalid`; the HistoryRead ServiceResult remains Good. Update the message to:
+
+> HistoryRead test #3 expected a Good ServiceResult and
+> `Results[0].StatusCode` `BadContinuationPointInvalid`.
+
+This matches Part 11 §6.3 and Part 4 §5.11.3.2.
+
+### `Err-019.js` uses an undefined loop variable in error messages
+
+Lines 25 and 43 interpolate undeclared `i`. Use literal test numbers `#1` and `#2` (or define a
+proper case index) so a failed assertion reports the actual case instead of throwing another
+JavaScript error.
+
+
+## 9. Node Management AddNodes — invalid reference and requested-NodeId CTT configuration
+
+
+### `002.js` enables references that cannot add a Variable under the configured parent
+
+`Node Management Add Node/Test Cases/002.js` loops every ReferenceType enabled under:
+
+`/Server Test/NodeIds/NodeManagement/SupportedReferences`
+
+and always adds a **Variable**, expecting `Good`. The project enabled all candidates. The 14 reported
+`BadReferenceNotAllowed` results correspond to the 13 non-hierarchical references plus `HasSubtype`:
+
+`HasModellingRule`, `HasEncoding`, `HasDescription`, `HasTypeDefinition`, `GeneratesEvent`,
+`AlwaysGeneratesEvent`, `FromState`, `HasCause`, `HasEffect`, `HasSubStateMachine`,
+`HasTrueSubState`, `HasFalseSubState`, `HasCondition`, and `HasSubtype`.
+
+OPC UA Part 4 §5.8.2 requires the new Node to be the target of a **HierarchicalReference**.
+`BadReferenceNotAllowed` is therefore correct. `HasSubtype` is hierarchical but is a type-system
+reference whose source and target must be compatible Type Nodes; the server now correctly rejects it
+for the Variable instance created by this script.
+
+**Recommended CTT project fix:** restrict the configured set to reference types compatible with the
+configured parent and a Variable target—typically `Organizes`, `HasProperty`, and `HasComponent`.
+Do not mark every known ReferenceType as supported merely because the server supports that
+ReferenceType elsewhere in its information model.
+
+### Node Management AddNodes `Err-008.js` tests duplicate NodeIds while client-specified NodeIds are disabled (https://mantis.opcfoundation.org/view.php?id=11266)
+
+`Err-008.js` sends the same AddNodes item twice and expects the second call to return
+`BadNodeIdExists`. In this project `/NodeManagement/RequestedNodeId` is disabled, so
+`CUVariables.RequestedNewNodeId()` returns a null NodeId. Each call legitimately asks the server to
+allocate a fresh NodeId; the second `Good` result represents a different node and is spec-correct.
+
+**Recommended CTT fix:** skip `Err-008.js` when client-specified NodeIds are disabled, or enable the
+setting and configure a concrete NodeId in a writable namespace owned by a NodeManager that supports
+NodeManagement before testing duplication.
+
+## 10. Run 18 Historical Access and Attribute script/configuration defects
+
+### Historical Access `012.js` expects `BadIndexRangeNoData` at the wrong level (https://mantis.opcfoundation.org/view.php?id=11267)
+
+The test reads historized array values with a syntactically valid IndexRange that is outside the
+array bounds. The server returns:
+
+- `HistoryReadResult.StatusCode = Good`;
+- each returned `DataValue.StatusCode = BadIndexRangeNoData`.
+
+`012.js` instead expects `Results[0].StatusCode = BadIndexRangeNoData`, producing two errors.
+OPC UA Part 11 §6.4 applies the IndexRange independently to each historical value; the HistoryRead
+operation succeeds while values for which no indexed data exists carry `BadIndexRangeNoData`.
+
+**Recommended CTT fix:** require the per-node result to be Good, decode `HistoryData`, and assert
+`BadIndexRangeNoData` on each affected `DataValue.StatusCode`.
+
+### Historical Access `Err-012.js` uses a non-historizing node for an access-denied test
+
+The configured node does not support history, so the server returns
+`BadHistoryOperationUnsupported` before any history authorization check can produce
+`BadUserAccessDenied`.
+
+**Recommended CTT project fix:** configure a node that is historizing and readable by an authorized
+identity but explicitly denies HistoryRead to the identity used by this case. A test cannot validate
+access denial with a node that has no supported history operation.
+
+### Attribute array helpers omit `NodeId[]` conversion (https://mantis.opcfoundation.org/view.php?id=11261)
+
+Run 18 records the same JavaScript exception for:
+
+- Attribute Read `032.js`;
+- Attribute Read `034.js`;
+- Attribute Write Index `007.js`.
+
+`UaNodeId.GuessType(...)` correctly identifies BuiltInType `NodeId (17)`, but the generic CTT array
+conversion/generation helper has no NodeId branch and throws:
+
+> Built in type not specified or detectable within the parameter: NodeId (17)
+
+**Recommended CTT fix:** add NodeId-array support to both directions:
+
+- decode with the appropriate `toNodeIdArray()` accessor;
+- generate/populate a `UaNodeIds` collection and set it with the NodeId-array Variant setter.
+
+As with the existing StatusCode-array defect (`026.js`/`036.js`), a generic built-in array test must
+support every configured built-in type or explicitly exclude unsupported types before executing.
+
+
+### The Core Structure comparison uses a UA 1.04 reference model for a UA 1.05 server (https://mantis.opcfoundation.org/view.php?id=11268)
+
+The run identifies the server as UA 1.05.006 but compares its address space with a UA 1.04 `NodeSetFile`. That can produce false additions, removals, modelling-rule, DataType, and ValueRank errors for nodes introduced or changed after 1.04.
+
+**Recommended CTT fix:** select a reference NodeSet whose specification version matches the server model under test. At minimum, the CTT must not report a 1.05 node as non-conformant solely because it differs from the bundled 1.04 reference.
+
+### `ConformanceUnits` is tested as a scalar instead of `QualifiedName[]`(https://mantis.opcfoundation.org/view.php?id=11269)
+
+The current standard node `i=24101` (`Server.ServerCapabilities.ConformanceUnits`) has `DataType=QualifiedName` and `ValueRank=1`; its value is a one-dimensional `QualifiedName` array. Run 19 expects a scalar QualifiedName and reports the conformant array value as an error.
+
+**Recommended CTT fix:** update the expected ValueRank to one dimension and decode/compare a `QualifiedName[]` value using the matching UA 1.05 NodeSet definition.
+
+### Monitor Value Change V2 `042.js` does not identify the missing item and does not guarantee its write changes the value
+
+`042.js` creates 19 matrix monitored items with IndexRange `1,1,...`, writes each whole matrix, and only reports the aggregate count (`Expected 19 but got 18`). It never reports the missing ClientHandle/NodeId, so the result cannot identify which data type failed. The repository's `MatrixIndexRangeReportsEveryChangedTypeAsync` creates the same 19 configured monitored items, writes a representably different selected element for every matrix type, and receives every ClientHandle.
+
+The script also computes `indexValue` from itself before initialization at line 243 (`var indexValue = Dimensions[u] * (indexValue + 1)`), so value verification is invalid once the count assertion passes. In addition, the configured deterministic Double and Float matrix elements can be very large (for example approximately `-8.19E+24` and `-1.03E+33`); adding one does not necessarily produce a representably different floating-point value. **Recommended CTT fix:** initialize the flat index, record and report missing ClientHandles, and verify that `UaVariant.Increment` actually changed each selected value (use the next representable floating-point value or a known different finite value).
+
+
+### Remaining A&C script findings
+
+* Alarm `Test_002.js` still evaluates Retain from only the main event's Active/Acked/Confirmed fields. The focused cycle confirms `Retain=true` after Confirm while the prior active branch remains outstanding; this is the Part 9 branch case already documented above, not a stale server value.
+* Alarm `Test_004.js` invokes the global `ReadHelper` synchronously from its alarm callback and receives a client-side `BadInvalidState`. An independent client/server regression resolves every AlarmCondition `InputNode` from the event model and reads every referenced source with `Good`. **Recommended CTT fix:** queue the Read outside the callback or use a Read helper/session that is valid on the alarm thread.
+* Enable `Test_002.js` calls `collector.AddMessage(testCase, category, conditionId, reason)` even though `AddMessage` accepts only three arguments. JavaScript drops the fourth argument, producing the empty `Error: ns=...` entries and hiding whether EnabledState, Retain, Event Time, or TransitionTime failed. The representative type- and instance-method disable/enable cycle passes with correct EnabledState and Retain. **Recommended CTT fix:** concatenate `conditionId` and `reason` into the third argument, then rerun before attributing the generic `Error validating variables for state ConditionDisabled`.
+
+### Run 23 A&C-only evidence confirms no new server regression
+
+`NewCTT2.results 23.xml` with `ctt output 10.txt` contains 140 errors: 64 from Alarm `Test_004.js`, 28 from Alarm `Test_002.js`, 45 from Enable `Test_002.js`, and three Confirm `Test_001.js` summaries. Alarm `Test_004.js` now reaches 25 configured InputNodes instead of 14, but every primary failure is still the client-side re-entrant `ReadHelper` `BadInvalidState` described above. Alarm `Test_002.js` is unchanged. Enable `Test_002.js` is unchanged and still discards its fourth `reason` argument. Confirm succeeds for every tested condition; only Discrete, OffNormal, and SystemOffNormal fail because `ValidateRetain` ignores outstanding branches and rejects the Part 9 §5.5.2 requirement that the current Event keep `Retain=true` while any ConditionBranch requires Operator input. The prior model-map, ModellingRule, invalid configured Object Value, Refresh2 cascade, and cross-Session Confirm failures are absent.
+
+### Core Structure reads TransactionDiagnostics as if a transaction had already occurred (https://mantis.opcfoundation.org/view.php?id=11256)
+
+Core Structure `001.js` reports `BadOutOfService` for `i=32337` through `i=32340` as a datatype/read failure. OPC UA Part 12 §7.10.17 explicitly states: *"If no transaction has started the values of all Variables have a status of Bad_OutOfService."* The server implements that requirement and `TransactionDiagnosticsReportBadOutOfServiceBeforeAnyTransactionAsync` verifies every TransactionDiagnostics variable. **Recommended CTT fix:** accept `BadOutOfService` while walking TransactionDiagnostics before the first transaction, or create a completed transaction before validating values.
+
+### SemanticChange `001.js` decodes the `Changes` array as one ExtensionObject (https://mantis.opcfoundation.org/view.php?id=11093)
+
+The test receives a SemanticChange event, then calls `EventFields[0].toExtensionObject()` at line 275. OPC UA Part 5 Table 174 defines `SemanticChangeEventType.Changes` as `SemanticChangeStructureDataType[]` with ValueRank 1, not a scalar ExtensionObject. The scalar conversion therefore returns null and the script throws before validating the event. **Recommended CTT fix:** decode the field as an ExtensionObject array and convert each element to `SemanticChangeStructureDataType`.
+
+### Historical Access Read Raw `013.js` reuses continuation points after changing IndexRange (https://mantis.opcfoundation.org/view.php?id=11257)
+
+`013.js` reuses the same `HistoryReadValueId` objects for three different IndexRanges and does not clear or consume the ContinuationPoints returned by the preceding call. With seven configured matrix nodes, the two later iterations produce the observed 14 `BadContinuationPointInvalid` results. A HistoryRead continuation point is opaque state for the original request (Part 11 §6.4.3.3); changing IndexRange while resubmitting it invalidates that state. **Recommended CTT fix:** fully drain/release every continuation point before the next IndexRange, or create fresh `HistoryReadValueId` objects with empty ContinuationPoints for each independent request.
+
+### Security User Name Password `015.js` requires PolicyId uniqueness across unrelated endpoints (https://mantis.opcfoundation.org/view.php?id=11258)
+
+The script flattens `UserIdentityTokens` from every `EndpointDescription` into one array and compares `PolicyId` globally. OPC UA Part 4 §7.36.2.2 requires each `UserTokenPolicy` to have a unique `PolicyId` within the `UserIdentityTokens` array of one `EndpointDescription`; it does not require global uniqueness across all endpoints. The current reference server's live endpoints have unique PolicyIds within every endpoint. The script also uses `foundTokens[i]` instead of the token it just appended inside the nested loop at line 20. **Recommended CTT fix:** reset the seen-PolicyId set for each endpoint and validate only that endpoint's array.
+
+### Aggregate failures
+
+The remaining evidenced value families primarily expose CTT configuration/oracle differences rather than proving more server changes:
+
+* The log prints `Requested Bad Data Entry - Bad Data Entry no found, using start data` 1,815 times. The current reference-server seed does contain a deterministic mixed-quality pattern (index modulo 10: one `BadDataUnavailable`, one `UncertainSubstituteValue`, eight Good) on every configured historical node, but the CTT project does not identify a `BadDataEntry`; `HAAggregateHelper.GetRequestEntry` silently substitutes `StartEntry`. The related `BadDataStartRequest` cases have no fallback and produce the 74 existing configuration exceptions. The project needs explicit Bad/Uncertain entry metadata instead of silently changing the requested scenario.
+* The same seeded status timeline is applied to Int32, Float, Double, Boolean, and String nodes. Status-only aggregates therefore return the same DurationGood/Bad and PercentGood/Bad values for each data type. The log shows the CTT cached oracle matching the numeric nodes, then producing different values only for the Boolean/String nodes (for example server `PercentGood=83.193277...` for every type while the CTT changes to `82.608771...` and then `0`). This proves a CTT cached-history decode/oracle defect for non-numeric values; the server calculation cannot legitimately depend on the raw value type.
+* Every Interpolative mismatch is the Int32 conversion `24` versus `23`; Float and Double match exactly. The TimeAverage and Total mismatches are likewise confined to Int32 nodes while Float and Double match. The server rounds the interpolated source-typed bounds to nearest; the CTT truncates. Part 13 defines the interpolation and result type but does not mandate the integer conversion convention.
+* StartBound and EndBound support all source data types under Part 13 §5.4.2.3 and use Simple Bounding Values. The CTT cached oracle repeatedly returns `BadNoData` for valid Boolean and String bounds while the server returns the nearest valid value. Numeric Float/Double bounds match, with only the same Int32 rounding convention above.
+* MinimumActualTime2 and MaximumActualTime2 server results use an eligible sloped End bound and timestamp it at EffectiveEndTime, as required by Part 13 §§5.4.3.17-.18 and §5.4.2.4. The CTT comparisons instead select an earlier raw value in those cases. Related `*2` comparisons also contain the non-numeric oracle and Int32 conversion differences above.
+
+Run 21 therefore justifies the NumberOfTransitions fix above, not broad compatibility changes to the other aggregate calculators. AnnotationCount, Count, DeltaBounds, DurationBad, and the beginning of DurationGood still need a non-truncated value-bearing log. Tail-of-range Start/End and WorstQuality comparisons that differ only between `BadDataUnavailable` and `BadNoData`, or by the Partial bit, also remain open pending a focused request/raw-data trace.
+
+### Run 24 confirms the aggregate fix and exposes new Base Information coverage
+
+`NewCTT2.results 24.xml` with `ctt output 11.txt` has 4,578 errors. All A&C and Node Management errors from run 21 are gone. Historical Access retains the same 17 documented script/configuration errors, and every aggregate family except NumberOfTransitions has the same count as run 21.
+
+NumberOfTransitions increases from 198 to 214 XML errors because the corrected server now includes Uncertain raw values in the transition count. The one-interval CTT case contains 24 monotonic samples: two are Bad, two are Uncertain, and 20 are Good. Part 13 §5.4.3.24 excludes only Bad values, so the conformant count is 22; the CTT returns 20 because its cached oracle also excludes Uncertain values when `TreatUncertainAsBad=true`. That setting affects aggregate StatusCode calculation, not which values participate in NumberOfTransitions. A direct and live historian regression reproduces `22` with `UncertainDataSubNormal`, including the Uncertain samples.
+
+Base Info Selection List `003.js` and `004.js` exposed a server modelling defect. The new instance declared `DataType=String` while its mandatory `Selections` Property retained the generated base type's `Variant[]` value. Part 5 §7.18 requires an instance's `Selections` array DataType to equal the instance DataType. Both CTT scripts therefore reached `UaVariant.New(Type=Variant)` and failed in `UaV.js:291` because the JavaScript binding cannot pass the wrapped `OpcUa_Variant*` back to `setVariant`. The reference instance now exposes a String `SelectionListType` with a `String[]` Selections Property, matching SelectionDescriptions and RestrictToList, and rejects values outside the list with `BadOutOfRange`.
+
+Base Info Currency `004.js` reads the EUR CurrencyUnit and reports the Exponent as empty. The server value is `NumericCode=978`, `Exponent=2`, `AlphabeticCode=EUR`, `Currency=Euro`, matching ISO 4217 and Part 3 §8.61. The generated `CurrencyUnitType.Encode` writes the Int16 NumericCode followed by the SByte Exponent, and the regression verifies the encoded prefix `D2 03 02`; the CTT `toCurrencyUnitType()` conversion is dropping the Exponent field. No server compatibility change is justified.
+
+### Durable Subscription `008.js` misspells `MoreNotifications` and does not drain the queue (https://mantis.opcfoundation.org/view.php?id=11259)
+
+The script correctly checks `PublishHelper.Response.MoreNotifications` at line 35, but line 101 uses the misspelled `MoreNotifcations`. The drain loop therefore does not run when additional notification responses are queued, and the final Publish sees a notification that the script incorrectly calls unexpected. OPC UA Part 4 §5.14.5.2 permits subsequent responses when `moreNotifications=TRUE`. Lines 105-108 also omit braces, leaving `result = false` unconditional. **Recommended CTT fix:** use `MoreNotifications`, drain until it is false, then perform the no-more-data assertion with braces around the failure branch.
+
+### Subscription Minimum 02 `020.js` accepts unrelated audit events (https://mantis.opcfoundation.org/view.php?id=11260)
+
+The event MonitoredItem has SelectClauses but no WhereClause, so it accepts every event emitted by the Server. The test's scalar Write generates an `AuditWriteUpdateEvent` when auditing is enabled, and a Server-root event subscriber is expected to receive it. The script then reports any event as unexpected; it may also leave a trigger event queued because the preceding step does not drain `MoreNotifications`.
+
+**Recommended CTT fix:** select EventType, filter for only the trigger event the test is validating, and drain every response while `MoreNotifications` is true. Do not treat correctly emitted audit events as Subscription-Minimum failures.
