@@ -3973,6 +3973,14 @@ namespace Opc.Ua.Server
                     continue;
                 }
 
+                ServiceResult? retirementError = GetRetirementError(monitoredItems[ii]);
+                if (retirementError is not null)
+                {
+                    errors[ii] = retirementError;
+                    itemsToModify[ii].Processed = true;
+                    continue;
+                }
+
                 // validate request parameters.
                 errors[ii] = ValidateMonitoredItemModifyRequest(itemsToModify[ii])!;
 
@@ -4040,6 +4048,11 @@ namespace Opc.Ua.Server
         {
             for (int ii = 0; ii < itemsToModify.Count; ii++)
             {
+                if (itemsToModify[ii].Processed)
+                {
+                    continue;
+                }
+
                 // all event subscriptions are handled by the event manager.
                 if (monitoredItems[ii] is not IEventMonitoredItem monitoredItem ||
                     (monitoredItem.MonitoredItemType & MonitoredItemTypeMask.Events) == 0)
@@ -4163,8 +4176,10 @@ namespace Opc.Ua.Server
             // preset results for unknown nodes
             for (int ii = 0; ii < monitoredItems.Count; ii++)
             {
-                processedItems.Add(monitoredItems[ii] == null);
-                errors[ii] = StatusCodes.BadMonitoredItemIdInvalid;
+                ServiceResult? retirementError = GetRetirementError(monitoredItems[ii]);
+                bool processed = monitoredItems[ii] == null || retirementError is not null;
+                processedItems.Add(processed);
+                errors[ii] = retirementError ?? StatusCodes.BadMonitoredItemIdInvalid;
             }
 
             // call each owning node manager. Data monitored items are dispatched to their
@@ -4230,6 +4245,19 @@ namespace Opc.Ua.Server
 
             for (int ii = 0; ii < itemsToDelete.Count; ii++)
             {
+                ServiceResult? retirementError = GetRetirementError(itemsToDelete[ii]);
+                if (retirementError is not null)
+                {
+                    processedItems.Add(true);
+                    if (itemsToDelete[ii] is IEventMonitoredItem eventMonitoredItem &&
+                        (eventMonitoredItem.MonitoredItemType & MonitoredItemTypeMask.Events) != 0)
+                    {
+                        Server.EventManager.DeleteMonitoredItem(itemsToDelete[ii].Id);
+                    }
+                    errors[ii] = StatusCodes.Good;
+                    continue;
+                }
+
                 processedItems.Add(ServiceResult.IsBad(errors[ii]) || itemsToDelete[ii] == null);
             }
 
@@ -4282,6 +4310,11 @@ namespace Opc.Ua.Server
         {
             for (int ii = 0; ii < monitoredItems.Count; ii++)
             {
+                if (processedItems[ii])
+                {
+                    continue;
+                }
+
                 // all event subscriptions are handled by the event manager.
                 if (monitoredItems[ii] is not IEventMonitoredItem monitoredItem ||
                     (monitoredItem.MonitoredItemType & MonitoredItemTypeMask.Events) == 0)
@@ -4353,6 +4386,14 @@ namespace Opc.Ua.Server
 
             for (int ii = 0; ii < itemsToModify.Count; ii++)
             {
+                ServiceResult? retirementError = GetRetirementError(itemsToModify[ii]);
+                if (retirementError is not null)
+                {
+                    processedItems.Add(true);
+                    errors[ii] = retirementError;
+                    continue;
+                }
+
                 processedItems.Add(ServiceResult.IsBad(errors[ii]) || itemsToModify[ii] == null);
             }
 
@@ -4403,6 +4444,11 @@ namespace Opc.Ua.Server
         {
             for (int ii = 0; ii < monitoredItems.Count; ii++)
             {
+                if (processedItems[ii])
+                {
+                    continue;
+                }
+
                 // all event subscriptions are handled by the event manager.
                 if (monitoredItems[ii] is not IEventMonitoredItem monitoredItem ||
                     (monitoredItem.MonitoredItemType & MonitoredItemTypeMask.Events) == 0)
@@ -4466,6 +4512,11 @@ namespace Opc.Ua.Server
 
             return owners;
         }
+
+        private static ServiceResult? GetRetirementError(IMonitoredItem? monitoredItem)
+            => monitoredItem is IRetirableMonitoredItem { RetirementError: { } error }
+                ? error
+                : null;
 
         /// <summary>
         /// Dispatches an ownership-sensitive data monitored item operation to each item's

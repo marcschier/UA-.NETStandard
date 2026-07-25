@@ -40,7 +40,10 @@ namespace Opc.Ua.Server
     /// <summary>
     /// Manages a subscription created by a client.
     /// </summary>
-    public class Subscription : ISubscription, INodeManagerMonitoredItemTracker
+    public class Subscription :
+        ISubscription,
+        INodeManagerMonitoredItemTracker,
+        INodeManagerMonitoredItemRetirementTracker
     {
         /// <summary>
         /// Initializes the object.
@@ -468,11 +471,125 @@ namespace Opc.Ua.Server
             lock (m_lock)
             {
                 return m_monitoredItems.Values.Any(monitoredItem =>
-                    ReferenceEquals(monitoredItem.Value.NodeManager, nodeManager) ||
-                    ReferenceEquals(
-                        monitoredItem.Value.NodeManager.SyncNodeManager,
-                        nodeManager.SyncNodeManager));
+                    !IsRetired(monitoredItem.Value) &&
+                    IsOwnedBy(monitoredItem.Value, nodeManager));
             }
+        }
+
+        /// <inheritdoc/>
+        bool INodeManagerMonitoredItemRetirementTracker.CanRetireMonitoredItems(
+            IAsyncNodeManager nodeManager)
+        {
+            if (nodeManager is null)
+            {
+                throw new ArgumentNullException(nameof(nodeManager));
+            }
+
+            lock (m_lock)
+            {
+                if (IsDurable)
+                {
+                    return false;
+                }
+                return m_monitoredItems.Values
+                    .Where(monitoredItem => IsOwnedBy(monitoredItem.Value, nodeManager))
+                    .All(monitoredItem =>
+                        !monitoredItem.Value.IsDurable &&
+                        monitoredItem.Value is IRetirableMonitoredItem);
+            }
+        }
+
+        /// <inheritdoc/>
+        void INodeManagerMonitoredItemRetirementTracker.RetireMonitoredItems(
+            IAsyncNodeManager nodeManager,
+            ServiceResult error)
+        {
+            if (nodeManager is null)
+            {
+                throw new ArgumentNullException(nameof(nodeManager));
+            }
+            if (error is null)
+            {
+                throw new ArgumentNullException(nameof(error));
+            }
+
+            IRetirableMonitoredItem[] ownedItems;
+            lock (m_lock)
+            {
+                if (IsDurable)
+                {
+                    throw new NotSupportedException(
+                        "Durable subscriptions cannot be retired immediately.");
+                }
+                IMonitoredItem[] candidates = m_monitoredItems.Values
+                    .Select(monitoredItem => monitoredItem.Value)
+                    .Where(monitoredItem => IsOwnedBy(monitoredItem, nodeManager))
+                    .ToArray();
+                if (candidates.Any(monitoredItem =>
+                    monitoredItem.IsDurable ||
+                    monitoredItem is not IRetirableMonitoredItem))
+                {
+                    throw new NotSupportedException(
+                        "Durable or unsupported monitored items cannot be retired immediately.");
+                }
+                ownedItems = candidates.Cast<IRetirableMonitoredItem>().ToArray();
+            }
+
+            foreach (IRetirableMonitoredItem monitoredItem in ownedItems)
+            {
+                monitoredItem.Retire(error);
+            }
+        }
+
+        /// <inheritdoc/>
+        void INodeManagerMonitoredItemRetirementTracker.DetachRetiredMonitoredItems(
+            IAsyncNodeManager nodeManager)
+        {
+            if (nodeManager is null)
+            {
+                throw new ArgumentNullException(nameof(nodeManager));
+            }
+
+            IRetirableMonitoredItem[] retiredItems;
+            lock (m_lock)
+            {
+                retiredItems = m_monitoredItems.Values
+                    .Select(monitoredItem => monitoredItem.Value)
+                    .Where(monitoredItem =>
+                        IsRetired(monitoredItem) &&
+                        IsOwnedBy(monitoredItem, nodeManager))
+                    .Cast<IRetirableMonitoredItem>()
+                    .ToArray();
+            }
+
+            foreach (IRetirableMonitoredItem monitoredItem in retiredItems)
+            {
+                monitoredItem.DetachOwner();
+            }
+        }
+
+        private static bool IsRetired(IMonitoredItem monitoredItem)
+            => monitoredItem is IRetirableMonitoredItem { IsRetired: true };
+
+        private static bool IsOwnedBy(
+            IMonitoredItem monitoredItem,
+            IAsyncNodeManager nodeManager)
+        {
+            IAsyncNodeManager? monitoredItemOwner = monitoredItem.NodeManager;
+            if (monitoredItemOwner is null)
+            {
+                return false;
+            }
+            if (ReferenceEquals(monitoredItemOwner, nodeManager))
+            {
+                return true;
+            }
+
+            INodeManager? monitoredItemSync = monitoredItemOwner.SyncNodeManager;
+            INodeManager? nodeManagerSync = nodeManager.SyncNodeManager;
+            return monitoredItemSync is not null &&
+                nodeManagerSync is not null &&
+                ReferenceEquals(monitoredItemSync, nodeManagerSync);
         }
 
         /// <summary>

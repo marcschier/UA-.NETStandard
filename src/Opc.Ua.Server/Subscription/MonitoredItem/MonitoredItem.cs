@@ -41,7 +41,8 @@ namespace Opc.Ua.Server
     public class MonitoredItem :
         IEventMonitoredItem,
         ISampledDataChangeMonitoredItem,
-        ITriggeredMonitoredItem
+        ITriggeredMonitoredItem,
+        IRetirableMonitoredItem
     {
         /// <summary>
         /// Initializes the object with its node type.
@@ -404,6 +405,11 @@ namespace Opc.Ua.Server
         {
             get
             {
+                if (m_retirementNotificationPending)
+                {
+                    return true;
+                }
+
                 // check if aggregate interval has passed.
                 if (m_calculator != null && m_calculator.HasEndTimePassed(DateTime.UtcNow))
                 {
@@ -481,7 +487,8 @@ namespace Opc.Ua.Server
         {
             lock (m_lock)
             {
-                if (MonitoringMode == MonitoringMode.Reporting &&
+                if (m_retirementError is null &&
+                    MonitoringMode == MonitoringMode.Reporting &&
                     (MonitoredItemType & MonitoredItemTypeMask.DataChange) != 0)
                 {
                     m_resendData = true;
@@ -943,6 +950,11 @@ namespace Opc.Ua.Server
         {
             lock (m_lock)
             {
+                if (m_retirementError is not null)
+                {
+                    return;
+                }
+
                 // this method should only be called for variables.
                 if ((MonitoredItemType & MonitoredItemTypeMask.DataChange) == 0)
                 {
@@ -1019,6 +1031,91 @@ namespace Opc.Ua.Server
 
                 // add the value to the queue.
                 AddValueToQueue(current, error!);
+            }
+        }
+
+        bool IRetirableMonitoredItem.IsRetired
+        {
+            get
+            {
+                lock (m_lock)
+                {
+                    return m_retirementError is not null;
+                }
+            }
+        }
+
+        ServiceResult? IRetirableMonitoredItem.RetirementError
+        {
+            get
+            {
+                lock (m_lock)
+                {
+                    return m_retirementError;
+                }
+            }
+        }
+
+        void IRetirableMonitoredItem.Retire(ServiceResult error)
+        {
+            if (error is null)
+            {
+                throw new ArgumentNullException(nameof(error));
+            }
+
+            ISubscription? subscription = null;
+            lock (m_lock)
+            {
+                if (m_retirementError is not null)
+                {
+                    return;
+                }
+
+                m_retirementError = error;
+                if ((MonitoredItemType & MonitoredItemTypeMask.DataChange) != 0)
+                {
+                    m_calculator = null;
+                    m_dataChangeQueueHandler?.Dispose();
+                    m_dataChangeQueueHandler = null;
+                    m_retirementNotificationPending = true;
+                    var value = new DataValue(
+                        Variant.Null,
+                        error.StatusCode,
+                        DateTime.UtcNow,
+                        DateTime.UtcNow);
+                    if (!m_lastValue.IsNull)
+                    {
+                        m_readyToTrigger = true;
+                    }
+                    m_lastValue = value;
+                    m_lastError = error;
+                    m_readyToPublish = true;
+                    subscription = m_subscription;
+                }
+                else if ((MonitoredItemType & MonitoredItemTypeMask.Events) != 0)
+                {
+                    m_eventQueueHandler?.Dispose();
+                    m_eventQueueHandler = null;
+                    m_readyToPublish = false;
+                    m_readyToTrigger = false;
+                    m_triggered = false;
+                }
+            }
+
+            subscription?.ItemReadyToPublish(this);
+        }
+
+        void IRetirableMonitoredItem.DetachOwner()
+        {
+            lock (m_lock)
+            {
+                if (m_retirementError is null)
+                {
+                    throw new InvalidOperationException(
+                        "A monitored item must be retired before its owner is detached.");
+                }
+                NodeManager = null!;
+                ManagerHandle = null!;
             }
         }
 
@@ -1122,6 +1219,11 @@ namespace Opc.Ua.Server
 
             lock (m_lock)
             {
+                if (m_retirementError is not null)
+                {
+                    return;
+                }
+
                 // this method should only be called for objects or views.
                 if ((MonitoredItemType & MonitoredItemTypeMask.Events) == 0)
                 {
@@ -1178,6 +1280,11 @@ namespace Opc.Ua.Server
         {
             lock (m_lock)
             {
+                if (m_retirementError is not null)
+                {
+                    return;
+                }
+
                 m_eventQueueHandler!.QueueEvent(fields);
                 m_readyToPublish = true;
                 m_readyToTrigger = true;
@@ -1448,7 +1555,9 @@ namespace Opc.Ua.Server
                 else
                 {
                     // pull any unprocessed data.
-                    if (m_calculator != null && m_calculator.HasEndTimePassed(DateTime.UtcNow))
+                    if (!m_retirementNotificationPending &&
+                        m_calculator != null &&
+                        m_calculator.HasEndTimePassed(DateTime.UtcNow))
                     {
                         while (m_calculator.TryGetProcessedValue(false, out DataValue processedValue))
                         {
@@ -1499,6 +1608,7 @@ namespace Opc.Ua.Server
                 // reset state variables.
                 m_readyToPublish = moreValuesToPublish;
                 m_readyToTrigger = moreValuesToPublish;
+                m_retirementNotificationPending = false;
                 m_resendData = false;
                 m_triggered = false;
 
@@ -2045,6 +2155,8 @@ namespace Opc.Ua.Server
         private bool m_structureChanged;
         private ISubscription? m_subscription;
         private ServiceResult? m_samplingError;
+        private ServiceResult? m_retirementError;
+        private bool m_retirementNotificationPending;
         private IAggregateCalculator? m_calculator;
         private bool m_triggered;
         private bool m_resendData;
