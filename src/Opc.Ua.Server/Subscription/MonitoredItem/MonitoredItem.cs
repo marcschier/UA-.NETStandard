@@ -962,12 +962,50 @@ namespace Opc.Ua.Server
         {
             lock (m_lock)
             {
+                MonitoringFilter? previousFilterToUse = m_filterToUse;
+                IAggregateCalculator? replacementCalculator = m_calculator;
+                bool preparedCalculatorUsed = false;
+                bool calculatorChanged = false;
+
+                if (filterToUse is ServerAggregateFilter aggregateFilter)
+                {
+                    if (IsEquivalentAggregateFilterLocked(aggregateFilter))
+                    {
+                        aggregateFilter.PrimeInitialValue = false;
+                    }
+                    else
+                    {
+                        if (m_aggregateModificationPreparation is
+                            {
+                                Filter: var preparedFilter
+                            } prepared &&
+                            ReferenceEquals(preparedFilter, aggregateFilter))
+                        {
+                            preparedCalculatorUsed = true;
+                            replacementCalculator = prepared.Calculator;
+                        }
+                        else
+                        {
+                            replacementCalculator =
+                                CreateAggregateCalculator(aggregateFilter);
+                        }
+                        calculatorChanged = true;
+                        if (replacementCalculator == null)
+                        {
+                            aggregateFilter.PrimeInitialValue = false;
+                        }
+                    }
+                }
+                else if (m_calculator != null)
+                {
+                    replacementCalculator = null;
+                    calculatorChanged = true;
+                }
+
                 DiagnosticsMasks = diagnosticsMasks;
                 m_timestampsToReturn = timestampsToReturn;
                 ClientHandle = clientHandle;
                 m_discardOldest = discardOldest;
-
-                MonitoringFilter? previousFilterToUse = m_filterToUse;
 
                 Filter = originalFilter;
                 m_filterToUse = filterToUse;
@@ -983,61 +1021,21 @@ namespace Opc.Ua.Server
                 SetSamplingInterval(samplingInterval);
                 QueueSize = queueSize;
 
-                // check if aggregate filter has been updated.
-                if (filterToUse is ServerAggregateFilter aggregateFilter)
+                if (calculatorChanged)
                 {
-                    var existingFilter =
-                        previousFilterToUse as ServerAggregateFilter;
-                    bool match = existingFilter != null &&
-                        m_calculator != null;
-
-                    if (match &&
-                        existingFilter!.AggregateType !=
-                            aggregateFilter.AggregateType)
+                    m_calculator = replacementCalculator;
+                    m_initialValuePending =
+                        replacementCalculator != null &&
+                        filterToUse is ServerAggregateFilter
+                        {
+                            PrimeInitialValue: true
+                        };
+                    m_pendingValues = null;
+                    m_initialValueOverflowed = false;
+                    if (preparedCalculatorUsed)
                     {
-                        match = false;
+                        m_aggregateModificationPreparation!.MarkCommitted();
                     }
-
-                    if (match &&
-                        existingFilter!.ProcessingInterval !=
-                            aggregateFilter.ProcessingInterval)
-                    {
-                        match = false;
-                    }
-
-                    if (match &&
-                        existingFilter!.StartTime != aggregateFilter.StartTime)
-                    {
-                        match = false;
-                    }
-
-                    if (match &&
-                        existingFilter!.Stepped != aggregateFilter.Stepped)
-                    {
-                        match = false;
-                    }
-
-                    if (match &&
-                        !existingFilter!.AggregateConfiguration
-                            .IsEqual(aggregateFilter.AggregateConfiguration))
-                    {
-                        match = false;
-                    }
-
-                    if (!match)
-                    {
-                        m_calculator = m_server.AggregateManager.CreateCalculator(
-                            aggregateFilter.AggregateType,
-                            (DateTime)aggregateFilter.StartTime,
-                            DateTime.MaxValue,
-                            aggregateFilter.ProcessingInterval,
-                            aggregateFilter.Stepped,
-                            aggregateFilter.AggregateConfiguration);
-                    }
-                }
-                else
-                {
-                    m_calculator = null;
                 }
 
                 // report change to item state.
@@ -1051,8 +1049,102 @@ namespace Opc.Ua.Server
                     MonitoringMode);
 
                 InitializeQueue();
+                if (preparedCalculatorUsed)
+                {
+                    m_aggregateModificationPreparation = null;
+                }
 
                 return null;
+            }
+        }
+
+        internal AggregateModificationPreparation?
+            PrepareAggregateModification(
+            ServerAggregateFilter aggregateFilter)
+        {
+            lock (m_lock)
+            {
+                m_aggregateModificationPreparation = null;
+                if (IsEquivalentAggregateFilterLocked(aggregateFilter))
+                {
+                    aggregateFilter.PrimeInitialValue = false;
+                    return null;
+                }
+
+                var preparation = new AggregateModificationPreparation(
+                    aggregateFilter,
+                    CreateAggregateCalculator(aggregateFilter));
+                m_aggregateModificationPreparation = preparation;
+                if (preparation.Calculator == null)
+                {
+                    aggregateFilter.PrimeInitialValue = false;
+                }
+                return preparation;
+            }
+        }
+
+        internal void CancelPreparedAggregateModification(
+            AggregateModificationPreparation preparation)
+        {
+            lock (m_lock)
+            {
+                if (ReferenceEquals(
+                    m_aggregateModificationPreparation,
+                    preparation))
+                {
+                    m_aggregateModificationPreparation = null;
+                }
+            }
+        }
+
+        private IAggregateCalculator? CreateAggregateCalculator(
+            ServerAggregateFilter aggregateFilter)
+        {
+            return m_server.AggregateManager.CreateCalculator(
+                aggregateFilter.AggregateType,
+                (DateTime)aggregateFilter.StartTime,
+                DateTime.MaxValue,
+                aggregateFilter.ProcessingInterval,
+                aggregateFilter.Stepped,
+                aggregateFilter.AggregateConfiguration);
+        }
+
+        private bool IsEquivalentAggregateFilterLocked(
+            ServerAggregateFilter aggregateFilter)
+        {
+            return m_filterToUse is ServerAggregateFilter existingFilter &&
+                m_calculator != null &&
+                existingFilter.AggregateType == aggregateFilter.AggregateType &&
+                existingFilter.ProcessingInterval ==
+                    aggregateFilter.ProcessingInterval &&
+                existingFilter.StartTime == aggregateFilter.StartTime &&
+                existingFilter.Stepped == aggregateFilter.Stepped &&
+                existingFilter.AggregateConfiguration
+                    .IsEqual(aggregateFilter.AggregateConfiguration);
+        }
+
+        internal sealed class AggregateModificationPreparation
+        {
+            internal AggregateModificationPreparation(
+                ServerAggregateFilter filter,
+                IAggregateCalculator? calculator)
+            {
+                Filter = filter;
+                Calculator = calculator;
+            }
+
+            internal ServerAggregateFilter Filter { get; }
+
+            internal IAggregateCalculator? Calculator { get; }
+
+            internal bool IsCommitted { get; private set; }
+
+            internal bool RequiresInitialValue =>
+                Calculator != null && Filter.PrimeInitialValue;
+
+            internal void MarkCommitted()
+            {
+                IsCommitted = true;
             }
         }
 
@@ -1173,16 +1265,20 @@ namespace Opc.Ua.Server
         {
             lock (m_lock)
             {
-                if (m_initialValueOverflowed)
+                List<PendingValue>? pendingValues = m_pendingValues;
+                bool initialValueOverflowed = m_initialValueOverflowed;
+                m_pendingValues = null;
+                m_initialValuePending = false;
+                m_initialValueOverflowed = false;
+
+                if (initialValueOverflowed)
                 {
-                    m_pendingValues = null;
-                    m_initialValuePending = false;
                     return StatusCodes.BadTooManyOperations;
                 }
 
-                if (m_pendingValues != null)
+                if (pendingValues != null)
                 {
-                    foreach (PendingValue pending in m_pendingValues)
+                    foreach (PendingValue pending in pendingValues)
                     {
                         QueueValueLocked(
                             pending.Value,
@@ -1190,9 +1286,7 @@ namespace Opc.Ua.Server
                             pending.IgnoreFilters,
                             required: false);
                     }
-                    m_pendingValues = null;
                 }
-                m_initialValuePending = false;
                 return ServiceResult.Good;
             }
         }
@@ -2613,6 +2707,8 @@ namespace Opc.Ua.Server
         private ISubscription? m_subscription;
         private ServiceResult? m_samplingError;
         private IAggregateCalculator? m_calculator;
+        private AggregateModificationPreparation?
+            m_aggregateModificationPreparation;
         private bool m_initialValuePending;
         private List<PendingValue>? m_pendingValues;
         private bool m_initialValueOverflowed;

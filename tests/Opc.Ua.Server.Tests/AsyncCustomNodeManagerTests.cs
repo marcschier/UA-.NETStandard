@@ -79,6 +79,8 @@ namespace Opc.Ua.Server.Tests
         private static readonly int[] s_trailingBoundValues = [50, 60];
         private static readonly int[] s_indexedLeadingBoundValues = [20];
         private static readonly int[] s_indexedInRangeValues = [40];
+        private static readonly int[] s_modifiedAggregateValues = [1, 2, 3, 4];
+        private static readonly int[] s_replayFailureValues = [3, 5];
         private MonitoredItemQueueFactory m_monitoredItemQueueFactory;
 
         private delegate void QueueValueCallback(
@@ -2271,6 +2273,977 @@ namespace Opc.Ua.Server.Tests
             Assert.That(
                 ((ISampledDataChangeMonitoredItem)monitoredItems[0]).QueueSize,
                 Is.EqualTo(4));
+        }
+
+        [Test]
+        public async Task ModifyAggregateOrdersPagedHistoryBeforeBufferedLiveValuesAsync()
+        {
+            using ITestNodeManager manager = CreateManager();
+            Assume.That(
+                manager is TestableAsyncCustomNodeManager,
+                "Historical aggregate modification is asynchronous.");
+            var asyncManager = (TestableAsyncCustomNodeManager)manager;
+            if (m_useSamplingGroups)
+            {
+                asyncManager.InstallTrackingSamplingGroupManager();
+            }
+            ushort nsIdx = manager.NamespaceIndexes[0];
+            var aggregateId = new NodeId("OrderedModificationAggregate", nsIdx);
+            using AggregateManager aggregateManager =
+                CreateAndSetupAggregateManager();
+            var queuedRawValues = new ConcurrentQueue<int>();
+            var calculator = new Mock<IAggregateCalculator>();
+            calculator
+                .Setup(value => value.QueueRawValue(It.IsAny<DataValue>()))
+                .Callback<DataValue>(
+                    value => queuedRawValues.Enqueue((int)value.WrappedValue))
+                .Returns(true);
+            await aggregateManager.RegisterFactoryAsync(
+                aggregateId,
+                "OrderedModificationAggregate",
+                (id, start, end, interval, stepped, configuration, telemetry) =>
+                    calculator.Object).ConfigureAwait(false);
+            (BaseDataVariableState variable, MonitoredItem monitoredItem) =
+                await CreateMonitoredVariableAsync(
+                    manager,
+                    "OrderedModificationVariable").ConfigureAwait(false);
+            PublishDataValues(monitoredItem);
+            DateTimeOffset now = new(2026, 9, 5, 8, 0, 0, TimeSpan.Zero);
+            m_timeProvider.SetUtcNow(now);
+            var provider = new Mock<IHistorianProvider>();
+            provider
+                .Setup(value => value.GetCapabilitiesAsync(
+                    variable.NodeId,
+                    It.IsAny<CancellationToken>()))
+                .Returns(new ValueTask<HistorianNodeCapabilities>(
+                    HistorianNodeCapabilities.ReadOnly));
+            Mock<IHistorianDataProvider> dataProvider =
+                provider.As<IHistorianDataProvider>();
+            var token = new HistorianResumeToken(ByteString.From([1]));
+            var secondPageStarted = new TaskCompletionSource(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            var secondPage = new TaskCompletionSource<HistorianPage<HistoricalDataValue>>(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            int pageCount = 0;
+            dataProvider
+                .Setup(value => value.ReadRawAsync(
+                    It.IsAny<HistorianOperationContext>(),
+                    It.IsAny<HistorianRawReadRequest>(),
+                    It.IsAny<HistorianResumeToken>(),
+                    It.IsAny<CancellationToken>()))
+                .Returns(() =>
+                {
+                    if (Interlocked.Increment(ref pageCount) == 1)
+                    {
+                        return new ValueTask<HistorianPage<HistoricalDataValue>>(
+                            new HistorianPage<HistoricalDataValue>(
+                                [
+                                    CreateHistoricalValue(
+                                        1,
+                                        now.UtcDateTime.AddSeconds(-2))
+                                ],
+                                token));
+                    }
+                    secondPageStarted.TrySetResult();
+                    return new ValueTask<HistorianPage<HistoricalDataValue>>(
+                        secondPage.Task);
+                });
+            m_historianRegistry.RegisterForNode(variable.NodeId, provider.Object);
+            monitoredItem.QueueValue(
+                new DataValue(
+                    new Variant(99),
+                    StatusCodes.Good,
+                    now.UtcDateTime.AddSeconds(-4),
+                    now.UtcDateTime.AddSeconds(-4)),
+                ServiceResult.Good);
+            asyncManager.MonitoredItemModifiedCallback = (_, _, item, _) =>
+            {
+                item.QueueValue(
+                    new DataValue(
+                        new Variant(4),
+                        StatusCodes.Good,
+                        now.UtcDateTime,
+                        now.UtcDateTime),
+                    ServiceResult.Good);
+                return default;
+            };
+            MonitoredItemModifyRequest request = CreateAggregateModifyRequest(
+                monitoredItem,
+                aggregateId,
+                now.UtcDateTime.AddSeconds(-3));
+
+            Task<(ServiceResult Error, MonitoringFilterResult FilterResult)>
+                modification = ModifySingleMonitoredItemAsync(
+                    manager,
+                    monitoredItem,
+                    request).AsTask();
+            await secondPageStarted.Task.WaitAsync(
+                TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+            monitoredItem.QueueValue(
+                new DataValue(
+                    new Variant(3),
+                    StatusCodes.Good,
+                    now.UtcDateTime.AddSeconds(-1),
+                    now.UtcDateTime.AddSeconds(-1)),
+                ServiceResult.Good);
+            secondPage.SetResult(
+                new HistorianPage<HistoricalDataValue>(
+                    [
+                        CreateHistoricalValue(
+                            2,
+                            now.UtcDateTime.AddSeconds(-1.5))
+                    ]));
+
+            (ServiceResult error, _) =
+                await modification.ConfigureAwait(false);
+
+            Assert.That(ServiceResult.IsGood(error), Is.True);
+            Assert.That(queuedRawValues, Is.EqualTo(s_modifiedAggregateValues));
+            Assert.That(
+                PublishDataValues(monitoredItem)
+                    .Select(value => (int)value.Value.WrappedValue),
+                Does.Contain(99));
+        }
+
+        [Test]
+        public async Task EquivalentAggregateModificationIgnoresFatalInitialReadSeamAsync()
+        {
+            using ITestNodeManager manager = CreateManager();
+            Assume.That(
+                manager is TestableAsyncCustomNodeManager,
+                "Historical aggregate modification is asynchronous.");
+            var asyncManager = (TestableAsyncCustomNodeManager)manager;
+            if (m_useSamplingGroups)
+            {
+                asyncManager.InstallTrackingSamplingGroupManager();
+            }
+            ushort nsIdx = manager.NamespaceIndexes[0];
+            var aggregateId = new NodeId("EquivalentModificationAggregate", nsIdx);
+            using AggregateManager aggregateManager =
+                CreateAndSetupAggregateManager();
+            var calculator = new Mock<IAggregateCalculator>();
+            int calculatorCount = 0;
+            await aggregateManager.RegisterFactoryAsync(
+                aggregateId,
+                "EquivalentModificationAggregate",
+                (id, start, end, interval, stepped, configuration, telemetry) =>
+                {
+                    calculatorCount++;
+                    return calculator.Object;
+                }).ConfigureAwait(false);
+            DateTimeOffset now = new(2026, 9, 5, 8, 0, 0, TimeSpan.Zero);
+            m_timeProvider.SetUtcNow(now);
+            var filter = new AggregateFilter
+            {
+                AggregateType = aggregateId,
+                StartTime = now.UtcDateTime.AddSeconds(-3),
+                ProcessingInterval = 1000,
+                AggregateConfiguration = new AggregateConfiguration()
+            };
+            (BaseDataVariableState variable, MonitoredItem monitoredItem) =
+                await CreateMonitoredVariableAsync(
+                    manager,
+                    "EquivalentModificationVariable",
+                    filter).ConfigureAwait(false);
+            var provider = new Mock<IHistorianProvider>();
+            provider
+                .Setup(value => value.GetCapabilitiesAsync(
+                    variable.NodeId,
+                    It.IsAny<CancellationToken>()))
+                .Returns(new ValueTask<HistorianNodeCapabilities>(
+                    HistorianNodeCapabilities.ReadOnly));
+            Mock<IHistorianDataProvider> dataProvider =
+                provider.As<IHistorianDataProvider>();
+            variable.OnReadValue = (
+                ISystemContext context,
+                NodeState node,
+                NumericRange indexRange,
+                QualifiedName dataEncoding,
+                ref Variant value,
+                ref StatusCode statusCode,
+                ref DateTimeUtc timestamp) =>
+                    StatusCodes.BadDataEncodingInvalid;
+            dataProvider
+                .Setup(value => value.ReadRawAsync(
+                    It.IsAny<HistorianOperationContext>(),
+                    It.IsAny<HistorianRawReadRequest>(),
+                    It.IsAny<HistorianResumeToken>(),
+                    It.IsAny<CancellationToken>()))
+                .Returns(new ValueTask<HistorianPage<HistoricalDataValue>>(
+                    new HistorianPage<HistoricalDataValue>([])));
+            m_historianRegistry.RegisterForNode(variable.NodeId, provider.Object);
+            MonitoredItemModifyRequest request = CreateAggregateModifyRequest(
+                monitoredItem,
+                aggregateId,
+                filter.StartTime);
+
+            (ServiceResult error, _) =
+                await ModifySingleMonitoredItemAsync(
+                    manager,
+                    monitoredItem,
+                    request).ConfigureAwait(false);
+
+            Assert.That(ServiceResult.IsGood(error), Is.True);
+            Assert.That(calculatorCount, Is.EqualTo(1));
+            dataProvider.Verify(
+                value => value.ReadRawAsync(
+                    It.IsAny<HistorianOperationContext>(),
+                    It.IsAny<HistorianRawReadRequest>(),
+                    It.IsAny<HistorianResumeToken>(),
+                    It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+
+        [Test]
+        public async Task AggregateModificationUsesSuccessfulInitialReadValidationOnceAsync()
+        {
+            using ITestNodeManager manager = CreateManager();
+            Assume.That(
+                manager is TestableAsyncCustomNodeManager,
+                "Historical aggregate modification is asynchronous.");
+            if (m_useSamplingGroups)
+            {
+                ((TestableAsyncCustomNodeManager)manager)
+                    .InstallTrackingSamplingGroupManager();
+            }
+            ushort nsIdx = manager.NamespaceIndexes[0];
+            var aggregateId = new NodeId("SingleValidationAggregate", nsIdx);
+            using AggregateManager aggregateManager =
+                CreateAndSetupAggregateManager();
+            await aggregateManager.RegisterFactoryAsync(
+                aggregateId,
+                "SingleValidationAggregate",
+                (id, start, end, interval, stepped, configuration, telemetry) =>
+                    new Mock<IAggregateCalculator>().Object).ConfigureAwait(false);
+            var variable = new ChangingInitialReadVariableState();
+            (_, MonitoredItem monitoredItem) =
+                await CreateMonitoredVariableAsync(
+                    manager,
+                    "SingleValidationVariable",
+                    variable: variable).ConfigureAwait(false);
+            DateTimeOffset now = new(2026, 9, 5, 8, 0, 0, TimeSpan.Zero);
+            m_timeProvider.SetUtcNow(now);
+            variable.FailAfterFirstRead = true;
+            var provider = new Mock<IHistorianProvider>();
+            provider
+                .Setup(value => value.GetCapabilitiesAsync(
+                    variable.NodeId,
+                    It.IsAny<CancellationToken>()))
+                .Returns(new ValueTask<HistorianNodeCapabilities>(
+                    HistorianNodeCapabilities.ReadOnly));
+            provider.As<IHistorianDataProvider>()
+                .Setup(value => value.ReadRawAsync(
+                    It.IsAny<HistorianOperationContext>(),
+                    It.IsAny<HistorianRawReadRequest>(),
+                    It.IsAny<HistorianResumeToken>(),
+                    It.IsAny<CancellationToken>()))
+                .Returns(new ValueTask<HistorianPage<HistoricalDataValue>>(
+                    new HistorianPage<HistoricalDataValue>([])));
+            m_historianRegistry.RegisterForNode(variable.NodeId, provider.Object);
+            MonitoredItemModifyRequest request = CreateAggregateModifyRequest(
+                monitoredItem,
+                aggregateId,
+                now.UtcDateTime.AddSeconds(-3));
+
+            (ServiceResult error, _) =
+                await ModifySingleMonitoredItemAsync(
+                    manager,
+                    monitoredItem,
+                    request).ConfigureAwait(false);
+
+            Assert.That(
+                error.StatusCode,
+                Is.EqualTo(StatusCodes.Good),
+                $"{m_managerType}: {error}; validation count: {variable.ReadCount}");
+            Assert.That(variable.ReadCount, Is.EqualTo(1));
+            Assert.That(
+                monitoredItem.ToStorableMonitoredItem().FilterToUse,
+                Is.InstanceOf<ServerAggregateFilter>());
+        }
+
+        [Test]
+        public async Task ThrowingInitialReadValidationCancelsAggregatePreparationAsync()
+        {
+            using ITestNodeManager manager = CreateManager();
+            Assume.That(
+                manager is TestableAsyncCustomNodeManager,
+                "Historical aggregate modification is asynchronous.");
+            var asyncManager = (TestableAsyncCustomNodeManager)manager;
+            if (m_useSamplingGroups)
+            {
+                asyncManager.InstallTrackingSamplingGroupManager();
+            }
+            ushort nsIdx = manager.NamespaceIndexes[0];
+            var aggregateId = new NodeId("ThrowingValidationAggregate", nsIdx);
+            using AggregateManager aggregateManager =
+                CreateAndSetupAggregateManager();
+            var calculator = new Mock<IAggregateCalculator>();
+            int calculatorCount = 0;
+            await aggregateManager.RegisterFactoryAsync(
+                aggregateId,
+                "ThrowingValidationAggregate",
+                (id, start, end, interval, stepped, configuration, telemetry) =>
+                {
+                    calculatorCount++;
+                    return calculator.Object;
+                }).ConfigureAwait(false);
+            var variable = new ThrowingInitialReadVariableState();
+            (_, MonitoredItem monitoredItem) =
+                await CreateMonitoredVariableAsync(
+                    manager,
+                    "ThrowingValidationVariable",
+                    variable: variable).ConfigureAwait(false);
+            IStoredMonitoredItem before = monitoredItem.ToStorableMonitoredItem();
+            DateTimeOffset now = new(2026, 9, 5, 8, 0, 0, TimeSpan.Zero);
+            m_timeProvider.SetUtcNow(now);
+            var provider = new Mock<IHistorianProvider>();
+            provider
+                .Setup(value => value.GetCapabilitiesAsync(
+                    variable.NodeId,
+                    It.IsAny<CancellationToken>()))
+                .Returns(new ValueTask<HistorianNodeCapabilities>(
+                    HistorianNodeCapabilities.ReadOnly));
+            provider.As<IHistorianDataProvider>()
+                .Setup(value => value.ReadRawAsync(
+                    It.IsAny<HistorianOperationContext>(),
+                    It.IsAny<HistorianRawReadRequest>(),
+                    It.IsAny<HistorianResumeToken>(),
+                    It.IsAny<CancellationToken>()))
+                .Returns(new ValueTask<HistorianPage<HistoricalDataValue>>(
+                    new HistorianPage<HistoricalDataValue>([])));
+            m_historianRegistry.RegisterForNode(variable.NodeId, provider.Object);
+            MonitoredItemModifyRequest request = CreateAggregateModifyRequest(
+                monitoredItem,
+                aggregateId,
+                now.UtcDateTime.AddSeconds(-3),
+                clientHandle: 99,
+                samplingInterval: 500,
+                queueSize: 20);
+            variable.ThrowOnRead = true;
+
+            Assert.ThrowsAsync<InvalidOperationException>(
+                async () => await ModifySingleMonitoredItemAsync(
+                    manager,
+                    monitoredItem,
+                    request).ConfigureAwait(false));
+
+            IStoredMonitoredItem afterFailure =
+                monitoredItem.ToStorableMonitoredItem();
+            Assert.Multiple(() =>
+            {
+                Assert.That(afterFailure.ClientHandle, Is.EqualTo(before.ClientHandle));
+                Assert.That(
+                    afterFailure.SamplingInterval,
+                    Is.EqualTo(before.SamplingInterval));
+                Assert.That(afterFailure.QueueSize, Is.EqualTo(before.QueueSize));
+                Assert.That(afterFailure.FilterToUse, Is.SameAs(before.FilterToUse));
+            });
+
+            variable.ThrowOnRead = false;
+            var revisedFilter =
+                (ServerAggregateFilter)asyncManager.LastValidatedFilter;
+            ServiceResult retryError = monitoredItem.ModifyAttributes(
+                DiagnosticsMasks.All,
+                TimestampsToReturn.Both,
+                99,
+                revisedFilter,
+                revisedFilter,
+                null,
+                500,
+                20,
+                discardOldest: false);
+
+            Assert.That(ServiceResult.IsGood(retryError), Is.True);
+            Assert.That(calculatorCount, Is.EqualTo(2));
+            _ = ((IInitialValueMonitoredItem)monitoredItem)
+                .CompleteInitialValue();
+        }
+
+        [Test]
+        public async Task AggregateModificationProviderFailureQueuesErrorAndKeepsItemAsync()
+        {
+            using ITestNodeManager manager = CreateManager();
+            Assume.That(
+                manager is TestableAsyncCustomNodeManager,
+                "Historical aggregate modification is asynchronous.");
+            ushort nsIdx = manager.NamespaceIndexes[0];
+            var aggregateId = new NodeId("FailingModificationAggregate", nsIdx);
+            using AggregateManager aggregateManager =
+                CreateAndSetupAggregateManager();
+            await aggregateManager.RegisterFactoryAsync(
+                aggregateId,
+                "FailingModificationAggregate",
+                (id, start, end, interval, stepped, configuration, telemetry) =>
+                    new Mock<IAggregateCalculator>().Object).ConfigureAwait(false);
+            (BaseDataVariableState variable, MonitoredItem monitoredItem) =
+                await CreateMonitoredVariableAsync(
+                    manager,
+                    "FailingModificationVariable").ConfigureAwait(false);
+            PublishDataValues(monitoredItem);
+            DateTimeOffset now = new(2026, 9, 5, 8, 0, 0, TimeSpan.Zero);
+            m_timeProvider.SetUtcNow(now);
+            var provider = new Mock<IHistorianProvider>();
+            provider
+                .Setup(value => value.GetCapabilitiesAsync(
+                    variable.NodeId,
+                    It.IsAny<CancellationToken>()))
+                .Returns(new ValueTask<HistorianNodeCapabilities>(
+                    HistorianNodeCapabilities.ReadOnly));
+            provider.As<IHistorianDataProvider>()
+                .Setup(value => value.ReadRawAsync(
+                    It.IsAny<HistorianOperationContext>(),
+                    It.IsAny<HistorianRawReadRequest>(),
+                    It.IsAny<HistorianResumeToken>(),
+                    It.IsAny<CancellationToken>()))
+                .Throws(new ServiceResultException(
+                    StatusCodes.BadCommunicationError));
+            m_historianRegistry.RegisterForNode(variable.NodeId, provider.Object);
+            MonitoredItemModifyRequest request = CreateAggregateModifyRequest(
+                monitoredItem,
+                aggregateId,
+                now.UtcDateTime.AddSeconds(-3));
+
+            (ServiceResult error, _) =
+                await ModifySingleMonitoredItemAsync(
+                    manager,
+                    monitoredItem,
+                    request).ConfigureAwait(false);
+
+            Assert.That(ServiceResult.IsGood(error), Is.True);
+            Assert.That(manager.MonitoredItems.ContainsKey(monitoredItem.Id), Is.True);
+            Assert.That(
+                PublishDataValues(monitoredItem)
+                    .Select(value => value.Value.StatusCode.Code),
+                Does.Contain(StatusCodes.BadCommunicationError));
+        }
+
+        [Test]
+        public async Task AggregateModificationOverflowQueuesErrorAndAllowsSecondCycleAsync()
+        {
+            using ITestNodeManager manager = CreateManager();
+            Assume.That(
+                manager is TestableAsyncCustomNodeManager,
+                "Historical aggregate modification is asynchronous.");
+            ushort nsIdx = manager.NamespaceIndexes[0];
+            var aggregateId = new NodeId("OverflowModificationAggregate", nsIdx);
+            using AggregateManager aggregateManager =
+                CreateAndSetupAggregateManager();
+            var calculator = new Mock<IAggregateCalculator>();
+            calculator
+                .Setup(value => value.QueueRawValue(It.IsAny<DataValue>()))
+                .Returns(true);
+            await aggregateManager.RegisterFactoryAsync(
+                aggregateId,
+                "OverflowModificationAggregate",
+                (id, start, end, interval, stepped, configuration, telemetry) =>
+                    calculator.Object).ConfigureAwait(false);
+            (BaseDataVariableState variable, MonitoredItem monitoredItem) =
+                await CreateMonitoredVariableAsync(
+                    manager,
+                    "OverflowModificationVariable").ConfigureAwait(false);
+            PublishDataValues(monitoredItem);
+            DateTimeOffset now = new(2026, 9, 5, 8, 0, 0, TimeSpan.Zero);
+            m_timeProvider.SetUtcNow(now);
+            var provider = new Mock<IHistorianProvider>();
+            provider
+                .Setup(value => value.GetCapabilitiesAsync(
+                    variable.NodeId,
+                    It.IsAny<CancellationToken>()))
+                .Returns(new ValueTask<HistorianNodeCapabilities>(
+                    HistorianNodeCapabilities.ReadOnly));
+            var readStarted = new TaskCompletionSource(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            var firstPage = new TaskCompletionSource<HistorianPage<HistoricalDataValue>>(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            provider.As<IHistorianDataProvider>()
+                .SetupSequence(value => value.ReadRawAsync(
+                    It.IsAny<HistorianOperationContext>(),
+                    It.IsAny<HistorianRawReadRequest>(),
+                    It.IsAny<HistorianResumeToken>(),
+                    It.IsAny<CancellationToken>()))
+                .Returns(() =>
+                {
+                    readStarted.TrySetResult();
+                    return new ValueTask<HistorianPage<HistoricalDataValue>>(
+                        firstPage.Task);
+                })
+                .Returns(new ValueTask<HistorianPage<HistoricalDataValue>>(
+                    new HistorianPage<HistoricalDataValue>([])));
+            m_historianRegistry.RegisterForNode(variable.NodeId, provider.Object);
+            MonitoredItemModifyRequest firstRequest =
+                CreateAggregateModifyRequest(
+                    monitoredItem,
+                    aggregateId,
+                    now.UtcDateTime.AddSeconds(-3));
+
+            Task<(ServiceResult Error, MonitoringFilterResult FilterResult)>
+                firstModification = ModifySingleMonitoredItemAsync(
+                    manager,
+                    monitoredItem,
+                    firstRequest).AsTask();
+            await readStarted.Task.WaitAsync(
+                TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+            var live = new DataValue(
+                new Variant(3),
+                StatusCodes.Good,
+                now.UtcDateTime.AddSeconds(-1),
+                now.UtcDateTime.AddSeconds(-1));
+            for (int ii = 0; ii <= 100_000; ii++)
+            {
+                monitoredItem.QueueValue(live, ServiceResult.Good);
+            }
+            firstPage.SetResult(new HistorianPage<HistoricalDataValue>([]));
+
+            (ServiceResult firstError, _) =
+                await firstModification.ConfigureAwait(false);
+
+            Assert.That(
+                firstError.StatusCode,
+                Is.EqualTo(StatusCodes.BadTooManyOperations));
+            Assert.That(manager.MonitoredItems.ContainsKey(monitoredItem.Id), Is.True);
+            Assert.That(
+                PublishDataValues(monitoredItem)
+                    .Select(value => value.Value.StatusCode.Code),
+                Does.Contain(StatusCodes.BadTooManyOperations));
+
+            MonitoredItemModifyRequest secondRequest =
+                CreateAggregateModifyRequest(
+                    monitoredItem,
+                    aggregateId,
+                    now.UtcDateTime.AddSeconds(-2));
+            (ServiceResult secondError, _) =
+                await ModifySingleMonitoredItemAsync(
+                    manager,
+                    monitoredItem,
+                    secondRequest).ConfigureAwait(false);
+
+            Assert.That(ServiceResult.IsGood(secondError), Is.True);
+            monitoredItem.QueueValue(live, ServiceResult.Good);
+            calculator.Verify(
+                value => value.QueueRawValue(It.IsAny<DataValue>()),
+                Times.Once);
+        }
+
+        [Test]
+        public async Task FatalAggregatePrimingValidationLeavesMonitoredItemUnchangedAsync()
+        {
+            using ITestNodeManager manager = CreateManager();
+            Assume.That(
+                manager is TestableAsyncCustomNodeManager,
+                "Historical aggregate modification is asynchronous.");
+            ushort nsIdx = manager.NamespaceIndexes[0];
+            var aggregateId = new NodeId("InvalidModificationAggregate", nsIdx);
+            using AggregateManager aggregateManager =
+                CreateAndSetupAggregateManager();
+            await aggregateManager.RegisterFactoryAsync(
+                aggregateId,
+                "InvalidModificationAggregate",
+                (id, start, end, interval, stepped, configuration, telemetry) =>
+                    new Mock<IAggregateCalculator>().Object).ConfigureAwait(false);
+            (BaseDataVariableState variable, MonitoredItem monitoredItem) =
+                await CreateMonitoredVariableAsync(
+                    manager,
+                    "InvalidModificationVariable").ConfigureAwait(false);
+            IStoredMonitoredItem before = monitoredItem.ToStorableMonitoredItem();
+            variable.OnReadValue = (
+                ISystemContext context,
+                NodeState node,
+                NumericRange indexRange,
+                QualifiedName dataEncoding,
+                ref Variant value,
+                ref StatusCode statusCode,
+                ref DateTimeUtc timestamp) =>
+                    StatusCodes.BadDataEncodingInvalid;
+            DateTimeOffset now = new(2026, 9, 5, 8, 0, 0, TimeSpan.Zero);
+            m_timeProvider.SetUtcNow(now);
+            var provider = new Mock<IHistorianProvider>();
+            provider
+                .Setup(value => value.GetCapabilitiesAsync(
+                    variable.NodeId,
+                    It.IsAny<CancellationToken>()))
+                .Returns(new ValueTask<HistorianNodeCapabilities>(
+                    HistorianNodeCapabilities.ReadOnly));
+            Mock<IHistorianDataProvider> dataProvider =
+                provider.As<IHistorianDataProvider>();
+            m_historianRegistry.RegisterForNode(variable.NodeId, provider.Object);
+            MonitoredItemModifyRequest request = CreateAggregateModifyRequest(
+                monitoredItem,
+                aggregateId,
+                now.UtcDateTime.AddSeconds(-3),
+                clientHandle: 99,
+                samplingInterval: 500,
+                queueSize: 20);
+
+            (ServiceResult error, _) =
+                await ModifySingleMonitoredItemAsync(
+                    manager,
+                    monitoredItem,
+                    request).ConfigureAwait(false);
+
+            IStoredMonitoredItem after = monitoredItem.ToStorableMonitoredItem();
+            Assert.Multiple(() =>
+            {
+                Assert.That(
+                    error.StatusCode,
+                    Is.EqualTo(StatusCodes.BadDataEncodingInvalid));
+                Assert.That(after.ClientHandle, Is.EqualTo(before.ClientHandle));
+                Assert.That(after.SamplingInterval, Is.EqualTo(before.SamplingInterval));
+                Assert.That(after.QueueSize, Is.EqualTo(before.QueueSize));
+                Assert.That(after.FilterToUse, Is.SameAs(before.FilterToUse));
+            });
+            dataProvider.Verify(
+                value => value.ReadRawAsync(
+                    It.IsAny<HistorianOperationContext>(),
+                    It.IsAny<HistorianRawReadRequest>(),
+                    It.IsAny<HistorianResumeToken>(),
+                    It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+
+        [Test]
+        public async Task CancelledAggregateModificationReleasesBufferedLiveValuesAsync()
+        {
+            using ITestNodeManager manager = CreateManager();
+            Assume.That(
+                manager is TestableAsyncCustomNodeManager,
+                "Historical aggregate modification is asynchronous.");
+            ushort nsIdx = manager.NamespaceIndexes[0];
+            var aggregateId = new NodeId("CancelledModificationAggregate", nsIdx);
+            using AggregateManager aggregateManager =
+                CreateAndSetupAggregateManager();
+            var calculator = new Mock<IAggregateCalculator>();
+            calculator
+                .Setup(value => value.QueueRawValue(It.IsAny<DataValue>()))
+                .Returns(true);
+            await aggregateManager.RegisterFactoryAsync(
+                aggregateId,
+                "CancelledModificationAggregate",
+                (id, start, end, interval, stepped, configuration, telemetry) =>
+                    calculator.Object).ConfigureAwait(false);
+            (BaseDataVariableState variable, MonitoredItem monitoredItem) =
+                await CreateMonitoredVariableAsync(
+                    manager,
+                    "CancelledModificationVariable").ConfigureAwait(false);
+            PublishDataValues(monitoredItem);
+            DateTimeOffset now = new(2026, 9, 5, 8, 0, 0, TimeSpan.Zero);
+            m_timeProvider.SetUtcNow(now);
+            var provider = new Mock<IHistorianProvider>();
+            provider
+                .Setup(value => value.GetCapabilitiesAsync(
+                    variable.NodeId,
+                    It.IsAny<CancellationToken>()))
+                .Returns(new ValueTask<HistorianNodeCapabilities>(
+                    HistorianNodeCapabilities.ReadOnly));
+            var readStarted = new TaskCompletionSource(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            provider.As<IHistorianDataProvider>()
+                .Setup(value => value.ReadRawAsync(
+                    It.IsAny<HistorianOperationContext>(),
+                    It.IsAny<HistorianRawReadRequest>(),
+                    It.IsAny<HistorianResumeToken>(),
+                    It.IsAny<CancellationToken>()))
+                .Returns(
+                    async (
+                        HistorianOperationContext _,
+                        HistorianRawReadRequest _,
+                        HistorianResumeToken _,
+                        CancellationToken cancellationToken) =>
+                    {
+                        readStarted.TrySetResult();
+                        await Task.Delay(
+                            Timeout.InfiniteTimeSpan,
+                            cancellationToken).ConfigureAwait(false);
+                        return new HistorianPage<HistoricalDataValue>([]);
+                    });
+            m_historianRegistry.RegisterForNode(variable.NodeId, provider.Object);
+            MonitoredItemModifyRequest request = CreateAggregateModifyRequest(
+                monitoredItem,
+                aggregateId,
+                now.UtcDateTime.AddSeconds(-3));
+            using var cancellation = new CancellationTokenSource();
+
+            Task modification = ModifySingleMonitoredItemAsync(
+                manager,
+                monitoredItem,
+                request,
+                cancellation.Token).AsTask();
+            await readStarted.Task.WaitAsync(
+                TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+            var live = new DataValue(
+                new Variant(3),
+                StatusCodes.Good,
+                now.UtcDateTime.AddSeconds(-1),
+                now.UtcDateTime.AddSeconds(-1));
+            monitoredItem.QueueValue(live, ServiceResult.Good);
+            cancellation.Cancel();
+
+            Assert.CatchAsync<OperationCanceledException>(
+                async () => await modification.ConfigureAwait(false));
+            calculator.Verify(
+                value => value.QueueRawValue(
+                    It.Is<DataValue>(
+                        queued => queued.WrappedValue == new Variant(3))),
+                Times.Once);
+        }
+
+        [Test]
+        public async Task CancelledSamplingGroupAggregateModificationAppliesStagedChangesAsync()
+        {
+            Assume.That(
+                m_useSamplingGroups &&
+                    m_managerType ==
+                        AsyncCustomNodeManagerType.SamplingGroupMonitoredItemManager,
+                "This regression covers the sampling-group commit path.");
+            using ITestNodeManager manager = CreateManager();
+            var asyncManager = (TestableAsyncCustomNodeManager)manager;
+            TrackingSamplingGroupManager samplingGroupManager =
+                asyncManager.InstallTrackingSamplingGroupManager();
+            ushort nsIdx = manager.NamespaceIndexes[0];
+            var aggregateId = new NodeId("CancelledSamplingGroupAggregate", nsIdx);
+            using AggregateManager aggregateManager =
+                CreateAndSetupAggregateManager();
+            await aggregateManager.RegisterFactoryAsync(
+                aggregateId,
+                "CancelledSamplingGroupAggregate",
+                (id, start, end, interval, stepped, configuration, telemetry) =>
+                    new Mock<IAggregateCalculator>().Object).ConfigureAwait(false);
+            (BaseDataVariableState variable, MonitoredItem monitoredItem) =
+                await CreateMonitoredVariableAsync(
+                    manager,
+                    "CancelledSamplingGroupVariable").ConfigureAwait(false);
+            samplingGroupManager.ResetCounts();
+            DateTimeOffset now = new(2026, 9, 5, 8, 0, 0, TimeSpan.Zero);
+            m_timeProvider.SetUtcNow(now);
+            var provider = new Mock<IHistorianProvider>();
+            provider
+                .Setup(value => value.GetCapabilitiesAsync(
+                    variable.NodeId,
+                    It.IsAny<CancellationToken>()))
+                .Returns(new ValueTask<HistorianNodeCapabilities>(
+                    HistorianNodeCapabilities.ReadOnly));
+            var readStarted = new TaskCompletionSource(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            provider.As<IHistorianDataProvider>()
+                .Setup(value => value.ReadRawAsync(
+                    It.IsAny<HistorianOperationContext>(),
+                    It.IsAny<HistorianRawReadRequest>(),
+                    It.IsAny<HistorianResumeToken>(),
+                    It.IsAny<CancellationToken>()))
+                .Returns(
+                    async (
+                        HistorianOperationContext _,
+                        HistorianRawReadRequest _,
+                        HistorianResumeToken _,
+                        CancellationToken cancellationToken) =>
+                    {
+                        readStarted.TrySetResult();
+                        await Task.Delay(
+                            Timeout.InfiniteTimeSpan,
+                            cancellationToken).ConfigureAwait(false);
+                        return new HistorianPage<HistoricalDataValue>([]);
+                    });
+            m_historianRegistry.RegisterForNode(variable.NodeId, provider.Object);
+            MonitoredItemModifyRequest request = CreateAggregateModifyRequest(
+                monitoredItem,
+                aggregateId,
+                now.UtcDateTime.AddSeconds(-3),
+                samplingInterval: 500);
+            using var cancellation = new CancellationTokenSource();
+
+            Task modification = ModifySingleMonitoredItemAsync(
+                manager,
+                monitoredItem,
+                request,
+                cancellation.Token).AsTask();
+            await readStarted.Task.WaitAsync(
+                TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+            cancellation.Cancel();
+
+            Assert.CatchAsync<OperationCanceledException>(
+                async () => await modification.ConfigureAwait(false));
+            Assert.Multiple(() =>
+            {
+                Assert.That(samplingGroupManager.ModifyCount, Is.EqualTo(1));
+                Assert.That(samplingGroupManager.ApplyCount, Is.EqualTo(1));
+            });
+        }
+
+        [Test]
+        public async Task ThrowingSamplingGroupModificationReleasesBufferedLiveValuesAsync()
+        {
+            Assume.That(
+                m_useSamplingGroups &&
+                    m_managerType ==
+                        AsyncCustomNodeManagerType.SamplingGroupMonitoredItemManager,
+                "This regression covers the sampling-group commit path.");
+            using ITestNodeManager manager = CreateManager();
+            var asyncManager = (TestableAsyncCustomNodeManager)manager;
+            TrackingSamplingGroupManager samplingGroupManager =
+                asyncManager.InstallTrackingSamplingGroupManager();
+            ushort nsIdx = manager.NamespaceIndexes[0];
+            var aggregateId = new NodeId("ThrowingSamplingGroupAggregate", nsIdx);
+            using AggregateManager aggregateManager =
+                CreateAndSetupAggregateManager();
+            var calculator = new Mock<IAggregateCalculator>();
+            calculator
+                .Setup(value => value.QueueRawValue(It.IsAny<DataValue>()))
+                .Returns(true);
+            await aggregateManager.RegisterFactoryAsync(
+                aggregateId,
+                "ThrowingSamplingGroupAggregate",
+                (id, start, end, interval, stepped, configuration, telemetry) =>
+                    calculator.Object).ConfigureAwait(false);
+            (BaseDataVariableState variable, MonitoredItem monitoredItem) =
+                await CreateMonitoredVariableAsync(
+                    manager,
+                    "ThrowingSamplingGroupVariable").ConfigureAwait(false);
+            DateTimeOffset now = new(2026, 9, 5, 8, 0, 0, TimeSpan.Zero);
+            m_timeProvider.SetUtcNow(now);
+            var provider = new Mock<IHistorianProvider>();
+            provider
+                .Setup(value => value.GetCapabilitiesAsync(
+                    variable.NodeId,
+                    It.IsAny<CancellationToken>()))
+                .Returns(new ValueTask<HistorianNodeCapabilities>(
+                    HistorianNodeCapabilities.ReadOnly));
+            m_historianRegistry.RegisterForNode(variable.NodeId, provider.Object);
+            MonitoredItemModifyRequest request = CreateAggregateModifyRequest(
+                monitoredItem,
+                aggregateId,
+                now.UtcDateTime.AddSeconds(-3),
+                samplingInterval: 500);
+            samplingGroupManager.ResetCounts();
+            samplingGroupManager.ThrowOnModify = true;
+
+            Assert.ThrowsAsync<InvalidOperationException>(
+                async () => await ModifySingleMonitoredItemAsync(
+                    manager,
+                    monitoredItem,
+                    request).ConfigureAwait(false));
+
+            var live = new DataValue(
+                new Variant(3),
+                StatusCodes.Good,
+                now.UtcDateTime,
+                now.UtcDateTime);
+            monitoredItem.QueueValue(live, ServiceResult.Good);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(samplingGroupManager.ModifyCount, Is.EqualTo(1));
+                Assert.That(samplingGroupManager.ApplyCount, Is.EqualTo(1));
+            });
+            calculator.Verify(
+                value => value.QueueRawValue(
+                    It.Is<DataValue>(
+                        queued => queued.WrappedValue == new Variant(3))),
+                Times.Once);
+        }
+
+        [Test]
+        public async Task ThrowingPendingReplayCompletesPrimingOnlyOnceAsync()
+        {
+            using ITestNodeManager manager = CreateManager();
+            Assume.That(
+                manager is TestableAsyncCustomNodeManager,
+                "Historical aggregate modification is asynchronous.");
+            var asyncManager = (TestableAsyncCustomNodeManager)manager;
+            if (m_useSamplingGroups)
+            {
+                asyncManager.InstallTrackingSamplingGroupManager();
+            }
+            ushort nsIdx = manager.NamespaceIndexes[0];
+            var aggregateId = new NodeId("ThrowingReplayAggregate", nsIdx);
+            using AggregateManager aggregateManager =
+                CreateAndSetupAggregateManager();
+            var queuedRawValues = new List<int>();
+            int calculatorCalls = 0;
+            var calculator = new Mock<IAggregateCalculator>();
+            calculator
+                .Setup(value => value.QueueRawValue(It.IsAny<DataValue>()))
+                .Callback<DataValue>(value =>
+                {
+                    queuedRawValues.Add((int)value.WrappedValue);
+                    if (Interlocked.Increment(ref calculatorCalls) == 1)
+                    {
+                        throw new InvalidOperationException(
+                            "Injected pending replay failure.");
+                    }
+                })
+                .Returns(true);
+            await aggregateManager.RegisterFactoryAsync(
+                aggregateId,
+                "ThrowingReplayAggregate",
+                (id, start, end, interval, stepped, configuration, telemetry) =>
+                    calculator.Object).ConfigureAwait(false);
+            (BaseDataVariableState variable, MonitoredItem monitoredItem) =
+                await CreateMonitoredVariableAsync(
+                    manager,
+                    "ThrowingReplayVariable").ConfigureAwait(false);
+            DateTimeOffset now = new(2026, 9, 5, 8, 0, 0, TimeSpan.Zero);
+            m_timeProvider.SetUtcNow(now);
+            var provider = new Mock<IHistorianProvider>();
+            provider
+                .Setup(value => value.GetCapabilitiesAsync(
+                    variable.NodeId,
+                    It.IsAny<CancellationToken>()))
+                .Returns(new ValueTask<HistorianNodeCapabilities>(
+                    HistorianNodeCapabilities.ReadOnly));
+            var readStarted = new TaskCompletionSource(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            var page = new TaskCompletionSource<HistorianPage<HistoricalDataValue>>(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            provider.As<IHistorianDataProvider>()
+                .Setup(value => value.ReadRawAsync(
+                    It.IsAny<HistorianOperationContext>(),
+                    It.IsAny<HistorianRawReadRequest>(),
+                    It.IsAny<HistorianResumeToken>(),
+                    It.IsAny<CancellationToken>()))
+                .Returns(() =>
+                {
+                    readStarted.TrySetResult();
+                    return new ValueTask<HistorianPage<HistoricalDataValue>>(
+                        page.Task);
+                });
+            m_historianRegistry.RegisterForNode(variable.NodeId, provider.Object);
+            MonitoredItemModifyRequest request = CreateAggregateModifyRequest(
+                monitoredItem,
+                aggregateId,
+                now.UtcDateTime.AddSeconds(-3));
+            Task modification = ModifySingleMonitoredItemAsync(
+                manager,
+                monitoredItem,
+                request).AsTask();
+            await readStarted.Task.WaitAsync(
+                TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+            monitoredItem.QueueValue(
+                new DataValue(
+                    new Variant(3),
+                    StatusCodes.Good,
+                    now.UtcDateTime.AddSeconds(-2),
+                    now.UtcDateTime.AddSeconds(-2)),
+                ServiceResult.Good);
+            monitoredItem.QueueValue(
+                new DataValue(
+                    new Variant(4),
+                    StatusCodes.Good,
+                    now.UtcDateTime.AddSeconds(-1),
+                    now.UtcDateTime.AddSeconds(-1)),
+                ServiceResult.Good);
+            page.SetResult(new HistorianPage<HistoricalDataValue>([]));
+
+            Assert.ThrowsAsync<InvalidOperationException>(
+                async () => await modification.ConfigureAwait(false));
+
+            monitoredItem.QueueValue(
+                new DataValue(
+                    new Variant(5),
+                    StatusCodes.Good,
+                    now.UtcDateTime,
+                    now.UtcDateTime),
+                ServiceResult.Good);
+
+            Assert.That(queuedRawValues, Is.EqualTo(s_replayFailureValues));
         }
 
         [Test]
@@ -6407,6 +7380,199 @@ namespace Opc.Ua.Server.Tests
             return new OperationContext(new RequestHeader(), null, RequestType.CreateMonitoredItems, RequestLifetime.None, m_mockSession.Object);
         }
 
+        private async Task<(BaseDataVariableState Variable, MonitoredItem MonitoredItem)>
+            CreateMonitoredVariableAsync(
+            ITestNodeManager manager,
+            string identifier,
+            AggregateFilter aggregateFilter = null,
+            BaseDataVariableState variable = null)
+        {
+            ServerSystemContext context = manager.SystemContext;
+            ushort namespaceIndex = manager.NamespaceIndexes[0];
+            variable ??= new BaseDataVariableState(null);
+            variable.CreateAsPredefinedNode(context);
+            variable.NodeId = new NodeId(identifier, namespaceIndex);
+            variable.BrowseName = new QualifiedName(identifier, namespaceIndex);
+            variable.Value = 10;
+            variable.DataType = DataTypeIds.Int32;
+            variable.ValueRank = ValueRanks.Scalar;
+            variable.AccessLevel = AccessLevels.CurrentRead;
+            await manager.AddNodeAsync(
+                context,
+                default,
+                variable).ConfigureAwait(false);
+            var itemToCreate = new MonitoredItemCreateRequest
+            {
+                ItemToMonitor = new ReadValueId
+                {
+                    NodeId = variable.NodeId,
+                    AttributeId = Attributes.Value
+                },
+                MonitoringMode = MonitoringMode.Reporting,
+                RequestedParameters = new MonitoringParameters
+                {
+                    ClientHandle = 1,
+                    SamplingInterval = 100,
+                    QueueSize = 10,
+                    Filter = aggregateFilter == null
+                        ? default
+                        : new ExtensionObject(aggregateFilter)
+                }
+            };
+            var errors = new List<ServiceResult> { null };
+            var filterErrors = new List<MonitoringFilterResult> { null };
+            var monitoredItems = new List<IMonitoredItem> { null };
+
+            await manager.CreateMonitoredItemsAsync(
+                CreateMonitoredItemsContext(),
+                1,
+                1000,
+                TimestampsToReturn.Both,
+                [itemToCreate],
+                errors,
+                filterErrors,
+                monitoredItems,
+                false,
+                new MonitoredItemIdFactory()).ConfigureAwait(false);
+
+            Assert.That(ServiceResult.IsGood(errors[0]), Is.True);
+            Assert.That(monitoredItems[0], Is.InstanceOf<MonitoredItem>());
+            return (variable, (MonitoredItem)monitoredItems[0]);
+        }
+
+        private static MonitoredItemModifyRequest CreateAggregateModifyRequest(
+            MonitoredItem monitoredItem,
+            NodeId aggregateId,
+            DateTimeUtc startTime,
+            uint clientHandle = 1,
+            double samplingInterval = 100,
+            uint queueSize = 10)
+        {
+            return new MonitoredItemModifyRequest
+            {
+                MonitoredItemId = monitoredItem.Id,
+                RequestedParameters = new MonitoringParameters
+                {
+                    ClientHandle = clientHandle,
+                    SamplingInterval = samplingInterval,
+                    QueueSize = queueSize,
+                    Filter = new ExtensionObject(new AggregateFilter
+                    {
+                        AggregateType = aggregateId,
+                        StartTime = startTime,
+                        ProcessingInterval = 1000,
+                        AggregateConfiguration = new AggregateConfiguration()
+                    })
+                }
+            };
+        }
+
+        private async ValueTask<(ServiceResult Error, MonitoringFilterResult FilterResult)>
+            ModifySingleMonitoredItemAsync(
+            ITestNodeManager manager,
+            MonitoredItem monitoredItem,
+            MonitoredItemModifyRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            var errors = new List<ServiceResult> { null };
+            var filterErrors = new List<MonitoringFilterResult> { null };
+
+            await manager.ModifyMonitoredItemsAsync(
+                new OperationContext(
+                    new RequestHeader(),
+                    null,
+                    RequestType.ModifyMonitoredItems,
+                    RequestLifetime.None,
+                    m_mockSession.Object),
+                TimestampsToReturn.Both,
+                [monitoredItem],
+                [request],
+                errors,
+                filterErrors,
+                cancellationToken).ConfigureAwait(false);
+
+            return (errors[0], filterErrors[0]);
+        }
+
+        private Queue<MonitoredItemNotification> PublishDataValues(
+            MonitoredItem monitoredItem)
+        {
+            var notifications = new Queue<MonitoredItemNotification>();
+            var diagnostics = new Queue<DiagnosticInfo>();
+            _ = monitoredItem.Publish(
+                new OperationContext(monitoredItem),
+                notifications,
+                diagnostics,
+                uint.MaxValue,
+                m_mockLogger.Object);
+            return notifications;
+        }
+
+        private sealed class ChangingInitialReadVariableState :
+            BaseDataVariableState
+        {
+            public ChangingInitialReadVariableState()
+                : base(null)
+            {
+            }
+
+            public bool FailAfterFirstRead { get; set; }
+
+            public int ReadCount { get; private set; }
+
+            public override ServiceResult ReadAttribute(
+                ISystemContext context,
+                uint attributeId,
+                NumericRange indexRange,
+                QualifiedName dataEncoding,
+                ref DataValue value)
+            {
+                if (FailAfterFirstRead &&
+                    attributeId == Attributes.Value &&
+                    ++ReadCount > 1)
+                {
+                    return StatusCodes.BadDataEncodingInvalid;
+                }
+                return base.ReadAttribute(
+                    context,
+                    attributeId,
+                    indexRange,
+                    dataEncoding,
+                    ref value);
+            }
+        }
+
+        private sealed class ThrowingInitialReadVariableState :
+            BaseDataVariableState
+        {
+            public ThrowingInitialReadVariableState()
+                : base(null)
+            {
+            }
+
+            public bool ThrowOnRead { get; set; }
+
+            public override ServiceResult ReadAttribute(
+                ISystemContext context,
+                uint attributeId,
+                NumericRange indexRange,
+                QualifiedName dataEncoding,
+                ref DataValue value)
+            {
+                if (ThrowOnRead && attributeId == Attributes.Value)
+                {
+                    throw new InvalidOperationException(
+                        "Injected initial-read validation failure.");
+                }
+                return base.ReadAttribute(
+                    context,
+                    attributeId,
+                    indexRange,
+                    dataEncoding,
+                    ref value);
+            }
+        }
+
         private static HistoricalDataValue CreateHistoricalValue(
             int value,
             DateTime sourceTimestamp)
@@ -6559,6 +7725,7 @@ namespace Opc.Ua.Server.Tests
            params string[] namespaceUris)
            : base(server, configuration, logger, namespaceUris)
         {
+            m_testServer = server;
         }
 
         public TestableAsyncCustomNodeManager(
@@ -6569,6 +7736,7 @@ namespace Opc.Ua.Server.Tests
            params string[] namespaceUris)
            : base(server, configuration, useSamplingGroups, logger, namespaceUris)
         {
+            m_testServer = server;
         }
 
         public ILogger Logger => m_logger;
@@ -6587,7 +7755,28 @@ namespace Opc.Ua.Server.Tests
 
         public Func<NodeState, NodeState> AddBehaviourCallback { get; set; } = null!;
 
+        public Func<
+            ServerSystemContext,
+            NodeHandle,
+            ISampledDataChangeMonitoredItem,
+            CancellationToken,
+            ValueTask> MonitoredItemModifiedCallback { get; set; } = null!;
+
         public Func<ServerSystemContext, NodeId, NodeState, bool> IsNodeInViewOverride { get; set; }
+
+        public MonitoringFilter LastValidatedFilter { get; private set; }
+
+        internal TrackingSamplingGroupManager InstallTrackingSamplingGroupManager()
+        {
+            var samplingGroupManager =
+                new TrackingSamplingGroupManager(m_testServer, this);
+            ReplaceMonitoredItemManager(
+                new SamplingGroupMonitoredItemManager(
+                    this,
+                    m_testServer,
+                    samplingGroupManager));
+            return samplingGroupManager;
+        }
 
         protected override bool IsNodeInView(ServerSystemContext context, NodeId viewId, NodeState node)
         {
@@ -6614,6 +7803,19 @@ namespace Opc.Ua.Server.Tests
             CancellationToken cancellationToken = default)
         {
             return NodeRemovedCallback?.Invoke(node, cancellationToken) ?? default;
+        }
+
+        protected override ValueTask OnMonitoredItemModifiedAsync(
+            ServerSystemContext context,
+            NodeHandle handle,
+            ISampledDataChangeMonitoredItem monitoredItem,
+            CancellationToken cancellationToken = default)
+        {
+            return MonitoredItemModifiedCallback?.Invoke(
+                context,
+                handle,
+                monitoredItem,
+                cancellationToken) ?? default;
         }
 
         protected override ValueTask<NodeState> AddBehaviourToPredefinedNodeAsync(
@@ -6712,6 +7914,29 @@ namespace Opc.Ua.Server.Tests
                 context, handle, attributeId, samplingInterval, queueSize, filter, cancellationToken);
         }
 
+        protected override async ValueTask<ValidateMonitoringFilterResult>
+            ValidateMonitoringFilterAsync(
+            ServerSystemContext context,
+            NodeHandle handle,
+            uint attributeId,
+            double samplingInterval,
+            uint queueSize,
+            ExtensionObject filter,
+            CancellationToken cancellationToken = default)
+        {
+            ValidateMonitoringFilterResult result =
+                await base.ValidateMonitoringFilterAsync(
+                    context,
+                    handle,
+                    attributeId,
+                    samplingInterval,
+                    queueSize,
+                    filter,
+                    cancellationToken).ConfigureAwait(false);
+            LastValidatedFilter = result.FilterToUse;
+            return result;
+        }
+
         public async ValueTask<ServiceResult> ReadInitialValuePublicAsync(
             ServerSystemContext context,
             NodeHandle handle,
@@ -6753,6 +7978,8 @@ namespace Opc.Ua.Server.Tests
             AddPredefinedNodeSynchronously(node);
         }
 
+        private readonly IServerInternal m_testServer;
+
         ValueTask ITestNodeManager.AddPredefinedNodeAsync(
             ISystemContext context,
             NodeState node,
@@ -6764,6 +7991,52 @@ namespace Opc.Ua.Server.Tests
         T ITestNodeManager.FindPredefinedNode<T>(NodeId nodeId)
         {
             return FindPredefinedNode<T>(nodeId);
+        }
+    }
+
+    internal sealed class TrackingSamplingGroupManager : SamplingGroupManager
+    {
+        public TrackingSamplingGroupManager(
+            IServerInternal server,
+            IAsyncNodeManager nodeManager)
+            : base(server, nodeManager, 100, 200, [])
+        {
+        }
+
+        public int ApplyCount { get; private set; }
+
+        public int ModifyCount { get; private set; }
+
+        public bool ThrowOnModify { get; set; }
+
+        public override void ApplyChanges()
+        {
+            ApplyCount++;
+        }
+
+        public override void ModifyMonitoring(
+            OperationContext context,
+            ISampledDataChangeMonitoredItem monitoredItem)
+        {
+            ModifyCount++;
+            if (ThrowOnModify)
+            {
+                throw new InvalidOperationException(
+                    "Injected sampling-group modification failure.");
+            }
+        }
+
+        public override void StartMonitoring(
+            OperationContext context,
+            ISampledDataChangeMonitoredItem monitoredItem,
+            IUserIdentity savedOwnerIdentity = null)
+        {
+        }
+
+        public void ResetCounts()
+        {
+            ApplyCount = 0;
+            ModifyCount = 0;
         }
     }
 

@@ -33,6 +33,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -781,6 +782,14 @@ namespace Opc.Ua.Server
         internal void ClearRemovedExternalReferences()
         {
             m_removedExternalReferences = [];
+        }
+
+        internal void ReplaceMonitoredItemManager(
+            IMonitoredItemManager monitoredItemManager)
+        {
+            ArgumentNullException.ThrowIfNull(monitoredItemManager);
+            m_monitoredItemManager.Dispose();
+            m_monitoredItemManager = monitoredItemManager;
         }
 
         /// <inheritdoc/>
@@ -6741,15 +6750,20 @@ namespace Opc.Ua.Server
                 return new InitialValueReadResult(
                     ReadInitialValue(context, handle, monitoredItem));
             }
-            ServiceResult requestValidation = ValidateInitialValueRequest(
-                context,
-                handle,
-                monitoredItem);
-            if (IsFatalInitialReadError(requestValidation))
+            if (!m_prevalidatedInitialValueRequests.TryGetValue(
+                aggregateFilter,
+                out _))
             {
-                return new InitialValueReadResult(
-                    requestValidation,
-                    FailCreation: true);
+                ServiceResult requestValidation = ValidateInitialValueRequest(
+                    context,
+                    handle,
+                    monitoredItem);
+                if (IsFatalInitialReadError(requestValidation))
+                {
+                    return new InitialValueReadResult(
+                        requestValidation,
+                        FailCreation: true);
+                }
             }
 
             var historianContext = new HistorianOperationContext(
@@ -7487,11 +7501,17 @@ namespace Opc.Ua.Server
                     }
                 }
 
-                m_monitoredItemManager.ApplyChanges();
             }
             finally
             {
-                m_monitoredItemSemaphore.Release();
+                try
+                {
+                    m_monitoredItemManager.ApplyChanges();
+                }
+                finally
+                {
+                    m_monitoredItemSemaphore.Release();
+                }
             }
 
             // do any post processing.
@@ -7566,25 +7586,183 @@ namespace Opc.Ua.Server
                 return (validateMonitoringFilterResult.StatusCode, validateMonitoringFilterResult.FilterResult);
             }
 
-            // modify the monitored item parameters.
-            ServiceResult? error = m_monitoredItemManager!.ModifyMonitoredItem(
-                context,
-                diagnosticsMasks,
-                timestampsToReturn,
-                validateMonitoringFilterResult.FilterToUse,
-                validateMonitoringFilterResult.Range,
-                samplingInterval,
-                revisedQueueSize,
-                datachangeItem,
-                itemToModify);
+            var aggregateFilter =
+                validateMonitoringFilterResult.FilterToUse as
+                    ServerAggregateFilter;
+            var concreteItem = datachangeItem as MonitoredItem;
+            MonitoredItem.AggregateModificationPreparation? preparation = null;
+            bool prevalidationRegistered = false;
+            bool initialValueCompleted = false;
 
-            // report change.
-            if (ServiceResult.IsGood(error))
+            try
             {
-                await OnMonitoredItemModifiedAsync(context, handle, datachangeItem, cancellationToken).ConfigureAwait(false);
+                if (aggregateFilter is { PrimeInitialValue: true } &&
+                    concreteItem != null)
+                {
+                    preparation = concreteItem.PrepareAggregateModification(
+                        aggregateFilter);
+                    if (preparation == null ||
+                        !preparation.RequiresInitialValue)
+                    {
+                        aggregateFilter.PrimeInitialValue = false;
+                    }
+                }
+
+                if (aggregateFilter is { PrimeInitialValue: true })
+                {
+                    ServiceResult initialValueValidation =
+                        ValidateInitialValueRequest(
+                            context,
+                            handle,
+                            datachangeItem);
+                    if (IsFatalInitialReadError(initialValueValidation))
+                    {
+                        if (preparation != null)
+                        {
+                            concreteItem!.CancelPreparedAggregateModification(
+                                preparation);
+                        }
+                        return (
+                            initialValueValidation,
+                            validateMonitoringFilterResult.FilterResult);
+                    }
+                    m_prevalidatedInitialValueRequests.Add(
+                        aggregateFilter,
+                        aggregateFilter);
+                    prevalidationRegistered = true;
+                }
+
+                // modify the monitored item parameters.
+                ServiceResult? error =
+                    m_monitoredItemManager!.ModifyMonitoredItem(
+                        context,
+                        diagnosticsMasks,
+                        timestampsToReturn,
+                        validateMonitoringFilterResult.FilterToUse,
+                        validateMonitoringFilterResult.Range,
+                        samplingInterval,
+                        revisedQueueSize,
+                        datachangeItem,
+                        itemToModify);
+
+                if (ServiceResult.IsBad(error))
+                {
+                    if (prevalidationRegistered)
+                    {
+                        m_prevalidatedInitialValueRequests.Remove(
+                            aggregateFilter!);
+                    }
+                    if (preparation != null)
+                    {
+                        if (preparation.IsCommitted)
+                        {
+                            _ = CompleteInitialValuePriming(datachangeItem);
+                        }
+                        else
+                        {
+                            concreteItem!.CancelPreparedAggregateModification(
+                                preparation);
+                        }
+                    }
+                    return (
+                        error!,
+                        validateMonitoringFilterResult.FilterResult);
+                }
+
+                if (aggregateFilter is { PrimeInitialValue: true })
+                {
+                    ServiceResult primingError = ServiceResult.Good;
+                    try
+                    {
+                        InitialValueReadResult initialValue =
+                            await ReadInitialValueAsync(
+                                context,
+                                handle,
+                                datachangeItem,
+                                aggregateFilter,
+                                cancellationToken).ConfigureAwait(false);
+                        if (ServiceResult.IsBad(initialValue.Error) &&
+                            (initialValue.FailCreation ||
+                                IsFatalInitialReadError(initialValue.Error)))
+                        {
+                            primingError = initialValue.Error;
+                        }
+                    }
+                    finally
+                    {
+                        m_prevalidatedInitialValueRequests.Remove(
+                            aggregateFilter);
+                        prevalidationRegistered = false;
+                        initialValueCompleted = true;
+                        ServiceResult completion =
+                            CompleteInitialValuePriming(datachangeItem);
+                        if (ServiceResult.IsBad(completion))
+                        {
+                            primingError = completion;
+                        }
+                    }
+                    error = primingError;
+                }
+
+                // report change after buffered live values have been released.
+                await OnMonitoredItemModifiedAsync(
+                    context,
+                    handle,
+                    datachangeItem,
+                    cancellationToken).ConfigureAwait(false);
+
+                return (
+                    error!,
+                    validateMonitoringFilterResult.FilterResult);
+            }
+            catch
+            {
+                if (prevalidationRegistered)
+                {
+                    m_prevalidatedInitialValueRequests.Remove(
+                        aggregateFilter!);
+                }
+                if (preparation != null)
+                {
+                    if (preparation.IsCommitted)
+                    {
+                        if (!initialValueCompleted)
+                        {
+                            _ = CompleteInitialValuePriming(datachangeItem);
+                        }
+                    }
+                    else
+                    {
+                        concreteItem!.CancelPreparedAggregateModification(
+                            preparation);
+                    }
+                }
+                throw;
+            }
+        }
+
+        private ServiceResult CompleteInitialValuePriming(
+            ISampledDataChangeMonitoredItem monitoredItem)
+        {
+            if (monitoredItem is not
+                IInitialValueMonitoredItem initialValueMonitoredItem)
+            {
+                return ServiceResult.Good;
             }
 
-            return (error!, validateMonitoringFilterResult.FilterResult);
+            ServiceResult completion =
+                initialValueMonitoredItem.CompleteInitialValue();
+            if (ServiceResult.IsBad(completion))
+            {
+                DateTimeUtc utcNow =
+                    ((Server as ITimeProviderProvider)?.TimeProvider ??
+                        TimeProvider.System).GetUtcNow().UtcDateTime;
+                QueueInitialHistoryFailure(
+                    monitoredItem,
+                    utcNow,
+                    completion);
+            }
+            return completion;
         }
 
         /// <summary>
@@ -8473,6 +8651,8 @@ namespace Opc.Ua.Server
         /// the monitored item manager of the NodeManager
         /// </summary>
         protected IMonitoredItemManager m_monitoredItemManager;
+        private readonly ConditionalWeakTable<ServerAggregateFilter, object>
+            m_prevalidatedInitialValueRequests = new();
         private List<LocalReference> m_removedExternalReferences = [];
         private bool m_disposed;
         /// <summary>
