@@ -622,6 +622,57 @@ namespace Opc.Ua.Server.Tests.Historian
         }
 
         [Test]
+        public async Task ReverseModifiedHistoryIncludesStartAndExcludesEndAsync()
+        {
+            using var provider = new InMemoryHistorianProvider();
+            var nodeId = new NodeId("modified.reverse.boundaries", NamespaceIndex);
+            provider.Register(nodeId);
+            HistorianOperationContext context = CreateContext();
+            DateTime lower = BaseTime;
+            DateTime middle = BaseTime.AddSeconds(5);
+            DateTime upper = BaseTime.AddSeconds(10);
+            await provider.InsertAsync(
+                context,
+                nodeId,
+                [
+                    MakeValue(lower, 0),
+                    MakeValue(middle, 5),
+                    MakeValue(upper, 10)
+                ],
+                CancellationToken.None).ConfigureAwait(false);
+            await provider.ReplaceAsync(
+                context,
+                nodeId,
+                [
+                    MakeValue(lower, 100),
+                    MakeValue(middle, 105),
+                    MakeValue(upper, 110)
+                ],
+                CancellationToken.None).ConfigureAwait(false);
+
+            HistorianPage<ModifiedDataValue> page =
+                await provider.ReadModifiedAsync(
+                    context,
+                    new HistorianModifiedReadRequest
+                    {
+                        NodeId = nodeId,
+                        StartTime = upper,
+                        EndTime = lower,
+                        IsForward = false
+                    },
+                    default,
+                    CancellationToken.None).ConfigureAwait(false);
+
+            Assert.That(page.Values, Has.Count.EqualTo(2));
+            Assert.That(
+                page.Values[0].Value.SourceTimestamp,
+                Is.EqualTo((DateTimeUtc)upper));
+            Assert.That(
+                page.Values[1].Value.SourceTimestamp,
+                Is.EqualTo((DateTimeUtc)middle));
+        }
+
+        [Test]
         public async Task ModifiedHistoryForwardCursorIncludesBackdatedModificationAsync()
         {
             using var provider = new InMemoryHistorianProvider();

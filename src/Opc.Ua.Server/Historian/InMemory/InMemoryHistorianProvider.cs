@@ -1882,8 +1882,11 @@ namespace Opc.Ua.Server.Historian.InMemory
 
             var source = archive.ModifiedLog
                 .Where(entry =>
-                    entry.Value.SourceTimestamp >= lo &&
-                    entry.Value.SourceTimestamp < hi)
+                    request.IsForward
+                        ? entry.Value.SourceTimestamp >= lo &&
+                            entry.Value.SourceTimestamp < hi
+                        : entry.Value.SourceTimestamp > lo &&
+                            entry.Value.SourceTimestamp <= hi)
                 .ToList();
             source.Sort(CompareModifiedEntries);
             if (!request.IsForward)

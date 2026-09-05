@@ -2279,8 +2279,8 @@ namespace Opc.Ua.Redundancy.Server
                     .ThenByDescending(entry => entry.Sequence)
                 : archive.Modified
                     .Where(entry =>
-                        entry.Value.SourceTimestamp >= lower &&
-                        entry.Value.SourceTimestamp < upper)
+                        entry.Value.SourceTimestamp > lower &&
+                        entry.Value.SourceTimestamp <= upper)
                     .OrderByDescending(entry => entry.Value.SourceTimestamp)
                     .ThenBy(entry => entry.Info.ModificationTime)
                     .ThenBy(entry => entry.Sequence);

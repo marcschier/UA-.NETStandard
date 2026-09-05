@@ -1074,6 +1074,58 @@ namespace Opc.Ua.Redundancy.Server.Tests.Historian
         }
 
         [Test]
+        public async Task ReverseModifiedHistoryIncludesStartAndExcludesEndAsync()
+        {
+            using var store = new StrongTestStore();
+            using AesCbcHmacRecordProtector protector = CreateProtector();
+            await using SharedKeyValueHistorianProvider provider = CreateProvider(
+                store,
+                protector,
+                new TestElection(true));
+            var nodeId = new NodeId("modified-reverse-boundaries", 2);
+            HistorianOperationContext context = CreateOperationContext();
+            await provider.InsertAsync(
+                context,
+                nodeId,
+                [
+                    ValueAt(0, 0),
+                    ValueAt(5, 5),
+                    ValueAt(10, 10)
+                ],
+                default).ConfigureAwait(false);
+            await provider.ReplaceAsync(
+                context,
+                nodeId,
+                [
+                    ValueAt(100, 0),
+                    ValueAt(105, 5),
+                    ValueAt(110, 10)
+                ],
+                default).ConfigureAwait(false);
+
+            HistorianPage<ModifiedDataValue> page =
+                await provider.ReadModifiedAsync(
+                    context,
+                    new HistorianModifiedReadRequest
+                    {
+                        NodeId = nodeId,
+                        StartTime = TimeAt(10),
+                        EndTime = TimeAt(0),
+                        IsForward = false
+                    },
+                    default,
+                    default).ConfigureAwait(false);
+
+            Assert.That(page.Values, Has.Count.EqualTo(2));
+            Assert.That(
+                page.Values[0].Value.SourceTimestamp,
+                Is.EqualTo(TimeAt(10)));
+            Assert.That(
+                page.Values[1].Value.SourceTimestamp,
+                Is.EqualTo(TimeAt(5)));
+        }
+
+        [Test]
         public async Task EventReplaceAppliesIndexRangeAsync()
         {
             using var store = new StrongTestStore();

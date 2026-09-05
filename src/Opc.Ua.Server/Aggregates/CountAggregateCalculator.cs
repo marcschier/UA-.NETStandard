@@ -116,13 +116,20 @@ namespace Opc.Ua.Server
                 throw new ServiceResultException(
                     StatusCodes.BadInvalidArgument);
             }
+            long intervalTicks = processingInterval == 0
+                ? 0
+                : GetAnnotationIntervalTicks(processingInterval);
             if (processingInterval > 0)
             {
-                double spanMilliseconds = Math.Abs(
-                    (endTime.ToDateTime() - startTime.ToDateTime())
-                    .TotalMilliseconds);
-                if (Math.Ceiling(
-                    spanMilliseconds / processingInterval) > outputCap)
+                long spanTicks = Math.Abs(
+                    endTime.ToDateTime().Ticks -
+                    startTime.ToDateTime().Ticks);
+                long intervalCount = spanTicks / intervalTicks;
+                if (spanTicks % intervalTicks != 0)
+                {
+                    intervalCount++;
+                }
+                if (intervalCount > outputCap)
                 {
                     throw new ServiceResultException(
                         StatusCodes.BadTooManyOperations);
@@ -150,16 +157,16 @@ namespace Opc.Ua.Server
                         StatusCodes.BadTooManyOperations);
                 }
 
-                double remainingMilliseconds = Math.Abs(
-                    (endTime.ToDateTime() - cursor.ToDateTime())
-                    .TotalMilliseconds);
+                long remainingTicks = Math.Abs(
+                    endTime.ToDateTime().Ticks -
+                    cursor.ToDateTime().Ticks);
                 DateTimeUtc next =
                     processingInterval == 0 ||
-                    processingInterval >= remainingMilliseconds
+                    intervalTicks >= remainingTicks
                     ? endTime
                     : AddAnnotationInterval(
                         cursor,
-                        forward ? processingInterval : -processingInterval);
+                        forward ? intervalTicks : -intervalTicks);
 
                 int count = forward
                     ? CountForwardAnnotations(
@@ -396,15 +403,19 @@ namespace Opc.Ua.Server
 
         private static DateTimeUtc AddAnnotationInterval(
             DateTimeUtc timestamp,
-            double milliseconds)
+            long ticks)
         {
             DateTimeUtc next;
             try
             {
+                long nextTicks = checked(
+                    timestamp.ToDateTime().Ticks + ticks);
                 next = new DateTimeUtc(
-                    timestamp.ToDateTime().AddMilliseconds(milliseconds));
+                    new DateTime(nextTicks, DateTimeKind.Utc));
             }
-            catch (ArgumentOutOfRangeException exception)
+            catch (Exception exception) when (
+                exception is ArgumentOutOfRangeException or
+                OverflowException)
             {
                 throw new ServiceResultException(
                     StatusCodes.BadAggregateInvalidInputs,
@@ -418,6 +429,31 @@ namespace Opc.Ua.Server
                     "The annotation-count interval does not advance.");
             }
             return next;
+        }
+
+        private static long GetAnnotationIntervalTicks(
+            double processingInterval)
+        {
+            double ticks = processingInterval *
+                TimeSpan.TicksPerMillisecond;
+            if (double.IsInfinity(ticks) ||
+                ticks < 1 ||
+                ticks >= 9_223_372_036_854_775_808d)
+            {
+                throw new ServiceResultException(
+                    StatusCodes.BadAggregateInvalidInputs);
+            }
+            try
+            {
+                return checked((long)ticks);
+            }
+            catch (OverflowException exception)
+            {
+                throw new ServiceResultException(
+                    StatusCodes.BadAggregateInvalidInputs,
+                    "The annotation-count interval exceeds the supported range.",
+                    exception);
+            }
         }
 
         private static int CountForwardAnnotations(

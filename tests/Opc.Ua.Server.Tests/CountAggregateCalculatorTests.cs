@@ -312,6 +312,40 @@ namespace Opc.Ua.Server.Tests
             AssertAnnotationCount(result[0], 1, startTime);
         }
 
+        [Test]
+        public void CalculateAnnotationCountsSupportsFractionalMillisecondIntervals()
+        {
+            var startDateTime =
+                new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            DateTimeUtc startTime = startDateTime;
+            DateTimeUtc endTime = startDateTime.AddTicks(3000);
+
+            ArrayOf<DataValue> result =
+                CountAggregateCalculator.CalculateAnnotationCounts(
+                    [
+                        startTime,
+                        (DateTimeUtc)startDateTime.AddTicks(1000),
+                        (DateTimeUtc)startDateTime.AddTicks(2000),
+                        endTime
+                    ],
+                    startTime,
+                    endTime,
+                    processingInterval: 0.1,
+                    outputCap: 10,
+                    CancellationToken.None);
+
+            Assert.That(result, Has.Count.EqualTo(3));
+            AssertAnnotationCount(result[0], 1, startTime);
+            AssertAnnotationCount(
+                result[1],
+                1,
+                startDateTime.AddTicks(1000));
+            AssertAnnotationCount(
+                result[2],
+                1,
+                startDateTime.AddTicks(2000));
+        }
+
         [TestCase(-1)]
         [TestCase(double.NaN)]
         [TestCase(double.PositiveInfinity)]
@@ -319,6 +353,28 @@ namespace Opc.Ua.Server.Tests
         public void CalculateAnnotationCountsRejectsInvalidInterval(
             double processingInterval)
         {
+            ServiceResultException exception =
+                Assert.Throws<ServiceResultException>(
+                    () => CountAggregateCalculator.CalculateAnnotationCounts(
+                        [],
+                        TimeAt(0),
+                        TimeAt(10),
+                        processingInterval,
+                        outputCap: 10,
+                        CancellationToken.None));
+
+            Assert.That(
+                exception.StatusCode,
+                Is.EqualTo(StatusCodes.BadAggregateInvalidInputs));
+        }
+
+        [Test]
+        public void CalculateAnnotationCountsRejectsIntervalTickOverflow()
+        {
+            double processingInterval =
+                (double)long.MaxValue /
+                TimeSpan.TicksPerMillisecond;
+
             ServiceResultException exception =
                 Assert.Throws<ServiceResultException>(
                     () => CountAggregateCalculator.CalculateAnnotationCounts(
