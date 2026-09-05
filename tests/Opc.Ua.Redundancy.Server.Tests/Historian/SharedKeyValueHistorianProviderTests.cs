@@ -817,6 +817,136 @@ namespace Opc.Ua.Redundancy.Server.Tests.Historian
         }
 
         [Test]
+        public async Task AtTimeUsesSharedInterpolationRulesAsync()
+        {
+            using var store = new StrongTestStore();
+            using AesCbcHmacRecordProtector protector = CreateProtector();
+            await using SharedKeyValueHistorianProvider provider = CreateProvider(
+                store,
+                protector,
+                new TestElection(true));
+            HistorianOperationContext context = CreateOperationContext();
+            var nodeId = new NodeId("at-time-interpolation", 2);
+            await provider.InsertAsync(
+                context,
+                nodeId,
+                [
+                    ValueAt(0, 0),
+                    ValueAt(10, 10)
+                ],
+                default).ConfigureAwait(false);
+
+            ArrayOf<DataValue> values = await provider.ReadAtTimeAsync(
+                context,
+                new HistorianAtTimeReadRequest
+                {
+                    NodeId = nodeId,
+                    RequestedTimes = [TimeAt(5)],
+                    UseSimpleBounds = true
+                },
+                default).ConfigureAwait(false);
+
+            Assert.That(values, Has.Count.EqualTo(1));
+            Assert.That(values[0].WrappedValue.TryGetValue(out int value), Is.True);
+            Assert.That(value, Is.EqualTo(5));
+            Assert.That(StatusCode.IsGood(values[0].StatusCode), Is.True);
+            Assert.That(
+                values[0].StatusCode.AggregateBits,
+                Is.EqualTo(AggregateBits.Interpolated));
+        }
+
+        [Test]
+        public async Task AnnotationCountZeroIntervalReturnsCalculatedWholeRangeAsync()
+        {
+            using var store = new StrongTestStore();
+            using AesCbcHmacRecordProtector protector = CreateProtector();
+            await using SharedKeyValueHistorianProvider provider = CreateProvider(
+                store,
+                protector,
+                new TestElection(true));
+            HistorianOperationContext context = CreateOperationContext();
+            var nodeId = new NodeId("annotation-count-zero", 2);
+            await provider.InsertAnnotationsAsync(
+                context,
+                nodeId,
+                [
+                    new Annotation { AnnotationTime = TimeAt(0) },
+                    new Annotation { AnnotationTime = TimeAt(5) },
+                    new Annotation { AnnotationTime = TimeAt(10) }
+                ],
+                default).ConfigureAwait(false);
+
+            HistorianPage<DataValue> page = await provider.ReadProcessedAsync(
+                context,
+                new HistorianProcessedReadRequest
+                {
+                    NodeId = nodeId,
+                    AggregateId = ObjectIds.AggregateFunction_AnnotationCount,
+                    StartTime = TimeAt(0),
+                    EndTime = TimeAt(10),
+                    ProcessingInterval = 0,
+                    Configuration = new AggregateConfiguration()
+                },
+                default,
+                default).ConfigureAwait(false);
+
+            Assert.That(page.Values, Has.Count.EqualTo(1));
+            Assert.That(page.Values[0].WrappedValue.TryGetValue(out int count), Is.True);
+            Assert.That(count, Is.EqualTo(2));
+            Assert.That(
+                page.Values[0].StatusCode.AggregateBits,
+                Is.EqualTo(AggregateBits.Calculated));
+        }
+
+        [Test]
+        public async Task AnnotationCountReverseExcludesEndTimeAsync()
+        {
+            using var store = new StrongTestStore();
+            using AesCbcHmacRecordProtector protector = CreateProtector();
+            await using SharedKeyValueHistorianProvider provider = CreateProvider(
+                store,
+                protector,
+                new TestElection(true));
+            HistorianOperationContext context = CreateOperationContext();
+            var nodeId = new NodeId("annotation-count-reverse", 2);
+            await provider.InsertAnnotationsAsync(
+                context,
+                nodeId,
+                [
+                    new Annotation { AnnotationTime = TimeAt(0) },
+                    new Annotation { AnnotationTime = TimeAt(5) },
+                    new Annotation { AnnotationTime = TimeAt(10) }
+                ],
+                default).ConfigureAwait(false);
+
+            HistorianPage<DataValue> page = await provider.ReadProcessedAsync(
+                context,
+                new HistorianProcessedReadRequest
+                {
+                    NodeId = nodeId,
+                    AggregateId = ObjectIds.AggregateFunction_AnnotationCount,
+                    StartTime = TimeAt(10),
+                    EndTime = TimeAt(0),
+                    ProcessingInterval = 5000,
+                    Configuration = new AggregateConfiguration()
+                },
+                default,
+                default).ConfigureAwait(false);
+
+            Assert.That(page.Values, Has.Count.EqualTo(2));
+            Assert.That(page.Values[0].WrappedValue.TryGetValue(out int first), Is.True);
+            Assert.That(page.Values[1].WrappedValue.TryGetValue(out int second), Is.True);
+            Assert.That(first, Is.EqualTo(1));
+            Assert.That(second, Is.EqualTo(1));
+            Assert.That(
+                page.Values[0].StatusCode.AggregateBits,
+                Is.EqualTo(AggregateBits.Calculated));
+            Assert.That(
+                page.Values[1].StatusCode.AggregateBits,
+                Is.EqualTo(AggregateBits.Calculated));
+        }
+
+        [Test]
         public async Task IdentityAndInterfacesAreStableAsync()
         {
             using var store = new StrongTestStore();

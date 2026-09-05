@@ -27,7 +27,9 @@
  * http://opcfoundation.org/License/MIT/1.00/
  * ======================================================================*/
 
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using NUnit.Framework;
 using Opc.Ua.Tests;
 
@@ -235,6 +237,116 @@ namespace Opc.Ua.Server.Tests
             int annotationCount = (int)(double)annotationResult.WrappedValue.ConvertToDouble();
             int goodCount = (int)(double)countResult.WrappedValue.ConvertToDouble();
             Assert.That(annotationCount, Is.GreaterThanOrEqualTo(goodCount));
+        }
+
+        [Test]
+        public void CalculateAnnotationCountsZeroIntervalUsesWholeDomain()
+        {
+            DateTimeUtc startTime = TimeAt(0);
+            DateTimeUtc endTime = TimeAt(10);
+
+            ArrayOf<DataValue> result =
+                CountAggregateCalculator.CalculateAnnotationCounts(
+                    [startTime, TimeAt(5), endTime],
+                    startTime,
+                    endTime,
+                    processingInterval: 0,
+                    outputCap: 10,
+                    CancellationToken.None);
+
+            Assert.That(result, Has.Count.EqualTo(1));
+            AssertAnnotationCount(result[0], 2, startTime);
+        }
+
+        [Test]
+        public void CalculateAnnotationCountsUsesHalfOpenForwardIntervals()
+        {
+            ArrayOf<DataValue> result =
+                CountAggregateCalculator.CalculateAnnotationCounts(
+                    [TimeAt(0), TimeAt(5), TimeAt(10)],
+                    TimeAt(0),
+                    TimeAt(10),
+                    processingInterval: 5000,
+                    outputCap: 10,
+                    CancellationToken.None);
+
+            Assert.That(result, Has.Count.EqualTo(2));
+            AssertAnnotationCount(result[0], 1, TimeAt(0));
+            AssertAnnotationCount(result[1], 1, TimeAt(5));
+        }
+
+        [Test]
+        public void CalculateAnnotationCountsUsesReverseIntervalBoundaries()
+        {
+            ArrayOf<DataValue> result =
+                CountAggregateCalculator.CalculateAnnotationCounts(
+                    [TimeAt(0), TimeAt(5), TimeAt(10)],
+                    TimeAt(10),
+                    TimeAt(0),
+                    processingInterval: 5000,
+                    outputCap: 10,
+                    CancellationToken.None);
+
+            Assert.That(result, Has.Count.EqualTo(2));
+            AssertAnnotationCount(result[0], 1, TimeAt(10));
+            AssertAnnotationCount(result[1], 1, TimeAt(5));
+        }
+
+        [TestCase(-1)]
+        [TestCase(double.NaN)]
+        [TestCase(double.PositiveInfinity)]
+        [TestCase(double.NegativeInfinity)]
+        public void CalculateAnnotationCountsRejectsInvalidInterval(
+            double processingInterval)
+        {
+            ServiceResultException exception =
+                Assert.Throws<ServiceResultException>(
+                    () => CountAggregateCalculator.CalculateAnnotationCounts(
+                        [],
+                        TimeAt(0),
+                        TimeAt(10),
+                        processingInterval,
+                        outputCap: 10,
+                        CancellationToken.None));
+
+            Assert.That(
+                exception.StatusCode,
+                Is.EqualTo(StatusCodes.BadAggregateInvalidInputs));
+        }
+
+        [Test]
+        public void CalculateAnnotationCountsEnforcesOutputCap()
+        {
+            ServiceResultException exception =
+                Assert.Throws<ServiceResultException>(
+                    () => CountAggregateCalculator.CalculateAnnotationCounts(
+                        [],
+                        TimeAt(0),
+                        TimeAt(10),
+                        processingInterval: 1000,
+                        outputCap: 5,
+                        CancellationToken.None));
+
+            Assert.That(
+                exception.StatusCode,
+                Is.EqualTo(StatusCodes.BadTooManyOperations));
+        }
+
+        [Test]
+        public void CalculateAnnotationCountsObservesCancellation()
+        {
+            using var cancellation = new CancellationTokenSource();
+            cancellation.Cancel();
+
+            Assert.That(
+                () => CountAggregateCalculator.CalculateAnnotationCounts(
+                    [],
+                    TimeAt(0),
+                    TimeAt(10),
+                    processingInterval: 1000,
+                    outputCap: 10,
+                    cancellation.Token),
+                Throws.InstanceOf<OperationCanceledException>());
         }
 
         [Test]
@@ -471,6 +583,25 @@ namespace Opc.Ua.Server.Tests
 
             Assert.That(result.IsNull, Is.False);
             Assert.That(result.StatusCode.AggregateBits.HasFlag(AggregateBits.Calculated), Is.True);
+        }
+
+        private static void AssertAnnotationCount(
+            DataValue value,
+            int expected,
+            DateTimeUtc timestamp)
+        {
+            Assert.That(value.WrappedValue.TryGetValue(out int count), Is.True);
+            Assert.That(count, Is.EqualTo(expected));
+            Assert.That(StatusCode.IsGood(value.StatusCode), Is.True);
+            Assert.That(
+                value.StatusCode.AggregateBits,
+                Is.EqualTo(AggregateBits.Calculated));
+            Assert.That(value.SourceTimestamp, Is.EqualTo(timestamp));
+        }
+
+        private static DateTimeUtc TimeAt(int second)
+        {
+            return new DateTimeUtc(2026, 1, 1, 0, 0, second);
         }
     }
 }

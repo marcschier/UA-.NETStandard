@@ -29,6 +29,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Opc.Ua.Server
 {
@@ -58,6 +59,113 @@ namespace Opc.Ua.Server
             : base(aggregateId, startTime, endTime, processingInterval, stepped, configuration, telemetry)
         {
             SetPartialBit = true;
+        }
+
+        /// <summary>
+        /// Calculates AnnotationCount values for the requested time domain.
+        /// </summary>
+        /// <param name="annotationTimestamps">
+        /// Annotation timestamps in any order.
+        /// </param>
+        /// <param name="startTime">The start of the requested domain.</param>
+        /// <param name="endTime">The end of the requested domain.</param>
+        /// <param name="processingInterval">
+        /// The interval in milliseconds. Zero requests one result over the
+        /// complete domain.
+        /// </param>
+        /// <param name="outputCap">Maximum number of returned values.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The calculated AnnotationCount values.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="annotationTimestamps"/> is null.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="outputCap"/> is not positive.
+        /// </exception>
+        /// <exception cref="ServiceResultException">
+        /// The interval is invalid or the output cap is exceeded.
+        /// </exception>
+        public static ArrayOf<DataValue> CalculateAnnotationCounts(
+            ArrayOf<DateTimeUtc> annotationTimestamps,
+            DateTimeUtc startTime,
+            DateTimeUtc endTime,
+            double processingInterval,
+            int outputCap,
+            CancellationToken cancellationToken)
+        {
+            if (annotationTimestamps.IsNull)
+            {
+                throw new ArgumentNullException(nameof(annotationTimestamps));
+            }
+            if (outputCap <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(outputCap),
+                    outputCap,
+                    "The output cap must be positive.");
+            }
+            if (processingInterval < 0 ||
+                double.IsNaN(processingInterval) ||
+                double.IsInfinity(processingInterval))
+            {
+                throw new ServiceResultException(
+                    StatusCodes.BadAggregateInvalidInputs);
+            }
+            if (startTime == endTime)
+            {
+                throw new ServiceResultException(
+                    StatusCodes.BadInvalidArgument);
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            var sorted = new DateTimeUtc[annotationTimestamps.Count];
+            for (int i = 0; i < sorted.Length; i++)
+            {
+                sorted[i] = annotationTimestamps[i];
+            }
+            Array.Sort(sorted);
+
+            bool forward = startTime < endTime;
+            var values = new List<DataValue>();
+            int index = forward ? 0 : sorted.Length - 1;
+            DateTimeUtc cursor = startTime;
+            while (forward ? cursor < endTime : cursor > endTime)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (values.Count >= outputCap)
+                {
+                    throw new ServiceResultException(
+                        StatusCodes.BadTooManyOperations);
+                }
+
+                DateTimeUtc next = processingInterval == 0
+                    ? endTime
+                    : AddAnnotationInterval(
+                        cursor,
+                        forward ? processingInterval : -processingInterval);
+                if ((forward && next > endTime) ||
+                    (!forward && next < endTime))
+                {
+                    next = endTime;
+                }
+
+                int count = forward
+                    ? CountForwardAnnotations(
+                        sorted,
+                        ref index,
+                        cursor,
+                        next,
+                        cancellationToken)
+                    : CountReverseAnnotations(
+                        sorted,
+                        ref index,
+                        cursor,
+                        next,
+                        cancellationToken);
+                values.Add(CreateAnnotationCountValue(count, cursor));
+                cursor = next;
+            }
+            return values.ToArrayOf();
         }
 
         /// <summary>
@@ -272,6 +380,88 @@ namespace Opc.Ua.Server
 
             // return result.
             return value;
+        }
+
+        private static DateTimeUtc AddAnnotationInterval(
+            DateTimeUtc timestamp,
+            double milliseconds)
+        {
+            DateTimeUtc next;
+            try
+            {
+                next = timestamp.AddMilliseconds(milliseconds);
+            }
+            catch (ArgumentOutOfRangeException exception)
+            {
+                throw new ServiceResultException(
+                    StatusCodes.BadAggregateInvalidInputs,
+                    "The annotation-count interval does not produce a valid timestamp.",
+                    exception);
+            }
+            if (next == timestamp)
+            {
+                throw new ServiceResultException(
+                    StatusCodes.BadAggregateInvalidInputs,
+                    "The annotation-count interval does not advance.");
+            }
+            return next;
+        }
+
+        private static int CountForwardAnnotations(
+            DateTimeUtc[] timestamps,
+            ref int index,
+            DateTimeUtc lowerInclusive,
+            DateTimeUtc upperExclusive,
+            CancellationToken cancellationToken)
+        {
+            while (index < timestamps.Length &&
+                timestamps[index] < lowerInclusive)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                index++;
+            }
+            int start = index;
+            while (index < timestamps.Length &&
+                timestamps[index] < upperExclusive)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                index++;
+            }
+            return index - start;
+        }
+
+        private static int CountReverseAnnotations(
+            DateTimeUtc[] timestamps,
+            ref int index,
+            DateTimeUtc upperInclusive,
+            DateTimeUtc lowerExclusive,
+            CancellationToken cancellationToken)
+        {
+            while (index >= 0 && timestamps[index] > upperInclusive)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                index--;
+            }
+            int start = index;
+            while (index >= 0 && timestamps[index] > lowerExclusive)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                index--;
+            }
+            return start - index;
+        }
+
+        private static DataValue CreateAnnotationCountValue(
+            int count,
+            DateTimeUtc timestamp)
+        {
+            var value = new DataValue(
+                Variant.From(count),
+                StatusCodes.Good,
+                timestamp,
+                timestamp);
+            return value.WithStatus(value.StatusCode.WithAggregateBits(
+                AggregateBits.Calculated));
         }
     }
 }

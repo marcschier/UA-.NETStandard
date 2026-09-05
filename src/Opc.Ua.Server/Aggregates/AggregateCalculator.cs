@@ -102,6 +102,134 @@ namespace Opc.Ua.Server
         public NodeId AggregateId { get; }
 
         /// <summary>
+        /// Calculates the value at a requested timestamp using the Part 13
+        /// simple or interpolated bounding-value rules.
+        /// </summary>
+        /// <param name="orderedValues">
+        /// Raw values ordered by ascending source timestamp.
+        /// </param>
+        /// <param name="requestedTime">The timestamp to calculate.</param>
+        /// <param name="useSimpleBounds">
+        /// Whether nearest raw values, rather than nearest non-Bad values,
+        /// define the interpolation bounds.
+        /// </param>
+        /// <param name="stepped">
+        /// Whether the historized signal uses stepped interpolation.
+        /// </param>
+        /// <returns>The exact or calculated value.</returns>
+        public static DataValue CalculateAtTime(
+            ArrayOf<DataValue> orderedValues,
+            DateTimeUtc requestedTime,
+            bool useSimpleBounds,
+            bool stepped)
+        {
+            if (orderedValues.IsNull || orderedValues.Count == 0)
+            {
+                return CreateAtTimeNoDataValue(requestedTime);
+            }
+
+            int afterIndex = FindFirstValueAtOrAfter(
+                orderedValues,
+                requestedTime);
+            if (afterIndex < orderedValues.Count &&
+                orderedValues[afterIndex].SourceTimestamp == requestedTime)
+            {
+                DataValue exact = orderedValues[afterIndex].Copy();
+                return exact.WithStatus(
+                    exact.StatusCode.WithAggregateBits(AggregateBits.Raw));
+            }
+
+            int beforeIndex = afterIndex - 1;
+            if (useSimpleBounds)
+            {
+                if (beforeIndex < 0 ||
+                    StatusCode.IsBad(orderedValues[beforeIndex].StatusCode))
+                {
+                    return CreateAtTimeNoDataValue(requestedTime);
+                }
+
+                DataValue before = orderedValues[beforeIndex];
+                if (stepped)
+                {
+                    DataValue steppedValue = SteppedInterpolate(
+                        requestedTime,
+                        before);
+                    return afterIndex < orderedValues.Count
+                        ? steppedValue
+                        : MarkAtTimeUncertain(steppedValue);
+                }
+                if (afterIndex >= orderedValues.Count ||
+                    StatusCode.IsBad(orderedValues[afterIndex].StatusCode))
+                {
+                    return MarkAtTimeUncertain(
+                        SteppedInterpolate(requestedTime, before));
+                }
+                return SlopedInterpolate(
+                    requestedTime,
+                    before,
+                    orderedValues[afterIndex]);
+            }
+
+            bool skippedBad = false;
+            while (beforeIndex >= 0 &&
+                StatusCode.IsBad(orderedValues[beforeIndex].StatusCode))
+            {
+                skippedBad = true;
+                beforeIndex--;
+            }
+            if (beforeIndex < 0)
+            {
+                return CreateAtTimeNoDataValue(requestedTime);
+            }
+
+            DataValue nonBadBefore = orderedValues[beforeIndex];
+            if (stepped)
+            {
+                DataValue steppedValue = SteppedInterpolate(
+                    requestedTime,
+                    nonBadBefore);
+                return skippedBad || afterIndex >= orderedValues.Count
+                    ? MarkAtTimeUncertain(steppedValue)
+                    : steppedValue;
+            }
+
+            while (afterIndex < orderedValues.Count &&
+                StatusCode.IsBad(orderedValues[afterIndex].StatusCode))
+            {
+                skippedBad = true;
+                afterIndex++;
+            }
+            DataValue calculated;
+            if (afterIndex < orderedValues.Count)
+            {
+                calculated = SlopedInterpolate(
+                    requestedTime,
+                    nonBadBefore,
+                    orderedValues[afterIndex]);
+            }
+            else
+            {
+                int secondBeforeIndex = beforeIndex - 1;
+                while (secondBeforeIndex >= 0 &&
+                    StatusCode.IsBad(
+                        orderedValues[secondBeforeIndex].StatusCode))
+                {
+                    secondBeforeIndex--;
+                }
+                calculated = secondBeforeIndex >= 0
+                    ? SlopedInterpolate(
+                        requestedTime,
+                        orderedValues[secondBeforeIndex],
+                        nonBadBefore)
+                    : SteppedInterpolate(requestedTime, nonBadBefore);
+                skippedBad = true;
+            }
+            return skippedBad
+                ? MarkAtTimeUncertain(calculated)
+                : calculated;
+        }
+
+        /// <summary>
         /// Queues a raw value for processing.
         /// </summary>
         /// <param name="value">The data value to process.</param>
@@ -1541,6 +1669,45 @@ namespace Opc.Ua.Server
                 // uncertain if did not meet the Good or Bad requirements
                 return statusCode.WithCodeBits(StatusCodes.UncertainDataSubNormal);
             }
+        }
+
+        private static int FindFirstValueAtOrAfter(
+            ArrayOf<DataValue> orderedValues,
+            DateTimeUtc timestamp)
+        {
+            int low = 0;
+            int high = orderedValues.Count;
+            while (low < high)
+            {
+                int middle = low + ((high - low) / 2);
+                if (orderedValues[middle].SourceTimestamp < timestamp)
+                {
+                    low = middle + 1;
+                }
+                else
+                {
+                    high = middle;
+                }
+            }
+            return low;
+        }
+
+        private static DataValue CreateAtTimeNoDataValue(
+            DateTimeUtc timestamp)
+        {
+            return new DataValue(
+                Variant.Null,
+                StatusCodes.BadNoData,
+                timestamp,
+                timestamp);
+        }
+
+        private static DataValue MarkAtTimeUncertain(DataValue value)
+        {
+            return StatusCode.IsBad(value.StatusCode)
+                ? value
+                : value.WithStatus(value.StatusCode.WithCodeBits(
+                    StatusCodes.UncertainDataSubNormal));
         }
 
         private readonly ILogger m_logger;
