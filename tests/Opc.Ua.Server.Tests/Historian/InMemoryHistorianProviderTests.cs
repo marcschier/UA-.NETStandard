@@ -622,6 +622,239 @@ namespace Opc.Ua.Server.Tests.Historian
         }
 
         [Test]
+        public async Task ModifiedHistoryForwardCursorIncludesBackdatedModificationAsync()
+        {
+            using var provider = new InMemoryHistorianProvider();
+            var nodeId = new NodeId("modified.forward.cursor", NamespaceIndex);
+            provider.Register(nodeId);
+            HistorianOperationContext insertContext = CreateContext();
+            HistorianOperationContext earlierContext = CreateContext();
+            HistorianOperationContext middleContext = CreateContext();
+            HistorianOperationContext laterContext = CreateContext();
+            earlierContext.DefaultModificationInfo.ModificationTime =
+                BaseTime.AddMinutes(1);
+            middleContext.DefaultModificationInfo.ModificationTime =
+                BaseTime.AddMinutes(2);
+            laterContext.DefaultModificationInfo.ModificationTime =
+                BaseTime.AddMinutes(3);
+            DateTime sourceTimestamp = BaseTime.AddSeconds(10);
+            await provider.InsertAsync(
+                insertContext,
+                nodeId,
+                [MakeValue(sourceTimestamp, 0)],
+                CancellationToken.None).ConfigureAwait(false);
+            await provider.ReplaceAsync(
+                laterContext,
+                nodeId,
+                [MakeValue(sourceTimestamp, 1)],
+                CancellationToken.None).ConfigureAwait(false);
+            await provider.ReplaceAsync(
+                middleContext,
+                nodeId,
+                [MakeValue(sourceTimestamp, 2)],
+                CancellationToken.None).ConfigureAwait(false);
+            var request = new HistorianModifiedReadRequest
+            {
+                NodeId = nodeId,
+                StartTime = BaseTime,
+                EndTime = BaseTime.AddMinutes(1),
+                MaxValues = 1,
+                IsForward = true
+            };
+
+            HistorianPage<ModifiedDataValue> first = await provider.ReadModifiedAsync(
+                laterContext,
+                request,
+                default,
+                CancellationToken.None).ConfigureAwait(false);
+            await provider.ReplaceAsync(
+                earlierContext,
+                nodeId,
+                [MakeValue(sourceTimestamp, 3)],
+                CancellationToken.None).ConfigureAwait(false);
+            HistorianPage<ModifiedDataValue> second = await provider.ReadModifiedAsync(
+                laterContext,
+                request,
+                first.NextToken,
+                CancellationToken.None).ConfigureAwait(false);
+            HistorianPage<ModifiedDataValue> third = await provider.ReadModifiedAsync(
+                laterContext,
+                request,
+                second.NextToken,
+                CancellationToken.None).ConfigureAwait(false);
+
+            Assert.That(first.Values, Has.Count.EqualTo(1));
+            Assert.That(first.Values[0].Value.WrappedValue.TryGetValue(out double firstValue), Is.True);
+            Assert.That(firstValue, Is.Zero);
+            Assert.That(first.IsFinal, Is.False);
+            Assert.That(first.NextToken.TryGetCursor(out HistorianResumeCursor firstCursor), Is.True);
+            Assert.That(firstCursor.Key.IsEmpty, Is.False);
+            Assert.That(second.Values, Has.Count.EqualTo(1));
+            Assert.That(second.Values[0].Value.WrappedValue.TryGetValue(out double secondValue), Is.True);
+            Assert.That(secondValue, Is.EqualTo(1));
+            Assert.That(second.IsFinal, Is.False);
+            Assert.That(third.Values, Has.Count.EqualTo(1));
+            Assert.That(third.Values[0].Value.WrappedValue.TryGetValue(out double thirdValue), Is.True);
+            Assert.That(thirdValue, Is.EqualTo(2));
+            Assert.That(third.IsFinal, Is.True);
+        }
+
+        [Test]
+        public async Task ModifiedHistoryReverseCursorUsesCompleteOrderingTupleAsync()
+        {
+            using var provider = new InMemoryHistorianProvider();
+            var nodeId = new NodeId("modified.reverse.cursor", NamespaceIndex);
+            provider.Register(nodeId);
+            HistorianOperationContext insertContext = CreateContext();
+            HistorianOperationContext earlierContext = CreateContext();
+            HistorianOperationContext laterContext = CreateContext();
+            earlierContext.DefaultModificationInfo.ModificationTime =
+                BaseTime.AddMinutes(1);
+            laterContext.DefaultModificationInfo.ModificationTime =
+                BaseTime.AddMinutes(2);
+            DateTime sourceTimestamp = BaseTime.AddSeconds(10);
+            await provider.InsertAsync(
+                insertContext,
+                nodeId,
+                [MakeValue(sourceTimestamp, 0)],
+                CancellationToken.None).ConfigureAwait(false);
+            await provider.ReplaceAsync(
+                laterContext,
+                nodeId,
+                [MakeValue(sourceTimestamp, 1)],
+                CancellationToken.None).ConfigureAwait(false);
+            await provider.ReplaceAsync(
+                earlierContext,
+                nodeId,
+                [MakeValue(sourceTimestamp, 2)],
+                CancellationToken.None).ConfigureAwait(false);
+            var request = new HistorianModifiedReadRequest
+            {
+                NodeId = nodeId,
+                StartTime = BaseTime.AddMinutes(1),
+                EndTime = BaseTime,
+                MaxValues = 1,
+                IsForward = false
+            };
+
+            HistorianPage<ModifiedDataValue> first = await provider.ReadModifiedAsync(
+                laterContext,
+                request,
+                default,
+                CancellationToken.None).ConfigureAwait(false);
+            HistorianPage<ModifiedDataValue> second = await provider.ReadModifiedAsync(
+                laterContext,
+                request,
+                first.NextToken,
+                CancellationToken.None).ConfigureAwait(false);
+
+            Assert.That(first.Values, Has.Count.EqualTo(1));
+            Assert.That(first.Values[0].Value.WrappedValue.TryGetValue(out double firstValue), Is.True);
+            Assert.That(firstValue, Is.EqualTo(1));
+            Assert.That(first.IsFinal, Is.False);
+            Assert.That(second.Values, Has.Count.EqualTo(1));
+            Assert.That(second.Values[0].Value.WrappedValue.TryGetValue(out double secondValue), Is.True);
+            Assert.That(secondValue, Is.Zero);
+            Assert.That(second.IsFinal, Is.True);
+        }
+
+        [Test]
+        public async Task ModifiedHistoryAcceptsLegacySequenceOnlyCursorAsync()
+        {
+            using var provider = new InMemoryHistorianProvider();
+            var nodeId = new NodeId("modified.legacy.cursor", NamespaceIndex);
+            provider.Register(nodeId);
+            HistorianOperationContext insertContext = CreateContext();
+            HistorianOperationContext earlierContext = CreateContext();
+            HistorianOperationContext laterContext = CreateContext();
+            earlierContext.DefaultModificationInfo.ModificationTime =
+                BaseTime.AddMinutes(1);
+            laterContext.DefaultModificationInfo.ModificationTime =
+                BaseTime.AddMinutes(2);
+            DateTime sourceTimestamp = BaseTime.AddSeconds(10);
+            await provider.InsertAsync(
+                insertContext,
+                nodeId,
+                [MakeValue(sourceTimestamp, 0)],
+                CancellationToken.None).ConfigureAwait(false);
+            await provider.ReplaceAsync(
+                laterContext,
+                nodeId,
+                [MakeValue(sourceTimestamp, 1)],
+                CancellationToken.None).ConfigureAwait(false);
+            await provider.ReplaceAsync(
+                earlierContext,
+                nodeId,
+                [MakeValue(sourceTimestamp, 2)],
+                CancellationToken.None).ConfigureAwait(false);
+
+            HistorianPage<ModifiedDataValue> page = await provider.ReadModifiedAsync(
+                laterContext,
+                new HistorianModifiedReadRequest
+                {
+                    NodeId = nodeId,
+                    StartTime = BaseTime,
+                    EndTime = BaseTime.AddMinutes(1),
+                    MaxValues = 1,
+                    IsForward = true
+                },
+                HistorianResumeToken.FromCursor(
+                    new HistorianResumeCursor(
+                        sourceTimestamp,
+                        ByteString.Empty,
+                        1)),
+                CancellationToken.None).ConfigureAwait(false);
+
+            Assert.That(page.Values, Has.Count.EqualTo(1));
+            Assert.That(page.Values[0].Value.WrappedValue.TryGetValue(out double value), Is.True);
+            Assert.That(value, Is.EqualTo(1));
+            Assert.That(page.IsFinal, Is.True);
+        }
+
+        [Test]
+        public async Task ModifiedHistoryRejectsUnknownCursorKeyVersionAsync()
+        {
+            using var provider = new InMemoryHistorianProvider();
+            var nodeId = new NodeId("modified.invalid.cursor", NamespaceIndex);
+            provider.Register(nodeId);
+            HistorianOperationContext context = CreateContext();
+            DateTime sourceTimestamp = BaseTime.AddSeconds(10);
+            await provider.InsertAsync(
+                context,
+                nodeId,
+                [MakeValue(sourceTimestamp, 0)],
+                CancellationToken.None).ConfigureAwait(false);
+            await provider.ReplaceAsync(
+                context,
+                nodeId,
+                [MakeValue(sourceTimestamp, 1)],
+                CancellationToken.None).ConfigureAwait(false);
+            HistorianResumeToken malformed = HistorianResumeToken.FromCursor(
+                new HistorianResumeCursor(
+                    sourceTimestamp,
+                    ByteString.From([1]),
+                    1));
+
+            ServiceResultException exception =
+                Assert.ThrowsAsync<ServiceResultException>(
+                    async () => await provider.ReadModifiedAsync(
+                        context,
+                        new HistorianModifiedReadRequest
+                        {
+                            NodeId = nodeId,
+                            StartTime = BaseTime,
+                            EndTime = BaseTime.AddMinutes(1),
+                            IsForward = true
+                        },
+                        malformed,
+                        CancellationToken.None).ConfigureAwait(false));
+
+            Assert.That(
+                exception.StatusCode,
+                Is.EqualTo(StatusCodes.BadContinuationPointInvalid));
+        }
+
+        [Test]
         public async Task ExactAnnotationPageDoesNotReturnContinuationAsync()
         {
             using var provider = new InMemoryHistorianProvider();
