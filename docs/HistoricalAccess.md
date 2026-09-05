@@ -319,6 +319,13 @@ default historian registration, or a node-manager
 surface. See [Server address-space metadata](NodeManagers.md#server-address-space-metadata)
 for the startup sequence.
 
+Hosted registrations are staged before `MasterNodeManager` startup, so
+reconciliation and the initial `HistoryServerCapabilities` rollup see the
+configured provider. Distributed historians also complete validation,
+recovery, continuation-store initialization, fencing, and leader-election
+startup through `IServerPreStartupTask` before any NodeManager is exposed.
+Startup fails if this consistency initialization fails.
+
 ### Annotations
 
 The historian framework natively understands the OPC UA convention that annotations live on the `Annotations` property of a historizing variable (`HasProperty` reference, `BrowseName = "Annotations"`, `DataType = Annotation`, `ValueRank = OneDimension`). Clients address the property NodeId, the framework translates property → parent variable NodeId before calling `IHistorianAnnotationProvider`, so providers only ever see the variable NodeId.
@@ -375,6 +382,13 @@ than silently falling back. A live-value buffer overflow fails creation because
 the history-to-live ordering can no longer be guaranteed. Required priming-error
 notifications remain protected across queue resizing and durable subscription
 restore.
+
+Modifying an existing monitored item to a past-start aggregate uses the same
+history-before-live handoff whenever the aggregate calculator changes.
+Equivalent filter revisions do not replay history or replace the calculator.
+If post-commit priming fails, the existing monitored item stays registered,
+publishes a protected error notification, and continues with later live
+values.
 
 Custom monitored-item implementations can preserve the same ordering by
 implementing `IInitialValueMonitoredItem`.
@@ -503,6 +517,13 @@ Pagination rules:
 3. To indicate "no more pages", return a page with a default (empty) `NextToken`. `IsFinal` becomes true automatically.
 4. **Do not** put live resources (cursors, transactions, connections) into a token. The token is serialised to the wire as the OPC UA continuation point and can outlive the originating task. Encode just enough state (typically the next timestamp or a keyset offset) to resume cleanly.
 
+Resuming a continuation is an atomic claim. The dispatcher keeps the claimed
+state unchanged until it has durably saved a fresh successor. Provider,
+filtering, projection, encoding, cancellation, and successor-persistence
+failures restore the original continuation so the client can retry the same
+identifier. A successful page retires the old identifier, preserving
+single-use semantics.
+
 A typical token encoding is the next sample's timestamp:
 
 ```csharp
@@ -534,7 +555,7 @@ for per-value failures**. Validate inputs and surface the per-value outcome:
 | `ReplaceAsync` | `Good` / `GoodEntryReplaced` | `BadNoEntryExists` when no entry exists at the timestamp. |
 | `UpdateAsync` (upsert) | `GoodEntryInserted` or `GoodEntryReplaced` | n/a (insert if absent, replace if present). |
 | `DeleteRawAsync` | `Good` for the whole range | `BadInvalidArgument` etc. for malformed ranges; do not fail per-sample. Returns a single `StatusCode`, not a list. |
-| `DeleteAtTimeAsync` | `Good` per timestamp | `BadNoEntryExists` when the exact timestamp has nothing to delete. |
+| `DeleteAtTimeAsync` | `Good` per timestamp | Deletes every raw or structured entry at that source timestamp, including each composite uniqueness key. Returns `BadNoEntryExists` when the exact timestamp has nothing to delete. |
 | Annotation variants | Same patterns, keyed by `AnnotationTime`. | Same status codes. |
 | Event variants | Same patterns, keyed by `EventId`. | `BadNoEntryExists` / `BadEntryExists`. |
 
@@ -559,6 +580,13 @@ public readonly record struct ModifiedDataValue(DataValue Value, ModificationInf
 
 `Info.UpdateType` distinguishes replaced (`Replace`) values from deleted (`Delete`) entries; `Info.UserName` and `Info.ModificationTime` come from the original update's `HistorianOperationContext.DefaultModificationInfo`.
 
+Modified history is ordered by
+`(SourceTimestamp, ModificationTime, Sequence)`. The in-memory provider's
+keyset continuation carries the complete tuple, so paging remains lossless
+when a same-timestamp modification is added between pages; it also accepts
+legacy sequence-only tokens issued by earlier builds. The distributed
+provider instead pins an immutable archive generation and pages by offset.
+
 ### Processed (aggregate) reads
 
 If your backend can compute aggregates server-side (Cassandra / Influx / TimescaleDB downsampling, ksql window functions, etc.) implement `IHistorianProcessedProvider`. Otherwise omit the interface — the framework will:
@@ -567,9 +595,22 @@ If your backend can compute aggregates server-side (Cassandra / Influx / Timesca
 2. Stream raw values through the `AggregateManager`'s `IAggregateCalculator`.
 3. Buffer the calculator output and emit it page-by-page back to the client (`MaxValuesPerPage = 1000` per buffered page).
 
+`AnnotationCount` counts annotation timestamps in half-open processing
+intervals. A zero processing interval produces one count over the complete
+requested domain. Every returned count is an `Int32` with `Good, Calculated`;
+the requested end time is excluded, and reverse-time requests preserve the
+same directional interval rules.
+
 ### At-time reads
 
-`IHistorianAtTimeProvider` returns exactly one `DataValue` per requested timestamp, in input order. Providers without this interface get a streaming framework fallback that interpolates linearly between numeric raw samples (or returns the nearest bound for `UseSimpleBounds`).
+`IHistorianAtTimeProvider` returns exactly one `DataValue` per requested
+timestamp, in input order. An exact value preserves its quality and carries
+the Raw information bits. Otherwise the node's `Stepped` setting selects
+stepped or sloped interpolation and the result carries the Interpolated bits.
+`UseSimpleBounds=true` uses the nearest raw values as bounds; it does not return
+the nearest sample. `UseSimpleBounds=false` uses the nearest non-Bad values and
+marks the result Uncertain when Bad samples were skipped. Providers without
+this interface use the same calculation through the raw-read fallback.
 
 ### Annotations
 
@@ -653,6 +694,12 @@ Insert/Update filter must provide. Fields that are invalid for the selected
 EventType or cannot be retained are omitted and return `GoodDataIgnored`;
 requested operation diagnostics identify their select-clause indexes and
 symbolic browse paths.
+
+Client event-update validation accepts inherited standard fields rooted at
+`BaseEventType` or any EventType subtype. Structural requirements remain
+unchanged: standard fields use `Attributes.Value`, one namespace-zero browse
+path segment, and the exact standard browse name. A field supplied through
+both a base and subtype root is still a duplicate.
 
 WhereClause evaluation runs on the framework side via `FilterEvaluator` + the `HistorianEventFilterTarget` adapter, but providers that can push filters down should evaluate `request.Filter.WhereClause` themselves and return only matching events (the framework re-evaluates the clause for correctness, so push-down is purely an optimisation).
 
@@ -1123,7 +1170,10 @@ the in-repository reference samples.
 - **Eventual active/active history is unsupported** — ordered history,
   modification chains, deletes, events, and atomic batches have no CRDT merge
   contract. `UseDistributedHistorian` therefore requires a linearizable
-  active/passive topology and fails closed otherwise.
+  active/passive topology and fails closed otherwise. Raft-backed reads commit
+  a no-op barrier before accessing local materialized state, so a promoted
+  replica cannot serve a pre-promotion snapshot; reads time out or cancel when
+  no leader/quorum can complete the barrier.
 - **Framework aggregate fallback buffers output** — providers without
   `IHistorianProcessedProvider` use the correct bounded framework calculator
   fallback, which buffers at most 100,000 output values. Distributed or
