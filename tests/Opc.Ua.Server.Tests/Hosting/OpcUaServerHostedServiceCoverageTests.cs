@@ -62,8 +62,8 @@ namespace Opc.Ua.Server.Tests.Hosting
     /// <summary>
     /// Directly exercises <see cref="OpcUaServerHostedService"/> paths that
     /// are not reached by the broader fluent-API hosting tests: the
-    /// constructor's null-argument guards, the post-start historian/alias
-    /// registry wiring (<c>RegisterPostStartRegistries</c>) on a plain
+    /// constructor's null-argument guards, early historian and post-start
+    /// alias registry wiring on a plain
     /// (non dependency-injection-aware) <see cref="StandardServer"/>, and
     /// the matched-authenticator branches of <c>HasMatchingAuthenticator</c>
     /// for <see cref="UserTokenType.Certificate"/> and
@@ -118,7 +118,7 @@ namespace Opc.Ua.Server.Tests.Hosting
         }
 
         [Test]
-        public async Task RegisterPostStartRegistriesWiresHistorianAndAliasStoresOnPlainServerAsync()
+        public async Task HostedStartupWiresHistorianAndAliasStoresOnPlainServerAsync()
         {
             RegistryCaptureServer.Reset();
             var historian = new Mock<IHistorianProvider>();
@@ -128,12 +128,15 @@ namespace Opc.Ua.Server.Tests.Hosting
             registrySourcedStore.SetupGet(s => s.RootCategories).Returns([]);
             var sourceRegistry = new Mock<IAliasNameStoreRegistry>();
             sourceRegistry.SetupGet(r => r.Stores).Returns([registrySourcedStore.Object]);
+            IHistoryContinuationPointStore continuationStore =
+                Mock.Of<IHistoryContinuationPointStore>();
 
             var loggerProvider = new CapturingLoggerProvider();
             await using HostedServerFixture fixture = await HostedServerFixture.StartAsync(
                 services =>
                 {
                     services.AddLogging(builder => builder.AddProvider(loggerProvider));
+                    services.AddSingleton(continuationStore);
                     services.AddOpcUa()
                         .AddServer<RegistryCaptureServer>(o => ConfigureHostedOptions(o, "PostStartRegistries"))
                         .AddHistorian(historian.Object)
@@ -155,7 +158,8 @@ namespace Opc.Ua.Server.Tests.Hosting
             var aliasRegistryProvider = (IAliasNameStoreRegistryProvider)server;
 
             // OnServerStarted publishes StartedServer before the hosted service completes
-            // RegisterPostStartRegistries. Wait for all post-start registrations to become visible.
+            // post-start alias registration. The historian is already present by
+            // MasterNodeManager startup.
             Assert.That(
                 await WaitForAsync(
                     () =>
@@ -172,6 +176,10 @@ namespace Opc.Ua.Server.Tests.Hosting
                 historianRegistryProvider.HistorianRegistry.Providers.Contains(
                     historian.Object),
                 Is.True);
+            Assert.That(
+                RegistryCaptureServer.StartedInstance?
+                    .HistoryContinuationPointStore,
+                Is.SameAs(continuationStore));
 
             Assert.That(
                 aliasRegistryProvider.AliasNameStoreRegistry.Stores,
@@ -360,8 +368,8 @@ namespace Opc.Ua.Server.Tests.Hosting
         /// <c>CurrentInstance</c> is the stock <c>ServerInternalData</c>,
         /// which implements <see cref="IHistorianRegistryProvider"/> and
         /// <see cref="IAliasNameStoreRegistryProvider"/> -- required to
-        /// reach the <c>RegisterPostStartRegistries</c> loops, which
-        /// explicitly skip <see cref="DependencyInjectionStandardServer"/>.
+        /// reach the post-start alias-registration loops, which explicitly
+        /// skip <see cref="DependencyInjectionStandardServer"/>.
         /// </summary>
         [SuppressMessage(
             "Performance",

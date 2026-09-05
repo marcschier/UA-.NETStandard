@@ -41,6 +41,7 @@ using Moq;
 using NUnit.Framework;
 using Opc.Ua.Server;
 using Opc.Ua.Server.Historian;
+using Opc.Ua.Server.Hosting;
 using Opc.Ua.Server.Tests.Redundancy;
 using Opc.Ua.Tests;
 
@@ -1352,6 +1353,11 @@ namespace Opc.Ua.Redundancy.Server.Tests.Historian
                 services.GetRequiredService<
                     DistributedHistorianStartupTask>(),
                 Is.Not.Null);
+            Assert.That(
+                services.GetServices<IServerPreStartupTask>(),
+                Has.Exactly(1).SameAs(
+                    services.GetRequiredService<
+                        DistributedHistorianStartupTask>()));
         }
 
         [Test]
@@ -1397,7 +1403,7 @@ namespace Opc.Ua.Redundancy.Server.Tests.Historian
         }
 
         [Test]
-        public async Task StartupRegistersSelectedProviderAndStartsElectionAsync()
+        public async Task StartupInitializesProviderAndStartsElectionAsync()
         {
             using var store = new StrongTestStore();
             using AesCbcHmacRecordProtector protector = CreateProtector();
@@ -1446,7 +1452,7 @@ namespace Opc.Ua.Redundancy.Server.Tests.Historian
                 election,
                 continuationStore);
 
-            await startup.OnServerStartedAsync(server.Object)
+            await startup.OnServerStartingAsync(server.Object)
                 .ConfigureAwait(false);
             var envelope = new HistoryContinuationPointEnvelope
             {
@@ -1461,7 +1467,7 @@ namespace Opc.Ua.Redundancy.Server.Tests.Historian
 
             Assert.That(
                 registry.Resolve(new NodeId("v", 2)),
-                Is.SameAs(provider));
+                Is.Null);
             Assert.That(election.Started, Is.True);
             Assert.That(
                 await continuationStore.TryTakeAsync(

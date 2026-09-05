@@ -3660,6 +3660,23 @@ namespace Opc.Ua.Server
                     TimeProvider,
                     SecurityPolicyRegistry);
 
+                var historianRegistry =
+                    (Historian.HistorianProviderRegistry)
+                        m_serverInternal.HistorianRegistry;
+                foreach (HistorianProviderRegistration registration in
+                    m_historianProviders)
+                {
+                    historianRegistry.RegisterDefault(
+                        registration.Provider,
+                        registration.OwnsProvider);
+                }
+                foreach (Hosting.IServerPreStartupTask task in m_preStartupTasks)
+                {
+                    await task.OnServerStartingAsync(
+                        m_serverInternal,
+                        cancellationToken).ConfigureAwait(false);
+                }
+
                 m_serverInternal.SetRoleManager(CreateRoleManager(m_serverInternal, configuration));
 
                 if (CreateUserManagement(m_serverInternal, configuration) is { } userManagement)
@@ -3872,6 +3889,13 @@ namespace Opc.Ua.Server
                             Timeout.InfiniteTimeSpan);
                     }
                 }
+            }
+            catch (OperationCanceledException)
+                when (cancellationToken.IsCancellationRequested)
+            {
+                m_serverInternal?.Dispose();
+                m_serverInternal = null;
+                throw;
             }
             catch (Exception e)
             {
@@ -4769,6 +4793,49 @@ namespace Opc.Ua.Server
             m_asyncNodeManagerFactories.Add(nodeManagerFactory);
         }
 
+        internal void AddHistorianProvider(
+            Historian.IHistorianProvider provider,
+            bool ownsProvider)
+        {
+            if (provider is null)
+            {
+                throw new ArgumentNullException(nameof(provider));
+            }
+
+            for (int ii = 0; ii < m_historianProviders.Count; ii++)
+            {
+                HistorianProviderRegistration registration =
+                    m_historianProviders[ii];
+                if (ReferenceEquals(registration.Provider, provider))
+                {
+                    if (ownsProvider && !registration.OwnsProvider)
+                    {
+                        m_historianProviders[ii] =
+                            registration with { OwnsProvider = true };
+                    }
+                    return;
+                }
+            }
+            m_historianProviders.Add(
+                new HistorianProviderRegistration(provider, ownsProvider));
+        }
+
+        internal void AddPreStartupTask(Hosting.IServerPreStartupTask task)
+        {
+            if (task == null)
+            {
+                throw new ArgumentNullException(nameof(task));
+            }
+            foreach (Hosting.IServerPreStartupTask existing in m_preStartupTasks)
+            {
+                if (ReferenceEquals(existing, task))
+                {
+                    return;
+                }
+            }
+            m_preStartupTasks.Add(task);
+        }
+
         /// <inheritdoc/>
         public virtual void RemoveNodeManager(INodeManagerFactory nodeManagerFactory)
         {
@@ -4841,11 +4908,19 @@ namespace Opc.Ua.Server
         private bool m_useRegisterServer2;
         private readonly List<INodeManagerFactory> m_nodeManagerFactories = [];
         private readonly List<IAsyncNodeManagerFactory> m_asyncNodeManagerFactories = [];
+        private readonly List<HistorianProviderRegistration>
+            m_historianProviders = [];
+        private readonly List<Hosting.IServerPreStartupTask> m_preStartupTasks =
+            [];
         private IDisposable? m_certManagerSubscription;
         private ServerRateLimitOptions? m_rateLimitOptions;
         private IServerRateLimiterProvider? m_rateLimiterProvider;
         private bool m_ownsRateLimiterProvider;
         private readonly ILogger m_eventLogger;
+
+        private readonly record struct HistorianProviderRegistration(
+            Historian.IHistorianProvider Provider,
+            bool OwnsProvider);
 
         /// <summary>
         /// The interval at which the <see cref="ConfigurationNodeManager"/>

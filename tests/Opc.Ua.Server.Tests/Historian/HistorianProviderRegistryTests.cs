@@ -31,6 +31,8 @@
 // making CA2000 noisy without a real leak risk. Disabled file-level for the suite.
 #pragma warning disable CA2000
 
+using System;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Opc.Ua.Server.Historian;
@@ -43,6 +45,24 @@ namespace Opc.Ua.Server.Tests.Historian
     [Parallelizable(ParallelScope.All)]
     public class HistorianProviderRegistryTests
     {
+        [Test]
+        public void DisposeOnlyDisposesOwnedProviders()
+        {
+            var owned = new DisposableHistorianProvider();
+            var external = new DisposableHistorianProvider();
+            var registry = new HistorianProviderRegistry(
+                new NamespaceTable());
+            registry.RegisterDefault(owned);
+            registry.RegisterDefault(
+                external,
+                ownsProvider: false);
+
+            registry.Dispose();
+
+            Assert.That(owned.DisposeCount, Is.EqualTo(1));
+            Assert.That(external.DisposeCount, Is.Zero);
+        }
+
         [Test]
         public async Task ResolveByExactNodeBeatsNamespaceAndDefaultAsync()
         {
@@ -121,6 +141,33 @@ namespace Opc.Ua.Server.Tests.Historian
             registry.RegisterDefault(provider);
 
             Assert.That(registry.Resolve(NodeId.Null), Is.Null);
+        }
+
+        private sealed class DisposableHistorianProvider :
+            IHistorianProvider,
+            IDisposable
+        {
+            public int DisposeCount { get; private set; }
+
+            public ValueTask<HistorianNodeCapabilities> GetCapabilitiesAsync(
+                NodeId nodeId,
+                CancellationToken cancellationToken = default)
+            {
+                return new ValueTask<HistorianNodeCapabilities>(
+                    HistorianNodeCapabilities.ReadOnly);
+            }
+
+            public ValueTask<bool> IsHistorizingAsync(
+                NodeId nodeId,
+                CancellationToken cancellationToken)
+            {
+                return new ValueTask<bool>(true);
+            }
+
+            public void Dispose()
+            {
+                DisposeCount++;
+            }
         }
     }
 }

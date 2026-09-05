@@ -87,6 +87,7 @@ namespace Opc.Ua.Redundancy.Server
             builder.Services.TryAddSingleton<IHistorianProvider>(
                 services => services.GetRequiredService<
                     SharedKeyValueHistorianProvider>());
+            builder.AddHistorian<IHistorianProvider>();
             builder.Services.TryAddSingleton(
                     services =>
                         new SharedKeyValueHistoryContinuationStore(
@@ -115,7 +116,7 @@ namespace Opc.Ua.Redundancy.Server
                 ServiceDescriptor.Singleton<IStrongKeyspaceProvider>(
                     DistributedHistorianStrongKeyspaceProvider.Instance));
             builder.Services.TryAddSingleton<DistributedHistorianStartupTask>();
-            builder.Services.AddSingleton<IServerStartupTask>(
+            builder.Services.AddSingleton<IServerPreStartupTask>(
                 services => services.GetRequiredService<
                     DistributedHistorianStartupTask>());
             return builder;

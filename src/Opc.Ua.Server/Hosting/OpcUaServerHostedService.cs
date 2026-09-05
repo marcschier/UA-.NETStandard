@@ -194,6 +194,10 @@ namespace Opc.Ua.Server.Hosting
 
             m_server = m_serverFactory.CreateServer(m_telemetry, m_timeProvider);
             m_nodeManagerLifecycle.Attach(m_server.NodeManagerLifecycle);
+            if (m_server is not DependencyInjectionStandardServer)
+            {
+                OpcUaServerRegistrationStaging.Apply(m_server, m_services);
+            }
 
             // Complex-type loading is on by default (StandardServer.LoadComplexTypes);
             // build and register stand-in encodeables for runtime-loaded custom
@@ -473,15 +477,6 @@ namespace Opc.Ua.Server.Hosting
             }
 
             IServerInternal server = m_server.CurrentInstance;
-            if (server is IHistorianRegistryProvider historianRegistryProvider)
-            {
-                foreach (OpcUaServerHistorianRegistration registration in
-                    m_services.GetServices<OpcUaServerHistorianRegistration>())
-                {
-                    historianRegistryProvider.HistorianRegistry.RegisterDefault(registration.Provider);
-                }
-            }
-
             if (server is IAliasNameStoreRegistryProvider aliasNameStoreRegistryProvider)
             {
                 foreach (IAliasNameStoreRegistry registry in m_services.GetServices<IAliasNameStoreRegistry>())

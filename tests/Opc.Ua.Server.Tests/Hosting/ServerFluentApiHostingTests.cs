@@ -44,6 +44,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
@@ -229,32 +230,96 @@ namespace Opc.Ua.Server.Tests.Hosting
         }
 
         [Test]
-        public void AddHistorianAndAliasNamesRegisterAtNodeManagerStarted()
+        public void AddAliasNamesRegistersAtNodeManagerStarted()
         {
-            Mock<IHistorianProvider> historian = new(MockBehavior.Strict);
             Mock<IAliasNameStore> aliasStore = new(MockBehavior.Strict);
             aliasStore.SetupGet(s => s.RootCategories).Returns([]);
             using ServiceProvider sp = CreateServerBuilder()
-                .AddHistorian(historian.Object)
                 .AddAliasNameStore(aliasStore.Object)
                 .Services.BuildServiceProvider();
             using StandardServer server = CreateServer(sp);
-            var historianRegistry = new HistorianProviderRegistry(new NamespaceTable());
             var aliasRegistry = new AliasNameStoreRegistry();
             Mock<IServerInternal> serverInternal = new(MockBehavior.Strict);
-            serverInternal.As<IHistorianRegistryProvider>()
-                .SetupGet(s => s.HistorianRegistry)
-                .Returns(historianRegistry);
             serverInternal.As<IAliasNameStoreRegistryProvider>()
                 .SetupGet(s => s.AliasNameStoreRegistry)
                 .Returns(aliasRegistry);
 
             InvokeProtected(server, "OnNodeManagerStarted", serverInternal.Object);
 
-            Assert.That(
-                historianRegistry.Providers.Contains(historian.Object),
-                Is.True);
             Assert.That(aliasRegistry.Stores, Does.Contain(aliasStore.Object));
+        }
+
+        [Test]
+        public async Task HostedHistorianIsAvailableBeforeNodeManagerStartupAsync()
+        {
+            EarlyHistorianCaptureServer.Reset();
+            var historian = new Mock<IHistorianProvider>();
+            historian.As<IHistorianDataProvider>();
+            historian
+                .Setup(provider => provider.GetCapabilitiesAsync(
+                    It.IsAny<NodeId>(),
+                    It.IsAny<CancellationToken>()))
+                .Returns(new ValueTask<HistorianNodeCapabilities>(
+                    new HistorianNodeCapabilities
+                    {
+                        ReadRawData = true
+                    }));
+
+            await using HostedServerFixture fixture = await HostedServerFixture.StartAsync(
+                services =>
+                {
+                    services.AddSingleton<IHistorianProvider>(historian.Object);
+                    services.AddOpcUa()
+                        .AddServer<EarlyHistorianCaptureServer>(
+                            options => ConfigureHostedOptions(options, "EarlyHistorian"))
+                        .AddNodeManager<HistorizedNodeManagerFactory>()
+                        .AddHistorian<IHistorianProvider>();
+                }).ConfigureAwait(false);
+
+            Assert.That(
+                await WaitForAsync(
+                    () => EarlyHistorianCaptureServer.NodeManagerStarted,
+                    TimeSpan.FromSeconds(30)).ConfigureAwait(false),
+                Is.True);
+            Assert.That(
+                EarlyHistorianCaptureServer.ResolvedProvider,
+                Is.SameAs(historian.Object));
+            Assert.That(HistorizedNodeManager.Variable, Is.Not.Null);
+            Assert.That(HistorizedNodeManager.Variable!.Historizing, Is.True);
+            Assert.That(
+                HistorizedNodeManager.Variable.AccessLevel & AccessLevels.HistoryRead,
+                Is.EqualTo(AccessLevels.HistoryRead));
+            Assert.That(
+                HistorizedNodeManager.Variable.UserAccessLevel & AccessLevels.HistoryRead,
+                Is.EqualTo(AccessLevels.HistoryRead));
+            Assert.That(
+                EarlyHistorianCaptureServer.HistoryCapabilities?
+                    .AccessHistoryDataCapability?.Value,
+                Is.True);
+        }
+
+        [Test]
+        public async Task TransientPreStartupTaskRunsOnceAsync()
+        {
+            TransientPreStartupTask.Reset();
+            await using HostedServerFixture fixture =
+                await HostedServerFixture.StartAsync(
+                    services =>
+                    {
+                        services.AddTransient<IServerPreStartupTask>(
+                            _ => new TransientPreStartupTask());
+                        services.AddOpcUa()
+                            .AddServer(options =>
+                                ConfigureHostedOptions(
+                                    options,
+                                    "TransientPreStartup"));
+                    }).ConfigureAwait(false);
+
+            Assert.That(
+                await WaitForAsync(
+                    () => TransientPreStartupTask.InvocationCount == 1,
+                    TimeSpan.FromSeconds(30)).ConfigureAwait(false),
+                Is.True);
         }
 
         [Test]
@@ -310,6 +375,27 @@ namespace Opc.Ua.Server.Tests.Hosting
 
             Assert.That(InvokeProtected(server, "CreateSubscriptionStore"), Is.SameAs(store.Object));
             Assert.That(InvokeProtected(server, "CreateMonitoredItemQueueFactory"), Is.SameAs(queueFactory.Object));
+        }
+
+        [Test]
+        public void DependencyInjectionServerStagesHistorianWithoutHostedService()
+        {
+            var historian = new Mock<IHistorianProvider>();
+            using ServiceProvider sp = CreateServerBuilder()
+                .AddHistorian(historian.Object)
+                .Services.BuildServiceProvider();
+
+            using StandardServer server = CreateServer(sp);
+            var registrations = (System.Collections.IEnumerable)
+                typeof(StandardServer)
+                    .GetField(
+                        "m_historianProviders",
+                        BindingFlags.Instance | BindingFlags.NonPublic)!
+                    .GetValue(server)!;
+
+            Assert.That(
+                registrations.Cast<object>().Count(),
+                Is.EqualTo(1));
         }
 
         [Test]
@@ -806,7 +892,7 @@ namespace Opc.Ua.Server.Tests.Hosting
                 Throws.ArgumentNullException);
             Assert.That(() => builder.AddSubscriptionManager(null!),
                 Throws.ArgumentNullException);
-            Assert.That(() => builder.AddHistorian(null!),
+            Assert.That(() => builder.AddHistorian((IHistorianProvider)null!),
                 Throws.ArgumentNullException);
             Assert.That(() => builder.AddFileSystem(null!),
                 Throws.ArgumentNullException);
@@ -1096,6 +1182,104 @@ namespace Opc.Ua.Server.Tests.Hosting
             private static StartupHookCaptureServer? s_startedServer;
         }
 
+        public sealed class EarlyHistorianCaptureServer : StandardServer
+        {
+            public EarlyHistorianCaptureServer(
+                ITelemetryContext telemetry,
+                TimeProvider timeProvider)
+                : base(telemetry, timeProvider)
+            {
+            }
+
+            public static bool NodeManagerStarted { get; private set; }
+
+            public static IHistorianProvider? ResolvedProvider { get; private set; }
+
+            public static HistoryServerCapabilitiesState? HistoryCapabilities { get; private set; }
+
+            public static void Reset()
+            {
+                NodeManagerStarted = false;
+                ResolvedProvider = null;
+                HistoryCapabilities = null;
+                HistorizedNodeManager.Reset();
+            }
+
+            protected override void OnNodeManagerStarted(IServerInternal server)
+            {
+                ResolvedProvider = ((IHistorianRegistryProvider)server)
+                    .HistorianRegistry.Resolve(
+                        HistorizedNodeManager.Variable?.NodeId ?? NodeId.Null);
+                HistoryCapabilities = server.DiagnosticsNodeManager
+                    .FindPredefinedNode<HistoryServerCapabilitiesState>(
+                        ObjectIds.HistoryServerCapabilities);
+                NodeManagerStarted = true;
+                base.OnNodeManagerStarted(server);
+            }
+        }
+
+        public sealed class HistorizedNodeManagerFactory : IAsyncNodeManagerFactory
+        {
+            public const string NamespaceUri = "urn:tests:hosted-historian";
+
+            public ArrayOf<string> NamespacesUris { get; } = [NamespaceUri];
+
+            public ValueTask<IAsyncNodeManager> CreateAsync(
+                IServerInternal server,
+                ApplicationConfiguration configuration,
+                CancellationToken cancellationToken = default)
+            {
+                return new ValueTask<IAsyncNodeManager>(
+                    new HistorizedNodeManager(server, configuration));
+            }
+
+        }
+
+        public sealed class HistorizedNodeManager : AsyncCustomNodeManager
+        {
+            public HistorizedNodeManager(
+                IServerInternal server,
+                ApplicationConfiguration configuration)
+                : base(
+                    server,
+                    configuration,
+                    NullLogger.Instance,
+                    HistorizedNodeManagerFactory.NamespaceUri)
+            {
+            }
+
+            public static BaseDataVariableState? Variable { get; private set; }
+
+            public static void Reset()
+            {
+                Variable = null;
+            }
+
+            public override async ValueTask CreateAddressSpaceAsync(
+                IDictionary<NodeId, IList<IReference>> externalReferences,
+                CancellationToken cancellationToken = default)
+            {
+                var variable = new BaseDataVariableState(null);
+                variable.CreateAsPredefinedNode(SystemContext);
+                variable.NodeId = new NodeId("Historized", NamespaceIndex);
+                variable.BrowseName = new QualifiedName("Historized", NamespaceIndex);
+                variable.DisplayName = new LocalizedText("Historized");
+                variable.DataType = DataTypeIds.Double;
+                variable.ValueRank = ValueRanks.Scalar;
+                variable.AccessLevel =
+                    AccessLevels.CurrentRead | AccessLevels.HistoryRead;
+                variable.UserAccessLevel =
+                    AccessLevels.CurrentRead | AccessLevels.HistoryRead;
+                variable.Historizing = true;
+                Variable = variable;
+
+                await AddPredefinedNodeAsync(
+                    SystemContext,
+                    variable,
+                    cancellationToken).ConfigureAwait(false);
+            }
+        }
+
         private sealed class StubServerFactory : IOpcUaServerFactory
         {
             public StandardServer CreateServer(ITelemetryContext telemetry, TimeProvider timeProvider)
@@ -1171,6 +1355,30 @@ namespace Opc.Ua.Server.Tests.Hosting
             }
 
             private int m_invocationCount;
+        }
+
+        private sealed class TransientPreStartupTask :
+            IServerPreStartupTask
+        {
+            public static int InvocationCount =>
+                Volatile.Read(ref s_invocationCount);
+
+            public static void Reset()
+            {
+                Volatile.Write(ref s_invocationCount, 0);
+            }
+
+            public ValueTask OnServerStartingAsync(
+                IServerContext server,
+                CancellationToken cancellationToken = default)
+            {
+                _ = server;
+                cancellationToken.ThrowIfCancellationRequested();
+                Interlocked.Increment(ref s_invocationCount);
+                return default;
+            }
+
+            private static int s_invocationCount;
         }
 
         private sealed class CapturingLoggerProvider : ILoggerProvider

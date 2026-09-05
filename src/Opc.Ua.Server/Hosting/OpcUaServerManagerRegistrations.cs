@@ -29,6 +29,7 @@
  * ======================================================================*/
 
 using System;
+using Microsoft.Extensions.DependencyInjection;
 using Opc.Ua.Server.AliasNames;
 using Opc.Ua.Server.Historian;
 
@@ -75,11 +76,67 @@ namespace Opc.Ua.Server.Hosting
     internal sealed class OpcUaServerHistorianRegistration
     {
         public OpcUaServerHistorianRegistration(IHistorianProvider provider)
+            : this(_ => provider, ownsProvider: true)
         {
-            Provider = provider ?? throw new ArgumentNullException(nameof(provider));
+            if (provider is null)
+            {
+                throw new ArgumentNullException(nameof(provider));
+            }
         }
 
-        public IHistorianProvider Provider { get; }
+        public OpcUaServerHistorianRegistration(
+            Func<IServiceProvider, IHistorianProvider> factory,
+            bool ownsProvider)
+        {
+            m_factory = factory ?? throw new ArgumentNullException(nameof(factory));
+            OwnsProvider = ownsProvider;
+        }
+
+        public bool OwnsProvider { get; }
+
+        public IHistorianProvider Resolve(IServiceProvider services)
+        {
+            if (services is null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
+            return m_factory(services) ??
+                throw new InvalidOperationException(
+                    "The historian provider factory returned null.");
+        }
+
+        private readonly Func<IServiceProvider, IHistorianProvider> m_factory;
+    }
+
+    internal static class OpcUaServerRegistrationStaging
+    {
+        public static void Apply(
+            StandardServer server,
+            IServiceProvider services)
+        {
+            if (server == null)
+            {
+                throw new ArgumentNullException(nameof(server));
+            }
+            if (services == null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
+            foreach (OpcUaServerHistorianRegistration registration in
+                services.GetServices<OpcUaServerHistorianRegistration>())
+            {
+                server.AddHistorianProvider(
+                    registration.Resolve(services),
+                    registration.OwnsProvider);
+            }
+            foreach (IServerPreStartupTask task in
+                services.GetServices<IServerPreStartupTask>())
+            {
+                server.AddPreStartupTask(task);
+            }
+        }
     }
 
     internal sealed class OpcUaServerAliasNameStoreRegistration
