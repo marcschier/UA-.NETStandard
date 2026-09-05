@@ -226,7 +226,8 @@ namespace Opc.Ua.Server.Tests.Historian
             PortableProvider provider = new("shared-historian");
             (HistorianContinuationPointCodec codec, _) = CreateCodec();
             HistorianContinuationState state = CreateRawState(nodeId, provider);
-            state.BufferedProcessedOutputs = [];
+            state.BufferedProcessedOutputs =
+                new HistorianBufferedProcessedPayload([]);
 
             HistoryContinuationPointEnvelope? envelope = await codec.EncodeAsync(
                 new NodeId(Guid.NewGuid()),
@@ -288,6 +289,145 @@ namespace Opc.Ua.Server.Tests.Historian
                 Is.EqualTo(TimestampsToReturn.Neither));
             Assert.That(state.EventRequest, Is.Not.Null);
             Assert.That(state.EventRequest!.Filter.SelectClauses, Has.Count.EqualTo(1));
+        }
+
+        [Test]
+        public async Task AnnotationContinuationRoundTripsDistinctNodeIdsAsync()
+        {
+            var propertyNodeId = new NodeId("Annotations", 1);
+            var parentNodeId = new NodeId("HistorizedVariable", 1);
+            PortableProvider provider = new("shared-historian");
+            (HistorianContinuationPointCodec codec, HistorianProviderRegistry registry) =
+                CreateCodec();
+            registry.RegisterForNode(parentNodeId, provider);
+            DateTime startTime = new(
+                2026,
+                1,
+                1,
+                0,
+                0,
+                0,
+                DateTimeKind.Utc);
+            var original = new HistorianContinuationState
+            {
+                Id = Guid.NewGuid(),
+                Provider = provider,
+                Kind = HistorianReadKind.Annotations,
+                NodeId = propertyNodeId,
+                ResumeToken = new HistorianResumeToken(
+                    ByteString.From([4, 5, 6])),
+                TimestampsToReturn = TimestampsToReturn.Source,
+                AnnotationRequest = new HistorianAnnotationReadRequest
+                {
+                    NodeId = parentNodeId,
+                    StartTime = startTime,
+                    EndTime = startTime.AddHours(1),
+                    MaxValues = 11,
+                    IsForward = true
+                }
+            };
+
+            HistoryContinuationPointEnvelope? envelope = await codec.EncodeAsync(
+                new NodeId(Guid.NewGuid()),
+                original,
+                CancellationToken.None).ConfigureAwait(false);
+            Assert.That(envelope, Is.Not.Null);
+            Assert.That(envelope!.CodecVersion, Is.EqualTo(3));
+
+            IHistoryContinuationPoint? decoded = await codec.DecodeAsync(
+                envelope,
+                CancellationToken.None).ConfigureAwait(false);
+
+            Assert.That(decoded, Is.TypeOf<HistorianContinuationState>());
+            var state = (HistorianContinuationState)decoded!;
+            Assert.That(state.NodeId, Is.EqualTo(propertyNodeId));
+            Assert.That(state.UsesLegacyAnnotationNodeId, Is.False);
+            Assert.That(state.AnnotationRequest, Is.Not.Null);
+            Assert.That(
+                state.AnnotationRequest!.NodeId,
+                Is.EqualTo(parentNodeId));
+        }
+
+        [TestCase(1)]
+        [TestCase(2)]
+        public async Task LegacyAnnotationContinuationUsesStateNodeForRequestAsync(
+            int formatVersion)
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+            var namespaceUris = new NamespaceTable();
+            namespaceUris.Append("urn:test:historian");
+            var serverUris = new StringTable();
+            var messageContext = new ServiceMessageContext(
+                telemetry,
+                EncodeableFactory.Create())
+            {
+                NamespaceUris = namespaceUris,
+                ServerUris = serverUris
+            };
+            var registry = new HistorianProviderRegistry(namespaceUris);
+            var server = new Mock<IServerInternal>();
+            server.SetupGet(value => value.MessageContext).Returns(messageContext);
+            server.SetupGet(value => value.NamespaceUris).Returns(namespaceUris);
+            server.SetupGet(value => value.ServerUris).Returns(serverUris);
+            server.As<IHistorianRegistryProvider>()
+                .SetupGet(value => value.HistorianRegistry)
+                .Returns(registry);
+            var codec = new HistorianContinuationPointCodec(server.Object);
+            var nodeId = new NodeId("HistorizedVariable", 1);
+            PortableProvider provider = new("shared-historian");
+            registry.RegisterForNode(nodeId, provider);
+            Guid id = Guid.NewGuid();
+            NodeId ownerSessionId = new(Guid.NewGuid());
+            DateTime startTime = new(
+                2026,
+                1,
+                1,
+                0,
+                0,
+                0,
+                DateTimeKind.Utc);
+
+            using var encoder = new BinaryEncoder(messageContext);
+            encoder.WriteInt32(null, formatVersion);
+            if (formatVersion >= 2)
+            {
+                encoder.WriteStringArray(null, namespaceUris.ToArrayOf());
+                encoder.WriteStringArray(null, serverUris.ToArrayOf());
+                encoder.SetMappingTables(namespaceUris, serverUris);
+            }
+            encoder.WriteString(null, provider.ProviderId);
+            encoder.WriteEnumerated(null, HistorianReadKind.Annotations);
+            encoder.WriteNodeId(null, nodeId);
+            encoder.WriteByteString(null, ByteString.From([1]));
+            encoder.WriteEnumerated(null, TimestampsToReturn.Source);
+            encoder.WriteString(null, string.Empty);
+            encoder.WriteQualifiedName(null, QualifiedName.Null);
+            encoder.WriteDateTime(null, startTime);
+            encoder.WriteDateTime(null, startTime.AddHours(1));
+            encoder.WriteUInt32(null, 11);
+            encoder.WriteBoolean(null, true);
+            byte[] payload = encoder.CloseAndReturnBuffer() ??
+                throw new InvalidOperationException(
+                    "The legacy continuation payload was not encoded.");
+            var envelope = new HistoryContinuationPointEnvelope
+            {
+                Id = id,
+                OwnerSessionId = ownerSessionId,
+                CodecId = "opcua-historian",
+                CodecVersion = (uint)formatVersion,
+                Payload = ByteString.From(payload)
+            };
+
+            IHistoryContinuationPoint? decoded = await codec.DecodeAsync(
+                envelope,
+                CancellationToken.None).ConfigureAwait(false);
+
+            Assert.That(decoded, Is.TypeOf<HistorianContinuationState>());
+            var state = (HistorianContinuationState)decoded!;
+            Assert.That(state.NodeId, Is.EqualTo(nodeId));
+            Assert.That(state.UsesLegacyAnnotationNodeId, Is.True);
+            Assert.That(state.AnnotationRequest, Is.Not.Null);
+            Assert.That(state.AnnotationRequest!.NodeId, Is.EqualTo(nodeId));
         }
 
         [Test]

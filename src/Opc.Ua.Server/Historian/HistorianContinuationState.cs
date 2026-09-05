@@ -28,7 +28,6 @@
  * ======================================================================*/
 
 using System;
-using System.Collections.Generic;
 
 namespace Opc.Ua.Server.Historian
 {
@@ -89,19 +88,67 @@ namespace Opc.Ua.Server.Historian
 
         public QualifiedName DataEncoding { get; init; } = QualifiedName.Null;
 
+        public bool UsesLegacyAnnotationNodeId { get; init; }
+
         /// <summary>
         /// Buffered output values for paginated processed reads using
         /// the framework streaming fallback. The first call computes
         /// every aggregate value, returns the first page, and stores
         /// the remainder here for subsequent calls to drain. Null for
-        /// every other read kind.
+        /// every other read kind. Successor and restoration states share
+        /// this immutable payload and advance only their own offset.
         /// </summary>
-        public List<DataValue>? BufferedProcessedOutputs { get; set; }
+        public HistorianBufferedProcessedPayload? BufferedProcessedOutputs { get; set; }
 
         /// <summary>
         /// Cursor into <see cref="BufferedProcessedOutputs"/>.
         /// </summary>
         public int BufferedProcessedOffset { get; set; }
+
+        public HistorianContinuationState CreateSuccessor(
+            HistorianResumeToken resumeToken,
+            int? bufferedProcessedOffset = null)
+        {
+            return Clone(
+                Guid.NewGuid(),
+                resumeToken,
+                bufferedProcessedOffset ?? BufferedProcessedOffset,
+                NodeId,
+                UsesLegacyAnnotationNodeId);
+        }
+
+        public HistorianContinuationState CreateRestorationCopy()
+        {
+            return Clone(
+                Id,
+                ResumeToken,
+                BufferedProcessedOffset,
+                NodeId,
+                UsesLegacyAnnotationNodeId);
+        }
+
+        public HistorianContinuationState CreateNormalizedAnnotationState(
+            NodeId nodeId)
+        {
+            if (nodeId.IsNull)
+            {
+                throw new ArgumentException(
+                    "The annotation property NodeId must not be null.",
+                    nameof(nodeId));
+            }
+            if (Kind != HistorianReadKind.Annotations ||
+                !UsesLegacyAnnotationNodeId)
+            {
+                throw new InvalidOperationException(
+                    "Only legacy annotation continuation state can be normalized.");
+            }
+            return Clone(
+                Id,
+                ResumeToken,
+                BufferedProcessedOffset,
+                nodeId,
+                usesLegacyAnnotationNodeId: false);
+        }
 
         public void Dispose()
         {
@@ -113,6 +160,75 @@ namespace Opc.Ua.Server.Historian
             // extension.
             BufferedProcessedOutputs = null;
         }
+
+        private HistorianContinuationState Clone(
+            Guid id,
+            HistorianResumeToken resumeToken,
+            int bufferedProcessedOffset,
+            NodeId nodeId,
+            bool usesLegacyAnnotationNodeId)
+        {
+            return new HistorianContinuationState
+            {
+                Id = id,
+                Provider = Provider,
+                Kind = Kind,
+                NodeId = nodeId,
+                ResumeToken = resumeToken,
+                RawRequest = RawRequest is null ? null : RawRequest with { },
+                ModifiedRequest = ModifiedRequest is null
+                    ? null
+                    : ModifiedRequest with { },
+                ProcessedRequest = ProcessedRequest is null
+                    ? null
+                    : ProcessedRequest with
+                    {
+                        Configuration = CoreUtils.Clone(
+                            ProcessedRequest.Configuration) ??
+                            throw new InvalidOperationException(
+                                "The processed request configuration could not be cloned.")
+                    },
+                AtTimeRequest = AtTimeRequest is null
+                    ? null
+                    : AtTimeRequest with { },
+                AnnotationRequest = AnnotationRequest is null
+                    ? null
+                    : AnnotationRequest with { },
+                EventRequest = EventRequest is null
+                    ? null
+                    : EventRequest with
+                    {
+                        Filter = CoreUtils.Clone(EventRequest.Filter) ??
+                            throw new InvalidOperationException(
+                                "The event request filter could not be cloned.")
+                    },
+                TimestampsToReturn = TimestampsToReturn,
+                IndexRange = IndexRange,
+                DataEncoding = DataEncoding,
+                UsesLegacyAnnotationNodeId =
+                    usesLegacyAnnotationNodeId,
+                BufferedProcessedOutputs = BufferedProcessedOutputs,
+                BufferedProcessedOffset = bufferedProcessedOffset
+            };
+        }
+    }
+
+    /// <summary>
+    /// Immutable buffered output shared by processed continuation states.
+    /// </summary>
+    internal sealed class HistorianBufferedProcessedPayload
+    {
+        public HistorianBufferedProcessedPayload(
+            ArrayOf<DataValue> values)
+        {
+            Values = values;
+        }
+
+        public int Count => Values.Count;
+
+        public DataValue this[int index] => Values[index];
+
+        private ArrayOf<DataValue> Values { get; }
     }
 
     /// <summary>

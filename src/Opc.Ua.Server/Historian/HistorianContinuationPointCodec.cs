@@ -60,12 +60,18 @@ namespace Opc.Ua.Server.Historian
         {
             if (continuationPoint is not HistorianContinuationState state ||
                 state.Provider is not IHistorianProviderIdentity identity ||
-                state.BufferedProcessedOutputs != null)
+                state.BufferedProcessedOutputs != null ||
+                !HasSerializableRequest(state))
+            {
+                return null;
+            }
+            NodeId providerNodeId = GetProviderNodeId(state);
+            if (providerNodeId.IsNull)
             {
                 return null;
             }
             HistorianNodeCapabilities capabilities = await state.Provider
-                .GetCapabilitiesAsync(state.NodeId, cancellationToken)
+                .GetCapabilitiesAsync(providerNodeId, cancellationToken)
                 .ConfigureAwait(false);
             if (!capabilities.PortableResumeTokens)
             {
@@ -73,8 +79,7 @@ namespace Opc.Ua.Server.Historian
             }
             if (ownerSessionId.IsNull ||
                 state.Id == Guid.Empty ||
-                state.NodeId.IsNull ||
-                !HasSerializableRequest(state))
+                state.NodeId.IsNull)
             {
                 return null;
             }
@@ -178,6 +183,12 @@ namespace Opc.Ua.Server.Historian
                     decoder.ReadEnumerated<TimestampsToReturn>(null);
                 string? indexRangeText = decoder.ReadString(null);
                 QualifiedName dataEncoding = decoder.ReadQualifiedName(null);
+                NodeId providerNodeId = nodeId;
+                if (kind == HistorianReadKind.Annotations &&
+                    formatVersion >= kAnnotationRequestNodeIdFormatVersion)
+                {
+                    providerNodeId = decoder.ReadNodeId(null);
+                }
                 bool timestampsValid = kind == HistorianReadKind.Events
                     ? timestamps is >= TimestampsToReturn.Source and
                         <= TimestampsToReturn.Neither
@@ -187,6 +198,7 @@ namespace Opc.Ua.Server.Historian
                 if (string.IsNullOrWhiteSpace(providerId) ||
                     providerId.Length > kMaxProviderIdLength ||
                     nodeId.IsNull ||
+                    providerNodeId.IsNull ||
                     resumeToken.Length > kMaxResumeTokenSize ||
                     (indexRangeText?.Length ?? 0) > kMaxIndexRangeLength ||
                     !timestampsValid)
@@ -194,14 +206,15 @@ namespace Opc.Ua.Server.Historian
                     return null;
                 }
 
-                IHistorianProvider? provider = registry.HistorianRegistry.Resolve(nodeId);
+                IHistorianProvider? provider =
+                    registry.HistorianRegistry.Resolve(providerNodeId);
                 if (provider is not IHistorianProviderIdentity identity ||
                     !string.Equals(identity.ProviderId, providerId, StringComparison.Ordinal))
                 {
                     return null;
                 }
                 HistorianNodeCapabilities capabilities = await provider
-                    .GetCapabilitiesAsync(nodeId, cancellationToken)
+                    .GetCapabilitiesAsync(providerNodeId, cancellationToken)
                     .ConfigureAwait(false);
                 if (!capabilities.PortableResumeTokens)
                 {
@@ -214,6 +227,10 @@ namespace Opc.Ua.Server.Historian
                     provider,
                     kind,
                     nodeId,
+                    providerNodeId,
+                    kind == HistorianReadKind.Annotations &&
+                        formatVersion <
+                            kAnnotationRequestNodeIdFormatVersion,
                     new HistorianResumeToken(resumeToken),
                     timestamps,
                     string.IsNullOrEmpty(indexRangeText)
@@ -279,6 +296,14 @@ namespace Opc.Ua.Server.Historian
                 HistorianReadKind.Events => state.EventRequest != null,
                 _ => false
             };
+        }
+
+        private static NodeId GetProviderNodeId(
+            HistorianContinuationState state)
+        {
+            return state.Kind == HistorianReadKind.Annotations
+                ? state.AnnotationRequest!.NodeId
+                : state.NodeId;
         }
 
         private static string FormatIndexRange(NumericRange range)
@@ -361,6 +386,8 @@ namespace Opc.Ua.Server.Historian
             IHistorianProvider provider,
             HistorianReadKind kind,
             NodeId nodeId,
+            NodeId providerNodeId,
+            bool usesLegacyAnnotationNodeId,
             HistorianResumeToken resumeToken,
             TimestampsToReturn timestamps,
             NumericRange indexRange,
@@ -414,7 +441,11 @@ namespace Opc.Ua.Server.Historian
                     TimestampsToReturn = timestamps,
                     IndexRange = indexRange,
                     DataEncoding = dataEncoding,
-                    AnnotationRequest = ReadAnnotationRequest(decoder, nodeId)
+                    UsesLegacyAnnotationNodeId =
+                        usesLegacyAnnotationNodeId,
+                    AnnotationRequest = ReadAnnotationRequest(
+                        decoder,
+                        providerNodeId)
                 },
                 HistorianReadKind.Events => new HistorianContinuationState
                 {
@@ -522,6 +553,7 @@ namespace Opc.Ua.Server.Historian
             BinaryEncoder encoder,
             HistorianAnnotationReadRequest request)
         {
+            encoder.WriteNodeId(null, request.NodeId);
             encoder.WriteDateTime(null, request.StartTime);
             encoder.WriteDateTime(null, request.EndTime);
             encoder.WriteUInt32(null, request.MaxValues);
@@ -577,7 +609,9 @@ namespace Opc.Ua.Server.Historian
         private const string kCodecId = "opcua-historian";
         private const uint kLegacyFormatVersion = 1;
         private const uint kNamespaceMappedFormatVersion = 2;
-        private const uint kFormatVersion = kNamespaceMappedFormatVersion;
+        private const uint kAnnotationRequestNodeIdFormatVersion = 3;
+        private const uint kFormatVersion =
+            kAnnotationRequestNodeIdFormatVersion;
         private const int kMaxPayloadSize = 1024 * 1024;
         private const int kMaxProviderIdLength = 256;
         private const int kMaxResumeTokenSize = 64 * 1024;
