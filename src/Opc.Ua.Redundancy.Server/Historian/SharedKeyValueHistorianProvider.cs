@@ -2304,12 +2304,13 @@ namespace Opc.Ua.Redundancy.Server
                 ? request.EndTime
                 : request.StartTime;
             IEnumerable<KeyValuePair<DateTimeUtc, Annotation>> source =
-                archive.Annotations.Where(entry =>
-                    entry.Key >= lower && entry.Key < upper);
-            if (!request.IsForward)
-            {
-                source = source.Reverse();
-            }
+                request.IsForward
+                    ? archive.Annotations.Where(entry =>
+                        entry.Key >= lower && entry.Key < upper)
+                    : archive.Annotations
+                        .Where(entry =>
+                            entry.Key > lower && entry.Key <= upper)
+                        .Reverse();
             return [.. source.Select(entry => CloneAnnotation(entry.Value))];
         }
 

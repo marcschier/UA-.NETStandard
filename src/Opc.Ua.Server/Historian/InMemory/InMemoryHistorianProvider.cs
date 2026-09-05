@@ -2087,7 +2087,10 @@ namespace Opc.Ua.Server.Historian.InMemory
             bool capReached = false;
             foreach (KeyValuePair<DateTime, Annotation> entry in source)
             {
-                if (entry.Key < lo || entry.Key >= hi)
+                bool outside = request.IsForward
+                    ? entry.Key < lo || entry.Key >= hi
+                    : entry.Key <= lo || entry.Key > hi;
+                if (outside)
                 {
                     continue;
                 }

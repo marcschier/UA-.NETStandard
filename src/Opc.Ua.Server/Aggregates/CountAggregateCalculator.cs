@@ -138,16 +138,16 @@ namespace Opc.Ua.Server
                         StatusCodes.BadTooManyOperations);
                 }
 
-                DateTimeUtc next = processingInterval == 0
+                double remainingMilliseconds = Math.Abs(
+                    (endTime.ToDateTime() - cursor.ToDateTime())
+                    .TotalMilliseconds);
+                DateTimeUtc next =
+                    processingInterval == 0 ||
+                    processingInterval >= remainingMilliseconds
                     ? endTime
                     : AddAnnotationInterval(
                         cursor,
                         forward ? processingInterval : -processingInterval);
-                if ((forward && next > endTime) ||
-                    (!forward && next < endTime))
-                {
-                    next = endTime;
-                }
 
                 int count = forward
                     ? CountForwardAnnotations(
@@ -389,7 +389,8 @@ namespace Opc.Ua.Server
             DateTimeUtc next;
             try
             {
-                next = timestamp.AddMilliseconds(milliseconds);
+                next = new DateTimeUtc(
+                    timestamp.ToDateTime().AddMilliseconds(milliseconds));
             }
             catch (ArgumentOutOfRangeException exception)
             {

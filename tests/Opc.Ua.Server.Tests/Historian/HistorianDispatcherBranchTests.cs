@@ -735,6 +735,9 @@ namespace Opc.Ua.Server.Tests.Historian
             Assert.That(values, Is.Not.Null.And.Length.EqualTo(1));
             Assert.That(values![0].WrappedValue.TryGetValue(out int count), Is.True);
             Assert.That(count, Is.EqualTo(3));
+            Assert.That(
+                values[0].StatusCode.AggregateBits,
+                Is.EqualTo(AggregateBits.Calculated));
         }
 
         [Test]
@@ -754,7 +757,9 @@ namespace Opc.Ua.Server.Tests.Historian
                 new() { Message = "a", UserName = "t", AnnotationTime = HarnessFixture.BaseTime.AddSeconds(2) },
                 new() { Message = "b", UserName = "t", AnnotationTime = HarnessFixture.BaseTime.AddSeconds(5) },
                 new() { Message = "c", UserName = "t", AnnotationTime = HarnessFixture.BaseTime.AddSeconds(8) },
-                new() { Message = "d", UserName = "t", AnnotationTime = HarnessFixture.BaseTime.AddSeconds(15) }
+                new() { Message = "d", UserName = "t", AnnotationTime = HarnessFixture.BaseTime.AddSeconds(15) },
+                new() { Message = "included-start", UserName = "t", AnnotationTime = HarnessFixture.BaseTime.AddSeconds(30) },
+                new() { Message = "excluded-end", UserName = "t", AnnotationTime = HarnessFixture.BaseTime }
             };
             await h.Provider.InsertAnnotationsAsync(context, nodeId, annotations, CancellationToken.None).ConfigureAwait(false);
 
@@ -788,8 +793,132 @@ namespace Opc.Ua.Server.Tests.Historian
                 Assert.That(v.WrappedValue.TryGetValue(out int count), Is.True);
                 total += count;
             }
-            Assert.That(total, Is.EqualTo(4),
-                "Reverse-time AnnotationCount must total all four annotations across the buckets.");
+            Assert.That(total, Is.EqualTo(5),
+                "Reverse-time AnnotationCount includes StartTime and excludes EndTime.");
+        }
+
+        [Test]
+        public async Task DispatchProcessedReadAnnotationCountIncludesMaximumStartTimeAsync()
+        {
+            HarnessFixture h = CreateHarnessWithAggregateManager();
+            await h.RegisterAggregateAsync(
+                ObjectIds.AggregateFunction_AnnotationCount).ConfigureAwait(false);
+            var nodeId = new NodeId($"anncount-max-start-{Guid.NewGuid():N}", 1);
+            h.Provider.Register(nodeId);
+            HistorianOperationContext context =
+                HarnessFixture.CreateContext(h.SystemContext);
+            DateTimeUtc startTime = DateTimeUtc.MaxValue;
+            DateTimeUtc endTime = new(
+                DateTime.MaxValue.AddSeconds(-10));
+            await h.Provider.InsertAnnotationsAsync(
+                context,
+                nodeId,
+                [
+                    new Annotation
+                    {
+                        Message = "included",
+                        AnnotationTime = startTime
+                    },
+                    new Annotation
+                    {
+                        Message = "excluded",
+                        AnnotationTime = endTime
+                    }
+                ],
+                CancellationToken.None).ConfigureAwait(false);
+            var result = new HistoryReadResult();
+
+            ServiceResult error = await HistorianDispatcher.DispatchProcessedReadAsync(
+                h.SystemContext,
+                h.Provider,
+                CreateVariable(nodeId),
+                new HistoryReadValueId
+                {
+                    NodeId = nodeId
+                },
+                new ReadProcessedDetails
+                {
+                    StartTime = startTime,
+                    EndTime = endTime,
+                    ProcessingInterval = 0
+                },
+                ObjectIds.AggregateFunction_AnnotationCount,
+                TimestampsToReturn.Source,
+                result,
+                CancellationToken.None).ConfigureAwait(false);
+
+            Assert.That(ServiceResult.IsGood(error), Is.True);
+            Assert.That(result.HistoryData.TryGetValue(out HistoryData? history), Is.True);
+            Assert.That(history!.DataValues, Has.Count.EqualTo(1));
+            Assert.That(history.DataValues[0].WrappedValue.TryGetValue(out int count), Is.True);
+            Assert.That(count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public async Task DispatchProcessedReadAnnotationCountAdvancesFromMaximumStartTimeAsync()
+        {
+            HarnessFixture h = CreateHarnessWithAggregateManager();
+            await h.RegisterAggregateAsync(
+                ObjectIds.AggregateFunction_AnnotationCount).ConfigureAwait(false);
+            var nodeId = new NodeId($"anncount-max-interval-{Guid.NewGuid():N}", 1);
+            h.Provider.Register(nodeId);
+            HistorianOperationContext context =
+                HarnessFixture.CreateContext(h.SystemContext);
+            DateTimeUtc startTime = DateTimeUtc.MaxValue;
+            DateTime maximum = startTime.ToDateTime();
+            DateTimeUtc middle = new(
+                maximum.AddMilliseconds(-5));
+            DateTimeUtc endTime = new(
+                maximum.AddMilliseconds(-10));
+            await h.Provider.InsertAnnotationsAsync(
+                context,
+                nodeId,
+                [
+                    new Annotation
+                    {
+                        Message = "first",
+                        AnnotationTime = startTime
+                    },
+                    new Annotation
+                    {
+                        Message = "second",
+                        AnnotationTime = middle
+                    },
+                    new Annotation
+                    {
+                        Message = "excluded",
+                        AnnotationTime = endTime
+                    }
+                ],
+                CancellationToken.None).ConfigureAwait(false);
+            var result = new HistoryReadResult();
+
+            ServiceResult error = await HistorianDispatcher.DispatchProcessedReadAsync(
+                h.SystemContext,
+                h.Provider,
+                CreateVariable(nodeId),
+                new HistoryReadValueId
+                {
+                    NodeId = nodeId
+                },
+                new ReadProcessedDetails
+                {
+                    StartTime = startTime,
+                    EndTime = endTime,
+                    ProcessingInterval = 5
+                },
+                ObjectIds.AggregateFunction_AnnotationCount,
+                TimestampsToReturn.Source,
+                result,
+                CancellationToken.None).ConfigureAwait(false);
+
+            Assert.That(ServiceResult.IsGood(error), Is.True);
+            Assert.That(result.HistoryData.TryGetValue(out HistoryData? history), Is.True);
+            Assert.That(history!.DataValues, Has.Count.EqualTo(2));
+            Assert.That(history.DataValues[0].WrappedValue.TryGetValue(out int first), Is.True);
+            Assert.That(history.DataValues[1].WrappedValue.TryGetValue(out int second), Is.True);
+            Assert.That(first, Is.EqualTo(1));
+            Assert.That(second, Is.EqualTo(1));
         }
 
         [Test]
@@ -830,6 +959,9 @@ namespace Opc.Ua.Server.Tests.Historian
                 Assert.That(v.WrappedValue.TryGetValue(out int count), Is.True);
                 Assert.That(count, Is.Zero);
                 Assert.That(StatusCode.IsGood(v.StatusCode), Is.True);
+                Assert.That(
+                    v.StatusCode.AggregateBits,
+                    Is.EqualTo(AggregateBits.Calculated));
             }
         }
 
@@ -1004,7 +1136,10 @@ namespace Opc.Ua.Server.Tests.Historian
             DataValue[]? values = hd!.DataValues.ToArray();
             Assert.That(values, Is.Not.Null.And.Length.EqualTo(1));
             Assert.That(values![0].SourceTimestamp.ToDateTime(), Is.EqualTo(t15));
-            Assert.That(values[0].StatusCode, Is.EqualTo(StatusCodes.UncertainDataSubNormal));
+            Assert.That(StatusCode.IsGood(values[0].StatusCode), Is.True);
+            Assert.That(
+                values[0].StatusCode.AggregateBits,
+                Is.EqualTo(AggregateBits.Interpolated));
             double interpolated = Convert.ToDouble(values[0].WrappedValue.AsBoxedObject(), CultureInfo.InvariantCulture);
             Assert.That(interpolated, Is.EqualTo(150.0).Within(0.01));
         }

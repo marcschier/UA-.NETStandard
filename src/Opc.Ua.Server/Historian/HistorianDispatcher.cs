@@ -1062,7 +1062,7 @@ namespace Opc.Ua.Server.Historian
                 StartTime = windowStart,
                 EndTime = windowEnd,
                 MaxValues = 0,
-                IsForward = true
+                IsForward = isForward
             };
 
             HistorianResumeToken token = default;
@@ -1082,14 +1082,21 @@ namespace Opc.Ua.Server.Historian
                 }
                 token = page.NextToken;
             }
-
-            // Bucket the annotation counts per processing interval (§5.4.3.1: the timestamp is the
-            // start of the interval and endTime is excluded).
-            var outputs = new List<DataValue>();
-            if (!TryBuildAnnotationCountIntervals(
-                startTime, endTime, details.ProcessingInterval, annotationTimes, outputs))
+            ArrayOf<DataValue> outputs;
+            try
             {
-                return StatusCodes.BadTooManyOperations;
+                outputs = CountAggregateCalculator.CalculateAnnotationCounts(
+                    annotationTimes.ToArrayOf(),
+                    startTime,
+                    endTime,
+                    details.ProcessingInterval,
+                    kMaxProcessedBufferedOutputs,
+                    cancellationToken);
+            }
+            catch (ServiceResultException exception) when (
+                exception.StatusCode == StatusCodes.BadTooManyOperations)
+            {
+                return exception.StatusCode;
             }
 
             HistorianContinuationState state = new()
@@ -1104,8 +1111,7 @@ namespace Opc.Ua.Server.Historian
                 IndexRange = nodeToRead.ParsedIndexRange,
                 DataEncoding = nodeToRead.DataEncoding,
                 BufferedProcessedOutputs =
-                    new HistorianBufferedProcessedPayload(
-                        outputs.ToArrayOf()),
+                    new HistorianBufferedProcessedPayload(outputs),
                 BufferedProcessedOffset = 0
             };
             await EmitProcessedPageAsync(
@@ -1117,99 +1123,6 @@ namespace Opc.Ua.Server.Historian
                 systemContext,
                 cancellationToken).ConfigureAwait(false);
             return ServiceResult.Good;
-        }
-
-        /// <summary>
-        /// Builds the per-interval AnnotationCount outputs. Returns false if the number of intervals
-        /// would exceed <see cref="kMaxProcessedBufferedOutputs"/>.
-        /// </summary>
-        private static bool TryBuildAnnotationCountIntervals(
-            DateTimeUtc startTime,
-            DateTimeUtc endTime,
-            double processingInterval,
-            List<DateTimeUtc> annotationTimes,
-            List<DataValue> outputs)
-        {
-            bool isForward = startTime <= endTime;
-
-            // ProcessingInterval == 0 → a single aggregate value over the entire range (§5.4.3.1).
-            if (processingInterval <= 0)
-            {
-                DateTimeUtc lo = isForward ? startTime : endTime;
-                DateTimeUtc hi = isForward ? endTime : startTime;
-                outputs.Add(CreateAnnotationCountValue(
-                    CountAnnotationsInRange(annotationTimes, lo, hi), startTime));
-                return true;
-            }
-
-            // Guard against unbounded buffering for very large windows.
-            double span = Math.Abs((endTime - startTime).TotalMilliseconds);
-            if (span / processingInterval > kMaxProcessedBufferedOutputs)
-            {
-                return false;
-            }
-
-            var interval = TimeSpan.FromMilliseconds(processingInterval);
-
-            if (isForward)
-            {
-                for (DateTimeUtc s = startTime; s < endTime; s += interval)
-                {
-                    DateTimeUtc e = s + interval;
-                    if (e > endTime)
-                    {
-                        e = endTime;
-                    }
-                    outputs.Add(CreateAnnotationCountValue(
-                        CountAnnotationsInRange(annotationTimes, s, e), s));
-                }
-            }
-            else
-            {
-                // Reverse time: intervals walk backward from startTime; each interval is timestamped
-                // with its (later) start time (§5.4.3.1).
-                for (DateTimeUtc s = startTime; s > endTime; s -= interval)
-                {
-                    DateTimeUtc e = s - interval;
-                    if (e < endTime)
-                    {
-                        e = endTime;
-                    }
-                    outputs.Add(CreateAnnotationCountValue(
-                        CountAnnotationsInRange(annotationTimes, e, s), s));
-                }
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Counts annotation timestamps in the half-open interval [loInclusive, hiExclusive).
-        /// </summary>
-        private static int CountAnnotationsInRange(
-            List<DateTimeUtc> annotationTimes,
-            DateTimeUtc loInclusive,
-            DateTimeUtc hiExclusive)
-        {
-            int count = 0;
-            for (int i = 0; i < annotationTimes.Count; i++)
-            {
-                DateTimeUtc t = annotationTimes[i];
-                if (t >= loInclusive && t < hiExclusive)
-                {
-                    count++;
-                }
-            }
-            return count;
-        }
-
-        /// <summary>
-        /// Creates an AnnotationCount aggregate value (Int32, Good, Calculated) for an interval.
-        /// </summary>
-        private static DataValue CreateAnnotationCountValue(int count, DateTimeUtc timestamp)
-        {
-            var value = new DataValue(Variant.From(count), StatusCodes.Good, timestamp, timestamp);
-            return value.WithStatus(value.StatusCode.WithAggregateBits(AggregateBits.Calculated));
         }
 
         private const int kProcessedPageSize = 1000;
@@ -1342,13 +1255,21 @@ namespace Opc.Ua.Server.Historian
                 raw,
                 node.NodeId,
                 reqTimes,
+                details.UseSimpleBounds,
+                capabilities.Stepped,
                 cancellationToken)
                 .ConfigureAwait(false);
 
+            ArrayOf<DataValue> orderedSamples = samples.ToArrayOf();
             var produced = new List<DataValue>(reqTimes.Count);
             foreach (DateTimeUtc requestedTime in reqTimes)
             {
-                produced.Add(InterpolateAtTime(samples, requestedTime, details.UseSimpleBounds));
+                cancellationToken.ThrowIfCancellationRequested();
+                produced.Add(AggregateCalculator.CalculateAtTime(
+                    orderedSamples,
+                    requestedTime,
+                    details.UseSimpleBounds,
+                    capabilities.Stepped));
             }
 
             FillHistoryData(
@@ -3036,6 +2957,8 @@ namespace Opc.Ua.Server.Historian
             IHistorianDataProvider raw,
             NodeId nodeId,
             ArrayOf<DateTimeUtc> times,
+            bool useSimpleBounds,
+            bool stepped,
             CancellationToken cancellationToken)
         {
             if (times.Count == 0)
@@ -3086,138 +3009,251 @@ namespace Opc.Ua.Server.Historian
                 }
                 token = page.NextToken;
             }
+            if (max == DateTimeUtc.MaxValue &&
+                min != max &&
+                !collected.Exists(value =>
+                    value.SourceTimestamp == DateTimeUtc.MaxValue))
+            {
+                await AddExactRawValuesAsync(
+                    collected,
+                    context,
+                    raw,
+                    nodeId,
+                    DateTimeUtc.MaxValue,
+                    cancellationToken).ConfigureAwait(false);
+            }
             collected.Sort((a, b) => a.SourceTimestamp.CompareTo(b.SourceTimestamp));
+            if (!useSimpleBounds)
+            {
+                bool hasNonBadBefore = false;
+                bool hasNonBadAfter = false;
+                for (int i = 0; i < collected.Count; i++)
+                {
+                    DataValue value = collected[i];
+                    if (StatusCode.IsBad(value.StatusCode))
+                    {
+                        continue;
+                    }
+                    hasNonBadBefore |= value.SourceTimestamp < min;
+                    hasNonBadAfter |= value.SourceTimestamp > max;
+                }
+                if (!hasNonBadBefore)
+                {
+                    _ = await AddOuterNonBadValuesAsync(
+                        collected,
+                        context,
+                        raw,
+                        nodeId,
+                        min,
+                        before: true,
+                        requiredCount: 1,
+                        cancellationToken).ConfigureAwait(false);
+                }
+                if (!hasNonBadAfter)
+                {
+                    hasNonBadAfter = await AddOuterNonBadValuesAsync(
+                        collected,
+                        context,
+                        raw,
+                        nodeId,
+                        max,
+                        before: false,
+                        requiredCount: 1,
+                        cancellationToken).ConfigureAwait(false) > 0;
+                }
+                if (!stepped && !hasNonBadAfter)
+                {
+                    int precedingCount = CountDistinctNonBadValuesBefore(
+                        collected,
+                        max);
+                    if (precedingCount < 2)
+                    {
+                        _ = await AddOuterNonBadValuesAsync(
+                            collected,
+                            context,
+                            raw,
+                            nodeId,
+                            max,
+                            before: true,
+                            requiredCount: 2 - precedingCount,
+                            cancellationToken).ConfigureAwait(false);
+                    }
+                }
+                collected.Sort((a, b) =>
+                    a.SourceTimestamp.CompareTo(b.SourceTimestamp));
+            }
             return collected;
         }
 
-        private static DataValue InterpolateAtTime(List<DataValue> samples, DateTimeUtc requestedTime, bool useSimpleBounds)
+        private static async ValueTask AddExactRawValuesAsync(
+            List<DataValue> collected,
+            HistorianOperationContext context,
+            IHistorianDataProvider raw,
+            NodeId nodeId,
+            DateTimeUtc timestamp,
+            CancellationToken cancellationToken)
         {
-            DataValue before = DataValue.Null;
-            DataValue after = DataValue.Null;
-            for (int i = 0; i < samples.Count; i++)
+            var request = new HistorianRawReadRequest
             {
-                DataValue v = samples[i];
-                int cmp = v.SourceTimestamp.CompareTo(requestedTime);
-                if (cmp == 0)
-                {
-                    return new DataValue(
-                        v.WrappedValue,
-                        v.StatusCode,
-                        sourceTimestamp: requestedTime,
-                        serverTimestamp: v.ServerTimestamp);
-                }
-                if (cmp < 0)
-                {
-                    before = v;
-                }
-                else
-                {
-                    after = v;
-                    break;
-                }
-            }
-
-            if (useSimpleBounds || before.IsNull || after.IsNull)
+                NodeId = nodeId,
+                StartTime = timestamp,
+                EndTime = timestamp,
+                MaxValues = 0,
+                IsForward = true,
+                ReturnBounds = false
+            };
+            HistorianResumeToken token = default;
+            while (true)
             {
-                DataValue closest = !before.IsNull ? before : after;
-                if (closest.IsNull)
+                HistorianPage<HistoricalDataValue> page =
+                    await raw.ReadRawAsync(
+                        context,
+                        request,
+                        token,
+                        cancellationToken).ConfigureAwait(false);
+                foreach (HistoricalDataValue historicalValue in page.Values)
                 {
-                    return new DataValue(
-                        Variant.Null,
-                        StatusCodes.BadNoData,
-                        sourceTimestamp: requestedTime,
-                        serverTimestamp: DateTimeUtc.MinValue);
+                    if (historicalValue.Value.SourceTimestamp == timestamp)
+                    {
+                        collected.Add(historicalValue.Value);
+                    }
                 }
-                return new DataValue(
-                    closest.WrappedValue,
-                    StatusCodes.UncertainNoCommunicationLastUsableValue,
-                    sourceTimestamp: requestedTime,
-                    serverTimestamp: DateTimeUtc.MinValue);
+                if (page.IsFinal)
+                {
+                    return;
+                }
+                token = page.NextToken;
             }
-
-            if (!TryGetDouble(before.WrappedValue, out double y0) ||
-                !TryGetDouble(after.WrappedValue, out double y1))
-            {
-                return new DataValue(
-                    before.WrappedValue,
-                    StatusCodes.UncertainNoCommunicationLastUsableValue,
-                    sourceTimestamp: requestedTime,
-                    serverTimestamp: DateTimeUtc.MinValue);
-            }
-            double t0 = before.SourceTimestamp.ToDateTime().Ticks;
-            double t1 = after.SourceTimestamp.ToDateTime().Ticks;
-            if (t1 == t0)
-            {
-                return new DataValue(
-                    before.WrappedValue,
-                    StatusCodes.UncertainNoCommunicationLastUsableValue,
-                    sourceTimestamp: requestedTime,
-                    serverTimestamp: DateTimeUtc.MinValue);
-            }
-            double t = requestedTime.ToDateTime().Ticks;
-            double ratio = (t - t0) / (t1 - t0);
-            double y = y0 + ((y1 - y0) * ratio);
-            return new DataValue(
-                Variant.From(y),
-                StatusCodes.UncertainDataSubNormal,
-                sourceTimestamp: requestedTime,
-                serverTimestamp: DateTimeUtc.MinValue);
         }
 
-        private static bool TryGetDouble(Variant value, out double result)
+        private static async ValueTask<int> AddOuterNonBadValuesAsync(
+            List<DataValue> collected,
+            HistorianOperationContext context,
+            IHistorianDataProvider raw,
+            NodeId nodeId,
+            DateTimeUtc boundary,
+            bool before,
+            int requiredCount,
+            CancellationToken cancellationToken)
         {
-            if (value.TryGetValue(out double doubleValue))
+            var existingTimestamps = new HashSet<DateTimeUtc>();
+            for (int i = 0; i < collected.Count; i++)
             {
-                result = doubleValue;
-                return true;
+                if (StatusCode.IsNotBad(collected[i].StatusCode))
+                {
+                    existingTimestamps.Add(collected[i].SourceTimestamp);
+                }
             }
-            if (value.TryGetValue(out float floatValue))
+            var request = new HistorianRawReadRequest
             {
-                result = floatValue;
-                return true;
-            }
-            if (value.TryGetValue(out long int64Value))
+                NodeId = nodeId,
+                StartTime = before ? DateTimeUtc.MinValue : boundary,
+                EndTime = before ? boundary : DateTimeUtc.MaxValue,
+                MaxValues = 0,
+                IsForward = !before,
+                ReturnBounds = false
+            };
+            int added = 0;
+            HistorianResumeToken token = default;
+            while (true)
             {
-                result = int64Value;
-                return true;
+                HistorianPage<HistoricalDataValue> page =
+                    await raw.ReadRawAsync(
+                        context,
+                        request,
+                        token,
+                        cancellationToken).ConfigureAwait(false);
+                foreach (HistoricalDataValue historicalValue in page.Values)
+                {
+                    DataValue value = historicalValue.Value;
+                    bool outside = before
+                        ? value.SourceTimestamp < boundary
+                        : value.SourceTimestamp > boundary;
+                    if (outside &&
+                        StatusCode.IsNotBad(value.StatusCode) &&
+                        existingTimestamps.Add(value.SourceTimestamp))
+                    {
+                        collected.Add(value);
+                        added++;
+                        if (added >= requiredCount)
+                        {
+                            return added;
+                        }
+                    }
+                }
+                if (page.IsFinal)
+                {
+                    break;
+                }
+                token = page.NextToken;
             }
-            if (value.TryGetValue(out ulong uint64Value))
+
+            DateTimeUtc extreme = before
+                ? DateTimeUtc.MinValue
+                : DateTimeUtc.MaxValue;
+            bool extremeIsOutside = before
+                ? extreme < boundary
+                : extreme > boundary;
+            if (!extremeIsOutside || added >= requiredCount)
             {
-                result = uint64Value;
-                return true;
+                return added;
             }
-            if (value.TryGetValue(out int int32Value))
+
+            var exactRequest = new HistorianRawReadRequest
             {
-                result = int32Value;
-                return true;
-            }
-            if (value.TryGetValue(out uint uint32Value))
+                NodeId = nodeId,
+                StartTime = extreme,
+                EndTime = extreme,
+                MaxValues = 0,
+                IsForward = true,
+                ReturnBounds = false
+            };
+            token = default;
+            while (true)
             {
-                result = uint32Value;
-                return true;
+                HistorianPage<HistoricalDataValue> page =
+                    await raw.ReadRawAsync(
+                        context,
+                        exactRequest,
+                        token,
+                        cancellationToken).ConfigureAwait(false);
+                foreach (HistoricalDataValue historicalValue in page.Values)
+                {
+                    DataValue value = historicalValue.Value;
+                    if (StatusCode.IsNotBad(value.StatusCode) &&
+                        existingTimestamps.Add(value.SourceTimestamp))
+                    {
+                        collected.Add(value);
+                        added++;
+                        if (added >= requiredCount)
+                        {
+                            return added;
+                        }
+                    }
+                }
+                if (page.IsFinal)
+                {
+                    return added;
+                }
+                token = page.NextToken;
             }
-            if (value.TryGetValue(out short int16Value))
+        }
+
+        private static int CountDistinctNonBadValuesBefore(
+            List<DataValue> values,
+            DateTimeUtc boundary)
+        {
+            var timestamps = new HashSet<DateTimeUtc>();
+            for (int i = 0; i < values.Count; i++)
             {
-                result = int16Value;
-                return true;
+                DataValue value = values[i];
+                if (value.SourceTimestamp < boundary &&
+                    StatusCode.IsNotBad(value.StatusCode))
+                {
+                    timestamps.Add(value.SourceTimestamp);
+                }
             }
-            if (value.TryGetValue(out ushort uint16Value))
-            {
-                result = uint16Value;
-                return true;
-            }
-            if (value.TryGetValue(out sbyte sbyteValue))
-            {
-                result = sbyteValue;
-                return true;
-            }
-            if (value.TryGetValue(out byte byteValue))
-            {
-                result = byteValue;
-                return true;
-            }
-            result = 0;
-            return false;
+            return timestamps.Count;
         }
 
         private static HistoryUpdateType MapPerformUpdate(PerformUpdateType performUpdate)

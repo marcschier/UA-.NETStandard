@@ -292,6 +292,26 @@ namespace Opc.Ua.Server.Tests
             AssertAnnotationCount(result[1], 1, TimeAt(5));
         }
 
+        [Test]
+        public void CalculateAnnotationCountsClampsPartialIntervalNearMaximum()
+        {
+            DateTimeUtc startTime = DateTimeUtc.MaxValue;
+            DateTimeUtc endTime = new(
+                startTime.ToDateTime().AddMilliseconds(-5));
+
+            ArrayOf<DataValue> result =
+                CountAggregateCalculator.CalculateAnnotationCounts(
+                    [startTime],
+                    startTime,
+                    endTime,
+                    processingInterval: 10,
+                    outputCap: 10,
+                    CancellationToken.None);
+
+            Assert.That(result, Has.Count.EqualTo(1));
+            AssertAnnotationCount(result[0], 1, startTime);
+        }
+
         [TestCase(-1)]
         [TestCase(double.NaN)]
         [TestCase(double.PositiveInfinity)]

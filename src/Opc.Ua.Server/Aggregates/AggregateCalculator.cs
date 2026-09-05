@@ -211,8 +211,10 @@ namespace Opc.Ua.Server
             {
                 int secondBeforeIndex = beforeIndex - 1;
                 while (secondBeforeIndex >= 0 &&
-                    StatusCode.IsBad(
-                        orderedValues[secondBeforeIndex].StatusCode))
+                    (StatusCode.IsBad(
+                        orderedValues[secondBeforeIndex].StatusCode) ||
+                    orderedValues[secondBeforeIndex].SourceTimestamp ==
+                        nonBadBefore.SourceTimestamp))
                 {
                     secondBeforeIndex--;
                 }
@@ -1105,10 +1107,15 @@ namespace Opc.Ua.Server
                 double lateValue = CastToDouble(lateBound);
 
                 // do interpolation.
-                double range = (lateBound.SourceTimestamp - earlyBound.SourceTimestamp).TotalMilliseconds;
+                DateTime earlyTimestamp =
+                    earlyBound.SourceTimestamp.ToDateTime();
+                DateTime lateTimestamp =
+                    lateBound.SourceTimestamp.ToDateTime();
+                double range =
+                    (lateTimestamp - earlyTimestamp).TotalMilliseconds;
                 double slope = (lateValue - earlyValue) / range;
                 double calculatedValue =
-                    (slope * (timestamp - earlyBound.SourceTimestamp).TotalMilliseconds) +
+                    (slope * (timestamp.ToDateTime() - earlyTimestamp).TotalMilliseconds) +
                     earlyValue;
 
                 // convert back to original type.
