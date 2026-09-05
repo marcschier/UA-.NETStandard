@@ -1473,25 +1473,36 @@ namespace Opc.Ua.Redundancy.Server
             var mutations = new List<Mutation>();
             for (int i = 0; i < timestamps.Count; i++)
             {
-                var key =
-                    HistoricalValueKey.FromTimestamp(timestamps[i]);
-                if (!archive.Raw.TryGetValue(key, out DataValue prior))
+                List<HistoricalValueKey> keys =
+                [
+                    .. archive.Raw.Keys.Where(
+                        key => key.SourceTimestamp == timestamps[i])
+                ];
+                if (keys.Count == 0)
                 {
                     statuses[i] = StatusCodes.BadNoEntryExists;
                     continue;
                 }
-                archive.Raw.Remove(key);
-                oldValues.Add(prior);
-                var info = new ModificationInfo
+
+                foreach (HistoricalValueKey key in keys)
                 {
-                    ModificationTime = defaultInfo.ModificationTime,
-                    UpdateType = HistoryUpdateType.Delete,
-                    UserName = defaultInfo.UserName
-                };
-                var modified = new ModifiedEntry(prior, info, ++nextSequence);
-                archive.Modified.Add(modified);
-                mutations.Add(Mutation.AddModified(nodeId, modified));
-                mutations.Add(Mutation.DeleteRaw(nodeId, key));
+                    DataValue prior = archive.Raw[key];
+                    archive.Raw.Remove(key);
+                    oldValues.Add(prior);
+                    var info = new ModificationInfo
+                    {
+                        ModificationTime = defaultInfo.ModificationTime,
+                        UpdateType = HistoryUpdateType.Delete,
+                        UserName = defaultInfo.UserName
+                    };
+                    var modified = new ModifiedEntry(
+                        prior,
+                        info,
+                        ++nextSequence);
+                    archive.Modified.Add(modified);
+                    mutations.Add(Mutation.AddModified(nodeId, modified));
+                    mutations.Add(Mutation.DeleteRaw(nodeId, key));
+                }
                 statuses[i] = StatusCodes.Good;
             }
             return new UpdatePlan<DataValue>(

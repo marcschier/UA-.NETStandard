@@ -1284,6 +1284,106 @@ namespace Opc.Ua.Redundancy.Server.Tests.Historian
         }
 
         [Test]
+        public async Task DeleteAtTimeRemovesEveryStructuredEntryAndPreservesPinnedGenerationAsync()
+        {
+            using var store = new StrongTestStore();
+            using AesCbcHmacRecordProtector protector = CreateProtector();
+            var nodeId = new NodeId("structured-delete-at-time", 2);
+            var options = new SharedKeyValueHistorianOptions
+            {
+                StructuredNodes =
+                [
+                    new SharedKeyValueStructuredHistorianNode
+                    {
+                        NodeId = nodeId,
+                        KeySelector = Int32KeySelector.Instance
+                    }
+                ]
+            };
+            await using SharedKeyValueHistorianProvider provider = CreateProvider(
+                store,
+                protector,
+                new TestElection(true),
+                options);
+            HistorianOperationContext context = CreateOperationContext();
+            await provider.InsertStructuredDataAsync(
+                context,
+                nodeId,
+                [
+                    ValueAt(1, 1),
+                    ValueAt(2, 1),
+                    ValueAt(3, 2)
+                ],
+                default).ConfigureAwait(false);
+            var pagedRequest = new HistorianRawReadRequest
+            {
+                NodeId = nodeId,
+                StartTime = TimeAt(0),
+                EndTime = TimeAt(10),
+                MaxValues = 1,
+                IsForward = true
+            };
+            HistorianPage<HistoricalDataValue> pinnedFirst =
+                await provider.ReadRawAsync(
+                    context,
+                    pagedRequest,
+                    default,
+                    default).ConfigureAwait(false);
+
+            HistorianUpdateOutcome<DataValue> deleted =
+                await provider.DeleteAtTimeAsync(
+                    context,
+                    nodeId,
+                    [TimeAt(1), TimeAt(1)],
+                    default).ConfigureAwait(false);
+            HistorianPage<HistoricalDataValue> pinnedSecond =
+                await provider.ReadRawAsync(
+                    context,
+                    pagedRequest,
+                    pinnedFirst.NextToken,
+                    default).ConfigureAwait(false);
+            HistorianPage<HistoricalDataValue> current =
+                await provider.ReadRawAsync(
+                    context,
+                    ReadRequest(nodeId, 0),
+                    default,
+                    default).ConfigureAwait(false);
+            HistorianPage<ModifiedDataValue> modified =
+                await provider.ReadModifiedAsync(
+                    context,
+                    new HistorianModifiedReadRequest
+                    {
+                        NodeId = nodeId,
+                        StartTime = TimeAt(0),
+                        EndTime = TimeAt(10),
+                        IsForward = true
+                    },
+                    default,
+                    default).ConfigureAwait(false);
+
+            Assert.That(pinnedFirst.IsFinal, Is.False);
+            Assert.That(pinnedSecond.Values, Has.Count.EqualTo(1));
+            Assert.That(
+                pinnedSecond.Values[0].Value.SourceTimestamp,
+                Is.EqualTo(TimeAt(1)));
+            Assert.That(
+                deleted.OperationResults,
+                Is.EqualTo([StatusCodes.Good, StatusCodes.BadNoEntryExists]));
+            Assert.That(deleted.OldValues, Has.Count.EqualTo(2));
+            Assert.That(current.Values, Has.Count.EqualTo(1));
+            Assert.That(
+                current.Values[0].Value.SourceTimestamp,
+                Is.EqualTo(TimeAt(2)));
+            Assert.That(modified.Values, Has.Count.EqualTo(2));
+            foreach (ModifiedDataValue value in modified.Values)
+            {
+                Assert.That(
+                    value.Info.UpdateType,
+                    Is.EqualTo(HistoryUpdateType.Delete));
+            }
+        }
+
+        [Test]
         public async Task RegistrationKeepsExplicitHistorianProviderAsync()
         {
             using var store = new StrongTestStore();
