@@ -116,6 +116,18 @@ namespace Opc.Ua.Server
                 throw new ServiceResultException(
                     StatusCodes.BadInvalidArgument);
             }
+            if (processingInterval > 0)
+            {
+                double spanMilliseconds = Math.Abs(
+                    (endTime.ToDateTime() - startTime.ToDateTime())
+                    .TotalMilliseconds);
+                if (Math.Ceiling(
+                    spanMilliseconds / processingInterval) > outputCap)
+                {
+                    throw new ServiceResultException(
+                        StatusCodes.BadTooManyOperations);
+                }
+            }
 
             cancellationToken.ThrowIfCancellationRequested();
             var sorted = new DateTimeUtc[annotationTimestamps.Count];
