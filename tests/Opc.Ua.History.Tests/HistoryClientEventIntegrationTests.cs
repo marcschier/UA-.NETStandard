@@ -163,6 +163,87 @@ namespace Opc.Ua.History.Tests
         }
 
         [Test]
+        public async Task ConditionTypeRootedEventUpdateRoundTripsAsync()
+        {
+            var client = new HistoryClient(m_session);
+            var updateFilter = new EventFilter();
+            updateFilter.AddSelectClause(
+                ObjectTypeIds.ConditionType,
+                BrowseNames.EventId,
+                Attributes.Value);
+            updateFilter.AddSelectClause(
+                ObjectTypeIds.ConditionType,
+                BrowseNames.EventType,
+                Attributes.Value);
+            updateFilter.AddSelectClause(
+                ObjectTypeIds.ConditionType,
+                BrowseNames.Time,
+                Attributes.Value);
+            updateFilter.AddSelectClause(
+                ObjectTypeIds.BaseEventType,
+                BrowseNames.Message,
+                Attributes.Value);
+            DateTime eventTime = DateTime.UtcNow.AddYears(-10).AddSeconds(1426);
+            var eventId = ByteString.From([0x43, 0x89]);
+
+            ArrayOf<StatusCode> insertStatuses = await client.InsertEventsAsync(
+                m_notifierId,
+                updateFilter,
+                [
+                    new HistoryEventFieldList
+                    {
+                        EventFields =
+                        [
+                            new Variant(eventId),
+                            new Variant(ObjectTypeIds.ConditionType),
+                            new Variant((DateTimeUtc)eventTime),
+                            new Variant(new LocalizedText("condition"))
+                        ]
+                    }
+                ]).ConfigureAwait(false);
+
+            Assert.That(insertStatuses, Has.Count.EqualTo(1));
+            Assert.That(StatusCode.IsGood(insertStatuses[0]), Is.True);
+
+            EventFilter readFilter = CreateEventFilter();
+            List<HistoryEventFieldList> events = await ReadEventsAsync(
+                client,
+                readFilter,
+                eventTime).ConfigureAwait(false);
+            AssertEvent(events, eventId, "condition");
+
+            ArrayOf<StatusCode> replaceStatuses = await client.ReplaceEventsAsync(
+                m_notifierId,
+                updateFilter,
+                [
+                    new HistoryEventFieldList
+                    {
+                        EventFields =
+                        [
+                            new Variant(eventId),
+                            new Variant(ObjectTypeIds.ConditionType),
+                            new Variant((DateTimeUtc)eventTime),
+                            new Variant(new LocalizedText("replaced condition"))
+                        ]
+                    }
+                ]).ConfigureAwait(false);
+            Assert.That(replaceStatuses, Has.Count.EqualTo(1));
+            Assert.That(StatusCode.IsGood(replaceStatuses[0]), Is.True);
+
+            events = await ReadEventsAsync(
+                client,
+                readFilter,
+                eventTime).ConfigureAwait(false);
+            AssertEvent(events, eventId, "replaced condition");
+
+            ArrayOf<StatusCode> deleteStatuses = await client.DeleteEventsAsync(
+                m_notifierId,
+                [eventId]).ConfigureAwait(false);
+            Assert.That(deleteStatuses, Has.Count.EqualTo(1));
+            Assert.That(StatusCode.IsGood(deleteStatuses[0]), Is.True);
+        }
+
+        [Test]
         public async Task EventReplaceAppliesIndexRangeAsync()
         {
             var client = new HistoryClient(m_session);
