@@ -2320,7 +2320,7 @@ namespace Opc.Ua.Server.Tests
             Mock<IHistorianDataProvider> dataProvider =
                 provider.As<IHistorianDataProvider>();
             var token = new HistorianResumeToken(ByteString.From([1]));
-            var secondPageStarted = new TaskCompletionSource(
+            var secondPageStarted = new TaskCompletionSource<bool>(
                 TaskCreationOptions.RunContinuationsAsynchronously);
             var secondPage = new TaskCompletionSource<HistorianPage<HistoricalDataValue>>(
                 TaskCreationOptions.RunContinuationsAsynchronously);
@@ -2344,7 +2344,7 @@ namespace Opc.Ua.Server.Tests
                                 ],
                                 token));
                     }
-                    secondPageStarted.TrySetResult();
+                    secondPageStarted.TrySetResult(true);
                     return new ValueTask<HistorianPage<HistoricalDataValue>>(
                         secondPage.Task);
                 });
@@ -2751,7 +2751,7 @@ namespace Opc.Ua.Server.Tests
                     It.IsAny<CancellationToken>()))
                 .Returns(new ValueTask<HistorianNodeCapabilities>(
                     HistorianNodeCapabilities.ReadOnly));
-            var readStarted = new TaskCompletionSource(
+            var readStarted = new TaskCompletionSource<bool>(
                 TaskCreationOptions.RunContinuationsAsynchronously);
             var firstPage = new TaskCompletionSource<HistorianPage<HistoricalDataValue>>(
                 TaskCreationOptions.RunContinuationsAsynchronously);
@@ -2763,7 +2763,7 @@ namespace Opc.Ua.Server.Tests
                     It.IsAny<CancellationToken>()))
                 .Returns(() =>
                 {
-                    readStarted.TrySetResult();
+                    readStarted.TrySetResult(true);
                     return new ValueTask<HistorianPage<HistoricalDataValue>>(
                         firstPage.Task);
                 })
@@ -2934,7 +2934,7 @@ namespace Opc.Ua.Server.Tests
                     It.IsAny<CancellationToken>()))
                 .Returns(new ValueTask<HistorianNodeCapabilities>(
                     HistorianNodeCapabilities.ReadOnly));
-            var readStarted = new TaskCompletionSource(
+            var readStarted = new TaskCompletionSource<bool>(
                 TaskCreationOptions.RunContinuationsAsynchronously);
             provider.As<IHistorianDataProvider>()
                 .Setup(value => value.ReadRawAsync(
@@ -2949,7 +2949,7 @@ namespace Opc.Ua.Server.Tests
                         HistorianResumeToken _,
                         CancellationToken cancellationToken) =>
                     {
-                        readStarted.TrySetResult();
+                        readStarted.TrySetResult(true);
                         await Task.Delay(
                             Timeout.InfiniteTimeSpan,
                             cancellationToken).ConfigureAwait(false);
@@ -3021,7 +3021,7 @@ namespace Opc.Ua.Server.Tests
                     It.IsAny<CancellationToken>()))
                 .Returns(new ValueTask<HistorianNodeCapabilities>(
                     HistorianNodeCapabilities.ReadOnly));
-            var readStarted = new TaskCompletionSource(
+            var readStarted = new TaskCompletionSource<bool>(
                 TaskCreationOptions.RunContinuationsAsynchronously);
             provider.As<IHistorianDataProvider>()
                 .Setup(value => value.ReadRawAsync(
@@ -3036,7 +3036,7 @@ namespace Opc.Ua.Server.Tests
                         HistorianResumeToken _,
                         CancellationToken cancellationToken) =>
                     {
-                        readStarted.TrySetResult();
+                        readStarted.TrySetResult(true);
                         await Task.Delay(
                             Timeout.InfiniteTimeSpan,
                             cancellationToken).ConfigureAwait(false);
@@ -3189,7 +3189,7 @@ namespace Opc.Ua.Server.Tests
                     It.IsAny<CancellationToken>()))
                 .Returns(new ValueTask<HistorianNodeCapabilities>(
                     HistorianNodeCapabilities.ReadOnly));
-            var readStarted = new TaskCompletionSource(
+            var readStarted = new TaskCompletionSource<bool>(
                 TaskCreationOptions.RunContinuationsAsynchronously);
             var page = new TaskCompletionSource<HistorianPage<HistoricalDataValue>>(
                 TaskCreationOptions.RunContinuationsAsynchronously);
@@ -3201,7 +3201,7 @@ namespace Opc.Ua.Server.Tests
                     It.IsAny<CancellationToken>()))
                 .Returns(() =>
                 {
-                    readStarted.TrySetResult();
+                    readStarted.TrySetResult(true);
                     return new ValueTask<HistorianPage<HistoricalDataValue>>(
                         page.Task);
                 });

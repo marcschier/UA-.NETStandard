@@ -787,7 +787,10 @@ namespace Opc.Ua.Server
         internal void ReplaceMonitoredItemManager(
             IMonitoredItemManager monitoredItemManager)
         {
-            ArgumentNullException.ThrowIfNull(monitoredItemManager);
+            if (monitoredItemManager == null)
+            {
+                throw new ArgumentNullException(nameof(monitoredItemManager));
+            }
             m_monitoredItemManager.Dispose();
             m_monitoredItemManager = monitoredItemManager;
         }
