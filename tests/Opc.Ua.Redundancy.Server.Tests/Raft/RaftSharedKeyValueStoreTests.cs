@@ -187,6 +187,29 @@ namespace Opc.Ua.Server.Tests.Redundancy
         }
 
         [Test]
+        public async Task ReadBarrierDoesNotPublishWatchEventAsync()
+        {
+            await using var store = new RaftSharedKeyValueStore();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
+            await store.TryGetAsync("warmup", cts.Token).ConfigureAwait(false);
+            await using IAsyncEnumerator<KeyValueChange> enumerator =
+                store.WatchAsync(string.Empty, cts.Token).GetAsyncEnumerator();
+            ValueTask<bool> next = enumerator.MoveNextAsync();
+
+            await store.TryGetAsync("missing", cts.Token).ConfigureAwait(false);
+
+            Assert.That(next.IsCompleted, Is.False);
+
+            await store.SetAsync(
+                "key",
+                ByteString.From(new byte[] { 1 }),
+                cts.Token).ConfigureAwait(false);
+            Assert.That(await next.ConfigureAwait(false), Is.True);
+            Assert.That(enumerator.Current.Key, Is.EqualTo("key"));
+        }
+
+        [Test]
         public async Task ConcurrentCompareAndSwapHasExactlyOneWinnerAsync()
         {
             await using var store = new RaftSharedKeyValueStore();
@@ -238,6 +261,132 @@ namespace Opc.Ua.Server.Tests.Redundancy
             }, Throws.TypeOf<TimeoutException>());
         }
 
+        [Test]
+        public async Task TryGetWaitsForReadBarrierToApplyAsync()
+        {
+            await using var consensus = new ControlledApplyConsensus();
+            await using var store = new RaftSharedKeyValueStore(consensus);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var value = ByteString.From(new byte[] { 7 });
+
+            Task setTask = store.SetAsync("key", value).AsTask();
+            ReadOnlyMemory<byte> setCommand = await consensus.NextProposalAsync(cts.Token).ConfigureAwait(false);
+            await consensus.CommitAsync(setCommand).ConfigureAwait(false);
+            await setTask.ConfigureAwait(false);
+
+            Task<(bool Found, ByteString Value)> readTask =
+                store.TryGetAsync("key").AsTask();
+            ReadOnlyMemory<byte> barrier = await consensus.NextProposalAsync(cts.Token).ConfigureAwait(false);
+
+            Assert.That(readTask.IsCompleted, Is.False);
+
+            await consensus.CommitAsync(barrier).ConfigureAwait(false);
+            (bool found, ByteString observed) = await readTask.ConfigureAwait(false);
+
+            Assert.That(found, Is.True);
+            Assert.That(observed.ToArray(), Is.EqualTo(value.ToArray()));
+        }
+
+        [Test]
+        public async Task ScanWaitsForPromotionAndReadBarrierToApplyAsync()
+        {
+            await using var consensus = new ControlledApplyConsensus();
+            await using var store = new RaftSharedKeyValueStore(consensus);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+            Task setTask = store.SetAsync(
+                "prefix/key",
+                ByteString.From(new byte[] { 9 })).AsTask();
+            ReadOnlyMemory<byte> setCommand = await consensus.NextProposalAsync(cts.Token).ConfigureAwait(false);
+            await consensus.CommitAsync(setCommand).ConfigureAwait(false);
+            await setTask.ConfigureAwait(false);
+
+            consensus.Demote();
+            await using IAsyncEnumerator<KeyValuePair<string, ByteString>> enumerator =
+                store.ScanAsync("prefix/").GetAsyncEnumerator();
+            Task<bool> moveNextTask = enumerator.MoveNextAsync().AsTask();
+
+            Assert.That(moveNextTask.IsCompleted, Is.False);
+
+            consensus.Promote();
+            ReadOnlyMemory<byte> barrier = await consensus.NextProposalAsync(cts.Token).ConfigureAwait(false);
+
+            Assert.That(moveNextTask.IsCompleted, Is.False);
+
+            await consensus.CommitAsync(barrier).ConfigureAwait(false);
+
+            Assert.That(await moveNextTask.ConfigureAwait(false), Is.True);
+            Assert.That(enumerator.Current.Key, Is.EqualTo("prefix/key"));
+        }
+
+        [Test]
+        public void TryGetTimesOutWhenReadBarrierCannotCommit()
+        {
+            Assert.That(async () =>
+            {
+                await using var consensus = new NeverCommitsConsensus();
+                await using var store = new RaftSharedKeyValueStore(
+                    consensus,
+                    ownsConsensus: false,
+                    commitTimeout: TimeSpan.FromMilliseconds(200));
+                await store.TryGetAsync("key").ConfigureAwait(false);
+            }, Throws.TypeOf<TimeoutException>());
+        }
+
+        [Test]
+        public void ReadBarrierMapsConsensusCancellationToTimeout()
+        {
+            Assert.That(async () =>
+            {
+                await using var consensus =
+                    new CancellationAwareNeverCommitsConsensus();
+                await using var store = new RaftSharedKeyValueStore(
+                    consensus,
+                    ownsConsensus: false,
+                    commitTimeout: TimeSpan.FromMilliseconds(200));
+                await store.TryGetAsync("key").ConfigureAwait(false);
+            }, Throws.TypeOf<TimeoutException>());
+        }
+
+        [Test]
+        public async Task PendingWatchCompletesOnDisposeAsync()
+        {
+            var store = new RaftSharedKeyValueStore();
+            await using IAsyncEnumerator<KeyValueChange> enumerator =
+                store.WatchAsync(string.Empty).GetAsyncEnumerator();
+            Task<bool> pending = enumerator.MoveNextAsync().AsTask();
+
+            await store.DisposeAsync().ConfigureAwait(false);
+
+            bool completed = false;
+            try
+            {
+                completed = !await pending.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                completed = true;
+            }
+            Assert.That(completed, Is.True);
+        }
+
+        [Test]
+        public void ScanCancellationCancelsPendingReadBarrier()
+        {
+            Assert.That(async () =>
+            {
+                await using var consensus = new NeverCommitsConsensus();
+                await using var store = new RaftSharedKeyValueStore(
+                    consensus,
+                    ownsConsensus: false,
+                    commitTimeout: Timeout.InfiniteTimeSpan);
+                using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
+                await foreach (KeyValuePair<string, ByteString> _ in store.ScanAsync(string.Empty, cts.Token))
+                {
+                }
+            }, Throws.InstanceOf<OperationCanceledException>());
+        }
+
         private static async Task<ByteString> WaitForValueAsync(
             RaftSharedKeyValueStore store,
             string key,
@@ -278,6 +427,124 @@ namespace Opc.Ua.Server.Tests.Redundancy
             public ValueTask ProposeAsync(ReadOnlyMemory<byte> command, CancellationToken ct = default)
             {
                 return default;
+            }
+
+            public ValueTask CampaignAsync(CancellationToken ct = default)
+            {
+                return default;
+            }
+
+            public ValueTask DisposeAsync()
+            {
+                m_committed.Writer.TryComplete();
+                return default;
+            }
+
+            private readonly Channel<ReadOnlyMemory<byte>> m_committed =
+                Channel.CreateUnbounded<ReadOnlyMemory<byte>>();
+        }
+
+        private sealed class ControlledApplyConsensus : IRaftConsensus
+        {
+            public ControlledApplyConsensus()
+            {
+                m_canPropose.TrySetResult(true);
+            }
+
+            public bool IsLeader => m_isLeader;
+
+            public event Action<bool> LeadershipChanged
+            {
+                add { }
+                remove { }
+            }
+
+            public ChannelReader<ReadOnlyMemory<byte>> Committed => m_committed.Reader;
+
+            public ValueTask StartAsync(CancellationToken ct = default)
+            {
+                return default;
+            }
+
+            public async ValueTask ProposeAsync(
+                ReadOnlyMemory<byte> command,
+                CancellationToken ct = default)
+            {
+                await m_canPropose.Task.ConfigureAwait(false);
+                await m_proposed.Writer.WriteAsync(command.ToArray(), ct).ConfigureAwait(false);
+            }
+
+            public ValueTask CampaignAsync(CancellationToken ct = default)
+            {
+                return default;
+            }
+
+            public ValueTask<ReadOnlyMemory<byte>> NextProposalAsync(
+                CancellationToken ct = default)
+            {
+                return m_proposed.Reader.ReadAsync(ct);
+            }
+
+            public ValueTask CommitAsync(
+                ReadOnlyMemory<byte> command,
+                CancellationToken ct = default)
+            {
+                return m_committed.Writer.WriteAsync(command, ct);
+            }
+
+            public void Demote()
+            {
+                m_isLeader = false;
+                m_canPropose = new TaskCompletionSource<bool>(
+                    TaskCreationOptions.RunContinuationsAsynchronously);
+            }
+
+            public void Promote()
+            {
+                m_isLeader = true;
+                m_canPropose.TrySetResult(true);
+            }
+
+            public ValueTask DisposeAsync()
+            {
+                m_proposed.Writer.TryComplete();
+                m_committed.Writer.TryComplete();
+                return default;
+            }
+
+            private readonly Channel<ReadOnlyMemory<byte>> m_proposed =
+                Channel.CreateUnbounded<ReadOnlyMemory<byte>>();
+            private readonly Channel<ReadOnlyMemory<byte>> m_committed =
+                Channel.CreateUnbounded<ReadOnlyMemory<byte>>();
+            private TaskCompletionSource<bool> m_canPropose =
+                new(TaskCreationOptions.RunContinuationsAsynchronously);
+            private bool m_isLeader = true;
+        }
+
+        private sealed class CancellationAwareNeverCommitsConsensus :
+            IRaftConsensus
+        {
+            public bool IsLeader => true;
+
+            public event Action<bool> LeadershipChanged
+            {
+                add { }
+                remove { }
+            }
+
+            public ChannelReader<ReadOnlyMemory<byte>> Committed =>
+                m_committed.Reader;
+
+            public ValueTask StartAsync(CancellationToken ct = default)
+            {
+                return default;
+            }
+
+            public async ValueTask ProposeAsync(
+                ReadOnlyMemory<byte> command,
+                CancellationToken ct = default)
+            {
+                await Task.Delay(Timeout.Infinite, ct).ConfigureAwait(false);
             }
 
             public ValueTask CampaignAsync(CancellationToken ct = default)

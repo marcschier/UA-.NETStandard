@@ -289,10 +289,6 @@ namespace Opc.Ua.Client.Redundancy.Tests
             await using var store = new RaftSharedKeyValueStore(
                 consensus, ownsConsensus: false, commitTimeout: Timeout.InfiniteTimeSpan);
 
-            // Warm the store up so EnsureStartedAsync is a no-op and the
-            // pre-canceled token bounds the pending proposal via its own path.
-            await store.TryGetAsync("warmup").ConfigureAwait(false);
-
             using var cts = new CancellationTokenSource();
             cts.Cancel();
 
@@ -320,15 +316,33 @@ namespace Opc.Ua.Client.Redundancy.Tests
             var store = new RaftSharedKeyValueStore(
                 consensus, ownsConsensus: true, commitTimeout: Timeout.InfiniteTimeSpan);
 
-            await store.TryGetAsync("warmup").ConfigureAwait(false);
-
-            // The proposal registers a pending completion synchronously (before
-            // the first real await), so disposing the store cancels it.
             Task pending = store.SetAsync("k", ByteString.From(new byte[] { 1 })).AsTask();
+            await consensus.WaitForProposalAsync().ConfigureAwait(false);
             await store.DisposeAsync().ConfigureAwait(false);
 
             Assert.That(async () => await pending.ConfigureAwait(false),
                 Throws.InstanceOf<OperationCanceledException>());
+        }
+
+        [Test]
+        public async Task ReadBarrierRejectedAfterDisposeAsync()
+        {
+            var consensus = new NeverCommitsConsensus();
+            var store = new RaftSharedKeyValueStore(
+                consensus,
+                ownsConsensus: false,
+                commitTimeout: Timeout.InfiniteTimeSpan);
+
+            Task pending = store.TryGetAsync("k").AsTask();
+            await consensus.WaitForProposalAsync().ConfigureAwait(false);
+            await store.DisposeAsync().ConfigureAwait(false);
+
+            Assert.That(
+                async () => await pending.ConfigureAwait(false),
+                Throws.InstanceOf<OperationCanceledException>());
+            Assert.That(
+                async () => await store.TryGetAsync("k").ConfigureAwait(false),
+                Throws.TypeOf<ObjectDisposedException>());
         }
 
         [Test]
@@ -380,7 +394,13 @@ namespace Opc.Ua.Client.Redundancy.Tests
 
             public ValueTask ProposeAsync(ReadOnlyMemory<byte> command, CancellationToken ct = default)
             {
+                m_proposed.TrySetResult(true);
                 return default;
+            }
+
+            public Task<bool> WaitForProposalAsync()
+            {
+                return m_proposed.Task;
             }
 
             public ValueTask CampaignAsync(CancellationToken ct = default)
@@ -396,6 +416,8 @@ namespace Opc.Ua.Client.Redundancy.Tests
 
             private readonly Channel<ReadOnlyMemory<byte>> m_committed =
                 Channel.CreateUnbounded<ReadOnlyMemory<byte>>();
+            private readonly TaskCompletionSource<bool> m_proposed =
+                new(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
         /// <summary>
