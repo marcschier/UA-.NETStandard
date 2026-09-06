@@ -151,6 +151,38 @@ dotnet publish tests/Opc.Ua.Aot.Tests/Opc.Ua.Aot.Tests.csproj -c Release && \
 > You must use `dotnet publish` followed by direct execution of the resulting
 > binary.
 
+### Companion binary: Opc.Ua.Aot.Tests.Historian
+
+The distributed shared-historian round-trip scenario
+(`SharedHistorianAndContinuationCodecsRoundTripAsync`) lives in a second,
+deliberately small NativeAOT executable,
+`tests/Opc.Ua.Aot.Tests.Historian/`, rather than in the monolithic
+`Opc.Ua.Aot.Tests` binary. Rooting the shared key/value historian read/write
+and history-continuation codec pipelines — with their many generic
+instantiations — inside the already very large monolithic binary pushed the
+macOS ARM64 Apple linker (`ld64`) past its *"too many large addends"* limit.
+Splitting the scenario into its own executable keeps every platform exercising
+the real NativeAOT test while both binaries stay below the linker thresholds.
+
+The companion project **links** (does not copy) `AotServerFixture.cs` and
+`AotTestFixture.cs` from `Opc.Ua.Aot.Tests` so the server/session bring-up stays
+identical, and intentionally does **not** reference the `Opc.Ua.Aot.Tests`
+assembly (whose generated TUnit registration would re-root every test and defeat
+the split). Build and run it exactly like the main binary:
+
+```bash
+# Publish
+dotnet publish tests/Opc.Ua.Aot.Tests.Historian/Opc.Ua.Aot.Tests.Historian.csproj --configuration Release
+# Run (Windows x64)
+./tests/Opc.Ua.Aot.Tests.Historian/bin/Release/net10.0/win-x64/publish/Opc.Ua.Aot.Tests.Historian.exe
+# Run (Linux x64)
+./tests/Opc.Ua.Aot.Tests.Historian/bin/Release/net10.0/linux-x64/publish/Opc.Ua.Aot.Tests.Historian
+```
+
+Both CI backends discover and run both executables: the Azure `test-aot.yml`
+matrix globs `Opc.Ua.Aot.Tests*.csproj`, and the GitHub Actions `aot-test` job
+publishes and runs each binary in turn.
+
 ## CI Integration
 
 The GitHub Actions workflow `.github/workflows/buildandtest.yml` defines an
@@ -161,7 +193,9 @@ steps are:
 2. **Setup** .NET 10.0 SDK.
 3. **Publish** the project with `dotnet publish` in `Release` configuration.
 4. **Execute** the platform-specific binary directly.
-5. **Upload** any `TestResults` artifacts.
+5. **Publish + execute** the companion `Opc.Ua.Aot.Tests.Historian` binary the
+   same way (see above).
+6. **Upload** any `TestResults` artifacts.
 
 The job runs in a separate matrix from the main `dotnet test` build so that AOT
 failures are isolated and clearly visible.
