@@ -120,7 +120,7 @@ namespace Opc.Ua.Server.Tests.Redundancy
         }
 
         [Test]
-        public async Task DoesNotReplicateReplicaLocalDiagnosticsAsync()
+        public async Task DoesNotReplicateReplicaLocalBuiltInAddressSpacesAsync()
         {
             ITelemetryContext telemetry = NUnitTelemetryContext.Create();
             var messageContext = ServiceMessageContext.CreateEmpty(telemetry);
@@ -137,15 +137,26 @@ namespace Opc.Ua.Server.Tests.Redundancy
                 BrowseName = new QualifiedName(BrowseNames.Server),
                 DisplayName = new LocalizedText("Server")
             }).ConfigureAwait(false);
-            var nodeManager = new Mock<IDiagnosticsNodeManager>();
-            Mock<ILocalAddressSpaceSource> source = nodeManager.As<ILocalAddressSpaceSource>();
-            source.Setup(value => value.CreateLocalAddressSpace()).Returns(addressSpace);
+            var diagnosticsNodeManager = new Mock<IDiagnosticsNodeManager>();
+            Mock<ILocalAddressSpaceSource> diagnosticsSource =
+                diagnosticsNodeManager.As<ILocalAddressSpaceSource>();
+            diagnosticsSource
+                .Setup(value => value.CreateLocalAddressSpace())
+                .Returns(addressSpace);
+            var coreNodeManager = new Mock<ICoreNodeManager>();
+            Mock<ILocalAddressSpaceSource> coreSource =
+                coreNodeManager.As<ILocalAddressSpaceSource>();
+            coreSource
+                .Setup(value => value.CreateLocalAddressSpace())
+                .Returns(addressSpace);
             var server = new Mock<IServerInternal>();
             server.Setup(value => value.Telemetry).Returns(telemetry);
             server.Setup(value => value.MessageContext).Returns(messageContext);
             server.Setup(value => value.NamespaceUris).Returns(messageContext.NamespaceUris);
             server.Setup(value => value.DefaultSystemContext).Returns(new ServerSystemContext(server.Object));
-            server.Setup(value => value.FindNodeManagers<ILocalAddressSpaceSource>()).Returns([source.Object]);
+            server
+                .Setup(value => value.FindNodeManagers<ILocalAddressSpaceSource>())
+                .Returns([diagnosticsSource.Object, coreSource.Object]);
             using var keyValueStore = new InMemorySharedKeyValueStore();
             await using var startup = new DistributedAddressSpaceStartupTask(
                 keyValueStore,
@@ -157,8 +168,9 @@ namespace Opc.Ua.Server.Tests.Redundancy
             Assert.That(
                 await store.TryGetNodeAsync(ObjectIds.Server).ConfigureAwait(false),
                 Is.Null,
-                "Replica-local diagnostics and configuration must never enter the shared address space.");
-            source.Verify(value => value.CreateLocalAddressSpace(), Times.Never);
+                "Replica-local core, diagnostics, and configuration nodes must never enter the shared address space.");
+            diagnosticsSource.Verify(value => value.CreateLocalAddressSpace(), Times.Never);
+            coreSource.Verify(value => value.CreateLocalAddressSpace(), Times.Never);
         }
 
         [Test]

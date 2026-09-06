@@ -357,7 +357,7 @@ byte displayedServiceLevel = redundancyMode == RedundancySupport.None
     ? ServiceLevels.Maximum
     : GetDisplayedServiceLevel(activeActive, redundancyMode);
 Console.WriteLine(
-    "HA sample node '{0}' listening at {1}; HA_MODE={2}; REDUNDANCY_MODE={3}; ServiceLevel={4} ({5}).",
+    "HA sample node '{0}' configured for {1}; HA_MODE={2}; REDUNDANCY_MODE={3}; ServiceLevel={4} ({5}).",
     nodeId,
     endpointUrl,
     haMode,
@@ -375,6 +375,8 @@ if (redundancyMode is RedundancySupport.Cold or
 }
 Console.WriteLine("RequestServerStateChange is enabled for administrator-driven Maintenance/NoData failover.");
 
+builder.Services.AddSingleton<IServerStartupTask>(
+    static _ => new HaSampleSimulationStartupTask());
 await builder.Build().RunAsync().ConfigureAwait(false);
 
 static RedundancySupport ParseRedundancyMode(string? value, RedundancySupport defaultMode)

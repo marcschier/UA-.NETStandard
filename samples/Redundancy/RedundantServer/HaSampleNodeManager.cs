@@ -38,6 +38,7 @@ using Opc.Ua.Redundancy;
 using Opc.Ua.Redundancy.Server;
 using Opc.Ua.Server;
 using Opc.Ua.Server.Historian;
+using Opc.Ua.Server.Hosting;
 
 namespace RedundantServer
 {
@@ -116,6 +117,30 @@ namespace RedundantServer
         /// Gets the unique local high-availability node id.
         /// </summary>
         public string NodeId { get; }
+    }
+
+    /// <summary>
+    /// Starts the sample producer after distributed services and redundancy metadata are initialized.
+    /// </summary>
+    internal sealed class HaSampleSimulationStartupTask : IServerStartupTask
+    {
+        /// <inheritdoc/>
+        public ValueTask OnServerStartedAsync(
+            IServerContext server,
+            CancellationToken cancellationToken = default)
+        {
+            if (server == null)
+            {
+                throw new ArgumentNullException(nameof(server));
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            foreach (HaSampleNodeManager manager in server.FindNodeManagers<HaSampleNodeManager>())
+            {
+                manager.StartSimulation();
+            }
+            return default;
+        }
     }
 
     /// <summary>
@@ -240,7 +265,6 @@ namespace RedundantServer
             }
 
             await AddPredefinedNodeAsync(SystemContext, folder, cancellationToken).ConfigureAwait(false);
-            StartSimulation();
         }
 
         /// <inheritdoc/>
@@ -310,7 +334,7 @@ namespace RedundantServer
             return variable;
         }
 
-        private void StartSimulation()
+        internal void StartSimulation()
         {
             m_simulationTask ??= Task.Run(() => RunSimulationAsync(m_simulationCts.Token));
         }

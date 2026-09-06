@@ -88,6 +88,19 @@ namespace Opc.Ua.Client.Redundancy.Tests
         }
 
         [Test]
+        public async Task AcquireStartsConsensusWithoutForcingCampaignAsync()
+        {
+            await using var consensus = new RecordingConsensus();
+            await using var election = new RaftLeaderElection(consensus);
+
+            bool acquired = await election.TryAcquireOrRenewAsync().ConfigureAwait(false);
+
+            Assert.That(acquired, Is.True);
+            Assert.That(consensus.StartCount, Is.EqualTo(1));
+            Assert.That(consensus.CampaignCount, Is.Zero);
+        }
+
+        [Test]
         public async Task FollowerIsNotLeaderAsync()
         {
             var cluster = new InProcessRaftCluster();
@@ -186,6 +199,50 @@ namespace Opc.Ua.Client.Redundancy.Tests
 
             public ValueTask CampaignAsync(CancellationToken ct = default)
             {
+                return default;
+            }
+
+            public ValueTask DisposeAsync()
+            {
+                m_committed.Writer.TryComplete();
+                return default;
+            }
+
+            private readonly Channel<ReadOnlyMemory<byte>> m_committed =
+                Channel.CreateUnbounded<ReadOnlyMemory<byte>>();
+        }
+
+        private sealed class RecordingConsensus : IRaftConsensus
+        {
+            public bool IsLeader => StartCount != 0;
+
+            public int StartCount { get; private set; }
+
+            public int CampaignCount { get; private set; }
+
+            public event Action<bool>? LeadershipChanged
+            {
+                add { }
+                remove { }
+            }
+
+            public ChannelReader<ReadOnlyMemory<byte>> Committed => m_committed.Reader;
+
+            public ValueTask StartAsync(CancellationToken ct = default)
+            {
+                ct.ThrowIfCancellationRequested();
+                StartCount++;
+                return default;
+            }
+
+            public ValueTask ProposeAsync(ReadOnlyMemory<byte> command, CancellationToken ct = default)
+            {
+                return default;
+            }
+
+            public ValueTask CampaignAsync(CancellationToken ct = default)
+            {
+                CampaignCount++;
                 return default;
             }
 
