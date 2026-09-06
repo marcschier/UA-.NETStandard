@@ -378,10 +378,12 @@ namespace Opc.Ua.Server
             }
 
             ServerSystemContext context = SystemContext.Copy(new OperationContext(monitoredItem));
+            object previousHandle = sampledMonitoredItem.ManagerHandle;
+            ServiceResult result;
             await m_monitoredItemSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                return await DetachMonitoredItemForLifecycleLockedAsync(
+                result = await DetachMonitoredItemForLifecycleLockedAsync(
                     context,
                     sampledMonitoredItem,
                     lifecycle,
@@ -391,6 +393,16 @@ namespace Opc.Ua.Server
             {
                 m_monitoredItemSemaphore.Release();
             }
+
+            if (ServiceResult.IsGood(result) && previousHandle is NodeHandle handle)
+            {
+                await OnMonitoredItemDetachedAsync(
+                    context,
+                    handle,
+                    sampledMonitoredItem,
+                    cancellationToken).ConfigureAwait(false);
+            }
+            return result;
         }
 
         /// <inheritdoc/>
@@ -398,7 +410,9 @@ namespace Opc.Ua.Server
             IMonitoredItem monitoredItem,
             CancellationToken cancellationToken)
         {
-            return AttachMonitoredItemForLifecycleAsync(monitoredItem, cancellationToken);
+            return AttachMonitoredItemAndNotifyAsync(
+                monitoredItem,
+                cancellationToken);
         }
 
         /// <inheritdoc/>
@@ -406,7 +420,55 @@ namespace Opc.Ua.Server
             IMonitoredItem monitoredItem,
             CancellationToken cancellationToken)
         {
-            return AttachMonitoredItemForLifecycleAsync(monitoredItem, cancellationToken);
+            return AttachMonitoredItemAndNotifyAsync(
+                monitoredItem,
+                cancellationToken);
+        }
+
+        private async ValueTask<ServiceResult> AttachMonitoredItemAndNotifyAsync(
+            IMonitoredItem monitoredItem,
+            CancellationToken cancellationToken)
+        {
+            ServiceResult result = await AttachMonitoredItemForLifecycleAsync(
+                monitoredItem,
+                cancellationToken).ConfigureAwait(false);
+            if (ServiceResult.IsGood(result) &&
+                monitoredItem is ISampledDataChangeMonitoredItem sampled &&
+                sampled.ManagerHandle is NodeHandle handle)
+            {
+                ServerSystemContext context =
+                    SystemContext.Copy(new OperationContext(monitoredItem));
+                await OnMonitoredItemAttachedAsync(
+                    context,
+                    handle,
+                    sampled,
+                    cancellationToken).ConfigureAwait(false);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Called after an existing monitored item attaches to this manager.
+        /// </summary>
+        protected virtual ValueTask OnMonitoredItemAttachedAsync(
+            ServerSystemContext context,
+            NodeHandle handle,
+            ISampledDataChangeMonitoredItem monitoredItem,
+            CancellationToken cancellationToken = default)
+        {
+            return default;
+        }
+
+        /// <summary>
+        /// Called after an existing monitored item detaches from this manager.
+        /// </summary>
+        protected virtual ValueTask OnMonitoredItemDetachedAsync(
+            ServerSystemContext context,
+            NodeHandle handle,
+            ISampledDataChangeMonitoredItem monitoredItem,
+            CancellationToken cancellationToken = default)
+        {
+            return default;
         }
 
         private async ValueTask<ServiceResult> ValidateMonitoredItemForLifecycleAsync(
@@ -4478,6 +4540,39 @@ namespace Opc.Ua.Server
             return null;
         }
 
+        /// <summary>
+        /// Allows a derived manager to handle a history read before the
+        /// historian provider pipeline is consulted.
+        /// </summary>
+        protected virtual bool TryHandleHistoryRead(
+            ISystemContext context,
+            NodeState source,
+            HistoryReadDetails details,
+            TimestampsToReturn timestampsToReturn,
+            bool releaseContinuationPoints,
+            HistoryReadValueId nodeToRead,
+            HistoryReadResult result,
+            out ServiceResult status)
+        {
+            status = ServiceResult.Good;
+            return false;
+        }
+
+        /// <summary>
+        /// Allows a derived manager to handle a history update before the
+        /// historian provider pipeline is consulted.
+        /// </summary>
+        protected virtual bool TryHandleHistoryUpdate(
+            ISystemContext context,
+            NodeState source,
+            HistoryUpdateDetails nodeToUpdate,
+            HistoryUpdateResult result,
+            out ServiceResult status)
+        {
+            status = ServiceResult.Good;
+            return false;
+        }
+
         private IHistorianProvider? ResolveHistorianProvider(NodeState node)
         {
             return HistorianDispatcher.ResolveProvider(Server, node, GetHistorianProvider(node));
@@ -4654,6 +4749,20 @@ namespace Opc.Ua.Server
                     continue;
                 }
 
+                if (TryHandleHistoryRead(
+                    context,
+                    source,
+                    details,
+                    timestampsToReturn,
+                    false,
+                    nodesToRead[handle.Index],
+                    results[handle.Index],
+                    out ServiceResult status))
+                {
+                    errors[handle.Index] = status;
+                    continue;
+                }
+
                 // Route HistoryRead on an Annotations property to the
                 // parent variable's annotation provider (Part 11 §5.2.7).
                 if (HistorianDispatcher.IsAnnotationsProperty(source))
@@ -4733,6 +4842,20 @@ namespace Opc.Ua.Server
                     continue;
                 }
 
+                if (TryHandleHistoryRead(
+                    context,
+                    source,
+                    details,
+                    timestampsToReturn,
+                    false,
+                    nodesToRead[handle.Index],
+                    results[handle.Index],
+                    out ServiceResult status))
+                {
+                    errors[handle.Index] = status;
+                    continue;
+                }
+
                 if (source is not BaseVariableState)
                 {
                     errors[handle.Index] = StatusCodes.BadHistoryOperationUnsupported;
@@ -4789,6 +4912,20 @@ namespace Opc.Ua.Server
                     continue;
                 }
 
+                if (TryHandleHistoryRead(
+                    context,
+                    source,
+                    details,
+                    timestampsToReturn,
+                    false,
+                    nodesToRead[handle.Index],
+                    results[handle.Index],
+                    out ServiceResult status))
+                {
+                    errors[handle.Index] = status;
+                    continue;
+                }
+
                 if (source is not BaseVariableState)
                 {
                     errors[handle.Index] = StatusCodes.BadHistoryOperationUnsupported;
@@ -4838,6 +4975,20 @@ namespace Opc.Ua.Server
                     continue;
                 }
 
+                if (TryHandleHistoryRead(
+                    context,
+                    source,
+                    details,
+                    timestampsToReturn,
+                    false,
+                    nodesToRead[handle.Index],
+                    results[handle.Index],
+                    out ServiceResult status))
+                {
+                    errors[handle.Index] = status;
+                    continue;
+                }
+
                 IHistorianProvider? provider = ResolveHistorianProvider(source);
                 if (provider == null)
                 {
@@ -4871,13 +5022,47 @@ namespace Opc.Ua.Server
             // check if continuation points are being released.
             if (releaseContinuationPoints)
             {
-                await HistoryReleaseContinuationPointsAsync(
-                    context,
-                    nodesToRead,
-                    errors,
-                    nodesToProcess,
-                    cache,
-                    cancellationToken).ConfigureAwait(false);
+                var providerNodes = new List<NodeHandle>(nodesToProcess.Count);
+                foreach (NodeHandle handle in nodesToProcess)
+                {
+                    NodeState source = await ValidateNodeAsync(
+                        context,
+                        handle,
+                        cache,
+                        cancellationToken).ConfigureAwait(false);
+                    if (source == null)
+                    {
+                        continue;
+                    }
+
+                    if (TryHandleHistoryRead(
+                        context,
+                        source,
+                        details,
+                        timestampsToReturn,
+                        true,
+                        nodesToRead[handle.Index],
+                        results[handle.Index],
+                        out ServiceResult status))
+                    {
+                        errors[handle.Index] = status;
+                    }
+                    else
+                    {
+                        providerNodes.Add(handle);
+                    }
+                }
+
+                if (providerNodes.Count > 0)
+                {
+                    await HistoryReleaseContinuationPointsAsync(
+                        context,
+                        nodesToRead,
+                        errors,
+                        providerNodes,
+                        cache,
+                        cancellationToken).ConfigureAwait(false);
+                }
 
                 return;
             }
@@ -5327,6 +5512,17 @@ namespace Opc.Ua.Server
                     continue;
                 }
 
+                if (TryHandleHistoryUpdate(
+                    context,
+                    source,
+                    nodesToUpdate[handle.Index],
+                    results[handle.Index],
+                    out ServiceResult status))
+                {
+                    errors[handle.Index] = status;
+                    continue;
+                }
+
                 if (source is not BaseVariableState)
                 {
                     errors[handle.Index] = StatusCodes.BadHistoryOperationUnsupported;
@@ -5370,6 +5566,17 @@ namespace Opc.Ua.Server
                 NodeState source = await ValidateNodeAsync(context, handle, cache, cancellationToken).ConfigureAwait(false);
                 if (source == null)
                 {
+                    continue;
+                }
+
+                if (TryHandleHistoryUpdate(
+                    context,
+                    source,
+                    nodesToUpdate[handle.Index],
+                    results[handle.Index],
+                    out ServiceResult status))
+                {
+                    errors[handle.Index] = status;
                     continue;
                 }
 
@@ -5451,6 +5658,17 @@ namespace Opc.Ua.Server
                     continue;
                 }
 
+                if (TryHandleHistoryUpdate(
+                    context,
+                    source,
+                    nodesToUpdate[handle.Index],
+                    results[handle.Index],
+                    out ServiceResult status))
+                {
+                    errors[handle.Index] = status;
+                    continue;
+                }
+
                 IHistorianProvider? provider = ResolveHistorianProvider(source);
                 if (provider == null)
                 {
@@ -5483,6 +5701,17 @@ namespace Opc.Ua.Server
                 NodeState source = await ValidateNodeAsync(context, handle, cache, cancellationToken).ConfigureAwait(false);
                 if (source == null)
                 {
+                    continue;
+                }
+
+                if (TryHandleHistoryUpdate(
+                    context,
+                    source,
+                    nodesToUpdate[handle.Index],
+                    results[handle.Index],
+                    out ServiceResult status))
+                {
+                    errors[handle.Index] = status;
                     continue;
                 }
 
@@ -5531,6 +5760,17 @@ namespace Opc.Ua.Server
                     continue;
                 }
 
+                if (TryHandleHistoryUpdate(
+                    context,
+                    source,
+                    nodesToUpdate[handle.Index],
+                    results[handle.Index],
+                    out ServiceResult status))
+                {
+                    errors[handle.Index] = status;
+                    continue;
+                }
+
                 if (source is not BaseVariableState)
                 {
                     errors[handle.Index] = StatusCodes.BadHistoryOperationUnsupported;
@@ -5573,6 +5813,17 @@ namespace Opc.Ua.Server
                 NodeState source = await ValidateNodeAsync(context, handle, cache, cancellationToken).ConfigureAwait(false);
                 if (source == null)
                 {
+                    continue;
+                }
+
+                if (TryHandleHistoryUpdate(
+                    context,
+                    source,
+                    nodesToUpdate[handle.Index],
+                    results[handle.Index],
+                    out ServiceResult status))
+                {
+                    errors[handle.Index] = status;
                     continue;
                 }
 
@@ -6240,6 +6491,7 @@ namespace Opc.Ua.Server
             ServerSystemContext systemContext = SystemContext.Copy();
             IDictionary<NodeId, NodeState> operationCache = new NodeIdDictionary<NodeState>();
             var nodesToValidate = new List<NodeHandle>();
+            var restoredItems = new List<IMonitoredItem>();
 
             for (int ii = 0; ii < itemsToRestore.Count; ii++)
             {
@@ -6313,6 +6565,7 @@ namespace Opc.Ua.Server
 
                         // save the monitored item.
                         monitoredItems[handle.Index] = monitoredItem!;
+                        restoredItems.Add(monitoredItem!);
                         monitoredItem = null; // ownership transferred
                     }
                     finally
@@ -6330,6 +6583,10 @@ namespace Opc.Ua.Server
 
             // do any post processing.
             OnCreateMonitoredItemsComplete(systemContext, monitoredItems);
+            await OnCreateMonitoredItemsCompleteAsync(
+                systemContext,
+                restoredItems,
+                cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -6496,6 +6753,10 @@ namespace Opc.Ua.Server
 
             // do any post processing.
             OnCreateMonitoredItemsComplete(systemContext, createdItems);
+            await OnCreateMonitoredItemsCompleteAsync(
+                systemContext,
+                createdItems,
+                cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -6506,6 +6767,31 @@ namespace Opc.Ua.Server
             IList<IMonitoredItem> monitoredItems)
         {
             // defined by the sub-class
+        }
+
+        /// <summary>
+        /// Called asynchronously after a batch of monitored items has been
+        /// created and committed to the monitored-item manager.
+        /// </summary>
+        protected virtual ValueTask OnCreateMonitoredItemsCompleteAsync(
+            ServerSystemContext context,
+            IList<IMonitoredItem> monitoredItems,
+            CancellationToken cancellationToken = default)
+        {
+            // defined by the sub-class
+            return default;
+        }
+
+        /// <summary>
+        /// Called before the stack creates a data-change monitored item.
+        /// </summary>
+        protected virtual ValueTask<MonitoredItemCreateDecision>
+            OnCreatingMonitoredItemAsync(
+                MonitoredItemCreateContext context,
+                CancellationToken cancellationToken = default)
+        {
+            return new ValueTask<MonitoredItemCreateDecision>(
+                MonitoredItemCreateDecision.UseDefault());
         }
 
         /// <summary>
@@ -6528,6 +6814,24 @@ namespace Opc.Ua.Server
         {
             MonitoringFilterResult? filterResult = null;
             IMonitoredItem? monitoredItem = null;
+
+            var createContext = new MonitoredItemCreateContext(
+                context,
+                handle,
+                subscriptionId,
+                publishingInterval,
+                diagnosticsMasks,
+                timestampsToReturn,
+                itemToCreate,
+                createDurable);
+            MonitoredItemCreateDecision decision =
+                await OnCreatingMonitoredItemAsync(
+                    createContext,
+                    cancellationToken).ConfigureAwait(false);
+            if (decision.Kind == MonitoredItemCreateDecisionKind.Refuse)
+            {
+                return (decision.Error!, filterResult, monitoredItem);
+            }
 
             // validate parameters.
             MonitoringParameters parameters = itemToCreate.RequestedParameters;
@@ -6572,8 +6876,37 @@ namespace Opc.Ua.Server
             bool componentCacheReferenceAdded =
                 m_monitoredItemManager is MonitoredNodeMonitoredItemManager &&
                 !m_monitoredItemManager.MonitoredNodes.ContainsKey(handle.NodeId);
-            ISampledDataChangeMonitoredItem dataChangeMonitoredItem =
-                m_monitoredItemManager.CreateMonitoredItem(
+            ISampledDataChangeMonitoredItem dataChangeMonitoredItem;
+            if (decision.Kind == MonitoredItemCreateDecisionKind.Custom)
+            {
+                if (m_monitoredItemManager is not ICustomMonitoredItemManager customManager)
+                {
+                    return (StatusCodes.BadNotSupported, filterResult, monitoredItem);
+                }
+
+                dataChangeMonitoredItem = customManager.CreateCustomMonitoredItem(
+                    Server,
+                    this,
+                    context,
+                    handle,
+                    subscriptionId,
+                    publishingInterval,
+                    diagnosticsMasks,
+                    timestampsToReturn,
+                    itemToCreate,
+                    validateMonitoringFilterResult.Range,
+                    validateMonitoringFilterResult.FilterToUse,
+                    samplingInterval,
+                    revisedQueueSize,
+                    createDurable,
+                    monitoredItemId,
+                    AddNodeToComponentCache,
+                    RemoveNodeFromComponentCache,
+                    decision.Factory!);
+            }
+            else
+            {
+                dataChangeMonitoredItem = m_monitoredItemManager.CreateMonitoredItem(
                     Server,
                     this,
                     context,
@@ -6590,31 +6923,37 @@ namespace Opc.Ua.Server
                     createDurable,
                     monitoredItemId,
                     AddNodeToComponentCache);
+            }
 
             bool created = false;
             try
             {
-                InitialValueReadResult initialValue =
-                    await ReadInitialValueAsync(
-                        context,
-                        handle,
-                        dataChangeMonitoredItem,
-                        validateMonitoringFilterResult.FilterToUse,
-                        cancellationToken).ConfigureAwait(false);
-                ServiceResult error = initialValue.Error;
-                if (ServiceResult.IsBad(error))
+                ServiceResult error = ServiceResult.Good;
+                if (decision.Kind != MonitoredItemCreateDecisionKind.Custom ||
+                    decision.QueueInitialValue)
                 {
-                    if (initialValue.FailCreation ||
-                        IsFatalInitialReadError(error))
-                    {
-                        DeleteFailedMonitoredItem(
+                    InitialValueReadResult initialValue =
+                        await ReadInitialValueAsync(
                             context,
                             handle,
                             dataChangeMonitoredItem,
-                            componentCacheReferenceAdded);
-                        return (error, filterResult, null);
+                            validateMonitoringFilterResult.FilterToUse,
+                            cancellationToken).ConfigureAwait(false);
+                    error = initialValue.Error;
+                    if (ServiceResult.IsBad(error))
+                    {
+                        if (initialValue.FailCreation ||
+                            IsFatalInitialReadError(error))
+                        {
+                            DeleteFailedMonitoredItem(
+                                context,
+                                handle,
+                                dataChangeMonitoredItem,
+                                componentCacheReferenceAdded);
+                            return (error, filterResult, null);
+                        }
+                        error = StatusCodes.Good;
                     }
-                    error = StatusCodes.Good;
                 }
 
                 if (dataChangeMonitoredItem is
