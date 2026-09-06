@@ -54,6 +54,8 @@ namespace Opc.Ua.Redundancy.Server
             m_store = store ?? throw new ArgumentNullException(nameof(store));
             m_provider = provider ??
                 throw new ArgumentNullException(nameof(provider));
+            // The host registers the selected provider before this task runs.
+            // Retain the constructor parameter for compatibility, including custom providers.
             _ = selectedProvider ??
                 throw new ArgumentNullException(nameof(selectedProvider));
             m_election = election ??
