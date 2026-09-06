@@ -1,3 +1,32 @@
+/* ========================================================================
+ * Copyright (c) 2005-2025 The OPC Foundation, Inc. All rights reserved.
+ *
+ * OPC Foundation MIT License 1.00
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * The complete license agreement can be found here:
+ * http://opcfoundation.org/License/MIT/1.00/
+ * ======================================================================*/
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,6 +35,7 @@ using BenchmarkDotNet.Attributes;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
+using Opc.Ua.Server.Historian;
 using Opc.Ua.Tests;
 
 namespace Opc.Ua.Server.Tests
@@ -180,6 +210,266 @@ namespace Opc.Ua.Server.Tests
             Assert.That(
                 notifications.Select(value => (int)value.Value.WrappedValue),
                 Is.EqualTo(prime ? s_initialThenLive : s_liveThenInitial));
+        }
+
+        [Test]
+        public async Task AggregateInitialValueHandoffKeepsDistinctValuesWithoutSourceTimestampsAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+            using var queueFactory = new MonitoredItemQueueFactory(telemetry);
+            Mock<IServerInternal> serverMock =
+                CreateServerMock(telemetry, queueFactory);
+            using var aggregateManager = new AggregateManager(serverMock.Object);
+            serverMock
+                .Setup(value => value.AggregateManager)
+                .Returns(aggregateManager);
+            serverMock
+                .Setup(value => value.DiagnosticsNodeManager)
+                .Returns(new Mock<IDiagnosticsNodeManager>().Object);
+            var queuedRawValues = new List<int>();
+            var calculator = new Mock<IAggregateCalculator>();
+            calculator
+                .Setup(value => value.QueueRawValue(It.IsAny<DataValue>()))
+                .Callback<DataValue>(
+                    value => queuedRawValues.Add((int)value.WrappedValue))
+                .Returns(true);
+            await aggregateManager.RegisterFactoryAsync(
+                ObjectIds.AggregateFunction_Average,
+                "Average",
+                (id, start, end, interval, stepped, configuration, context) =>
+                    calculator.Object).ConfigureAwait(false);
+            var filter = new ServerAggregateFilter
+            {
+                AggregateType = ObjectIds.AggregateFunction_Average,
+                StartTime = DateTime.UtcNow.AddSeconds(-10),
+                ProcessingInterval = 1000,
+                AggregateConfiguration = new AggregateConfiguration(),
+                PrimeInitialValue = true,
+                HistorianKeySelector = ConstantValueKeySelector.Instance
+            };
+            using var monitoredItem = new MonitoredItem(
+                serverMock.Object,
+                new Mock<IAsyncNodeManager>().Object,
+                null,
+                1,
+                2,
+                new ReadValueId
+                {
+                    NodeId = new NodeId("V", 1),
+                    AttributeId = Attributes.Value
+                },
+                DiagnosticsMasks.All,
+                TimestampsToReturn.Both,
+                MonitoringMode.Reporting,
+                3,
+                filter,
+                filter,
+                null,
+                0,
+                10,
+                discardOldest: false,
+                sourceSamplingInterval: 0);
+            var serverTimestamp =
+                new DateTime(2026, 9, 5, 8, 0, 0, DateTimeKind.Utc);
+            var historical = new DataValue(
+                new Variant(1),
+                StatusCodes.Good,
+                DateTimeUtc.MinValue,
+                serverTimestamp);
+            DataValue duplicateLive = historical.Copy();
+            var distinctLive = new DataValue(
+                new Variant(2),
+                StatusCodes.Good,
+                DateTimeUtc.MinValue,
+                serverTimestamp);
+
+            monitoredItem.QueueValue(duplicateLive, ServiceResult.Good);
+            monitoredItem.QueueValue(distinctLive, ServiceResult.Good);
+            ((IInitialValueMonitoredItem)monitoredItem).QueueInitialValue(
+                historical,
+                ServiceResult.Good,
+                ignoreFilters: false);
+            ServiceResult completion =
+                ((IInitialValueMonitoredItem)monitoredItem)
+                    .CompleteInitialValue();
+
+            Assert.That(ServiceResult.IsGood(completion), Is.True);
+            Assert.That(queuedRawValues, Is.EqualTo(s_initialThenLive));
+        }
+
+        [Test]
+        public async Task AggregateInitialValueHandoffUsesStructuredCompositeIdentityAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+            using var queueFactory = new MonitoredItemQueueFactory(telemetry);
+            Mock<IServerInternal> serverMock =
+                CreateServerMock(telemetry, queueFactory);
+            using var aggregateManager = new AggregateManager(serverMock.Object);
+            serverMock
+                .Setup(value => value.AggregateManager)
+                .Returns(aggregateManager);
+            serverMock
+                .Setup(value => value.DiagnosticsNodeManager)
+                .Returns(new Mock<IDiagnosticsNodeManager>().Object);
+            var queuedRawValues = new List<int>();
+            var calculator = new Mock<IAggregateCalculator>();
+            calculator
+                .Setup(value => value.QueueRawValue(It.IsAny<DataValue>()))
+                .Callback<DataValue>(
+                    value => queuedRawValues.Add((int)value.WrappedValue))
+                .Returns(true);
+            await aggregateManager.RegisterFactoryAsync(
+                ObjectIds.AggregateFunction_Average,
+                "Average",
+                (id, start, end, interval, stepped, configuration, context) =>
+                    calculator.Object).ConfigureAwait(false);
+            var filter = new ServerAggregateFilter
+            {
+                AggregateType = ObjectIds.AggregateFunction_Average,
+                StartTime = DateTime.UtcNow.AddSeconds(-10),
+                ProcessingInterval = 1000,
+                AggregateConfiguration = new AggregateConfiguration(),
+                PrimeInitialValue = true,
+                HistorianKeySelector = Int32ValueKeySelector.Instance
+            };
+            using var monitoredItem = new MonitoredItem(
+                serverMock.Object,
+                new Mock<IAsyncNodeManager>().Object,
+                null,
+                1,
+                2,
+                new ReadValueId
+                {
+                    NodeId = new NodeId("V", 1),
+                    AttributeId = Attributes.Value
+                },
+                DiagnosticsMasks.All,
+                TimestampsToReturn.Both,
+                MonitoringMode.Reporting,
+                3,
+                filter,
+                filter,
+                null,
+                0,
+                10,
+                discardOldest: false,
+                sourceSamplingInterval: 0);
+            DateTime timestamp =
+                new(2026, 9, 5, 8, 0, 0, DateTimeKind.Utc);
+            var historical = new DataValue(
+                Variant.From(1),
+                StatusCodes.Good,
+                timestamp,
+                timestamp);
+
+            monitoredItem.QueueValue(
+                historical.Copy(),
+                ServiceResult.Good);
+            monitoredItem.QueueValue(
+                new DataValue(
+                    Variant.From(2),
+                    StatusCodes.Good,
+                    timestamp,
+                    timestamp),
+                ServiceResult.Good);
+            ((IInitialValueMonitoredItem)monitoredItem).QueueInitialValue(
+                historical,
+                ServiceResult.Good,
+                ignoreFilters: false);
+            ServiceResult completion =
+                ((IInitialValueMonitoredItem)monitoredItem)
+                    .CompleteInitialValue();
+
+            Assert.That(ServiceResult.IsGood(completion), Is.True);
+            Assert.That(queuedRawValues, Is.EqualTo(s_initialThenLive));
+        }
+
+        [Test]
+        public async Task AggregateInitialValueHandoffMatchesDeepCopiedValuesWithoutSourceTimestampsAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+            using var queueFactory = new MonitoredItemQueueFactory(telemetry);
+            Mock<IServerInternal> serverMock =
+                CreateServerMock(telemetry, queueFactory);
+            using var aggregateManager = new AggregateManager(serverMock.Object);
+            serverMock
+                .Setup(value => value.AggregateManager)
+                .Returns(aggregateManager);
+            serverMock
+                .Setup(value => value.DiagnosticsNodeManager)
+                .Returns(new Mock<IDiagnosticsNodeManager>().Object);
+            var queuedRawValues = new List<DataValue>();
+            var calculator = new Mock<IAggregateCalculator>();
+            calculator
+                .Setup(value => value.QueueRawValue(It.IsAny<DataValue>()))
+                .Callback<DataValue>(queuedRawValues.Add)
+                .Returns(true);
+            await aggregateManager.RegisterFactoryAsync(
+                ObjectIds.AggregateFunction_Average,
+                "Average",
+                (id, start, end, interval, stepped, configuration, context) =>
+                    calculator.Object).ConfigureAwait(false);
+            var filter = new ServerAggregateFilter
+            {
+                AggregateType = ObjectIds.AggregateFunction_Average,
+                StartTime = DateTime.UtcNow.AddSeconds(-10),
+                ProcessingInterval = 1000,
+                AggregateConfiguration = new AggregateConfiguration(),
+                PrimeInitialValue = true
+            };
+            using var monitoredItem = new MonitoredItem(
+                serverMock.Object,
+                new Mock<IAsyncNodeManager>().Object,
+                null,
+                1,
+                2,
+                new ReadValueId
+                {
+                    NodeId = new NodeId("V", 1),
+                    AttributeId = Attributes.Value
+                },
+                DiagnosticsMasks.All,
+                TimestampsToReturn.Both,
+                MonitoringMode.Reporting,
+                3,
+                filter,
+                filter,
+                null,
+                0,
+                10,
+                discardOldest: false,
+                sourceSamplingInterval: 0);
+            var pair = new KeyValuePair
+            {
+                Key = new QualifiedName("A"),
+                Value = Variant.From(1)
+            };
+            var historical = new DataValue(
+                Variant.From(new ExtensionObject(pair)),
+                StatusCodes.Good);
+            DataValue duplicateLive = historical.Copy();
+            var distinctLive = new DataValue(
+                Variant.From(new ExtensionObject(new KeyValuePair
+                {
+                    Key = new QualifiedName("B"),
+                    Value = Variant.From(2)
+                })),
+                StatusCodes.Good);
+
+            monitoredItem.QueueValue(duplicateLive, ServiceResult.Good);
+            monitoredItem.QueueValue(distinctLive, ServiceResult.Good);
+            ((IInitialValueMonitoredItem)monitoredItem).QueueInitialValue(
+                historical,
+                ServiceResult.Good,
+                ignoreFilters: false);
+            ServiceResult completion =
+                ((IInitialValueMonitoredItem)monitoredItem)
+                    .CompleteInitialValue();
+
+            Assert.That(ServiceResult.IsGood(completion), Is.True);
+            Assert.That(queuedRawValues, Has.Count.EqualTo(2));
+            Assert.That(queuedRawValues[0], Is.EqualTo(historical));
+            Assert.That(queuedRawValues[1], Is.EqualTo(distinctLive));
         }
 
         [Test]
@@ -1023,6 +1313,45 @@ namespace Opc.Ua.Server.Tests
             serverMock.Setup(s => s.TypeTree).Returns(new TypeTable(new NamespaceTable()));
             serverMock.Setup(s => s.MonitoredItemQueueFactory).Returns(queueFactory);
             return serverMock;
+        }
+
+        private sealed class Int32ValueKeySelector :
+            IHistorianStructuredDataKeySelector
+        {
+            public static Int32ValueKeySelector Instance { get; } = new();
+
+            public ArrayOf<QualifiedName> UniquenessFields { get; } =
+                [new QualifiedName("Value")];
+
+            public bool TryGetUniquenessKey(
+                in DataValue value,
+                out ByteString uniquenessKey)
+            {
+                if (!value.WrappedValue.TryGetValue(out int key))
+                {
+                    uniquenessKey = ByteString.Empty;
+                    return false;
+                }
+                uniquenessKey = ByteString.From(BitConverter.GetBytes(key));
+                return true;
+            }
+        }
+
+        private sealed class ConstantValueKeySelector :
+            IHistorianStructuredDataKeySelector
+        {
+            public static ConstantValueKeySelector Instance { get; } = new();
+
+            public ArrayOf<QualifiedName> UniquenessFields { get; } =
+                [new QualifiedName("Value")];
+
+            public bool TryGetUniquenessKey(
+                in DataValue value,
+                out ByteString uniquenessKey)
+            {
+                uniquenessKey = ByteString.From([1]);
+                return true;
+            }
         }
     }
 }

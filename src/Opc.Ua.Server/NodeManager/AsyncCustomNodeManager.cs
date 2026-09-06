@@ -787,12 +787,10 @@ namespace Opc.Ua.Server
         internal void ReplaceMonitoredItemManager(
             IMonitoredItemManager monitoredItemManager)
         {
-            if (monitoredItemManager == null)
-            {
+            IMonitoredItemManager replacement = monitoredItemManager ??
                 throw new ArgumentNullException(nameof(monitoredItemManager));
-            }
             m_monitoredItemManager.Dispose();
-            m_monitoredItemManager = monitoredItemManager;
+            m_monitoredItemManager = replacement;
         }
 
         /// <inheritdoc/>
@@ -2300,12 +2298,9 @@ namespace Opc.Ua.Server
             }
 
             node.CreateAsPredefinedNode(context);
-            if (m_logger != null)
-            {
-                m_logger.PredefinedNodeLifecycleCompletedAtRegistration(
-                    node.NodeId,
-                    node.BrowseName);
-            }
+            m_logger?.PredefinedNodeLifecycleCompletedAtRegistration(
+                node.NodeId,
+                node.BrowseName);
         }
 
         /// <summary>
@@ -6810,9 +6805,11 @@ namespace Opc.Ua.Server
                                 historicalValue.Value);
                         if (IsFatalInitialReadError(valueError))
                         {
-                            return new InitialValueReadResult(
+                            return QueueInitialHistoryFailure(
+                                monitoredItem,
+                                utcNow,
                                 valueError,
-                                FailCreation: true);
+                                failCreation: true);
                         }
                         QueueInitialValue(
                             monitoredItem,
@@ -6927,7 +6924,8 @@ namespace Opc.Ua.Server
         private static InitialValueReadResult QueueInitialHistoryFailure(
             IDataChangeMonitoredItem2 monitoredItem,
             DateTimeUtc serverTimestamp,
-            ServiceResult error)
+            ServiceResult error,
+            bool failCreation = false)
         {
             var value = new DataValue(
                 Variant.Null,
@@ -6939,7 +6937,7 @@ namespace Opc.Ua.Server
                 value,
                 error,
                 ignoreFilters: true);
-            return new InitialValueReadResult(error);
+            return new InitialValueReadResult(error, failCreation);
         }
 
         private static void QueueInitialValue(
@@ -7303,6 +7301,8 @@ namespace Opc.Ua.Server
             IHistorianProvider? provider = ResolveHistorianProvider(handle.Node);
             filterToUse.HistorianProvider = null;
             filterToUse.HistorianCapabilities = null;
+            filterToUse.HistorianKeySelector =
+                TimestampStructuredDataKeySelector.Instance;
             if (provider == null)
             {
                 if (filterToUse.ProcessingInterval < samplingInterval)
@@ -7362,6 +7362,29 @@ namespace Opc.Ua.Server
             }
             filterToUse.HistorianProvider = provider;
             filterToUse.HistorianCapabilities = capabilities;
+            if (provider is IHistorianStructuredDataProvider structuredProvider)
+            {
+                try
+                {
+                    filterToUse.HistorianKeySelector = await structuredProvider
+                        .GetKeySelectorAsync(
+                            handle.NodeId,
+                            cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                catch (ServiceResultException exception)
+                {
+                    return exception.StatusCode;
+                }
+                catch (TimeoutException)
+                {
+                    return StatusCodes.BadTimeout;
+                }
+                catch (IOException)
+                {
+                    return StatusCodes.BadCommunicationError;
+                }
+            }
             double providerInterval =
                 GetHistorianAggregateInterval(capabilities);
             filterToUse.Stepped = capabilities.Stepped;
@@ -7503,7 +7526,6 @@ namespace Opc.Ua.Server
                         modifiedItems.Add(monitoredItems[ii]);
                     }
                 }
-
             }
             finally
             {
@@ -7674,22 +7696,15 @@ namespace Opc.Ua.Server
 
                 if (aggregateFilter is { PrimeInitialValue: true })
                 {
-                    ServiceResult primingError = ServiceResult.Good;
+                    // The modification is committed; priming failures are reported through the item.
                     try
                     {
-                        InitialValueReadResult initialValue =
-                            await ReadInitialValueAsync(
+                        _ = await ReadInitialValueAsync(
                                 context,
                                 handle,
                                 datachangeItem,
                                 aggregateFilter,
                                 cancellationToken).ConfigureAwait(false);
-                        if (ServiceResult.IsBad(initialValue.Error) &&
-                            (initialValue.FailCreation ||
-                                IsFatalInitialReadError(initialValue.Error)))
-                        {
-                            primingError = initialValue.Error;
-                        }
                     }
                     finally
                     {
@@ -7697,14 +7712,9 @@ namespace Opc.Ua.Server
                             aggregateFilter);
                         prevalidationRegistered = false;
                         initialValueCompleted = true;
-                        ServiceResult completion =
-                            CompleteInitialValuePriming(datachangeItem);
-                        if (ServiceResult.IsBad(completion))
-                        {
-                            primingError = completion;
-                        }
+                        _ = CompleteInitialValuePriming(datachangeItem);
                     }
-                    error = primingError;
+                    error = ServiceResult.Good;
                 }
 
                 // report change after buffered live values have been released.
@@ -8655,7 +8665,12 @@ namespace Opc.Ua.Server
         /// </summary>
         protected IMonitoredItemManager m_monitoredItemManager;
         private readonly ConditionalWeakTable<ServerAggregateFilter, object>
-            m_prevalidatedInitialValueRequests = new();
+            m_prevalidatedInitialValueRequests =
+#if NETFRAMEWORK || NETSTANDARD2_0
+                new();
+#else
+                [];
+#endif
         private List<LocalReference> m_removedExternalReferences = [];
         private bool m_disposed;
         /// <summary>

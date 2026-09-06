@@ -46,5 +46,7 @@ namespace Opc.Ua.Server
         internal IHistorianProvider? HistorianProvider { get; set; }
 
         internal HistorianNodeCapabilities? HistorianCapabilities { get; set; }
+
+        internal IHistorianStructuredDataKeySelector? HistorianKeySelector { get; set; }
     }
 }

@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using Microsoft.Extensions.Logging;
+using Opc.Ua.Server.Historian;
 
 namespace Opc.Ua.Server
 {
@@ -199,6 +200,9 @@ namespace Opc.Ua.Server
             m_calculator = null;
             m_initialValuePending =
                 filterToUse is ServerAggregateFilter { PrimeInitialValue: true };
+            m_initialValueKeySelector =
+                (filterToUse as ServerAggregateFilter)?.HistorianKeySelector ??
+                TimestampStructuredDataKeySelector.Instance;
             m_nextSamplingTime = m_timeProvider.GetTimestampMilliseconds();
             AlwaysReportUpdates = false;
             m_monitoredItemQueueFactory = m_server.MonitoredItemQueueFactory;
@@ -322,7 +326,7 @@ namespace Opc.Ua.Server
             m_lastError = storedMonitoredItem.LastError;
             m_lastValue = storedMonitoredItem.LastValue;
             MonitoredItemType = storedMonitoredItem.TypeMask;
-            IStoredMonitoredItemNotificationState? notificationState =
+            var notificationState =
                 storedMonitoredItem as IStoredMonitoredItemNotificationState;
 
             // without this the first transition out of filter scope after a restart is
@@ -693,9 +697,10 @@ namespace Opc.Ua.Server
         }
 
         /// <summary>
-        /// Gets the handle a detached MonitoredItem is parked on.
+        /// Gets the handle a detached MonitoredItem is parked on. It is a shared sentinel, because a
+        /// detached item has no real Node behind it until it is attached again.
         /// </summary>
-        internal static object DetachedHandle => s_detachedHandle;
+        internal static object DetachedHandle { get; } = new();
 
         /// <inheritdoc/>
         void IDetachableMonitoredItem.QueueNodeIdUnknown()
@@ -720,7 +725,7 @@ namespace Opc.Ua.Server
                 ManagerHandle = managerHandle;
                 m_isDetached = false;
                 m_isDeleted = false;
-                }
+            }
         }
 
         /// <summary>
@@ -1031,6 +1036,11 @@ namespace Opc.Ua.Server
                             PrimeInitialValue: true
                         };
                     m_pendingValues = null;
+                    m_initialValueKeys = null;
+                    m_initialValuesWithoutSourceTimestamp = null;
+                    m_initialValueKeySelector =
+                        (filterToUse as ServerAggregateFilter)?.HistorianKeySelector ??
+                        TimestampStructuredDataKeySelector.Instance;
                     m_initialValueOverflowed = false;
                     if (preparedCalculatorUsed)
                     {
@@ -1266,8 +1276,14 @@ namespace Opc.Ua.Server
             lock (m_lock)
             {
                 List<PendingValue>? pendingValues = m_pendingValues;
+                HashSet<HistoricalValueKey>? initialValueKeys =
+                    m_initialValueKeys;
+                List<DataValue>? initialValuesWithoutSourceTimestamp =
+                    m_initialValuesWithoutSourceTimestamp;
                 bool initialValueOverflowed = m_initialValueOverflowed;
                 m_pendingValues = null;
+                m_initialValueKeys = null;
+                m_initialValuesWithoutSourceTimestamp = null;
                 m_initialValuePending = false;
                 m_initialValueOverflowed = false;
 
@@ -1280,11 +1296,35 @@ namespace Opc.Ua.Server
                 {
                     foreach (PendingValue pending in pendingValues)
                     {
+                        DataValue pendingValue = pending.Value;
+                        if (!pendingValue.IsNull &&
+                            pending.Error != null &&
+                            pending.Error.StatusCode.Code != 0)
+                        {
+                            pendingValue = pendingValue.WithStatus(
+                                pending.Error.StatusCode);
+                        }
+                        // A source timestamp identifies an archived sample. Without one,
+                        // require the complete DataValue to match before dropping live data.
+                        bool alreadyRepresented = ServiceResult.IsGood(
+                            pending.Error) &&
+                            (TryGetInitialValueKey(
+                                in pendingValue,
+                                out HistoricalValueKey key)
+                                ? initialValueKeys?.Contains(key) == true
+                                : initialValuesWithoutSourceTimestamp?.Exists(
+                                    candidate =>
+                                        candidate.Equals(pendingValue)) == true);
+                        if (alreadyRepresented)
+                        {
+                            continue;
+                        }
                         QueueValueLocked(
                             pending.Value,
                             pending.Error,
                             pending.IgnoreFilters,
-                            required: false);
+                            required: false,
+                            initialValue: false);
                     }
                 }
                 return ServiceResult.Good;
@@ -1334,7 +1374,8 @@ namespace Opc.Ua.Server
                     value,
                     error,
                     ignoreFilters,
-                    required: initialValue && ServiceResult.IsBad(error));
+                    required: initialValue && ServiceResult.IsBad(error),
+                    initialValue: initialValue);
             }
         }
 
@@ -1342,7 +1383,8 @@ namespace Opc.Ua.Server
             in DataValue value,
             ServiceResult? error,
             bool ignoreFilters,
-            bool required)
+            bool required,
+            bool initialValue)
         {
             DataValue current = value;
 
@@ -1398,7 +1440,25 @@ namespace Opc.Ua.Server
             // apply aggregate filter.
             if (m_calculator != null && !ServiceResult.IsBad(error))
             {
-                if (!m_calculator.QueueRawValue(current) &&
+                bool accepted = m_calculator.QueueRawValue(current);
+                if (accepted &&
+                    initialValue &&
+                    m_initialValuePending)
+                {
+                    if (TryGetInitialValueKey(
+                        in current,
+                        out HistoricalValueKey key))
+                    {
+                        (m_initialValueKeys ??= []).Add(key);
+                    }
+                    else
+                    {
+                        (m_initialValuesWithoutSourceTimestamp ??= [])
+                            .Add(current);
+                    }
+                }
+
+                if (!accepted &&
                     m_logger.IsEnabled(LogLevel.Trace))
                 {
                     m_logger.ValueReceivedOutOfOrderSourceTimestampServerHandle(
@@ -1428,6 +1488,31 @@ namespace Opc.Ua.Server
 
             // add the value to the queue.
             AddValueToQueue(current, error!);
+        }
+
+        private bool TryGetInitialValueKey(
+            in DataValue value,
+            out HistoricalValueKey key)
+        {
+            if (value.SourceTimestamp == DateTimeUtc.MinValue)
+            {
+                key = default;
+                return false;
+            }
+            IHistorianStructuredDataKeySelector selector =
+                m_initialValueKeySelector ??
+                TimestampStructuredDataKeySelector.Instance;
+            if (!selector.TryGetUniquenessKey(
+                    in value,
+                    out ByteString uniquenessKey))
+            {
+                key = default;
+                return false;
+            }
+            key = new HistoricalValueKey(
+                value.SourceTimestamp,
+                uniquenessKey);
+            return true;
         }
 
         private void AddRequiredValueToQueue(
@@ -2117,7 +2202,6 @@ namespace Opc.Ua.Server
             return false;
         }
 
-
         /// <summary>
         /// The object to call when item is ready to publish.
         /// </summary>
@@ -2252,16 +2336,6 @@ namespace Opc.Ua.Server
                 StatusCodes.BadNodeIdUnknown,
                 utcNow,
                 utcNow);
-        }
-
-        private static bool IsBadNodeIdUnknown(in DataValue value, ServiceResult? error)
-        {
-            if (error?.StatusCode.Code == StatusCodes.BadNodeIdUnknown.Code)
-            {
-                return true;
-            }
-
-            return !value.IsNull && value.StatusCode.Code == StatusCodes.BadNodeIdUnknown.Code;
         }
 
         /// <summary>
@@ -2707,21 +2781,20 @@ namespace Opc.Ua.Server
         private ISubscription? m_subscription;
         private ServiceResult? m_samplingError;
         private IAggregateCalculator? m_calculator;
+
         private AggregateModificationPreparation?
             m_aggregateModificationPreparation;
+
         private bool m_initialValuePending;
         private List<PendingValue>? m_pendingValues;
+        private HashSet<HistoricalValueKey>? m_initialValueKeys;
+        private List<DataValue>? m_initialValuesWithoutSourceTimestamp;
+        private IHistorianStructuredDataKeySelector? m_initialValueKeySelector;
         private bool m_initialValueOverflowed;
         private bool m_triggered;
         private bool m_resendData;
         private HashSet<string>? m_filteredRetainConditionIds;
         private bool m_isDetached;
-
-        /// <summary>
-        /// The handle a detached MonitoredItem is parked on. It is a shared sentinel, because a
-        /// detached item has no real Node behind it until it is attached again.
-        /// </summary>
-        private static readonly object s_detachedHandle = new();
         private bool m_isDeleted;
 
         private const int kMaxPendingInitialValues = 100_000;
@@ -2819,5 +2892,4 @@ namespace Opc.Ua.Server
             uint id,
             uint subscriptionId);
     }
-
 }
