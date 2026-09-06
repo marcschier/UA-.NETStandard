@@ -153,6 +153,22 @@ namespace Opc.Ua.Core.Tests.Redundancy
         }
 
         [Test]
+        public async Task CompareAndSwapDeletesWhenReplacementIsNullAsync()
+        {
+            using var store = new InMemorySharedKeyValueStore();
+            await store.SetAsync("key", s_valueA).ConfigureAwait(false);
+
+            bool swapped = await store.CompareAndSwapAsync(
+                "key",
+                s_valueA,
+                default).ConfigureAwait(false);
+
+            Assert.That(swapped, Is.True);
+            (bool found, _) = await store.TryGetAsync("key").ConfigureAwait(false);
+            Assert.That(found, Is.False);
+        }
+
+        [Test]
         public async Task CompareAndSwapFailsWhenExpectedDiffersAsync()
         {
             using var store = new InMemorySharedKeyValueStore();

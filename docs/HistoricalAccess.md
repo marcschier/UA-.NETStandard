@@ -524,6 +524,19 @@ failures restore the original continuation so the client can retry the same
 identifier. A successful page retires the old identifier, preserving
 single-use semantics.
 
+The shared continuation store gives each persisted envelope a distinct
+incarnation. Deferred cleanup conditionally deletes only that exact protected
+record, so a delayed cleanup cannot delete a restored continuation with the
+same identifier. Indeterminate save failures schedule the same conditional
+cleanup whether they were creating a record or replacing a claim marker.
+
+The asynchronous release path claims the portable record before acknowledging
+release. Synchronous session teardown only schedules cleanup and is not a
+crash-durable acknowledgement. Orderly store disposal drains queued cleanup
+within a bounded grace period, then cancels outstanding work and reports the
+timeout through diagnostics. Retained envelopes are subject to the store's
+expiration checks when loaded or claimed.
+
 A typical token encoding is the next sample's timestamp:
 
 ```csharp

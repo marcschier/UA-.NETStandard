@@ -109,6 +109,32 @@ namespace Opc.Ua.Server.Tests.Redundancy
         }
 
         [Test]
+        public async Task CompareAndSwapDeletesWhenReplacementIsNullAsync()
+        {
+            await using var store = new RaftSharedKeyValueStore();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var value = ByteString.From(new byte[] { 1 });
+            await store.SetAsync("k", value, cts.Token).ConfigureAwait(false);
+            await using IAsyncEnumerator<KeyValueChange> enumerator =
+                store.WatchAsync("k", cts.Token).GetAsyncEnumerator();
+            ValueTask<bool> next = enumerator.MoveNextAsync();
+
+            bool deleted = await store.CompareAndSwapAsync(
+                "k",
+                value,
+                default,
+                cts.Token).ConfigureAwait(false);
+            (bool found, _) = await store.TryGetAsync("k")
+                .ConfigureAwait(false);
+
+            Assert.That(deleted, Is.True);
+            Assert.That(found, Is.False);
+            Assert.That(await next.ConfigureAwait(false), Is.True);
+            Assert.That(enumerator.Current.Kind, Is.EqualTo(KeyValueChangeKind.Delete));
+            Assert.That(enumerator.Current.Key, Is.EqualTo("k"));
+        }
+
+        [Test]
         public async Task CompareAndSwapFailsWhenValueMismatchAsync()
         {
             await using var store = new RaftSharedKeyValueStore();
@@ -514,10 +540,13 @@ namespace Opc.Ua.Server.Tests.Redundancy
 
             private readonly Channel<ReadOnlyMemory<byte>> m_proposed =
                 Channel.CreateUnbounded<ReadOnlyMemory<byte>>();
+
             private readonly Channel<ReadOnlyMemory<byte>> m_committed =
                 Channel.CreateUnbounded<ReadOnlyMemory<byte>>();
+
             private TaskCompletionSource<bool> m_canPropose =
                 new(TaskCreationOptions.RunContinuationsAsynchronously);
+
             private bool m_isLeader = true;
         }
 

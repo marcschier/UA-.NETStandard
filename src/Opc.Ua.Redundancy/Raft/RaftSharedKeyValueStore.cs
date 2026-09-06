@@ -502,8 +502,28 @@ namespace Opc.Ua.Redundancy
                         bool matches = expected.IsNull ? !present : present && current.Equals(expected);
                         if (matches)
                         {
-                            m_state[key] = value;
-                            change = new KeyValueChange { Kind = KeyValueChangeKind.Set, Key = key, Value = value };
+                            if (value.IsNull)
+                            {
+                                if (present)
+                                {
+                                    m_state.Remove(key);
+                                    change = new KeyValueChange
+                                    {
+                                        Kind = KeyValueChangeKind.Delete,
+                                        Key = key
+                                    };
+                                }
+                            }
+                            else
+                            {
+                                m_state[key] = value;
+                                change = new KeyValueChange
+                                {
+                                    Kind = KeyValueChangeKind.Set,
+                                    Key = key,
+                                    Value = value
+                                };
+                            }
                             result = true;
                         }
                         break;
