@@ -931,7 +931,7 @@ adopted verbatim rather than maintained by hand.
 
 | Model | Version | PublicationDate |
 |---|---|---|
-| WoT Connectivity | `1.1.1` | 2026-09-03 |
+| WoT Connectivity | `1.1` | 2026-09-03 |
 | WoT Binding | `1.1` | 2026-07-29 |
 | xRegistry (`RequiredModel`) | `0.5.0` | 2026-09-03 |
 

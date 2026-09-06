@@ -167,7 +167,7 @@ namespace Opc.Ua.WotCon.Tests.Materialization
             Assert.That(closures, Has.Length.EqualTo(1));
             Assert.That(
                 closures[0].OrderedResources.Select(r => r.ResourceId),
-                Is.EqualTo(new[] { "events", "td" }).AsCollection,
+                Is.EqualTo(s_stringValues1).AsCollection,
                 "A consumer resolves the reference against the documents it holds, so the " +
                 "definition is materialized before the document that names it.");
         }
@@ -257,5 +257,7 @@ namespace Opc.Ua.WotCon.Tests.Materialization
             Assert.That(closures[0].Members, Has.Length.EqualTo(2),
                 "A cyclic closure must still report its members for diagnostics.");
         }
+
+        private static readonly string[] s_stringValues1 = ["events", "td"];
     }
 }
