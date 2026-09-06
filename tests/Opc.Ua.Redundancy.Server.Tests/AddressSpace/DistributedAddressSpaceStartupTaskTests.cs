@@ -120,6 +120,48 @@ namespace Opc.Ua.Server.Tests.Redundancy
         }
 
         [Test]
+        public async Task DoesNotReplicateReplicaLocalDiagnosticsAsync()
+        {
+            ITelemetryContext telemetry = NUnitTelemetryContext.Create();
+            var messageContext = ServiceMessageContext.CreateEmpty(telemetry);
+            var systemContext = new SystemContext(telemetry)
+            {
+                NamespaceUris = messageContext.NamespaceUris,
+                ServerUris = messageContext.ServerUris,
+                EncodeableFactory = messageContext.Factory
+            };
+            var addressSpace = new DictionaryAddressSpace(systemContext);
+            await addressSpace.AddOrUpdateNodeAsync(new BaseObjectState(null)
+            {
+                NodeId = ObjectIds.Server,
+                BrowseName = new QualifiedName(BrowseNames.Server),
+                DisplayName = new LocalizedText("Server")
+            }).ConfigureAwait(false);
+            var nodeManager = new Mock<IDiagnosticsNodeManager>();
+            Mock<ILocalAddressSpaceSource> source = nodeManager.As<ILocalAddressSpaceSource>();
+            source.Setup(value => value.CreateLocalAddressSpace()).Returns(addressSpace);
+            var server = new Mock<IServerInternal>();
+            server.Setup(value => value.Telemetry).Returns(telemetry);
+            server.Setup(value => value.MessageContext).Returns(messageContext);
+            server.Setup(value => value.NamespaceUris).Returns(messageContext.NamespaceUris);
+            server.Setup(value => value.DefaultSystemContext).Returns(new ServerSystemContext(server.Object));
+            server.Setup(value => value.FindNodeManagers<ILocalAddressSpaceSource>()).Returns([source.Object]);
+            using var keyValueStore = new InMemorySharedKeyValueStore();
+            await using var startup = new DistributedAddressSpaceStartupTask(
+                keyValueStore,
+                new StaticLeaderElection(true));
+
+            await startup.OnServerStartedAsync(server.Object).ConfigureAwait(false);
+
+            using var store = new InMemoryNodeStateStore(keyValueStore, messageContext);
+            Assert.That(
+                await store.TryGetNodeAsync(ObjectIds.Server).ConfigureAwait(false),
+                Is.Null,
+                "Replica-local diagnostics and configuration must never enter the shared address space.");
+            source.Verify(value => value.CreateLocalAddressSpace(), Times.Never);
+        }
+
+        [Test]
         public void ConstructorThrowsOnNullArguments()
         {
             using var kv = new InMemorySharedKeyValueStore();
