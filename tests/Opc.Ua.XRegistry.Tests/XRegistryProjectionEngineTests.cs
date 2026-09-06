@@ -1913,10 +1913,11 @@ namespace Opc.Ua.XRegistry.Tests
             // In the hierarchical model, version nodes are children of a
             // ResourceVersionsState folder. Filter to nodes whose parent is
             // a ResourceVersionsState to avoid matching the logical Resource node.
-            IEnumerable<ResourceState> candidates = harness.Added
+            List<ResourceState> candidates = harness.Added
                 .OfType<ResourceState>()
                 .Where(node =>
-                    string.Equals(node.VersionId?.Value, versionId, StringComparison.Ordinal));
+                    string.Equals(node.VersionId?.Value, versionId, StringComparison.Ordinal))
+                .ToList();
 
             ResourceState? versionChild = candidates
                 .FirstOrDefault(node => node.Parent is ResourceVersionsState);
