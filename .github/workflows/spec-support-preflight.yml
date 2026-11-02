@@ -1,5 +1,5 @@
 name: Unfiltered solution preflight
-run-name: PackML at 1f27ccbac365f59f3100e24d2841d2d2c605e6e3
+run-name: Base Network at 10261eeef1043cd2f786eee2bc9b1d5be8c55ab1
 
 on:
   push:
@@ -15,7 +15,7 @@ env:
 
 jobs:
   solution:
-    name: PackML ${{ matrix.framework }}
+    name: Base Network ${{ matrix.framework }}
     runs-on: windows-latest
     timeout-minutes: 360
     strategy:
@@ -31,7 +31,7 @@ jobs:
       uses: actions/checkout@v7
       with:
         repository: OPCFoundation/UA-.NETStandard
-        ref: 1f27ccbac365f59f3100e24d2841d2d2c605e6e3
+        ref: 10261eeef1043cd2f786eee2bc9b1d5be8c55ab1
         fetch-depth: 0
         persist-credentials: false
 
@@ -39,8 +39,8 @@ jobs:
       shell: pwsh
       run: |
         $actual = (& git rev-parse HEAD).Trim()
-        if ($actual -ne '1f27ccbac365f59f3100e24d2841d2d2c605e6e3') {
-            throw "Checked out $actual, expected 1f27ccbac365f59f3100e24d2841d2d2c605e6e3."
+        if ($actual -ne '10261eeef1043cd2f786eee2bc9b1d5be8c55ab1') {
+            throw "Checked out $actual, expected 10261eeef1043cd2f786eee2bc9b1d5be8c55ab1."
         }
         Write-Host "Testing OPCFoundation/UA-.NETStandard at $actual."
 
@@ -90,6 +90,6 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v7
       with:
-        name: PackML-${{ matrix.framework }}-trx
+        name: Base Network-${{ matrix.framework }}-trx
         path: D:\temp\solution-results
         if-no-files-found: warn
