@@ -1,0 +1,95 @@
+name: Unfiltered solution preflight
+run-name: Base Network at c71e494935985237451a64e6e6f2f3d3fd2b62a4
+
+on:
+  push:
+    branches: [marcschier-spec-support-ci-preflight]
+
+permissions:
+  contents: read
+
+env:
+  NBGV_SetCloudBuildVersionVars: 'false'
+  TEMP: D:\temp
+  TMP: D:\temp
+
+jobs:
+  solution:
+    name: Base Network ${{ matrix.framework }}
+    runs-on: windows-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        framework: [net48, net10.0]
+    steps:
+    - name: Configure temporary directory
+      shell: pwsh
+      run: New-Item -ItemType Directory -Force -Path 'D:\temp' | Out-Null
+
+    - name: Checkout implementation
+      uses: actions/checkout@v7
+      with:
+        repository: OPCFoundation/UA-.NETStandard
+        ref: c71e494935985237451a64e6e6f2f3d3fd2b62a4
+        fetch-depth: 0
+        persist-credentials: false
+
+    - name: Verify implementation commit
+      shell: pwsh
+      run: |
+        $actual = (& git rev-parse HEAD).Trim()
+        if ($actual -ne 'c71e494935985237451a64e6e6f2f3d3fd2b62a4') {
+            throw "Checked out $actual, expected c71e494935985237451a64e6e6f2f3d3fd2b62a4."
+        }
+        Write-Host "Testing OPCFoundation/UA-.NETStandard at $actual."
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v6
+      with:
+        dotnet-version: '10.0.402'
+
+    - name: Set cloud version
+      shell: pwsh
+      run: .\.azurepipelines\set-version.ps1
+
+    - name: Run and verify unfiltered solution tests
+      shell: pwsh
+      run: |
+        dotnet test UA.slnx --configuration Release `
+          "/p:CustomTestTarget=${{ matrix.framework }}" -m:1 --logger trx
+        $testExitCode = $LASTEXITCODE
+        . .\.github\scripts\get-test-verdict.ps1
+        $results = Measure-TestResults (Get-Location).Path
+        Write-Host "TRX files: $($results.Files); total: $($results.Total); passed: $($results.Passed); nonpassing: $($results.Failed)"
+        $verdict = Get-TestRunVerdict `
+          -TrxFileCount $results.Files `
+          -Total $results.Total `
+          -Passed $results.Passed `
+          -Failed $results.Failed `
+          -FixtureFailures $results.FixtureFailures `
+          -ExitCode $testExitCode `
+          -TimedOut $false
+        if ($testExitCode -ne 0 -or -not $verdict.Passed) {
+            throw "Solution test exit code $testExitCode. $($verdict.Reason)"
+        }
+
+    - name: Stage test results
+      if: always()
+      shell: pwsh
+      run: |
+        $output = 'D:\temp\solution-results'
+        New-Item -ItemType Directory -Force -Path $output | Out-Null
+        $files = @(Get-ChildItem -Path . -Recurse -File -Filter *.trx)
+        foreach ($file in $files) {
+            Copy-Item -LiteralPath $file.FullName -Destination (Join-Path $output "$([guid]::NewGuid()).trx")
+        }
+        Write-Host "Staged $($files.Count) TRX files."
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: Base Network-${{ matrix.framework }}-trx
+        path: D:\temp\solution-results
+        if-no-files-found: warn
