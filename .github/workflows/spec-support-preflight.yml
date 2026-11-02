@@ -1,5 +1,5 @@
-name: Unfiltered solution preflight
-run-name: Industrial Automation at 2544aeb2001732f40f3925608361c37db4d59603
+name: Supplemental split test preflight
+run-name: AutoID at 45b54630f1d64cf7273f9b44e6c2d57decbc6531
 
 on:
   push:
@@ -14,8 +14,8 @@ env:
   TMP: D:\temp
 
 jobs:
-  solution:
-    name: Industrial Automation ${{ matrix.framework }}
+  managed:
+    name: AutoID VSTest ${{ matrix.framework }}
     runs-on: windows-latest
     timeout-minutes: 360
     strategy:
@@ -31,7 +31,7 @@ jobs:
       uses: actions/checkout@v7
       with:
         repository: OPCFoundation/UA-.NETStandard
-        ref: 2544aeb2001732f40f3925608361c37db4d59603
+        ref: 45b54630f1d64cf7273f9b44e6c2d57decbc6531
         fetch-depth: 0
         persist-credentials: false
 
@@ -39,8 +39,8 @@ jobs:
       shell: pwsh
       run: |
         $actual = (& git rev-parse HEAD).Trim()
-        if ($actual -ne '2544aeb2001732f40f3925608361c37db4d59603') {
-            throw "Checked out $actual, expected 2544aeb2001732f40f3925608361c37db4d59603."
+        if ($actual -ne '45b54630f1d64cf7273f9b44e6c2d57decbc6531') {
+            throw "Checked out $actual, expected 45b54630f1d64cf7273f9b44e6c2d57decbc6531."
         }
         Write-Host "Testing OPCFoundation/UA-.NETStandard at $actual."
 
@@ -53,11 +53,44 @@ jobs:
       shell: pwsh
       run: .\.azurepipelines\set-version.ps1
 
-    - name: Run and verify unfiltered solution tests
+    - name: Run and verify unfiltered VSTest projects
       shell: pwsh
       run: |
-        dotnet test UA.slnx --configuration Release `
-          "/p:CustomTestTarget=${{ matrix.framework }}" -m:2 --logger trx
+        $ErrorActionPreference = 'Stop'
+        $framework = '${{ matrix.framework }}'
+        [xml]$sourceSolution = Get-Content -Raw -LiteralPath 'UA.slnx'
+        $sourceProjects = @($sourceSolution.SelectNodes('//Project') | ForEach-Object { $_.GetAttribute('Path') })
+        $aotProjects = @(
+          'tests/Opc.Ua.Aot.Tests/Opc.Ua.Aot.Tests.csproj',
+          'tests/Opc.Ua.Aot.Tests.Historian/Opc.Ua.Aot.Tests.Historian.csproj',
+          'tests/Opc.Ua.Aot.Tests.Mcp/Opc.Ua.Aot.Tests.Mcp.csproj'
+        )
+        foreach ($project in $aotProjects) {
+            if (@($sourceProjects | Where-Object { $_ -ceq $project }).Count -ne 1) {
+                throw "Expected exactly one solution entry for '$project'."
+            }
+        }
+
+        $solution = 'UA.slnx'
+        if ($framework -eq 'net10.0') {
+            foreach ($project in $aotProjects) {
+                $node = @($sourceSolution.SelectNodes('//Project') |
+                    Where-Object { $_.GetAttribute('Path') -ceq $project })[0]
+                $null = $node.ParentNode.RemoveChild($node)
+            }
+            $remaining = @($sourceSolution.SelectNodes('//Project') |
+                ForEach-Object { $_.GetAttribute('Path') })
+            $expected = @($sourceProjects | Where-Object { $_ -cnotin $aotProjects })
+            if (Compare-Object $expected $remaining -CaseSensitive) {
+                throw 'The generated VSTest solution does not contain exactly the expected projects.'
+            }
+            $solution = 'UA.Preflight.VSTest.slnx'
+            $sourceSolution.Save((Join-Path (Get-Location).Path $solution))
+            Write-Host "Running $solution; the three TUnit projects run separately as NativeAOT."
+        }
+
+        dotnet test $solution --configuration Release `
+          "/p:CustomTestTarget=$framework" -m:2 --logger trx
         $testExitCode = $LASTEXITCODE
         . .\.github\scripts\get-test-verdict.ps1
         $results = Measure-TestResults (Get-Location).Path
@@ -71,7 +104,71 @@ jobs:
           -ExitCode $testExitCode `
           -TimedOut $false
         if ($testExitCode -ne 0 -or -not $verdict.Passed) {
-            throw "Solution test exit code $testExitCode. $($verdict.Reason)"
+            throw "VSTest solution exit code $testExitCode. $($verdict.Reason)"
+        }
+
+        $records = [System.Collections.Generic.List[object]]::new()
+        foreach ($project in $sourceProjects) {
+            if ($project -cin $aotProjects) {
+                continue
+            }
+            $path = $project.Replace('/', '\')
+            $output = (& dotnet msbuild $path `
+              '-getProperty:IsTestProject;TargetFrameworks;TargetFramework;_StressTestSupportedTarget' `
+              "-p:CustomTestTarget=$framework" '-p:Configuration=Release' '-nologo' | Out-String)
+            if ($LASTEXITCODE -ne 0) {
+                throw "Could not evaluate '$path' for $framework."
+            }
+            $start = $output.IndexOf('{')
+            $end = $output.LastIndexOf('}')
+            if ($start -lt 0 -or $end -le $start) {
+                throw "No property document for '$path': $output"
+            }
+            $properties = ($output.Substring($start, $end - $start + 1) | ConvertFrom-Json).Properties
+            if ($properties.IsTestProject -ne 'true') {
+                continue
+            }
+            if ($framework -eq 'net48' -and
+                $path -ieq 'tests\Opc.Ua.Stress.Tests\Opc.Ua.Stress.Tests.csproj' -and
+                $properties._StressTestSupportedTarget -eq 'false') {
+                $records.Add([pscustomobject]@{
+                    Project = $path
+                    Framework = $framework
+                    Files = 0
+                    Total = 0
+                    Passed = 0
+                    Failed = 0
+                    Verdict = 'not applicable: net48 placeholder'
+                })
+                continue
+            }
+            $projectResults = Measure-TestResults (Join-Path (Split-Path $path -Parent) 'TestResults')
+            $projectVerdict = Get-TestRunVerdict `
+              -TrxFileCount $projectResults.Files `
+              -Total $projectResults.Total `
+              -Passed $projectResults.Passed `
+              -Failed $projectResults.Failed `
+              -FixtureFailures $projectResults.FixtureFailures `
+              -ExitCode 0 `
+              -TimedOut $false
+            $records.Add([pscustomobject]@{
+                Project = $path
+                Framework = $framework
+                Files = $projectResults.Files
+                Total = $projectResults.Total
+                Passed = $projectResults.Passed
+                Failed = $projectResults.Failed
+                Verdict = if ($projectVerdict.Passed) { 'passed' } else { $projectVerdict.Reason }
+            })
+        }
+        $records | Format-Table -AutoSize
+        $records | Export-Csv -NoTypeInformation -Path "D:\temp\project-results-$framework.csv"
+        $passedProjects = @($records | Where-Object { $_.Verdict -eq 'passed' })
+        $invalid = @($records | Where-Object {
+            $_.Verdict -ne 'passed' -and $_.Verdict -ne 'not applicable: net48 placeholder'
+        })
+        if ($passedProjects.Count -eq 0 -or $invalid.Count -gt 0) {
+            throw "Per-project evidence is missing or failing for $($invalid.Count) of $($records.Count) projects."
         }
 
     - name: Stage test results
@@ -84,12 +181,101 @@ jobs:
         foreach ($file in $files) {
             Copy-Item -LiteralPath $file.FullName -Destination (Join-Path $output "$([guid]::NewGuid()).trx")
         }
+        Get-ChildItem -Path 'D:\temp' -Filter 'project-results-*.csv' |
+          Copy-Item -Destination $output
         Write-Host "Staged $($files.Count) TRX files."
 
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v7
       with:
-        name: Industrial Automation-${{ matrix.framework }}-trx
+        name: AutoID-vstest-${{ matrix.framework }}
         path: D:\temp\solution-results
+        if-no-files-found: warn
+
+  aot:
+    name: AutoID NativeAOT net10.0
+    runs-on: windows-latest
+    timeout-minutes: 360
+    steps:
+    - name: Configure temporary directory
+      shell: pwsh
+      run: New-Item -ItemType Directory -Force -Path 'D:\temp' | Out-Null
+
+    - name: Checkout implementation
+      uses: actions/checkout@v7
+      with:
+        repository: OPCFoundation/UA-.NETStandard
+        ref: 45b54630f1d64cf7273f9b44e6c2d57decbc6531
+        fetch-depth: 0
+        persist-credentials: false
+
+    - name: Verify implementation commit
+      shell: pwsh
+      run: |
+        $actual = (& git rev-parse HEAD).Trim()
+        if ($actual -ne '45b54630f1d64cf7273f9b44e6c2d57decbc6531') {
+            throw "Checked out $actual, expected 45b54630f1d64cf7273f9b44e6c2d57decbc6531."
+        }
+        Write-Host "Testing OPCFoundation/UA-.NETStandard at $actual."
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v6
+      with:
+        dotnet-version: '10.0.402'
+
+    - name: Set cloud version
+      shell: pwsh
+      run: .\.azurepipelines\set-version.ps1
+
+    - name: Publish and run every NativeAOT test project
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        . .\.github\scripts\get-test-verdict.ps1
+        $projects = @(
+          'tests\Opc.Ua.Aot.Tests\Opc.Ua.Aot.Tests.csproj',
+          'tests\Opc.Ua.Aot.Tests.Historian\Opc.Ua.Aot.Tests.Historian.csproj',
+          'tests\Opc.Ua.Aot.Tests.Mcp\Opc.Ua.Aot.Tests.Mcp.csproj'
+        )
+        foreach ($project in $projects) {
+            $stem = [System.IO.Path]::GetFileNameWithoutExtension($project)
+            Write-Host "::group::$stem (win-x64)"
+            dotnet publish $project --configuration Release --runtime win-x64 `
+              --self-contained true '/p:CustomTestTarget=net10.0' -m:2
+            if ($LASTEXITCODE -ne 0) {
+                throw "NativeAOT publish failed for '$project' with exit code $LASTEXITCODE."
+            }
+            $publish = Join-Path (Split-Path $project -Parent) 'bin\Release\net10.0\win-x64\publish'
+            $executable = Join-Path $publish "$stem.exe"
+            if (-not (Test-Path -LiteralPath $executable -PathType Leaf) -or
+                (Test-Path -LiteralPath (Join-Path $publish 'coreclr.dll'))) {
+                throw "NativeAOT executable missing or managed runtime detected at '$publish'."
+            }
+            $resultsDirectory = Join-Path 'D:\temp\aot-results' $stem
+            New-Item -ItemType Directory -Force -Path $resultsDirectory | Out-Null
+            & $executable --report-trx --results-directory $resultsDirectory
+            $testExitCode = $LASTEXITCODE
+            $results = Measure-TestResults $resultsDirectory
+            $verdict = Get-TestRunVerdict `
+              -TrxFileCount $results.Files `
+              -Total $results.Total `
+              -Passed $results.Passed `
+              -Failed $results.Failed `
+              -FixtureFailures $results.FixtureFailures `
+              -ExitCode $testExitCode `
+              -TimedOut $false
+            Write-Host "$stem TRX files: $($results.Files); total: $($results.Total); passed: $($results.Passed); nonpassing: $($results.Failed)"
+            if ($testExitCode -ne 0 -or -not $verdict.Passed) {
+                throw "NativeAOT tests failed for '$project' with exit code $testExitCode. $($verdict.Reason)"
+            }
+            Write-Host '::endgroup::'
+        }
+
+    - name: Upload NativeAOT results
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: AutoID-nativeaot-net10.0
+        path: D:\temp\aot-results
         if-no-files-found: warn
