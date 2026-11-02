@@ -1,5 +1,5 @@
 name: Unfiltered solution preflight
-run-name: Base Network at c71e494935985237451a64e6e6f2f3d3fd2b62a4
+run-name: Base Network at 8840e103cf4e2b81779ce52a518f90abda58a839
 
 on:
   push:
@@ -31,7 +31,7 @@ jobs:
       uses: actions/checkout@v7
       with:
         repository: OPCFoundation/UA-.NETStandard
-        ref: c71e494935985237451a64e6e6f2f3d3fd2b62a4
+        ref: 8840e103cf4e2b81779ce52a518f90abda58a839
         fetch-depth: 0
         persist-credentials: false
 
@@ -39,8 +39,8 @@ jobs:
       shell: pwsh
       run: |
         $actual = (& git rev-parse HEAD).Trim()
-        if ($actual -ne 'c71e494935985237451a64e6e6f2f3d3fd2b62a4') {
-            throw "Checked out $actual, expected c71e494935985237451a64e6e6f2f3d3fd2b62a4."
+        if ($actual -ne '8840e103cf4e2b81779ce52a518f90abda58a839') {
+            throw "Checked out $actual, expected 8840e103cf4e2b81779ce52a518f90abda58a839."
         }
         Write-Host "Testing OPCFoundation/UA-.NETStandard at $actual."
 
