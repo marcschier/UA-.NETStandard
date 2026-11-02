@@ -1,5 +1,5 @@
 name: Unfiltered solution preflight
-run-name: Weighing at c0b4a90c4365afe7ae002f03137800802faad0b3
+run-name: LADS at 78db49ca6e72508cd9113a80dfb1aadb8f99a248
 
 on:
   push:
@@ -15,7 +15,7 @@ env:
 
 jobs:
   solution:
-    name: Weighing ${{ matrix.framework }}
+    name: LADS ${{ matrix.framework }}
     runs-on: windows-latest
     timeout-minutes: 360
     strategy:
@@ -30,8 +30,8 @@ jobs:
     - name: Checkout implementation
       uses: actions/checkout@v7
       with:
-        repository: marcschier/UA-.NETStandard
-        ref: c0b4a90c4365afe7ae002f03137800802faad0b3
+        repository: OPCFoundation/UA-.NETStandard
+        ref: 78db49ca6e72508cd9113a80dfb1aadb8f99a248
         fetch-depth: 0
         persist-credentials: false
 
@@ -39,10 +39,10 @@ jobs:
       shell: pwsh
       run: |
         $actual = (& git rev-parse HEAD).Trim()
-        if ($actual -ne 'c0b4a90c4365afe7ae002f03137800802faad0b3') {
-            throw "Checked out $actual, expected c0b4a90c4365afe7ae002f03137800802faad0b3."
+        if ($actual -ne '78db49ca6e72508cd9113a80dfb1aadb8f99a248') {
+            throw "Checked out $actual, expected 78db49ca6e72508cd9113a80dfb1aadb8f99a248."
         }
-        Write-Host "Testing marcschier/UA-.NETStandard at $actual."
+        Write-Host "Testing OPCFoundation/UA-.NETStandard at $actual."
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v6
@@ -90,6 +90,6 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v7
       with:
-        name: Weighing-${{ matrix.framework }}-trx
+        name: LADS-${{ matrix.framework }}-trx
         path: D:\temp\solution-results
         if-no-files-found: warn
